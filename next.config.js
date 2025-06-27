@@ -25,124 +25,42 @@ const nextConfig = {
       // Use a custom cache directory to avoid permission issues
       config.cache = {
         type: 'filesystem',
-        cacheDirectory: path.resolve('.next/cache/webpack'),
-        compression: false,
+        cacheDirectory: path.join(process.cwd(), '.next/cache/webpack'),
         buildDependencies: {
           config: [__filename],
         },
       };
     }
 
-    // Corrigir problema de MIME Type para arquivos CSS
-    config.module.rules.forEach((rule) => {
-      if (rule.oneOf) {
-        rule.oneOf.forEach((oneOfRule) => {
-          if (
-            oneOfRule.test &&
-            oneOfRule.test.toString().includes('css') &&
-            oneOfRule.issuer &&
-            oneOfRule.issuer.not
-          ) {
-            delete oneOfRule.issuer;
-          }
-        });
-      }
-    });
-
-    // Otimizações para o Fast Refresh
-    if (!isServer) {
-      // Use a single runtime chunk to avoid "Cannot read properties of undefined (reading 'call')" errors
-      config.optimization.runtimeChunk = 'single';
-
-      // Melhorar a estabilidade do build
-      config.optimization.moduleIds = 'deterministic';
-
-      // Otimizações de bundle size
-      config.optimization.splitChunks = {
+    // Otimizar o tamanho do bundle
+    config.optimization = {
+      ...config.optimization,
+      splitChunks: {
+        ...config.optimization?.splitChunks,
         chunks: 'all',
-        minSize: 20000,
-        maxSize: 244000, // Reduzir tamanho máximo dos chunks
         cacheGroups: {
-          default: false,
-          vendors: false,
-          // Create a optimized chunk for all node_modules
-          commons: {
-            name: 'commons',
-            chunks: 'all',
-            test: /[\\/]node_modules[\\/]/,
-            priority: 10,
-            reuseExistingChunk: true,
-            enforce: true,
-          },
-          // Create a single chunk for all context files
-          contexts: {
-            name: 'contexts',
-            chunks: 'all',
-            test: /[\\/]contexts[\\/]/,
-            priority: 20,
-            reuseExistingChunk: true,
-            minSize: 0,
-          },
-          // Create a single chunk for all lib files  
-          libs: {
-            name: 'libs',
-            chunks: 'all',
-            test: /[\\/]lib[\\/]/,
-            priority: 15,
-            reuseExistingChunk: true,
-            minSize: 0,
-          },
-          // Separar large dependencies em chunks próprios
-          googleapis: {
-            name: 'googleapis',
-            test: /[\\/]node_modules[\\/]googleapis[\\/]/,
-            chunks: 'async', // Carregar apenas quando necessário
-            priority: 25,
-            reuseExistingChunk: true,
-          },
+          ...config.optimization?.splitChunks?.cacheGroups,
           supabase: {
             name: 'supabase',
             test: /[\\/]node_modules[\\/]@supabase[\\/]/,
             chunks: 'all',
             priority: 30,
-            reuseExistingChunk: true,
+          },
+          libs: {
+            name: 'libs',
+            test: /[\\/]node_modules[\\/]/,
+            chunks: 'all',
+            priority: 10,
+          },
+          commons: {
+            name: 'commons',
+            chunks: 'all',
+            minChunks: 2,
+            priority: 5,
           },
         },
-      };
-
-      // Resolver problema com módulos Node.js no browser
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        path: false,
-        crypto: false,
-        os: false,
-        net: false,
-        tls: false,
-        child_process: false,
-        // Adicionar mais fallbacks para Google APIs
-        stream: require.resolve('stream-browserify'),
-        util: require.resolve('util'),
-        buffer: require.resolve('buffer'),
-      };
-
-      // Add source maps in development for better debugging
-      if (dev) {
-        config.devtool = 'source-map';
-      }
-    }
-
-    // Otimizar performance e bundle size
-    config.performance = {
-      ...config.performance,
-      maxAssetSize: 1024 * 1024 * 1.5, // 1.5MB (reduzido)
-      maxEntrypointSize: 1024 * 1024 * 1.5, // 1.5MB (reduzido)
-      hints: 'warning', // Mostrar warnings para bundles grandes
+      },
     };
-
-    // Tree shaking otimizations
-    config.optimization.usedExports = true;
-    config.optimization.sideEffects = false;
 
     return config;
   },
@@ -170,13 +88,10 @@ const nextConfig = {
 
   // Permitir origens de desenvolvimento
   experimental: {
-    allowedDevOrigins: ['192.168.0.173', 'localhost', '127.0.0.1'],
-    // Melhorar a estabilidade do build
-    optimizePackageImports: ['react-icons', '@supabase/supabase-js'],
-    // Fix CSS preload warning
+    // Otimizar CSS
     optimizeCss: true,
-    // Ativar Web Assembly para melhor performance
-    webVitalsAttribution: ['CLS', 'LCP'],
+    // Permitir origens de desenvolvimento específicas
+    allowedDevOrigins: ['localhost:3000', '127.0.0.1:3000']
   },
 
   // External packages for server components (moved from experimental)
@@ -201,22 +116,22 @@ const nextConfig = {
   output: 'standalone',
 
   // Configurações de segurança
-  headers: async () => {
+  async headers() {
     return [
       {
         source: '/(.*)',
         headers: [
           {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
             key: 'X-Frame-Options',
             value: 'DENY',
           },
           {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
           },
         ],
       },
@@ -225,50 +140,12 @@ const nextConfig = {
 
   // Configurações para lidar com erros 404
   async rewrites() {
-    return [
-      // Removendo redirecionamentos desnecessários que podem causar loops
-      // {
-      //   source: '/login',
-      //   destination: '/login',
-      // },
-      // {
-      //   source: '/dashboard',
-      //   destination: '/dashboard',
-      // },
-      // {
-      //   source: '/manual',
-      //   destination: '/manual',
-      // },
-      // {
-      //   source: '/set-password',
-      //   destination: '/set-password',
-      // },
-      // {
-      //   source: '/admin',
-      //   destination: '/admin',
-      // },
-      // {
-      //   source: '/admin/:path*',
-      //   destination: '/admin/:path*',
-      // },
-    ];
+    return [];
   },
 
   // Configurações de redirecionamento
   async redirects() {
-    return [
-      // Redirecionamentos para a página de avaliação
-      {
-        source: '/avaliacao/avaliacoes/:id',
-        destination: '/avaliacao/:id',
-        permanent: false,
-      },
-      {
-        source: '/avaliacao/avaliacoes/nova',
-        destination: '/avaliacao/nova',
-        permanent: false,
-      },
-    ];
+    return [];
   },
 };
 
