@@ -10,14 +10,18 @@ export { supabase, supabaseAdmin };
 // NOTA: Este é um objeto temporário para facilitar a migração
 // Eventualmente, todo o código deve ser atualizado para usar diretamente o Supabase
 
-// Aviso de depreciação
-console.warn('AVISO: O objeto prisma está depreciado. Use supabase ou supabaseAdmin diretamente.');
+// Aviso de depreciação apenas em desenvolvimento
+if (process.env.NODE_ENV === 'development') {
+  console.warn('AVISO: O objeto prisma está depreciado. Use supabase ou supabaseAdmin diretamente.');
+}
 
 // Criar um proxy para redirecionar chamadas do Prisma para o Supabase
 export const prisma = new Proxy({}, {
   get: function(target, prop) {
-    // Registrar tentativa de uso do Prisma
-    console.warn(`Tentativa de usar prisma.${String(prop)}. Use supabase diretamente.`);
+    // Registrar tentativa de uso do Prisma apenas em desenvolvimento
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`Tentativa de usar prisma.${String(prop)}. Use supabase diretamente.`);
+    }
 
     // Retornar uma função que registra um erro
     return () => {

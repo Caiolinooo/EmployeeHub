@@ -16,9 +16,8 @@ const nextConfig = {
   // Configurar o webpack para lidar com módulos problemáticos
   webpack: (config, { isServer, dev }) => {
     if (isServer) {
-      // Ignorar pacotes problemáticos no middleware
-      // Nota: Twilio foi removido pois causa conflito com serverExternalPackages
-      config.externals = [...config.externals || [], 'bcryptjs', 'nodemailer'];
+      // Manter googleapis como external para reduzir bundle
+      config.externals = [...config.externals || [], 'bcryptjs', 'nodemailer', 'googleapis'];
     }
 
     // Fix webpack cache issues
@@ -58,19 +57,22 @@ const nextConfig = {
       // Melhorar a estabilidade do build
       config.optimization.moduleIds = 'deterministic';
 
-      // Fix for circular dependencies and module loading issues
+      // Otimizações de bundle size
       config.optimization.splitChunks = {
         chunks: 'all',
+        minSize: 20000,
+        maxSize: 244000, // Reduzir tamanho máximo dos chunks
         cacheGroups: {
           default: false,
           vendors: false,
-          // Create a single chunk for all node_modules
+          // Create a optimized chunk for all node_modules
           commons: {
             name: 'commons',
             chunks: 'all',
             test: /[\\/]node_modules[\\/]/,
             priority: 10,
             reuseExistingChunk: true,
+            enforce: true,
           },
           // Create a single chunk for all context files
           contexts: {
@@ -79,13 +81,30 @@ const nextConfig = {
             test: /[\\/]contexts[\\/]/,
             priority: 20,
             reuseExistingChunk: true,
+            minSize: 0,
           },
-          // Create a single chunk for all lib files
+          // Create a single chunk for all lib files  
           libs: {
             name: 'libs',
             chunks: 'all',
             test: /[\\/]lib[\\/]/,
             priority: 15,
+            reuseExistingChunk: true,
+            minSize: 0,
+          },
+          // Separar large dependencies em chunks próprios
+          googleapis: {
+            name: 'googleapis',
+            test: /[\\/]node_modules[\\/]googleapis[\\/]/,
+            chunks: 'async', // Carregar apenas quando necessário
+            priority: 25,
+            reuseExistingChunk: true,
+          },
+          supabase: {
+            name: 'supabase',
+            test: /[\\/]node_modules[\\/]@supabase[\\/]/,
+            chunks: 'all',
+            priority: 30,
             reuseExistingChunk: true,
           },
         },
@@ -101,6 +120,10 @@ const nextConfig = {
         net: false,
         tls: false,
         child_process: false,
+        // Adicionar mais fallbacks para Google APIs
+        stream: require.resolve('stream-browserify'),
+        util: require.resolve('util'),
+        buffer: require.resolve('buffer'),
       };
 
       // Add source maps in development for better debugging
@@ -109,12 +132,17 @@ const nextConfig = {
       }
     }
 
-    // Aumentar o limite de tamanho dos chunks para evitar erros de ENOENT
+    // Otimizar performance e bundle size
     config.performance = {
       ...config.performance,
-      maxAssetSize: 1024 * 1024 * 2, // 2MB
-      maxEntrypointSize: 1024 * 1024 * 2, // 2MB
+      maxAssetSize: 1024 * 1024 * 1.5, // 1.5MB (reduzido)
+      maxEntrypointSize: 1024 * 1024 * 1.5, // 1.5MB (reduzido)
+      hints: 'warning', // Mostrar warnings para bundles grandes
     };
+
+    // Tree shaking otimizations
+    config.optimization.usedExports = true;
+    config.optimization.sideEffects = false;
 
     return config;
   },
@@ -135,20 +163,25 @@ const nextConfig = {
         hostname: 'arzvingdtnttiejcvucs.supabase.co',
       },
     ],
+    // Otimizar carregamento de imagens
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 60,
   },
 
   // Permitir origens de desenvolvimento
   experimental: {
     allowedDevOrigins: ['192.168.0.173', 'localhost', '127.0.0.1'],
     // Melhorar a estabilidade do build
-    optimizePackageImports: ['react-icons'],
+    optimizePackageImports: ['react-icons', '@supabase/supabase-js'],
     // Fix CSS preload warning
     optimizeCss: true,
+    // Ativar Web Assembly para melhor performance
+    webVitalsAttribution: ['CLS', 'LCP'],
   },
 
   // External packages for server components (moved from experimental)
-  // These packages will be bundled for server components but not for middleware
-  serverExternalPackages: ['bcryptjs', 'nodemailer', 'twilio'],
+  // Inclui googleapis para reduzir bundle size
+  serverExternalPackages: ['bcryptjs', 'nodemailer', 'twilio', 'googleapis'],
 
   // Configurar o comportamento de build
   poweredByHeader: false,
@@ -159,8 +192,13 @@ const nextConfig = {
     styledComponents: true,
     // Configurações adicionais do SWC
     reactRemoveProperties: process.env.NODE_ENV === 'production',
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'] // Manter apenas logs importantes em produção
+    } : false,
   },
+
+  // Otimizações de output
+  output: 'standalone',
 
   // Configurações de segurança
   headers: async () => {

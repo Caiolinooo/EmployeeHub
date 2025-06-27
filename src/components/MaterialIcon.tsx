@@ -1,42 +1,46 @@
 'use client';
 
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { IconType } from 'react-icons';
-import * as FiIcons from 'react-icons/fi';
 
-// Mapeamento de nomes de ícones do Material Design para ícones do react-icons/fi
-const iconMap: Record<string, IconType> = {
-  // Ícones mencionados nos erros
-  book: FiIcons.FiBookOpen,
-  description: FiIcons.FiFileText,
-  policy: FiIcons.FiShield,
-  calendar_today: FiIcons.FiCalendar,
-  newspaper: FiIcons.FiRss,
-  receipt: FiIcons.FiFileText,
-  payments: FiIcons.FiDollarSign,
-  schedule: FiIcons.FiClock,
-  assessment: FiIcons.FiBarChart2,
-  admin_panel_settings: FiIcons.FiSettings,
+// Import dinâmico de ícones específicos para reduzir bundle size
+const iconComponents = {
+  // Ícones essenciais para o sistema
+  book: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiBookOpen }))),
+  description: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiFileText }))),
+  policy: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiShield }))),
+  calendar_today: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiCalendar }))),
+  newspaper: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiRss }))),
+  receipt: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiFileText }))),
+  payments: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiDollarSign }))),
+  schedule: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiClock }))),
+  assessment: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiBarChart2 }))),
+  admin_panel_settings: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiSettings }))),
   
-  // Outros ícones comuns que podem ser usados
-  dashboard: FiIcons.FiGrid,
-  people: FiIcons.FiUsers,
-  person: FiIcons.FiUser,
-  settings: FiIcons.FiSettings,
-  menu: FiIcons.FiMenu,
-  close: FiIcons.FiX,
-  logout: FiIcons.FiLogOut,
-  layers: FiIcons.FiLayers,
-  list: FiIcons.FiList,
-  edit: FiIcons.FiEdit,
-  image: FiIcons.FiImage,
-  check: FiIcons.FiCheck,
-  alert: FiIcons.FiAlertCircle,
-  info: FiIcons.FiInfo,
-  warning: FiIcons.FiAlertCircle,
-  error: FiIcons.FiAlertCircle,
-  success: FiIcons.FiCheck,
+  // Outros ícones comuns
+  dashboard: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiGrid }))),
+  people: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiUsers }))),
+  person: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiUser }))),
+  settings: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiSettings }))),
+  menu: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiMenu }))),
+  close: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiX }))),
+  logout: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiLogOut }))),
+  layers: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiLayers }))),
+  list: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiList }))),
+  edit: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiEdit }))),
+  image: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiImage }))),
+  check: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiCheck }))),
+  alert: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiAlertCircle }))),
+  info: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiInfo }))),
+  warning: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiAlertCircle }))),
+  error: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiAlertCircle }))),
+  success: lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiCheck }))),
 };
+
+// Componente de fallback
+const IconFallback = () => (
+  <div className="inline-block w-5 h-5 bg-gray-300 rounded animate-pulse" />
+);
 
 interface MaterialIconProps {
   name: string;
@@ -52,16 +56,25 @@ const MaterialIcon: React.FC<MaterialIconProps> = ({
   color 
 }) => {
   // Verificar se o ícone existe no mapeamento
-  const IconComponent = iconMap[name];
+  const IconComponent = iconComponents[name as keyof typeof iconComponents];
   
-  // Se o ícone não existir, usar um ícone padrão
+  // Se o ícone não existir, usar um ícone padrão carregado dinamicamente
   if (!IconComponent) {
     console.warn(`Ícone "${name}" não encontrado. Usando ícone padrão.`);
-    return <FiIcons.FiHelpCircle className={className} size={size} color={color} />;
+    const DefaultIcon = lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiHelpCircle })));
+    return (
+      <Suspense fallback={<IconFallback />}>
+        <DefaultIcon className={className} size={size} color={color} />
+      </Suspense>
+    );
   }
   
-  // Renderizar o ícone
-  return <IconComponent className={className} size={size} color={color} />;
+  // Renderizar o ícone com carregamento lazy
+  return (
+    <Suspense fallback={<IconFallback />}>
+      <IconComponent className={className} size={size} color={color} />
+    </Suspense>
+  );
 };
 
 export default MaterialIcon;

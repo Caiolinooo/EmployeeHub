@@ -1,44 +1,27 @@
 'use client';
 
-import React from 'react';
-import * as FiIcons from 'react-icons/fi';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { IconType } from 'react-icons';
 
-// Mapping of Material Design icon names to Feather icons
-const iconMap: Record<string, IconType> = {
-  book: FiIcons.FiBookOpen,
-  description: FiIcons.FiFileText,
-  policy: FiIcons.FiShield,
-  calendar_today: FiIcons.FiCalendar,
-  newspaper: FiIcons.FiRss,
-  receipt: FiIcons.FiFileText,
-  payments: FiIcons.FiDollarSign,
-  schedule: FiIcons.FiClock,
-  assessment: FiIcons.FiBarChart2,
-  admin_panel_settings: FiIcons.FiSettings,
-  
-  // Other common icons
-  dashboard: FiIcons.FiGrid,
-  people: FiIcons.FiUsers,
-  person: FiIcons.FiUser,
-  settings: FiIcons.FiSettings,
-  menu: FiIcons.FiMenu,
-  close: FiIcons.FiX,
-  logout: FiIcons.FiLogOut,
-  layers: FiIcons.FiLayers,
-  list: FiIcons.FiList,
-  edit: FiIcons.FiEdit,
-  image: FiIcons.FiImage,
-  check: FiIcons.FiCheck,
-  alert: FiIcons.FiAlertCircle,
-  info: FiIcons.FiInfo,
-  warning: FiIcons.FiAlertCircle,
-  error: FiIcons.FiAlertCircle,
-  success: FiIcons.FiCheck,
+// Import dinâmico para otimizar bundle size
+const loadIcon = async (iconName: string): Promise<IconType | null> => {
+  try {
+    const iconModule = await import('react-icons/fi');
+    const IconComponent = iconModule[iconName as keyof typeof iconModule] as IconType;
+    return IconComponent || null;
+  } catch (error) {
+    console.warn(`Erro ao carregar ícone ${iconName}:`, error);
+    return null;
+  }
 };
 
+// Componente de fallback
+const IconFallback = () => (
+  <div className="inline-block w-5 h-5 bg-gray-300 rounded animate-pulse" />
+);
+
 interface MaterialDesignIconProps {
-  name: string;
+  iconName: string;
   className?: string;
   size?: number;
   color?: string;
@@ -52,22 +35,36 @@ interface MaterialDesignIconProps {
  * <MaterialDesignIcon name="book" />
  * <MaterialDesignIcon name="description" size={24} color="blue" />
  */
-const MaterialDesignIcon: React.FC<MaterialDesignIconProps> = ({ 
-  name, 
-  className = '', 
-  size, 
-  color 
+const MaterialDesignIcon: React.FC<MaterialDesignIconProps> = ({
+  iconName,
+  className = '',
+  size = 24,
+  color
 }) => {
-  // Check if the icon exists in the mapping
-  const IconComponent = iconMap[name];
-  
-  // If the icon doesn't exist, use a default icon
-  if (!IconComponent) {
-    console.warn(`Material Design icon "${name}" not found. Using default icon.`);
-    return <FiIcons.FiHelpCircle className={className} size={size} color={color} />;
+  const [IconComponent, setIconComponent] = useState<IconType | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadIcon(iconName).then(component => {
+      setIconComponent(component);
+      setLoading(false);
+    });
+  }, [iconName]);
+
+  if (loading) {
+    return <IconFallback />;
   }
-  
-  // Render the icon
+
+  if (!IconComponent) {
+    // Fallback para ícone não encontrado
+    const FallbackIcon = lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiHelpCircle })));
+    return (
+      <Suspense fallback={<IconFallback />}>
+        <FallbackIcon className={className} size={size} color={color} />
+      </Suspense>
+    );
+  }
+
   return <IconComponent className={className} size={size} color={color} />;
 };
 

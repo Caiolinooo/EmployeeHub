@@ -1,27 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { createClient } from '@supabase/supabase-js';
-import { google } from 'googleapis';
 import { Readable } from 'stream';
 import { getCredential } from '@/lib/secure-credentials';
 
-// Configurar cliente do Google Drive
-// BUSCAR CREDENCIAIS DA TABELA app_secrets
+// Configurar cliente do Google Drive com import dinâmico
 async function initializeGoogleDriveClient() {
   try {
+    // Import dinâmico para reduzir o tamanho do bundle
+    const { google } = await import('googleapis');
+    
     const googleServiceAccountEmail = await getCredential('GOOGLE_SERVICE_ACCOUNT_EMAIL');
     const googleServiceAccountPrivateKey = await getCredential('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY');
 
     if (!googleServiceAccountEmail || !googleServiceAccountPrivateKey) {
       console.error('Credenciais do Google Drive Service Account não encontradas na tabela app_secrets.');
-      // Dependendo da sua lógica de inicialização, você pode querer lançar um erro aqui
-      // ou retornar null e lidar com isso no handler POST.
       return null;
     }
 
     const auth = new google.auth.JWT({
       email: googleServiceAccountEmail,
-      key: googleServiceAccountPrivateKey.replace(/\\n/g, '\n'), // Ainda pode precisar substituir \n se não foram escapados no banco
+      key: googleServiceAccountPrivateKey.replace(/\\n/g, '\n'),
       scopes: ['https://www.googleapis.com/auth/drive']
     });
 
@@ -33,19 +32,23 @@ async function initializeGoogleDriveClient() {
   }
 }
 
+// Função auxiliar para validar tipos de imagem
+function isValidImageType(mimeType: string): boolean {
+  const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+  return validTypes.includes(mimeType);
+}
+
+// Função auxiliar para gerar nome de arquivo seguro
+function generateFileName(firstName: string, lastName: string, originalName: string): string {
+  const extension = originalName.split('.').pop() || 'jpg';
+  const timestamp = Date.now();
+  const safeName = `${firstName}_${lastName}_profile_${timestamp}.${extension}`;
+  return safeName.replace(/[^a-zA-Z0-9._-]/g, '_');
+}
+
 export async function POST(request: NextRequest) {
   try {
-    // Inicializar cliente do Google Drive
-    const drive = await initializeGoogleDriveClient();
-
-    if (!drive) {
-      return NextResponse.json(
-        { error: 'Erro de configuração do Google Drive.' },
-        { status: 500 }
-      );
-    }
-
-    // Verificar autenticação
+    // Verificar autenticação primeiro para economizar recursos
     const authHeader = request.headers.get('authorization');
     const token = extractTokenFromHeader(authHeader || '');
 
@@ -70,7 +73,6 @@ export async function POST(request: NextRequest) {
     const userId = formData.get('userId') as string;
 
     // Verificar se o usuário está tentando modificar seus próprios dados
-    // ou se é um administrador
     if (payload.userId !== userId && payload.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Acesso negado' },
@@ -85,23 +87,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar tipo de arquivo
-    if (!photo.type.startsWith('image/')) {
+    // Verificar tipo de arquivo com validação mais específica
+    if (!isValidImageType(photo.type)) {
       return NextResponse.json(
-        { error: 'Tipo de arquivo inválido. Por favor, envie uma imagem.' },
+        { error: 'Tipo de arquivo inválido. Formatos aceitos: JPEG, PNG, WebP, GIF.' },
         { status: 400 }
       );
     }
 
     // Verificar tamanho do arquivo (máximo 5MB)
-    if (photo.size > 5 * 1024 * 1024) {
+    const maxSize = 5 * 1024 * 1024;
+    if (photo.size > maxSize) {
       return NextResponse.json(
-        { error: 'Arquivo muito grande. O tamanho máximo é 5MB.' },
+        { error: `Arquivo muito grande. O tamanho máximo é ${maxSize / (1024 * 1024)}MB.` },
         { status: 400 }
       );
     }
 
-    // Inicializar cliente Supabase
+    // Inicializar cliente Supabase com configuração otimizada
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_KEY!,
@@ -128,7 +131,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Converter o arquivo para um buffer
+    // Inicializar cliente do Google Drive (import dinâmico acontece aqui)
+    const drive = await initializeGoogleDriveClient();
+
+    if (!drive) {
+      return NextResponse.json(
+        { error: 'Erro de configuração do Google Drive.' },
+        { status: 500 }
+      );
+    }
+
+    // Converter o arquivo para um buffer de forma mais eficiente
     const arrayBuffer = await photo.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
@@ -138,7 +151,11 @@ export async function POST(request: NextRequest) {
     stream.push(null);
 
     // Nome do arquivo no Google Drive
-    const fileName = `${userData.first_name}_${userData.last_name}_profile_${Date.now()}.${photo.name.split('.').pop()}`;
+    const fileName = generateFileName(
+      userData.first_name || 'user',
+      userData.last_name || 'photo',
+      photo.name
+    );
 
     // Se o usuário já tem uma foto, atualizar em vez de criar nova
     let fileId = userData.drive_photo_id;
@@ -146,28 +163,36 @@ export async function POST(request: NextRequest) {
 
     if (fileId) {
       // Atualizar arquivo existente
-      const response = await drive.files.update({
-        fileId,
-        media: {
-          body: stream,
-          mimeType: photo.type
-        }
-      });
+      try {
+        await drive.files.update({
+          fileId,
+          media: {
+            body: stream,
+            mimeType: photo.type
+          }
+        });
 
-      // Obter URL do arquivo
-      const fileResponse = await drive.files.get({
-        fileId,
-        fields: 'webViewLink, webContentLink'
-      });
+        // Obter URL do arquivo
+        const fileResponse = await drive.files.get({
+          fileId,
+          fields: 'webViewLink, webContentLink'
+        });
 
-      fileUrl = fileResponse.data.webContentLink || fileResponse.data.webViewLink || '';
-    } else {
+        fileUrl = fileResponse.data.webContentLink || fileResponse.data.webViewLink || '';
+      } catch (driveError) {
+        console.error('Erro ao atualizar arquivo existente:', driveError);
+        // Se falhar ao atualizar, criar novo arquivo
+        fileId = '';
+      }
+    }
+
+    if (!fileId) {
       // Criar novo arquivo
       const response = await drive.files.create({
         requestBody: {
           name: fileName,
           mimeType: photo.type,
-          parents: [process.env.GOOGLE_DRIVE_FOLDER_ID || '']
+          parents: process.env.GOOGLE_DRIVE_FOLDER_ID ? [process.env.GOOGLE_DRIVE_FOLDER_ID] : undefined
         },
         media: {
           body: stream,
@@ -176,6 +201,10 @@ export async function POST(request: NextRequest) {
       });
 
       fileId = response.data.id || '';
+
+      if (!fileId) {
+        throw new Error('Falha ao criar arquivo no Google Drive');
+      }
 
       // Tornar o arquivo público
       await drive.permissions.create({
@@ -195,6 +224,10 @@ export async function POST(request: NextRequest) {
       fileUrl = fileResponse.data.webContentLink || fileResponse.data.webViewLink || '';
     }
 
+    if (!fileUrl) {
+      throw new Error('Falha ao obter URL do arquivo');
+    }
+
     // Atualizar referência no banco de dados
     const { error: updateError } = await supabase
       .from('users_unified')
@@ -209,7 +242,7 @@ export async function POST(request: NextRequest) {
     if (updateError) {
       console.error('Erro ao atualizar referência da foto:', updateError);
       return NextResponse.json(
-        { error: 'Erro ao atualizar referência da foto' },
+        { error: 'Erro ao atualizar referência da foto no banco de dados' },
         { status: 500 }
       );
     }
@@ -217,12 +250,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Foto de perfil atualizada com sucesso',
-      photoUrl: fileUrl
+      photoUrl: fileUrl,
+      fileId
     });
   } catch (error) {
-    console.error('Erro ao processar requisição:', error);
+    console.error('Erro ao processar requisição de upload:', error);
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
+      { error: 'Erro interno do servidor ao processar upload' },
       { status: 500 }
     );
   }

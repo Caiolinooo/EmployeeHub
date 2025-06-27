@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { FiUpload, FiX, FiSearch } from 'react-icons/fi';
-import * as Icons from 'react-icons/fi';
 import { IconType } from 'react-icons';
 
 interface IconSelectorProps {
@@ -12,6 +11,19 @@ interface IconSelectorProps {
   allowCustomUpload?: boolean;
 }
 
+// Lista limitada de ícones mais usados para evitar importar toda a biblioteca
+const commonIcons = [
+  'FiHome', 'FiUser', 'FiUsers', 'FiSettings', 'FiMail', 'FiPhone',
+  'FiCalendar', 'FiClock', 'FiDollarSign', 'FiFileText', 'FiImage',
+  'FiFolder', 'FiDownload', 'FiUpload', 'FiEdit', 'FiTrash2',
+  'FiCheck', 'FiX', 'FiPlus', 'FiMinus', 'FiSave', 'FiRefreshCw',
+  'FiSearch', 'FiFilter', 'FiEye', 'FiEyeOff', 'FiHeart', 'FiStar',
+  'FiShare2', 'FiMessageSquare', 'FiBell', 'FiAlertCircle', 'FiInfo',
+  'FiShield', 'FiLock', 'FiUnlock', 'FiKey', 'FiGlobe', 'FiWifi',
+  'FiBarChart2', 'FiTrendingUp', 'FiActivity', 'FiCpu', 'FiDatabase',
+  'FiGrid', 'FiList', 'FiLayers', 'FiBookOpen', 'FiRss', 'FiLogOut'
+];
+
 export default function IconSelector({
   selectedIcon,
   onIconChange,
@@ -20,25 +32,61 @@ export default function IconSelector({
 }: IconSelectorProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showIconGrid, setShowIconGrid] = useState(false);
+  const [iconComponents, setIconComponents] = useState<Record<string, IconType>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Lista de ícones disponíveis
-  const iconOptions = Object.keys(Icons)
-    .filter(key => key.startsWith('Fi'))
-    .filter(key => key.toLowerCase().includes(searchTerm.toLowerCase()))
-    .sort();
+  // Filtrar ícones baseado no termo de busca
+  const filteredIcons = commonIcons.filter(iconName =>
+    iconName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  // Função para renderizar o ícone
-  const renderIcon = (iconName: string) => {
-    // @ts-ignore - Estamos assumindo que o ícone existe no objeto Icons
-    const IconComponent = Icons[iconName];
-    return IconComponent ? <IconComponent className="h-5 w-5" /> : null;
+  // Função para carregar ícone dinamicamente
+  const loadIcon = useCallback(async (iconName: string): Promise<IconType | null> => {
+    if (iconComponents[iconName]) {
+      return iconComponents[iconName];
+    }
+
+    try {
+      const iconModule = await import('react-icons/fi');
+      const IconComponent = iconModule[iconName as keyof typeof iconModule] as IconType;
+      
+      if (IconComponent) {
+        setIconComponents(prev => ({ ...prev, [iconName]: IconComponent }));
+        return IconComponent;
+      }
+    } catch (error) {
+      console.warn(`Erro ao carregar ícone ${iconName}:`, error);
+    }
+    
+    return null;
+  }, [iconComponents]);
+
+  // Componente para renderizar ícone com carregamento lazy
+  const IconRenderer = ({ iconName }: { iconName: string }) => {
+    const [IconComponent, setIconComponent] = useState<IconType | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    React.useEffect(() => {
+      loadIcon(iconName).then(component => {
+        setIconComponent(component);
+        setLoading(false);
+      });
+    }, [iconName]);
+
+    if (loading) {
+      return <div className="w-5 h-5 bg-gray-300 rounded animate-pulse" />;
+    }
+
+    if (!IconComponent) {
+      return <div className="w-5 h-5 bg-red-300 rounded" />;
+    }
+
+    return <IconComponent className="h-5 w-5" />;
   };
 
   // Função para selecionar um ícone
-  const handleSelectIcon = (iconName: string) => {
-    // @ts-ignore - Estamos assumindo que o ícone existe no objeto Icons
-    const IconComponent = Icons[iconName];
+  const handleSelectIcon = async (iconName: string) => {
+    const IconComponent = await loadIcon(iconName);
     if (IconComponent) {
       onIconChange(iconName, IconComponent);
       setShowIconGrid(false);
@@ -65,13 +113,13 @@ export default function IconSelector({
           onClick={() => setShowIconGrid(!showIconGrid)}
           className="text-xs text-blue-600 hover:text-blue-800"
         >
-          {showIconGrid ? 'Fechar seletor' : 'Mostrar todos os ícones'}
+          {showIconGrid ? 'Fechar seletor' : 'Mostrar ícones'}
         </button>
       </div>
 
       <div className="flex items-center space-x-2">
         <div className="p-3 border border-gray-300 rounded-md bg-gray-50 flex items-center justify-center w-12 h-12">
-          {selectedIcon && renderIcon(selectedIcon)}
+          {selectedIcon && <IconRenderer iconName={selectedIcon} />}
         </div>
 
         <div className="flex-1">
@@ -130,7 +178,7 @@ export default function IconSelector({
           </div>
 
           <div className="max-h-60 overflow-y-auto grid grid-cols-6 gap-2">
-            {iconOptions.map((iconName) => (
+            {filteredIcons.map((iconName) => (
               <button
                 key={iconName}
                 type="button"
@@ -141,7 +189,7 @@ export default function IconSelector({
                 title={iconName}
               >
                 <div className="p-2">
-                  {renderIcon(iconName)}
+                  <IconRenderer iconName={iconName} />
                 </div>
                 <span className="text-xs text-gray-600 truncate w-full text-center">
                   {iconName.replace('Fi', '')}
@@ -149,11 +197,15 @@ export default function IconSelector({
               </button>
             ))}
 
-            {iconOptions.length === 0 && (
+            {filteredIcons.length === 0 && (
               <div className="col-span-6 py-4 text-center text-gray-500">
                 Nenhum ícone encontrado para "{searchTerm}"
               </div>
             )}
+          </div>
+
+          <div className="mt-3 text-xs text-gray-500 text-center">
+            Mostrando {filteredIcons.length} de {commonIcons.length} ícones mais comuns
           </div>
         </div>
       )}
