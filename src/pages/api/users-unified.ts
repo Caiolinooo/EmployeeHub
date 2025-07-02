@@ -17,7 +17,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Token não fornecido' });
     }
 
-    const token = authHeader.split(' ')[1];
+    const tokenParts = authHeader.split(' ');
+    if (tokenParts.length !== 2 || tokenParts[0] !== 'Bearer') {
+      return res.status(401).json({ error: 'Formato de autorização inválido. Use: Bearer <token>' });
+    }
+    
+    const token = tokenParts[1];
     if (!token) {
       return res.status(401).json({ error: 'Token inválido' });
     }

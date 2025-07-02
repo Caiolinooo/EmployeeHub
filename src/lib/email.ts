@@ -5,12 +5,14 @@
  */
 
 // Usar Gmail para todos os ambientes (desenvolvimento e produção)
-console.log('Usando Gmail para envio de emails em todos os ambientes');
-console.log(`Ambiente: ${process.env.NODE_ENV || 'development'}`);
-console.log(`Host: ${process.env.EMAIL_HOST || 'smtp.gmail.com'}`);
-console.log(`Porta: ${process.env.EMAIL_PORT || '465'}`);
-console.log(`Usuário: ${process.env.EMAIL_USER || 'apiabzgroup@gmail.com'}`);
-console.log(`Remetente: ${process.env.EMAIL_FROM || 'apiabzgroup@gmail.com'}`);
+// Environment configuration loaded securely without logging sensitive data
+const isProduction = process.env.NODE_ENV === 'production';
+
+if (!isProduction) {
+  console.log('Email configuration loaded for development environment');
+} else {
+  console.log('Email configuration loaded for production environment');
+}
 
 // Exportar as funções do Gmail
 export * from './email-gmail';

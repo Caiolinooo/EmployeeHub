@@ -9,9 +9,27 @@
 import nodemailer from 'nodemailer';
 import { MailService } from '@sendgrid/mail';
 
+// Validate required environment variables
+function validateSendGridConfig() {
+  if (!process.env.SENDGRID_API_KEY) {
+    throw new Error('SENDGRID_API_KEY environment variable is required');
+  }
+}
+
+// Validate configuration early (only on server)
+if (typeof window === 'undefined') {
+  try {
+    validateSendGridConfig();
+  } catch (error) {
+    console.error('SendGrid configuration validation failed:', error instanceof Error ? error.message : 'Unknown error');
+  }
+}
+
 // Inicializar o cliente SendGrid
 const sgMail = new MailService();
-sgMail.setApiKey(process.env.SENDGRID_API_KEY || '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');
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
 
 // Configuração do nodemailer com SendGrid
 const sendgridConfig = {
@@ -20,7 +38,7 @@ const sendgridConfig = {
   secure: false, // true para 465, false para outras portas
   auth: {
     user: 'apikey', // Sempre 'apikey' para SendGrid
-    pass: process.env.SENDGRID_API_KEY || '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'
+    pass: process.env.SENDGRID_API_KEY
   },
   // Configurações para melhorar a entregabilidade
   pool: true,
