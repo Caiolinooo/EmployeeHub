@@ -8,14 +8,24 @@
 
 import nodemailer from 'nodemailer';
 
+// Validate required environment variables
+function validateEmailConfig() {
+  const requiredVars = ['EMAIL_USER', 'EMAIL_PASSWORD'];
+  const missing = requiredVars.filter(varName => !process.env[varName]);
+  
+  if (missing.length > 0) {
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+  }
+}
+
 // Configuração do Exchange/Office 365 com otimizações para evitar spam
 const emailConfig = {
   host: process.env.EMAIL_HOST || 'smtp.office365.com',
   port: parseInt(process.env.EMAIL_PORT || '587'),
   secure: process.env.EMAIL_SECURE === 'true', // geralmente false para porta 587 (STARTTLS)
   auth: {
-    user: process.env.EMAIL_USER || 'apiabz@groupabz.com',
-    pass: process.env.EMAIL_PASSWORD || 'Caio@2122@'
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD
   },
   // Log detalhado para depuração
   debug: process.env.NODE_ENV !== 'production',
@@ -40,6 +50,16 @@ const emailConfig = {
   // Identificação do servidor
   name: 'ABZ Group Mailer'
 };
+
+// Validate configuration on import (only in server environment)
+if (typeof window === 'undefined') {
+  try {
+    validateEmailConfig();
+    console.log('Email configuration validated successfully');
+  } catch (error) {
+    console.error('Email configuration validation failed:', error instanceof Error ? error.message : 'Unknown error');
+  }
+}
 
 // Log para debug
 console.log('Configuração de email Exchange/Office 365 carregada:', {

@@ -73,7 +73,13 @@ export async function checkUserAuthorization(
 
     // 2. Verificar por domínio de email
     if (email && email.includes('@')) {
-      const domain = email.split('@')[1];
+      const domain = getEmailDomain(email);
+  if (!domain) {
+    return {
+      authorized: false,
+      message: 'Formato de email inválido'
+    };
+  }
       const domainAuth = await prisma.authorizedUser.findFirst({
         where: {
           domain: domain,
@@ -524,4 +530,18 @@ export async function addAuthorizedUser(
       message: 'Erro ao adicionar usuário autorizado'
     };
   }
+}
+
+export function getEmailDomain(email: string): string | null {
+  if (!email || typeof email !== 'string') {
+    return null;
+  }
+  
+  const emailParts = email.split('@');
+  if (emailParts.length !== 2) {
+    return null; // Invalid email format
+  }
+  
+  const domain = emailParts[1];
+  return domain && domain.length > 0 ? domain : null;
 }

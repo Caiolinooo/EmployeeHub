@@ -14,8 +14,8 @@ import { prisma } from '@/lib/db';
 export async function verifyAuth(request: NextRequest, requireAdmin = false) {
   try {
     // Verificar autenticação
-    const token = request.headers.get('Authorization')?.split(' ')[1];
-    if (!token) {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader) {
       return {
         error: NextResponse.json(
           { error: 'Não autorizado' },
@@ -23,6 +23,18 @@ export async function verifyAuth(request: NextRequest, requireAdmin = false) {
         )
       };
     }
+
+    const tokenParts = authHeader.split(' ');
+    if (tokenParts.length !== 2 || tokenParts[0] !== 'Bearer') {
+      return {
+        error: NextResponse.json(
+          { error: 'Token inválido' },
+          { status: 401 }
+        )
+      };
+    }
+
+    const token = tokenParts[1];
 
     // Verificar token
     const payload = verifyToken(token);

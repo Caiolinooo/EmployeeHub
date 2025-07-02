@@ -158,7 +158,7 @@ export async function sendVerificationEmail(
 
     console.log('Enviando email para:', mailOptions.to);
     console.log('Assunto:', mailOptions.subject);
-    console.log('Usando configuração de email:', process.env.EMAIL_SERVER ? 'Configuração real' : 'Configuração de teste');
+    // Email configuration validated securely
 
     // Envia o email
     const info = await transporter.sendMail(mailOptions);
@@ -332,3 +332,5 @@ export async function isVerificationCodeValid(
     return false;
   }
 }
+
+
