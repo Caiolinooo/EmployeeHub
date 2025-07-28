@@ -2,16 +2,6 @@
  * Utilitário para inicializar e gerenciar o módulo de avaliação de desempenho
  */
 
-// Importar o módulo de avaliação de desempenho
-let avaliacaoDesempenho: any;
-try {
-  avaliacaoDesempenho = require('../../avaliacao-desempenho/src/index');
-} catch (error) {
-  console.warn('Erro ao importar módulo de avaliação de desempenho:', error);
-  avaliacaoDesempenho = null;
-}
-// Nota: Este é um stub temporário até que o módulo real seja implementado
-
 // Variável para armazenar a instância inicializada do módulo
 let avaliacaoModule: any = null;
 
@@ -23,6 +13,14 @@ export async function initAvaliacaoModule() {
   if (!avaliacaoModule) {
     try {
       console.log('Inicializando módulo de avaliação de desempenho...');
+
+      let avaliacaoDesempenho: any;
+      try {
+        avaliacaoDesempenho = await import('../../avaliacao-desempenho/src/index');
+      } catch (error) {
+        console.warn('Erro ao importar módulo de avaliação de desempenho, usando stub:', error);
+        avaliacaoDesempenho = null;
+      }
 
       // Criar um stub básico para o módulo
       const createStub = () => {

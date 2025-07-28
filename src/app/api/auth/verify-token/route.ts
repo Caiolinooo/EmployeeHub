@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     // Verificar autenticação - tentar obter o token de várias fontes
     const authHeader = request.headers.get('authorization');
-    let token = extractTokenFromHeader(authHeader);
+    let token = extractTokenFromHeader(authHeader || undefined);
 
     // Log detalhado para depuração
     console.log('API verify-token: Cabeçalho de autorização:', authHeader ? 'Presente' : 'Ausente');
@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
 
       // Fornecer mensagem de erro mais detalhada
       let errorMessage = 'Erro ao verificar token';
-      let errorDetails = '';
+      const errorDetails = '';
 
       if (verifyError instanceof Error) {
         errorMessage = verifyError.message;

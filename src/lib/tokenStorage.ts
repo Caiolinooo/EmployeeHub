@@ -32,7 +32,7 @@ export const saveToken = (token: string, expiryInSeconds?: number): void => {
     localStorage.setItem(LEGACY_TOKEN_KEY, token);
 
     // Se fornecido, salvar a data de expiração
-    let expiryDate = new Date();
+    const expiryDate = new Date();
     if (expiryInSeconds) {
       expiryDate.setSeconds(expiryDate.getSeconds() + expiryInSeconds);
       localStorage.setItem(TOKEN_EXPIRY_KEY, expiryDate.toISOString());

@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // GET - Obter todos os itens de menu
 export async function GET() {
   try {
-    const menuItems = await prisma.menuItem.findMany({
-      orderBy: { order: 'asc' },
-    });
-    
+    const { data: menuItems, error } = await supabaseAdmin
+      .from('menu_items')
+      .select('*')
+      .order('order', { ascending: true });
+
+    if (error) {
+      console.error('Erro ao buscar itens de menu:', error);
+      return NextResponse.json(
+        { error: 'Erro interno do servidor' },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(menuItems);
   } catch (error) {
     console.error('Erro ao obter itens de menu:', error);
@@ -33,8 +42,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Criar o item de menu
-    const menuItem = await prisma.menuItem.create({
-      data: {
+    const { data: menuItem, error } = await supabaseAdmin
+      .from('menu_items')
+      .insert({
         href,
         label,
         icon,
@@ -42,9 +52,17 @@ export async function POST(request: NextRequest) {
         enabled: enabled !== false,
         order,
         adminOnly: adminOnly || false,
-      },
-    });
-    
+      })
+      .select('*')
+      .single();
+
+    if (error) {
+      return NextResponse.json(
+        { error: 'Erro ao criar item de menu' },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(menuItem, { status: 201 });
   } catch (error) {
     console.error('Erro ao criar item de menu:', error);

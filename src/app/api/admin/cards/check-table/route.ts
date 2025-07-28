@@ -39,6 +39,9 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({
               success: true,
               exists: true,
+              tableExists: false,
+              supabaseCount: 0,
+              hardcodedCount: dashboardCards.length,
               count: dashboardCards.length,
               source: 'hardcoded',
               message: 'Usando cards hardcoded'
@@ -48,6 +51,9 @@ export async function GET(request: NextRequest) {
           return NextResponse.json({
             success: false,
             exists: false,
+            tableExists: false,
+            supabaseCount: 0,
+            hardcodedCount: 0,
             error: 'A tabela cards não existe'
           });
         }
@@ -60,10 +66,18 @@ export async function GET(request: NextRequest) {
 
       console.log(`Tabela cards existe, encontrados ${data?.length || 0} cards`);
 
+      // Contar registros totais
+      const { count, error: countError } = await supabaseAdmin
+        .from('cards')
+        .select('*', { count: 'exact', head: true });
+
       return NextResponse.json({
         success: true,
         exists: true,
-        count: data?.length || 0,
+        tableExists: true,
+        supabaseCount: count || 0,
+        hardcodedCount: 0,
+        count: count || 0,
         source: 'database'
       });
     } catch (err) {

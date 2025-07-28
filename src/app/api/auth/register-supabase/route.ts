@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
         verification_code: verificationCode,
         verification_code_expires: verificationCodeExpires.toISOString(),
         protocol: protocol,
-        invite_code_used: isInviteValid ? inviteCode : null,
+        invite_code: isInviteValid ? inviteCode : null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -213,7 +213,7 @@ export async function POST(request: NextRequest) {
     ];
 
     const permissionsToInsert = defaultModules.map(module => ({
-      user_id: authData.user.id,
+      user_id: authData.user?.id || '',
       module,
       feature: null
     }));

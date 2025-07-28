@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processUserImportFile, ImportType } from '@/lib/importers/userImporter';
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
 export async function POST(request: NextRequest) {
   try {
     // Verificar se é uma requisição multipart/form-data

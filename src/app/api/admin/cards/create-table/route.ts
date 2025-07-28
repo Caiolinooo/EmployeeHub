@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
       // Verificar se o ícone é um componente válido
       if (card.icon && typeof card.icon === 'function') {
         // Tentar obter o displayName do componente
-        iconName = card.icon.displayName || 'FiGrid';
+        iconName = (card.icon as any).displayName || card.icon.name || 'FiGrid';
 
         // Garantir que o nome do ícone esteja no formato correto (PascalCase)
         if (!iconName.startsWith('Fi')) {

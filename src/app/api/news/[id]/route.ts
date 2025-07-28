@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // GET - Obter uma notícia pelo ID
 export async function GET(
@@ -12,11 +12,13 @@ export async function GET(
     // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
     const id = await Promise.resolve(params.id);
 
-    const news = await prisma.news.findUnique({
-      where: { id },
-    });
+    const { data: news, error } = await supabaseAdmin
+      .from('news')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-    if (!news) {
+    if (error || !news) {
       return NextResponse.json(
         { error: 'Notícia não encontrada' },
         { status: 404 }
@@ -59,23 +61,16 @@ export async function PUT(
       );
     }
 
-    // Verificar conexão com o banco de dados
-    try {
-      await prisma.$connect();
-      console.log('Conexão com o banco de dados estabelecida com sucesso');
-    } catch (dbError) {
-      console.error('Erro ao conectar ao banco de dados:', dbError);
-      return NextResponse.json(
-        { error: 'Erro de conexão com o banco de dados', details: String(dbError) },
-        { status: 500 }
-      );
-    }
+    // Verificar conexão com o Supabase (não é necessário conectar explicitamente)
+    console.log('Usando Supabase para operações de banco de dados');
 
     // Verificar se a notícia existe
     console.log(`Verificando se a notícia ID ${id} existe...`);
-    const existingNews = await prisma.news.findUnique({
-      where: { id },
-    });
+    const { data: existingNews, error: findError } = await supabaseAdmin
+      .from('news')
+      .select('*')
+      .eq('id', id)
+      .single();
 
     if (!existingNews) {
       console.log(`Notícia ID ${id} não encontrada`);
@@ -88,21 +83,31 @@ export async function PUT(
     console.log(`Notícia ID ${id} encontrada, atualizando...`);
 
     // Atualizar a notícia
-    const updatedNews = await prisma.news.update({
-      where: { id },
-      data: {
+    const { data: updatedNews, error: updateError } = await supabaseAdmin
+      .from('news')
+      .update({
         title,
         description,
         content: description, // Usar a descrição como conteúdo por padrão
-        date: new Date(date),
+        date: new Date(date).toISOString(),
         file: file || '', // Tornar o arquivo opcional
         enabled: enabled !== false,
         featured: featured || false,
         category,
         author,
         thumbnail,
-      },
-    });
+      })
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (updateError) {
+      console.error('Erro ao atualizar notícia:', updateError);
+      return NextResponse.json(
+        { error: 'Erro ao atualizar notícia', details: updateError.message },
+        { status: 500 }
+      );
+    }
 
     console.log(`Notícia ID ${id} atualizada com sucesso`);
     return NextResponse.json(updatedNews);
@@ -112,14 +117,6 @@ export async function PUT(
       { error: 'Erro interno do servidor', details: String(error) },
       { status: 500 }
     );
-  } finally {
-    // Desconectar do banco de dados
-    try {
-      await prisma.$disconnect();
-      console.log('Desconectado do banco de dados');
-    } catch (disconnectError) {
-      console.error('Erro ao desconectar do banco de dados:', disconnectError);
-    }
   }
 }
 
@@ -135,23 +132,13 @@ export async function DELETE(
     const id = await Promise.resolve(params.id);
     console.log(`API de notícias - Iniciando exclusão da notícia ID: ${id}`);
 
-    // Verificar conexão com o banco de dados
-    try {
-      await prisma.$connect();
-      console.log('Conexão com o banco de dados estabelecida com sucesso');
-    } catch (dbError) {
-      console.error('Erro ao conectar ao banco de dados:', dbError);
-      return NextResponse.json(
-        { error: 'Erro de conexão com o banco de dados', details: String(dbError) },
-        { status: 500 }
-      );
-    }
-
     // Verificar se a notícia existe
     console.log(`Verificando se a notícia ID ${id} existe...`);
-    const existingNews = await prisma.news.findUnique({
-      where: { id },
-    });
+    const { data: existingNews, error: findError } = await supabaseAdmin
+      .from('news')
+      .select('*')
+      .eq('id', id)
+      .single();
 
     if (!existingNews) {
       console.log(`Notícia ID ${id} não encontrada`);
@@ -164,9 +151,18 @@ export async function DELETE(
     console.log(`Notícia ID ${id} encontrada, excluindo...`);
 
     // Excluir a notícia
-    await prisma.news.delete({
-      where: { id },
-    });
+    const { error: deleteError } = await supabaseAdmin
+      .from('news')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) {
+      console.error('Erro ao excluir notícia:', deleteError);
+      return NextResponse.json(
+        { error: 'Erro ao excluir notícia', details: deleteError.message },
+        { status: 500 }
+      );
+    }
 
     console.log(`Notícia ID ${id} excluída com sucesso`);
     return NextResponse.json({ message: 'Notícia excluída com sucesso' });
@@ -176,13 +172,5 @@ export async function DELETE(
       { error: 'Erro interno do servidor', details: String(error) },
       { status: 500 }
     );
-  } finally {
-    // Desconectar do banco de dados
-    try {
-      await prisma.$disconnect();
-      console.log('Desconectado do banco de dados');
-    } catch (disconnectError) {
-      console.error('Erro ao desconectar do banco de dados:', disconnectError);
-    }
   }
 }

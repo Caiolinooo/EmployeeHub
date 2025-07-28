@@ -1,7 +1,6 @@
 "use client";
 
 import React, { forwardRef } from 'react';
-import { motion } from 'framer-motion';
 import { useI18n } from '@/contexts/I18nContext';
 
 interface FieldBaseProps {
@@ -55,14 +54,8 @@ interface RadioGroupProps extends FieldBaseProps {
   className?: string;
 }
 
-// Animation variants for form elements
-const inputVariants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
-};
-
 // Estilo para garantir que os elementos sejam sempre visíveis
-const alwaysVisibleStyle = { opacity: 1 };
+const alwaysVisibleStyle = { opacity: 1, visibility: 'visible' as const };
 
 // Input Field Component
 export const InputField: React.FC<InputFieldProps> = ({
@@ -90,7 +83,7 @@ export const InputField: React.FC<InputFieldProps> = ({
   const errorMessage = typeof error === 'object' ? error?.message : error;
 
   return (
-    <motion.div className={`mb-4 ${className}`} variants={inputVariants} style={{ opacity: 1 }}>
+    <div className={`mb-4 ${className}`} style={{ opacity: 1, visibility: 'visible' }}>
       <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
@@ -104,9 +97,10 @@ export const InputField: React.FC<InputFieldProps> = ({
         className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
           errorMessage ? 'border-red-500' : 'border-gray-300'
         } bg-white`}
+        style={{ opacity: 1, visibility: 'visible' }}
       />
       {errorMessage && <p className="mt-1 text-sm text-red-500">{errorMessage}</p>}
-    </motion.div>
+    </div>
   );
 };
 
@@ -127,7 +121,7 @@ export const TextArea: React.FC<TextAreaProps> = ({
   const errorMessage = typeof error === 'object' ? error?.message : error;
 
   return (
-    <motion.div className={`mb-4 ${className}`} variants={inputVariants} style={{ opacity: 1 }}>
+    <div className={`mb-4 ${className}`} style={{ opacity: 1, visibility: 'visible' }}>
       <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
@@ -141,9 +135,10 @@ export const TextArea: React.FC<TextAreaProps> = ({
         className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
           errorMessage ? 'border-red-500' : 'border-gray-300'
         } bg-white`}
+        style={{ opacity: 1, visibility: 'visible' }}
       />
       {errorMessage && <p className="mt-1 text-sm text-red-500">{errorMessage}</p>}
-    </motion.div>
+    </div>
   );
 };
 
@@ -165,7 +160,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   const errorMessage = typeof error === 'object' ? error?.message : error;
 
   return (
-    <motion.div className={`mb-4 ${className}`} variants={inputVariants} style={{ opacity: 1 }}>
+    <div className={`mb-4 ${className}`} style={{ opacity: 1, visibility: 'visible' }}>
       <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
@@ -177,6 +172,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
         className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
           errorMessage ? 'border-red-500' : 'border-gray-300'
         } bg-white`}
+        style={{ opacity: 1, visibility: 'visible' }}
       >
         <option value="">{isEnglish ? 'Select an option' : 'Selecione uma opção'}</option>
         {options.map((option) => (
@@ -186,7 +182,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
         ))}
       </select>
       {errorMessage && <p className="mt-1 text-sm text-red-500">{errorMessage}</p>}
-    </motion.div>
+    </div>
   );
 };
 
@@ -205,7 +201,7 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
   const errorMessage = typeof error === 'object' ? error?.message : error;
 
   return (
-    <motion.div className={`mb-4 ${className}`} variants={inputVariants} style={{ opacity: 1 }}>
+    <div className={`mb-4 ${className}`} style={{ opacity: 1, visibility: 'visible' }}>
       <label className="block text-sm font-medium text-gray-700 mb-2">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
@@ -231,6 +227,6 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
         ))}
       </div>
       {errorMessage && <p className="mt-1 text-sm text-red-500">{errorMessage}</p>}
-    </motion.div>
+    </div>
   );
 };

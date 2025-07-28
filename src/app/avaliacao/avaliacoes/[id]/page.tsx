@@ -6,7 +6,11 @@ import React, { useEffect } from 'react';
  * Componente de redirecionamento para manter a compatibilidade com links existentes
  * Usando window.location.href para garantir um redirecionamento completo
  */
-export default function AvaliacaoDetailRedirectPage({ params }: { params: { id: string } }) {
+interface PageProps {
+  params: { id: string };
+}
+
+export default function AvaliacaoDetailRedirectPage({ params }: PageProps) {
   const id = params.id;
 
   useEffect(() => {

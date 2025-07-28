@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
     // Verificar se a tabela de reembolsos existe
     const { exists, tableName } = await checkReimbursementTableExists();
 
-    if (!exists) {
+    if (!exists || !tableName) {
       console.error('Tabela de reembolsos não encontrada');
       return NextResponse.json(
         { error: 'A tabela de reembolsos não existe no banco de dados.' },
@@ -215,14 +215,14 @@ export async function GET(request: NextRequest) {
       },
       reimbursements: processedReimbursements,
       // Manter compatibilidade com o formato anterior
-      exactMatch: email ? processResults(exactMatch || []) : [],
-      caseInsensitiveMatch: email ? processResults(caseInsensitiveMatch || []) : [],
-      partialMatch: email ? processResults(partialMatch || []) : [],
-      usernameMatch: email ? processResults(usernameMatch || []) : [],
-      hasExactMatch: email ? (exactMatch && exactMatch.length > 0) || false : false,
-      hasCaseInsensitiveMatch: email ? (caseInsensitiveMatch && caseInsensitiveMatch.length > 0) || false : false,
-      hasPartialMatch: email ? (partialMatch && partialMatch.length > 0) || false : false,
-      hasUsernameMatch: email ? (usernameMatch && usernameMatch.length > 0) || false : false
+      exactMatch: email ? processResults(reimbursements || []) : [],
+      caseInsensitiveMatch: email ? processResults([]) : [],
+      partialMatch: email ? processResults([]) : [],
+      usernameMatch: email ? processResults([]) : [],
+      hasExactMatch: email ? (reimbursements && reimbursements.length > 0) || false : false,
+      hasCaseInsensitiveMatch: false,
+      hasPartialMatch: false,
+      hasUsernameMatch: false
     });
   } catch (error) {
     console.error('Erro ao verificar reembolsos do usuário:', error);

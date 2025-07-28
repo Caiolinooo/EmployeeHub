@@ -120,7 +120,7 @@ export async function getCredential(key: string): Promise<string | null> {
     }
     
     // Descriptografar o valor se necessário
-    const credential = data as Credential;
+    const credential = data as unknown as Credential;
     const value = credential.is_encrypted 
       ? decryptValue(credential.value)
       : credential.value;

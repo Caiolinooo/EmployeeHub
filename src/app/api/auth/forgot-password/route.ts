@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     // Buscar o usuário pelo número de telefone
     const { data: user, error: userError } = await supabase
       .from('users_unified')
-      .select('id, phone_number, active')
+      .select('id, phone_number, active, email, access_history')
       .eq('phone_number', phoneNumber)
       .single();
 

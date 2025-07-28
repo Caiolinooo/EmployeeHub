@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, handleApiError } from '@/lib/api-utils';
-import { prisma } from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // POST - Atualizar o papel (role) de um usuário
 export async function POST(
@@ -34,11 +34,13 @@ export async function POST(
     }
 
     // Buscar o usuário a ser atualizado
-    const userToUpdate = await prisma.user.findUnique({
-      where: { id: userId }
-    });
+    const { data: userToUpdate, error: findError } = await supabaseAdmin
+      .from('users_unified')
+      .select('*')
+      .eq('id', userId)
+      .single();
 
-    if (!userToUpdate) {
+    if (findError || !userToUpdate) {
       return NextResponse.json(
         { error: 'Usuário não encontrado' },
         { status: 404 }
@@ -72,31 +74,41 @@ export async function POST(
     };
 
     // Atualizar o usuário
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: {
+    const { data: updatedUser, error: updateError } = await supabaseAdmin
+      .from('users_unified')
+      .update({
         ...updateData,
-        accessHistory: [...userAccessHistory, historyEntry]
-      }
-    });
+        access_history: [...userAccessHistory, historyEntry]
+      })
+      .eq('id', userId)
+      .select('*')
+      .single();
+
+    if (updateError) {
+      console.error('Erro ao atualizar usuário:', updateError);
+      return NextResponse.json(
+        { error: 'Erro ao atualizar usuário' },
+        { status: 500 }
+      );
+    }
 
     // Obter o histórico de acesso atual do administrador
-    const adminAccessHistory = requestingUser.accessHistory || [];
+    const adminAccessHistory = requestingUser.access_history || [];
 
     // Registrar a ação no histórico do administrador
-    await prisma.user.update({
-      where: { id: requestingUser.id },
-      data: {
-        accessHistory: [
+    await supabaseAdmin
+      .from('users_unified')
+      .update({
+        access_history: [
           ...adminAccessHistory,
           {
-            timestamp: new Date(),
+            timestamp: new Date().toISOString(),
             action: 'UPDATE_USER_ROLE',
-            details: `Alterou o papel de ${userToUpdate.firstName} ${userToUpdate.lastName} de ${userToUpdate.role} para ${role}`
+            details: `Alterou o papel de ${userToUpdate.first_name} ${userToUpdate.last_name} de ${userToUpdate.role} para ${role}`
           }
         ]
-      }
-    });
+      })
+      .eq('id', requestingUser.id);
 
     // Retornar os dados do usuário atualizado (sem campos sensíveis)
     const userResponse = {

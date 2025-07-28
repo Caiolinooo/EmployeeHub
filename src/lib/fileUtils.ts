@@ -272,7 +272,7 @@ export async function downloadAttachment(url: string, fileName: string): Promise
     }
 
     // Tentar com o nome do arquivo exato
-    let { data, error } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .storage
       .from('comprovantes')
       .download(fileNameOnly);

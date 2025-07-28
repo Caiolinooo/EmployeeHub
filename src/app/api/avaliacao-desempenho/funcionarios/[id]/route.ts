@@ -12,7 +12,7 @@ export async function GET(
   try {
     // Verificar autenticação
     const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromHeader(authHeader || undefined);
 
     if (!token) {
       return NextResponse.json(
@@ -78,7 +78,7 @@ export async function PUT(
   try {
     // Verificar autenticação
     const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromHeader(authHeader || undefined);
 
     if (!token) {
       return NextResponse.json(
@@ -153,7 +153,7 @@ export async function DELETE(
   try {
     // Verificar autenticação
     const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromHeader(authHeader || undefined);
 
     if (!token) {
       return NextResponse.json(

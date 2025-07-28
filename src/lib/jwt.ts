@@ -1,19 +1,26 @@
 import jwt from 'jsonwebtoken';
-import { User } from '@prisma/client';
+import { Tables } from '@/types/supabase';
+
+// Tipo do usuário do Supabase
+type User = Tables<'users_unified'>;
 
 // Tipo para o payload do token
 export interface TokenPayload {
   userId: string;
-  username: string;
+  phoneNumber: string;
   role: string;
+  email?: string;
+  iat?: number;
+  exp?: number;
 }
 
 // Função para gerar um token JWT
 export function generateToken(user: User): string {
   const payload: TokenPayload = {
     userId: user.id,
-    username: user.username,
+    phoneNumber: user.phone_number,
     role: user.role,
+    email: user.email,
   };
 
   return jwt.sign(payload, process.env.JWT_SECRET || 'fallback-secret', {

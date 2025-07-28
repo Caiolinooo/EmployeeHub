@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // GET - Obter um card pelo ID
 export async function GET(
@@ -12,11 +12,13 @@ export async function GET(
     // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
     const id = await Promise.resolve(params.id);
 
-    const card = await prisma.card.findUnique({
-      where: { id },
-    });
+    const { data: card, error } = await supabaseAdmin
+      .from('cards')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-    if (!card) {
+    if (error || !card) {
       return NextResponse.json(
         { error: 'Card não encontrado' },
         { status: 404 }
@@ -58,11 +60,13 @@ export async function PUT(
     }
 
     // Verificar se o card existe
-    const existingCard = await prisma.card.findUnique({
-      where: { id },
-    });
+    const { data: existingCard, error: existingError } = await supabaseAdmin
+      .from('cards')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-    if (!existingCard) {
+    if (existingError || !existingCard) {
       return NextResponse.json(
         { error: 'Card não encontrado' },
         { status: 404 }
@@ -100,10 +104,19 @@ export async function PUT(
     }
 
     // Atualizar o card
-    const updatedCard = await prisma.card.update({
-      where: { id },
-      data: updateData,
-    });
+    const { data: updatedCard, error: updateError } = await supabaseAdmin
+      .from('cards')
+      .update(updateData)
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (updateError) {
+      return NextResponse.json(
+        { error: 'Erro ao atualizar card' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(updatedCard);
   } catch (error) {
@@ -126,11 +139,13 @@ export async function DELETE(
     const id = resolvedParams.id;
 
     // Verificar se o card existe
-    const existingCard = await prisma.card.findUnique({
-      where: { id },
-    });
+    const { data: existingCard, error: existingError } = await supabaseAdmin
+      .from('cards')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-    if (!existingCard) {
+    if (existingError || !existingCard) {
       return NextResponse.json(
         { error: 'Card não encontrado' },
         { status: 404 }
@@ -138,9 +153,17 @@ export async function DELETE(
     }
 
     // Excluir o card
-    await prisma.card.delete({
-      where: { id },
-    });
+    const { error: deleteError } = await supabaseAdmin
+      .from('cards')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) {
+      return NextResponse.json(
+        { error: 'Erro ao excluir card' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ message: 'Card excluído com sucesso' });
   } catch (error) {

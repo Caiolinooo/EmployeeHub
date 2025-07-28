@@ -14,6 +14,7 @@ interface CurrencyInputProps {
   value: string;
   onChange: (value: string) => void;
   onCurrencyChange?: (currency: Currency) => void;
+  currency?: Currency;
   error?: string;
   required?: boolean;
   className?: string;
@@ -25,11 +26,12 @@ export default function CurrencyInput({
   value,
   onChange,
   onCurrencyChange,
+  currency,
   error,
   required = false,
   className = ''
 }: CurrencyInputProps) {
-  const [selectedCurrency, setSelectedCurrency] = useState<Currency>('BRL');
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(currency || 'BRL');
   const [showCurrencySelector, setShowCurrencySelector] = useState(false);
   const [convertedValues, setConvertedValues] = useState<Record<Currency, string>>({
     BRL: '',
@@ -41,29 +43,41 @@ export default function CurrencyInput({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
+  // Update selected currency when currency prop changes (only on initial load)
+  useEffect(() => {
+    if (currency && currency !== selectedCurrency) {
+      console.log('Sincronizando moeda inicial:', currency);
+      setSelectedCurrency(currency);
+    }
+  }, [currency]); // Removido selectedCurrency da dependência para evitar loops
+
   // Handle click outside to close dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(event.target as Node)
-      ) {
-        setShowCurrencySelector(false);
-      }
+      // Adicionar um pequeno delay para permitir que o onClick seja processado primeiro
+      setTimeout(() => {
+        if (
+          dropdownRef.current &&
+          !dropdownRef.current.contains(event.target as Node) &&
+          buttonRef.current &&
+          !buttonRef.current.contains(event.target as Node)
+        ) {
+          setShowCurrencySelector(false);
+        }
+      }, 0);
     }
 
-    document.addEventListener('mousedown', handleClickOutside);
+    // Usar 'click' ao invés de 'mousedown' para evitar conflito com onClick
+    document.addEventListener('click', handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('click', handleClickOutside);
     };
   }, []);
 
   // Atualizar valores convertidos quando o valor ou a moeda mudar
   useEffect(() => {
     const updateConversions = async () => {
-      if (!value) {
+      if (!value || value === '0,00') {
         setConvertedValues({
           BRL: '',
           USD: '',
@@ -75,25 +89,16 @@ export default function CurrencyInput({
 
       setIsConverting(true);
       try {
-        // Verificar se value é uma string válida
-        if (typeof value !== 'string') {
-          console.warn('CurrencyInput: value is not a string', value);
+        // Extrair valor numérico da string formatada (ex: "1.234,56" -> 1234.56)
+        const numericValue = parseFloat(value.replace(/\./g, '').replace(',', '.')) || 0;
+
+        if (numericValue === 0) {
           setConvertedValues({
             BRL: '',
             USD: '',
             EUR: '',
             GBP: ''
           });
-          return;
-        }
-
-        // Extrair valor numérico da string formatada
-        const numericValue = parseFloat(value.replace(/\./g, '').replace(',', '.')) || 0;
-
-        // Verificar se selectedCurrency é válido
-        if (!selectedCurrency || !['BRL', 'USD', 'EUR', 'GBP'].includes(selectedCurrency)) {
-          console.warn('CurrencyInput: invalid currency', selectedCurrency);
-          setSelectedCurrency('BRL');
           return;
         }
 
@@ -111,7 +116,6 @@ export default function CurrencyInput({
         setConvertedValues(converted);
       } catch (error) {
         console.error('Erro ao converter moedas:', error);
-        // Set default values in case of error
         setConvertedValues({
           BRL: '',
           USD: '',
@@ -130,50 +134,48 @@ export default function CurrencyInput({
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Função para manipular a entrada de valores no estilo de aplicativos bancários
-  const handleBankingStyleInput = (input: string): string => {
-    // Verificar se input é undefined ou null
-    if (input === undefined || input === null) return '';
+  const handleBankingStyleInput = (inputValue: string, isBackspace: boolean = false): string => {
+    // Se for backspace e o valor atual não estiver vazio
+    if (isBackspace && value) {
+      // Remover formatação para obter apenas os dígitos
+      const digitsOnly = value.replace(/[^\d]/g, '');
 
-    // Remover todos os caracteres não numéricos e vírgulas
-    const cleanInput = input.replace(/[^\d,]/g, '');
-
-    // Se estiver vazio, retornar string vazia
-    if (!cleanInput) return '';
-
-    // Verificar se há vírgula
-    if (cleanInput.includes(',')) {
-      // Dividir em parte inteira e decimal
-      const parts = cleanInput.split(',');
-
-      // Garantir que há apenas uma vírgula
-      if (parts.length > 2) {
-        // Manter apenas a primeira vírgula
-        return `${parts[0]},${parts.slice(1).join('')}`;
+      if (digitsOnly.length <= 1) {
+        return '0,00';
       }
 
-      // Formatar a parte inteira e manter a parte decimal como está
-      const integerPart = parts[0] === '' ? '0' : parts[0];
-      const decimalPart = parts[1];
-
-      // Formatar a parte inteira com separadores de milhar
-      const formattedIntegerPart = integerPart === '0' ? '0' :
-        (parseInt(integerPart) || 0).toLocaleString('pt-BR', {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 0
-        });
-
-      return `${formattedIntegerPart},${decimalPart}`;
-    } else {
-      // Sem vírgula, tratar como valor inteiro
-      const integerValue = cleanInput === '' ? '0' : cleanInput;
-
-      // Formatar com separadores de milhar
-      return integerValue === '0' ? '0' :
-        (parseInt(integerValue) || 0).toLocaleString('pt-BR', {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 0
-        });
+      // Remover o último dígito
+      const newDigits = digitsOnly.slice(0, -1);
+      return formatBankingValue(newDigits);
     }
+
+    // Para entrada normal, extrair apenas os dígitos do input
+    const newDigits = inputValue.replace(/[^\d]/g, '');
+
+    if (!newDigits) {
+      return '0,00';
+    }
+
+    return formatBankingValue(newDigits);
+  };
+
+  // Função para formatar valor no estilo bancário
+  const formatBankingValue = (digits: string): string => {
+    if (!digits || digits === '0') {
+      return '0,00';
+    }
+
+    // Garantir que temos pelo menos 3 dígitos (para ter centavos)
+    const paddedDigits = digits.padStart(3, '0');
+
+    // Separar centavos (últimos 2 dígitos) da parte inteira
+    const centavos = paddedDigits.slice(-2);
+    const reais = paddedDigits.slice(0, -2);
+
+    // Formatar a parte dos reais com separadores de milhar
+    const formattedReais = parseInt(reais || '0').toLocaleString('pt-BR');
+
+    return `${formattedReais},${centavos}`;
   };
 
   // Manipular a entrada do usuário
@@ -184,70 +186,37 @@ export default function CurrencyInput({
     }
 
     const inputValue = e.target.value || '';
-    const cursorPosition = e.target.selectionStart || 0;
-
-    // Remover o símbolo da moeda se presente
-    const valueWithoutCurrencySymbol = inputValue.replace(
-      currencySymbols[selectedCurrency] || 'R$',
-      ''
-    ).trim();
 
     // Processar o valor no estilo de aplicativos bancários
-    const processedValue = handleBankingStyleInput(valueWithoutCurrencySymbol);
+    const processedValue = handleBankingStyleInput(inputValue);
 
     // Atualizar o valor
     onChange(processedValue);
 
-    // Ajustar a posição do cursor após a formatação
+    // Posicionar cursor no final após formatação
     setTimeout(() => {
       if (inputRef.current) {
-        // Obter o valor atual formatado
-        const currentValue = inputRef.current.value;
-
-        // Calcular a nova posição do cursor
-        let newPosition = cursorPosition;
-
-        // Se o usuário acabou de digitar uma vírgula, posicionar o cursor após ela
-        if (inputValue.charAt(cursorPosition - 1) === ',') {
-          const commaPosition = currentValue.indexOf(',');
-          if (commaPosition !== -1) {
-            newPosition = commaPosition + 1;
-          }
-        }
-        // Se o usuário está digitando após a vírgula, manter a posição relativa à vírgula
-        else if (currentValue.includes(',') && valueWithoutCurrencySymbol.includes(',') &&
-                cursorPosition > valueWithoutCurrencySymbol.indexOf(',')) {
-          const commaPosition = currentValue.indexOf(',');
-          const oldCommaPosition = valueWithoutCurrencySymbol.indexOf(',');
-          const charsAfterComma = cursorPosition - oldCommaPosition - 1;
-          newPosition = commaPosition + 1 + charsAfterComma;
-        }
-        // Caso contrário, tentar manter a posição relativa aos dígitos
-        else {
-          // Contar dígitos antes do cursor no valor original
-          const digitsBeforeCursor = valueWithoutCurrencySymbol.substring(0, cursorPosition).replace(/[^\d]/g, '').length;
-
-          // Encontrar a posição correspondente no valor formatado
-          let digitCount = 0;
-          for (let i = 0; i < currentValue.length; i++) {
-            if (/\d/.test(currentValue[i])) {
-              digitCount++;
-              if (digitCount === digitsBeforeCursor) {
-                newPosition = i + 1;
-                break;
-              }
-            }
-          }
-        }
-
-        // Garantir que a posição está dentro dos limites
-        newPosition = Math.min(newPosition, currentValue.length);
-        newPosition = Math.max(newPosition, 0);
-
-        // Definir a posição do cursor
-        inputRef.current.setSelectionRange(newPosition, newPosition);
+        const length = inputRef.current.value.length;
+        inputRef.current.setSelectionRange(length, length);
       }
     }, 0);
+  };
+
+  // Manipular teclas especiais (backspace, delete)
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      const processedValue = handleBankingStyleInput('', true);
+      onChange(processedValue);
+
+      // Posicionar cursor no final
+      setTimeout(() => {
+        if (inputRef.current) {
+          const length = inputRef.current.value.length;
+          inputRef.current.setSelectionRange(length, length);
+        }
+      }, 0);
+    }
   };
 
   // Função para formatar valor monetário
@@ -264,52 +233,31 @@ export default function CurrencyInput({
 
   // Mudar a moeda selecionada
   const handleCurrencyChange = (currency: Currency) => {
+    console.log('Mudando moeda para:', currency, 'Moeda atual:', selectedCurrency);
+
     // Verificar se a moeda é válida
     if (!currency || !['BRL', 'USD', 'EUR', 'GBP'].includes(currency)) {
       console.warn('CurrencyInput: invalid currency in handleCurrencyChange', currency);
       currency = 'BRL';
     }
 
+    // Forçar atualização do estado
     setSelectedCurrency(currency);
     setShowCurrencySelector(false);
 
-    if (onCurrencyChange) {
-      try {
-        onCurrencyChange(currency);
-      } catch (error) {
-        console.error('Error in onCurrencyChange callback:', error);
-      }
-    }
-
-    // Atualizar o valor formatado para a nova moeda
-    if (value) {
-      try {
-        // Verificar se value é uma string válida
-        if (typeof value !== 'string') {
-          console.warn('CurrencyInput: value is not a string in handleCurrencyChange', value);
-          return;
+    // Forçar re-render usando um timeout
+    setTimeout(() => {
+      console.log('Estado após mudança:', currency);
+      if (onCurrencyChange) {
+        try {
+          onCurrencyChange(currency);
+        } catch (error) {
+          console.error('Error in onCurrencyChange callback:', error);
         }
-
-        // Converter o valor para número
-        const numericValue = parseFloat(value.replace(/\./g, '').replace(',', '.')) || 0;
-
-        // Formatar o valor para a nova moeda
-        const formattedValue = formatCurrency(numericValue, currency);
-
-        // Remover o símbolo da moeda
-        const valueWithoutSymbol = formattedValue.replace(
-          currencySymbols[currency] || '',
-          ''
-        ).trim();
-
-        // Processar o valor no estilo de aplicativos bancários
-        const processedValue = handleBankingStyleInput(valueWithoutSymbol);
-
-        onChange(processedValue);
-      } catch (error) {
-        console.error('Error formatting currency value:', error);
       }
-    }
+    }, 0);
+
+    console.log('Moeda alterada para:', currency);
   };
 
   return (
@@ -338,6 +286,7 @@ export default function CurrencyInput({
             type="text"
             value={value}
             onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
             ref={inputRef}
             className={`flex-1 px-3 py-2 border-y border-r rounded-r-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
               error ? 'border-red-500' : 'border-gray-300'
@@ -349,9 +298,14 @@ export default function CurrencyInput({
         {showCurrencySelector && (
           <div
             ref={dropdownRef}
-            className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-xl animate-fadeIn"
+            className="absolute z-[60] mt-1 w-full bg-white border border-gray-300 rounded-md shadow-xl"
             style={{
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            }}
+            onMouseDown={(e) => {
+              // Prevenir que o mousedown feche o dropdown
+              e.preventDefault();
+              e.stopPropagation();
             }}
           >
             <div className="p-3">
@@ -361,9 +315,14 @@ export default function CurrencyInput({
                   <button
                     key={currency}
                     type="button"
-                    onClick={() => handleCurrencyChange(currency)}
-                    className={`w-full text-left px-3 py-2 rounded-md ${
-                      selectedCurrency === currency ? 'bg-blue-100 text-blue-800 font-medium' : 'hover:bg-gray-100'
+                    onClick={() => {
+                      console.log('Clicou na moeda:', currency);
+                      handleCurrencyChange(currency);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-md transition-colors cursor-pointer ${
+                      selectedCurrency === currency
+                        ? 'bg-blue-100 text-blue-800 font-medium'
+                        : 'hover:bg-gray-100 text-gray-700'
                     }`}
                   >
                     <span className="font-medium">{currencySymbols[currency]}</span> {currency}
@@ -378,12 +337,19 @@ export default function CurrencyInput({
       {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
 
       {/* Mostrar valores convertidos */}
-      {value && !error && (
+      {value && value !== '0,00' && !error && (
         <div className="mt-2 text-xs text-gray-500">
           {isConverting ? (
             <p>Convertendo valores...</p>
           ) : (
             <div className="grid grid-cols-2 gap-2">
+              {/* Mostrar valor atual */}
+              <div className="flex items-center">
+                <span className="font-medium mr-1 text-blue-600">{selectedCurrency}:</span>
+                <span className="text-blue-600 font-medium">{currencySymbols[selectedCurrency]} {value}</span>
+              </div>
+
+              {/* Mostrar conversões para outras moedas */}
               {Object.entries(convertedValues)
                 .filter(([curr]) => curr !== selectedCurrency)
                 .map(([curr, convertedValue]) => (

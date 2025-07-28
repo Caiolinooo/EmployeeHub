@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
 import { initAvaliacaoModule } from '@/lib/avaliacao-module';
 

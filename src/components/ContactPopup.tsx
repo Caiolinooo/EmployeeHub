@@ -57,9 +57,12 @@ const ContactPopup: React.FC<ContactPopupProps> = ({ onClose }) => {
             </div>
             <div>
               <h3 className="font-medium text-gray-800">Telefone</h3>
-              <a href="tel:+551140028922" className="text-blue-600 hover:underline">
-                (11) 4002-8922
+              <a href="tel:+5522992074646" className="text-blue-600 hover:underline">
+                (22) 99207-4646
               </a>
+              <p className="text-sm text-gray-500 mt-1">
+                Segunda a Sexta, das 9h às 18h
+              </p>
             </div>
           </div>
 

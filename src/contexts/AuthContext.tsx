@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
+import { saveToken } from '@/lib/tokenStorage';
 
 // Tipo para usuário
 export interface User {
@@ -323,15 +324,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return true;
       } else if (data.authStatus) {
         // Verificar status de autorização
-        console.log('Status de autorização:', data.authStatus);
+        console.log('🔍 DEBUG AuthContext - Status de autorização:', data.authStatus);
         setAuthStatus(data.authStatus);
         if (data.authStatus === 'pending') {
+          console.log('🔍 DEBUG AuthContext - Definindo loginStep para pending');
           setLoginStep('pending');
         } else if (data.authStatus === 'unauthorized') {
+          console.log('🔍 DEBUG AuthContext - Definindo loginStep para unauthorized');
           setLoginStep('unauthorized');
         } else if (data.authStatus === 'inactive') {
           // Conta desativada
+          console.log('🔍 DEBUG AuthContext - Definindo loginStep para unauthorized (inactive)');
           setLoginStep('unauthorized'); // Usando o mesmo estado para simplificar
+        } else if (data.authStatus === 'pending_registration' || data.authStatus === 'incomplete_registration') {
+          // Usuário existe mas registro não foi completado
+          console.log('🎯 DEBUG AuthContext - DETECTADO pending_registration - mudando para quick_register');
+          setLoginStep('quick_register');
+          console.log('🎯 DEBUG AuthContext - loginStep definido como quick_register');
+        } else if (data.authStatus === 'new_email' || data.authStatus === 'new_phone') {
+          // Email/telefone não cadastrado, mostrar formulário de registro
+          console.log('🎯 DEBUG AuthContext - DETECTADO new_email/new_phone - mudando para quick_register');
+          setLoginStep('quick_register');
+          console.log('🎯 DEBUG AuthContext - loginStep definido como quick_register para novo usuário');
+        } else {
+          console.log('🔍 DEBUG AuthContext - Status não reconhecido:', data.authStatus);
         }
       }
 
@@ -366,7 +382,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (data && data.token) {
           setUser(data.user);
           localStorage.setItem('auth', 'true');
-          localStorage.setItem('token', data.token);
+          saveToken(data.token, 86400); // 24 horas - usar tokenStorage
           localStorage.setItem('user', JSON.stringify(data.user));
 
           // Se a opção "lembrar-me" estiver marcada, definir um cookie de longa duração
@@ -454,7 +470,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('Verificação de código bem-sucedida, atualizando estado do usuário');
         setUser(data.user);
         localStorage.setItem('auth', 'true');
-        localStorage.setItem('token', data.token);
+        saveToken(data.token, 86400); // 24 horas - usar tokenStorage
         localStorage.setItem('user', JSON.stringify(data.user));
 
         // Verificar se o usuário precisa definir senha

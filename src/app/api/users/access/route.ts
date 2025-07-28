@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // GET - Obter permissões de acesso de um usuário
 export async function GET(request: NextRequest) {
   try {
     // Verificar autenticação
     const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromHeader(authHeader || undefined);
 
     if (!token) {
       return NextResponse.json(
@@ -30,16 +30,13 @@ export async function GET(request: NextRequest) {
 
     // Se não for fornecido um ID, retornar as permissões do usuário atual
     if (!userId) {
-      const user = await prisma.user.findUnique({
-        where: { id: payload.userId },
-        select: {
-          id: true,
-          role: true,
-          accessPermissions: true
-        }
-      });
+      const { data: user, error } = await supabaseAdmin
+        .from('users_unified')
+        .select('id, role, access_permissions')
+        .eq('id', payload.userId)
+        .single();
 
-      if (!user) {
+      if (error || !user) {
         return NextResponse.json(
           { error: 'Usuário não encontrado' },
           { status: 404 }
@@ -49,20 +46,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         userId: user.id,
         role: user.role,
-        accessPermissions: user.accessPermissions || {}
+        accessPermissions: user.access_permissions || {}
       });
     }
 
     // Se for fornecido um ID, verificar se o usuário atual é administrador
-    const requestingUser = await prisma.user.findUnique({
-      where: { id: payload.userId },
-      select: {
-        id: true,
-        role: true
-      }
-    });
+    const { data: requestingUser, error: requestingUserError } = await supabaseAdmin
+      .from('users_unified')
+      .select('id, role')
+      .eq('id', payload.userId)
+      .single();
 
-    if (!requestingUser || requestingUser.role !== 'ADMIN') {
+    if (requestingUserError || !requestingUser || requestingUser.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Acesso negado. Apenas administradores podem ver permissões de outros usuários.' },
         { status: 403 }
@@ -70,18 +65,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Buscar o usuário solicitado
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        accessPermissions: true
-      }
-    });
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users_unified')
+      .select('id, first_name, last_name, role, access_permissions')
+      .eq('id', userId)
+      .single();
 
-    if (!user) {
+    if (userError || !user) {
       return NextResponse.json(
         { error: 'Usuário não encontrado' },
         { status: 404 }
@@ -90,9 +80,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       userId: user.id,
-      fullName: `${user.firstName} ${user.lastName}`,
+      fullName: `${user.first_name} ${user.last_name}`,
       role: user.role,
-      accessPermissions: user.accessPermissions || {}
+      accessPermissions: user.access_permissions || {}
     });
   } catch (error) {
     console.error('Erro ao obter permissões de acesso:', error);
@@ -108,7 +98,7 @@ export async function POST(request: NextRequest) {
   try {
     // Verificar autenticação
     const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromHeader(authHeader || undefined);
 
     if (!token) {
       return NextResponse.json(
@@ -126,18 +116,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se o usuário é administrador
-    const requestingUser = await prisma.user.findUnique({
-      where: { id: payload.userId },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        accessHistory: true
-      }
-    });
+    const { data: requestingUser, error: requestingUserError } = await supabaseAdmin
+      .from('users_unified')
+      .select('id, first_name, last_name, role, access_history')
+      .eq('id', payload.userId)
+      .single();
 
-    if (!requestingUser || requestingUser.role !== 'ADMIN') {
+    if (requestingUserError || !requestingUser || requestingUser.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Acesso negado. Apenas administradores podem atualizar permissões.' },
         { status: 403 }
@@ -157,17 +142,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Buscar o usuário
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        accessHistory: true
-      }
-    });
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users_unified')
+      .select('id, first_name, last_name, access_history')
+      .eq('id', userId)
+      .single();
 
-    if (!user) {
+    if (userError || !user) {
       return NextResponse.json(
         { error: 'Usuário não encontrado' },
         { status: 404 }
@@ -175,45 +156,56 @@ export async function POST(request: NextRequest) {
     }
 
     // Obter o histórico de acesso atual do usuário
-    const userAccessHistory = user.accessHistory || [];
+    const userAccessHistory = user.access_history || [];
 
     // Atualizar permissões de acesso e registrar no histórico
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        accessPermissions,
-        accessHistory: [
+    const { data: updatedUser, error: updateError } = await supabaseAdmin
+      .from('users_unified')
+      .update({
+        access_permissions: accessPermissions,
+        access_history: [
           ...userAccessHistory,
           {
-            timestamp: new Date(),
+            timestamp: new Date().toISOString(),
             action: 'PERMISSIONS_UPDATED',
-            details: `Permissões atualizadas por ${requestingUser.firstName} ${requestingUser.lastName}`
+            details: `Permissões atualizadas por ${requestingUser.first_name} ${requestingUser.last_name}`
           }
-        ]
-      }
-    });
+        ],
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+      .select('*')
+      .single();
+
+    if (updateError) {
+      return NextResponse.json(
+        { error: 'Erro ao atualizar permissões' },
+        { status: 500 }
+      );
+    }
 
     // Registrar a ação no histórico do administrador
-    const adminAccessHistory = requestingUser.accessHistory || [];
-    await prisma.user.update({
-      where: { id: requestingUser.id },
-      data: {
-        accessHistory: [
+    const adminAccessHistory = requestingUser.access_history || [];
+    await supabaseAdmin
+      .from('users_unified')
+      .update({
+        access_history: [
           ...adminAccessHistory,
           {
-            timestamp: new Date(),
+            timestamp: new Date().toISOString(),
             action: 'UPDATE_PERMISSIONS',
-            details: `Atualizou permissões do usuário ${user.firstName} ${user.lastName}`
+            details: `Atualizou permissões do usuário ${user.first_name} ${user.last_name}`
           }
-        ]
-      }
-    });
+        ],
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', requestingUser.id);
 
     return NextResponse.json({
       success: true,
       message: 'Permissões de acesso atualizadas com sucesso',
       userId: updatedUser.id,
-      accessPermissions: updatedUser.accessPermissions
+      accessPermissions: updatedUser.access_permissions
     });
   } catch (error) {
     console.error('Erro ao atualizar permissões de acesso:', error);

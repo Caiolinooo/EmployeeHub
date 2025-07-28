@@ -12,6 +12,45 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
+// Interfaces para tipos
+interface Funcionario {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone_number?: string;
+  role: string;
+  position?: string;
+  department?: string;
+  active: boolean;
+}
+
+interface Avaliacao {
+  id: string;
+  funcionario_id: string;
+  avaliador_id: string;
+  periodo: string;
+  data_inicio: string;
+  data_fim: string;
+  status: string;
+  pontuacao_total?: number;
+  funcionario?: {
+    nome: string;
+    cargo?: string;
+    departamento?: string;
+  };
+  avaliador?: {
+    nome: string;
+    cargo?: string;
+  };
+  funcionario_nome?: string;
+  avaliador_nome?: string;
+  funcionario_cargo?: string;
+  avaliador_cargo?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export default function AvailacaoPage() {
   const { t } = useI18n();
   const { user, profile, isAdmin, isManager } = useSupabaseAuth();
@@ -27,14 +66,14 @@ export default function AvailacaoPage() {
   });
 
   // Estado para funcionários
-  const [funcionarios, setFuncionarios] = useState([]);
+  const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [loadingFuncionarios, setLoadingFuncionarios] = useState(true);
-  const [errorFuncionarios, setErrorFuncionarios] = useState(null);
+  const [errorFuncionarios, setErrorFuncionarios] = useState<string | null>(null);
 
   // Estado para avaliações
-  const [avaliacoes, setAvaliacoes] = useState([]);
+  const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([]);
   const [loadingAvaliacoes, setLoadingAvaliacoes] = useState(true);
-  const [errorAvaliacoes, setErrorAvaliacoes] = useState(null);
+  const [errorAvaliacoes, setErrorAvaliacoes] = useState<string | null>(null);
 
   // Carregar funcionários do Supabase
   useEffect(() => {
@@ -204,7 +243,7 @@ export default function AvailacaoPage() {
         } catch (error) {
           console.error('Erro ao acessar a tabela avaliacoes_desempenho:', error);
           // Verificar se o erro é porque a tabela não existe
-          if (error.message && error.message.includes('does not exist')) {
+          if (error instanceof Error && error.message && error.message.includes('does not exist')) {
             console.error('A tabela avaliacoes_desempenho não existe. Execute o script para criá-la.');
             throw new Error('A tabela avaliacoes_desempenho não existe. Execute o script scripts/run-create-avaliacoes-desempenho-table.js');
           }
@@ -251,12 +290,12 @@ export default function AvailacaoPage() {
                 ...avaliacao,
                 funcionario: {
                   nome: `ID: ${avaliacao.funcionario_id}`,
-                  cargo: null,
-                  departamento: null
+                  cargo: undefined,
+                  departamento: undefined
                 },
                 avaliador: {
                   nome: `ID: ${avaliacao.avaliador_id}`,
-                  cargo: null
+                  cargo: undefined
                 }
               };
             });
@@ -505,7 +544,7 @@ export default function AvailacaoPage() {
                               }
 
                               // Formatar o status
-                              let statusFormatado = avaliacao.status || 'pendente';
+                              const statusFormatado = avaliacao.status || 'pendente';
                               let statusClass = 'bg-gray-100 text-gray-800';
 
                               if (statusFormatado === 'concluida' || statusFormatado === 'concluída') {
@@ -627,7 +666,7 @@ export default function AvailacaoPage() {
                 ) : (
                   <div>
                     <p className="text-gray-600 mb-4">
-                      {t('avaliacao.funcionarios.found', 'Encontrados {{count}} funcionários.', { count: funcionarios.length })}
+                      {t('avaliacao.funcionarios.found', `Encontrados ${funcionarios.length} funcionários.`)}
                     </p>
                     <div className="mt-4 overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
                       <table className="min-w-full divide-y divide-gray-300">

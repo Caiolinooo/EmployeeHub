@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Setting up evaluation tables...');
-    const results = {};
+    const results: Record<string, any> = {};
 
     // 1. Create criterios table if it doesn't exist
     const createCriteriosSQL = `
@@ -224,7 +224,7 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('Checking evaluation tables...');
-    const results = {};
+    const checkResults: Record<string, any> = {};
 
     // Check criterios table
     try {
@@ -234,7 +234,7 @@ export async function GET(request: NextRequest) {
         .limit(1);
 
       if (criteriosError) {
-        results['criterios'] = {
+        checkResults['criterios'] = {
           exists: false,
           error: criteriosError.message
         };
@@ -244,13 +244,13 @@ export async function GET(request: NextRequest) {
           .select('id', { count: 'exact', head: true })
           .is('deleted_at', null);
 
-        results['criterios'] = {
+        checkResults['criterios'] = {
           exists: true,
           count: count || 0
         };
       }
     } catch (err) {
-      results['criterios'] = {
+      checkResults['criterios'] = {
         exists: false,
         error: err instanceof Error ? err.message : 'Unknown error'
       };
@@ -264,7 +264,7 @@ export async function GET(request: NextRequest) {
         .limit(1);
 
       if (avaliacoesError) {
-        results['avaliacoes'] = {
+        checkResults['avaliacoes'] = {
           exists: false,
           error: avaliacoesError.message
         };
@@ -274,13 +274,13 @@ export async function GET(request: NextRequest) {
           .select('id', { count: 'exact', head: true })
           .is('deleted_at', null);
 
-        results['avaliacoes'] = {
+        checkResults['avaliacoes'] = {
           exists: true,
           count: count || 0
         };
       }
     } catch (err) {
-      results['avaliacoes'] = {
+      checkResults['avaliacoes'] = {
         exists: false,
         error: err instanceof Error ? err.message : 'Unknown error'
       };
@@ -294,7 +294,7 @@ export async function GET(request: NextRequest) {
         .limit(1);
 
       if (pontuacoesError) {
-        results['pontuacoes'] = {
+        checkResults['pontuacoes'] = {
           exists: false,
           error: pontuacoesError.message
         };
@@ -303,13 +303,13 @@ export async function GET(request: NextRequest) {
           .from('pontuacoes')
           .select('id', { count: 'exact', head: true });
 
-        results['pontuacoes'] = {
+        checkResults['pontuacoes'] = {
           exists: true,
           count: count || 0
         };
       }
     } catch (err) {
-      results['pontuacoes'] = {
+      checkResults['pontuacoes'] = {
         exists: false,
         error: err instanceof Error ? err.message : 'Unknown error'
       };
@@ -317,7 +317,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      tables: results
+      tables: checkResults
     });
   } catch (error) {
     console.error('Error checking tables:', error);

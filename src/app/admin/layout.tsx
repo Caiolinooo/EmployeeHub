@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FiSettings, FiGrid, FiUsers, FiFileText, FiMenu, FiX, FiLogOut, FiLayers, FiList, FiEdit, FiImage, FiUser, FiUserCheck, FiDollarSign, FiCheck } from 'react-icons/fi';
+import { FiSettings, FiGrid, FiUsers, FiFileText, FiMenu, FiX, FiLogOut, FiLayers, FiList, FiEdit, FiImage, FiUser, FiUserCheck, FiDollarSign, FiCheck, FiTool } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import Footer from '@/components/Footer';
@@ -15,6 +15,7 @@ import { startMeasure, endMeasure, logPerformance } from '@/lib/performance';
 // Itens do menu de administração
 const adminMenuItems = [
   { id: 'dashboard', href: '/admin', label: 'admin.dashboard', icon: FiGrid },
+  { id: 'setup', href: '/admin/setup', label: 'Setup do Sistema', icon: FiTool },
   { id: 'cards', href: '/admin/cards', label: 'admin.cards', icon: FiLayers },
   { id: 'menu', href: '/admin/menu', label: 'admin.menu', icon: FiList },
   { id: 'documents', href: '/admin/documents', label: 'admin.documentsSection', icon: FiFileText },
@@ -103,7 +104,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="flex items-center mb-4">
               <div className="w-10 h-10 rounded-full bg-abz-light-blue flex items-center justify-center mr-3">
                 {user?.avatar ? (
-                  <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full" />
+                  <img src={user.avatar} alt={user.name || 'User'} className="w-10 h-10 rounded-full" />
                 ) : (
                   <FiUser className="h-5 w-5 text-abz-blue" />
                 )}

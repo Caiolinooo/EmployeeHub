@@ -12,7 +12,7 @@ export async function GET(
   try {
     // Verificar autenticação - tentar obter o token de várias fontes
     const authHeader = request.headers.get('authorization');
-    let token = extractTokenFromHeader(authHeader);
+    let token = extractTokenFromHeader(authHeader || undefined);
 
     // Log detalhado para depuração
     console.log('API avaliacao GET: Cabeçalho de autorização:', authHeader ? 'Presente' : 'Ausente');
@@ -134,11 +134,11 @@ export async function GET(
       criterioId: c.criterio_id,
       nota: c.valor,
       comentario: c.observacao,
-      nome: c.criterios?.nome,
-      descricao: c.criterios?.descricao,
-      categoria: c.criterios?.categoria,
-      peso: c.criterios?.peso || 1,
-      notaMaxima: c.criterios?.pontuacao_maxima || 5
+      nome: (c.criterios as any)?.nome,
+      descricao: (c.criterios as any)?.descricao,
+      categoria: (c.criterios as any)?.categoria,
+      peso: (c.criterios as any)?.peso || 1,
+      notaMaxima: (c.criterios as any)?.pontuacao_maxima || 5
     })) || [];
 
     // Determinar se deve ocultar informações do avaliador
@@ -194,7 +194,7 @@ export async function PUT(
   try {
     // Verificar autenticação
     const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromHeader(authHeader || undefined);
 
     if (!token) {
       return NextResponse.json(
@@ -389,7 +389,7 @@ export async function DELETE(
   try {
     // Verificar autenticação
     const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromHeader(authHeader || undefined);
 
     if (!token) {
       return NextResponse.json(

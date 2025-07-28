@@ -1,7 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+// import { PrismaClient } from '@prisma/client'; // Removed - using Supabase
 
 declare global {
-  var prisma: PrismaClient;
+  // let prisma: PrismaClient; // Removed - using Supabase
 
   interface Window {
     convertOffice365File?: (file: File) => Promise<{

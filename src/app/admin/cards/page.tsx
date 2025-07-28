@@ -145,7 +145,7 @@ const CardEditor = ({ card, onSave, onCancel, isNew = false }: CardEditorProps) 
             <select
               id="icon"
               name="icon"
-              value={typeof editedCard.icon === 'function' ? editedCard.icon.displayName || 'FiGrid' : 'FiGrid'}
+              value={typeof editedCard.icon === 'function' ? (editedCard.icon as any).displayName || editedCard.iconName || 'FiGrid' : 'FiGrid'}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
               required
@@ -611,6 +611,7 @@ export default function CardsPage() {
       description: t('admin.newCardDescription', 'Descrição do novo card'),
       href: '/novo-card',
       icon: Icons.FiGrid, // Usar o componente FiGrid diretamente
+      iconName: 'FiGrid', // Nome do ícone como string
       color: 'bg-abz-blue',
       hoverColor: 'hover:bg-abz-blue-dark',
       external: false,
@@ -619,7 +620,7 @@ export default function CardsPage() {
       adminOnly: false
     };
 
-    console.log('Criando novo card com ícone:', typeof newCard.icon, newCard.icon.displayName);
+    console.log('Criando novo card com ícone:', typeof newCard.icon, (newCard.icon as any).displayName || newCard.iconName);
 
     setEditingCard(newCard);
     setIsAdding(true);
@@ -785,7 +786,7 @@ export default function CardsPage() {
         ...card,
         enabled,
         // Se o ícone for um componente, extrair o displayName
-        icon: typeof card.icon === 'function' ? card.icon.displayName || 'FiGrid' : card.icon
+        icon: typeof card.icon === 'function' ? (card.icon as any).displayName || card.iconName || 'FiGrid' : card.icon
       };
 
       console.log('Atualizando visibilidade do card:', cardToSend);

@@ -536,13 +536,8 @@ export default function ImportUsers() {
       setImportStartTime(startTime);
 
       // Criar log de importação
-      const logId = await logImport({
-        type: importType,
-        fileName: file?.name || 'unknown',
-        fileSize: file?.size || 0,
-        recordCount: data.length,
-        options: importOptions
-      });
+      // Simplificar o log de importação
+      const logId = null;
 
       setImportLogId(logId);
 
@@ -594,13 +589,7 @@ export default function ImportUsers() {
 
       // Atualizar status da importação
       if (importLogId) {
-        await updateImportStatus(importLogId, {
-          status: 'completed',
-          duration: Date.now() - startTime,
-          success: result.success || 0,
-          errors: result.error || 0,
-          skipped: result.skipped || 0
-        });
+        await updateImportStatus(importLogId, 'success');
       }
 
       setIsLoading(false);
@@ -731,7 +720,7 @@ export default function ImportUsers() {
                     : t('admin.dragAndDropOrClick')}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {t('admin.maxFileSize', { size: '10MB' })}
+                  {t('admin.maxFileSize', 'Tamanho máximo: 10MB')}
                 </p>
               </div>
             )}

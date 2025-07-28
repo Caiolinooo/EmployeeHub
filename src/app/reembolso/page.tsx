@@ -99,11 +99,11 @@ export default function ReembolsoPage() {
     // Garantir que as permissões sejam definidas corretamente
     // Conceder permissão para administradores, gerentes, emails específicos e domínios da empresa
     setHasApprovalPermission(
-      hasFeaturePermission ||
-      isAdmin ||
-      isManager ||
-      isAdminOrManagerEmail ||
-      isGroupAbzDomain
+      !!hasFeaturePermission ||
+      !!isAdmin ||
+      !!isManager ||
+      !!isAdminOrManagerEmail ||
+      !!isGroupAbzDomain
     );
 
     setIsLoading(false);

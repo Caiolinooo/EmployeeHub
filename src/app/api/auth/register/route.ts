@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 import { hashPassword } from '@/lib/password';
 import { generateToken } from '@/lib/jwt';
 import { sendNewUserWelcomeEmail } from '@/lib/notifications';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,18 +19,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se o usuário já existe
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { username },
-          { email },
-        ],
-      },
-    });
+    const { data: existingUser, error: searchError } = await supabase
+      .from('users_unified')
+      .select('id')
+      .eq('email', email)
+      .single();
 
-    if (existingUser) {
+    if (existingUser && !searchError) {
       return NextResponse.json(
-        { error: 'Nome de usuário ou e-mail já está em uso' },
+        { error: 'E-mail já está em uso' },
         { status: 409 }
       );
     }
@@ -53,21 +51,41 @@ export async function POST(request: NextRequest) {
       }
     };
 
+    // Separar nome em primeiro e último nome
+    const nameParts = name.split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
     // Criar o usuário (sempre com papel USER, exceto se for o admin principal)
-    const user = await prisma.user.create({
-      data: {
-        username,
-        name,
+    const { data: user, error: createError } = await supabase
+      .from('users_unified')
+      .insert({
+        id: uuidv4(),
         email,
+        first_name: firstName,
+        last_name: lastName,
+        phone_number: username, // Usando username como phone_number temporariamente
         password: hashedPassword,
+        password_hash: hashedPassword,
         // Apenas o admin principal pode ser criado como ADMIN
         role: (role === 'ADMIN' && email === process.env.ADMIN_EMAIL) ? 'ADMIN' : 'USER',
         department,
-        accessPermissions: defaultPermissions,
+        access_permissions: defaultPermissions,
         active: false, // Usuário inativo por padrão, aguardando aprovação
-        passwordLastChanged: new Date()
-      },
-    });
+        password_last_changed: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      console.error('Erro ao criar usuário:', createError);
+      return NextResponse.json(
+        { error: 'Erro ao criar usuário' },
+        { status: 500 }
+      );
+    }
 
     // Gerar o token JWT
     const token = generateToken(user);
@@ -83,7 +101,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Retornar o token e os dados do usuário (sem a senha)
-    const { password: _, ...userWithoutPassword } = user;
+    const { password: userPassword, password_hash, ...userWithoutPassword } = user;
 
     return NextResponse.json({
       success: true,

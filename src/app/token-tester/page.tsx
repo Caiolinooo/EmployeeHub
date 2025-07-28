@@ -57,7 +57,7 @@ export default function TokenTester() {
 
           if (meResponse.ok) {
             setSuccess(prev => `${prev}\nAPI /api/auth/me respondeu com sucesso!`);
-            setUserData(prev => ({ ...prev, apiResponse: meData }));
+            setUserData((prev: any) => ({ ...prev, apiResponse: meData }));
           } else {
             setError(`API /api/auth/me retornou erro: ${meData.error || 'Erro desconhecido'}`);
           }

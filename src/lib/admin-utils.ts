@@ -4,6 +4,7 @@
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 import { getDefaultPermissions } from './auth';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Verifica se o usuário administrador existe e o cria se necessário
@@ -59,7 +60,6 @@ export async function ensureAdminUser(): Promise<boolean> {
       const hashedPassword = await bcrypt.hash(adminPassword, 10);
       
       // Gerar ID único
-      const { v4: uuidv4 } = require('uuid');
       const userId = uuidv4();
       
       // Inserir o usuário administrador

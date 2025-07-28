@@ -21,7 +21,7 @@ export default function SetPassword() {
   const { isAuthenticated, isLoading, passwordExpired, updatePassword } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const inviteCode = searchParams.get('invite');
+  const inviteCode = searchParams?.get('invite');
 
   // Verificar se o usuário está autenticado ou tem código de convite
   useEffect(() => {

@@ -1,3 +1,24 @@
+/**
+ * MIGRAÇÃO PRISMA → SUPABASE - TIPOS ATUALIZADOS ✅
+ *
+ * Data da Migração: 2025-01-25
+ * Responsável: Augment Agent
+ *
+ * CAMPOS ADICIONADOS À TABELA users_unified:
+ * - password: string | null
+ * - authorization_status: string | null
+ * - failed_login_attempts: number | null
+ * - lock_until: string | null
+ *
+ * MAPEAMENTO DE CAMPOS:
+ * - phoneNumber → phone_number
+ * - firstName → first_name
+ * - lastName → last_name
+ * - accessPermissions → access_permissions
+ *
+ * STATUS: Tipos sincronizados com Supabase ✅
+ */
+
 export type Json =
   | string
   | number
@@ -354,6 +375,88 @@ export interface Database {
           used?: boolean
           created_by?: string
           created_at?: string
+        }
+      }
+      users_unified: {
+        Row: {
+          id: string
+          email: string
+          first_name: string
+          last_name: string
+          phone_number: string
+          role: 'admin' | 'user' | 'gerente' | 'ADMIN' | 'USER' | 'MANAGER'
+          position: string | null
+          department: string | null
+          avatar: string | null
+          active: boolean
+          is_active: boolean
+          is_verified: boolean
+          verification_code: string | null
+          verification_code_expires: string | null
+          password_hash: string | null
+          password_last_changed: string | null
+          access_permissions: Json | null
+          access_history: Json | null
+          profile_data: Json | null
+          tax_id: string | null
+          password: string | null
+          authorization_status: string | null
+          failed_login_attempts: number | null
+          lock_until: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          email: string
+          first_name: string
+          last_name: string
+          phone_number: string
+          role?: 'admin' | 'user' | 'gerente' | 'ADMIN' | 'USER' | 'MANAGER'
+          position?: string | null
+          department?: string | null
+          avatar?: string | null
+          active?: boolean
+          is_active?: boolean
+          is_verified?: boolean
+          verification_code?: string | null
+          verification_code_expires?: string | null
+          password_hash?: string | null
+          password_last_changed?: string | null
+          access_permissions?: Json | null
+          access_history?: Json | null
+          profile_data?: Json | null
+          tax_id?: string | null
+          password?: string | null
+          authorization_status?: string | null
+          failed_login_attempts?: number | null
+          lock_until?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          first_name?: string
+          last_name?: string
+          phone_number?: string
+          role?: 'admin' | 'user' | 'gerente' | 'ADMIN' | 'USER' | 'MANAGER'
+          position?: string | null
+          department?: string | null
+          avatar?: string | null
+          active?: boolean
+          is_active?: boolean
+          is_verified?: boolean
+          verification_code?: string | null
+          verification_code_expires?: string | null
+          password_hash?: string | null
+          password_last_changed?: string | null
+          access_permissions?: Json | null
+          access_history?: Json | null
+          profile_data?: Json | null
+          tax_id?: string | null
+          created_at?: string
+          updated_at?: string
         }
       }
     }

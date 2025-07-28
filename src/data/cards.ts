@@ -13,7 +13,8 @@ import {
   FiDollarSign,
   FiClock,
   FiUser,
-  FiBarChart2
+  FiBarChart2,
+  FiActivity
 } from 'react-icons/fi';
 import { IconType } from 'react-icons';
 
@@ -29,6 +30,7 @@ export const iconMap: { [key: string]: IconType } = {
   FiClock,
   FiUser,
   FiBarChart2,
+  FiActivity,
   // Adicione outros ícones do react-icons/fi aqui se necessário
   // Exemplo: FiAlertCircle: FiAlertCircle,
 };
@@ -50,6 +52,44 @@ export interface DashboardCard {
   managerOnly?: boolean;
   allowedRoles?: string[];
   allowedUserIds?: string[];
+}
+
+// Função para obter cards hardcoded (usada como fallback na API)
+export function getHardcodedCards(): DashboardCard[] {
+  // Retorna cards com títulos em português (fallback)
+  return [
+    {
+      id: 'manual',
+      title: 'Manual do Colaborador',
+      description: 'Acesse o manual completo do colaborador',
+      href: '/manual',
+      icon: FiBookOpen,
+      iconName: 'FiBookOpen',
+      color: 'bg-abz-blue',
+      hoverColor: 'hover:bg-abz-blue-dark',
+      external: false,
+      enabled: true,
+      order: 1,
+      adminOnly: false,
+      managerOnly: false,
+    },
+    {
+      id: 'folhaPagamento',
+      title: 'Folha de Pagamento',
+      description: 'Gerencie a folha de pagamento dos colaboradores',
+      href: '/folha-pagamento',
+      icon: FiActivity,
+      iconName: 'FiActivity',
+      color: 'bg-green-500',
+      hoverColor: 'hover:bg-green-600',
+      external: false,
+      enabled: true,
+      order: 2,
+      adminOnly: false,
+      managerOnly: true,
+    },
+    // Adicionar outros cards aqui conforme necessário
+  ];
 }
 
 // Função para obter os cards do dashboard com traduções
@@ -187,6 +227,20 @@ export function getTranslatedCards(t: (key: string) => string): DashboardCard[] 
       managerOnly: true
     },
     {
+      id: 'folha-pagamento',
+      title: t('cards.folhaPagamento'),
+      description: t('cards.folhaPagamentoDesc'),
+      href: '/folha-pagamento',
+      icon: FiActivity,
+      iconName: 'FiActivity',
+      color: 'bg-abz-blue',
+      hoverColor: 'hover:bg-abz-blue-dark',
+      external: false,
+      enabled: true,
+      order: 11,
+      managerOnly: true
+    },
+    {
       id: 'admin',
       title: t('admin.title'),
       description: t('admin.dashboard'),
@@ -197,7 +251,7 @@ export function getTranslatedCards(t: (key: string) => string): DashboardCard[] 
       hoverColor: 'hover:bg-abz-indigo-dark',
       external: false,
       enabled: true,
-      order: 11,
+      order: 12,
       adminOnly: true
     }
   ];

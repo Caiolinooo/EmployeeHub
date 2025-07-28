@@ -61,7 +61,7 @@ export default function ReimbursementDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const protocolo = params.protocolo as string;
+  const protocolo = params?.protocolo as string;
 
   useEffect(() => {
     const fetchReimbursementDetails = async () => {

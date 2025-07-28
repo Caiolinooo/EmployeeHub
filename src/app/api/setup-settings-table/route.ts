@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
+import fs from 'fs';
+import path from 'path';
 
 /**
  * API route to create the settings table directly using standard Supabase operations
@@ -122,8 +124,6 @@ export async function POST(request: NextRequest) {
           }
           
           // Salvar as configurações em um arquivo local
-          const fs = require('fs');
-          const path = require('path');
           
           const configDir = path.join(process.cwd(), 'src', 'config');
           if (!fs.existsSync(configDir)) {

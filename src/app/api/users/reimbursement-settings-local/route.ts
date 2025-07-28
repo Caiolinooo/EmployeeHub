@@ -117,7 +117,7 @@ function saveEmailMapping(email: string, userId: string) {
     }
   }
 
-  mapping[email] = userId;
+  (mapping as any)[email] = userId;
 
   fs.writeFileSync(mappingPath, JSON.stringify(mapping, null, 2));
 }
@@ -231,7 +231,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Caminho para o arquivo de configuração do usuário
-    const configPath = getUserConfigPath(userIdToUse);
+    const configPath = getUserConfigPath(userIdToUse || '');
     console.log(`Verificando arquivo de configuração em ${configPath}`);
 
     // Verificar se o arquivo existe

@@ -4,7 +4,7 @@ import React from 'react';
 import dynamic from 'next/dynamic';
 
 // Importar o componente AvaliacoesPageFixed dinamicamente para evitar problemas de carregamento
-const AvaliacoesPageFixed = dynamic(() => import('./page-fixed'), {
+const AvaliacoesPageFixed = dynamic(() => import('./page-fixed-corrected'), {
   ssr: false,
   loading: () => (
     <div className="flex justify-center items-center h-64">

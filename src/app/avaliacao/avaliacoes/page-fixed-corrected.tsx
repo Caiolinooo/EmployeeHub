@@ -113,24 +113,6 @@ export default function AvaliacoesPageFixed() {
     setInitialized(true);
   }, [user, profile, authLoading, isAdmin, isManager, router, pathname]);
 
-  // Se estiver carregando a autenticação, mostrar indicador de carregamento
-  if (authLoading) {
-    return (
-      <MainLayout>
-        <LoadingIndicator />
-      </MainLayout>
-    );
-  }
-
-  // Se não estiver inicializado (verificando permissões), mostrar indicador de carregamento
-  if (!initialized) {
-    return (
-      <MainLayout>
-        <LoadingIndicator />
-      </MainLayout>
-    );
-  }
-
   // Carregar avaliações
   useEffect(() => {
     if (!initialized || !t) return;
@@ -243,6 +225,24 @@ export default function AvaliacoesPageFixed() {
 
     loadAvaliacoes();
   }, [initialized, t, router]);
+
+  // Se estiver carregando a autenticação, mostrar indicador de carregamento
+  if (authLoading) {
+    return (
+      <MainLayout>
+        <LoadingIndicator />
+      </MainLayout>
+    );
+  }
+
+  // Se não estiver inicializado (verificando permissões), mostrar indicador de carregamento
+  if (!initialized) {
+    return (
+      <MainLayout>
+        <LoadingIndicator />
+      </MainLayout>
+    );
+  }
 
   // Formatar data
   const formatDate = (dateString: string) => {

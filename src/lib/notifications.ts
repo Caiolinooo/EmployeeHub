@@ -1,5 +1,5 @@
 import { sendEmail } from './email';
-import { prisma } from './db';
+import { supabase } from './supabase';
 import {
   accessApprovalTemplate,
   accessRejectionTemplate,
@@ -37,12 +37,14 @@ export async function sendAccessApprovalNotification(
     console.log(`Iniciando envio de notificação de aprovação para ID: ${authorizedUserId}`);
 
     // Buscar informações do usuário autorizado
-    const authorizedUser = await prisma.authorizedUser.findUnique({
-      where: { id: authorizedUserId }
-    });
+    const { data: authorizedUser, error: userError } = await supabase
+      .from('authorized_users')
+      .select('*')
+      .eq('id', authorizedUserId)
+      .single();
 
-    if (!authorizedUser) {
-      console.error(`Usuário autorizado não encontrado: ${authorizedUserId}`);
+    if (userError || !authorizedUser) {
+      console.error(`Usuário autorizado não encontrado: ${authorizedUserId}`, userError);
       return {
         success: false,
         message: 'Usuário autorizado não encontrado'
@@ -52,9 +54,11 @@ export async function sendAccessApprovalNotification(
     console.log(`Usuário autorizado encontrado: ${authorizedUser.email || 'Sem email'}`);
 
     // Buscar informações do administrador
-    const admin = await prisma.user.findUnique({
-      where: { id: approvedById }
-    });
+    const { data: admin, error: adminError } = await supabase
+      .from('users_unified')
+      .select('*')
+      .eq('id', approvedById)
+      .single();
 
     if (!admin) {
       console.error(`Administrador não encontrado: ${approvedById}`);
@@ -145,7 +149,11 @@ export async function sendCustomEmail(
       console.log(`URL de preview: ${result.previewUrl}`);
     }
 
-    return result;
+    return {
+      success: result.success,
+      message: result.message,
+      previewUrl: typeof result.previewUrl === 'string' ? result.previewUrl : undefined
+    };
   } catch (error) {
     console.error('Erro ao enviar email personalizado:', error);
     if (error instanceof Error) {
@@ -241,12 +249,14 @@ export async function sendAccessRejectionNotification(
     console.log(`Iniciando envio de notificação de rejeição para ID: ${authorizedUserId}`);
 
     // Buscar informações do usuário autorizado
-    const authorizedUser = await prisma.authorizedUser.findUnique({
-      where: { id: authorizedUserId }
-    });
+    const { data: authorizedUser, error: userError } = await supabase
+      .from('authorized_users')
+      .select('*')
+      .eq('id', authorizedUserId)
+      .single();
 
-    if (!authorizedUser) {
-      console.error(`Usuário autorizado não encontrado: ${authorizedUserId}`);
+    if (userError || !authorizedUser) {
+      console.error(`Usuário autorizado não encontrado: ${authorizedUserId}`, userError);
       return {
         success: false,
         message: 'Usuário autorizado não encontrado'
@@ -256,9 +266,11 @@ export async function sendAccessRejectionNotification(
     console.log(`Usuário autorizado encontrado: ${authorizedUser.email || 'Sem email'}`);
 
     // Buscar informações do administrador
-    const admin = await prisma.user.findUnique({
-      where: { id: rejectedById }
-    });
+    const { data: admin, error: adminError } = await supabase
+      .from('users_unified')
+      .select('*')
+      .eq('id', rejectedById)
+      .single();
 
     if (!admin) {
       console.error(`Administrador não encontrado: ${rejectedById}`);
@@ -345,7 +357,7 @@ export async function sendReimbursementConfirmationEmail(
     const emailContent = reimbursementConfirmationTemplate(nome, protocolo, valor);
 
     // Se temos dados do formulário, gerar PDF
-    let emailAttachments = [];
+    const emailAttachments = [];
     console.log(`Verificando anexos iniciais: ${attachments ? attachments.length : 0}`);
 
     // Garantir que os anexos originais sejam incluídos
@@ -477,20 +489,7 @@ export async function sendReimbursementConfirmationEmail(
 
     console.log(`Filtrando anexos: ${emailAttachments.length} total, ${validAttachments.length} válidos`);
 
-    // Adicionar anexo de teste se não houver anexos válidos suficientes
-    if (validAttachments.length <= 1) { // Se só tiver o formulário PDF ou nenhum anexo
-      console.warn('Poucos anexos válidos encontrados, adicionando anexo de teste');
-
-      // Criar um anexo de teste
-      const testBuffer = Buffer.from('Este é um anexo de teste para garantir que os anexos estão funcionando corretamente.');
-      validAttachments.push({
-        filename: `anexo_teste_${Date.now()}.txt`,
-        content: testBuffer,
-        contentType: 'text/plain'
-      });
-
-      console.log('Anexo de teste adicionado');
-    }
+    // Remover código de teste - não adicionar anexos de teste em produção
 
     // Log detalhado dos anexos válidos
     console.log(`Enviando email com ${validAttachments.length} anexos válidos:`);
@@ -527,7 +526,11 @@ export async function sendReimbursementConfirmationEmail(
       console.warn('Aviso: Email enviado sem anexos!');
     }
 
-    return result;
+    return {
+      success: result.success,
+      message: result.message,
+      previewUrl: typeof result.previewUrl === 'string' ? result.previewUrl : undefined
+    };
   } catch (error) {
     console.error('Erro ao enviar email de confirmação de reembolso:', error);
     if (error instanceof Error) {

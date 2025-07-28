@@ -11,7 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export default function ReimbursementMigrationPage() {
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   
@@ -21,7 +21,7 @@ export default function ReimbursementMigrationPage() {
   const [activeTab, setActiveTab] = useState('migration');
 
   // Verificar se o usuário é admin
-  const isAdmin = profile?.role === 'ADMIN';
+  const isAdmin = user?.role === 'ADMIN';
 
   // Redirecionar se não for admin
   React.useEffect(() => {

@@ -4,20 +4,14 @@ import React from 'react';
 import Image from 'next/image';
 import ReimbursementFormWrapper from '@/components/ReimbursementFormWrapper';
 import Footer from '@/components/Footer';
-import { motion } from 'framer-motion';
 import 'react-toastify/dist/ReactToastify.css';
 
 export default function PublicReimbursementPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100">
       <div className="container mx-auto py-12 px-4">
-        {/* Animated header with logo */}
-        <motion.header
-          className="text-center mb-12"
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-        >
+        {/* Header with logo */}
+        <header className="text-center mb-12" style={{ opacity: 1, visibility: 'visible' }}>
           <div className="flex justify-center">
             <Image
               src="/images/LC1_Azul.png"
@@ -27,20 +21,15 @@ export default function PublicReimbursementPage() {
               priority
             />
           </div>
-        </motion.header>
+        </header>
 
         {/* Main form with profile data if available */}
         <ReimbursementFormWrapper />
 
         {/* Footer */}
-        <motion.div
-          className="mt-16"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
+        <div className="mt-16" style={{ opacity: 1, visibility: 'visible' }}>
           <Footer />
-        </motion.div>
+        </div>
       </div>
     </div>
   );

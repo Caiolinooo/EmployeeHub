@@ -18,9 +18,11 @@ import { InputField, TextArea, SelectField } from './FormFields';
 import PaymentMethodRadio from './PaymentMethodRadio';
 import DescriptionField from './DescriptionField';
 import CurrencyInput from './CurrencyInput';
+import { fetchWithAuth, getAuthToken } from '@/lib/authUtils';
 
 import FileUploader from './FileUploader';
 import PdfViewer from './PdfViewer';
+import MultipleExpenses from './MultipleExpenses';
 import ThankYouModal from './ThankYouModal';
 import ContactPopup from './ContactPopup';
 
@@ -60,6 +62,35 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
   const [showContactPopup, setShowContactPopup] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>('BRL');
   const [fieldsPopulated, setFieldsPopulated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  // Verificar autenticação quando o componente carrega
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      try {
+        console.log('🔍 Verificando status de autenticação...');
+        const token = await getAuthToken();
+        setIsAuthenticated(!!token);
+        console.log(token ? '✅ Usuário autenticado' : '❌ Usuário não autenticado');
+      } catch (error) {
+        console.error('Erro ao verificar autenticação:', error);
+        setIsAuthenticated(false);
+      }
+    };
+
+    checkAuthentication();
+  }, []);
+
+  // Função para determinar centro de custo baseado no CPF
+  const getCostCenterByCPF = (cpf: string): string => {
+    // Remove formatação do CPF
+    const cleanCPF = cpf.replace(/\D/g, '');
+
+    // Lógica para determinar centro de custo baseado no CPF
+    // Por enquanto, vamos usar ABZ como padrão
+    // Você pode implementar uma lógica mais específica aqui
+    return 'abz';
+  };
 
   const {
     control,
@@ -78,28 +109,35 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
       email: '',
       telefone: '',
       data: new Date().toISOString().split('T')[0],
+      expenses: [{
+        id: Math.random().toString(36).substr(2, 9),
+        tipoReembolso: 'alimentacao',
+        descricao: '',
+        valor: '0,00',
+        comprovantes: []
+      }],
       tipoReembolso: 'alimentacao',
       descricao: '',
       valorTotal: '',
       moeda: 'BRL' as Currency,
-      metodoPagamento: 'agente',
+      metodoPagamento: 'deposito',
       banco: null,
       agencia: null,
       conta: null,
       pixTipo: null,
       pixChave: null,
-      comprovantes: [],
       observacoes: null,
       cargo: '',
-      centroCusto: '',
+      centroCusto: 'abz',
       cpf: ''
     }
   });
 
   // Watch values for conditional rendering with fallbacks for undefined values
-  const metodoPagamento = watch('metodoPagamento') || 'agente';
+  const metodoPagamento = watch('metodoPagamento') || 'deposito';
   const pixTipo = watch('pixTipo') || null;
   const tipoReembolso = watch('tipoReembolso') || 'alimentacao';
+  const expenses = watch('expenses') || [];
 
   // Auto-populate form fields with user profile data
   useEffect(() => {
@@ -153,7 +191,15 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
         if (costCenter) {
           setValue('centroCusto', costCenter);
           console.log('Auto-populated cost center from department:', costCenter);
+        } else {
+          // Se não conseguir mapear o departamento, usar ABZ como padrão
+          setValue('centroCusto', 'abz');
+          console.log('Auto-populated cost center as default: abz');
         }
+      } else {
+        // Se não há departamento, usar ABZ como padrão
+        setValue('centroCusto', 'abz');
+        console.log('Auto-populated cost center as default (no department): abz');
       }
 
       // Mark fields as populated to prevent re-population on re-renders
@@ -163,30 +209,69 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
+      console.log('🚀 onSubmit CHAMADO!');
+      console.log('📋 Dados recebidos:', data);
       setSubmitting(true);
       console.log('Iniciando envio do formulário de reembolso...');
 
-      const normalizedValue = data.valorTotal.replace(/\./g, '').replace(',', '.');
-      console.log(`Valor normalizado: ${normalizedValue} (original: ${data.valorTotal})`);
+      // Verificar se o usuário está autenticado antes de enviar
+      console.log('🔍 Verificando autenticação...');
+      const token = await getAuthToken();
 
-      if (!data.comprovantes || data.comprovantes.length === 0) {
-        toast.error('É necessário anexar pelo menos um comprovante.');
+      if (!token) {
+        console.error('❌ Usuário não autenticado');
+        toast.error('Você precisa estar logado para enviar um reembolso. Redirecionando para login...');
+
+        // Redirecionar para login após 2 segundos
+        setTimeout(() => {
+          window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+        }, 2000);
+
         setSubmitting(false);
         return;
       }
 
-      console.log(`Comprovantes anexados: ${data.comprovantes.length}`);
+      console.log('✅ Usuário autenticado, prosseguindo com envio...');
 
-      if (!data.centroCusto) {
+      // Validar se há pelo menos uma despesa
+      if (!data.expenses || data.expenses.length === 0) {
+        toast.error('É necessário adicionar pelo menos uma despesa.');
+        setSubmitting(false);
+        return;
+      }
+
+      // Calcular valor total das despesas
+      const totalValue = data.expenses.reduce((total, expense) => {
+        const value = parseFloat(expense.valor.replace(/\./g, '').replace(',', '.')) || 0;
+        return total + value;
+      }, 0);
+
+      console.log(`Valor total calculado: ${totalValue}`);
+
+      // Verificar se todas as despesas têm comprovantes
+      const expensesWithoutReceipts = data.expenses.filter(expense =>
+        !expense.comprovantes || expense.comprovantes.length === 0
+      );
+
+      if (expensesWithoutReceipts.length > 0) {
+        toast.error('Todas as despesas devem ter pelo menos um comprovante.');
+        setSubmitting(false);
+        return;
+      }
+
+      if (!data.centroCusto || data.centroCusto.trim() === '') {
+        console.error('Centro de custo não informado:', data.centroCusto);
         setError('centroCusto', { type: 'manual', message: t('reimbursement.form.costCenterRequired') });
+        toast.error('Por favor, selecione um centro de custo.');
         setSubmitting(false);
         return;
       }
 
-      const formData = {
-        ...data,
-        valorTotal: normalizedValue,
-        comprovantes: data.comprovantes.map((file: any) => {
+      // Processar múltiplas despesas
+      const processedExpenses = data.expenses.map(expense => ({
+        ...expense,
+        valor: expense.valor.replace(/\./g, '').replace(',', '.'),
+        comprovantes: expense.comprovantes.map((file: any) => {
           const isLocalFile = file.isLocalFile === true;
           let base64Buffer = null;
 
@@ -224,18 +309,35 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
             dados: base64Buffer
           };
         })
+      }));
+
+      // Para compatibilidade com o backend, usar a primeira despesa como principal
+      const mainExpense = processedExpenses[0];
+
+      // Garantir que centroCusto tenha um valor válido
+      const centroCusto = data.centroCusto && data.centroCusto.trim() !== '' ? data.centroCusto : 'abz';
+
+      const formData = {
+        ...data,
+        centroCusto: centroCusto,
+        expenses: processedExpenses,
+        valorTotal: totalValue.toString(),
+        moeda: selectedCurrency, // Usar a moeda selecionada no componente
+        tipoReembolso: mainExpense.tipoReembolso,
+        descricao: processedExpenses.map(exp => `${exp.tipoReembolso}: ${exp.descricao}`).join('; '),
+        comprovantes: processedExpenses.flatMap(exp => exp.comprovantes)
       };
 
+      console.log('Moeda selecionada:', selectedCurrency);
+      console.log('Valor total:', totalValue);
+      console.log('FormData moeda:', formData.moeda);
+
       console.log('Enviando dados para a API de criação de reembolso...');
+      console.log('Centro de custo no formData:', formData.centroCusto);
+      console.log('FormData completo:', formData);
 
-      const token = localStorage.getItem('supabase.auth.token');
-
-      const response = await fetch('/api/reembolso/create', {
+      const response = await fetchWithAuth('/api/reembolso/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
         body: JSON.stringify(formData),
       });
 
@@ -329,11 +431,9 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
         )}
       </AnimatePresence>
 
-      <motion.div
+      <div
         className="bg-white rounded-lg shadow-lg p-6 md:p-8"
-        variants={formContainerVariants}
-        initial="hidden"
-        animate="visible"
+        style={{ opacity: 1, visibility: 'visible' }}
       >
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-800">{t('reimbursement.form.title')}</h2>
@@ -347,8 +447,54 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
           </button>
         </div>
 
+        {/* Banner de Status de Autenticação */}
+        {isAuthenticated === false && (
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800">
+                  Login necessário
+                </h3>
+                <div className="mt-2 text-sm text-yellow-700">
+                  <p>
+                    Você precisa estar logado para enviar um reembolso.
+                    <button
+                      onClick={() => window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname)}
+                      className="font-medium underline hover:text-yellow-600 ml-1"
+                    >
+                      Clique aqui para fazer login
+                    </button>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isAuthenticated === true && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-green-800">
+                  ✅ Você está logado e pode enviar reembolsos
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          <motion.div variants={sectionVariants} className="bg-gray-50 p-5 rounded-lg">
+          <div className="bg-gray-50 p-5 rounded-lg" style={{ opacity: 1, visibility: 'visible' }}>
             <h3 className="text-lg font-medium text-gray-800 mb-4">{t('reimbursement.form.personalInfo')}</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -441,9 +587,13 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
                   <SelectField
                     id="centroCusto"
                     label={t('reimbursement.form.costCenter')}
-                    value={field.value || ''}
-                    onChange={field.onChange}
+                    value={field.value || 'abz'}
+                    onChange={(e) => {
+                      console.log('Centro de custo selecionado:', e.target.value);
+                      field.onChange(e);
+                    }}
                     options={[
+                      { value: 'abz', label: 'ABZ' },
                       { value: 'luz_maritima', label: 'Luz Marítima' },
                       { value: 'fms', label: 'FMS' },
                       { value: 'msi', label: 'MSI' },
@@ -453,14 +603,37 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
                       { value: 'ahk', label: 'AHK' }
                     ]}
                     error={errors.centroCusto?.message}
+                    required
                   />
                 )}
               />
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div variants={sectionVariants} className="bg-gray-50 p-5 rounded-lg">
-            <h3 className="text-lg font-medium text-gray-800 mb-4">{t('reimbursement.form.expenseInfo')}</h3>
+          {/* Seção de Múltiplas Despesas */}
+          <div className="bg-gray-50 p-5 rounded-lg" style={{ opacity: 1, visibility: 'visible' }}>
+            <Controller
+              name="expenses"
+              control={control}
+              render={({ field }) => (
+                <MultipleExpenses
+                  expenses={field.value || []}
+                  onChange={field.onChange}
+                  currency={selectedCurrency}
+                  onCurrencyChange={(currency) => {
+                    console.log('Moeda mudou no MultipleExpenses:', currency);
+                    setSelectedCurrency(currency as any);
+                    setValue('moeda', currency as any);
+                  }}
+                  errors={errors.expenses}
+                />
+              )}
+            />
+          </div>
+
+          {/* Seção de Informações de Pagamento */}
+          <div className="bg-gray-50 p-5 rounded-lg" style={{ opacity: 1, visibility: 'visible' }}>
+            <h3 className="text-lg font-medium text-gray-800 mb-4">{t('reimbursement.form.paymentInfo', 'Informações de Pagamento')}</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Controller
@@ -480,49 +653,6 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
               />
 
               <Controller
-                name="tipoReembolso"
-                control={control}
-                render={({ field }) => (
-                  <SelectField
-                    id="tipoReembolso"
-                    label={t('reimbursement.form.expenseType')}
-                    value={field.value}
-                    onChange={(e) => {
-                      field.onChange(e);
-                    }}
-                    options={[
-                      { value: 'alimentacao', label: t('locale.code') === 'en-US' ? 'Food' : 'Alimentação' },
-                      { value: 'transporte', label: t('locale.code') === 'en-US' ? 'Transportation' : 'Transporte' },
-                      { value: 'hospedagem', label: t('locale.code') === 'en-US' ? 'Accommodation' : 'Hospedagem' },
-                      { value: 'material', label: t('locale.code') === 'en-US' ? 'Work Materials' : 'Material de Trabalho' },
-                      { value: 'outro', label: t('locale.code') === 'en-US' ? 'Other' : 'Outro' }
-                    ]}
-                    error={errors.tipoReembolso?.message}
-                    required
-                  />
-                )}
-              />
-
-              <Controller
-                name="valorTotal"
-                control={control}
-                render={({ field }) => (
-                  <CurrencyInput
-                    id="valorTotal"
-                    label={t('reimbursement.form.expenseValue')}
-                    value={field.value}
-                    onChange={(value) => {
-                      handleCurrencyChange(value);
-                      field.onChange(value);
-                    }}
-                    onCurrencyChange={handleCurrencyTypeChange}
-                    error={errors.valorTotal?.message}
-                    required
-                  />
-                )}
-              />
-
-              <Controller
                 name="metodoPagamento"
                 control={control}
                 render={({ field }) => (
@@ -531,21 +661,26 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
                     label={t('reimbursement.form.bankInfo')}
                     value={field.value}
                     onChange={(value) => {
+                      console.log('Payment method changed to:', value);
                       if (value === 'deposito') {
                         setValue('pixTipo', null);
                         setValue('pixChave', null);
+                        console.log('Cleared PIX fields');
                       } else if (value === 'pix') {
                         setValue('banco', null);
                         setValue('agencia', null);
                         setValue('conta', null);
+                        console.log('Cleared bank fields');
                       } else {
                         setValue('banco', null);
                         setValue('agencia', null);
                         setValue('conta', null);
                         setValue('pixTipo', null);
                         setValue('pixChave', null);
+                        console.log('Cleared all payment fields');
                       }
                       field.onChange(value);
+                      console.log('Current metodoPagamento after change:', value);
                     }}
                     options={[
                       { value: 'deposito', label: t('locale.code') === 'en-US' ? 'Bank Deposit' : 'Depósito Bancário' },
@@ -560,14 +695,14 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
             </div>
 
             {/* Campos condicionais para depósito bancário */}
-            <AnimatePresence mode="wait">
-              {metodoPagamento === 'deposito' && (
-                <motion.div
-                  className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 border-t border-gray-200 pt-4"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
+            {(() => {
+              console.log('Rendering bank fields check - metodoPagamento:', metodoPagamento);
+              return metodoPagamento === 'deposito';
+            })() && (
+              <div
+                className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 border-t border-gray-200 pt-4"
+                style={{ opacity: 1, visibility: 'visible', display: 'grid' }}
+              >
                   <Controller
                     name="banco"
                     control={control}
@@ -612,19 +747,18 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
                       />
                     )}
                   />
-                </motion.div>
-              )}
-            </AnimatePresence>
+              </div>
+            )}
 
             {/* Campos condicionais para PIX */}
-            <AnimatePresence mode="wait">
-              {metodoPagamento === 'pix' && (
-                <motion.div
-                  className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 border-t border-gray-200 pt-4"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
+            {(() => {
+              console.log('Rendering PIX fields check - metodoPagamento:', metodoPagamento);
+              return metodoPagamento === 'pix';
+            })() && (
+              <div
+                className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 border-t border-gray-200 pt-4"
+                style={{ opacity: 1, visibility: 'visible', display: 'grid' }}
+              >
                   <Controller
                     name="pixTipo"
                     control={control}
@@ -699,52 +833,10 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
                       );
                     }}
                   />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Campo de Descrição da Despesa */}
-            <Controller
-              name="descricao"
-              control={control}
-              render={({ field }) => (
-                <DescriptionField
-                  id="descricao"
-                  label={t('locale.code') === 'en-US' ? 'Expense Description' : 'Descrição da Despesa'}
-                  value={field.value}
-                  onChange={field.onChange}
-                  error={errors.descricao?.message}
-                  required
-                  rows={4}
-                />
-              )}
-            />
-          </motion.div>
-
-          {/* Seção 3: Comprovantes */}
-          <motion.div variants={sectionVariants} className="bg-gray-50 p-5 rounded-lg">
-            <h3 className="text-lg font-medium text-gray-800 mb-4">{t('locale.code') === 'en-US' ? 'Attachments' : 'Comprovantes'}</h3>
-
-            <Controller
-              name="comprovantes"
-              control={control}
-              render={({ field }) => (
-                <FileUploader
-                  files={field.value}
-                  onFilesChange={(files) => {
-                    field.onChange(files);
-                    trigger('comprovantes');
-                  }}
-                  maxFiles={5}
-                  maxSizeInMB={10}
-                  acceptedFileTypes={['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']}
-                />
-              )}
-            />
-
-            {errors.comprovantes && (
-              <p className="mt-1 text-sm text-red-500">{errors.comprovantes.message}</p>
+              </div>
             )}
+
+
 
             <Controller
               name="observacoes"
@@ -760,10 +852,10 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
                 />
               )}
             />
-          </motion.div>
+          </div>
 
           {/* Botões de Ação */}
-          <motion.div variants={sectionVariants} className="flex flex-col md:flex-row justify-end space-y-3 md:space-y-0 md:space-x-3">
+          <div className="flex flex-col md:flex-row justify-end space-y-3 md:space-y-0 md:space-x-3" style={{ opacity: 1, visibility: 'visible' }}>
             <button
               type="button"
               onClick={() => setShowPdfViewer(true)}
@@ -775,8 +867,18 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
 
             <button
               type="submit"
-              disabled={isSubmitting || submitting}
-              className={`flex items-center justify-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+              disabled={isSubmitting || submitting || isAuthenticated === false}
+              onClick={() => {
+                console.log('Submit button clicked');
+                console.log('Form errors:', errors);
+                console.log('Is submitting:', isSubmitting || submitting);
+                console.log('Is authenticated:', isAuthenticated);
+              }}
+              className={`flex items-center justify-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
+                isAuthenticated === false
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+              } ${
                 (isSubmitting || submitting) ? 'opacity-70 cursor-not-allowed' : ''
               }`}
             >
@@ -788,6 +890,13 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
                     </svg>
                     {t('reimbursement.form.submitting')}
                   </>
+                ) : isAuthenticated === false ? (
+                  <>
+                    <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    Faça login para enviar
+                  </>
                 ) : (
                   <>
                     <FiSend className="mr-2"/>
@@ -795,9 +904,9 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
                   </>
                 )}
               </button>
-            </motion.div>
+            </div>
         </form>
-      </motion.div>
+      </div>
     </>
   );
 }

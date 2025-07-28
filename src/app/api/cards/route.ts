@@ -1,35 +1,127 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Pool } from 'pg';
+import { supabaseAdmin } from '@/lib/supabase';
+import { getTranslatedCards } from '@/data/cards';
 
-// Criar pool de conexão PostgreSQL
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
-// GET - Obter todos os cards
+// GET - Obter todos os cards com fallback para dados hardcoded
 export async function GET() {
-  const client = await pool.connect();
-
   try {
-    const result = await client.query(
-      'SELECT * FROM "Card" ORDER BY "order" ASC'
-    );
+    console.log('🔄 API Cards - Buscando cards do Supabase...');
 
-    return NextResponse.json(result.rows);
+    // Tentar buscar do Supabase primeiro
+    const { data: cards, error } = await supabaseAdmin
+      .from('cards')
+      .select('*')
+      .order('order', { ascending: true });
+
+    if (error) {
+      console.log('⚠️ Erro ao buscar do Supabase:', error.message);
+      console.log('📦 Usando dados hardcoded como fallback');
+      const fallbackCards = getTranslatedCards((key: string) => {
+        const translations: { [key: string]: string } = {
+          'cards.manualColaborador': 'Manual do Colaborador',
+          'cards.manualColaboradorDesc': 'Acesse o manual completo do colaborador',
+          'cards.procedimentosLogistica': 'Procedimentos de Logística',
+          'cards.procedimentosLogisticaDesc': 'Consulte os procedimentos padrões da área',
+          'cards.politicas': 'Políticas',
+          'cards.politicasDesc': 'Consulte as políticas da empresa',
+          'cards.procedimentosGerais': 'Procedimentos Gerais',
+          'cards.procedimentosGeraisDesc': 'Consulte os procedimentos gerais da empresa',
+          'cards.calendario': 'Calendário',
+          'cards.calendarioDesc': 'Visualize eventos e datas importantes',
+          'cards.noticias': 'ABZ News',
+          'cards.noticiasDesc': 'Fique por dentro das novidades da empresa',
+          'cards.reembolso': 'Reembolso',
+          'cards.reembolsoDesc': 'Solicite reembolsos de despesas',
+          'cards.contracheque': 'Contracheque',
+          'cards.contrachequeDesc': 'Acesse seus contracheques',
+          'cards.ponto': 'Ponto',
+          'cards.pontoDesc': 'Registre seu ponto e consulte seu histórico',
+          'avaliacao.title': 'Avaliação de Desempenho',
+          'avaliacao.description': 'Gerencie avaliações de desempenho dos colaboradores',
+          'cards.folhaPagamento': 'Folha de Pagamento',
+          'cards.folhaPagamentoDesc': 'Gerencie a folha de pagamento dos colaboradores',
+          'admin.title': 'Administração',
+          'admin.dashboard': 'Painel administrativo',
+        };
+        return translations[key] || key;
+      });
+      return NextResponse.json(fallbackCards);
+    }
+
+    if (!cards || cards.length === 0) {
+      console.log('📦 Nenhum card encontrado no Supabase, usando dados hardcoded');
+      const fallbackCards = getTranslatedCards((key: string) => {
+        const translations: { [key: string]: string } = {
+          'cards.manualColaborador': 'Manual do Colaborador',
+          'cards.manualColaboradorDesc': 'Acesse o manual completo do colaborador',
+          'cards.procedimentosLogistica': 'Procedimentos de Logística',
+          'cards.procedimentosLogisticaDesc': 'Consulte os procedimentos padrões da área',
+          'cards.politicas': 'Políticas',
+          'cards.politicasDesc': 'Consulte as políticas da empresa',
+          'cards.procedimentosGerais': 'Procedimentos Gerais',
+          'cards.procedimentosGeraisDesc': 'Consulte os procedimentos gerais da empresa',
+          'cards.calendario': 'Calendário',
+          'cards.calendarioDesc': 'Visualize eventos e datas importantes',
+          'cards.noticias': 'ABZ News',
+          'cards.noticiasDesc': 'Fique por dentro das novidades da empresa',
+          'cards.reembolso': 'Reembolso',
+          'cards.reembolsoDesc': 'Solicite reembolsos de despesas',
+          'cards.contracheque': 'Contracheque',
+          'cards.contrachequeDesc': 'Acesse seus contracheques',
+          'cards.ponto': 'Ponto',
+          'cards.pontoDesc': 'Registre seu ponto e consulte seu histórico',
+          'avaliacao.title': 'Avaliação de Desempenho',
+          'avaliacao.description': 'Gerencie avaliações de desempenho dos colaboradores',
+          'cards.folhaPagamento': 'Folha de Pagamento',
+          'cards.folhaPagamentoDesc': 'Gerencie a folha de pagamento dos colaboradores',
+          'admin.title': 'Administração',
+          'admin.dashboard': 'Painel administrativo',
+        };
+        return translations[key] || key;
+      });
+      return NextResponse.json(fallbackCards);
+    }
+
+    console.log(`✅ ${cards.length} cards carregados do Supabase`);
+    return NextResponse.json(cards);
   } catch (error) {
-    console.error('Erro ao obter cards:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
-  } finally {
-    client.release();
+    console.error('❌ Erro na API de cards:', error);
+    console.log('📦 Usando dados hardcoded como fallback de emergência');
+    const fallbackCards = getTranslatedCards((key: string) => {
+      const translations: { [key: string]: string } = {
+        'cards.manualColaborador': 'Manual do Colaborador',
+        'cards.manualColaboradorDesc': 'Acesse o manual completo do colaborador',
+        'cards.procedimentosLogistica': 'Procedimentos de Logística',
+        'cards.procedimentosLogisticaDesc': 'Consulte os procedimentos padrões da área',
+        'cards.politicas': 'Políticas',
+        'cards.politicasDesc': 'Consulte as políticas da empresa',
+        'cards.procedimentosGerais': 'Procedimentos Gerais',
+        'cards.procedimentosGeraisDesc': 'Consulte os procedimentos gerais da empresa',
+        'cards.calendario': 'Calendário',
+        'cards.calendarioDesc': 'Visualize eventos e datas importantes',
+        'cards.noticias': 'ABZ News',
+        'cards.noticiasDesc': 'Fique por dentro das novidades da empresa',
+        'cards.reembolso': 'Reembolso',
+        'cards.reembolsoDesc': 'Solicite reembolsos de despesas',
+        'cards.contracheque': 'Contracheque',
+        'cards.contrachequeDesc': 'Acesse seus contracheques',
+        'cards.ponto': 'Ponto',
+        'cards.pontoDesc': 'Registre seu ponto e consulte seu histórico',
+        'avaliacao.title': 'Avaliação de Desempenho',
+        'avaliacao.description': 'Gerencie avaliações de desempenho dos colaboradores',
+        'cards.folhaPagamento': 'Folha de Pagamento',
+        'cards.folhaPagamentoDesc': 'Gerencie a folha de pagamento dos colaboradores',
+        'admin.title': 'Administração',
+        'admin.dashboard': 'Painel administrativo',
+      };
+      return translations[key] || key;
+    });
+    return NextResponse.json(fallbackCards);
   }
 }
 
 // POST - Criar um novo card
 export async function POST(request: NextRequest) {
-  const client = await pool.connect();
 
   try {
     const body = await request.json();
@@ -46,92 +138,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar se a coluna descriptionEn existe
-    let hasDescriptionEn = true;
-    try {
-      // Tentar verificar se a coluna existe
-      const checkResult = await client.query(
-        `SELECT column_name FROM information_schema.columns
-         WHERE table_name = 'Card' AND column_name = 'descriptionEn'`
-      );
-      hasDescriptionEn = checkResult.rows.length > 0;
-    } catch (error) {
-      console.warn('Erro ao verificar coluna descriptionEn:', error);
-      hasDescriptionEn = false;
-    }
+    // Preparar dados para inserção
+    const cardData = {
+      title,
+      description,
+      href,
+      icon,
+      color,
+      hoverColor,
+      external: external || false,
+      enabled: enabled !== undefined ? enabled : true,
+      order,
+      adminOnly: adminOnly || false,
+      managerOnly: managerOnly || false,
+      allowedRoles: allowedRoles || null,
+      allowedUserIds: allowedUserIds || null,
+      titleEn: titleEn || null,
+      descriptionEn: descriptionEn || null
+    };
 
-    // Criar o card usando SQL
-    let result;
-    if (hasDescriptionEn) {
-      // Se a coluna descriptionEn existir, incluí-la na query
-      result = await client.query(
-        `INSERT INTO "Card" (
-          "title", "description", "href", "icon", "color", "hoverColor",
-          "external", "enabled", "order", "adminOnly", "managerOnly",
-          "allowedRoles", "allowedUserIds", "titleEn", "descriptionEn",
-          "createdAt", "updatedAt"
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
-        RETURNING *`,
-        [
-          title,
-          description,
-          href,
-          icon,
-          color,
-          hoverColor,
-          external || false,
-          enabled !== false,
-          order,
-          adminOnly || false,
-          managerOnly || false,
-          JSON.stringify(allowedRoles || []),
-          JSON.stringify(allowedUserIds || []),
-          titleEn || '',
-          descriptionEn || '',
-          new Date(),
-          new Date()
-        ]
-      );
-    } else {
-      // Se a coluna descriptionEn não existir, não incluí-la na query
-      result = await client.query(
-        `INSERT INTO "Card" (
-          "title", "description", "href", "icon", "color", "hoverColor",
-          "external", "enabled", "order", "adminOnly", "managerOnly",
-          "allowedRoles", "allowedUserIds", "titleEn",
-          "createdAt", "updatedAt"
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-        RETURNING *`,
-        [
-          title,
-          description,
-          href,
-          icon,
-          color,
-          hoverColor,
-          external || false,
-          enabled !== false,
-          order,
-          adminOnly || false,
-          managerOnly || false,
-          JSON.stringify(allowedRoles || []),
-          JSON.stringify(allowedUserIds || []),
-          titleEn || '',
-          new Date(),
-          new Date()
-        ]
+    // Inserir o card no Supabase
+    const { data: newCard, error } = await supabaseAdmin
+      .from('cards')
+      .insert(cardData)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Erro ao criar card:', error);
+      return NextResponse.json(
+        { error: 'Erro ao criar card' },
+        { status: 500 }
       );
     }
 
-    const card = result.rows[0];
-    return NextResponse.json(card, { status: 201 });
+    return NextResponse.json(newCard, { status: 201 });
   } catch (error) {
     console.error('Erro ao criar card:', error);
     return NextResponse.json(
       { error: 'Erro interno do servidor' },
       { status: 500 }
     );
-  } finally {
-    client.release();
   }
 }

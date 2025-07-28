@@ -1,6 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+
+// Declaração de tipo para window
+declare global {
+  interface Window {
+    convertOffice365File?: (file: File) => Promise<any>;
+  }
+}
 import { useI18n } from '@/contexts/I18nContext';
 import { FiUpload, FiDownload, FiFile, FiX, FiCheck, FiAlertCircle, FiLoader, FiInfo } from 'react-icons/fi';
 import { useDropzone } from 'react-dropzone';

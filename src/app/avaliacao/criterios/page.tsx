@@ -20,7 +20,7 @@ interface Criterio {
 
 export default function CriteriosPage() {
   const { t } = useI18n();
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
 
   const [criterios, setCriterios] = useState<Criterio[]>([]);
   const [isLoading, setIsLoading] = useState(true);

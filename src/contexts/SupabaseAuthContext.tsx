@@ -702,10 +702,12 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         console.log('Resposta do login:', response);
 
         if (response.token) {
-          // Armazenar o token e os dados do usuário
+          // Armazenar o token usando o utilitário tokenStorage para consistência
+          console.log('🔐 Salvando token após login bem-sucedido...');
           localStorage.setItem('auth', 'true');
-          localStorage.setItem('token', response.token);
+          saveToken(response.token, 86400); // 24 horas
           localStorage.setItem('user', JSON.stringify(response.user));
+          console.log('✅ Token salvo com sucesso!');
 
           // Se a opção "lembrar-me" estiver marcada, definir um cookie de longa duração
           if (rememberMe) {

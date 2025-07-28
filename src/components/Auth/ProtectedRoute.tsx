@@ -57,7 +57,7 @@ export default function ProtectedRoute({
   // Verificar se o usuário deveria ser administrador
   const adminEmail = process.env.ADMIN_EMAIL || 'caio.correia@groupabz.com';
   const adminPhone = process.env.ADMIN_PHONE_NUMBER || '+5522997847289';
-  const shouldBeAdmin = user?.email === adminEmail || user?.phoneNumber === adminPhone;
+  const shouldBeAdmin = user?.email === adminEmail || (user as any)?.phone_number === adminPhone;
 
   // Forçar acesso de administrador para o usuário principal (mesmo em produção)
   // Isso garante que o usuário principal sempre tenha acesso ao painel de administração
@@ -75,7 +75,7 @@ export default function ProtectedRoute({
       managerOnly,
       moduleName,
       userEmail: user?.email,
-      userPhone: user?.phoneNumber,
+      userPhone: (user as any)?.phone_number,
       shouldBeAdmin,
       forceAdmin,
       userRole: user?.role,
@@ -93,7 +93,7 @@ export default function ProtectedRoute({
     console.log('ProtectedRoute - Detalhes do usuário:', {
       id: user?.id,
       email: user?.email,
-      phone: user?.phoneNumber,
+      phone: (user as any)?.phone_number,
       role: user?.role,
       profileId: profile?.id,
       profileEmail: profile?.email,
@@ -203,7 +203,7 @@ export default function ProtectedRoute({
             isManager,
             role: user?.role,
             email: user?.email,
-            phone: user?.phoneNumber
+            phone: (user as any)?.phone_number
           });
 
           router.replace('/dashboard');
@@ -248,7 +248,7 @@ export default function ProtectedRoute({
         body: JSON.stringify({
           userId: user?.id,
           email: user?.email,
-          phoneNumber: user?.phoneNumber
+          phoneNumber: (user as any)?.phone_number
         })
       });
 

@@ -44,7 +44,7 @@ const EnhancedPdfViewer: React.FC<EnhancedPdfViewerProps> = ({
         // Verificar se o navegador tem o plugin de PDF
         const hasPdfPlugin = typeof navigator !== 'undefined' &&
           navigator.mimeTypes &&
-          navigator.mimeTypes['application/pdf'];
+          (navigator.mimeTypes as any)['application/pdf'];
 
         // Se for IE ou mobile sem plugin, considerar que não tem suporte
         setHasPdfSupport(!isIE && (!isMobile || hasPdfPlugin));

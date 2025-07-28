@@ -24,6 +24,7 @@ export interface MenuItem {
   id: string;
   href: string;
   label: string;
+  title?: string;
   icon: IconType;
   external: boolean;
   enabled: boolean;
@@ -34,7 +35,7 @@ export interface MenuItem {
 }
 
 // Função para obter os itens do menu com traduções
-export function getTranslatedMenu(t: (key: string, params?: Record<string, any>) => string) {
+export function getTranslatedMenu(t: (key: string, defaultValue?: string) => string) {
   return [
     {
       id: 'dashboard',
@@ -137,25 +138,35 @@ export function getTranslatedMenu(t: (key: string, params?: Record<string, any>)
       adminOnly: false
     },
     {
+      id: 'folha-pagamento',
+      title: t('menu.folhaPagamento'),
+      href: '/folha-pagamento',
+      icon: FiDollarSign,
+      external: false,
+      enabled: true,
+      order: 11,
+      adminOnly: false
+    },
+    {
       id: 'avaliacao',
-      title: t('menu.avaliacao', 'Avaliação'),
+      title: t('menu.avaliacao') || 'Avaliação',
       href: '/avaliacao',
       icon: FiBarChart2,
       external: false,
       enabled: true,
-      order: 11,
+      order: 12,
       adminOnly: false,
       managerOnly: true, // Restringir acesso apenas para gerentes e administradores
       forceShow: false // Não forçar exibição do item de menu
     },
     {
       id: 'admin',
-      title: t('menu.administracao'),
+      title: t('menu.administracao') || 'Administração',
       href: '/admin',
       icon: FiSettings,
       external: false,
       enabled: true,
-      order: 12,
+      order: 13,
       adminOnly: true
     },
     // Removido o item 'usuarios-autorizados' do menu principal
@@ -266,13 +277,23 @@ const menuItems: MenuItem[] = [
     adminOnly: false
   },
   {
+    id: 'folha-pagamento',
+    href: '/folha-pagamento',
+    label: 'Folha de Pagamento',
+    icon: FiDollarSign,
+    external: false,
+    enabled: true,
+    order: 11,
+    adminOnly: false
+  },
+  {
     id: 'avaliacao',
     href: '/avaliacao',
     label: 'Avaliação',
     icon: FiBarChart2,
     external: false,
     enabled: true,
-    order: 11,
+    order: 12,
     adminOnly: false,
     managerOnly: true, // Restringir acesso apenas para gerentes e administradores
     forceShow: false // Não forçar exibição do item de menu
@@ -284,7 +305,7 @@ const menuItems: MenuItem[] = [
     icon: FiSettings,
     external: false,
     enabled: true,
-    order: 12,
+    order: 13,
     adminOnly: true
   },
   // Removido o item 'authorized-users' do menu principal

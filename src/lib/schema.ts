@@ -101,6 +101,30 @@ export const validatePixKey = (pixTipo: string, value: string): boolean => {
   }
 };
 
+// Schema para uma despesa individual
+export const expenseSchema = z.object({
+  id: z.string().default(() => Math.random().toString(36).substr(2, 9)),
+  tipoReembolso: z.string().min(1, { message: 'Tipo de reembolso é obrigatório' }),
+  descricao: z.string().min(5, { message: 'Descrição é obrigatória (mínimo 5 caracteres)' })
+    .max(500, { message: 'Descrição muito longa (máximo 500 caracteres)' }),
+  valor: z.string().min(1, { message: 'Valor é obrigatório' })
+    .refine(validateCurrency, {
+      message: 'Valor inválido'
+    }),
+  comprovantes: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    size: z.number(),
+    type: z.string(),
+    file: z.any().optional(),
+    url: z.string().optional(),
+    uploading: z.boolean().optional(),
+    uploadError: z.string().optional(),
+    buffer: z.any().optional(),
+    isLocalFile: z.boolean().optional()
+  })).min(1, { message: 'É necessário anexar pelo menos um comprovante' })
+});
+
 // Base form schema
 export const formSchema = z.object({
   nome: z.string().min(3, { message: 'Nome completo é obrigatório' })
@@ -122,13 +146,14 @@ export const formSchema = z.object({
     }, {
       message: 'Data inválida ou futura'
     }),
-  tipoReembolso: z.string().min(1, { message: 'Tipo de reembolso é obrigatório' }),
-  descricao: z.string().min(5, { message: 'Descrição é obrigatória (mínimo 5 caracteres)' })
-    .max(500, { message: 'Descrição muito longa (máximo 500 caracteres)' }),
-  valorTotal: z.string().min(1, { message: 'Valor é obrigatório' })
-    .refine(validateCurrency, {
-      message: 'Valor inválido'
-    }),
+  // Múltiplas despesas
+  expenses: z.array(expenseSchema).min(1, { message: 'Pelo menos uma despesa é obrigatória' })
+    .max(10, { message: 'Máximo de 10 despesas permitidas' }),
+
+  // Campos mantidos para compatibilidade (serão calculados automaticamente)
+  tipoReembolso: z.string().optional(),
+  descricao: z.string().optional(),
+  valorTotal: z.string().optional(),
   moeda: z.enum(['BRL', 'USD', 'EUR', 'GBP']).default('BRL'),
   metodoPagamento: z.string().min(1, { message: 'Método de pagamento é obrigatório' }),
 
@@ -141,9 +166,7 @@ export const formSchema = z.object({
   pixTipo: z.string().nullable().optional(),
   pixChave: z.string().nullable().optional(),
 
-  // Comprovantes
-  comprovantes: z.array(z.any()).min(1, { message: 'Pelo menos um comprovante é obrigatório' })
-    .max(5, { message: 'Máximo de 5 comprovantes permitidos' }),
+  // Comprovantes agora estão dentro de cada despesa individual
 
   // Campo opcional
   observacoes: z.string().nullable().optional()
@@ -219,9 +242,9 @@ export const refinedFormSchema = formSchema.superRefine(
     }
 
     // Validar tamanho dos comprovantes (máximo 10MB cada)
-    if (data.comprovantes && data.comprovantes.length > 0) {
+    if ((data as any).comprovantes && (data as any).comprovantes.length > 0) {
       const maxSize = 10 * 1024 * 1024; // 10MB
-      data.comprovantes.forEach((file: any, index: number) => {
+      (data as any).comprovantes.forEach((file: any, index: number) => {
         if (file.size > maxSize) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,

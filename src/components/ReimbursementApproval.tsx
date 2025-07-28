@@ -51,8 +51,8 @@ export default function ReimbursementApproval() {
       email: user?.email,
       isAdmin,
       role: user?.role,
-      accessPermissions: user?.accessPermissions,
-      access_permissions: user?.access_permissions
+      accessPermissions: (user as any)?.access_permissions,
+      access_permissions: (user as any)?.access_permissions
     });
 
     // IMPORTANTE: Garantir que todos os administradores e gerentes tenham acesso
@@ -72,8 +72,8 @@ export default function ReimbursementApproval() {
 
     // Verificar permissões específicas
     const hasFeaturePermission = !!(
-      user?.accessPermissions?.features?.reimbursement_approval ||
-      user?.access_permissions?.features?.reimbursement_approval
+      (user as any)?.access_permissions?.features?.reimbursement_approval ||
+      (user as any)?.access_permissions?.features?.reimbursement_approval
     );
 
     console.log('Verificando permissões de aprovação:', {
@@ -81,8 +81,8 @@ export default function ReimbursementApproval() {
       isManager,
       hasFeaturePermission,
       role: user?.role,
-      accessPermissions: user?.accessPermissions,
-      access_permissions: user?.access_permissions
+      accessPermissions: (user as any)?.access_permissions,
+      access_permissions: (user as any)?.access_permissions
     });
 
     // Verificar se o email do usuário é o email do administrador ou de um gerente conhecido

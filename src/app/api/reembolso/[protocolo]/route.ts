@@ -102,7 +102,7 @@ export async function GET(
 
     const { exists, tableName } = await checkReimbursementTableExists();
 
-    if (!exists) {
+    if (!exists || !tableName) {
       console.error('Tabela de reembolsos não encontrada');
       return NextResponse.json(
         {
@@ -224,7 +224,7 @@ export async function PUT(
 
     const { exists, tableName } = await checkReimbursementTableExists();
 
-    if (!exists) {
+    if (!exists || !tableName) {
       console.error('Tabela de reembolsos não encontrada');
       return NextResponse.json(
         {

@@ -13,9 +13,7 @@ import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import ManagerProtectedRoute from '@/components/Auth/ManagerProtectedRoute';
 import { Tables } from '@/types/supabase';
 
-interface User extends Tables<'users'> {
-  // Campos adicionais se necessário
-}
+type User = Tables<'users'>;
 
 interface Avaliacao {
   id: string;

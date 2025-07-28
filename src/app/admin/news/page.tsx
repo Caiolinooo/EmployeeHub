@@ -535,6 +535,10 @@ export default function NewsPage() {
         }
       }
 
+      if (!response) {
+        throw new Error('Nenhuma resposta recebida');
+      }
+
       const data = await response.json();
       console.log('Dados recebidos:', data);
 

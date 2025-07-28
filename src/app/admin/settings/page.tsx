@@ -156,7 +156,7 @@ export default function SettingsPage() {
     setSuccess(null);
 
     try {
-      let updatedConfig = { ...config };
+      const updatedConfig = { ...config };
 
       // Fazer upload do logo, se houver
       if (logoFile) {

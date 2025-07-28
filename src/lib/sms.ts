@@ -174,7 +174,7 @@ export async function sendVerificationEmail(
     return {
       success: true,
       message: 'Email de verificação enviado com sucesso',
-      previewUrl,
+      previewUrl: typeof previewUrl === 'string' ? previewUrl : undefined,
     };
   } catch (error) {
     console.error('Erro ao enviar email de verificação:', error);
@@ -187,30 +187,6 @@ export async function sendVerificationEmail(
       success: false,
       message: `Erro ao enviar email de verificação: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
     };
-  }
-
-  try {
-    // Carregar o Twilio dinamicamente apenas quando necessário
-    // Isso evita problemas com o Edge Runtime
-    const twilioModule = await import('twilio');
-    const twilio = twilioModule.default;
-    const client = twilio(accountSid, authToken);
-
-    // Usar o serviço Twilio Verify para enviar o código
-    const verification = await client.verify.v2.services(verifyServiceSid)
-      .verifications
-      .create({
-        to: phoneNumber,
-        channel: 'sms',
-        // Podemos usar o código gerado localmente ou deixar o Twilio gerar um
-        // customCode: code
-      });
-
-    console.log(`Verificação iniciada com SID: ${verification.sid}`);
-    return true;
-  } catch (error) {
-    console.error('Erro ao enviar SMS de verificação:', error);
-    return false;
   }
 }
 

@@ -75,13 +75,13 @@ export default function ProfilePage() {
     }
 
     try {
-      const { data, error: urlError } = await supabase
+      const { data } = await supabase
         .storage
         .from('profile-images')
         .getPublicUrl(`${profile.id}/profile.jpg`);
 
-      if (urlError || !data?.publicUrl) {
-        console.error('Erro ao obter URL pública da imagem de perfil:', urlError);
+      if (!data?.publicUrl) {
+        console.error('Erro ao obter URL pública da imagem de perfil');
         setProfileImage('/images/default-avatar.png'); // Fallback to default
         return;
       }

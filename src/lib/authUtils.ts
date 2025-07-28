@@ -7,12 +7,22 @@ import { getToken } from '@/lib/tokenStorage';
  */
 export async function getAuthToken(): Promise<string | null> {
   try {
-    console.log('Obtendo token de autenticação...');
+    console.log('🔍 Obtendo token de autenticação...');
+
+    // Debug: Verificar o que existe no localStorage
+    if (typeof window !== 'undefined') {
+      console.log('🔍 Debug localStorage:', {
+        auth: localStorage.getItem('auth'),
+        token: localStorage.getItem('token') ? 'EXISTS' : 'NOT_FOUND',
+        abzToken: localStorage.getItem('abzToken') ? 'EXISTS' : 'NOT_FOUND',
+        user: localStorage.getItem('user') ? 'EXISTS' : 'NOT_FOUND'
+      });
+    }
 
     // 1. Primeiro, tentar obter o token usando o utilitário tokenStorage
     const storedToken = getToken();
     if (storedToken) {
-      console.log('Token encontrado no tokenStorage');
+      console.log('✅ Token encontrado no tokenStorage');
       return storedToken;
     }
 
@@ -152,15 +162,27 @@ export async function getAuthToken(): Promise<string | null> {
       }
     }
 
-    // 6. Como último recurso, tentar obter um novo token
+    // 6. Verificação direta no localStorage como fallback
+    if (typeof window !== 'undefined') {
+      console.log('🔍 Verificação direta no localStorage...');
+
+      // Tentar token direto
+      const directToken = localStorage.getItem('token') || localStorage.getItem('abzToken');
+      if (directToken) {
+        console.log('✅ Token encontrado diretamente no localStorage');
+        return directToken;
+      }
+    }
+
+    // 7. Como último recurso, tentar obter um novo token
     try {
-      console.log('Token não encontrado em nenhuma fonte, tentando obter novo token');
+      console.log('❌ Token não encontrado em nenhuma fonte, tentando obter novo token');
 
       // Tentar com o cliente normal primeiro
       const { data: refreshData } = await supabase.auth.refreshSession();
 
       if (refreshData.session?.access_token) {
-        console.log('Novo token obtido com sucesso via supabase');
+        console.log('✅ Novo token obtido com sucesso via supabase');
         return refreshData.session.access_token;
       }
 
@@ -168,11 +190,11 @@ export async function getAuthToken(): Promise<string | null> {
       const { data: adminRefreshData } = await supabaseAdmin.auth.refreshSession();
 
       if (adminRefreshData.session?.access_token) {
-        console.log('Novo token obtido com sucesso via supabaseAdmin');
+        console.log('✅ Novo token obtido com sucesso via supabaseAdmin');
         return adminRefreshData.session.access_token;
       }
     } catch (refreshError) {
-      console.error('Erro ao tentar obter novo token:', refreshError);
+      console.error('❌ Erro ao tentar obter novo token:', refreshError);
     }
 
     // 7. Verificar se há um token na URL (para casos de redirecionamento após login)
@@ -190,10 +212,19 @@ export async function getAuthToken(): Promise<string | null> {
       }
     }
 
-    console.error('Não foi possível obter token de autenticação de nenhuma fonte');
+    console.error('❌ Não foi possível obter token de autenticação de nenhuma fonte');
+
+    // Debug final: mostrar tudo que tentamos
+    if (typeof window !== 'undefined') {
+      console.log('🔍 Debug final - Estado do localStorage:', {
+        keys: Object.keys(localStorage),
+        cookies: document.cookie
+      });
+    }
+
     return null;
   } catch (error) {
-    console.error('Erro ao obter token de autenticação:', error);
+    console.error('❌ Erro ao obter token de autenticação:', error);
     return null;
   }
 }

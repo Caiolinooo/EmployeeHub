@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     console.log('Cabeçalho de autorização recebido:', authHeader ? 'Presente' : 'Ausente');
 
     // Tentar obter o token do cabeçalho
-    let token = extractTokenFromHeader(authHeader);
+    let token = extractTokenFromHeader(authHeader || undefined);
     console.log('Token extraído do cabeçalho:', token ? 'Presente' : 'Ausente');
 
     // Se não houver token no cabeçalho, tentar obter do corpo da requisição
@@ -204,7 +204,7 @@ export async function POST(request: NextRequest) {
       const adminEmail = process.env.ADMIN_EMAIL || 'caio.correia@groupabz.com';
       console.log('Buscando usuário administrador pelo email:', adminEmail);
 
-      const { data: adminUser, error: adminUserError } = await supabase
+      const { data: adminUser, error: adminUserError } = await supabaseAdmin
         .from('users')
         .select('*')
         .eq('email', adminEmail)

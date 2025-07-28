@@ -213,8 +213,8 @@ export async function POST(request: NextRequest) {
     
     // Salvar as instruções em um arquivo para referência futura
     try {
-      const fs = require('fs');
-      const path = require('path');
+      const fs = await import('fs');
+      const path = await import('path');
       
       const instructionsDir = path.join(process.cwd(), 'logs');
       if (!fs.existsSync(instructionsDir)) {

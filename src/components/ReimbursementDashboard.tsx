@@ -6,8 +6,8 @@ import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/contexts/I18nContext';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { supabaseAdmin } from '@/lib/db';
 import { fetchWithAuth } from '@/lib/authUtils';
+import { supabaseAdmin } from '@/lib/db';
 import { fetchUserReimbursements } from '@/services/reimbursementService';
 
 interface Reimbursement {
@@ -76,18 +76,11 @@ export default function ReimbursementDashboard() {
       queryParams.append('page', page.toString());
       queryParams.append('limit', limit.toString());
 
-      // Obter token de autenticação
-      const token = localStorage.getItem('token');
-
       // Fazer a requisição para a API
       console.log('Buscando reembolsos do usuário via API...');
       console.log('URL:', `/api/reembolso/user?${queryParams.toString()}`);
 
-      const response = await fetch(`/api/reembolso/user?${queryParams.toString()}`, {
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
-      });
+      const response = await fetchWithAuth(`/api/reembolso/user?${queryParams.toString()}`);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -119,7 +112,7 @@ export default function ReimbursementDashboard() {
 
       if (apiData && apiData.length > 0) {
         // Normalizar os dados
-        const normalizedData = apiData.map(item => ({
+        const normalizedData = apiData.map((item: any) => ({
           id: item.id,
           protocolo: item.protocolo,
           nome: item.nome,
@@ -432,7 +425,7 @@ export default function ReimbursementDashboard() {
 
         // Show a toast with instructions for the admin
         if (profile?.role === 'ADMIN') {
-          toast.info(
+          toast(
             'Para garantir o funcionamento correto do sistema de reembolsos, verifique as políticas de segurança no painel do Supabase.',
             { duration: 8000 }
           );
@@ -471,13 +464,10 @@ export default function ReimbursementDashboard() {
               console.log('Test insert failed, which might indicate RLS policies are already restricting access:', insertError);
 
               // Show a toast with instructions for the admin
-              toast({
-                title: 'Atenção',
-                description: 'Para garantir o funcionamento correto do sistema de reembolsos, verifique as políticas de segurança no painel do Supabase.',
-                status: 'info',
-                duration: 8000,
-                isClosable: true,
-              });
+              toast(
+                'Atenção: Para garantir o funcionamento correto do sistema de reembolsos, verifique as políticas de segurança no painel do Supabase.',
+                { duration: 8000 }
+              );
             } else {
               console.log('Test insert successful, cleaning up...');
 
@@ -684,7 +674,7 @@ export default function ReimbursementDashboard() {
         ) : error ? (
           <div className="p-6 text-center text-red-500">
             <p>{error}</p>
-            {tableExists === false ? (
+            {tableExists !== true ? (
               <button
                 onClick={createReimbursementTable}
                 disabled={creatingTable}

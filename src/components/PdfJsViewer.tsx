@@ -58,7 +58,7 @@ const PdfJsViewer: React.FC<PdfJsViewerProps> = ({ filePath }) => {
 
       try {
         // Normalizar o caminho do arquivo
-        let normalizedPath = getNormalizedPath();
+        const normalizedPath = getNormalizedPath();
 
         console.log('Verificando arquivo PDF:', normalizedPath);
 

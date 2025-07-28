@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   try {
     // Verificar autenticação
     const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromHeader(authHeader || undefined);
 
     if (!token) {
       console.error('API avaliacoes: Token não fornecido');
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
   try {
     // Verificar autenticação - tentar obter o token de várias fontes
     const authHeader = request.headers.get('authorization');
-    let token = extractTokenFromHeader(authHeader);
+    let token = extractTokenFromHeader(authHeader || undefined);
 
     // Log detalhado para depuração
     console.log('API avaliacoes POST: Cabeçalho de autorização:', authHeader ? 'Presente' : 'Ausente');
@@ -392,8 +392,8 @@ export async function POST(request: NextRequest) {
 
     // Verificar se os IDs estão no formato correto (funcionario_id ou funcionarioId)
     // Usar os IDs já verificados anteriormente
-    const funcionarioId = funcionarioCheck.id;
-    const avaliadorId = avaliadorCheck.id;
+    const funcionarioId = funcionarioCheck?.id;
+    const avaliadorId = avaliadorCheck?.id;
 
     console.log('IDs para criação de avaliação:', {
       funcionarioId,
@@ -402,8 +402,8 @@ export async function POST(request: NextRequest) {
       originalAvaliadorId: data.avaliador_id,
       fallbackFuncionarioId: data.funcionarioId,
       fallbackAvaliadorId: data.avaliadorId,
-      funcionarioCheckId: funcionarioCheck.id,
-      avaliadorCheckId: avaliadorCheck.id
+      funcionarioCheckId: funcionarioCheck?.id,
+      avaliadorCheckId: avaliadorCheck?.id
     });
 
     if (!funcionarioId || !avaliadorId) {

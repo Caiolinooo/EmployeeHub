@@ -28,6 +28,7 @@ interface UserEditorProps {
   onSave: (user: UserEditorData, password?: string) => void;
   onCancel: () => void;
   isNewUser?: boolean;
+  isNew?: boolean;
   isModal?: boolean;
 }
 
@@ -147,7 +148,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
       const role = value as 'ADMIN' | 'MANAGER' | 'USER';
       setEditedUser(prev => ({
         ...prev,
-        [name]: value,
+        [name]: role,
         accessPermissions: defaultPermissions[role]
       }));
     } else {

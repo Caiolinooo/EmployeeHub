@@ -78,7 +78,7 @@ const TextContentViewer: React.FC<TextContentViewerProps> = ({ filePath }) => {
     const processedLines = [];
     let currentParagraph = [];
     let inTable = false;
-    let tableRows = [];
+    let tableRows: any[] = [];
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];

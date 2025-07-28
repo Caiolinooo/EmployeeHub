@@ -166,7 +166,7 @@ export async function GET(request: NextRequest) {
   try {
     // Verificar autenticação
     const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromHeader(authHeader || undefined);
 
     if (!token) {
       return NextResponse.json(
@@ -353,7 +353,7 @@ export async function GET(request: NextRequest) {
       email: funcionario.email,
       cargo: funcionario.cargo || 'Não especificado',
       departamento: funcionario.departamento || 'Não especificado',
-      role: funcionario.users?.role || 'USER',
+      role: (funcionario.users as any)?.role || 'USER',
       ativo: funcionario.status === 'ativo'
     }));
 

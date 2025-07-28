@@ -12,7 +12,7 @@ function convertHardcodedCards() {
     // Verificar se o ícone é um componente válido
     if (card.icon && typeof card.icon === 'function') {
       // Tentar obter o displayName do componente
-      iconName = card.icon.displayName || 'FiGrid';
+      iconName = (card.icon as any).displayName || card.icon.name || 'FiGrid';
 
       // Garantir que o nome do ícone esteja no formato correto (PascalCase)
       if (!iconName.startsWith('Fi')) {
@@ -208,7 +208,7 @@ export async function POST(request: NextRequest) {
             console.log('Tabela cards criada com sucesso');
           } catch (createTableError) {
             console.error('Erro ao criar tabela cards:', createTableError);
-            throw new Error(`Erro ao criar tabela cards: ${createTableError.message}`);
+            throw new Error(`Erro ao criar tabela cards: ${createTableError instanceof Error ? createTableError.message : String(createTableError)}`);
           }
         } else {
           return NextResponse.json(

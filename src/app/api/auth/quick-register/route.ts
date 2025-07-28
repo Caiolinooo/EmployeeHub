@@ -28,6 +28,8 @@ export async function POST(request: NextRequest) {
       phoneNumber,
       firstName,
       lastName,
+      cpf,
+      position,
       password,
       inviteCode
     } = body;
@@ -42,9 +44,17 @@ export async function POST(request: NextRequest) {
     });
 
     // Validar os dados de entrada
-    if ((!email && !phoneNumber) || !firstName || !lastName || !password) {
+    if ((!email && !phoneNumber) || !firstName || !lastName || !cpf || !position || !password) {
       return NextResponse.json(
-        { error: 'Todos os campos obrigatórios devem ser preenchidos' },
+        { error: 'Todos os campos obrigatórios devem ser preenchidos (nome, sobrenome, CPF, cargo, telefone/email e senha)' },
+        { status: 400 }
+      );
+    }
+
+    // Validar formato do CPF
+    if (cpf && cpf.replace(/\D/g, '').length !== 11) {
+      return NextResponse.json(
+        { error: 'CPF deve ter 11 dígitos' },
         { status: 400 }
       );
     }
@@ -76,11 +86,191 @@ export async function POST(request: NextRequest) {
       phoneError = error;
     }
 
+    // Se o usuário existe, verificar se pode completar o registro
     if (existingUser) {
-      return NextResponse.json(
-        { error: 'Usuário já cadastrado com este e-mail ou telefone' },
-        { status: 400 }
-      );
+      // Verificar se é um registro incompleto (sem senha ou pendente)
+      const isIncompleteRegistration = !existingUser.password_hash && 
+                                      (existingUser.authorization_status === 'pending' || !existingUser.active);
+      
+      if (isIncompleteRegistration) {
+        console.log('Completando registro de usuário existente:', existingUser.id);
+        
+        // Hash da nova senha
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        // Verificar se o código de convite é válido
+        let isInviteValid = false;
+        let inviteData = null;
+
+        if (inviteCode) {
+          console.log('Verificando código de convite:', inviteCode);
+
+          const { data: invite, error: inviteError } = await supabase
+            .from('users_unified')
+            .select('*')
+            .eq('invite_code', inviteCode)
+            .eq('is_authorized', true)
+            .single();
+
+          if (inviteError) {
+            console.log('Erro ao verificar código de convite:', inviteError.message);
+          } else if (invite) {
+            console.log('Código de convite válido:', invite.id);
+            isInviteValid = true;
+            inviteData = invite;
+
+            // Verificar se o convite expirou
+            if (invite.authorization_expires_at) {
+              const expiryDate = new Date(invite.authorization_expires_at);
+              if (expiryDate < new Date()) {
+                console.log('Código de convite expirado');
+                isInviteValid = false;
+              }
+            }
+
+            // Verificar se o convite atingiu o número máximo de usos
+            if (invite.authorization_max_uses && invite.authorization_uses >= invite.authorization_max_uses) {
+              console.log('Código de convite atingiu o número máximo de usos');
+              isInviteValid = false;
+            }
+          }
+        }
+        
+        // Atualizar o usuário existente com as novas informações
+        const { data: updatedUserData, error: updateError } = await supabase
+          .from('users_unified')
+          .update({
+            first_name: firstName,
+            last_name: lastName,
+            cpf: cpf,
+            position: position,
+            password_hash: hashedPassword,
+            active: isInviteValid, // Ativo imediatamente se o convite for válido
+            is_authorized: isInviteValid, // Autorizado imediatamente se o convite for válido
+            authorization_status: isInviteValid ? 'active' : 'pending',
+            invite_code: isInviteValid ? inviteCode : null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingUser.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          console.error('Erro ao atualizar usuário existente:', updateError);
+          return NextResponse.json(
+            { error: 'Erro ao completar registro: ' + updateError.message },
+            { status: 500 }
+          );
+        }
+
+        // Se o convite for válido, incrementar o contador de usos
+        if (isInviteValid && inviteData) {
+          const { error: updateInviteError } = await supabase
+            .from('users_unified')
+            .update({
+              authorization_uses: (inviteData.authorization_uses || 0) + 1,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', inviteData.id);
+
+          if (updateInviteError) {
+            console.error('Erro ao atualizar contador de usos do convite:', updateInviteError);
+          }
+        }
+
+        // Verificar se já tem permissões, se não, adicionar
+        const { data: existingPermissions } = await supabase
+          .from('user_permissions')
+          .select('*')
+          .eq('user_id', existingUser.id);
+
+        if (!existingPermissions || existingPermissions.length === 0) {
+          // Adicionar permissões padrão
+          const defaultModules = [
+            'dashboard',
+            'manual',
+            'procedimentos',
+            'politicas',
+            'calendario',
+            'noticias',
+            'reembolso',
+            'contracheque',
+            'ponto'
+          ];
+
+          const permissionsToInsert = defaultModules.map(module => ({
+            user_id: existingUser.id,
+            module,
+            feature: null
+          }));
+
+          const { error: permissionsError } = await supabase
+            .from('user_permissions')
+            .insert(permissionsToInsert);
+
+          if (permissionsError) {
+            console.error('Erro ao adicionar permissões:', permissionsError);
+          }
+        }
+
+        // Registrar histórico de acesso
+        const { error: historyError } = await supabase
+          .from('access_history')
+          .insert({
+            user_id: existingUser.id,
+            action: 'REGISTRATION_COMPLETED',
+            details: `Registro completado via formulário rápido.`,
+            ip_address: request.headers.get('x-forwarded-for') || 'unknown',
+            user_agent: request.headers.get('user-agent') || 'unknown'
+          });
+
+        if (historyError) {
+          console.error('Erro ao registrar histórico de acesso:', historyError);
+        }
+
+        // Enviar e-mail de confirmação se tiver email
+        if (email) {
+          try {
+            console.log(`Enviando email de confirmação para ${email}`);
+            const emailResult = await sendNewUserWelcomeEmail(email, firstName);
+            console.log(`Resultado do envio de email: ${emailResult.success ? 'Sucesso' : 'Falha'}`);
+          } catch (emailError) {
+            console.error('Erro ao enviar email de confirmação:', emailError);
+          }
+        }
+
+        // Enviar notificação para o administrador
+        try {
+          await sendAdminNotificationEmail(
+            process.env.ADMIN_EMAIL || 'caio.correia@groupabz.com',
+            {
+              name: `${firstName} ${lastName}`,
+              email: email || 'Não informado',
+              phoneNumber: phoneNumber || 'Não informado',
+              position: 'Não informado',
+              department: 'Não informado',
+              protocol: existingUser.protocol || 'N/A'
+            }
+          );
+        } catch (notifyError) {
+          console.error('Erro ao enviar notificação para o administrador:', notifyError);
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: isInviteValid
+            ? 'Registro completado com sucesso. Sua conta já está ativa e você pode fazer login imediatamente.'
+            : 'Registro completado com sucesso. Aguarde a aprovação do administrador.',
+          protocol: existingUser.protocol,
+          accountActive: isInviteValid
+        });
+      } else {
+        // Usuário já possui registro completo
+        return NextResponse.json(
+          { error: 'Usuário já cadastrado com este e-mail ou telefone' },
+          { status: 400 }
+        );
+      }
     }
 
     // Gerar código de verificação
@@ -174,7 +364,8 @@ export async function POST(request: NextRequest) {
         phone_number: phoneNumber || null,
         first_name: firstName,
         last_name: lastName,
-        position: 'Não informado',
+        cpf: cpf,
+        position: position || 'Não informado',
         department: 'Não informado',
         role: 'USER',
         active: isInviteValid, // Ativo imediatamente se o convite for válido
@@ -183,7 +374,7 @@ export async function POST(request: NextRequest) {
         verification_code: verificationCode,
         verification_code_expires: verificationCodeExpires.toISOString(),
         protocol: protocol,
-        invite_code_used: isInviteValid ? inviteCode : null,
+        invite_code: isInviteValid ? inviteCode : null,
         password_hash: hashedPassword,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -228,7 +419,7 @@ export async function POST(request: NextRequest) {
     ];
 
     const permissionsToInsert = defaultModules.map(module => ({
-      user_id: authData.user.id,
+      user_id: authData.user?.id || '',
       module,
       feature: null
     }));
@@ -259,7 +450,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Enviar código de verificação por e-mail se tiver email
-    let sendResult = { success: false, previewUrl: undefined };
+    let sendResult: any = { success: false, previewUrl: undefined };
     if (email) {
       sendResult = await sendVerificationEmail(email, verificationCode);
     }

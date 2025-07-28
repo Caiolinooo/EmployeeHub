@@ -3,7 +3,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, isAdmin } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 
 /**
  * Verifica a autenticação e autorização do usuário
@@ -48,16 +48,24 @@ export async function verifyAuth(request: NextRequest, requireAdmin = false) {
     }
 
     // Buscar usuário pelo ID
-    let user = await prisma.user.findUnique({
-      where: { id: payload.userId }
-    });
+    let { data: user, error } = await supabase
+      .from('users_unified')
+      .select('*')
+      .eq('id', payload.userId)
+      .single();
 
     // Se não encontrar pelo ID, tentar pelo número de telefone
     if (!user && payload.phoneNumber) {
       console.log('Usuário não encontrado pelo ID, tentando pelo telefone:', payload.phoneNumber);
-      user = await prisma.user.findUnique({
-        where: { phoneNumber: payload.phoneNumber }
-      });
+      const { data: userByPhone, error: phoneError } = await supabase
+        .from('users_unified')
+        .select('*')
+        .eq('phone_number', payload.phoneNumber)
+        .single();
+
+      if (!phoneError) {
+        user = userByPhone;
+      }
     }
 
     // Verificar se o usuário existe

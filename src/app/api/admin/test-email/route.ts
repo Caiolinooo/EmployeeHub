@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       message: result.success ? 'E-mail de teste enviado com sucesso' : 'Falha ao enviar e-mail de teste',
       details: result.message,
       previewUrl: result.previewUrl,
-      usedFallback: result.usedFallback
+      usedFallback: (result as any).usedFallback || false
     });
   } catch (error) {
     console.error('Erro ao testar configuração de e-mail:', error);

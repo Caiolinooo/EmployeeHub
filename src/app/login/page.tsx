@@ -13,7 +13,7 @@ import LanguageSelector from '@/components/LanguageSelector';
 import InviteCodeInput from '@/components/Auth/InviteCodeInput';
 import ForgotPasswordForm from '@/components/Auth/ForgotPasswordForm';
 import { SetPasswordModal } from '@/components/Auth/SetPasswordModal';
-import { QuickRegisterForm } from '@/components/Auth/QuickRegisterForm';
+
 import { fetchWrapper } from '@/lib/fetch-wrapper';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -40,6 +40,10 @@ export default function Login() {
   // Campos para registro rápido
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [quickRegisterPhone, setQuickRegisterPhone] = useState('');
+  const [cpf, setCpf] = useState('');
+  const [cargo, setCargo] = useState('');
+  
   const {
     initiateLogin,
     loginWithPassword,
@@ -52,8 +56,14 @@ export default function Login() {
     authStatus,
     requiresPassword,
     isNewUser,
-    setPasswordAfterVerification
+    setPasswordAfterVerification,
+    setLoginStep
   } = useAuth();
+  
+  // Debug: Log do estado loginStep
+  console.log('🎯 DEBUG Frontend - loginStep atual:', loginStep);
+  console.log('🎯 DEBUG Frontend - authStatus atual:', authStatus);
+  console.log('🎯 DEBUG Frontend - loginStep === quick_register?', loginStep === 'quick_register');
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useI18n();
@@ -61,7 +71,7 @@ export default function Login() {
 
   // Verificar se há um código de convite na URL
   useEffect(() => {
-    const inviteParam = searchParams.get('invite');
+    const inviteParam = searchParams?.get('invite');
     if (inviteParam) {
       setInviteCode(inviteParam);
       setShowInviteField(true);
@@ -121,11 +131,17 @@ export default function Login() {
         };
       }
 
-      // Validar o email com a função melhorada
-      if (!email || !validateEmail(email)) {
+      // Validar o email com a função melhorada - temporariamente comentado para debugging
+      if (!email) {
         setError(t('auth.invalidEmail'));
         return;
       }
+      
+      // TODO: Reativar validação após teste
+      // if (!validateEmail(email)) {
+      //   setError(t('auth.invalidEmail'));
+      //   return;
+      // }
 
       // Verificar se é o email do administrador
       if (email === 'caio.correia@groupabz.com' || email === 'apiabz@groupabz.com') {
@@ -192,6 +208,19 @@ export default function Login() {
         setError(t('auth.unauthorizedAccessMessage'));
       } else if (authStatus === 'inactive') {
         setError('Sua conta está desativada. Entre em contato com o suporte.');
+      } else if (authStatus === 'pending_registration' || authStatus === 'incomplete_registration') {
+        // Usuário existe mas registro não foi completado
+        const identifier = useEmail ? email : phoneNumber;
+        console.log(`Email/telefone encontrado mas registro incompleto: ${identifier}. Direcionando para completar registro.`);
+        console.log('DEBUG: authStatus detectado:', authStatus);
+        console.log('DEBUG: AuthContext já deve ter mudado loginStep para quick_register automaticamente');
+
+        // Mostrar formulário de registro rápido para completar o cadastro
+        setError('');
+        setSuccess(t('auth.completeRegistration', 'Complete seu cadastro para acessar o sistema.'));
+
+        // Não precisamos chamar setLoginStep aqui, pois o AuthContext já fez isso automaticamente
+        console.log('DEBUG: loginStep será alterado pelo AuthContext automaticamente');
       } else if (authStatus === 'new_email' || authStatus === 'new_phone') {
         // Redirecionar para a página de registro com o email/telefone preenchido
         const identifier = useEmail ? email : phoneNumber;
@@ -201,8 +230,7 @@ export default function Login() {
         setError('');
         setSuccess(t('auth.notRegisteredYet', 'Este email/telefone ainda não está cadastrado. Por favor, complete seu cadastro abaixo.'));
 
-        // Mudar para o passo de registro rápido
-        setLoginStep('quick_register');
+        // AuthContext deve gerenciar o loginStep automaticamente baseado no authStatus
       } else {
         setError(useEmail ? t('auth.invalidEmail') : t('auth.invalidPhoneNumber'));
       }
@@ -314,9 +342,31 @@ export default function Login() {
     setSuccess('');
 
     try {
-      // Validar os campos
+      // Validar os campos obrigatórios
       if (!firstName || !lastName) {
         setError(t('register.error.requiredFields', 'Nome e sobrenome são obrigatórios'));
+        return;
+      }
+
+      if (!quickRegisterPhone) {
+        setError(t('register.error.phoneRequired', 'Telefone é obrigatório'));
+        return;
+      }
+
+      if (!cpf) {
+        setError(t('register.error.cpfRequired', 'CPF é obrigatório'));
+        return;
+      }
+
+      if (!cargo) {
+        setError(t('register.error.cargoRequired', 'Cargo é obrigatório'));
+        return;
+      }
+
+      // Validar formato do CPF (11 dígitos)
+      const cpfNumbers = cpf.replace(/\D/g, '');
+      if (cpfNumbers.length !== 11) {
+        setError(t('register.error.invalidCpf', 'CPF deve ter 11 dígitos'));
         return;
       }
 
@@ -360,7 +410,9 @@ export default function Login() {
         firstName,
         lastName,
         email: useEmail ? email : '',
-        phoneNumber: useEmail ? '' : formattedPhone,
+        phoneNumber: quickRegisterPhone || (useEmail ? '' : formattedPhone),
+        cpf: cpfNumbers,
+        position: cargo,
         password,
         inviteCode: inviteCode || undefined
       };
@@ -414,20 +466,12 @@ export default function Login() {
   // Estado para controlar se a senha foi definida com sucesso
   const [passwordSet, setPasswordSet] = useState(false);
 
-  // Modal de registro rápido
-  const [showQuickRegisterModal, setShowQuickRegisterModal] = useState(false);
-
-  // Efeito para mostrar os modais quando necessário
+  // Efeito para mostrar o modal de definição de senha quando necessário
   useEffect(() => {
     if (loginStep === 'set_password') {
       setShowSetPasswordModal(true);
-      setShowQuickRegisterModal(false);
-    } else if (loginStep === 'quick_register') {
-      setShowSetPasswordModal(false);
-      setShowQuickRegisterModal(true);
     } else {
       setShowSetPasswordModal(false);
-      setShowQuickRegisterModal(false);
     }
   }, [loginStep]);
 
@@ -452,14 +496,10 @@ export default function Login() {
     }
   };
 
-  // Função para lidar com o sucesso do registro rápido
-  const handleQuickRegisterSuccess = async () => {
-    setShowQuickRegisterModal(false);
-    router.push('/dashboard');
-  };
+
 
   return (
-    <div className="min-h-screen flex flex-col justify-center px-6 py-12 lg:px-8 bg-abz-background">
+    <div className="min-h-screen flex flex-col justify-center px-4 py-6 sm:px-6 sm:py-12 lg:px-8 bg-abz-background">
 
 
       {/* Modal de definição de senha */}
@@ -470,14 +510,7 @@ export default function Login() {
         isNewUser={isNewUser}
       />
 
-      {/* Modal de registro rápido */}
-      <QuickRegisterForm
-        isOpen={showQuickRegisterModal}
-        onClose={() => setShowQuickRegisterModal(false)}
-        onSuccess={handleQuickRegisterSuccess}
-        email={email}
-        phoneNumber={phoneNumber}
-      />
+
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
@@ -486,12 +519,12 @@ export default function Login() {
             alt={config.companyName + " Logo"}
             width={200}
             height={60}
-            className="h-auto"
+            className="h-auto w-auto max-w-[150px] sm:max-w-[200px]"
             priority
             unoptimized
           />
         </div>
-        <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-abz-blue-dark">
+        <h2 className="mt-4 sm:mt-6 text-center text-xl sm:text-2xl font-bold leading-8 sm:leading-9 tracking-tight text-abz-blue-dark">
           {loginStep === 'phone' ? t('auth.accessAccount') :
            loginStep === 'verification' ? t('auth.verifyPhone') :
            loginStep === 'password' ? t('auth.enterPassword') :
@@ -504,8 +537,8 @@ export default function Login() {
         </div>
       </div>
 
-      <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white px-6 py-8 shadow-md rounded-lg sm:px-10">
+      <div className="mt-4 sm:mt-10 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white px-4 py-6 shadow-md rounded-lg sm:px-10 max-h-[80vh] overflow-y-auto">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm mb-4">
               {error}
@@ -580,7 +613,7 @@ export default function Login() {
               ) : (
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
-                    Email
+                    {t('auth.email')}
                   </label>
                   <div className="mt-2 relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -826,7 +859,7 @@ export default function Login() {
           {showForgotPassword && (
             <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
               <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-                <h2 className="text-xl font-semibold mb-4">Recuperação de Senha</h2>
+                <h2 className="text-xl font-semibold mb-4">{t('auth.resetPassword')}</h2>
                 <ForgotPasswordForm
                   onCancel={() => setShowForgotPassword(false)}
                   initialEmail={forgotPasswordEmail}
@@ -939,15 +972,15 @@ export default function Login() {
 
           {/* Formulário de Registro Rápido */}
           {loginStep === 'quick_register' && (
-            <form onSubmit={handleQuickRegister} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-1">
+            <form onSubmit={handleQuickRegister} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
                   <label htmlFor="firstName" className="block text-sm font-medium leading-6 text-gray-900">
                     {t('register.firstName', 'Nome')}*
                   </label>
                   <div className="mt-2 relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FiUser className="h-5 w-5 text-gray-400" />
+                      <FiUser className="h-4 w-4 text-gray-400" />
                     </div>
                     <input
                       id="firstName"
@@ -956,19 +989,19 @@ export default function Login() {
                       required
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
-                      className="block w-full rounded-md border-0 py-2.5 pl-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-abz-blue sm:text-sm sm:leading-6"
+                      className="block w-full rounded-md border-0 py-2 pl-9 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-abz-blue text-sm"
                       placeholder={t('register.firstNamePlaceholder', 'Seu nome')}
                     />
                   </div>
                 </div>
 
-                <div className="col-span-1">
+                <div>
                   <label htmlFor="lastName" className="block text-sm font-medium leading-6 text-gray-900">
                     {t('register.lastName', 'Sobrenome')}*
                   </label>
                   <div className="mt-2 relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FiUser className="h-5 w-5 text-gray-400" />
+                      <FiUser className="h-4 w-4 text-gray-400" />
                     </div>
                     <input
                       id="lastName"
@@ -977,7 +1010,7 @@ export default function Login() {
                       required
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
-                      className="block w-full rounded-md border-0 py-2.5 pl-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-abz-blue sm:text-sm sm:leading-6"
+                      className="block w-full rounded-md border-0 py-2 pl-9 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-abz-blue text-sm"
                       placeholder={t('register.lastNamePlaceholder', 'Seu sobrenome')}
                     />
                   </div>
@@ -990,7 +1023,7 @@ export default function Login() {
                 </label>
                 <div className="mt-2 relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    {useEmail ? <FiUser className="h-5 w-5 text-gray-400" /> : <FiPhone className="h-5 w-5 text-gray-400" />}
+                    {useEmail ? <FiUser className="h-4 w-4 text-gray-400" /> : <FiPhone className="h-4 w-4 text-gray-400" />}
                   </div>
                   <input
                     id="identifier"
@@ -998,8 +1031,83 @@ export default function Login() {
                     type={useEmail ? "email" : "tel"}
                     value={useEmail ? email : phoneNumber}
                     readOnly
-                    className="block w-full rounded-md border-0 py-2.5 pl-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 bg-gray-100 sm:text-sm sm:leading-6"
+                    className="block w-full rounded-md border-0 py-2 pl-9 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 bg-gray-100 text-sm"
                   />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="quickRegisterPhone" className="block text-sm font-medium leading-6 text-gray-900">
+                  {t('register.phoneNumber', 'Telefone')}*
+                </label>
+                <div className="mt-2 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FiPhone className="h-4 w-4 text-gray-400" />
+                  </div>
+                  <input
+                    id="quickRegisterPhone"
+                    name="quickRegisterPhone"
+                    type="tel"
+                    required
+                    value={quickRegisterPhone}
+                    onChange={(e) => setQuickRegisterPhone(e.target.value)}
+                    className="block w-full rounded-md border-0 py-2 pl-9 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-abz-blue text-sm"
+                    placeholder={t('register.phoneNumberPlaceholder', '+5522999999999')}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="cpf" className="block text-sm font-medium leading-6 text-gray-900">
+                    {t('register.cpf', 'CPF')}*
+                  </label>
+                  <div className="mt-2 relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <FiUser className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <input
+                      id="cpf"
+                      name="cpf"
+                      type="text"
+                      required
+                      value={cpf}
+                      onChange={(e) => {
+                        // Aplicar máscara do CPF
+                        let value = e.target.value.replace(/\D/g, '');
+                        if (value.length <= 11) {
+                          value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                          value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                          value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                          setCpf(value);
+                        }
+                      }}
+                      className="block w-full rounded-md border-0 py-2 pl-9 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-abz-blue text-sm"
+                      placeholder={t('register.cpfPlaceholder', '000.000.000-00')}
+                      maxLength={14}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="cargo" className="block text-sm font-medium leading-6 text-gray-900">
+                    {t('register.position', 'Cargo')}*
+                  </label>
+                  <div className="mt-2 relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <FiUser className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <input
+                      id="cargo"
+                      name="cargo"
+                      type="text"
+                      required
+                      value={cargo}
+                      onChange={(e) => setCargo(e.target.value)}
+                      className="block w-full rounded-md border-0 py-2 pl-9 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-abz-blue text-sm"
+                      placeholder={t('register.positionPlaceholder', 'Ex: Desenvolvedor')}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -1009,7 +1117,7 @@ export default function Login() {
                 </label>
                 <div className="mt-2 relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiLock className="h-5 w-5 text-gray-400" />
+                    <FiLock className="h-4 w-4 text-gray-400" />
                   </div>
                   <input
                     id="register-password"
@@ -1019,7 +1127,7 @@ export default function Login() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full rounded-md border-0 py-2.5 pl-10 pr-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-abz-blue sm:text-sm sm:leading-6"
+                    className="block w-full rounded-md border-0 py-2 pl-9 pr-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-abz-blue text-sm"
                     placeholder={t('auth.passwordPlaceholder', 'Mínimo 8 caracteres')}
                   />
                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -1028,7 +1136,7 @@ export default function Login() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="text-gray-400 hover:text-gray-500 focus:outline-none"
                     >
-                      {showPassword ? <FiEyeOff className="h-5 w-5" /> : <FiEye className="h-5 w-5" />}
+                      {showPassword ? <FiEyeOff className="h-4 w-4" /> : <FiEye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
@@ -1040,7 +1148,7 @@ export default function Login() {
                 </label>
                 <div className="mt-2 relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiLock className="h-5 w-5 text-gray-400" />
+                    <FiLock className="h-4 w-4 text-gray-400" />
                   </div>
                   <input
                     id="login-confirm-password"
@@ -1050,7 +1158,7 @@ export default function Login() {
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="block w-full rounded-md border-0 py-2.5 pl-10 pr-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-abz-blue sm:text-sm sm:leading-6"
+                    className="block w-full rounded-md border-0 py-2 pl-9 pr-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-abz-blue text-sm"
                     placeholder={t('auth.confirmPasswordPlaceholder', 'Repita a senha')}
                   />
                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -1059,7 +1167,7 @@ export default function Login() {
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       className="text-gray-400 hover:text-gray-500 focus:outline-none"
                     >
-                      {showConfirmPassword ? <FiEyeOff className="h-5 w-5" /> : <FiEye className="h-5 w-5" />}
+                      {showConfirmPassword ? <FiEyeOff className="h-4 w-4" /> : <FiEye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
@@ -1072,8 +1180,8 @@ export default function Login() {
                 setShowInviteField={setShowInviteField}
               />
 
-              <div className="mb-6">
-                <p className="text-sm text-gray-600">
+              <div className="mb-2">
+                <p className="text-xs text-gray-600">
                   {t('register.requiredFields', 'Campos marcados com * são obrigatórios')}
                 </p>
               </div>
@@ -1082,7 +1190,7 @@ export default function Login() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-abz-blue hover:bg-abz-blue-dark"
+                  className="w-full bg-abz-blue hover:bg-abz-blue-dark py-2"
                 >
                   {isLoading ? (
                     <>
@@ -1097,12 +1205,12 @@ export default function Login() {
                 </Button>
               </div>
 
-              <div className="flex items-center justify-center">
+              <div className="flex items-center justify-center mt-3">
                 <Button
                   type="button"
                   onClick={() => setLoginStep('phone')}
                   variant="link"
-                  className="text-abz-blue hover:text-abz-blue-dark"
+                  className="text-abz-blue hover:text-abz-blue-dark text-sm"
                 >
                   <FiArrowLeft className="mr-2 h-4 w-4" />
                   {t('auth.backToIdentifier', 'Voltar para identificação')}

@@ -8,7 +8,6 @@ import { useI18n } from '@/contexts/I18nContext';
 
 // Configurar worker do PDF.js
 // Usar o worker local para evitar problemas de CORS
-import { PDFWorker } from 'react-pdf';
 
 // Definir o worker src para o worker local
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -168,7 +167,6 @@ const ReactPdfViewer: React.FC<ReactPdfViewerProps> = ({
                   cMapPacked: true,
                   standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@3.4.120/standard_fonts/'
                 }}
-                worker={<PDFWorker />}
               >
                 <Page
                   pageNumber={pageNumber}
@@ -196,7 +194,7 @@ const ReactPdfViewer: React.FC<ReactPdfViewerProps> = ({
                 <FiChevronLeft className="w-5 h-5" />
               </button>
               <span className="text-sm text-gray-600">
-                {t('viewer.pageInfo', 'Página {{current}} de {{total}}', { current: pageNumber, total: numPages })}
+                {t('viewer.pageInfo', `Página ${pageNumber} de ${numPages}`)}
               </span>
               <button
                 onClick={nextPage}

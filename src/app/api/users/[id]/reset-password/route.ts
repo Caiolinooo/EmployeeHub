@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase';
 import bcrypt from 'bcryptjs';
 
 export async function POST(
@@ -10,7 +10,7 @@ export async function POST(
   try {
     // Verificar autenticação
     const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromHeader(authHeader || undefined);
 
     if (!token) {
       return NextResponse.json(
@@ -27,17 +27,12 @@ export async function POST(
       );
     }
 
-    // Verificar se o usuário é administrador
-    const requestingUser = await prisma.user.findUnique({
-      where: { id: payload.userId },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        accessHistory: true
-      }
-    });
+    // Verificar se o usuário é administrador usando Supabase
+    const { data: requestingUser, error: userError } = await supabaseAdmin
+      .from('users_unified')
+      .select('id, first_name, last_name, role, access_history')
+      .eq('id', payload.userId)
+      .single();
 
     if (!requestingUser || requestingUser.role !== 'ADMIN') {
       return NextResponse.json(
@@ -62,17 +57,13 @@ export async function POST(
     }
 
     // Buscar o usuário
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        accessHistory: true
-      }
-    });
+    const { data: user, error: userFetchError } = await supabaseAdmin
+      .from('users_unified')
+      .select('id, first_name, last_name, access_history')
+      .eq('id', userId)
+      .single();
 
-    if (!user) {
+    if (userFetchError || !user) {
       return NextResponse.json(
         { error: 'Usuário não encontrado' },
         { status: 404 }
@@ -83,40 +74,51 @@ export async function POST(
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Obter o histórico de acesso atual do usuário
-    const userAccessHistory = user.accessHistory || [];
+    const userAccessHistory = user.access_history || [];
 
     // Atualizar a senha e registrar no histórico
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
+    const { error: updateError } = await supabaseAdmin
+      .from('users_unified')
+      .update({
         password: hashedPassword,
-        passwordLastChanged: new Date(),
-        accessHistory: [
+        password_hash: hashedPassword,
+        password_last_changed: new Date().toISOString(),
+        access_history: [
           ...userAccessHistory,
           {
-            timestamp: new Date(),
+            timestamp: new Date().toISOString(),
             action: 'PASSWORD_RESET',
-            details: `Senha redefinida por ${requestingUser.firstName} ${requestingUser.lastName}`
+            details: `Senha redefinida por ${requestingUser.first_name}`
           }
-        ]
-      }
-    });
+        ],
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+
+    if (updateError) {
+      console.error('Erro ao atualizar senha:', updateError);
+      return NextResponse.json(
+        { error: 'Erro ao atualizar senha' },
+        { status: 500 }
+      );
+    }
 
     // Registrar a ação no histórico do administrador
-    const adminAccessHistory = requestingUser.accessHistory || [];
-    await prisma.user.update({
-      where: { id: requestingUser.id },
-      data: {
-        accessHistory: [
+    const adminAccessHistory = requestingUser.access_history || [];
+    await supabaseAdmin
+      .from('users_unified')
+      .update({
+        access_history: [
           ...adminAccessHistory,
           {
-            timestamp: new Date(),
+            timestamp: new Date().toISOString(),
             action: 'RESET_USER_PASSWORD',
-            details: `Redefiniu a senha do usuário ${user.firstName} ${user.lastName}`
+            details: `Redefiniu a senha do usuário ${user.first_name} ${user.last_name}`
           }
-        ]
-      }
-    });
+        ],
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', requestingUser.id);
 
     return NextResponse.json({
       success: true,

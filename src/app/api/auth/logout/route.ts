@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   try {
     // Extrair o token do cabeçalho
     const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromHeader(authHeader || undefined);
 
     if (!token) {
       return NextResponse.json(

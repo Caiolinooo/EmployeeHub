@@ -36,7 +36,7 @@ export default function AvaliacoesPage() {
 
         // Buscar avaliações
         let data;
-        let error = null;
+        const error = null;
 
         console.log('Buscando avaliações...');
 
@@ -106,9 +106,9 @@ export default function AvaliacoesPage() {
               }
 
               // Mapear funcionários por ID
-              const funcionariosMap = {};
+              const funcionariosMap: { [key: string]: { id: string; nome: string; email: string } } = {};
               if (funcionarios) {
-                funcionarios.forEach(f => {
+                funcionarios.forEach((f: { id: string; nome: string; email: string }) => {
                   funcionariosMap[f.id] = f;
                 });
               }

@@ -289,7 +289,7 @@ export default function UnifiedUserManager() {
       setError(`Erro ao corrigir token: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
 
       // Se falhar, tentar criar um novo token para o administrador
-      if (user?.email === 'caio.correia@groupabz.com' || user?.phoneNumber === '+5522997847289') {
+      if (user?.email === 'caio.correia@groupabz.com' || (user as any)?.phone_number === '+5522997847289') {
         try {
           console.log('Tentando criar novo token para o administrador...');
 
@@ -451,7 +451,7 @@ export default function UnifiedUserManager() {
         }
 
         console.error('Erro ao buscar usuários:', errorData);
-        throw new Error(errorData.error || `Erro ao carregar usuários: ${response.status} ${response.statusText}`);
+        throw new Error((errorData as any)?.error || `Erro ao carregar usuários: ${response.status} ${response.statusText}`);
       }
 
       const responseText = await response.text();
@@ -583,7 +583,7 @@ export default function UnifiedUserManager() {
 
         // Se o erro for de acesso negado e o usuário for o administrador principal, redirecionar para a página de correção
         if (response.status === 403 &&
-            (user?.email === 'caio.correia@groupabz.com' || user?.phoneNumber === '+5522997847289')) {
+            (user?.email === 'caio.correia@groupabz.com' || (user as any)?.phone_number === '+5522997847289')) {
           console.log('Usuário é o administrador principal mas não tem acesso. Redirecionando para correção...');
           router.push('/admin-fix');
           return;
@@ -703,7 +703,7 @@ export default function UnifiedUserManager() {
         console.error('Erro ao renovar token antes de buscar estatísticas:', refreshError);
       }
 
-      console.log('Buscando estatísticas com token:', token.substring(0, 10) + '...');
+      console.log('Buscando estatísticas com token:', token?.substring(0, 10) + '...');
 
       const response = await fetch('/api/admin/access-stats', {
         headers: {
@@ -763,7 +763,7 @@ export default function UnifiedUserManager() {
 
         // Se o erro for de acesso negado e o usuário for o administrador principal, redirecionar para a página de correção
         if (response.status === 403 &&
-            (user?.email === 'caio.correia@groupabz.com' || user?.phoneNumber === '+5522997847289')) {
+            (user?.email === 'caio.correia@groupabz.com' || (user as any)?.phone_number === '+5522997847289')) {
           console.log('Usuário é o administrador principal mas não tem acesso às estatísticas. Redirecionando para correção...');
           router.push('/admin-fix');
           return;
@@ -1136,6 +1136,64 @@ export default function UnifiedUserManager() {
     }
   };
 
+  const handleApproveUser = async (userId: string) => {
+    const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
+    if (!token) {
+      setError('Token de autenticação não encontrado');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/approve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`);
+      }
+
+      setSuccessMessage('Usuário aprovado com sucesso');
+      await fetchUsers();
+      await fetchStats();
+    } catch (err) {
+      console.error('Erro ao aprovar usuário:', err);
+      setError(err instanceof Error ? err.message : 'Erro ao aprovar usuário');
+    }
+  };
+
+  const handleRejectUser = async (userId: string) => {
+    const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
+    if (!token) {
+      setError('Token de autenticação não encontrado');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/reject`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`);
+      }
+
+      setSuccessMessage('Usuário rejeitado');
+      await fetchUsers();
+      await fetchStats();
+    } catch (err) {
+      console.error('Erro ao rejeitar usuário:', err);
+      setError(err instanceof Error ? err.message : 'Erro ao rejeitar usuário');
+    }
+  };
+
   // Funções auxiliares
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -1287,6 +1345,9 @@ export default function UnifiedUserManager() {
                     Status
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Autorização
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Criado em
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -1297,13 +1358,13 @@ export default function UnifiedUserManager() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                    <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
                       Carregando...
                     </td>
                   </tr>
                 ) : filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                    <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
                       Nenhum usuário encontrado.
                     </td>
                   </tr>
@@ -1341,6 +1402,43 @@ export default function UnifiedUserManager() {
                         <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${user.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                           {user.active ? 'Ativo' : 'Inativo'}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {user.authorizationStatus ? (
+                          <div className="flex items-center space-x-2">
+                            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              user.authorizationStatus === 'active' ? 'bg-green-100 text-green-800' :
+                              user.authorizationStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {user.authorizationStatus === 'active' ? 'Autorizado' :
+                               user.authorizationStatus === 'pending' ? 'Pendente' :
+                               'Rejeitado'}
+                            </span>
+                            {user.authorizationStatus === 'pending' && (
+                              <div className="flex space-x-1">
+                                <button
+                                  onClick={() => handleApproveUser(user._id)}
+                                  className="inline-flex items-center px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-md transition-colors"
+                                  title="Aprovar usuário"
+                                >
+                                  <FiCheck className="w-3 h-3 mr-1" />
+                                  Aprovar
+                                </button>
+                                <button
+                                  onClick={() => handleRejectUser(user._id)}
+                                  className="inline-flex items-center px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-md transition-colors"
+                                  title="Rejeitar usuário"
+                                >
+                                  <FiX className="w-3 h-3 mr-1" />
+                                  Rejeitar
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-xs">N/A</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatDate(user.createdAt)}
@@ -1868,6 +1966,10 @@ export default function UnifiedUserManager() {
           userId={selectedUser._id}
           userName={`${selectedUser.firstName} ${selectedUser.lastName}`}
           onClose={() => setShowPasswordReset(false)}
+          onSuccess={() => {
+            setShowPasswordReset(false);
+            // Opcional: recarregar dados do usuário
+          }}
         />
       )}
 

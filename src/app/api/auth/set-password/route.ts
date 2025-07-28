@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
@@ -23,14 +23,14 @@ export async function POST(request: NextRequest) {
 
     // Buscar usuário pelo código de convite
     console.log('Buscando usuário com código de convite:', inviteCode);
-    const user = await prisma.user.findFirst({
-      where: {
-        inviteCode,
-        inviteAccepted: { not: true },
-      },
-    });
+    const { data: user, error } = await supabaseAdmin
+      .from('users_unified')
+      .select('*')
+      .eq('invite_code', inviteCode)
+      .neq('invite_accepted', true)
+      .single();
 
-    if (!user) {
+    if (error || !user) {
       return NextResponse.json(
         { error: 'Código de convite inválido ou já utilizado' },
         { status: 400 }
@@ -42,15 +42,23 @@ export async function POST(request: NextRequest) {
 
     // Atualizar usuário
     console.log('Atualizando usuário com ID:', user.id);
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        password: hashedPassword,
-        inviteAccepted: true,
-        inviteAcceptedAt: new Date(),
-        passwordLastChanged: new Date(),
-      },
-    });
+    const { error: updateError } = await supabaseAdmin
+      .from('users_unified')
+      .update({
+        password_hash: hashedPassword,
+        invite_accepted: true,
+        invite_accepted_at: new Date().toISOString(),
+        password_last_changed: new Date().toISOString(),
+      })
+      .eq('id', user.id);
+
+    if (updateError) {
+      console.error('Erro ao atualizar usuário:', updateError);
+      return NextResponse.json(
+        { error: 'Erro ao definir senha' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,

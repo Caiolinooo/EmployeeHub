@@ -175,7 +175,7 @@ export async function sendEmail(
       },
       // Configurações adicionais
       encoding: 'utf-8',
-      priority: 'normal' as 'normal',
+      priority: 'normal' as const,
       disableFileAccess: true,
       disableUrlAccess: true,
       // Configurações para melhorar a entregabilidade
@@ -203,7 +203,7 @@ export async function sendEmail(
       success: true,
       message: 'Email enviado com sucesso',
       messageId: info.messageId,
-      previewUrl
+      previewUrl: previewUrl || undefined
     };
   } catch (error) {
     console.error('Erro ao enviar e-mail:', error);

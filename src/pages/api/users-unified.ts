@@ -31,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Verificar token
     const tokenResult = await verifyToken(token);
-    if (!tokenResult.valid) {
+    if (!tokenResult) {
       return res.status(401).json({ error: 'Token inválido ou expirado' });
     }
 

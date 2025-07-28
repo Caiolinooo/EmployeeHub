@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // GET - Obter um documento pelo ID
 export async function GET(
@@ -12,11 +12,13 @@ export async function GET(
     // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
     const id = await Promise.resolve(params.id);
 
-    const document = await prisma.document.findUnique({
-      where: { id }
-    });
+    const { data: document, error } = await supabaseAdmin
+      .from('documents')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-    if (!document) {
+    if (error || !document) {
       return NextResponse.json(
         { error: 'Documento não encontrado' },
         { status: 404 }
@@ -55,11 +57,13 @@ export async function PUT(
     }
 
     // Verificar se o documento existe
-    const existingDocument = await prisma.document.findUnique({
-      where: { id }
-    });
+    const { data: existingDocument, error: existingError } = await supabaseAdmin
+      .from('documents')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-    if (!existingDocument) {
+    if (existingError || !existingDocument) {
       return NextResponse.json(
         { error: 'Documento não encontrado' },
         { status: 404 }
@@ -67,9 +71,9 @@ export async function PUT(
     }
 
     // Atualizar o documento
-    const updatedDocument = await prisma.document.update({
-      where: { id },
-      data: {
+    const { data: updatedDocument, error: updateError } = await supabaseAdmin
+      .from('documents')
+      .update({
         title,
         description,
         category,
@@ -77,8 +81,17 @@ export async function PUT(
         file,
         enabled: enabled !== false,
         order,
-      }
-    });
+      })
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (updateError) {
+      return NextResponse.json(
+        { error: 'Erro ao atualizar documento' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(updatedDocument);
   } catch (error) {
@@ -101,11 +114,13 @@ export async function DELETE(
     const id = await Promise.resolve(params.id);
 
     // Verificar se o documento existe
-    const existingDocument = await prisma.document.findUnique({
-      where: { id }
-    });
+    const { data: existingDocument, error: findError } = await supabaseAdmin
+      .from('documents')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-    if (!existingDocument) {
+    if (findError || !existingDocument) {
       return NextResponse.json(
         { error: 'Documento não encontrado' },
         { status: 404 }
@@ -113,9 +128,17 @@ export async function DELETE(
     }
 
     // Excluir o documento
-    await prisma.document.delete({
-      where: { id }
-    });
+    const { error: deleteError } = await supabaseAdmin
+      .from('documents')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) {
+      return NextResponse.json(
+        { error: 'Erro ao excluir documento' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ message: 'Documento excluído com sucesso' });
   } catch (error) {

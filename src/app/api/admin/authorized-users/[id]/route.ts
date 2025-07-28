@@ -43,9 +43,7 @@ export async function GET(
     }
 
     // Obter ID do usuário autorizado
-    // Garantir que params seja await antes de acessar suas propriedades
-    const resolvedParams = await params;
-    const id = resolvedParams.id;
+    const id = params.id;
 
     // Buscar usuário autorizado
     const { data: authorizedUser, error: findError } = await supabaseAdmin
@@ -112,9 +110,7 @@ export async function DELETE(
     }
 
     // Obter ID do usuário autorizado
-    // Garantir que params seja await antes de acessar suas propriedades
-    const resolvedParams = await params;
-    const id = resolvedParams.id;
+    const id = params.id;
 
     // Verificar se o usuário autorizado existe
     const { data: authorizedUser, error: findError } = await supabaseAdmin
@@ -198,9 +194,7 @@ export async function PUT(
     }
 
     // Obter ID do usuário autorizado
-    // Garantir que params seja await antes de acessar suas propriedades
-    const resolvedParams = await params;
-    const id = resolvedParams.id;
+    const id = params.id;
 
     // Obter dados do corpo da requisição
     const body = await request.json();

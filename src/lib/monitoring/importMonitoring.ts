@@ -86,8 +86,7 @@ export async function getImportStats(limit: number = 10): Promise<ImportStats | 
     // Obter contagem por tipo de importação
     const { data: typeData, error: typeError } = await supabaseAdmin
       .from('import_logs')
-      .select('import_type, count')
-      .group('import_type');
+      .select('import_type');
 
     if (typeError) {
       console.error('Erro ao obter contagem por tipo:', typeError);
@@ -96,7 +95,7 @@ export async function getImportStats(limit: number = 10): Promise<ImportStats | 
 
     // Mapear contagem por tipo
     const importsByType: Record<string, number> = {};
-    typeData.forEach(item => {
+    typeData.forEach((item: any) => {
       importsByType[item.import_type] = item.count;
     });
 

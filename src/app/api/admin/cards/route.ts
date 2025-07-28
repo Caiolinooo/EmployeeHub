@@ -13,8 +13,8 @@ function convertHardcodedCards() {
 
     // Verificar se o ícone é um componente válido
     if (card.icon && typeof card.icon === 'function') {
-      // Tentar obter o displayName do componente
-      iconName = card.icon.displayName || 'FiGrid';
+      // Tentar obter o displayName do componente ou usar o nome da função
+      iconName = (card.icon as any).displayName || card.icon.name || 'FiGrid';
 
       // Garantir que o nome do ícone esteja no formato correto (PascalCase)
       if (!iconName.startsWith('Fi')) {
@@ -55,8 +55,8 @@ function convertDatabaseCards(dbCards: any[]) {
       const iconName = card.icon.startsWith('Fi') ? card.icon : `Fi${card.icon}`;
 
       // Verificar se o ícone existe no objeto Icons
-      if (Icons[iconName]) {
-        icon = Icons[iconName];
+      if (Icons[iconName as keyof typeof Icons]) {
+        icon = Icons[iconName as keyof typeof Icons];
       } else {
         console.warn(`Ícone não encontrado: ${iconName}, usando FiGrid como fallback`);
         icon = Icons.FiGrid;

@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useState, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { FiUpload, FiX, FiFile, FiImage, FiPaperclip, FiLoader } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
 import { uploadReimbursementAttachment } from '@/services/reimbursementService';
-import toast from 'react-hot-toast';
+
 
 export interface UploadedFile {
   id: string;
@@ -129,7 +128,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
         if (fileIndex !== -1) {
           newFiles[fileIndex] = {
             ...newFiles[fileIndex],
-            buffer: dataUrl, // Armazenar os dados como DataURL
+            buffer: dataUrl as any, // Armazenar os dados como DataURL
             isLocalFile: true // Marcar como arquivo local
           };
 
@@ -365,25 +364,15 @@ const FileUploader: React.FC<FileUploaderProps> = ({
 
       {/* Error message */}
       {error && (
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mt-2 text-sm text-red-600"
-        >
+        <p className="mt-2 text-sm text-red-600" style={{ opacity: 1, visibility: 'visible' }}>
           {error}
-        </motion.p>
+        </p>
       )}
 
       {/* File list */}
       <div className="mt-4">
-        <AnimatePresence>
-          {files.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="bg-gray-50 rounded-md p-3"
-            >
+        {files.length > 0 && (
+          <div className="bg-gray-50 rounded-md p-3" style={{ opacity: 1, visibility: 'visible' }}>
               <h4 className="text-sm font-medium text-gray-700 mb-2">
                 {isEnglish
                   ? `Selected files (${files.length}/${maxFiles})`
@@ -391,16 +380,14 @@ const FileUploader: React.FC<FileUploaderProps> = ({
               </h4>
               <ul className="space-y-2">
                 {files.map((file) => (
-                  <motion.li
+                  <li
                     key={file.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
                     className={`flex items-center justify-between bg-white p-2 rounded border ${
                       file.uploadError ? 'border-red-300 bg-red-50' :
                       file.uploading ? 'border-blue-300 bg-blue-50' :
                       'border-gray-200'
                     }`}
+                    style={{ opacity: 1, visibility: 'visible' }}
                   >
                     <div className="flex items-center">
                       {file.uploading ? (
@@ -438,12 +425,11 @@ const FileUploader: React.FC<FileUploaderProps> = ({
                     >
                       <FiX className={`h-5 w-5 ${file.uploading ? 'opacity-50 cursor-not-allowed' : ''}`} />
                     </button>
-                  </motion.li>
+                  </li>
                 ))}
               </ul>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
       </div>
     </div>
   );

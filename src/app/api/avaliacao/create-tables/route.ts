@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     `;
 
     // Executar SQL para criar as tabelas
-    const results = {};
+    const results: Record<string, any> = {};
 
     // Criar tabela funcionarios
     try {

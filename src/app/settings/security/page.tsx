@@ -8,17 +8,17 @@ import TwoFactorSetup from '@/components/Auth/TwoFactorSetup';
 import PasswordChange from '@/components/Auth/PasswordChange';
 
 export default function SecuritySettingsPage() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
   // Redirecionar se não estiver autenticado
   React.useEffect(() => {
-    if (!loading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.push('/login');
     }
-  }, [isAuthenticated, loading, router]);
+  }, [isAuthenticated, isLoading, router]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-abz-blue"></div>

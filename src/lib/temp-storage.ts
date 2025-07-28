@@ -78,7 +78,7 @@ export async function storeTemporaryFile(
             // Tentar como base64 direto
             fileBuffer = Buffer.from(fileData.buffer, 'base64');
           }
-        } else if (fileData.buffer instanceof ArrayBuffer) {
+        } else if ((fileData as any).buffer instanceof ArrayBuffer) {
           fileBuffer = Buffer.from(fileData.buffer);
         }
       } catch (bufferError) {

@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { 
-  FiCoffee, FiShoppingBag, FiTruck, FiHome, FiDollarSign, 
-  FiCar, FiPlane, FiTrain, FiBriefcase, FiHotel, 
+import {
+  FiCoffee, FiShoppingBag, FiTruck, FiHome, FiDollarSign,
+  FiBriefcase,
   FiTool, FiPackage, FiMonitor, FiPrinter, FiBook,
   FiUpload, FiX, FiSearch, FiPlus
 } from 'react-icons/fi';
@@ -17,14 +17,10 @@ const reimbursementIcons: Record<string, { icon: IconType, label: string, catego
   FiShoppingBag: { icon: FiShoppingBag, label: 'Compras', category: 'alimentacao' },
   
   // Transporte
-  FiCar: { icon: FiCar, label: 'Carro', category: 'transporte' },
   FiTruck: { icon: FiTruck, label: 'Caminhão', category: 'transporte' },
-  FiPlane: { icon: FiPlane, label: 'Avião', category: 'transporte' },
-  FiTrain: { icon: FiTrain, label: 'Trem', category: 'transporte' },
-  
+
   // Hospedagem
   FiHome: { icon: FiHome, label: 'Casa', category: 'hospedagem' },
-  FiHotel: { icon: FiHotel, label: 'Hotel', category: 'hospedagem' },
   
   // Material de Trabalho
   FiTool: { icon: FiTool, label: 'Ferramentas', category: 'material' },

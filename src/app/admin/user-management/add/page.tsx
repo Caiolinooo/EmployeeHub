@@ -9,7 +9,7 @@ import { useI18n } from '@/contexts/I18nContext';
 import UserEditor from '@/components/admin/UserEditor';
 
 export default function AddUserPage() {
-  const { isAdmin, isAuthenticated, loading } = useAuth();
+  const { isAdmin, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const { t } = useI18n();
   const [error, setError] = useState<string | null>(null);
@@ -17,12 +17,12 @@ export default function AddUserPage() {
 
   // Redirecionar se não for administrador
   useEffect(() => {
-    if (!loading && !isAdmin) {
+    if (!isLoading && !isAdmin) {
       router.push('/dashboard');
     }
-  }, [isAdmin, loading, router]);
+  }, [isAdmin, isLoading, router]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-abz-blue"></div>

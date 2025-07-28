@@ -17,7 +17,7 @@ interface Funcionario {
   email: string;
   cargo: string;
   user_id: string;
-  users?: {
+  users: {
     id: string;
     role: string;
   };
@@ -84,12 +84,12 @@ export default function NovaAvaliacaoPage() {
 
         // Separar avaliadores (gerentes e admins) dos funcionários comuns
         const todosFuncionarios = data || [];
-        const apenasAvaliadores = todosFuncionarios.filter(f =>
+        const apenasAvaliadores = todosFuncionarios.filter((f: any) =>
           f.users?.role === 'ADMIN' || f.users?.role === 'MANAGER'
         );
 
-        setFuncionarios(todosFuncionarios);
-        setAvaliadores(apenasAvaliadores);
+        setFuncionarios(todosFuncionarios as any);
+        setAvaliadores(apenasAvaliadores as any);
         setLoadingFuncionarios(false);
       } catch (err) {
         console.error('Erro ao carregar funcionários:', err);

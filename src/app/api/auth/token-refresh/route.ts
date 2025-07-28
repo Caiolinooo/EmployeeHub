@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     console.log('Cabeçalho de autorização recebido:', authHeader ? 'Presente' : 'Ausente');
 
     // Tentar obter o token do cabeçalho
-    let token = extractTokenFromHeader(authHeader);
+    let token = extractTokenFromHeader(authHeader || undefined);
     console.log('Token extraído do cabeçalho:', token ? 'Presente' : 'Ausente');
 
     // Se não houver token no cabeçalho, tentar obter do corpo da requisição
@@ -87,9 +87,9 @@ export async function POST(request: NextRequest) {
           // Gerar um novo token para o administrador
           const adminToken = generateToken({
             id: payload.userId,
-            phoneNumber: adminPhone,
+            phone_number: adminPhone,
             role: 'ADMIN'
-          }, expiresIn);
+          });
 
           return NextResponse.json({
             success: true,
@@ -139,9 +139,9 @@ export async function POST(request: NextRequest) {
         // Gerar um novo token
         const newToken = generateToken({
           id: user.id,
-          phoneNumber: user.phone_number,
+          phone_number: user.phone_number,
           role: user.role
-        }, expiresIn);
+        });
 
         // Criar a resposta
         const response = NextResponse.json({
@@ -214,9 +214,9 @@ export async function POST(request: NextRequest) {
         // Gerar um novo token para o administrador
         const adminToken = generateToken({
           id: payload.userId,
-          phoneNumber: adminPhone,
+          phone_number: adminPhone,
           role: 'ADMIN'
-        }, expiresIn);
+        });
 
         return NextResponse.json({
           success: true,

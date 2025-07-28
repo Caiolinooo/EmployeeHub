@@ -181,11 +181,12 @@ export async function POST(request: NextRequest) {
 
       console.log(`Sending rejection notification to ${reimbursement.email}`);
 
-      await sendEmail({
-        to: reimbursement.email,
+      await sendEmail(
+        reimbursement.email,
         subject,
-        html: emailBody
-      });
+        '', // text
+        emailBody
+      );
 
       console.log('Rejection email notification sent successfully');
     } catch (emailError) {

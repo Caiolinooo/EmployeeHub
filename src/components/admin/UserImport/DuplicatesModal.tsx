@@ -24,7 +24,7 @@ export default function DuplicatesModal({ duplicates, onClose, onProceed }: Dupl
           <div className="flex items-center">
             <FiAlertTriangle className="text-yellow-500 h-6 w-6 mr-3" />
             <h2 className="text-xl font-semibold text-gray-900">
-              {t('admin.duplicatesFound', { count: duplicates.length })}
+              {t('admin.duplicatesFound', `${duplicates.length} duplicatas encontradas`)}
             </h2>
           </div>
           <button
@@ -48,7 +48,7 @@ export default function DuplicatesModal({ duplicates, onClose, onProceed }: Dupl
             {localDuplicates.length > 0 && (
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-3">
-                  {t('admin.localDuplicates', { count: localDuplicates.length })}
+                  {t('admin.localDuplicates', `${localDuplicates.length} duplicatas locais`)}
                 </h3>
                 <div className="bg-gray-50 rounded-md p-4 space-y-4">
                   {localDuplicates.slice(0, 5).map((dup, index) => (
@@ -87,7 +87,7 @@ export default function DuplicatesModal({ duplicates, onClose, onProceed }: Dupl
                   ))}
                   {localDuplicates.length > 5 && (
                     <div className="text-sm text-gray-500 text-center">
-                      {t('admin.andMoreDuplicates', { count: localDuplicates.length - 5 })}
+                      {t('admin.andMoreDuplicates', `e mais ${localDuplicates.length - 5} duplicatas`)}
                     </div>
                   )}
                 </div>
@@ -98,7 +98,7 @@ export default function DuplicatesModal({ duplicates, onClose, onProceed }: Dupl
             {serverDuplicates.length > 0 && (
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-3">
-                  {t('admin.serverDuplicates', { count: serverDuplicates.length })}
+                  {t('admin.serverDuplicates', `${serverDuplicates.length} duplicatas no servidor`)}
                 </h3>
                 <div className="bg-gray-50 rounded-md p-4 space-y-4">
                   {serverDuplicates.slice(0, 5).map((dup, index) => (
@@ -139,7 +139,7 @@ export default function DuplicatesModal({ duplicates, onClose, onProceed }: Dupl
                   ))}
                   {serverDuplicates.length > 5 && (
                     <div className="text-sm text-gray-500 text-center">
-                      {t('admin.andMoreDuplicates', { count: serverDuplicates.length - 5 })}
+                      {t('admin.andMoreDuplicates', `e mais ${serverDuplicates.length - 5} duplicatas`)}
                     </div>
                   )}
                 </div>

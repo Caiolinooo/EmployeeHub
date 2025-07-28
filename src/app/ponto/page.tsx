@@ -3,7 +3,6 @@
 import React from 'react';
 import MainLayout from '@/components/Layout/MainLayout';
 import { useI18n } from '@/contexts/I18nContext';
-import { FiApple } from 'react-icons/fi';
 import {
   FiClock,
   FiSmartphone,
@@ -25,7 +24,7 @@ const AHGORA_MULTI_GOOGLE_PLAY = 'https://play.google.com/store/apps/details?id=
 const AHGORA_MULTI_APP_STORE = 'https://apps.apple.com/us/app/ahgora-multi/id1436645391';
 
 // Component for App Download Buttons
-const AppDownloadButton = ({ href, storeName }) => {
+const AppDownloadButton = ({ href, storeName }: { href: string; storeName: string }) => {
   // Return null immediately if href is missing
   if (!href) return null;
 
@@ -59,11 +58,9 @@ export default function PontoPage() {
 
         {/* Introduction */}
         <div className="prose prose-sm max-w-none text-abz-text-dark">
-          <h2 className="text-xl font-semibold text-abz-text-black mb-3">{isEnglish ? 'Welcome to Batida Online' : 'Bem-vindo ao Batida Online'}</h2>
+          <h2 className="text-xl font-semibold text-abz-text-black mb-3">{t('ponto.welcomeTitle')}</h2>
           <p>
-            {isEnglish
-              ? 'Batida Online is the platform used by ABZ Group for employee time tracking, automating processes and making day-to-day operations easier.'
-              : 'O Batida Online é a plataforma utilizada pela ABZ Group para o registro de ponto dos colaboradores, automatizando processos e facilitando o dia a dia.'}
+            {t('ponto.welcomeDescription')}
           </p>
         </div>
 
@@ -126,7 +123,7 @@ export default function PontoPage() {
             className="inline-flex items-center px-6 py-3 bg-abz-blue text-white rounded-lg font-semibold hover:bg-abz-blue-dark transition duration-200 shadow-md text-sm"
           >
             <FiExternalLink className="mr-2" />
-            {isEnglish ? 'Access Batida Online (Web)' : 'Acessar Batida Online (Web)'}
+            {t('ponto.accessBatidaOnline')}
           </a>
         </div>
 

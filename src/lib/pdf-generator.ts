@@ -18,10 +18,60 @@ declare module 'jspdf' {
 // Ensure autoTable is available globally
 if (typeof window !== 'undefined') {
   // This ensures the plugin is loaded in the browser environment
-  window.jspdf = window.jspdf || {};
+  (window as any).jspdf = (window as any).jspdf || {};
 }
 import { FormValues } from './schema';
 import { PDFDocument } from 'pdf-lib';
+import { createClient } from '@supabase/supabase-js';
+
+// Função para baixar arquivo do Supabase Storage
+async function downloadFileFromSupabase(fileName: string): Promise<Buffer | null> {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Configuração do Supabase não encontrada');
+      return null;
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+
+    const { data, error } = await supabase
+      .storage
+      .from('comprovantes')
+      .download(fileName);
+
+    if (error) {
+      console.error('Erro ao baixar arquivo:', error);
+      return null;
+    }
+
+    if (data) {
+      const arrayBuffer = await data.arrayBuffer();
+      return Buffer.from(arrayBuffer);
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Erro ao baixar arquivo do Supabase:', error);
+    return null;
+  }
+}
+
+// Função para verificar se é uma imagem
+function isImageFile(tipo: string): boolean {
+  return tipo.startsWith('image/') && (
+    tipo.includes('jpeg') ||
+    tipo.includes('jpg') ||
+    tipo.includes('png')
+  );
+}
 
 // Ensure autoTable is properly initialized
 const ensureAutoTable = (doc: jsPDF): void => {
@@ -32,9 +82,9 @@ const ensureAutoTable = (doc: jsPDF): void => {
 
       // Try to apply the plugin directly
       try {
-        // @ts-ignore - Try to access the global autoTable function if available
+        // @ts-expect-error - Try to access the global autoTable function if available
         if (typeof window !== 'undefined' && window.jspdf && window.jspdf.autoTable) {
-          // @ts-ignore - Apply the plugin to the document
+          // @ts-expect-error - Apply the plugin to the document
           window.jspdf.autoTable(doc);
           console.log('Applied autoTable plugin from global scope');
         }
@@ -363,23 +413,27 @@ export async function generateReimbursementPDF(data: FormValues, protocolo: stri
     doc.text('Comprovantes Anexados', 20, finalY2);
 
     // Verificar se há comprovantes
-    if (data.comprovantes && Array.isArray(data.comprovantes) && data.comprovantes.length > 0) {
+    if ((data as any).comprovantes && Array.isArray((data as any).comprovantes) && (data as any).comprovantes.length > 0) {
       // Tabela de comprovantes com informações mais detalhadas
-      const comprovantesData = data.comprovantes.map((file: any, index: number) => {
-        // Determinar o tamanho do arquivo
+      const comprovantesData = (data as any).comprovantes.map((file: any, index: number) => {
+        // Determinar o tamanho do arquivo (compatibilidade com diferentes estruturas)
         let fileSize = 'Desconhecido';
-        if (file.size) {
+        if (file.tamanho) {
+          fileSize = `${(file.tamanho / 1024).toFixed(1)} KB`;
+        } else if (file.size) {
           fileSize = `${(file.size / 1024).toFixed(1)} KB`;
         } else if (file.content && file.content.length) {
           fileSize = `${(file.content.length / 1024).toFixed(1)} KB`;
         }
 
-        // Determinar o nome do arquivo
-        const fileName = file.name || file.filename || `Comprovante ${index + 1}`;
+        // Determinar o nome do arquivo (compatibilidade com diferentes estruturas)
+        const fileName = file.nome || file.name || file.filename || `Comprovante ${index + 1}`;
 
-        // Determinar o tipo do arquivo
+        // Determinar o tipo do arquivo (compatibilidade com diferentes estruturas)
         let fileType = 'Desconhecido';
-        if (file.type) {
+        if (file.tipo) {
+          fileType = file.tipo;
+        } else if (file.type) {
           fileType = file.type;
         } else if (file.contentType) {
           fileType = file.contentType;
@@ -432,7 +486,7 @@ export async function generateReimbursementPDF(data: FormValues, protocolo: stri
         try {
           doc.text('Lista de Comprovantes:', 20, yPos);
           yPos += 5;
-          comprovantesData.forEach(row => {
+          comprovantesData.forEach((row: any) => {
             try {
               doc.text(`${row[0]}. ${row[1]} (${row[2]})`, 20, yPos);
               yPos += 5;
@@ -450,6 +504,84 @@ export async function generateReimbursementPDF(data: FormValues, protocolo: stri
       doc.setTextColor(0, 0, 0);
       doc.text('Nenhum comprovante anexado', 20, finalY2 + 10);
       console.log('Nenhum comprovante para adicionar ao PDF');
+    }
+
+    // Adicionar visualização das imagens dos comprovantes
+    if ((data as any).comprovantes && Array.isArray((data as any).comprovantes) && (data as any).comprovantes.length > 0) {
+      let currentY = doc.lastAutoTable?.finalY || finalY2 + 30;
+
+      console.log('Processando imagens dos comprovantes...');
+      for (let i = 0; i < (data as any).comprovantes.length; i++) {
+        const comprovante = (data as any).comprovantes[i];
+        const fileName = comprovante.nome || comprovante.name || `Comprovante ${i + 1}`;
+        const fileType = comprovante.tipo || comprovante.type || '';
+
+        // Verificar se é uma imagem
+        if (isImageFile(fileType)) {
+          try {
+            console.log(`Processando imagem: ${fileName}`);
+
+            // Extrair nome do arquivo da URL pública
+            let fileNameToDownload = comprovante.publicUrl?.split('/').pop() || comprovante.url?.split('/').pop();
+            if (!fileNameToDownload && comprovante.nome) {
+              fileNameToDownload = comprovante.nome;
+            }
+
+            if (fileNameToDownload) {
+              // Baixar a imagem do Supabase
+              const imageBuffer = await downloadFileFromSupabase(fileNameToDownload);
+
+              if (imageBuffer) {
+                // Verificar se precisamos de uma nova página
+                if (currentY > 200) {
+                  doc.addPage();
+                  currentY = 20;
+                }
+
+                // Adicionar título da imagem
+                doc.setFontSize(12);
+                doc.setTextColor(0, 102, 204);
+                doc.text(`Comprovante ${i + 1}: ${fileName}`, 20, currentY);
+                currentY += 10;
+
+                try {
+                  // Converter buffer para base64
+                  const base64Image = imageBuffer.toString('base64');
+                  const imageFormat = fileType.includes('png') ? 'PNG' : 'JPEG';
+
+                  // Adicionar a imagem ao PDF
+                  // Calcular dimensões para caber na página (máximo 170mm de largura)
+                  const maxWidth = 170;
+                  const maxHeight = 120;
+
+                  doc.addImage(
+                    `data:${fileType};base64,${base64Image}`,
+                    imageFormat,
+                    20,
+                    currentY,
+                    maxWidth,
+                    maxHeight
+                  );
+
+                  currentY += maxHeight + 15;
+                  console.log(`Imagem ${fileName} adicionada ao PDF`);
+                } catch (imageError) {
+                  console.error(`Erro ao adicionar imagem ${fileName}:`, imageError);
+                  // Adicionar texto indicando erro
+                  doc.setFontSize(10);
+                  doc.setTextColor(255, 0, 0);
+                  doc.text(`Erro ao carregar imagem: ${fileName}`, 20, currentY);
+                  currentY += 10;
+                }
+              } else {
+                console.log(`Não foi possível baixar a imagem: ${fileName}`);
+              }
+            }
+          } catch (error) {
+            console.error(`Erro ao processar imagem ${fileName}:`, error);
+          }
+        }
+      }
     }
 
     // Rodapé

@@ -157,7 +157,7 @@ export async function sendEmail(
       },
       // Configurações adicionais
       encoding: 'utf-8',
-      priority: 'high' as 'high', // Tipo explícito para evitar erro de tipo
+      priority: 'high' as const, // Tipo explícito para evitar erro de tipo
       disableFileAccess: true,
       disableUrlAccess: true
     };
@@ -181,8 +181,9 @@ export async function sendEmail(
 
     return {
       success: true,
+      message: 'E-mail enviado com sucesso.',
       messageId: info.messageId,
-      previewUrl
+      previewUrl: previewUrl || undefined
     };
   } catch (error) {
     console.error('Erro ao enviar e-mail:', error);

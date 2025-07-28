@@ -49,7 +49,7 @@ const emailConfig = {
   opportunisticTLS: true, // Usar TLS quando disponível
   // Identificação do servidor
   name: 'ABZ Group Mailer'
-};
+} as const;
 
 // Validate configuration on import (only in server environment)
 if (typeof window === 'undefined') {
@@ -202,7 +202,7 @@ export async function sendEmail(
       },
       // Configurações adicionais
       encoding: 'utf-8',
-      priority: 'normal',
+      priority: 'normal' as const,
       disableFileAccess: true,
       disableUrlAccess: true,
       // Adicionar um endereço de resposta
@@ -213,13 +213,15 @@ export async function sendEmail(
 
     // Enviar e-mail
     const info = await transport.sendMail(mailOptions);
-    console.log('E-mail enviado com sucesso. ID:', info.messageId);
+    const messageId = (info as any)?.messageId || 'unknown';
+    console.log('E-mail enviado com sucesso. ID:', messageId);
 
     // Obter URL de preview (disponível apenas com Ethereal)
-    let previewUrl;
+    let previewUrl: string | undefined;
     try {
-      previewUrl = nodemailer.getTestMessageUrl(info);
-      if (previewUrl) {
+      const testUrl = nodemailer.getTestMessageUrl(info as any);
+      if (testUrl && typeof testUrl === 'string') {
+        previewUrl = testUrl;
         console.log('URL de preview:', previewUrl);
       }
     } catch (previewError) {
@@ -229,7 +231,7 @@ export async function sendEmail(
     return {
       success: true,
       message: 'Email enviado com sucesso',
-      messageId: info.messageId,
+      messageId,
       previewUrl
     };
   } catch (error) {

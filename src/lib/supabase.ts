@@ -1,5 +1,8 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { getCredential, initializeSupabaseClient } from './secure-credentials';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { v4 as uuidv4 } from 'uuid';
 
 // Estas variáveis devem ser definidas no arquivo .env
 // Definindo valores padrão para garantir que o código funcione mesmo sem as variáveis de ambiente
@@ -188,7 +191,6 @@ export async function signInWithEmail(email: string, password: string) {
     }
 
     // Verificar a senha usando bcrypt
-    const bcrypt = require('bcryptjs');
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
@@ -196,7 +198,6 @@ export async function signInWithEmail(email: string, password: string) {
     }
 
     // Gerar token JWT
-    const jwt = require('jsonwebtoken');
 
     // Obter a chave JWT da tabela app_secrets ou usar a do ambiente
     let jwtSecret = process.env.JWT_SECRET || 'fallback-secret';
@@ -269,7 +270,6 @@ export async function signInWithPhone(phone: string, password: string) {
     }
 
     // Verificar a senha usando bcrypt
-    const bcrypt = require('bcryptjs');
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
@@ -277,7 +277,6 @@ export async function signInWithPhone(phone: string, password: string) {
     }
 
     // Gerar token JWT
-    const jwt = require('jsonwebtoken');
 
     // Obter a chave JWT da tabela app_secrets ou usar a do ambiente
     let jwtSecret = process.env.JWT_SECRET || 'fallback-secret';
@@ -357,11 +356,9 @@ export async function signUp(email: string, password: string, userData: any) {
     }
 
     // Hash da senha
-    const bcrypt = require('bcryptjs');
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Gerar ID único
-    const { v4: uuidv4 } = require('uuid');
     const userId = uuidv4();
 
     // Verificar se o usuário está autorizado
@@ -434,7 +431,6 @@ export async function signUp(email: string, password: string, userData: any) {
     }
 
     // Gerar token JWT
-    const jwt = require('jsonwebtoken');
 
     // Obter a chave JWT da tabela app_secrets ou usar a do ambiente
     let jwtSecret = process.env.JWT_SECRET || 'fallback-secret';

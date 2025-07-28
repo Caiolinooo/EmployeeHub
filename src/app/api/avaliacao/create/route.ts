@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
 
     // Verificar autenticação
     const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromHeader(authHeader || undefined);
 
     if (!token) {
       console.error('API avaliacao/create: Token não fornecido');

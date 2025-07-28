@@ -267,6 +267,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Buscar usuário
+    let data: any = null;
     try {
       let query = supabaseAdmin
         .from('users_unified')
@@ -278,7 +279,8 @@ export async function GET(request: NextRequest) {
         query = query.eq('email', email);
       }
 
-      const { data, error } = await query.single();
+      const { data: queryData, error } = await query.single();
+      data = queryData;
 
       if (error) {
         console.error('Erro ao buscar configurações de email do usuário:', error);

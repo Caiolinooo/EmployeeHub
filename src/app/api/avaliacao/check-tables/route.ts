@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     // Verificar se as tabelas existem
     const tables = ['avaliacoes', 'funcionarios'];
-    const results = {};
+    const results: Record<string, any> = {};
 
     for (const table of tables) {
       try {

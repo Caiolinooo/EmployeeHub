@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     console.log('Testando conexão com o Supabase...');
 
     // Testar autenticação anônima
-    const anonAuthTest = await supabaseAnon.auth.getSession();
+    const anonAuthTest = await supabase.auth.getSession();
     console.log('Teste de autenticação anônima:', anonAuthTest.error ? 'Falha' : 'Sucesso');
 
     // Testar acesso à tabela de usuários com chave de serviço

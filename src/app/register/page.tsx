@@ -14,9 +14,9 @@ export default function RegisterPage() {
   const searchParams = useSearchParams();
 
   // Obter o e-mail e telefone da URL se disponíveis
-  const emailFromUrl = searchParams.get('email') || '';
-  const phoneFromUrl = searchParams.get('phone') || '';
-  const inviteCodeFromUrl = searchParams.get('invite') || '';
+  const emailFromUrl = searchParams?.get('email') || '';
+  const phoneFromUrl = searchParams?.get('phone') || '';
+  const inviteCodeFromUrl = searchParams?.get('invite') || '';
 
   const [formData, setFormData] = useState({
     firstName: '',

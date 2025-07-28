@@ -108,8 +108,8 @@ export async function POST(request: NextRequest) {
 
         if (code) {
           console.log(`Código gerado para ${identifier}: ${code}`);
-          result.code = code;
-          result.debugUrl = 'http://localhost:3000/debug/codes';
+          (result as any).code = code;
+          (result as any).debugUrl = 'http://localhost:3000/debug/codes';
         } else {
           console.warn(`Nenhum código encontrado para ${identifier} no serviço em memória`);
 

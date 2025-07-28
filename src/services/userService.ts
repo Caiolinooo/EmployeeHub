@@ -261,7 +261,7 @@ export async function updateUserPermissions(userId: string, modules: string[]) {
     // Criar objeto de permissões
     const modulesObj = {};
     modules.forEach(module => {
-      modulesObj[module] = true;
+      (modulesObj as any)[module] = true;
     });
 
     // Atualizar as permissões do usuário

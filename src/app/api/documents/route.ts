@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 
 // GET - Obter todos os documentos
 export async function GET(request: NextRequest) {
@@ -8,12 +8,21 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
 
-    const where = category ? { category } : {};
+    let query = supabase.from('documents').select('*');
 
-    const documents = await prisma.document.findMany({
-      where,
-      orderBy: { order: 'asc' }
-    });
+    if (category) {
+      query = query.eq('category', category);
+    }
+
+    const { data: documents, error } = await query.order('order', { ascending: true });
+
+    if (error) {
+      console.error('Erro ao buscar documentos:', error);
+      return NextResponse.json(
+        { error: 'Erro interno do servidor' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(documents);
   } catch (error) {
@@ -41,9 +50,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Criar o documento usando Prisma
-    const document = await prisma.document.create({
-      data: {
+    // Criar o documento usando Supabase
+    const { data: document, error } = await supabase
+      .from('documents')
+      .insert({
         title,
         description,
         category,
@@ -51,8 +61,19 @@ export async function POST(request: NextRequest) {
         file,
         enabled: enabled !== false,
         order,
-      }
-    });
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Erro ao criar documento:', error);
+      return NextResponse.json(
+        { error: 'Erro interno do servidor' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(document, { status: 201 });
   } catch (error) {

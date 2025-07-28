@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       expires,
       latestCode,
       emailSent: emailResult.success,
-      previewUrl: emailResult.previewUrl,
+      previewUrl: (emailResult as any).previewUrl,
       activeCodes,
       debugUrl: 'http://localhost:3000/debug/codes'
     });

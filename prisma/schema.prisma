@@ -1,0 +1,11 @@
+// Este é um arquivo de schema do Prisma.
+// Saiba mais em https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+} 

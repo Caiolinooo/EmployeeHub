@@ -36,7 +36,7 @@ export default function ValidationWarnings({ warnings, onClose, onProceed }: Val
           <div className="flex items-center">
             <FiAlertTriangle className="text-yellow-500 h-6 w-6 mr-3" />
             <h2 className="text-xl font-semibold text-gray-900">
-              {t('admin.validationWarnings', { count: warnings.length })}
+              {t('admin.validationWarnings', `${warnings.length} avisos de validação`)}
             </h2>
           </div>
           <button

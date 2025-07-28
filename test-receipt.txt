@@ -1,0 +1,10 @@
+COMPROVANTE DE PAGAMENTO
+========================
+
+Data: 28/07/2025
+Estabelecimento: Restaurante Teste
+CNPJ: 12.345.678/0001-90
+Valor: R$ 114,99
+Descrição: Almoço executivo
+
+Este é um arquivo de teste para simular um comprovante de reembolso.

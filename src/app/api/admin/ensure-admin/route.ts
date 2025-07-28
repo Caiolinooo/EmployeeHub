@@ -157,13 +157,13 @@ export async function GET(request: NextRequest) {
             }
           }
         } else {
-          console.log('Usuário administrador criado com sucesso:', signUpData.user.id);
+          console.log('Usuário administrador criado com sucesso:', signUpData.user?.id);
 
           // Criar perfil para o usuário
           const { data: newProfile, error: createError } = await supabase
             .from('users')
             .insert({
-              id: signUpData.user.id,
+              id: signUpData.user?.id || '',
               email: adminEmail,
               phone_number: adminPhone,
               first_name: adminFirstName,

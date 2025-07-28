@@ -67,7 +67,7 @@ export default function ImportPreview({ data }: ImportPreviewProps) {
       </table>
 
       <div className="mt-2 text-xs text-gray-500">
-        {t('admin.previewLimited', { count: data.length })}
+        {t('admin.previewLimited', `Visualização limitada a ${data.length} registros`)}
       </div>
     </div>
   );

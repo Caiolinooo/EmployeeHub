@@ -254,12 +254,13 @@ export async function POST(request: NextRequest) {
 
       console.log(`Sending email notification to ${reimbursement.email} with ${attachments.length} attachments`);
 
-      await sendEmail({
-        to: reimbursement.email,
+      await sendEmail(
+        reimbursement.email,
         subject,
-        html: emailBody,
-        attachments
-      });
+        '', // text
+        emailBody,
+        { attachments }
+      );
 
       console.log('Email notification sent successfully');
     } catch (emailError) {

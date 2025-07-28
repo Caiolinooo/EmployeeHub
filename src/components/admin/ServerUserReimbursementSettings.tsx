@@ -494,7 +494,7 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
                 <button
                   type="button"
                   onClick={handleAddRecipient}
-                  disabled={readOnly || !newRecipient || !isValidEmail(newRecipient)}
+                  disabled={readOnly || !newRecipient || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newRecipient)}
                   className="px-4 py-2 border border-transparent rounded-r-md shadow-sm text-sm font-medium text-white bg-abz-blue hover:bg-abz-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue disabled:opacity-50"
                 >
                   <FiPlus />

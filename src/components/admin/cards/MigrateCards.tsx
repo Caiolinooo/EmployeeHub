@@ -156,7 +156,7 @@ export function MigrateCards() {
       <div className="flex gap-2">
         <Button
           onClick={migrateCards}
-          disabled={loading || checking || (migrationStatus && !migrationStatus.migrationNeeded)}
+          disabled={loading || checking || (migrationStatus && !migrationStatus.migrationNeeded) || false}
           className="bg-primary hover:bg-primary/90"
         >
           {loading ? <Spinner className="mr-2" /> : <MoveRight className="mr-2 h-4 w-4" />}

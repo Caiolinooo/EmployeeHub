@@ -79,8 +79,8 @@ export default function Dashboard() {
         const currentLanguage = locale;
 
         const dbCards = data.map((card: any) => {
-          let title = currentLanguage === 'en-US' && card.titleEn ? card.titleEn : card.title;
-          let description = currentLanguage === 'en-US' && card.descriptionEn ? card.descriptionEn : card.description;
+          const title = currentLanguage === 'en-US' && card.titleEn ? card.titleEn : card.title;
+          const description = currentLanguage === 'en-US' && card.descriptionEn ? card.descriptionEn : card.description;
 
           // Resolve icon component from iconName string
           let resolvedIcon = iconMap[card.icon]; // card.icon is expected to be a string like 'FiBookOpen'

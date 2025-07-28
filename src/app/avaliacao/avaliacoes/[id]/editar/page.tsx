@@ -13,6 +13,36 @@ import { fetchWithToken } from '@/lib/tokenStorage';
 import StarRating from '@/components/StarRating';
 import CriterioAvaliacao from '@/components/CriterioAvaliacao';
 
+// Interfaces para tipos
+interface Criterio {
+  id: string;
+  nome: string;
+  descricao?: string;
+  categoria?: string;
+  peso?: number;
+  nota?: number;
+  comentario?: string;
+}
+
+interface Funcionario {
+  id: string;
+  nome: string;
+  email: string;
+  cargo?: string;
+}
+
+interface Avaliacao {
+  id: string;
+  funcionario_id: string;
+  avaliador_id: string;
+  periodo: string;
+  data_inicio: string;
+  data_fim: string;
+  status: string;
+  criterios: Criterio[];
+  [key: string]: any;
+}
+
 export default function EditarAvaliacaoPage({ params }: { params: { id: string } }) {
   // Usar React.use para evitar o aviso de acesso direto a params
   const id = React.use(Promise.resolve(params.id));
@@ -20,13 +50,13 @@ export default function EditarAvaliacaoPage({ params }: { params: { id: string }
   const { user } = useSupabaseAuth();
   const router = useRouter();
 
-  const [avaliacao, setAvaliacao] = useState<any | null>(null);
+  const [avaliacao, setAvaliacao] = useState<Avaliacao | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [funcionarios, setFuncionarios] = useState<any[]>([]);
-  const [avaliadores, setAvaliadores] = useState<any[]>([]);
-  const [criterios, setCriterios] = useState<any[]>([]);
+  const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
+  const [avaliadores, setAvaliadores] = useState<Funcionario[]>([]);
+  const [criterios, setCriterios] = useState<Criterio[]>([]);
 
   // Verificar se o usuário logado é o avaliador da avaliação
   useEffect(() => {
@@ -178,7 +208,7 @@ export default function EditarAvaliacaoPage({ params }: { params: { id: string }
   // Função para atualizar um campo da avaliação
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setAvaliacao(prev => ({ ...prev, [name]: value }));
+    setAvaliacao((prev: Avaliacao | null) => prev ? ({ ...prev, [name]: value }) : null);
   };
 
   // Função para atualizar a nota e comentário de um critério
@@ -189,14 +219,16 @@ export default function EditarAvaliacaoPage({ params }: { params: { id: string }
       comentario: comentario ? 'Preenchido' : 'Vazio'
     });
 
-    setAvaliacao(prev => {
+    setAvaliacao((prev: Avaliacao | null) => {
+      if (!prev) return null;
+
       // Se não houver critérios, criar um array vazio
       if (!prev.criterios) {
         prev.criterios = [];
       }
 
       // Verificar se o critério já existe na lista
-      const criterioExistente = prev.criterios.find(c =>
+      const criterioExistente = prev.criterios.find((c: any) =>
         (c.criterioId === criterioId || c.id === criterioId || c.criterio_id === criterioId)
       );
 
@@ -204,7 +236,7 @@ export default function EditarAvaliacaoPage({ params }: { params: { id: string }
         // Atualizar critério existente
         return {
           ...prev,
-          criterios: prev.criterios.map(c =>
+          criterios: prev.criterios.map((c: any) =>
             (c.criterioId === criterioId || c.id === criterioId || c.criterio_id === criterioId)
               ? { ...c, nota: nota, comentario: comentario }
               : c
@@ -241,7 +273,7 @@ export default function EditarAvaliacaoPage({ params }: { params: { id: string }
       // Garantir que o avaliador seja sempre o usuário logado
       const avaliacaoAtualizada = {
         ...avaliacao,
-        avaliador_id: user?.id || avaliacao.avaliador_id // Forçar o ID do usuário logado
+        avaliador_id: user?.id || avaliacao?.avaliador_id // Forçar o ID do usuário logado
       };
 
       console.log('Salvando avaliação:', avaliacaoAtualizada);
@@ -366,7 +398,7 @@ export default function EditarAvaliacaoPage({ params }: { params: { id: string }
                 >
                   <option value="">{t('common.select')}</option>
                   {funcionarios.map(funcionario => (
-                    <option key={funcionario.id || funcionario.funcionario_id} value={funcionario.id || funcionario.funcionario_id}>
+                    <option key={funcionario.id || (funcionario as any).funcionario_id} value={funcionario.id || (funcionario as any).funcionario_id}>
                       {funcionario.nome || 'Não informado'} - {funcionario.cargo || 'Não informado'}
                     </option>
                   ))}
@@ -476,7 +508,7 @@ export default function EditarAvaliacaoPage({ params }: { params: { id: string }
               {/* Mostrar critérios da avaliação ou critérios padrão */}
               {avaliacao.criterios && avaliacao.criterios.length > 0 ? (
                 <div className="space-y-4">
-                  {avaliacao.criterios.map((criterio) => (
+                  {avaliacao.criterios.map((criterio: any) => (
                     <CriterioAvaliacao
                       key={criterio.id || criterio.criterioId || criterio.criterio_id}
                       id={criterio.criterioId || criterio.criterio_id || criterio.id}
@@ -512,7 +544,7 @@ export default function EditarAvaliacaoPage({ params }: { params: { id: string }
                         {categoria}
                       </div>
                       <div className="p-4 space-y-4">
-                        {criteriosCategoria.map((criterio) => (
+                        {(criteriosCategoria as any[]).map((criterio: any) => (
                           <CriterioAvaliacao
                             key={criterio.id}
                             id={criterio.id}

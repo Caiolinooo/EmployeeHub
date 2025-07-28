@@ -1,7 +1,7 @@
 /**
  * Módulo para verificação de usuários e definição de senha
  */
-import { prisma } from './db';
+import { supabase } from './supabase';
 import bcrypt from 'bcryptjs';
 import { Pool } from 'pg';
 import { sendVerificationEmail } from './email';
@@ -18,14 +18,16 @@ export async function checkUserExists(identifier: string) {
     const isEmail = identifier.includes('@');
 
     // Buscar o usuário
-    const user = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: isEmail ? identifier : undefined },
-          { phoneNumber: !isEmail ? identifier : undefined }
-        ]
-      }
-    });
+    const { data: user, error } = await supabase
+      .from('users_unified')
+      .select('*')
+      .or(isEmail ? `email.eq.${identifier}` : `phone_number.eq.${identifier}`)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Erro ao buscar usuário:', error);
+      return null;
+    }
 
     return user;
   } catch (error) {
@@ -41,12 +43,18 @@ export async function checkUserExists(identifier: string) {
  */
 export async function hasPasswordDefined(userId: string) {
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { password: true }
-    });
+    const { data: user, error } = await supabase
+      .from('users_unified')
+      .select('password, password_hash')
+      .eq('id', userId)
+      .single();
 
-    return !!user?.password;
+    if (error) {
+      console.error('Erro ao buscar usuário:', error);
+      return false;
+    }
+
+    return !!(user?.password || user?.password_hash);
   } catch (error) {
     console.error('Erro ao verificar se usuário tem senha definida:', error);
     return false;
@@ -73,13 +81,23 @@ export async function setUserPassword(userId: string, password: string) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Atualizar usuário
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
+    const { error } = await supabase
+      .from('users_unified')
+      .update({
         password: hashedPassword,
-        passwordLastChanged: new Date()
-      }
-    });
+        password_hash: hashedPassword,
+        password_last_changed: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+
+    if (error) {
+      console.error('Erro ao atualizar senha:', error);
+      return {
+        success: false,
+        message: 'Erro ao definir senha'
+      };
+    }
 
     return {
       success: true,
@@ -102,17 +120,17 @@ export async function setUserPassword(userId: string, password: string) {
 export async function isExternalUser(identifier: string) {
   try {
     const user = await checkUserExists(identifier);
-    
+
     // Se o usuário não existe, é considerado externo
     if (!user) {
       return true;
     }
-    
+
     // Se o usuário existe mas não tem senha definida, é considerado importado
-    if (!user.password) {
+    if (!user.password && !user.password_hash) {
       return false;
     }
-    
+
     // Se o usuário existe e tem senha definida, não é externo
     return false;
   } catch (error) {
@@ -135,41 +153,51 @@ export async function createExternalUser(userData: {
 }) {
   try {
     const { email, phoneNumber, firstName, lastName, password } = userData;
-    
+
     // Verificar se já existe um usuário com este email ou telefone
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: email || undefined },
-          { phoneNumber: phoneNumber || undefined }
-        ]
-      }
-    });
-    
-    if (existingUser) {
+    const { data: existingUser, error: searchError } = await supabase
+      .from('users_unified')
+      .select('id')
+      .or(email ? `email.eq.${email}` : `phone_number.eq.${phoneNumber}`)
+      .single();
+
+    if (existingUser && !searchError) {
       return {
         success: false,
         message: 'Já existe um usuário com este email ou telefone'
       };
     }
-    
+
     // Gerar hash da senha
     const hashedPassword = await bcrypt.hash(password, 10);
-    
+
     // Criar o usuário
-    const user = await prisma.user.create({
-      data: {
-        email: email || undefined,
-        phoneNumber: phoneNumber || undefined,
-        firstName,
-        lastName,
+    const { data: user, error } = await supabase
+      .from('users_unified')
+      .insert({
+        email: email || '',
+        phone_number: phoneNumber || '',
+        first_name: firstName,
+        last_name: lastName,
         password: hashedPassword,
+        password_hash: hashedPassword,
         role: 'USER', // Sempre USER para usuários externos
         active: true,
-        passwordLastChanged: new Date()
-      }
-    });
-    
+        password_last_changed: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Erro ao criar usuário:', error);
+      return {
+        success: false,
+        message: 'Erro ao criar usuário'
+      };
+    }
+
     return {
       success: true,
       message: 'Usuário criado com sucesso',
@@ -194,23 +222,32 @@ export async function sendPasswordSetupCode(userId: string, email: string) {
   try {
     // Gerar código de verificação
     const code = generateCode();
-    
+
     // Calcular data de expiração (10 minutos)
     const expires = new Date();
     expires.setMinutes(expires.getMinutes() + 10);
-    
+
     // Atualizar usuário com o código
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        verificationCode: code,
-        verificationCodeExpires: expires
-      }
-    });
-    
+    const { error } = await supabase
+      .from('users_unified')
+      .update({
+        verification_code: code,
+        verification_code_expires: expires.toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+
+    if (error) {
+      console.error('Erro ao atualizar código de verificação:', error);
+      return {
+        success: false,
+        message: 'Erro ao gerar código de verificação'
+      };
+    }
+
     // Enviar email com o código
     const result = await sendVerificationEmail(email, code);
-    
+
     return {
       success: result.success,
       message: result.success ? 'Código enviado com sucesso' : 'Erro ao enviar código'

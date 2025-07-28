@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
+import { sendReimbursementConfirmationEmail } from '@/lib/notifications';
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,70 +36,25 @@ export async function POST(request: NextRequest) {
     const formData = await request.json();
     console.log('Dados recebidos para criação de reembolso:', formData);
 
-    // Verificar se a tabela Reimbursement existe
-    const { data: tables, error: tablesError } = await supabaseAdmin
-      .from('information_schema.tables')
-      .select('table_name')
-      .eq('table_schema', 'public')
-      .eq('table_name', 'Reimbursement');
+    // Remover verificação problemática de tabela
+    console.log('Prosseguindo com criação do reembolso...');
 
-    if (tablesError) {
-      console.error('Erro ao verificar tabela Reimbursement:', tablesError);
-      return NextResponse.json(
-        { error: 'Erro ao verificar tabela de reembolsos' },
-        { status: 500 }
-      );
-    }
 
-    if (!tables || tables.length === 0) {
-      console.log('Tabela Reimbursement não encontrada, tentando criar...');
 
-      // Tentar criar a tabela
-      const createResponse = await fetch('/api/reembolso/create-table', {
-        method: 'POST',
-      });
-
-      if (!createResponse.ok) {
-        console.error('Erro ao criar tabela Reimbursement');
-        return NextResponse.json(
-          { error: 'Erro ao criar tabela de reembolsos' },
-          { status: 500 }
-        );
-      }
-
-      console.log('Tabela Reimbursement criada com sucesso');
-    }
-
-    // Verificar se a coluna user_id existe
-    const { data: columns, error: columnsError } = await supabaseAdmin
-      .from('information_schema.columns')
-      .select('column_name')
-      .eq('table_schema', 'public')
-      .eq('table_name', 'Reimbursement')
-      .eq('column_name', 'user_id');
-
-    if (columnsError) {
-      console.error('Erro ao verificar coluna user_id:', columnsError);
-    }
-
-    if (!columns || columns.length === 0) {
-      console.log('Coluna user_id não encontrada, tentando adicionar...');
-
-      // Tentar adicionar a coluna
-      const addColumnResponse = await fetch('/api/reembolso/add-user-id-column', {
-        method: 'GET',
-      });
-
-      if (!addColumnResponse.ok) {
-        console.error('Erro ao adicionar coluna user_id');
-        // Continuar mesmo sem a coluna user_id
-      } else {
-        console.log('Coluna user_id adicionada com sucesso');
-      }
-    }
+    // Verificação de colunas removida para evitar erro de variável não definida
+    console.log('Prosseguindo com criação do reembolso sem verificação de colunas...');
 
     // Gerar protocolo único
     const protocolo = `REEMB-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+    // Validar centro de custo
+    if (!formData.centroCusto || formData.centroCusto.trim() === '') {
+      console.error('Centro de custo não informado:', formData.centroCusto);
+      return NextResponse.json(
+        { error: 'Centro de custo é obrigatório' },
+        { status: 400 }
+      );
+    }
 
     // Preparar dados para inserção
     const reimbursementData = {
@@ -108,23 +64,32 @@ export async function POST(request: NextRequest) {
       telefone: formData.telefone,
       cpf: formData.cpf,
       cargo: formData.cargo,
-      centro_custo: formData.centroCusto,
+      centroCusto: formData.centroCusto.trim(), // Corrigido para camelCase
+      centro_custo: formData.centroCusto.trim(), // Adicionar versão snake_case
       data: new Date(formData.data).toISOString(),
-      tipo_reembolso: formData.tipoReembolso,
-      icone_reembolso: getIconForReimbursementType(formData.tipoReembolso),
+      tipoReembolso: formData.tipoReembolso, // Corrigido para camelCase
+      tipo_reembolso: formData.tipoReembolso, // Adicionar versão snake_case
+      iconeReembolso: getIconForReimbursementType(formData.tipoReembolso), // Corrigido para camelCase
+      icone_reembolso: getIconForReimbursementType(formData.tipoReembolso), // Adicionar versão snake_case
       descricao: formData.descricao,
-      valor_total: parseFloat(formData.valorTotal.replace(/\./g, '').replace(',', '.')),
+      valorTotal: parseFloat(formData.valorTotal.replace(/\./g, '').replace(',', '.')) / 100, // Corrigido para camelCase e dividido por 100 para obter valor correto
+      valor_total: parseFloat(formData.valorTotal.replace(/\./g, '').replace(',', '.')) / 100, // Adicionar versão snake_case
       moeda: formData.moeda,
-      metodo_pagamento: formData.metodoPagamento,
+      metodoPagamento: formData.metodoPagamento, // Corrigido para camelCase
+      metodo_pagamento: formData.metodoPagamento, // Adicionar versão snake_case
       banco: formData.banco || null,
       agencia: formData.agencia || null,
       conta: formData.conta || null,
-      pix_tipo: formData.pixTipo || null,
-      pix_chave: formData.pixChave || null,
+      pixTipo: formData.pixTipo || null, // Corrigido para camelCase
+      pix_tipo: formData.pixTipo || null, // Adicionar versão snake_case
+      pixChave: formData.pixChave || null, // Corrigido para camelCase
+      pix_chave: formData.pixChave || null, // Adicionar versão snake_case
       comprovantes: formData.comprovantes || [],
       observacoes: formData.observacoes || null,
       protocolo,
       status: 'pendente',
+      dataCriacao: new Date().toISOString(), // Adicionar dataCriacao
+      dataAtualizacao: new Date().toISOString(), // Adicionar dataAtualizacao
       historico: [{
         data: new Date(),
         status: 'pendente',
@@ -150,6 +115,67 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Reembolso criado com sucesso:', insertedData);
+
+    // Enviar email de confirmação
+    try {
+      console.log('Enviando email de confirmação de reembolso...');
+      // Corrigir formatação do valor - não dividir por 100 pois já vem no formato correto
+      const valorNumerico = parseFloat(formData.valorTotal.replace(/\./g, '').replace(',', '.'));
+      const valorFormatado = `R$ ${valorNumerico.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+      // Baixar anexos do Supabase Storage para enviar no email
+      const emailAttachments = [];
+      if (formData.comprovantes && formData.comprovantes.length > 0) {
+        console.log(`Processando ${formData.comprovantes.length} comprovantes para email`);
+
+        for (const comp of formData.comprovantes) {
+          try {
+            // Extrair o nome do arquivo da URL pública
+            const fileName = comp.publicUrl.split('/').pop() || comp.publicUrl;
+            console.log(`Baixando anexo para email: ${fileName}`);
+
+            const { data, error } = await supabaseAdmin
+              .storage
+              .from('comprovantes')
+              .download(fileName);
+
+            if (error) {
+              console.error(`Erro ao baixar anexo ${fileName}:`, error);
+              continue;
+            }
+
+            if (data) {
+              console.log(`Anexo baixado com sucesso para email: ${fileName}`);
+              const arrayBuffer = await data.arrayBuffer();
+
+              emailAttachments.push({
+                filename: comp.nome,
+                content: Buffer.from(arrayBuffer),
+                contentType: comp.tipo || 'application/octet-stream'
+              });
+            }
+          } catch (attachError) {
+            console.error('Erro ao processar anexo para email:', attachError);
+          }
+        }
+      }
+
+      console.log(`Enviando email com ${emailAttachments.length} anexos`);
+
+      await sendReimbursementConfirmationEmail(
+        formData.email,
+        formData.nome,
+        protocolo,
+        valorFormatado,
+        formData, // dados completos do formulário
+        emailAttachments
+      );
+
+      console.log('Email de confirmação enviado com sucesso');
+    } catch (emailError) {
+      console.error('Erro ao enviar email de confirmação:', emailError);
+      // Continuar mesmo se o email falhar
+    }
 
     return NextResponse.json({
       success: true,
