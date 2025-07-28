@@ -718,7 +718,7 @@ export async function generateReimbursementPDF(data: FormValues, protocolo: stri
         doc.setTextColor(0, 0, 0);
         doc.text('Nenhum comprovante anexado', 20, finalY2 + 10);
       }
-
+    }
 
     // Rodapé
     const pageCount = doc.getNumberOfPages();
