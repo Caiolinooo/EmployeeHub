@@ -125,13 +125,60 @@ export async function POST(request: NextRequest) {
 
       // Baixar anexos do Supabase Storage para enviar no email
       const emailAttachments = [];
-      if (formData.comprovantes && formData.comprovantes.length > 0) {
-        console.log(`Processando ${formData.comprovantes.length} comprovantes para email`);
+
+      // Processar múltiplas despesas e seus comprovantes
+      if (formData.expenses && Array.isArray(formData.expenses)) {
+        console.log(`Processando ${formData.expenses.length} despesas com comprovantes para email`);
+
+        for (let expenseIndex = 0; expenseIndex < formData.expenses.length; expenseIndex++) {
+          const expense = formData.expenses[expenseIndex];
+
+          if (expense.comprovantes && expense.comprovantes.length > 0) {
+            console.log(`Processando ${expense.comprovantes.length} comprovantes da despesa ${expenseIndex + 1}`);
+
+            for (const comp of expense.comprovantes) {
+              try {
+                // Extrair o nome do arquivo da URL pública
+                const fileName = comp.publicUrl?.split('/').pop() || comp.url?.split('/').pop() || comp.nome;
+                console.log(`Baixando anexo da despesa ${expenseIndex + 1} para email: ${fileName}`);
+
+                const { data, error } = await supabaseAdmin
+                  .storage
+                  .from('comprovantes')
+                  .download(fileName);
+
+                if (error) {
+                  console.error(`Erro ao baixar anexo ${fileName}:`, error);
+                  continue;
+                }
+
+                if (data) {
+                  console.log(`Anexo baixado com sucesso para email: ${fileName}`);
+                  const arrayBuffer = await data.arrayBuffer();
+
+                  // Adicionar prefixo indicando a qual despesa pertence
+                  const expenseType = expense.tipoReembolso || 'despesa';
+                  const prefixedFilename = `Despesa_${expenseIndex + 1}_${expenseType}_${comp.nome}`;
+
+                  emailAttachments.push({
+                    filename: prefixedFilename,
+                    content: Buffer.from(arrayBuffer),
+                    contentType: comp.tipo || 'application/octet-stream'
+                  });
+                }
+              } catch (attachError) {
+                console.error(`Erro ao processar anexo da despesa ${expenseIndex + 1}:`, attachError);
+              }
+            }
+          }
+        }
+      } else if (formData.comprovantes && formData.comprovantes.length > 0) {
+        // Fallback para formato antigo (compatibilidade)
+        console.log(`Processando ${formData.comprovantes.length} comprovantes (formato antigo) para email`);
 
         for (const comp of formData.comprovantes) {
           try {
-            // Extrair o nome do arquivo da URL pública
-            const fileName = comp.publicUrl.split('/').pop() || comp.publicUrl;
+            const fileName = comp.publicUrl?.split('/').pop() || comp.url?.split('/').pop() || comp.nome;
             console.log(`Baixando anexo para email: ${fileName}`);
 
             const { data, error } = await supabaseAdmin

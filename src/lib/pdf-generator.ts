@@ -408,60 +408,245 @@ export async function generateReimbursementPDF(data: FormValues, protocolo: stri
       console.error('Error calculating finalY2:', finalY2Error);
     }
 
-    doc.setFontSize(14);
-    doc.setTextColor(0, 102, 204);
-    doc.text('Comprovantes Anexados', 20, finalY2);
+    // Processar múltiplas despesas e seus comprovantes
+    if ((data as any).expenses && Array.isArray((data as any).expenses) && (data as any).expenses.length > 0) {
+      console.log('Processando múltiplas despesas...');
 
-    // Verificar se há comprovantes
-    if ((data as any).comprovantes && Array.isArray((data as any).comprovantes) && (data as any).comprovantes.length > 0) {
-      // Tabela de comprovantes com informações mais detalhadas
-      const comprovantesData = (data as any).comprovantes.map((file: any, index: number) => {
-        // Determinar o tamanho do arquivo (compatibilidade com diferentes estruturas)
-        let fileSize = 'Desconhecido';
-        if (file.tamanho) {
-          fileSize = `${(file.tamanho / 1024).toFixed(1)} KB`;
-        } else if (file.size) {
-          fileSize = `${(file.size / 1024).toFixed(1)} KB`;
-        } else if (file.content && file.content.length) {
-          fileSize = `${(file.content.length / 1024).toFixed(1)} KB`;
+      // Adicionar seção de despesas
+      doc.setFontSize(14);
+      doc.setTextColor(0, 102, 204);
+      doc.text('Detalhamento das Despesas', 20, finalY2);
+
+      let currentY = finalY2 + 10;
+
+      // Processar cada despesa
+      for (let expenseIndex = 0; expenseIndex < (data as any).expenses.length; expenseIndex++) {
+        const expense = (data as any).expenses[expenseIndex];
+
+        // Verificar se precisamos de nova página
+        if (currentY > 250) {
+          doc.addPage();
+          currentY = 20;
         }
 
-        // Determinar o nome do arquivo (compatibilidade com diferentes estruturas)
-        const fileName = file.nome || file.name || file.filename || `Comprovante ${index + 1}`;
+        // Título da despesa
+        doc.setFontSize(12);
+        doc.setTextColor(0, 102, 204);
+        doc.text(`Despesa ${expenseIndex + 1}`, 20, currentY);
+        currentY += 8;
 
-        // Determinar o tipo do arquivo (compatibilidade com diferentes estruturas)
-        let fileType = 'Desconhecido';
-        if (file.tipo) {
-          fileType = file.tipo;
-        } else if (file.type) {
-          fileType = file.type;
-        } else if (file.contentType) {
-          fileType = file.contentType;
-        } else if (fileName.includes('.')) {
-          const extension = fileName.split('.').pop().toLowerCase();
-          switch (extension) {
-            case 'pdf': fileType = 'PDF'; break;
-            case 'jpg': case 'jpeg': fileType = 'Imagem JPEG'; break;
-            case 'png': fileType = 'Imagem PNG'; break;
-            default: fileType = `Arquivo .${extension}`;
-          }
-        }
-
-        return [
-          index + 1,
-          fileName,
-          fileType,
-          fileSize
+        // Dados da despesa
+        const expenseData = [
+          ['Tipo:', expense.tipoReembolso || 'Não informado'],
+          ['Descrição:', expense.descricao || 'Não informada'],
+          ['Valor:', `${expense.valor || '0,00'} ${(data as any).moeda || 'BRL'}`]
         ];
-      });
 
-      try {
-        console.log('Adicionando tabela de comprovantes');
+        try {
+          if (typeof doc.autoTable === 'function') {
+            doc.autoTable({
+              startY: currentY,
+              head: [],
+              body: expenseData,
+              theme: 'grid',
+              styles: { fontSize: 10 },
+              columnStyles: {
+                0: { fontStyle: 'bold', cellWidth: 30 },
+                1: { cellWidth: 140 }
+              },
+              headStyles: { fillColor: [0, 102, 204] }
+            });
+            currentY = doc.lastAutoTable.finalY + 10;
+          } else {
+            // Fallback sem autoTable
+            expenseData.forEach(([label, value]) => {
+              doc.setFontSize(10);
+              doc.setTextColor(0, 0, 0);
+              doc.text(`${label} ${value}`, 25, currentY);
+              currentY += 6;
+            });
+            currentY += 5;
+          }
+        } catch (error) {
+          console.error('Erro ao criar tabela da despesa:', error);
+          currentY += 20;
+        }
 
-        // Verificar se autoTable está disponível
-        if (typeof doc.autoTable === 'function') {
-          // Usar try/catch para cada operação de autoTable para evitar falhas
+        // Comprovantes desta despesa
+        if (expense.comprovantes && Array.isArray(expense.comprovantes) && expense.comprovantes.length > 0) {
+          doc.setFontSize(11);
+          doc.setTextColor(0, 102, 204);
+          doc.text(`Comprovantes da Despesa ${expenseIndex + 1}:`, 20, currentY);
+          currentY += 8;
+
+          // Tabela de comprovantes desta despesa
+          const comprovantesData = expense.comprovantes.map((file: any, index: number) => {
+            // Determinar o tamanho do arquivo
+            let fileSize = 'Desconhecido';
+            if (file.tamanho) {
+              fileSize = `${(file.tamanho / 1024).toFixed(1)} KB`;
+            } else if (file.size) {
+              fileSize = `${(file.size / 1024).toFixed(1)} KB`;
+            }
+
+            // Determinar o nome do arquivo
+            const fileName = file.nome || file.name || file.filename || `Comprovante ${index + 1}`;
+
+            // Determinar o tipo do arquivo
+            let fileType = 'Desconhecido';
+            if (file.tipo) {
+              fileType = file.tipo;
+            } else if (file.type) {
+              fileType = file.type;
+            }
+
+            return [
+              index + 1,
+              fileName,
+              fileType,
+              fileSize
+            ];
+          });
+
           try {
+            if (typeof doc.autoTable === 'function') {
+              doc.autoTable({
+                startY: currentY,
+                head: [['#', 'Nome do Arquivo', 'Tipo', 'Tamanho']],
+                body: comprovantesData,
+                theme: 'grid',
+                styles: { fontSize: 9 },
+                headStyles: { fillColor: [0, 102, 204] }
+              });
+              currentY = doc.lastAutoTable.finalY + 15;
+            } else {
+              // Fallback sem autoTable
+              comprovantesData.forEach((row: any) => {
+                doc.setFontSize(9);
+                doc.setTextColor(0, 0, 0);
+                doc.text(`${row[0]}. ${row[1]} (${row[2]}) - ${row[3]}`, 25, currentY);
+                currentY += 5;
+              });
+              currentY += 10;
+            }
+          } catch (error) {
+            console.error('Erro ao criar tabela de comprovantes:', error);
+            currentY += 15;
+          }
+
+          // Adicionar visualização das imagens desta despesa
+          for (let i = 0; i < expense.comprovantes.length; i++) {
+            const comprovante = expense.comprovantes[i];
+            const fileName = comprovante.nome || comprovante.name || `Comprovante ${i + 1}`;
+            const fileType = comprovante.tipo || comprovante.type || '';
+
+            // Verificar se é uma imagem
+            if (isImageFile(fileType)) {
+              try {
+                console.log(`Processando imagem da despesa ${expenseIndex + 1}: ${fileName}`);
+
+                // Extrair nome do arquivo da URL pública
+                let fileNameToDownload = comprovante.publicUrl?.split('/').pop() || comprovante.url?.split('/').pop();
+                if (!fileNameToDownload && comprovante.nome) {
+                  fileNameToDownload = comprovante.nome;
+                }
+
+                if (fileNameToDownload) {
+                  // Baixar a imagem do Supabase
+                  const imageBuffer = await downloadFileFromSupabase(fileNameToDownload);
+
+                  if (imageBuffer) {
+                    // Verificar se precisamos de uma nova página
+                    if (currentY > 180) {
+                      doc.addPage();
+                      currentY = 20;
+                    }
+
+                    // Adicionar título da imagem
+                    doc.setFontSize(10);
+                    doc.setTextColor(0, 102, 204);
+                    doc.text(`Despesa ${expenseIndex + 1} - ${fileName}`, 20, currentY);
+                    currentY += 8;
+
+                    try {
+                      // Converter buffer para base64
+                      const base64Image = imageBuffer.toString('base64');
+                      const imageFormat = fileType.includes('png') ? 'PNG' : 'JPEG';
+
+                      // Adicionar a imagem ao PDF
+                      const maxWidth = 170;
+                      const maxHeight = 100;
+
+                      doc.addImage(
+                        `data:${fileType};base64,${base64Image}`,
+                        imageFormat,
+                        20,
+                        currentY,
+                        maxWidth,
+                        maxHeight
+                      );
+
+                      currentY += maxHeight + 10;
+                      console.log(`Imagem ${fileName} da despesa ${expenseIndex + 1} adicionada ao PDF`);
+                    } catch (imageError) {
+                      console.error(`Erro ao adicionar imagem ${fileName}:`, imageError);
+                      doc.setFontSize(9);
+                      doc.setTextColor(255, 0, 0);
+                      doc.text(`Erro ao carregar imagem: ${fileName}`, 20, currentY);
+                      currentY += 8;
+                    }
+                  }
+                }
+              } catch (error) {
+                console.error(`Erro ao processar imagem ${fileName}:`, error);
+              }
+            }
+          }
+        } else {
+          doc.setFontSize(10);
+          doc.setTextColor(128, 128, 128);
+          doc.text('Nenhum comprovante anexado para esta despesa', 25, currentY);
+          currentY += 10;
+        }
+
+        currentY += 5; // Espaço entre despesas
+      }
+    } else {
+      // Fallback para formato antigo (compatibilidade)
+      console.log('Usando formato antigo de comprovantes...');
+
+      doc.setFontSize(14);
+      doc.setTextColor(0, 102, 204);
+      doc.text('Comprovantes Anexados', 20, finalY2);
+
+      if ((data as any).comprovantes && Array.isArray((data as any).comprovantes) && (data as any).comprovantes.length > 0) {
+        // Código antigo para comprovantes únicos (compatibilidade)
+        const comprovantesData = (data as any).comprovantes.map((file: any, index: number) => {
+          let fileSize = 'Desconhecido';
+          if (file.tamanho) {
+            fileSize = `${(file.tamanho / 1024).toFixed(1)} KB`;
+          } else if (file.size) {
+            fileSize = `${(file.size / 1024).toFixed(1)} KB`;
+          }
+
+          const fileName = file.nome || file.name || file.filename || `Comprovante ${index + 1}`;
+          let fileType = 'Desconhecido';
+          if (file.tipo) {
+            fileType = file.tipo;
+          } else if (file.type) {
+            fileType = file.type;
+          }
+
+          return [
+            index + 1,
+            fileName,
+            fileType,
+            fileSize
+          ];
+        });
+
+        try {
+          if (typeof doc.autoTable === 'function') {
             doc.autoTable({
               startY: finalY2 + 5,
               head: [['#', 'Nome do Arquivo', 'Tipo', 'Tamanho']],
@@ -470,119 +655,70 @@ export async function generateReimbursementPDF(data: FormValues, protocolo: stri
               styles: { fontSize: 10 },
               headStyles: { fillColor: [0, 102, 204] }
             });
-            console.log('Tabela de comprovantes adicionada ao PDF');
-          } catch (innerError) {
-            console.error('Erro interno ao criar tabela de comprovantes:', innerError);
-            throw innerError; // Propagar erro para o fallback
           }
-        } else {
-          console.error('doc.autoTable não é uma função, usando fallback');
-          throw new Error('autoTable não disponível');
+        } catch (error) {
+          console.error('Erro ao criar tabela de comprovantes:', error);
         }
-      } catch (tableError) {
-        console.error('Erro ao criar tabela de comprovantes:', tableError);
-        // Fallback: adicionar texto simples em vez da tabela
-        let yPos = finalY2 + 5;
-        try {
-          doc.text('Lista de Comprovantes:', 20, yPos);
-          yPos += 5;
-          comprovantesData.forEach((row: any) => {
+
+        // Adicionar visualização das imagens (formato antigo)
+        let currentY = doc.lastAutoTable?.finalY || finalY2 + 30;
+
+        for (let i = 0; i < (data as any).comprovantes.length; i++) {
+          const comprovante = (data as any).comprovantes[i];
+          const fileName = comprovante.nome || comprovante.name || `Comprovante ${i + 1}`;
+          const fileType = comprovante.tipo || comprovante.type || '';
+
+          if (isImageFile(fileType)) {
             try {
-              doc.text(`${row[0]}. ${row[1]} (${row[2]})`, 20, yPos);
-              yPos += 5;
-            } catch (textError) {
-              console.error('Erro ao adicionar texto de comprovante:', textError);
-            }
-          });
-          console.log('Fallback: lista de comprovantes adicionada como texto simples após erro');
-        } catch (textError) {
-          console.error('Erro ao adicionar texto de cabeçalho de comprovantes:', textError);
-        }
-      }
-    } else {
-      doc.setFontSize(10);
-      doc.setTextColor(0, 0, 0);
-      doc.text('Nenhum comprovante anexado', 20, finalY2 + 10);
-      console.log('Nenhum comprovante para adicionar ao PDF');
-    }
-
-    // Adicionar visualização das imagens dos comprovantes
-    if ((data as any).comprovantes && Array.isArray((data as any).comprovantes) && (data as any).comprovantes.length > 0) {
-      let currentY = doc.lastAutoTable?.finalY || finalY2 + 30;
-
-      console.log('Processando imagens dos comprovantes...');
-      for (let i = 0; i < (data as any).comprovantes.length; i++) {
-        const comprovante = (data as any).comprovantes[i];
-        const fileName = comprovante.nome || comprovante.name || `Comprovante ${i + 1}`;
-        const fileType = comprovante.tipo || comprovante.type || '';
-
-        // Verificar se é uma imagem
-        if (isImageFile(fileType)) {
-          try {
-            console.log(`Processando imagem: ${fileName}`);
-
-            // Extrair nome do arquivo da URL pública
-            let fileNameToDownload = comprovante.publicUrl?.split('/').pop() || comprovante.url?.split('/').pop();
-            if (!fileNameToDownload && comprovante.nome) {
-              fileNameToDownload = comprovante.nome;
-            }
-
-            if (fileNameToDownload) {
-              // Baixar a imagem do Supabase
-              const imageBuffer = await downloadFileFromSupabase(fileNameToDownload);
-
-              if (imageBuffer) {
-                // Verificar se precisamos de uma nova página
-                if (currentY > 200) {
-                  doc.addPage();
-                  currentY = 20;
-                }
-
-                // Adicionar título da imagem
-                doc.setFontSize(12);
-                doc.setTextColor(0, 102, 204);
-                doc.text(`Comprovante ${i + 1}: ${fileName}`, 20, currentY);
-                currentY += 10;
-
-                try {
-                  // Converter buffer para base64
-                  const base64Image = imageBuffer.toString('base64');
-                  const imageFormat = fileType.includes('png') ? 'PNG' : 'JPEG';
-
-                  // Adicionar a imagem ao PDF
-                  // Calcular dimensões para caber na página (máximo 170mm de largura)
-                  const maxWidth = 170;
-                  const maxHeight = 120;
-
-                  doc.addImage(
-                    `data:${fileType};base64,${base64Image}`,
-                    imageFormat,
-                    20,
-                    currentY,
-                    maxWidth,
-                    maxHeight
-                  );
-
-                  currentY += maxHeight + 15;
-                  console.log(`Imagem ${fileName} adicionada ao PDF`);
-                } catch (imageError) {
-                  console.error(`Erro ao adicionar imagem ${fileName}:`, imageError);
-                  // Adicionar texto indicando erro
-                  doc.setFontSize(10);
-                  doc.setTextColor(255, 0, 0);
-                  doc.text(`Erro ao carregar imagem: ${fileName}`, 20, currentY);
-                  currentY += 10;
-                }
-              } else {
-                console.log(`Não foi possível baixar a imagem: ${fileName}`);
+              let fileNameToDownload = comprovante.publicUrl?.split('/').pop() || comprovante.url?.split('/').pop();
+              if (!fileNameToDownload && comprovante.nome) {
+                fileNameToDownload = comprovante.nome;
               }
+
+              if (fileNameToDownload) {
+                const imageBuffer = await downloadFileFromSupabase(fileNameToDownload);
+
+                if (imageBuffer) {
+                  if (currentY > 180) {
+                    doc.addPage();
+                    currentY = 20;
+                  }
+
+                  doc.setFontSize(10);
+                  doc.setTextColor(0, 102, 204);
+                  doc.text(fileName, 20, currentY);
+                  currentY += 8;
+
+                  try {
+                    const base64Image = imageBuffer.toString('base64');
+                    const imageFormat = fileType.includes('png') ? 'PNG' : 'JPEG';
+
+                    doc.addImage(
+                      `data:${fileType};base64,${base64Image}`,
+                      imageFormat,
+                      20,
+                      currentY,
+                      170,
+                      100
+                    );
+
+                    currentY += 110;
+                  } catch (imageError) {
+                    console.error(`Erro ao adicionar imagem ${fileName}:`, imageError);
+                  }
+                }
+              }
+            } catch (error) {
+              console.error(`Erro ao processar imagem ${fileName}:`, error);
             }
-          } catch (error) {
-            console.error(`Erro ao processar imagem ${fileName}:`, error);
           }
         }
+      } else {
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.text('Nenhum comprovante anexado', 20, finalY2 + 10);
       }
-    }
+
 
     // Rodapé
     const pageCount = doc.getNumberOfPages();
