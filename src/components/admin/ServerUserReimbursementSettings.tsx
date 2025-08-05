@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { FiSave, FiPlus, FiTrash2, FiMail, FiAlertCircle, FiCheck, FiX } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ServerUserReimbursementSettingsProps {
   userId?: string;
@@ -26,6 +27,7 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
   onSave,
   onClose
 }) => {
+  const { t } = useI18n();
   const { user, isAdmin } = useSupabaseAuth();
   const [enabled, setEnabled] = useState(initialSettings?.enabled || false);
   const [recipients, setRecipients] = useState<string[]>(initialSettings?.recipients || []);

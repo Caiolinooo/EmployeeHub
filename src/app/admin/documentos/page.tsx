@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import MainLayout from '@/components/Layout/MainLayout';
 import FileExplorer from '@/components/FileExplorer';
-import { FiFile, FiDownload, FiEye, FiEdit, FiTrash2, FiPlus, FiRefreshCw } from 'react-icons/fi';
+import { FiFile, FiDownload, FiEye, FiPlus, FiRefreshCw } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
 import MultiPdfViewer from '@/components/MultiPdfViewer';
 import { toast } from 'react-hot-toast';
@@ -11,7 +11,7 @@ import { toast } from 'react-hot-toast';
 export default function DocumentsAdminPage() {
   const { t } = useI18n();
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
-  const [currentFolder, setCurrentFolder] = useState<string>('');
+  // const [currentFolder, setCurrentFolder] = useState<string>(''); // Removido - não utilizado
   const [viewerOpen, setViewerOpen] = useState<boolean>(false);
   const [isConverting, setIsConverting] = useState<boolean>(false);
 
@@ -22,7 +22,8 @@ export default function DocumentsAdminPage() {
 
   // Função para lidar com a seleção de pasta
   const handleFolderSelect = (folderPath: string) => {
-    setCurrentFolder(folderPath);
+    // setCurrentFolder(folderPath); // Removido - variável não existe
+    console.log('Pasta selecionada:', folderPath);
   };
 
   // Função para abrir o visualizador

@@ -9,7 +9,7 @@ import MainLayout from '@/components/Layout/MainLayout';
 import { 
   FiPlus, 
   FiEdit, 
-  FiTrash2, 
+  // FiTrash2, // Removido - não utilizado
   FiRefreshCw, 
   FiDatabase,
   FiActivity,
@@ -55,7 +55,7 @@ export default function AdminCardsPage() {
   const [cards, setCards] = useState<DashboardCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [migrationStatus, setMigrationStatus] = useState<any>(null);
-  const [user, setUser] = useState<any>(null);
+  // const [user, setUser] = useState<any>(null); // Removido - não utilizado
 
   // Verificar autenticação e permissões
   useEffect(() => {
@@ -78,7 +78,6 @@ export default function AdminCardsPage() {
       return;
     }
 
-    setUser(user);
     loadCards();
     checkMigrationStatus();
   }, [router, toast]);

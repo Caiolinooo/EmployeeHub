@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FiSettings, FiMail, FiAlertCircle } from 'react-icons/fi';
-import { toast } from 'react-hot-toast';
+import { FiSettings, FiAlertCircle } from 'react-icons/fi';
 import ReimbursementEmailSettings from '@/components/admin/ReimbursementEmailSettings';
 
 export default function ReimbursementSettingsPage() {

@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       
       // Look for headers
       let headerRow = -1;
-      let headers: Record<string, string> = {};
+      const headers: Record<string, string> = {};
       
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i] as Record<string, any>;

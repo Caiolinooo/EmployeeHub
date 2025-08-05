@@ -38,7 +38,7 @@ const AdminCard = ({ title, description, icon: Icon, href, color }: AdminCardPro
 };
 
 export default function AdminDashboard() {
-  const { user, isAdmin } = useSupabaseAuth();
+  const { user, profile, isAdmin } = useSupabaseAuth();
   const { t } = useI18n();
   const router = useRouter();
   const [isFixingPermissions, setIsFixingPermissions] = useState(false);
@@ -63,7 +63,7 @@ export default function AdminDashboard() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{t('admin.dashboard')}</h1>
           <p className="mt-1 text-sm text-gray-500">
-            {t('admin.welcomeAdmin', `Bem-vindo, ${user?.firstName || 'Admin'}`)}
+            {t('admin.welcomeAdmin', `Bem-vindo, ${profile?.first_name || 'Admin'}`)}
           </p>
         </div>
         <div className="mt-4 md:mt-0">

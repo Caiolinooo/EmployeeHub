@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff, FiArrowUp, FiArrowDown, FiX, FiLock, FiCheck, FiAlertCircle, FiInfo, FiDatabase } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff, FiArrowUp, FiArrowDown, FiX, FiLock, FiCheck, FiInfo, FiDatabase } from 'react-icons/fi';
 import { DashboardCard } from '@/data/cards';
-import { IconType } from 'react-icons';
 import * as Icons from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
 import { CreateCardsTable } from '@/components/admin/cards/CreateCardsTable';
@@ -145,7 +144,7 @@ const CardEditor = ({ card, onSave, onCancel, isNew = false }: CardEditorProps) 
             <select
               id="icon"
               name="icon"
-              value={typeof editedCard.icon === 'function' ? (editedCard.icon as any).displayName || editedCard.iconName || 'FiGrid' : 'FiGrid'}
+              value={typeof editedCard.icon === 'function' ? (editedCard.icon as { displayName?: string }).displayName || editedCard.iconName || 'FiGrid' : 'FiGrid'}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
               required
@@ -341,7 +340,7 @@ export default function CardsPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [tableExists, setTableExists] = useState<boolean>(true);
-  const [creatingTable, setCreatingTable] = useState<boolean>(false);
+  // const [creatingTable, setCreatingTable] = useState<boolean>(false); // Removido - não utilizado
   const [dataSource, setDataSource] = useState<'database' | 'hardcoded' | null>(null);
   const [migrationStatus, setMigrationStatus] = useState<{ needed: boolean; inProgress: boolean; message: string | null }>({
     needed: false,
@@ -541,7 +540,7 @@ export default function CardsPage() {
   // Função para criar a tabela cards
   const createCardsTable = async () => {
     try {
-      setCreatingTable(true);
+      // setCreatingTable(true); // Removido - variável não existe
       setError(null);
 
       // Obter o token de autenticação do localStorage
@@ -581,7 +580,7 @@ export default function CardsPage() {
       console.error('Erro ao criar tabela cards:', err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
     } finally {
-      setCreatingTable(false);
+      // setCreatingTable(false); // Removido - variável não existe
     }
   };
 

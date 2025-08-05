@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
       `;
 
       // Generate PDF if approved
-      let attachments = [];
+      const attachments: any[] = [];
       if (status === 'APPROVED') {
         try {
           console.log('Generating PDF for approved reimbursement');

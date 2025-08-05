@@ -29,7 +29,7 @@ export default function AdminSetupPage() {
   const { toast } = useToast();
   const [checks, setChecks] = useState<SystemCheck[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  // const [user, setUser] = useState<any>(null); // Removido - não utilizado
 
   // Verificar autenticação
   useEffect(() => {
@@ -52,7 +52,6 @@ export default function AdminSetupPage() {
       return;
     }
 
-    setUser(user);
     runSystemChecks();
   }, [router, toast]);
 

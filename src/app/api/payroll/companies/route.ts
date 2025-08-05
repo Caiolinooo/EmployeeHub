@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const cnpj = searchParams.get('cnpj');
     const isActive = searchParams.get('isActive');
 
-    let query = supabaseAdminAdmin
+    let query = supabaseAdmin
       .from('payroll_companies')
       .select('*', { count: 'exact' });
 

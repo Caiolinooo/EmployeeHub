@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se código já existe para o tipo
-    const { data: existingCode } = await supabase
+    const { data: existingCode } = await supabaseAdmin
       .from('payroll_codes')
       .select('id')
       .eq('code', body.code)
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Criar código
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('payroll_codes')
       .insert([{
         code: body.code,

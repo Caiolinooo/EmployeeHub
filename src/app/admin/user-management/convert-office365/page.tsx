@@ -9,12 +9,12 @@ declare global {
   }
 }
 import { useI18n } from '@/contexts/I18nContext';
-import { FiUpload, FiDownload, FiFile, FiX, FiCheck, FiAlertCircle, FiLoader, FiInfo } from 'react-icons/fi';
+import { FiUpload, FiDownload, FiFile, FiCheck, FiAlertCircle, FiLoader, FiInfo } from 'react-icons/fi';
 import { useDropzone } from 'react-dropzone';
 import Script from 'next/script';
 
 export default function ConvertOffice365Page() {
-  const { t } = useI18n();
+  // const { t } = useI18n(); // Removido - não utilizado
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);

@@ -7,6 +7,7 @@ import { fetchWrapper } from '@/lib/fetch-wrapper';
 import { User } from '@supabase/supabase-js';
 import { Tables } from '@/types/supabase';
 import { getToken, saveToken, removeToken } from '@/lib/tokenStorage';
+import { activateUserAfterEmailVerification } from '@/lib/user-approval';
 // Import a browser-compatible JWT library or use a safer approach
 
 // Função para gerar um token JWT (deve ser feito no servidor)
@@ -932,6 +933,31 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       if (userError) {
         console.error('Erro ao buscar usuário após verificação de OTP:', userError);
         return { success: false, status: 'user_error' };
+      }
+
+      // Se for verificação por email, tentar ativar automaticamente o usuário
+      if (isEmail && userData.id) {
+        try {
+          const activated = await activateUserAfterEmailVerification(userData.id);
+          if (activated) {
+            console.log('Usuário ativado automaticamente após verificação de email');
+            // Recarregar dados do usuário para obter o status atualizado
+            const { data: updatedUserData } = await supabase
+              .from('users_unified')
+              .select('*')
+              .eq('id', userData.id)
+              .single();
+
+            if (updatedUserData) {
+              userData.active = updatedUserData.active;
+              userData.is_authorized = updatedUserData.is_authorized;
+              userData.authorization_status = updatedUserData.authorization_status;
+            }
+          }
+        } catch (activationError) {
+          console.error('Erro ao tentar ativar usuário automaticamente:', activationError);
+          // Continuar com o fluxo normal mesmo se a ativação falhar
+        }
       }
 
       // Gerar token JWT

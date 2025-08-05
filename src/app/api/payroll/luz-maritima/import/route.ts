@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase as supabaseAdmin } from '@/lib/supabase-admin';
+import { supabaseAdmin } from '@/lib/supabase';
 import * as XLSX from 'xlsx';
 
 /**
@@ -49,7 +49,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Criar ou buscar folha de pagamento
-    let { data: payrollSheet, error: sheetError } = await supabaseAdmin
+    let payrollSheetData;
+    const { data: existingSheet, error: sheetError } = await supabaseAdmin
       .from('payroll_sheets')
       .select('id')
       .eq('company_id', companyId)
@@ -80,19 +81,26 @@ export async function POST(request: NextRequest) {
         }, { status: 500 });
       }
 
-      payrollSheet = newSheet;
+      payrollSheetData = newSheet;
+    } else if (sheetError) {
+      return NextResponse.json({
+        success: false,
+        error: 'Erro ao buscar folha de pagamento'
+      }, { status: 500 });
+    } else {
+      payrollSheetData = existingSheet;
     }
 
     // Processar Sheet 1 (Payroll) - colunas A até AB
-    const payrollData = await processPayrollSheet(workbook, payrollSheet.id, companyId);
-    
+    const payrollData = await processPayrollSheet(workbook, payrollSheetData.id, companyId);
+
     // Processar Sheet 2 (Cost) - custos fixos
-    const costData = await processCostSheet(workbook, payrollSheet.id);
+    const costData = await processCostSheet(workbook, payrollSheetData.id);
 
     return NextResponse.json({
       success: true,
       data: {
-        sheetId: payrollSheet.id,
+        sheetId: payrollSheetData.id,
         employeesImported: payrollData.employeesCount,
         payrollRecords: payrollData.recordsCount,
         costRecords: costData.recordsCount
@@ -134,7 +142,8 @@ async function processPayrollSheet(workbook: XLSX.WorkBook, sheetId: string, com
     if (!employeeName) continue;
 
     // Criar ou buscar funcionário
-    let { data: employee, error: empError } = await supabaseAdmin
+    let employeeData;
+    const { data: existingEmployee, error: empError } = await supabaseAdmin
       .from('payroll_employees')
       .select('id')
       .eq('company_id', companyId)
@@ -162,13 +171,18 @@ async function processPayrollSheet(workbook: XLSX.WorkBook, sheetId: string, com
         continue;
       }
 
-      employee = newEmployee;
+      employeeData = newEmployee;
       employeesCount++;
+    } else if (empError) {
+      console.error('Erro ao buscar funcionário:', empError);
+      continue;
+    } else {
+      employeeData = existingEmployee;
     }
 
     // Inserir dados do payroll (colunas A-AB)
     const payrollData: any = {
-      employee_id: employee.id,
+      employee_id: employeeData.id,
       sheet_id: sheetId
     };
 

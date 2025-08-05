@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuth, handleApiError } from '@/lib/api-utils';
+import { handleApiError } from '@/lib/api-utils';
 import { testEmailConnection, sendEmail } from '@/lib/email';
 
 /**

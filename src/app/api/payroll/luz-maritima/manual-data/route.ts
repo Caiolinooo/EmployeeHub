@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase as supabaseAdmin } from '@/lib/supabase-admin';
+import { supabaseAdmin } from '@/lib/supabase';
 
 /**
  * API para gerenciar dados manuais do cliente LUZ Marítima
@@ -203,7 +203,7 @@ export async function POST(request: NextRequest) {
         updated: results.length,
         errors: errors.length,
         results,
-        errors
+        errorDetails: errors
       },
       message: `${results.length} registros atualizados, ${errors.length} erros`
     });

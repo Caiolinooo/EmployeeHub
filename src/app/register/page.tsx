@@ -7,6 +7,7 @@ import { toast } from 'react-hot-toast';
 import { FaUser, FaEnvelope, FaPhone, FaBriefcase, FaBuilding } from 'react-icons/fa';
 import Image from 'next/image';
 import Link from 'next/link';
+import LanguageSelector from '@/components/LanguageSelector';
 
 export default function RegisterPage() {
   const { t } = useI18n();
@@ -165,7 +166,12 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md relative">
+        {/* Language Selector */}
+        <div className="absolute top-4 right-4">
+          <LanguageSelector variant="dropdown" />
+        </div>
+
         <div className="text-center mb-6">
           <Image
             src="/images/logo.png"

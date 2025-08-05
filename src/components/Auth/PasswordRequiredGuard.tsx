@@ -12,7 +12,7 @@ interface PasswordRequiredGuardProps {
 }
 
 export function PasswordRequiredGuard({ children }: PasswordRequiredGuardProps) {
-  const { user, isAuthenticated, isLoading, requiresPassword } = useSupabaseAuth();
+  const { user, isAuthenticated, isLoading, passwordExpired } = useSupabaseAuth();
   const { t } = useI18n();
   const [showSetPasswordModal, setShowSetPasswordModal] = useState(false);
   const [passwordSet, setPasswordSet] = useState(false);

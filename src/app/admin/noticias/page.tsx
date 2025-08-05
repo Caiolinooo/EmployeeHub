@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import MainLayout from '@/components/Layout/MainLayout';
-import { FiPlus, FiEdit, FiTrash2, FiEye, FiFile, FiCalendar, FiUser, FiTag } from 'react-icons/fi';
+import { FiPlus, FiEdit, FiTrash2, FiFile, FiCalendar, FiTag } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
 import FileExplorer from '@/components/FileExplorer';
 import MultiPdfViewer from '@/components/MultiPdfViewer';
@@ -26,7 +26,7 @@ export default function NewsAdminPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showFileExplorer, setShowFileExplorer] = useState<boolean>(false);
-  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  // const [selectedFile, setSelectedFile] = useState<string | null>(null); // Removido - não utilizado
   const [viewerOpen, setViewerOpen] = useState<boolean>(false);
   const [viewingFile, setViewingFile] = useState<string | null>(null);
   const [editingNews, setEditingNews] = useState<News | null>(null);
@@ -87,7 +87,6 @@ export default function NewsAdminPage() {
 
   // Função para lidar com a seleção de arquivo
   const handleFileSelect = (filePath: string) => {
-    setSelectedFile(filePath);
     setFormData({ ...formData, file: filePath });
     closeFileExplorer();
   };

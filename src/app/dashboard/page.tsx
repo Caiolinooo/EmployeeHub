@@ -55,7 +55,7 @@ export default function Dashboard() {
   const { t, locale } = useI18n();
   const { config } = useSiteConfig();
   const router = useRouter();
-  const [cards, setCards] = useState<DashboardCard[]>(getTranslatedCards((key: string) => t(key)));
+  const [cards, setCards] = useState<DashboardCard[]>([]);
   const [loadingCards, setLoadingCards] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -99,6 +99,9 @@ export default function Dashboard() {
 
         if (dbCards && dbCards.length > 0) {
           setCards(dbCards);
+        } else {
+          // Se não há cards no banco, usar cards estáticos traduzidos
+          setCards(getTranslatedCards((key: string) => t(key)));
         }
       } catch (err) {
         console.error('Error loading cards:', err);
@@ -111,8 +114,26 @@ export default function Dashboard() {
 
     if (isAuthenticated) {
       fetchCards();
+    } else if (!isLoading) {
+      // Se não está autenticado e não está carregando, inicializar com cards traduzidos
+      setCards(getTranslatedCards((key: string) => t(key)));
+      setLoadingCards(false);
     }
   }, [t, isAuthenticated, isLoading, router, locale]);
+
+  // Efeito adicional para atualizar traduções quando o idioma muda
+  useEffect(() => {
+    if (!loadingCards && cards.length > 0) {
+      // Verificar se os cards atuais são do banco (têm titleEn/descriptionEn) ou estáticos
+      const hasDbCards = cards.some(card => 'titleEn' in card || 'descriptionEn' in card);
+
+      if (!hasDbCards) {
+        // Se são cards estáticos, atualizar as traduções
+        console.log('Atualizando traduções dos cards estáticos para idioma:', locale);
+        setCards(getTranslatedCards((key: string) => t(key)));
+      }
+    }
+  }, [locale, t, loadingCards, cards]);
 
   if (isLoading) {
     return <LoadingSpinner />;

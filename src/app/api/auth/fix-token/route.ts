@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractTokenFromHeader, verifyToken, generateToken } from '@/lib/auth';
+import jwt from 'jsonwebtoken';
 import { supabaseAdmin } from '@/lib/supabase';
 
 console.log('Inicializando cliente Supabase para fix-token');
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Gerar um novo token para o administrador
-      const jwt = require('jsonwebtoken');
+      // const jwt = require('jsonwebtoken'); // Já importado no topo
       const newToken = jwt.sign(
         {
           userId: adminUser.id,
@@ -144,7 +145,7 @@ export async function POST(request: NextRequest) {
 
       if (adminUser) {
         // Gerar um novo token
-        const jwt = require('jsonwebtoken');
+        // const jwt = require('jsonwebtoken'); // Já importado no topo
         const newToken = jwt.sign(
           {
             userId: adminUser.id,
@@ -223,7 +224,7 @@ export async function POST(request: NextRequest) {
         console.log('Gerando token para o administrador:', userForToken);
 
         // Gerar um novo token
-        const jwt = require('jsonwebtoken');
+        // const jwt = require('jsonwebtoken'); // Já importado no topo
         const newToken = jwt.sign(
           {
             userId: adminUser.id,
@@ -312,7 +313,7 @@ export async function POST(request: NextRequest) {
       console.log('Gerando novo token com papel de administrador');
 
       // Gerar um novo token
-      const jwt = require('jsonwebtoken');
+      // const jwt = require('jsonwebtoken'); // Já importado no topo
       const newToken = jwt.sign(
         {
           userId: user.id,
@@ -445,7 +446,7 @@ export async function POST(request: NextRequest) {
 
       if (adminUser) {
         // Gerar um novo token
-        const jwt = require('jsonwebtoken');
+        // const jwt = require('jsonwebtoken'); // Já importado no topo
         const newToken = jwt.sign(
           {
             userId: adminUser.id,

@@ -11,7 +11,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('payroll_companies')
       .select('*')
       .eq('id', params.id)
@@ -65,7 +65,7 @@ export async function PUT(
     }
 
     // Verificar se CNPJ já existe em outra empresa
-    const { data: existingCompany } = await supabase
+    const { data: existingCompany } = await supabaseAdmin
       .from('payroll_companies')
       .select('id')
       .eq('cnpj', body.cnpj)
@@ -80,7 +80,7 @@ export async function PUT(
     }
 
     // Atualizar empresa
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('payroll_companies')
       .update({
         name: body.name,
@@ -135,7 +135,7 @@ export async function DELETE(
 ) {
   try {
     // Verificar se existem funcionários vinculados
-    const { data: employees } = await supabase
+    const { data: employees } = await supabaseAdmin
       .from('payroll_employees')
       .select('id')
       .eq('company_id', params.id)
@@ -149,7 +149,7 @@ export async function DELETE(
     }
 
     // Verificar se existem folhas de pagamento vinculadas
-    const { data: sheets } = await supabase
+    const { data: sheets } = await supabaseAdmin
       .from('payroll_sheets')
       .select('id')
       .eq('company_id', params.id)
@@ -163,7 +163,7 @@ export async function DELETE(
     }
 
     // Remover empresa
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('payroll_companies')
       .delete()
       .eq('id', params.id);

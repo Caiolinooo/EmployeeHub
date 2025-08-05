@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff, FiStar, FiUpload, FiDownload, FiSave, FiX } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff, FiStar, FiUpload, FiDownload, FiX } from 'react-icons/fi';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface NewsItem {
   id: string;
@@ -27,6 +28,7 @@ interface NewsEditorProps {
 }
 
 const NewsEditor = ({ news, onSave, onCancel, isNew = false }: NewsEditorProps) => {
+  const { t } = useI18n();
   const [editedNews, setEditedNews] = useState<NewsItem>({ ...news });
   const [file, setFile] = useState<File | null>(null);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
@@ -432,14 +434,14 @@ const NewsItemComponent = ({ news, onEdit, onDelete, onToggleVisibility, onToggl
           <button
             onClick={() => onEdit(news)}
             className="p-1 text-blue-500 hover:text-blue-700"
-            title={t('common.edit', 'Editar')}
+            title="Editar"
           >
             <FiEdit2 className="h-4 w-4" />
           </button>
           <button
             onClick={() => onDelete(news.id)}
             className="p-1 text-red-500 hover:text-red-700"
-            title={t('common.delete', 'Excluir')}
+            title="Excluir"
           >
             <FiTrash2 className="h-4 w-4" />
           </button>
@@ -619,7 +621,7 @@ export default function NewsPage() {
       }
 
       if (!response.ok) {
-        throw new Error(t('admin.errorSavingNews', 'Erro ao salvar notícia'));
+        throw new Error('Erro ao salvar notícia');
       }
 
       // Recarregar notícias
@@ -630,7 +632,7 @@ export default function NewsPage() {
       setIsAdding(false);
     } catch (error) {
       console.error('Erro ao salvar notícia:', error);
-      setError(t('admin.errorSavingNews', 'Erro ao salvar notícia. Por favor, tente novamente.'));
+      setError('Erro ao salvar notícia. Por favor, tente novamente.');
     }
   };
 
@@ -640,21 +642,21 @@ export default function NewsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm(t('admin.users.deleteConfirm', 'Tem certeza que deseja excluir esta notícia?'))) {
+    if (window.confirm('Tem certeza que deseja excluir esta notícia?')) {
       try {
         const response = await fetch(`/api/news/${id}`, {
           method: 'DELETE',
         });
 
         if (!response.ok) {
-          throw new Error(t('admin.errorDeletingNews', 'Erro ao excluir notícia'));
+          throw new Error('Erro ao excluir notícia');
         }
 
         // Recarregar notícias
         fetchNews();
       } catch (error) {
         console.error('Erro ao excluir notícia:', error);
-        setError(t('admin.errorDeletingNews', 'Erro ao excluir notícia. Por favor, tente novamente.'));
+        setError('Erro ao excluir notícia. Por favor, tente novamente.');
       }
     }
   };
@@ -733,7 +735,7 @@ export default function NewsPage() {
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-abz-blue hover:bg-abz-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue"
           >
             <FiPlus className="mr-2 h-4 w-4" />
-            {t('admin.addNews', 'Adicionar Notícia')}
+            Adicionar Notícia
           </button>
         </div>
       </div>
@@ -819,7 +821,7 @@ export default function NewsPage() {
             </div>
           ) : sortedNewsItems.length === 0 ? (
             <div className="p-6 text-center text-gray-500">
-              {t('admin.noNewsFound', 'Nenhuma notícia encontrada. Clique em "Adicionar Notícia" para criar uma nova.')}
+              Nenhuma notícia encontrada. Clique em "Adicionar Notícia" para criar uma nova.
             </div>
           ) : (
             <div className="space-y-3 p-4">

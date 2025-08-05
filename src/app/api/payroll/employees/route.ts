@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
 
     // Verificar se número de registro já existe na empresa
     if (body.registrationNumber) {
-      const { data: existingEmployee } = await supabase
+      const { data: existingEmployee } = await supabaseAdmin
         .from('payroll_employees')
         .select('id')
         .eq('company_id', body.companyId)
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Criar funcionário
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('payroll_employees')
       .insert([{
         employee_id: body.employeeId,

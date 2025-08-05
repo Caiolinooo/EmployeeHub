@@ -257,7 +257,7 @@ export async function POST(request: NextRequest) {
 
     // Verificar se o usuário é administrador
     console.log('Verificando se o usuário é administrador. ID:', payload.userId);
-    let { data: requestingUser, error: userError } = await supabaseAdmin
+    const { data: requestingUser, error: userError } = await supabaseAdmin
       .from('users_unified')
       .select('id, role, first_name, last_name, email, phone_number')
       .eq('id', payload.userId)
@@ -353,7 +353,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Continuar com a execução usando o novo usuário administrador
-          requestingUser = newAdmin;
+          // requestingUser = newAdmin; // Removido - não é possível reatribuir const
         } else {
           console.log('Erro ao verificar usuário administrador. Retornando erro.');
           return NextResponse.json(

@@ -6,7 +6,7 @@ import {
   FiPlus,
   FiEdit2,
   FiTrash2,
-  FiUser,
+  // FiUser, // Removido - não utilizado
   FiUsers,
   FiShield,
   FiSearch,
@@ -17,7 +17,7 @@ import {
   FiX,
   FiRefreshCw,
   FiUserCheck,
-  FiSettings
+  // FiSettings // Removido - não utilizado
 } from 'react-icons/fi';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';

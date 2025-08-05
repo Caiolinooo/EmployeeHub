@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { v4 as uuidv4 } from 'uuid';
 import { sendVerificationEmail } from '@/lib/email';
 import { sendNewUserWelcomeEmail, sendAdminNotificationEmail } from '@/lib/notifications';
 import bcrypt from 'bcryptjs';

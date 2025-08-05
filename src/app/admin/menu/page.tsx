@@ -6,6 +6,7 @@ import menuItems, { MenuItem } from '@/data/menu';
 import { IconType } from 'react-icons';
 import * as Icons from 'react-icons/fi';
 import IconSelector from '@/components/IconSelector';
+import { useI18n } from '@/contexts/I18nContext';
 
 // Componente para edição de item de menu
 interface MenuEditorProps {
@@ -16,6 +17,7 @@ interface MenuEditorProps {
 }
 
 const MenuEditor = ({ item, onSave, onCancel, isNew = false }: MenuEditorProps) => {
+  const { t } = useI18n();
   const [editedItem, setEditedItem] = useState<MenuItem>({ ...item });
   const [selectedIcon, setSelectedIcon] = useState<string>(item.icon.name);
 
@@ -243,14 +245,14 @@ const MenuItemComponent = ({ item, onEdit, onDelete, onToggleVisibility, onMoveU
           <button
             onClick={() => onEdit(item)}
             className="p-1 text-blue-500 hover:text-blue-700"
-            title={t('common.edit', 'Editar')}
+            title="Editar"
           >
             <FiEdit2 className="h-4 w-4" />
           </button>
           <button
             onClick={() => onDelete(item.id)}
             className="p-1 text-red-500 hover:text-red-700"
-            title={t('common.delete', 'Excluir')}
+            title="Excluir"
           >
             <FiTrash2 className="h-4 w-4" />
           </button>
@@ -261,6 +263,7 @@ const MenuItemComponent = ({ item, onEdit, onDelete, onToggleVisibility, onMoveU
 };
 
 export default function MenuPage() {
+  const { t } = useI18n();
   const [items, setItems] = useState<MenuItem[]>(menuItems);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [isAdding, setIsAdding] = useState(false);

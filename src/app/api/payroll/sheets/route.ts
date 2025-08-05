@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const referenceYear = searchParams.get('referenceYear');
     const status = searchParams.get('status');
 
-    let query = supabaseAdminAdmin
+    let query = supabaseAdmin
       .from('payroll_sheets')
       .select(`
         *,
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se já existe folha para o mesmo período
-    let existingQuery = supabaseAdminAdmin
+    let existingQuery = supabaseAdmin
       .from('payroll_sheets')
       .select('id')
       .eq('company_id', body.companyId)
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Contar funcionários ativos da empresa/departamento
-    let employeeQuery = supabaseAdminAdmin
+    let employeeQuery = supabaseAdmin
       .from('payroll_employees')
       .select('id', { count: 'exact' })
       .eq('company_id', body.companyId)

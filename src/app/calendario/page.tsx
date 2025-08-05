@@ -142,7 +142,7 @@ async function fetchScrapedHolidays(year: number): Promise<Holiday[]> {
 }
 
 export default function CalendarioPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [allHolidays, setAllHolidays] = useState<Holiday[]>([]);
   const [viewDate, setViewDate] = useState(new Date()); // Date object for calendar view
   const [loading, setLoading] = useState(true);
@@ -222,7 +222,7 @@ export default function CalendarioPage() {
         // Add national holidays first
         nationalHolidays.forEach(h => combinedHolidaysMap.set(h.date + h.name, h));
         // Add Macaé holidays only for Portuguese locale
-        if (!isEnglish) {
+        if (locale === 'pt-BR') {
           macaeHolidays.forEach(h => combinedHolidaysMap.set(h.date + h.name, h));
         }
 

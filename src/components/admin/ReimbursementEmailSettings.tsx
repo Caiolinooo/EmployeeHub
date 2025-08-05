@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiSave, FiPlus, FiTrash2, FiMail, FiAlertCircle, FiCheck } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ReimbursementEmailSettingsProps {
   initialSettings?: {
@@ -19,6 +20,7 @@ const ReimbursementEmailSettings: React.FC<ReimbursementEmailSettingsProps> = ({
   initialSettings,
   onSave
 }) => {
+  const { t } = useI18n();
   const [enableDomainRule, setEnableDomainRule] = useState(initialSettings?.enableDomainRule || false);
   const [recipients, setRecipients] = useState<string[]>(initialSettings?.recipients || ['andresa.oliveira@groupabz.com', 'fiscal@groupabz.com']);
   const [newRecipient, setNewRecipient] = useState('');

@@ -42,8 +42,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Temporariamente ler o conteúdo do arquivo SQL
-    const fs = require('fs').promises;
-    const path = require('path');
+    const fs = await import('fs').then(m => m.promises);
+    const path = await import('path').then(m => m.default);
 
     const sqlFilePath = path.join(process.cwd(), 'scripts', 'add-preferences-column.sql');
     let sqlScript = '';

@@ -70,7 +70,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Buscar funcionários da empresa/departamento
-    let employeesQuery = supabaseAdminAdmin
+    let employeesQuery = supabaseAdmin
       .from('payroll_employees')
       .select('*')
       .eq('company_id', sheet.company_id)
@@ -98,7 +98,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Buscar códigos ativos
-    const { data: codes, error: codesError } = await supabase
+    const { data: codes, error: codesError } = await supabaseAdmin
       .from('payroll_codes')
       .select('*')
       .eq('is_active', true);
@@ -112,7 +112,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Buscar itens existentes da folha
-    const { data: existingItems } = await supabase
+    const { data: existingItems } = await supabaseAdmin
       .from('payroll_sheet_items')
       .select('*')
       .eq('sheet_id', sheetId);
@@ -202,7 +202,7 @@ export async function PUT(request: NextRequest) {
       totalFgts += result.fgtsValue;
 
       // Salvar/atualizar resumo do funcionário
-      await supabase
+      await supabaseAdmin
         .from('payroll_employee_summaries')
         .upsert({
           sheet_id: sheetId,
@@ -225,7 +225,7 @@ export async function PUT(request: NextRequest) {
 
       // Salvar/atualizar itens da folha
       for (const item of result.items) {
-        await supabase
+        await supabaseAdmin
           .from('payroll_sheet_items')
           .upsert({
             sheet_id: sheetId,
@@ -242,7 +242,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Atualizar totais da folha
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from('payroll_sheets')
       .update({
         status: 'calculated',

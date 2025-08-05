@@ -10,15 +10,15 @@ export async function GET(request: NextRequest) {
     console.log('API: Verificando status do módulo de avaliação de desempenho');
 
     // Inicializar o módulo
-    const module = await initAvaliacaoModule();
+    const avaliacaoModule = await initAvaliacaoModule();
 
     console.log('API: Módulo de avaliação inicializado com sucesso:', {
-      version: module.version,
-      name: module.name
+      version: avaliacaoModule.version,
+      name: avaliacaoModule.name
     });
 
     // Verificar se o módulo está funcionando corretamente
-    const status = module.getStatus ? await module.getStatus() : { status: 'online', mode: 'stub' };
+    const status = avaliacaoModule.getStatus ? await avaliacaoModule.getStatus() : { status: 'online', mode: 'stub' };
 
     console.log('API: Status do módulo:', status);
 
@@ -26,8 +26,8 @@ export async function GET(request: NextRequest) {
       status: 'online',
       message: 'Módulo de avaliação de desempenho está funcionando corretamente',
       moduleInfo: {
-        version: module.version,
-        name: module.name,
+        version: avaliacaoModule.version,
+        name: avaliacaoModule.name,
         mode: status.mode || 'unknown'
       },
       timestamp: new Date().toISOString()

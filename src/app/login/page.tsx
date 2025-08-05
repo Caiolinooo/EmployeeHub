@@ -54,9 +54,6 @@ export default function Login() {
     hasPassword,
     passwordExpired,
     authStatus,
-    requiresPassword,
-    isNewUser,
-    setPasswordAfterVerification,
     setLoginStep
   } = useSupabaseAuth();
   
@@ -83,19 +80,14 @@ export default function Login() {
   // Verificar se o usuário já está autenticado
   useEffect(() => {
     if (isAuthenticated) {
-      if (passwordExpired || requiresPassword) {
-        // Se a senha estiver expirada ou o usuário precisar definir uma senha,
-        // não redirecionar para o dashboard
-        if (passwordExpired) {
-          router.replace('/set-password');
-        }
-        // Se requiresPassword for true, o modal de definição de senha será exibido
-        // e não devemos redirecionar para o dashboard
+      if (passwordExpired) {
+        // Se a senha estiver expirada, redirecionar para definir senha
+        router.replace('/set-password');
       } else {
         router.replace('/dashboard');
       }
     }
-  }, [isAuthenticated, passwordExpired, requiresPassword, router]);
+  }, [isAuthenticated, passwordExpired, router]);
 
   // Garantir que o usuário administrador exista
   useEffect(() => {
@@ -468,12 +460,12 @@ export default function Login() {
 
   // Efeito para mostrar o modal de definição de senha quando necessário
   useEffect(() => {
-    if (loginStep === 'set_password') {
+    if (passwordExpired) {
       setShowSetPasswordModal(true);
     } else {
       setShowSetPasswordModal(false);
     }
-  }, [loginStep]);
+  }, [passwordExpired]);
 
   // Função para lidar com o sucesso da definição de senha
   const handlePasswordSetSuccess = async () => {
@@ -507,7 +499,6 @@ export default function Login() {
         isOpen={showSetPasswordModal}
         onClose={handleCloseSetPasswordModal}
         onSuccess={handlePasswordSetSuccess}
-        isNewUser={isNewUser}
       />
 
 
@@ -1230,6 +1221,21 @@ export default function Login() {
                 </span>
               </div>
             </div>
+
+            {/* Link para registro */}
+            {loginStep === 'phone' && (
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-600">
+                  {t('auth.notRegistered')} {' '}
+                  <Link
+                    href="/register"
+                    className="text-abz-blue hover:text-abz-blue-dark font-medium"
+                  >
+                    {t('auth.createAccount')}
+                  </Link>
+                </p>
+              </div>
+            )}
 
             {/* Link para página de definição de senha com código de convite */}
             {inviteCode && (

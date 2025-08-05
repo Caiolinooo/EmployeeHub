@@ -197,7 +197,7 @@ export async function GET(
     const normalizedPath = path.normalize(filePath).replace(/^(\.\.(\/|\\|$))+/, '');
 
     // Construct the full path
-    let fullPath = path.join(process.cwd(), 'public', normalizedPath);
+    const fullPath = path.join(process.cwd(), 'public', normalizedPath);
 
     console.log('Checking local file system path:', fullPath);
 

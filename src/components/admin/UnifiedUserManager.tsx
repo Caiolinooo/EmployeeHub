@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useI18n } from '@/contexts/I18nContext';
 import {
   FiPlus,
   FiEdit2,
@@ -84,6 +85,7 @@ type AuthStats = {
 };
 
 export default function UnifiedUserManager() {
+  const { t } = useI18n();
   const { user, isAdmin } = useSupabaseAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'users' | 'authorized'>('users');

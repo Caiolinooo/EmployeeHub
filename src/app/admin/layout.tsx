@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FiSettings, FiGrid, FiUsers, FiFileText, FiMenu, FiX, FiLogOut, FiLayers, FiList, FiEdit, FiImage, FiUser, FiUserCheck, FiDollarSign, FiCheck, FiTool } from 'react-icons/fi';
+import { FiSettings, FiGrid, FiUsers, FiFileText, FiMenu, FiX, FiLogOut, FiLayers, FiList, FiEdit, FiUser, FiUserCheck, FiDollarSign, FiCheck, FiTool } from 'react-icons/fi';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import Footer from '@/components/Footer';
@@ -103,15 +103,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="p-4 border-t">
             <div className="flex items-center mb-4">
               <div className="w-10 h-10 rounded-full bg-abz-light-blue flex items-center justify-center mr-3">
-                {user?.avatar ? (
-                  <img src={user.avatar} alt={user.name || 'User'} className="w-10 h-10 rounded-full" />
-                ) : (
-                  <FiUser className="h-5 w-5 text-abz-blue" />
-                )}
+                {/* user?.avatar não existe no tipo User */}
+                <FiUser className="h-5 w-5 text-abz-blue" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-700">{user?.name}</p>
-                <p className="text-xs text-gray-500">{user?.email}</p>
+                <p className="text-sm font-medium text-gray-700">{user?.email}</p>
+                <p className="text-xs text-gray-500">Usuário</p>
               </div>
             </div>
             <div className="mb-3">

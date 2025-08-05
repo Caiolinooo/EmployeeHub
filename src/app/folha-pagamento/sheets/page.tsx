@@ -50,7 +50,7 @@ export default function PayrollSheetsPage() {
   const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const companyId = searchParams.get('companyId');
+  const companyId = searchParams?.get('companyId');
   
   const [sheets, setSheets] = useState<PayrollSheet[]>([]);
   const [company, setCompany] = useState<any>(null);

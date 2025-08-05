@@ -59,8 +59,8 @@ export async function GET(request: NextRequest) {
 
             // Tentar ler o arquivo local
             try {
-              const fs = require('fs');
-              const path = require('path');
+              const fs = await import('fs');
+              const path = await import('path');
 
               const configFile = path.join(process.cwd(), 'src', 'config', 'reimbursementSettings.json');
 
@@ -77,8 +77,8 @@ export async function GET(request: NextRequest) {
 
             // Salvar as instruções em um arquivo para referência futura
             try {
-              const fs = require('fs');
-              const path = require('path');
+              const fs = await import('fs');
+              const path = await import('path');
 
               const instructionsDir = path.join(process.cwd(), 'logs');
               if (!fs.existsSync(instructionsDir)) {
@@ -99,8 +99,8 @@ export async function GET(request: NextRequest) {
 
         // Criar arquivo de configuração local como fallback
         try {
-          const fs = require('fs');
-          const path = require('path');
+          const fs = await import('fs');
+          const path = await import('path');
 
           const configDir = path.join(process.cwd(), 'src', 'config');
           if (!fs.existsSync(configDir)) {
@@ -257,8 +257,8 @@ export async function POST(request: NextRequest) {
 
             // Salvar as configurações em um arquivo local
             try {
-              const fs = require('fs');
-              const path = require('path');
+              const fs = await import('fs');
+              const path = await import('path');
 
               const configDir = path.join(process.cwd(), 'src', 'config');
               if (!fs.existsSync(configDir)) {
@@ -288,8 +288,8 @@ export async function POST(request: NextRequest) {
 
         // Criar arquivo de configuração local como fallback
         try {
-          const fs = require('fs');
-          const path = require('path');
+          const fs = await import('fs');
+          const path = await import('path');
 
           const configDir = path.join(process.cwd(), 'src', 'config');
           if (!fs.existsSync(configDir)) {

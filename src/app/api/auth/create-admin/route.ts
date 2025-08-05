@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
       // Gerar ID único
-      const { v4: uuidv4 } = require('uuid');
+      const { v4: uuidv4 } = await import('uuid');
       const userId = uuidv4();
 
       // Criar usuário administrador no PostgreSQL

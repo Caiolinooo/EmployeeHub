@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initiatePhoneLogin, verifyPhoneLogin, loginWithPassword } from '@/lib/auth';
-import { Pool } from 'pg';
+// import { Pool } from 'pg'; // Removido - não utilizado
 import { getLatestCode } from '@/lib/code-service';
 
 export async function POST(request: NextRequest) {
