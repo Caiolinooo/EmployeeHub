@@ -20,6 +20,11 @@ export interface PayrollCompany {
   email?: string;
   contactPerson?: string;
   isActive: boolean;
+  // Configurações específicas do cliente
+  payrollType?: 'standard' | 'custom' | 'import_based';
+  templateVersion?: string;
+  calculationMethod?: string;
+  customSettings?: any;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -346,4 +351,54 @@ export interface PayrollDashboardStats {
     totalPayroll: number;
     totalEmployees: number;
   }[];
+}
+
+// Tipos para workflows específicos por cliente
+export interface PayrollWorkflow {
+  id: string;
+  companyId: string;
+  workflowType: 'standard' | 'import_excel' | 'custom_calculation';
+  name: string;
+  description?: string;
+  steps: PayrollWorkflowStep[];
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PayrollWorkflowStep {
+  id: string;
+  stepOrder: number;
+  stepType: 'import' | 'manual_input' | 'calculation' | 'approval' | 'export';
+  name: string;
+  description?: string;
+  configuration: any;
+  isRequired: boolean;
+}
+
+// Tipos específicos para importação de dados
+export interface PayrollImportTemplate {
+  id: string;
+  companyId: string;
+  templateName: string;
+  templateVersion: string;
+  fileFormat: 'xlsx' | 'csv' | 'xml';
+  sheetMappings: PayrollSheetMapping[];
+  validationRules: any;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PayrollSheetMapping {
+  sheetName: string;
+  startRow: number;
+  columnMappings: {
+    [columnIndex: string]: {
+      fieldName: string;
+      dataType: 'string' | 'number' | 'date' | 'boolean';
+      isRequired: boolean;
+      validationRules?: any;
+    };
+  };
 }

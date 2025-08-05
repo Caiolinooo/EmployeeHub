@@ -11,7 +11,11 @@ import {
   Search,
   Filter,
   Download,
-  ArrowLeft
+  ArrowLeft,
+  Upload,
+  FileSpreadsheet,
+  Workflow,
+  Settings
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -34,9 +38,12 @@ export default function PayrollDashboard() {
     monthlyTrends: []
   });
   const [loading, setLoading] = useState(true);
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [selectedCompany, setSelectedCompany] = useState<string>('');
 
   useEffect(() => {
     loadDashboardData();
+    loadCompanies();
   }, []);
 
   const loadDashboardData = async () => {
@@ -46,7 +53,7 @@ export default function PayrollDashboard() {
       // const response = await fetch('/api/payroll/dashboard');
       // const data = await response.json();
       // setStats(data);
-      
+
       // Dados mockados por enquanto
       setStats({
         totalCompanies: 1,
@@ -60,6 +67,23 @@ export default function PayrollDashboard() {
       console.error('Erro ao carregar dados do dashboard:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCompanies = async () => {
+    try {
+      const response = await fetch('/api/payroll/companies');
+      const data = await response.json();
+
+      if (data.success) {
+        setCompanies(data.data);
+        // Selecionar primeira empresa por padrão
+        if (data.data.length > 0) {
+          setSelectedCompany(data.data[0].id);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar empresas:', error);
     }
   };
 
@@ -107,8 +131,40 @@ export default function PayrollDashboard() {
     router.push('/folha-pagamento/configuracoes/tabelas');
   };
 
+  const handleLuzMaritima = () => {
+    router.push('/folha-pagamento/luz-maritima');
+  };
+
   const handleCreateFirstPayroll = () => {
     router.push('/folha-pagamento/nova');
+  };
+
+  const handleImportData = () => {
+    if (!selectedCompany) {
+      alert('Selecione uma empresa primeiro');
+      return;
+    }
+
+    const company = companies.find(c => c.id === selectedCompany);
+    if (company?.name === 'LUZ MARÍTIMA LTDA') {
+      // Workflow específico para LUZ Marítima
+      router.push(`/folha-pagamento/import?companyId=${selectedCompany}&type=luz-maritima`);
+    } else {
+      // Workflow padrão de importação
+      router.push(`/folha-pagamento/import?companyId=${selectedCompany}&type=standard`);
+    }
+  };
+
+  const handleCompanyWorkflow = (companyId: string) => {
+    const company = companies.find(c => c.id === companyId);
+    if (!company) return;
+
+    // Determinar workflow baseado no tipo da empresa
+    if (company.name === 'LUZ MARÍTIMA LTDA') {
+      router.push(`/folha-pagamento/workflow/luz-maritima?companyId=${companyId}`);
+    } else {
+      router.push(`/folha-pagamento/workflow/standard?companyId=${companyId}`);
+    }
   };
 
   if (loading) {
@@ -171,6 +227,103 @@ export default function PayrollDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto p-6">
+        {/* Seleção de Empresa e Workflow */}
+        {companies.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-abz-text-dark flex items-center">
+                <Building2 className="h-5 w-5 mr-2 text-blue-600" />
+                Empresa Selecionada
+              </h3>
+              <div className="flex items-center space-x-4">
+                <select
+                  value={selectedCompany}
+                  onChange={(e) => setSelectedCompany(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-abz-blue focus:border-transparent"
+                >
+                  {companies.map((company) => (
+                    <option key={company.id} value={company.id}>
+                      {company.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => handleCompanyWorkflow(selectedCompany)}
+                  disabled={!selectedCompany}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-300 transition-colors flex items-center space-x-2"
+                >
+                  <Workflow className="h-4 w-4" />
+                  <span>Workflow</span>
+                </button>
+              </div>
+            </div>
+
+            {selectedCompany && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-gray-700 mb-2">Ações Rápidas</h4>
+                  <div className="space-y-2">
+                    <button
+                      onClick={handleImportData}
+                      className="w-full bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center space-x-2 text-sm"
+                    >
+                      <Upload className="h-4 w-4" />
+                      <span>Importar Dados</span>
+                    </button>
+                    <button
+                      onClick={handleNewPayroll}
+                      className="w-full bg-abz-blue text-white px-3 py-2 rounded-md hover:bg-abz-blue-dark transition-colors flex items-center space-x-2 text-sm"
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span>Nova Folha</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-gray-700 mb-2">Gestão</h4>
+                  <div className="space-y-2">
+                    <button
+                      onClick={handleManageEmployees}
+                      className="w-full bg-gray-600 text-white px-3 py-2 rounded-md hover:bg-gray-700 transition-colors flex items-center space-x-2 text-sm"
+                    >
+                      <Users className="h-4 w-4" />
+                      <span>Funcionários</span>
+                    </button>
+                    <button
+                      onClick={() => router.push(`/folha-pagamento/sheets?companyId=${selectedCompany}`)}
+                      className="w-full bg-gray-600 text-white px-3 py-2 rounded-md hover:bg-gray-700 transition-colors flex items-center space-x-2 text-sm"
+                    >
+                      <FileText className="h-4 w-4" />
+                      <span>Folhas</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-gray-700 mb-2">Relatórios</h4>
+                  <div className="space-y-2">
+                    <button
+                      onClick={handleMonthlyReport}
+                      className="w-full bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700 transition-colors flex items-center space-x-2 text-sm"
+                    >
+                      <Download className="h-4 w-4" />
+                      <span>Relatório Mensal</span>
+                    </button>
+                    <button
+                      onClick={handlePaymentGuides}
+                      className="w-full bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700 transition-colors flex items-center space-x-2 text-sm"
+                    >
+                      <FileSpreadsheet className="h-4 w-4" />
+                      <span>Guias</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
