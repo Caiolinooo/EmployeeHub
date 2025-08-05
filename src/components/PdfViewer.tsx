@@ -12,7 +12,6 @@ interface PdfViewerProps {
 
 const PdfViewer: React.FC<PdfViewerProps> = ({ onClose, onUnderstand }) => {
   const { t } = useI18n();
-  const isEnglish = t('locale.code') === 'en-US';
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -28,7 +27,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ onClose, onUnderstand }) => {
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-xl font-semibold text-gray-800">{isEnglish ? 'Reimbursement Policy' : 'Política de Reembolso'}</h2>
+          <h2 className="text-xl font-semibold text-gray-800">{t('reimbursement.form.viewPolicy')}</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 focus:outline-none"
@@ -40,81 +39,67 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ onClose, onUnderstand }) => {
         {/* Content - Scrollable */}
         <div className="flex-1 overflow-auto p-6">
           <div className="prose max-w-none">
-            <h3>{isEnglish ? 'Reimbursement Policy - ABZ Group' : 'Política de Reembolso - ABZ Group'}</h3>
+            <h3>{t('reimbursement.policy.title')}</h3>
 
             <p>
-              {isEnglish
-                ? 'This document establishes the guidelines and procedures for requesting and processing reimbursements of expenses related to the professional activities of ABZ Group employees.'
-                : 'Este documento estabelece as diretrizes e procedimentos para solicitação e processamento de reembolsos de despesas relacionadas às atividades profissionais dos colaboradores da ABZ Group.'}
+              {t('reimbursement.policy.introduction')}
             </p>
 
-            <h4>{isEnglish ? '1. Eligibility' : '1. Elegibilidade'}</h4>
+            <h4>{t('reimbursement.policy.eligibility')}</h4>
             <p>
-              {isEnglish
-                ? 'Expenses directly related to professional activities, previously authorized by the responsible manager, and that comply with company policies are eligible for reimbursement.'
-                : 'São elegíveis para reembolso as despesas diretamente relacionadas às atividades profissionais, previamente autorizadas pelo gestor responsável, e que estejam em conformidade com as políticas da empresa.'}
+              {t('reimbursement.policy.eligibilityText')}
             </p>
 
-            <h4>{isEnglish ? '2. Types of Reimbursable Expenses' : '2. Tipos de Despesas Reembolsáveis'}</h4>
+            <h4>{t('reimbursement.policy.typesTitle')}</h4>
             <ul>
-              <li><strong>{isEnglish ? 'Food:' : 'Alimentação:'}</strong> {isEnglish ? 'Meals during business trips or external meetings.' : 'Refeições durante viagens a trabalho ou reuniões externas.'}</li>
-              <li><strong>{isEnglish ? 'Transportation:' : 'Transporte:'}</strong> {isEnglish ? 'Service travel, including taxi, transport apps, fuel, tolls, and parking.' : 'Deslocamentos a serviço, incluindo táxi, aplicativos de transporte, combustível, pedágios e estacionamento.'}</li>
-              <li><strong>{isEnglish ? 'Accommodation:' : 'Hospedagem:'}</strong> {isEnglish ? 'Hotel stays during business trips.' : 'Estadias em hotéis durante viagens a trabalho.'}</li>
-              <li><strong>{isEnglish ? 'Work Materials:' : 'Material de Trabalho:'}</strong> {isEnglish ? 'Items necessary for performing professional activities.' : 'Itens necessários para execução das atividades profissionais.'}</li>
-              <li><strong>{isEnglish ? 'Other expenses:' : 'Outras despesas:'}</strong> {isEnglish ? 'Subject to prior approval by the manager.' : 'Conforme aprovação prévia do gestor.'}</li>
+              <li><strong>{t('reimbursement.policy.foodLabel')}</strong> {t('reimbursement.policy.foodText')}</li>
+              <li><strong>{t('reimbursement.policy.transportLabel')}</strong> {t('reimbursement.policy.transportText')}</li>
+              <li><strong>{t('reimbursement.policy.accommodationLabel')}</strong> {t('reimbursement.policy.accommodationText')}</li>
+              <li><strong>{t('reimbursement.policy.materialsLabel')}</strong> {t('reimbursement.policy.materialsText')}</li>
+              <li><strong>{t('reimbursement.policy.otherLabel')}</strong> {t('reimbursement.policy.otherText')}</li>
             </ul>
 
-            <h4>{isEnglish ? '3. Required Documentation' : '3. Documentação Necessária'}</h4>
+            <h4>{t('reimbursement.policy.documentationTitle')}</h4>
             <p>
-              {isEnglish
-                ? 'For all reimbursement requests, it is mandatory to present valid tax receipts (invoices, tax receipts, receipts) that contain:'
-                : 'Para todas as solicitações de reembolso, é obrigatória a apresentação de comprovantes fiscais válidos (notas fiscais, cupons fiscais, recibos) que contenham:'}
+              {t('reimbursement.policy.documentationText')}
             </p>
             <ul>
-              <li>{isEnglish ? 'Date and time of expense' : 'Data e hora da despesa'}</li>
-              <li>{isEnglish ? 'Amount' : 'Valor'}</li>
-              <li>{isEnglish ? 'Description of product or service' : 'Descrição do produto ou serviço'}</li>
-              <li>{isEnglish ? 'Supplier identification (CNPJ or CPF)' : 'Identificação do fornecedor (CNPJ ou CPF)'}</li>
+              <li>{t('reimbursement.policy.docDate')}</li>
+              <li>{t('reimbursement.policy.docAmount')}</li>
+              <li>{t('reimbursement.policy.docDescription')}</li>
+              <li>{t('reimbursement.policy.docSupplier')}</li>
             </ul>
 
-            <h4>{isEnglish ? '4. Deadlines' : '4. Prazos'}</h4>
+            <h4>{t('reimbursement.policy.deadlinesTitle')}</h4>
             <p>
-              {isEnglish
-                ? 'Reimbursement requests must be submitted within 30 days after the expense is incurred. Processing will be carried out within 10 business days after manager approval.'
-                : 'As solicitações de reembolso devem ser apresentadas em até 30 dias após a realização da despesa. O processamento será realizado em até 10 dias úteis após a aprovação do gestor.'}
+              {t('reimbursement.policy.deadlinesText')}
             </p>
 
-            <h4>{isEnglish ? '5. Payment Methods' : '5. Formas de Pagamento'}</h4>
+            <h4>{t('reimbursement.policy.paymentTitle')}</h4>
             <p>
-              {isEnglish
-                ? 'Reimbursement will preferably be made by:'
-                : 'O reembolso será realizado preferencialmente por:'}
+              {t('reimbursement.policy.paymentText')}
             </p>
             <ul>
-              <li>{isEnglish ? 'Deposit to employee\'s bank account' : 'Depósito em conta bancária do colaborador'}</li>
-              <li>{isEnglish ? 'PIX transfer' : 'Transferência via PIX'}</li>
-              <li>{isEnglish ? 'In exceptional cases, cash payment by the financial agent' : 'Em casos excepcionais, pagamento em espécie pelo agente financeiro'}</li>
+              <li>{t('reimbursement.policy.paymentBank')}</li>
+              <li>{t('reimbursement.policy.paymentPix')}</li>
+              <li>{t('reimbursement.policy.paymentCash')}</li>
             </ul>
 
-            <h4>{isEnglish ? '6. Restrictions' : '6. Restrições'}</h4>
+            <h4>{t('reimbursement.policy.restrictionsTitle')}</h4>
             <p>
-              {isEnglish
-                ? 'Expenses will not be reimbursed if:'
-                : 'Não serão reembolsadas despesas:'}
+              {t('reimbursement.policy.restrictionsText')}
             </p>
             <ul>
-              <li>{isEnglish ? 'Without adequate fiscal proof' : 'Sem comprovação fiscal adequada'}</li>
-              <li>{isEnglish ? 'Of a personal nature' : 'De caráter pessoal'}</li>
-              <li>{isEnglish ? 'Not previously authorized (when applicable)' : 'Não autorizadas previamente (quando aplicável)'}</li>
-              <li>{isEnglish ? 'In disagreement with company policies' : 'Em desacordo com as políticas da empresa'}</li>
-              <li>{isEnglish ? 'With illegible or incomplete documentation' : 'Com documentação ilegível ou incompleta'}</li>
+              <li>{t('reimbursement.policy.restrictionProof')}</li>
+              <li>{t('reimbursement.policy.restrictionPersonal')}</li>
+              <li>{t('reimbursement.policy.restrictionAuth')}</li>
+              <li>{t('reimbursement.policy.restrictionPolicy')}</li>
+              <li>{t('reimbursement.policy.restrictionDoc')}</li>
             </ul>
 
-            <h4>{isEnglish ? '7. Final Considerations' : '7. Considerações Finais'}</h4>
+            <h4>{t('reimbursement.policy.finalTitle')}</h4>
             <p>
-              {isEnglish
-                ? 'ABZ Group reserves the right to audit reimbursement requests at any time. Omitted cases will be analyzed by the Financial Board. This policy may be reviewed and updated periodically.'
-                : 'A ABZ Group se reserva o direito de auditar as solicitações de reembolso a qualquer momento. Casos omissos serão analisados pela Diretoria Financeira. Esta política pode ser revisada e atualizada periodicamente.'}
+              {t('reimbursement.policy.finalText')}
             </p>
           </div>
         </div>
@@ -126,7 +111,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ onClose, onUnderstand }) => {
             className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
             <FiCheckCircle className="mr-2" />
-            {isEnglish ? 'I Understand and Agree' : 'Entendi e Concordo'}
+            {t('reimbursement.policy.agreeButton')}
           </button>
         </div>
       </motion.div>

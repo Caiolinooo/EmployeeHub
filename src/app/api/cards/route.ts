@@ -83,7 +83,26 @@ export async function GET() {
     }
 
     console.log(`✅ ${cards.length} cards carregados do Supabase`);
-    return NextResponse.json(cards);
+
+    // Mapear os dados do Supabase para o formato esperado pelo frontend
+    const formattedCards = cards.map(card => ({
+      id: card.id,
+      title: card.title,
+      description: card.description,
+      href: card.href,
+      iconName: card.icon_name,
+      color: card.color,
+      hoverColor: card.hover_color,
+      external: card.external || false,
+      enabled: card.enabled !== false,
+      order: card.order,
+      adminOnly: card.admin_only || false,
+      managerOnly: card.manager_only || false,
+      allowedRoles: card.allowed_roles || [],
+      allowedUserIds: card.allowed_user_ids || [],
+    }));
+
+    return NextResponse.json(formattedCards);
   } catch (error) {
     console.error('❌ Erro na API de cards:', error);
     console.log('📦 Usando dados hardcoded como fallback de emergência');

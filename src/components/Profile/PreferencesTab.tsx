@@ -143,9 +143,9 @@ export function PreferencesTab({ user = null }: PreferencesTabProps) {
               onChange={handleLanguageChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="pt-BR">Português (Brasil)</option>
-              <option value="en">English</option>
-              <option value="es">Español</option>
+              <option value="pt-BR">{t('common.portugueseBrazil')}</option>
+              <option value="en">{t('common.englishUS')}</option>
+              <option value="es">{t('common.spanish')}</option>
             </select>
             <p className="text-sm text-gray-500 mt-1">
               {t('profile.languageDescription', 'Selecione o idioma de exibição do sistema')}

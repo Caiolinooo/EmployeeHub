@@ -104,29 +104,20 @@ export async function checkUserAuthorization(
 
     // 2. Verificar por domínio de email
     if (email && email.includes('@')) {
-<<<<<<< HEAD
       const domain = getEmailDomain(email);
-  if (!domain) {
-    return {
-      authorized: false,
-      message: 'Formato de email inválido'
-    };
-  }
-      const domainAuth = await prisma.authorizedUser.findFirst({
-        where: {
-          domain: domain,
-          status: 'active'
-        }
-      });
-=======
-      const domain = email.split('@')[1];
+      if (!domain) {
+        return {
+          authorized: false,
+          message: 'Formato de email inválido'
+        };
+      }
+
       const { data: domainAuth, error } = await supabaseAdmin
         .from('authorized_users')
         .select('*')
         .eq('domain', domain)
         .eq('status', 'active')
         .single();
->>>>>>> 4ccb41d (Fix: Corrigir anexos de reembolso - remover arquivos de teste e corrigir estrutura de dados no PDF)
 
       if (!error && domainAuth) {
         return {

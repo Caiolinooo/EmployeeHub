@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 import { PayrollEmployee, PayrollEmployeeForm, PayrollApiResponse, PayrollPaginatedResponse } from '@/types/payroll';
 
 /**
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const position = searchParams.get('position');
     const status = searchParams.get('status');
 
-    let query = supabase
+    let query = supabaseAdmin
       .from('payroll_employees')
       .select(`
         *,

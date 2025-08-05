@@ -104,11 +104,11 @@ export default function NewsEditor({ newsId, onSave, onCancel }: NewsEditorProps
               setAllowedUserIds(Array.isArray(data.allowedUserIds) ? data.allowedUserIds : []);
             }
           } else {
-            throw new Error('Erro ao carregar notícia');
+            throw new Error(t('admin.errorLoadingNews'));
           }
         } catch (error) {
           console.error('Erro ao carregar notícia:', error);
-          setError('Erro ao carregar notícia. Por favor, tente novamente.');
+          setError(t('admin.errorLoadingNews'));
         } finally {
           setIsLoading(false);
         }
@@ -234,7 +234,7 @@ export default function NewsEditor({ newsId, onSave, onCancel }: NewsEditorProps
       await onSave(newsData);
     } catch (error) {
       console.error('Erro ao salvar notícia:', error);
-      setError('Erro ao salvar notícia. Por favor, tente novamente.');
+      setError(t('admin.errorSavingNews'));
     } finally {
       setIsLoading(false);
     }

@@ -155,7 +155,6 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   className = '',
 }) => {
   const { t } = useI18n();
-  const isEnglish = t('locale.code') === 'en-US';
   // Extract error message if it's an object
   const errorMessage = typeof error === 'object' ? error?.message : error;
 
@@ -174,7 +173,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
         } bg-white`}
         style={{ opacity: 1, visibility: 'visible' }}
       >
-        <option value="">{isEnglish ? 'Select an option' : 'Selecione uma opção'}</option>
+        <option value="">{t('common.selectOption')}</option>
         {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}

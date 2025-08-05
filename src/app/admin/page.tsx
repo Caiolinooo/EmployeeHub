@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FiLayers, FiList, FiFileText, FiEdit, FiUsers, FiSettings, FiUserCheck, FiRefreshCw, FiBarChart2 } from 'react-icons/fi';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 
 // Componente de card para o dashboard de administração
@@ -38,7 +38,7 @@ const AdminCard = ({ title, description, icon: Icon, href, color }: AdminCardPro
 };
 
 export default function AdminDashboard() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin } = useSupabaseAuth();
   const { t } = useI18n();
   const router = useRouter();
   const [isFixingPermissions, setIsFixingPermissions] = useState(false);

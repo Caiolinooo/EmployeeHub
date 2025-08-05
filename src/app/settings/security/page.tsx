@@ -1,14 +1,14 @@
 'use client';
 
 import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useRouter } from 'next/navigation';
 import { FiLock, FiKey, FiShield } from 'react-icons/fi';
 import TwoFactorSetup from '@/components/Auth/TwoFactorSetup';
 import PasswordChange from '@/components/Auth/PasswordChange';
 
 export default function SecuritySettingsPage() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useSupabaseAuth();
   const router = useRouter();
 
   // Redirecionar se não estiver autenticado

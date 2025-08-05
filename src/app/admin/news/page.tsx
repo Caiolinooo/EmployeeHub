@@ -115,7 +115,7 @@ const NewsEditor = ({ news, onSave, onCancel, isNew = false }: NewsEditorProps) 
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold text-gray-900">
-          {isNew ? 'Adicionar Nova Notícia' : 'Editar Notícia'}
+          {isNew ? t('userEditor.addNews', 'Adicionar Nova Notícia') : t('userEditor.editNews', 'Editar Notícia')}
         </h3>
         <button
           onClick={onCancel}
@@ -342,13 +342,13 @@ const NewsEditor = ({ news, onSave, onCancel, isNew = false }: NewsEditorProps) 
             onClick={onCancel}
             className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue"
           >
-            Cancelar
+            {t('common.cancel', 'Cancelar')}
           </button>
           <button
             type="submit"
             className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-abz-blue hover:bg-abz-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue"
           >
-            {isNew ? 'Adicionar' : 'Salvar'}
+            {isNew ? t('common.add', 'Adicionar') : t('common.save', 'Salvar')}
           </button>
         </div>
       </form>
@@ -432,14 +432,14 @@ const NewsItemComponent = ({ news, onEdit, onDelete, onToggleVisibility, onToggl
           <button
             onClick={() => onEdit(news)}
             className="p-1 text-blue-500 hover:text-blue-700"
-            title="Editar"
+            title={t('common.edit', 'Editar')}
           >
             <FiEdit2 className="h-4 w-4" />
           </button>
           <button
             onClick={() => onDelete(news.id)}
             className="p-1 text-red-500 hover:text-red-700"
-            title="Excluir"
+            title={t('common.delete', 'Excluir')}
           >
             <FiTrash2 className="h-4 w-4" />
           </button>
@@ -619,7 +619,7 @@ export default function NewsPage() {
       }
 
       if (!response.ok) {
-        throw new Error('Erro ao salvar notícia');
+        throw new Error(t('admin.errorSavingNews', 'Erro ao salvar notícia'));
       }
 
       // Recarregar notícias
@@ -630,7 +630,7 @@ export default function NewsPage() {
       setIsAdding(false);
     } catch (error) {
       console.error('Erro ao salvar notícia:', error);
-      setError('Erro ao salvar notícia. Por favor, tente novamente.');
+      setError(t('admin.errorSavingNews', 'Erro ao salvar notícia. Por favor, tente novamente.'));
     }
   };
 
@@ -640,21 +640,21 @@ export default function NewsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir esta notícia?')) {
+    if (window.confirm(t('admin.users.deleteConfirm', 'Tem certeza que deseja excluir esta notícia?'))) {
       try {
         const response = await fetch(`/api/news/${id}`, {
           method: 'DELETE',
         });
 
         if (!response.ok) {
-          throw new Error('Erro ao excluir notícia');
+          throw new Error(t('admin.errorDeletingNews', 'Erro ao excluir notícia'));
         }
 
         // Recarregar notícias
         fetchNews();
       } catch (error) {
         console.error('Erro ao excluir notícia:', error);
-        setError('Erro ao excluir notícia. Por favor, tente novamente.');
+        setError(t('admin.errorDeletingNews', 'Erro ao excluir notícia. Por favor, tente novamente.'));
       }
     }
   };
@@ -733,7 +733,7 @@ export default function NewsPage() {
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-abz-blue hover:bg-abz-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue"
           >
             <FiPlus className="mr-2 h-4 w-4" />
-            Adicionar Notícia
+            {t('admin.addNews', 'Adicionar Notícia')}
           </button>
         </div>
       </div>
@@ -819,7 +819,7 @@ export default function NewsPage() {
             </div>
           ) : sortedNewsItems.length === 0 ? (
             <div className="p-6 text-center text-gray-500">
-              Nenhuma notícia encontrada. Clique em "Adicionar Notícia" para criar uma nova.
+              {t('admin.noNewsFound', 'Nenhuma notícia encontrada. Clique em "Adicionar Notícia" para criar uma nova.')}
             </div>
           ) : (
             <div className="space-y-3 p-4">

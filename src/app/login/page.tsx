@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { FiLock, FiEye, FiEyeOff, FiUser, FiPhone, FiArrowRight, FiGlobe, FiAlertTriangle, FiKey, FiArrowLeft } from 'react-icons/fi';
 import { FaLinkedin, FaGithub, FaInstagram } from 'react-icons/fa';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useSiteConfig } from '@/contexts/SiteConfigContext';
 import LanguageSelector from '@/components/LanguageSelector';
@@ -58,7 +58,7 @@ export default function Login() {
     isNewUser,
     setPasswordAfterVerification,
     setLoginStep
-  } = useAuth();
+  } = useSupabaseAuth();
   
   // Debug: Log do estado loginStep
   console.log('🎯 DEBUG Frontend - loginStep atual:', loginStep);
@@ -625,7 +625,7 @@ export default function Login() {
                       type="email"
                       autoComplete="email"
                       required={useEmail}
-                      placeholder={t('locale.code') === 'en-US' ? 'your@email.com' : 'seu@email.com'}
+                      placeholder={t('auth.emailPlaceholder')}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="block w-full rounded-md border-0 py-2.5 pl-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-abz-blue sm:text-sm sm:leading-6"

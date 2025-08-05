@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { FiStar } from 'react-icons/fi';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface StarRatingProps {
   maxRating: number;
@@ -22,6 +23,7 @@ const StarRating: React.FC<StarRatingProps> = ({
   name,
   id,
 }) => {
+  const { t } = useI18n();
   const [rating, setRating] = useState<number>(initialRating);
   const [hoverRating, setHoverRating] = useState<number>(0);
 
@@ -70,7 +72,7 @@ const StarRating: React.FC<StarRatingProps> = ({
               onMouseLeave={handleMouseLeave}
               className={`focus:outline-none ${readOnly ? 'cursor-default' : 'cursor-pointer'} p-1`}
               disabled={readOnly}
-              aria-label={`${star} de ${maxRating} estrelas`}
+              aria-label={t('starRating.ariaLabel', `${star} of ${maxRating} stars`)}
             >
               <FiStar
                 className={`${starSize} ${

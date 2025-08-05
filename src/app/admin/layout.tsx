@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { FiSettings, FiGrid, FiUsers, FiFileText, FiMenu, FiX, FiLogOut, FiLayers, FiList, FiEdit, FiImage, FiUser, FiUserCheck, FiDollarSign, FiCheck, FiTool } from 'react-icons/fi';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import Footer from '@/components/Footer';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
@@ -15,7 +15,7 @@ import { startMeasure, endMeasure, logPerformance } from '@/lib/performance';
 // Itens do menu de administração
 const adminMenuItems = [
   { id: 'dashboard', href: '/admin', label: 'admin.dashboard', icon: FiGrid },
-  { id: 'setup', href: '/admin/setup', label: 'Setup do Sistema', icon: FiTool },
+  { id: 'setup', href: '/admin/setup', label: 'admin.systemSetup', icon: FiTool },
   { id: 'cards', href: '/admin/cards', label: 'admin.cards', icon: FiLayers },
   { id: 'menu', href: '/admin/menu', label: 'admin.menu', icon: FiList },
   { id: 'documents', href: '/admin/documents', label: 'admin.documentsSection', icon: FiFileText },
@@ -32,7 +32,7 @@ const adminMenuItems = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin } = useSupabaseAuth();
   const { t } = useI18n();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
@@ -67,7 +67,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="p-4 border-b flex items-center justify-between">
             <Link href="/admin" className="flex items-center space-x-2">
               <FiSettings className="h-6 w-6 text-abz-blue" />
-              <span className="text-lg font-semibold text-abz-blue-dark">Painel Admin</span>
+              <span className="text-lg font-semibold text-abz-blue-dark">{t('admin.title')}</span>
             </Link>
             <button
               className="md:hidden text-gray-500 hover:text-gray-700"
@@ -148,7 +148,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 >
                   <FiMenu className="h-6 w-6" />
                 </button>
-                <span className="ml-3 text-lg font-semibold text-abz-blue-dark">Painel Admin</span>
+                <span className="ml-3 text-lg font-semibold text-abz-blue-dark">{t('admin.title')}</span>
               </div>
               <Link href="/dashboard" className="text-gray-500 hover:text-gray-700">
                 <FiGrid className="h-6 w-6" />

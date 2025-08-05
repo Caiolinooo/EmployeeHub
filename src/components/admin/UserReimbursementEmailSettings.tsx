@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiSave, FiPlus, FiTrash2, FiMail, FiAlertCircle, FiCheck, FiX } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface UserReimbursementEmailSettingsProps {
   userId?: string;
@@ -25,6 +26,7 @@ const UserReimbursementEmailSettings: React.FC<UserReimbursementEmailSettingsPro
   onSave,
   onClose
 }) => {
+  const { t } = useI18n();
   const [enabled, setEnabled] = useState(initialSettings?.enabled || false);
   const [recipients, setRecipients] = useState<string[]>(initialSettings?.recipients || []);
   const [newRecipient, setNewRecipient] = useState('');
@@ -140,15 +142,15 @@ const UserReimbursementEmailSettings: React.FC<UserReimbursementEmailSettingsPro
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Erro ao salvar configurações:', errorData.error);
-        throw new Error(errorData.error || 'Erro ao salvar configurações');
+        throw new Error(errorData.error || t('common.errorSavingSettings'));
       }
 
-      toast.success('Configurações de email de reembolso salvas com sucesso');
+      toast.success(t('common.settingsSavedSuccess'));
       if (onClose) onClose();
     } catch (error) {
       console.error('Erro ao salvar configurações:', error);
-      toast.error('Erro ao salvar configurações');
-      setError('Erro ao salvar configurações. Tente novamente.');
+      toast.error(t('common.errorSavingSettings'));
+      setError(t('common.errorSavingSettings') + '. ' + t('common.tryAgain'));
     } finally {
       setIsSaving(false);
     }
@@ -225,7 +227,7 @@ const UserReimbursementEmailSettings: React.FC<UserReimbursementEmailSettingsPro
                 type="email"
                 value={newRecipient}
                 onChange={(e) => setNewRecipient(e.target.value)}
-                placeholder="Adicionar novo email"
+                placeholder={t('admin.addNewEmail', 'Adicionar novo email')}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
               />
               <button
@@ -246,10 +248,10 @@ const UserReimbursementEmailSettings: React.FC<UserReimbursementEmailSettingsPro
             className="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-abz-blue hover:bg-abz-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue disabled:opacity-50"
           >
             {isSaving ? (
-              <>Salvando...</>
+              <>{t('common.saving')}</>
             ) : (
               <>
-                <FiSave className="mr-2" /> Salvar Configurações
+                <FiSave className="mr-2" /> {t('common.saveSettings')}
               </>
             )}
           </button>

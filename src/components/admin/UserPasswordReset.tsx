@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { FiX, FiKey, FiSave, FiAlertTriangle } from 'react-icons/fi';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface UserPasswordResetProps {
   userId: string;
@@ -11,6 +12,7 @@ interface UserPasswordResetProps {
 }
 
 const UserPasswordReset: React.FC<UserPasswordResetProps> = ({ userId, userName, onClose, onSuccess }) => {
+  const { t } = useI18n();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -64,7 +66,7 @@ const UserPasswordReset: React.FC<UserPasswordResetProps> = ({ userId, userName,
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Resposta de erro:', errorData);
-        throw new Error(errorData.error || 'Erro ao redefinir senha');
+        throw new Error(errorData.error || t('common.errorResettingPassword'));
       }
 
       setSuccess(true);
@@ -74,7 +76,7 @@ const UserPasswordReset: React.FC<UserPasswordResetProps> = ({ userId, userName,
       }, 1500);
     } catch (error) {
       console.error('Erro ao redefinir senha:', error);
-      setError(error instanceof Error ? error.message : 'Erro desconhecido');
+      setError(error instanceof Error ? error.message : t('common.unknownError'));
     } finally {
       setLoading(false);
     }
@@ -85,7 +87,7 @@ const UserPasswordReset: React.FC<UserPasswordResetProps> = ({ userId, userName,
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-xl font-semibold text-abz-blue">
-            Redefinir Senha - {userName}
+            {t('common.resetPasswordFor')} {userName}
           </h2>
           <button
             onClick={onClose}
@@ -172,7 +174,7 @@ const UserPasswordReset: React.FC<UserPasswordResetProps> = ({ userId, userName,
               className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue"
               disabled={loading || success}
             >
-              Cancelar
+              {t('common.cancel', 'Cancelar')}
             </button>
 
             {!success && (
@@ -184,12 +186,12 @@ const UserPasswordReset: React.FC<UserPasswordResetProps> = ({ userId, userName,
                 {loading ? (
                   <>
                     <span className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full"></span>
-                    Processando...
+                    {t('common.processing')}
                   </>
                 ) : (
                   <>
                     <FiSave className="mr-2" />
-                    Redefinir Senha
+                    {t('common.resetPassword')}
                   </>
                 )}
               </button>

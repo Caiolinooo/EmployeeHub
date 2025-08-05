@@ -68,10 +68,74 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
   useEffect(() => {
     const checkAuthentication = async () => {
       try {
-        console.log('🔍 Verificando status de autenticação...');
-        const token = await getAuthToken();
+        console.log('🔍 ReimbursementForm - Verificando status de autenticação...');
+
+        // Verificar múltiplas fontes de token
+        let token = null;
+
+        // 1. Tentar getAuthToken primeiro
+        try {
+          token = await getAuthToken();
+          if (token) {
+            console.log('✅ Token encontrado via getAuthToken');
+          }
+        } catch (authError) {
+          console.warn('Erro ao usar getAuthToken:', authError);
+        }
+
+        // 2. Se não encontrou, verificar localStorage diretamente
+        if (!token && typeof window !== 'undefined') {
+          token = localStorage.getItem('token') ||
+                  localStorage.getItem('abzToken') ||
+                  localStorage.getItem('auth-token');
+
+          if (token) {
+            console.log('✅ Token encontrado no localStorage');
+          }
+        }
+
+        // 3. Verificar se há uma sessão ativa
+        if (!token) {
+          try {
+            const response = await fetch('/api/auth/session', {
+              method: 'GET',
+              credentials: 'include'
+            });
+
+            if (response.ok) {
+              const sessionData = await response.json();
+              if (sessionData.data?.session?.access_token) {
+                token = sessionData.data.session.access_token;
+                console.log('✅ Token encontrado na sessão');
+              }
+            }
+          } catch (sessionError) {
+            console.warn('Erro ao verificar sessão:', sessionError);
+          }
+        }
+
         setIsAuthenticated(!!token);
-        console.log(token ? '✅ Usuário autenticado' : '❌ Usuário não autenticado');
+        console.log(token ? '✅ Usuário autenticado para reembolso' : '❌ Usuário não autenticado para reembolso');
+
+        // Se autenticado, tentar carregar dados do perfil
+        if (token && !profile) {
+          try {
+            const profileResponse = await fetch('/api/users-unified/profile', {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+
+            if (profileResponse.ok) {
+              const profileData = await profileResponse.json();
+              console.log('✅ Dados do perfil carregados para o formulário');
+              // Aqui você pode usar os dados do perfil se necessário
+            }
+          } catch (profileError) {
+            console.warn('Erro ao carregar perfil:', profileError);
+          }
+        }
+
       } catch (error) {
         console.error('Erro ao verificar autenticação:', error);
         setIsAuthenticated(false);
@@ -79,7 +143,7 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
     };
 
     checkAuthentication();
-  }, []);
+  }, [profile]);
 
   // Função para determinar centro de custo baseado no CPF
   const getCostCenterByCPF = (cpf: string): string => {
@@ -220,7 +284,7 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
 
       if (!token) {
         console.error('❌ Usuário não autenticado');
-        toast.error('Você precisa estar logado para enviar um reembolso. Redirecionando para login...');
+        toast.error(t('reimbursement.form.authStatus.redirectingToLogin', 'Você precisa estar logado para enviar um reembolso. Redirecionando para login...'));
 
         // Redirecionar para login após 2 segundos
         setTimeout(() => {
@@ -458,16 +522,16 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
               </div>
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-yellow-800">
-                  Login necessário
+                  {t('reimbursement.form.authStatus.loginRequired', 'Login necessário')}
                 </h3>
                 <div className="mt-2 text-sm text-yellow-700">
                   <p>
-                    Você precisa estar logado para enviar um reembolso.
+                    {t('reimbursement.form.authStatus.loginRequiredMessage', 'Você precisa estar logado para enviar um reembolso.')}
                     <button
                       onClick={() => window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname)}
                       className="font-medium underline hover:text-yellow-600 ml-1"
                     >
-                      Clique aqui para fazer login
+                      {t('reimbursement.form.authStatus.loginLink', 'Clique aqui para fazer login')}
                     </button>
                   </p>
                 </div>
@@ -486,7 +550,7 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
               </div>
               <div className="ml-3">
                 <p className="text-sm font-medium text-green-800">
-                  ✅ Você está logado e pode enviar reembolsos
+                  ✅ {t('reimbursement.form.authStatus.authenticated', 'Você está logado e pode enviar reembolsos')}
                 </p>
               </div>
             </div>
@@ -525,6 +589,8 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
                     onChange={field.onChange}
                     error={errors.email?.message}
                     required
+                    disabled={!!profile?.email} // Bloquear edição se o usuário estiver logado
+                    placeholder={profile?.email ? t('reimbursement.form.emailLocked') : undefined}
                   />
                 )}
               />
@@ -789,25 +855,25 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
                     control={control}
                     render={({ field }) => {
                       let inputType = 'text';
-                      let placeholder = t('locale.code') === 'en-US' ? 'Enter your PIX key' : 'Digite sua chave PIX';
+                      let placeholder = t('reimbursement.form.pixKeyPlaceholder');
                       let mask = undefined;
 
                       if (pixTipo) {
                         switch(pixTipo) {
                           case 'cpf':
-                            placeholder = t('locale.code') === 'en-US' ? '000.000.000-00 (TAX ID)' : '000.000.000-00';
+                            placeholder = t('reimbursement.form.pixCpfPlaceholder');
                             mask = formatCPF;
                             break;
                           case 'email':
                             inputType = 'email';
-                            placeholder = t('locale.code') === 'en-US' ? 'example@email.com' : 'exemplo@email.com';
+                            placeholder = t('reimbursement.form.pixEmailPlaceholder');
                             break;
                           case 'telefone':
-                            placeholder = t('locale.code') === 'en-US' ? '(00) 00000-0000' : '(00) 00000-0000';
+                            placeholder = t('reimbursement.form.pixPhonePlaceholder');
                             mask = formatPhone;
                             break;
                           case 'aleatoria':
-                            placeholder = t('locale.code') === 'en-US' ? 'Random PIX key' : 'Chave aleatória PIX';
+                            placeholder = t('reimbursement.form.pixRandomPlaceholder');
                             break;
                         }
                       }
@@ -844,7 +910,7 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
               render={({ field }) => (
                 <TextArea
                   id="observacoes"
-                  label={t('locale.code') === 'en-US' ? 'Notes (optional)' : 'Observações (opcional)'}
+                  label={t('reimbursement.form.notes')}
                   value={field.value ?? ''}
                   onChange={field.onChange}
                   error={errors.observacoes?.message}
@@ -895,7 +961,7 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
                     <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
-                    Faça login para enviar
+                    {t('reimbursement.form.authStatus.loginRequired', 'Faça login para enviar')}
                   </>
                 ) : (
                   <>

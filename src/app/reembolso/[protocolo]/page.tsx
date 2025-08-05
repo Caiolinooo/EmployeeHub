@@ -178,7 +178,7 @@ export default function ReimbursementDetailPage() {
             <div className="p-6">
               <h1 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
                 <FiFileText className="mr-3 text-abz-blue" />
-                Detalhes do Reembolso
+                {t('reimbursement.details', 'Detalhes do Reembolso')}
               </h1>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">

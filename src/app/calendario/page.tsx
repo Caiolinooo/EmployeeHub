@@ -158,11 +158,9 @@ export default function CalendarioPage() {
       setError(null);
       let nationalHolidays: Holiday[] = [];
       let fetchSource = '';
-      const isEnglish = t('locale.code') === 'en-US';
-
       try {
         // For English locale, prioritize UK holidays
-        if (isEnglish) {
+        if (locale === 'en-US') {
           // Add UK holidays
           const ukHolidays: Holiday[] = [];
           UK_HOLIDAYS.forEach(holiday => {
@@ -185,9 +183,7 @@ export default function CalendarioPage() {
               console.log(`Successfully fetched ${nationalHolidays.length} holidays from BrasilAPI for ${currentYear}`);
           } catch (brasilApiError: any) {
               console.warn(`BrasilAPI failed: ${brasilApiError.message}`);
-              setError(isEnglish ?
-                `Failed to fetch from BrasilAPI (${brasilApiError.message}). Trying alternative...` :
-                `Falha ao buscar na BrasilAPI (${brasilApiError.message}). Tentando alternativa...`); // Temporary error
+              setError(`${t('calendario.failedToFetchBrasilApi')} (${brasilApiError.message}). ${t('calendario.tryingAlternative')}`); // Temporary error
 
               // 2. Try Scraping API as fallback
               try {
@@ -206,9 +202,7 @@ export default function CalendarioPage() {
                     setError(null);
                     console.log(`Using ${nationalHolidays.length} static holidays as fallback`);
                   } else {
-                    throw new Error(isEnglish ?
-                      `Failed to fetch holidays from all sources.` :
-                      `Falha ao buscar feriados de todas as fontes.`);
+                    throw new Error(t('calendario.failedToFetchFromAllSources'));
                   }
               }
           }
@@ -216,7 +210,7 @@ export default function CalendarioPage() {
 
         // Generate Macaé Holidays for the viewed year (only for Portuguese locale)
         let macaeHolidays: Holiday[] = [];
-        if (!isEnglish) {
+        if (locale === 'pt-BR') {
           macaeHolidays = MACAE_HOLIDAYS.map(h => {
               const date = getMacaeHolidayDate(h.name, currentYear);
               return date ? { ...h, date } : null;
@@ -308,12 +302,12 @@ export default function CalendarioPage() {
     }
   };
 
-  const isEnglish = t('locale.code') === 'en-US';
+
 
   return (
     <MainLayout>
-      <h1 className="text-3xl font-bold text-abz-text-black mb-2">{isEnglish ? 'Holiday Calendar' : 'Calendário de Feriados'}</h1>
-      <p className="text-gray-600 mb-6">{isEnglish ? 'National and UK Bank Holidays' : 'Feriados Nacionais e Municipais (Macaé, RJ)'}</p>
+      <h1 className="text-3xl font-bold text-abz-text-black mb-2">{t('calendario.title')}</h1>
+      <p className="text-gray-600 mb-6">{t('calendario.description')}</p>
       {/* Display specific error if loading failed */}
       {error && !loading && (
           <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-800 text-sm rounded-md flex items-center gap-2">
@@ -326,7 +320,7 @@ export default function CalendarioPage() {
         {/* Calendar Column */}
         <div className="lg:col-span-2 bg-white p-4 sm:p-6 rounded-lg shadow-md">
           {/* Show loading indicator on calendar */}
-          {loading && <p className="text-center text-gray-500 mb-4">{isEnglish ? 'Loading holidays...' : 'Carregando feriados...'}</p>}
+          {loading && <p className="text-center text-gray-500 mb-4">{t('calendario.loading')}</p>}
 
           <Calendar
             onActiveStartDateChange={handleActiveStartDateChange}
@@ -335,17 +329,17 @@ export default function CalendarioPage() {
             activeStartDate={viewDate} // Explicitly control the viewed month/year
             tileContent={tileContent}
             tileClassName={tileClassName}
-            locale={isEnglish ? 'en-US' : 'pt-BR'}
+            locale={locale}
             className="w-full border-none custom-calendar-styling" // Remove default border, add custom class
             showNeighboringMonth={false} // Hide days from prev/next month
           />
           {/* Legend */}
           <div className="flex justify-center gap-4 mt-4 text-xs text-gray-600">
             <div className="flex items-center gap-1">
-              <span className="h-2 w-2 rounded-full bg-blue-500"></span> {isEnglish ? 'National / Other Holiday' : 'Feriado Nacional / Outro'}
+              <span className="h-2 w-2 rounded-full bg-blue-500"></span> {t('calendario.nationalHoliday')}
             </div>
             <div className="flex items-center gap-1">
-              <span className="h-2 w-2 rounded-full bg-orange-500"></span> {isEnglish ? 'UK Bank Holiday' : 'Feriado Municipal (Macaé)'}
+              <span className="h-2 w-2 rounded-full bg-orange-500"></span> {t('calendario.municipalHoliday')}
             </div>
           </div>
         </div>
@@ -353,17 +347,14 @@ export default function CalendarioPage() {
         {/* Holiday List Column */}
         <div className="lg:col-span-1 bg-white p-4 sm:p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold text-abz-text-black mb-4 border-b pb-2">
-            {isEnglish ?
-              `Holidays in ${new Date(currentYear, viewDate.getMonth()).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}` :
-              `Feriados em ${new Date(currentYear, viewDate.getMonth()).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`
-            }
+            {t('calendario.holidaysInMonth')} {new Date(currentYear, viewDate.getMonth()).toLocaleDateString(locale, { month: 'long', year: 'numeric' })}
           </h2>
-          {loading && <p className="text-gray-500">{isEnglish ? 'Loading...' : 'Carregando...'}</p>}
+          {loading && <p className="text-gray-500">{t('calendario.loadingHolidays')}</p>}
           {!loading && error && holidaysThisMonth.length === 0 && (
-              <p className="text-gray-500 text-sm italic">{isEnglish ? 'Could not load holidays.' : 'Não foi possível carregar feriados.'}</p>
+              <p className="text-gray-500 text-sm italic">{t('calendario.couldNotLoadHolidays')}</p>
           )}
           {!loading && !error && holidaysThisMonth.length === 0 && (
-            <p className="text-gray-500 text-sm italic">{isEnglish ? 'No holidays this month.' : 'Nenhum feriado neste mês.'}</p>
+            <p className="text-gray-500 text-sm italic">{t('calendario.noHolidaysThisMonth')}</p>
           )}
           {!loading && holidaysThisMonth.length > 0 && (
             <ul className="space-y-3 overflow-y-auto max-h-96 pr-2">
@@ -379,7 +370,7 @@ export default function CalendarioPage() {
                      p-2 rounded-r-md`}
                   >
                   <span className="font-semibold block text-abz-text-dark">
-                         {displayDate.toLocaleDateString(isEnglish ? 'en-US' : 'pt-BR', { day: '2-digit', timeZone: 'UTC' })} - {holiday.name}
+                         {displayDate.toLocaleDateString(locale, { day: '2-digit', timeZone: 'UTC' })} - {holiday.name}
                   </span>
                   <span className="text-xs text-gray-600">({holiday.type})</span>
                   {holiday.description && <p className="text-xs text-gray-500 mt-0.5">{holiday.description}</p>}

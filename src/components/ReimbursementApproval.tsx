@@ -8,19 +8,49 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { supabaseAdmin } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { getAuthToken, fetchWithAuth } from '@/lib/authUtils';
+import ReimbursementDetailModal from '@/components/admin/ReimbursementDetailModal';
 
 interface Reimbursement {
   id: string;
   protocolo: string;
   nome: string;
   email: string;
+  telefone?: string;
+  cpf?: string;
+  cargo?: string;
+  centroCusto?: string;
+  centro_custo?: string;
   data: string;
-  valorTotal: number;
+  valorTotal?: number;
   valor_total?: number;
-  tipoReembolso: string;
+  moeda?: string;
+  tipoReembolso?: string;
   tipo_reembolso?: string;
+  descricao?: string;
+  metodoPagamento?: string;
+  metodo_pagamento?: string;
+  banco?: string;
+  agencia?: string;
+  conta?: string;
+  pixTipo?: string;
+  pix_tipo?: string;
+  pixChave?: string;
+  pix_chave?: string;
+  comprovantes?: Array<{
+    nome: string;
+    url: string;
+    tipo: string;
+    tamanho: number;
+  }>;
+  observacoes?: string;
   status: string;
   created_at: string;
+  updated_at?: string;
+  historico?: Array<{
+    data: string;
+    status: string;
+    observacao: string;
+  }>;
 }
 
 export default function ReimbursementApproval() {
@@ -41,6 +71,10 @@ export default function ReimbursementApproval() {
   const [rejectReason, setRejectReason] = useState('');
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectLoading, setRejectLoading] = useState(false);
+
+  // Estado para o modal de detalhes
+  const [selectedReimbursement, setSelectedReimbursement] = useState<Reimbursement | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   // Verificar permissões do usuário
   useEffect(() => {
@@ -382,8 +416,15 @@ export default function ReimbursementApproval() {
 
   // Função para visualizar detalhes de uma solicitação
   const handleViewDetails = (reimbursement: Reimbursement) => {
-    console.log(`Navegando para detalhes do reembolso com protocolo: ${reimbursement.protocolo}`);
-    router.push(`/reembolso/${reimbursement.protocolo}`);
+    console.log(`Abrindo modal de detalhes do reembolso com protocolo: ${reimbursement.protocolo}`);
+    setSelectedReimbursement(reimbursement);
+    setShowDetailModal(true);
+  };
+
+  // Função para fechar o modal de detalhes
+  const handleCloseDetailModal = () => {
+    setShowDetailModal(false);
+    setSelectedReimbursement(null);
   };
 
   // Função para formatar valor monetário
@@ -618,7 +659,7 @@ export default function ReimbursementApproval() {
                         <button
                           onClick={() => handleViewDetails(reimbursement)}
                           className="text-blue-600 hover:text-blue-900"
-                          title={t('common.view')}
+                          title={t('common.view', 'Visualizar')}
                         >
                           <FiEye />
                         </button>
@@ -717,7 +758,7 @@ export default function ReimbursementApproval() {
                 <textarea
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
-                  placeholder="Informe o motivo da rejeição..."
+                  placeholder={t('reimbursement.rejectionReasonPlaceholder', 'Informe o motivo da rejeição...')}
                   className="w-full p-3 border border-red-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
                   rows={4}
                   autoFocus
@@ -725,7 +766,7 @@ export default function ReimbursementApproval() {
                 ></textarea>
                 {!rejectReason.trim() && (
                   <div className="mt-2 text-sm text-red-600">
-                    O motivo da rejeição é obrigatório
+                    {t('reimbursement.rejectionReasonRequired', 'O motivo da rejeição é obrigatório')}
                   </div>
                 )}
               </div>
@@ -738,7 +779,7 @@ export default function ReimbursementApproval() {
                 className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
                 disabled={rejectLoading}
               >
-                Cancelar
+                {t('common.cancel', 'Cancelar')}
               </button>
               <button
                 onClick={confirmReject}
@@ -750,11 +791,24 @@ export default function ReimbursementApproval() {
                 ) : (
                   <FiX className="mr-2" />
                 )}
-                Confirmar Rejeição
+                {t('reimbursement.confirmRejection', 'Confirmar Rejeição')}
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal de detalhes do reembolso */}
+      {showDetailModal && selectedReimbursement && (
+        <ReimbursementDetailModal
+          reimbursement={selectedReimbursement}
+          isOpen={showDetailModal}
+          onClose={handleCloseDetailModal}
+          onApprove={handleApprove}
+          onReject={handleReject}
+          readOnly={false}
+          onStatusChange={fetchReimbursements}
+        />
       )}
     </div>
   );

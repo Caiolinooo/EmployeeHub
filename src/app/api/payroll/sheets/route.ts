@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 import { PayrollSheet, PayrollSheetForm, PayrollApiResponse, PayrollPaginatedResponse } from '@/types/payroll';
 
 /**
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const referenceYear = searchParams.get('referenceYear');
     const status = searchParams.get('status');
 
-    let query = supabase
+    let query = supabaseAdminAdmin
       .from('payroll_sheets')
       .select(`
         *,
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se já existe folha para o mesmo período
-    let existingQuery = supabase
+    let existingQuery = supabaseAdminAdmin
       .from('payroll_sheets')
       .select('id')
       .eq('company_id', body.companyId)
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Contar funcionários ativos da empresa/departamento
-    let employeeQuery = supabase
+    let employeeQuery = supabaseAdminAdmin
       .from('payroll_employees')
       .select('id', { count: 'exact' })
       .eq('company_id', body.companyId)
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
     const { count: employeeCount } = await employeeQuery;
 
     // Criar folha de pagamento
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('payroll_sheets')
       .insert([{
         company_id: body.companyId,

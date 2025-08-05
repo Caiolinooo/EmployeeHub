@@ -56,7 +56,7 @@ const MenuEditor = ({ item, onSave, onCancel, isNew = false }: MenuEditorProps) 
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold text-gray-900">
-          {isNew ? 'Adicionar Novo Item' : 'Editar Item'}
+          {isNew ? t('admin.addMenuItem', 'Adicionar Novo Item') : t('common.edit', 'Editar Item')}
         </h3>
         <button
           onClick={onCancel}
@@ -174,13 +174,13 @@ const MenuEditor = ({ item, onSave, onCancel, isNew = false }: MenuEditorProps) 
             onClick={onCancel}
             className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue"
           >
-            Cancelar
+            {t('common.cancel', 'Cancelar')}
           </button>
           <button
             type="submit"
             className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-abz-blue hover:bg-abz-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue"
           >
-            {isNew ? 'Adicionar' : 'Salvar'}
+            {isNew ? t('common.add', 'Adicionar') : t('common.save', 'Salvar')}
           </button>
         </div>
       </form>
@@ -243,14 +243,14 @@ const MenuItemComponent = ({ item, onEdit, onDelete, onToggleVisibility, onMoveU
           <button
             onClick={() => onEdit(item)}
             className="p-1 text-blue-500 hover:text-blue-700"
-            title="Editar"
+            title={t('common.edit', 'Editar')}
           >
             <FiEdit2 className="h-4 w-4" />
           </button>
           <button
             onClick={() => onDelete(item.id)}
             className="p-1 text-red-500 hover:text-red-700"
-            title="Excluir"
+            title={t('common.delete', 'Excluir')}
           >
             <FiTrash2 className="h-4 w-4" />
           </button>
@@ -305,7 +305,7 @@ export default function MenuPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este item?')) {
+    if (window.confirm(t('admin.users.deleteConfirm', 'Tem certeza que deseja excluir este item?'))) {
       setItems(prev => prev.filter(item => item.id !== id));
     }
   };
@@ -366,7 +366,7 @@ export default function MenuPage() {
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-abz-blue hover:bg-abz-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue"
           >
             <FiPlus className="mr-2 h-4 w-4" />
-            Adicionar Item
+            {t('admin.addMenuItem', 'Adicionar Item')}
           </button>
         </div>
       </div>
@@ -389,7 +389,7 @@ export default function MenuPage() {
         <div className="divide-y divide-gray-200">
           {sortedItems.length === 0 ? (
             <div className="p-6 text-center text-gray-500">
-              Nenhum item encontrado. Clique em "Adicionar Item" para criar um novo.
+              {t('admin.noItems', 'Nenhum item encontrado. Clique em "Adicionar Item" para criar um novo.')}
             </div>
           ) : (
             <div className="space-y-3 p-4">
@@ -415,7 +415,7 @@ export default function MenuPage() {
           className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
         >
           <FiSave className="mr-2 h-4 w-4" />
-          Salvar Alterações
+          {t('common.saveSettings', 'Salvar Alterações')}
         </button>
       </div>
     </div>

@@ -12,9 +12,11 @@ import { default as NextImage } from 'next/image';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import ChangePasswordTab from '@/components/Profile/ChangePasswordTab';
+import { useI18n } from '@/contexts/I18nContext';
 
 export default function ProfilePage() {
   const { user, profile, isLoading, refreshProfile } = useSupabaseAuth();
+  const { t } = useI18n();
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
   const [showReimbursementSettings, setShowReimbursementSettings] = useState(false);
@@ -478,10 +480,10 @@ export default function ProfilePage() {
 
                 {/* Informações profissionais */}
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Informações Profissionais</h2>
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('common.professionalInfo')}</h2>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm text-gray-500 mb-1">Cargo</label>
+                      <label className="block text-sm text-gray-500 mb-1">{t('common.position')}</label>
                       <input
                         type="text"
                         name="position"
@@ -491,7 +493,7 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-gray-500 mb-1">Departamento</label>
+                      <label className="block text-sm text-gray-500 mb-1">{t('common.department')}</label>
                       <input
                         type="text"
                         name="department"
@@ -501,7 +503,7 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-gray-500 mb-1">Função no sistema</label>
+                      <label className="block text-sm text-gray-500 mb-1">{t('common.systemRole')}</label>
                       <input
                         type="text"
                         value={profile.role === 'ADMIN' ? 'Administrador' :
@@ -542,21 +544,21 @@ export default function ProfilePage() {
 
                 {/* Informações profissionais */}
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Informações Profissionais</h2>
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('common.professionalInfo')}</h2>
                   <div className="space-y-4">
                     <div>
-                      <p className="text-sm text-gray-500">Cargo</p>
-                      <p className="font-medium">{profile.position || 'Não informado'}</p>
+                      <p className="text-sm text-gray-500">{t('common.position')}</p>
+                      <p className="font-medium">{profile.position || t('common.notInformed')}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Departamento</p>
-                      <p className="font-medium">{profile.department || 'Não informado'}</p>
+                      <p className="text-sm text-gray-500">{t('common.department')}</p>
+                      <p className="font-medium">{profile.department || t('common.notInformed')}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Função no sistema</p>
+                      <p className="text-sm text-gray-500">{t('common.systemRole')}</p>
                       <p className="font-medium">
-                        {profile.role === 'ADMIN' ? 'Administrador' :
-                         profile.role === 'MANAGER' ? 'Gerente' : 'Usuário'}
+                        {profile.role === 'ADMIN' ? t('common.administrator') :
+                         profile.role === 'MANAGER' ? t('common.manager') : t('common.user')}
                       </p>
                     </div>
                   </div>
@@ -566,34 +568,34 @@ export default function ProfilePage() {
 
             {/* Preferências do usuário */}
             <div className="mt-8 pt-6 border-t border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Preferências</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('common.preferences')}</h2>
 
               {editing ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <label className="block text-sm text-gray-500 mb-1">Tema</label>
+                    <label className="block text-sm text-gray-500 mb-1">{t('common.theme')}</label>
                     <select
                       name="theme"
                       value={formData.theme}
                       onChange={handleInputChange}
                       className="w-full p-2 border border-gray-300 rounded-md"
                     >
-                      <option value="light">Claro</option>
-                      <option value="dark">Escuro</option>
-                      <option value="system">Sistema</option>
+                      <option value="light">{t('common.light')}</option>
+                      <option value="dark">{t('common.dark')}</option>
+                      <option value="system">{t('common.system')}</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-500 mb-1">Idioma</label>
+                    <label className="block text-sm text-gray-500 mb-1">{t('common.language')}</label>
                     <select
                       name="language"
                       value={formData.language}
                       onChange={handleInputChange}
                       className="w-full p-2 border border-gray-300 rounded-md"
                     >
-                      <option value="pt-BR">Português (Brasil)</option>
-                      <option value="en-US">English (US)</option>
+                      <option value="pt-BR">{t('common.portugueseBrazil')}</option>
+                      <option value="en-US">{t('common.englishUS')}</option>
                     </select>
                   </div>
 
@@ -614,24 +616,24 @@ export default function ProfilePage() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <p className="text-sm text-gray-500">Tema</p>
+                    <p className="text-sm text-gray-500">{t('common.theme')}</p>
                     <p className="font-medium">
-                      {(profile as any).theme === 'dark' ? 'Escuro' :
-                       (profile as any).theme === 'system' ? 'Sistema' : 'Claro'}
+                      {(profile as any).theme === 'dark' ? t('common.dark') :
+                       (profile as any).theme === 'system' ? t('common.system') : t('common.light')}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-500">Idioma</p>
+                    <p className="text-sm text-gray-500">{t('common.language')}</p>
                     <p className="font-medium">
-                      {(profile as any).language === 'en-US' ? 'English (US)' : 'Português (Brasil)'}
+                      {(profile as any).language === 'en-US' ? t('common.englishUS') : t('common.portugueseBrazil')}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-500">Notificações</p>
+                    <p className="text-sm text-gray-500">{t('common.notifications')}</p>
                     <p className="font-medium">
-                      Ativadas
+                      {t('common.enabled')}
                     </p>
                   </div>
                 </div>
@@ -646,13 +648,13 @@ export default function ProfilePage() {
                       variant="outline"
                       className="mr-2"
                     >
-                      Cancelar
+                      {t('common.cancel')}
                     </Button>
                     <Button
                       onClick={updateProfile}
                       className="bg-abz-blue hover:bg-abz-blue-dark"
                     >
-                      Salvar Alterações
+                      {t('common.save')}
                     </Button>
                   </>
                 )}

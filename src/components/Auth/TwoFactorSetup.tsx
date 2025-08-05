@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { FiShield, FiCheck, FiX, FiAlertTriangle, FiLock } from 'react-icons/fi';
 import Image from 'next/image';
 
 export default function TwoFactorSetup() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useSupabaseAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);

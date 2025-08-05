@@ -9,7 +9,7 @@ import {
 } from 'react-icons/fi';
 import Footer from '@/components/Footer';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useSiteConfig } from '@/contexts/SiteConfigContext';
 import LanguageSelector from '@/components/LanguageSelector';
@@ -27,7 +27,7 @@ interface MainLayoutProps {
 export default function MainLayout({ children }: MainLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isAuthenticated, isLoading, isAdmin, logout } = useAuth();
+  const { user, isAuthenticated, isLoading, isAdmin, logout } = useSupabaseAuth();
   const { t } = useI18n();
   const { config } = useSiteConfig();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

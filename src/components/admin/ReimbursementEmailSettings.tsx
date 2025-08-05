@@ -190,7 +190,7 @@ const ReimbursementEmailSettings: React.FC<ReimbursementEmailSettingsProps> = ({
               type="email"
               value={newRecipient}
               onChange={(e) => setNewRecipient(e.target.value)}
-              placeholder="Adicionar novo email"
+              placeholder={t('admin.addNewEmail', 'Adicionar novo email')}
               className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
             />
             <button

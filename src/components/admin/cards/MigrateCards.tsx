@@ -5,11 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle2, MoveRight } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
+import { useI18n } from '@/contexts/I18nContext';
 
 /**
  * Componente para migrar cards hardcoded para o banco de dados
  */
 export function MigrateCards() {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -26,14 +28,14 @@ export function MigrateCards() {
     try {
       setChecking(true);
       setError(null);
-      setMessage('Verificando status da migração...');
+      setMessage(t('admin.checkingMigrationStatus'));
 
       // Chamar a API para verificar o status da migração
       const response = await fetch('/api/admin/cards/migrate');
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao verificar status da migração');
+        throw new Error(data.error || t('admin.errorCheckingMigrationStatus'));
       }
 
       setMigrationStatus({
@@ -42,10 +44,10 @@ export function MigrateCards() {
         migrationNeeded: data.migrationNeeded || false
       });
 
-      setMessage(data.message || 'Status da migração verificado com sucesso');
+      setMessage(data.message || t('admin.migrationStatusCheckedSuccess'));
     } catch (err) {
       console.error('Erro ao verificar status da migração:', err);
-      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      setError(err instanceof Error ? err.message : t('common.unknownError'));
       setMessage(null);
     } finally {
       setChecking(false);
@@ -58,7 +60,7 @@ export function MigrateCards() {
       setLoading(true);
       setError(null);
       setSuccess(false);
-      setMessage('Migrando cards para o banco de dados...');
+      setMessage(t('admin.migratingCards'));
 
       // Chamar a API para migrar os cards
       const response = await fetch('/api/admin/cards/migrate', {
@@ -71,17 +73,17 @@ export function MigrateCards() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao migrar cards');
+        throw new Error(data.error || t('admin.errorMigratingCards'));
       }
 
       setSuccess(true);
-      setMessage(data.message || 'Cards migrados com sucesso');
+      setMessage(data.message || t('admin.cardsMigratedSuccess'));
       
       // Atualizar o status da migração
       await checkMigrationStatus();
     } catch (err) {
       console.error('Erro ao migrar cards:', err);
-      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      setError(err instanceof Error ? err.message : t('common.unknownError'));
       setMessage(null);
     } finally {
       setLoading(false);
@@ -97,13 +99,12 @@ export function MigrateCards() {
     <div className="space-y-4 p-4 border rounded-lg bg-card">
       <div className="flex items-center gap-2">
         <MoveRight className="h-5 w-5 text-primary" />
-        <h3 className="text-lg font-semibold">Migração de Cards</h3>
+        <h3 className="text-lg font-semibold">{t('admin.cardsMigration')}</h3>
       </div>
 
       <div className="text-sm text-muted-foreground">
         <p>
-          Este utilitário permite migrar os cards hardcoded do código-fonte para o banco de dados Supabase.
-          Isso permite que os cards sejam editados através da interface administrativa.
+          {t('admin.cardsMigrationDescription')}
         </p>
       </div>
 
@@ -132,7 +133,7 @@ export function MigrateCards() {
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Erro</AlertTitle>
+          <AlertTitle>{t('common.error')}</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
@@ -140,7 +141,7 @@ export function MigrateCards() {
       {success && (
         <Alert variant="success" className="bg-green-50 border-green-200">
           <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertTitle className="text-green-800">Sucesso</AlertTitle>
+          <AlertTitle className="text-green-800">{t('common.success')}</AlertTitle>
           <AlertDescription className="text-green-700">{message}</AlertDescription>
         </Alert>
       )}
@@ -148,7 +149,7 @@ export function MigrateCards() {
       {message && !success && !error && (
         <Alert>
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Informação</AlertTitle>
+          <AlertTitle>{t('common.information')}</AlertTitle>
           <AlertDescription>{message}</AlertDescription>
         </Alert>
       )}
@@ -160,7 +161,7 @@ export function MigrateCards() {
           className="bg-primary hover:bg-primary/90"
         >
           {loading ? <Spinner className="mr-2" /> : <MoveRight className="mr-2 h-4 w-4" />}
-          Migrar Cards
+          {t('admin.migrateCards')}
         </Button>
 
         <Button

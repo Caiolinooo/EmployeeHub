@@ -6,11 +6,13 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle2, Upload } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { fetchWithToken } from '@/lib/tokenStorage';
+import { useI18n } from '@/contexts/I18nContext';
 
 /**
  * Component to import evaluation criteria from Excel file
  */
 export function ImportCriteriosButton() {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +65,7 @@ export function ImportCriteriosButton() {
     <div className="space-y-4 p-4 border rounded-lg bg-white">
       <div className="flex items-center gap-2">
         <Upload className="h-5 w-5 text-blue-600" />
-        <h3 className="text-lg font-semibold">Importar Critérios de Avaliação</h3>
+        <h3 className="text-lg font-semibold">{t('avaliacao.importacao.importCriterios', 'Importar Critérios de Avaliação')}</h3>
       </div>
 
       <div className="text-sm text-gray-600">
@@ -104,7 +106,7 @@ export function ImportCriteriosButton() {
           className="bg-blue-600 hover:bg-blue-700 text-white"
         >
           {loading ? <Spinner className="mr-2" /> : <Upload className="mr-2 h-4 w-4" />}
-          Importar Critérios
+          {t('avaliacao.importacao.importCriterios', 'Importar Critérios')}
         </Button>
       </div>
     </div>

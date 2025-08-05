@@ -5,6 +5,7 @@ import { FiSave, FiX, FiUser, FiMail, FiPhone, FiBriefcase, FiUsers, FiPlus, FiT
 import { AccessPermissions } from '@/models/User';
 import ServerUserReimbursementSettings from './ServerUserReimbursementSettings';
 import ReimbursementPermissionsEditor from './ReimbursementPermissionsEditor';
+import { useI18n } from '@/contexts/I18nContext';
 
 // Interface para o usuário no editor
 export interface UserEditorData {
@@ -39,6 +40,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
   isNewUser = false,
   isModal = true
 }) => {
+  const { t } = useI18n();
   const defaultUser: UserEditorData = {
     phoneNumber: '',
     firstName: '',
@@ -180,19 +182,19 @@ const UserEditor: React.FC<UserEditorProps> = ({
 
     // Validar campos obrigatórios
     if (!editedUser.phoneNumber || !editedUser.firstName || !editedUser.lastName) {
-      setPasswordError('Número de telefone, nome e sobrenome são obrigatórios');
+      setPasswordError(t('userEditor.requiredFields', 'Phone number, first name and last name are required'));
       return;
     }
 
     // Validar senha para novos usuários
     if (isNewUser && !password) {
-      setPasswordError('A senha é obrigatória para novos usuários');
+      setPasswordError(t('userEditor.passwordRequired', 'Password is required for new users'));
       return;
     }
 
     // Validar confirmação de senha
     if (password && password !== confirmPassword) {
-      setPasswordError('As senhas não coincidem');
+      setPasswordError(t('userEditor.passwordMismatch', 'Passwords do not match'));
       return;
     }
 
@@ -205,7 +207,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
       {isModal && (
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-xl font-semibold text-abz-blue">
-            {isNewUser ? 'Novo Usuário' : 'Editar Usuário'}
+            {isNewUser ? t('userEditor.newUser', 'New User') : t('userEditor.editUser', 'Edit User')}
           </h2>
           <button
             onClick={onCancel}
@@ -308,7 +310,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
               <div className="space-y-4">
                 <div>
                   <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-                    Função no Sistema*
+                    {t('common.systemRole')}*
                   </label>
                   <select
                     id="role"
@@ -318,9 +320,9 @@ const UserEditor: React.FC<UserEditorProps> = ({
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
                     required
                   >
-                    <option value="USER">Usuário</option>
-                    <option value="MANAGER">Gerente</option>
-                    <option value="ADMIN">Administrador</option>
+                    <option value="USER">{t('common.user')}</option>
+                    <option value="MANAGER">{t('common.manager')}</option>
+                    <option value="ADMIN">{t('common.administrator')}</option>
                   </select>
                   <p className="mt-1 text-xs text-gray-500">
                     <strong>Administrador:</strong> Acesso completo ao sistema, incluindo todas as funcionalidades administrativas.<br />
@@ -485,14 +487,14 @@ const UserEditor: React.FC<UserEditorProps> = ({
               onClick={onCancel}
               className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue"
             >
-              Cancelar
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               className="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-abz-blue hover:bg-abz-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue"
             >
               <FiSave className="mr-2" />
-              Salvar
+              {t('common.save')}
             </button>
           </div>
         </form>

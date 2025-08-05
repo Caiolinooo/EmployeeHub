@@ -48,11 +48,10 @@ const AppDownloadButton = ({ href, storeName }: { href: string; storeName: strin
 
 export default function PontoPage() {
   const { t } = useI18n();
-  const isEnglish = t('locale.code') === 'en-US';
 
   return (
     <MainLayout>
-      <h1 className="text-3xl font-extrabold text-abz-blue-dark mb-6">{isEnglish ? 'Time Clock' : 'Registro de Ponto'}</h1>
+      <h1 className="text-3xl font-extrabold text-abz-blue-dark mb-6">{t('ponto.pageTitle')}</h1>
 
       <div className="bg-white p-8 rounded-lg shadow-md space-y-8">
 
@@ -67,7 +66,7 @@ export default function PontoPage() {
         {/* App Access Info */}
         <div className="border-t pt-6">
           <h2 className="text-xl font-semibold text-abz-text-black mb-4 flex items-center">
-            <FiSmartphone className="mr-2 text-abz-blue" /> {isEnglish ? 'App Access' : 'Acesso via Aplicativos'}
+            <FiSmartphone className="mr-2 text-abz-blue" /> {t('ponto.appAccess')}
           </h2>
 
           {/* Ahgora Multi */}
@@ -78,11 +77,9 @@ export default function PontoPage() {
               <AppDownloadButton href={AHGORA_MULTI_GOOGLE_PLAY} storeName="Google Play" />
             </div>
             <p className="text-sm text-gray-600 mb-1">
-              {isEnglish
-                ? 'Use this app to register your time clock via facial recognition (according to company settings).'
-                : 'Utilize este aplicativo para registrar seu ponto via reconhecimento facial (conforme configurações da empresa).'}
+              {t('ponto.ahgoraMultiDescription')}
             </p>
-            <p className="text-sm text-gray-600"><span className="font-medium">{isEnglish ? 'Activation Key:' : 'Chave de Ativação:'}</span> {isEnglish ? '(Provided in the email sent by HR)' : '(Informada no E-mail enviado pelo RH)'}</p>
+            <p className="text-sm text-gray-600"><span className="font-medium">{t('ponto.activationKey')}</span> {t('ponto.activationKeyInfo')}</p>
           </div>
 
           {/* MyAhgora */}
@@ -92,29 +89,25 @@ export default function PontoPage() {
               {MYAHGORA_APP_STORE ? (
                 <AppDownloadButton href={MYAHGORA_APP_STORE} storeName="App Store" />
               ) : (
-                <span className="text-xs text-gray-400 italic mr-2 mb-2 inline-block">{isEnglish ? 'App Store link unavailable' : 'App Store link indisponível'}</span>
+                <span className="text-xs text-gray-400 italic mr-2 mb-2 inline-block">{t('ponto.appStoreUnavailable')}</span>
               )}
               <AppDownloadButton href={MYAHGORA_GOOGLE_PLAY} storeName="Google Play" />
             </div>
             <p className="text-sm text-gray-600 mb-1">
-              {isEnglish
-                ? 'Use this app to check your time clock records, request adjustments and absences.'
-                : 'Use este aplicativo para consultar seu espelho de ponto, solicitar ajustes e abonos.'}
+              {t('ponto.myAhgoraDescription')}
             </p>
-            <p className="text-sm text-gray-600"><span className="font-medium">{isEnglish ? 'Company Code:' : 'Código da Empresa:'}</span> 4811</p>
-            <p className="text-sm text-gray-600"><span className="font-medium">{isEnglish ? 'Registration/Password:' : 'Matrícula/Senha:'}</span> {isEnglish ? '(Provided in the email sent by HR)' : '(Informada no E-mail enviado pelo RH)'}</p>
+            <p className="text-sm text-gray-600"><span className="font-medium">{t('ponto.companyCode')}</span> 4811</p>
+            <p className="text-sm text-gray-600"><span className="font-medium">{t('ponto.registrationPassword')}</span> {t('ponto.activationKeyInfo')}</p>
           </div>
         </div>
 
         {/* Web Access */}
         <div className="border-t pt-6">
           <h2 className="text-xl font-semibold text-abz-text-black mb-3 flex items-center">
-            <FiExternalLink className="mr-2 text-abz-blue" /> {isEnglish ? 'Web Access' : 'Acesso via Web'}
+            <FiExternalLink className="mr-2 text-abz-blue" /> {t('ponto.webAccess')}
           </h2>
           <p className="text-sm text-abz-text-dark mb-4">
-            {isEnglish
-              ? 'You can also access the time clock system through your browser.'
-              : 'Você também pode acessar o sistema de ponto através do navegador.'}
+            {t('ponto.webAccessDescription')}
           </p>
           <a
             href={EXTERNAL_URL}
@@ -130,12 +123,10 @@ export default function PontoPage() {
         {/* Manual Download */}
         <div className="border-t pt-6">
           <h2 className="text-xl font-semibold text-abz-text-black mb-3 flex items-center">
-            <FiBookOpen className="mr-2 text-abz-blue" /> {isEnglish ? 'Additional Resources' : 'Recursos Adicionais'}
+            <FiBookOpen className="mr-2 text-abz-blue" /> {t('ponto.additionalResources')}
           </h2>
           <p className="text-sm text-abz-text-dark mb-4">
-            {isEnglish
-              ? 'Check the user manual for detailed instructions on how to use the Ahgora platforms.'
-              : 'Consulte o manual de uso para obter instruções detalhadas sobre como utilizar as plataformas Ahgora.'}
+            {t('ponto.manualDescription')}
           </p>
           <a
             href={MANUAL_URL}
@@ -145,7 +136,7 @@ export default function PontoPage() {
             className="inline-flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 transition duration-200 shadow-md text-sm"
           >
             <FiDownload className="mr-2" />
-            {isEnglish ? 'Download Manual (PDF)' : 'Baixar Manual (PDF)'}
+            {t('ponto.downloadManual')}
           </a>
         </div>
 

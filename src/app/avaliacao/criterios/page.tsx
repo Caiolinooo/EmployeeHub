@@ -352,14 +352,14 @@ export default function CriteriosPage() {
                               className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-abz-blue text-base font-medium text-white hover:bg-abz-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue sm:ml-3 sm:w-auto sm:text-sm"
                               disabled={isLoading}
                             >
-                              {isLoading ? t('common.salvando', 'Salvando...') : t('common.salvar', 'Salvar')}
+                              {isLoading ? t('common.saving', 'Salvando...') : t('common.save', 'Salvar')}
                             </button>
                             <button
                               type="button"
                               className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
                               onClick={() => setShowModal(false)}
                             >
-                              {t('common.cancelar', 'Cancelar')}
+                              {t('common.cancel', 'Cancelar')}
                             </button>
                           </div>
                         </form>

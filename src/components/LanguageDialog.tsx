@@ -43,9 +43,9 @@ export default function LanguageDialog() {
   const getLanguageName = (localeCode: Locale) => {
     switch (localeCode) {
       case 'pt-BR':
-        return 'Português';
+        return t('common.portuguese');
       case 'en-US':
-        return 'English';
+        return t('common.english');
       default:
         return localeCode;
     }

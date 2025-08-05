@@ -35,7 +35,6 @@ const FileUploader: React.FC<FileUploaderProps> = ({
   acceptedFileTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'],
 }) => {
   const { t } = useI18n();
-  const isEnglish = t('locale.code') === 'en-US';
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -63,29 +62,23 @@ const FileUploader: React.FC<FileUploaderProps> = ({
   const validateFile = useCallback((file: File): string | null => {
     // Check file type
     if (!acceptedFileTypes.includes(file.type)) {
-      return isEnglish
-        ? `Unsupported file type: ${file.type}`
-        : `Tipo de arquivo não suportado: ${file.type}`;
+      return t('fileUploader.unsupportedFileType', `Unsupported file type: ${file.type}`);
     }
 
     // Check file size
     if (file.size > maxSizeInBytes) {
-      return isEnglish
-        ? `File too large: ${(file.size / (1024 * 1024)).toFixed(2)}MB (maximum: ${maxSizeInMB}MB)`
-        : `Arquivo muito grande: ${(file.size / (1024 * 1024)).toFixed(2)}MB (máximo: ${maxSizeInMB}MB)`;
+      return t('fileUploader.fileTooLarge', `File too large: ${(file.size / (1024 * 1024)).toFixed(2)}MB (maximum: ${maxSizeInMB}MB)`);
     }
 
     return null;
-  }, [acceptedFileTypes, maxSizeInBytes, maxSizeInMB, isEnglish]);
+  }, [acceptedFileTypes, maxSizeInBytes, maxSizeInMB, t]);
 
   const processFiles = useCallback(async (fileList: FileList) => {
     setError(null);
 
     // Check if adding these files would exceed the maximum
     if (files.length + fileList.length > maxFiles) {
-      setError(isEnglish
-        ? `You can upload a maximum of ${maxFiles} files`
-        : `Você pode enviar no máximo ${maxFiles} arquivos`);
+      setError(t('fileUploader.maxFilesExceeded', `You can upload a maximum of ${maxFiles} files`));
       return;
     }
 
@@ -148,7 +141,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
         if (fileIndex !== -1) {
           newFiles[fileIndex] = {
             ...newFiles[fileIndex],
-            uploadError: 'Erro ao ler o arquivo'
+            uploadError: t('fileUploader.errorReadingFile', 'Error reading file')
           };
 
           // Atualizar o estado com o erro
@@ -238,11 +231,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
                 : 'bucket';
 
               // Use a simple alert instead of toast to avoid any issues
-              alert(
-                isEnglish
-                  ? `File stored locally due to storage ${errorType} issues. The file will be included in your submission, but may not be permanently stored.`
-                  : `Arquivo armazenado localmente devido a problemas de ${errorType === 'RLS policy' ? 'permissão' : 'bucket'} no armazenamento. O arquivo será incluído na sua solicitação, mas pode não ser armazenado permanentemente.`
-              );
+              alert(t('fileUploader.fileStoredLocally', 'File stored locally due to storage issues. The file will be included in your submission, but may not be permanently stored.'));
             } else {
               // For other errors, show the error
               throw uploadError;
@@ -255,7 +244,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
           const errorFile = {
             ...fileToUpload,
             uploading: false,
-            uploadError: err instanceof Error ? err.message : 'Erro ao fazer upload'
+            uploadError: err instanceof Error ? err.message : t('fileUploader.uploadError', 'Upload error')
           };
 
           // Update the file in the array
@@ -268,17 +257,15 @@ const FileUploader: React.FC<FileUploaderProps> = ({
           ]);
 
           // Show error alert with more details
-          const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-          alert(isEnglish
-            ? `Error uploading ${fileToUpload.name}: ${errorMessage}`
-            : `Erro ao fazer upload de ${fileToUpload.name}: ${errorMessage}`);
+          const errorMessage = err instanceof Error ? err.message : t('common.unknownError', 'Unknown error');
+          alert(t('fileUploader.errorUploadingFile', `Error uploading ${fileToUpload.name}: ${errorMessage}`));
         }
       }
 
       // Final update with all files processed
       onFilesChange([...files, ...newFiles]);
     }
-  }, [files, maxFiles, onFilesChange, validateFile, isEnglish]);
+  }, [files, maxFiles, onFilesChange, validateFile, t]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -325,7 +312,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
   return (
     <div className="mb-6">
       <label className="block text-sm font-medium text-gray-700 mb-2">
-        {isEnglish ? 'Attachments' : 'Comprovantes'} <span className="text-red-500">*</span>
+        {t('fileUploader.attachments', 'Attachments')} <span className="text-red-500">*</span>
       </label>
 
       {/* Drag and drop area */}
@@ -343,14 +330,10 @@ const FileUploader: React.FC<FileUploaderProps> = ({
       >
         <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
         <p className="mt-2 text-sm text-gray-600">
-          {isEnglish
-            ? 'Drag and drop files here, or click to select'
-            : 'Arraste e solte arquivos aqui, ou clique para selecionar'}
+          {t('fileUploader.dragDropText', 'Drag and drop files here, or click to select')}
         </p>
         <p className="mt-1 text-xs text-gray-500">
-          {isEnglish
-            ? `Accepted formats: PDF, JPG, PNG (max. ${maxSizeInMB}MB per file)`
-            : `Formatos aceitos: PDF, JPG, PNG (máx. ${maxSizeInMB}MB por arquivo)`}
+          {t('fileUploader.acceptedFormats', `Accepted formats: PDF, JPG, PNG (max. ${maxSizeInMB}MB per file)`)}
         </p>
         <input
           ref={fileInputRef}
@@ -374,9 +357,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
         {files.length > 0 && (
           <div className="bg-gray-50 rounded-md p-3" style={{ opacity: 1, visibility: 'visible' }}>
               <h4 className="text-sm font-medium text-gray-700 mb-2">
-                {isEnglish
-                  ? `Selected files (${files.length}/${maxFiles})`
-                  : `Arquivos selecionados (${files.length}/${maxFiles})`}
+                {t('fileUploader.selectedFiles', `Selected files (${files.length}/${maxFiles})`)}
               </h4>
               <ul className="space-y-2">
                 {files.map((file) => (
@@ -407,7 +388,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
                           {file.uploadError ? (
                             <span className="text-red-500">{file.uploadError}</span>
                           ) : file.uploading ? (
-                            <span className="text-blue-500">{isEnglish ? 'Uploading...' : 'Enviando...'}</span>
+                            <span className="text-blue-500">{t('fileUploader.uploading', 'Uploading...')}</span>
                           ) : (
                             formatFileSize(file.size)
                           )}

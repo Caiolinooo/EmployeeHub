@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { SetPasswordModal } from './SetPasswordModal';
 import { fetchWrapper } from '@/lib/fetch-wrapper';
@@ -12,7 +12,7 @@ interface PasswordRequiredGuardProps {
 }
 
 export function PasswordRequiredGuard({ children }: PasswordRequiredGuardProps) {
-  const { user, isAuthenticated, isLoading, requiresPassword } = useAuth();
+  const { user, isAuthenticated, isLoading, requiresPassword } = useSupabaseAuth();
   const { t } = useI18n();
   const [showSetPasswordModal, setShowSetPasswordModal] = useState(false);
   const [passwordSet, setPasswordSet] = useState(false);

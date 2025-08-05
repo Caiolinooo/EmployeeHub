@@ -13,7 +13,7 @@ import {
 } from 'react-icons/fi';
 import Link from 'next/link';
 import dashboardCards, { getTranslatedCards, DashboardCard, iconMap } from '@/data/cards';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useSiteConfig } from '@/contexts/SiteConfigContext';
 
@@ -51,7 +51,7 @@ function LoadingSpinner() {
 }
 
 export default function Dashboard() {
-  const { user, isAdmin, isAuthenticated, isLoading } = useAuth();
+  const { user, isAdmin, isAuthenticated, isLoading } = useSupabaseAuth();
   const { t, locale } = useI18n();
   const { config } = useSiteConfig();
   const router = useRouter();
@@ -167,7 +167,10 @@ export default function Dashboard() {
                   })
                   .sort((a, b) => a.order - b.order)
                   .map((card) => {
-                    const Icon = card.icon;
+                    // Mapear o iconName para o componente de ícone real
+                    const Icon = card.iconName && iconMap[card.iconName]
+                      ? iconMap[card.iconName]
+                      : card.icon || iconMap.FiGrid;
                     return (
                       <div
                         key={card.id}

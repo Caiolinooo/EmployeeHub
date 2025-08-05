@@ -209,13 +209,59 @@ export async function POST(request: NextRequest) {
 
       console.log(`Enviando email com ${emailAttachments.length} anexos`);
 
+      // Obter o email do usuário logado a partir do token
+      const userEmail = payload.email;
+      console.log(`Email do usuário logado: ${userEmail}`);
+      console.log(`Email do formulário: ${formData.email}`);
+
+      // Usar o email do usuário logado se disponível, caso contrário usar o email do formulário
+      const emailToSend = userEmail || formData.email;
+      console.log(`Email que será usado para envio: ${emailToSend}`);
+
+      // Buscar configurações de email de reembolso para destinatários adicionais
+      let additionalRecipients: string[] = [];
+      try {
+        console.log('Buscando configurações de email de reembolso...');
+
+        // Primeiro, verificar se o usuário tem configurações específicas
+        const userSettingsResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/users/reimbursement-settings-server?email=${encodeURIComponent(emailToSend)}`);
+
+        if (userSettingsResponse.ok) {
+          const userSettings = await userSettingsResponse.json();
+          console.log('Configurações do usuário:', userSettings);
+
+          if (userSettings.reimbursement_email_settings?.enabled && userSettings.reimbursement_email_settings?.recipients?.length > 0) {
+            additionalRecipients = userSettings.reimbursement_email_settings.recipients;
+            console.log(`Usando configurações específicas do usuário: ${additionalRecipients.join(', ')}`);
+          } else {
+            // Se o usuário não tem configurações específicas, verificar regras globais
+            const globalSettingsResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/reimbursement-settings`);
+
+            if (globalSettingsResponse.ok) {
+              const globalSettings = await globalSettingsResponse.json();
+              console.log('Configurações globais:', globalSettings);
+
+              // Verificar se a regra de domínio está ativada e se o email tem o domínio @groupabz.com
+              if (globalSettings.enableDomainRule && emailToSend.endsWith('@groupabz.com')) {
+                additionalRecipients = globalSettings.recipients || [];
+                console.log(`Usando regra de domínio para @groupabz.com: ${additionalRecipients.join(', ')}`);
+              }
+            }
+          }
+        }
+      } catch (settingsError) {
+        console.error('Erro ao buscar configurações de email:', settingsError);
+        // Continuar sem destinatários adicionais
+      }
+
       await sendReimbursementConfirmationEmail(
-        formData.email,
+        emailToSend,
         formData.nome,
         protocolo,
         valorFormatado,
         formData, // dados completos do formulário
-        emailAttachments
+        emailAttachments,
+        additionalRecipients
       );
 
       console.log('Email de confirmação enviado com sucesso');

@@ -9,19 +9,49 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { fetchWithAuth } from '@/lib/authUtils';
 import { supabaseAdmin } from '@/lib/db';
 import { fetchUserReimbursements } from '@/services/reimbursementService';
+import ReimbursementDetailModal from '@/components/admin/ReimbursementDetailModal';
 
 interface Reimbursement {
   id: string;
   protocolo: string;
   nome: string;
   email: string;
+  telefone?: string;
+  cpf?: string;
+  cargo?: string;
+  centroCusto?: string;
+  centro_custo?: string;
   data: string;
-  valorTotal: number;
+  valorTotal?: number;
   valor_total?: number;
-  tipoReembolso: string;
+  moeda?: string;
+  tipoReembolso?: string;
   tipo_reembolso?: string;
+  descricao?: string;
+  metodoPagamento?: string;
+  metodo_pagamento?: string;
+  banco?: string;
+  agencia?: string;
+  conta?: string;
+  pixTipo?: string;
+  pix_tipo?: string;
+  pixChave?: string;
+  pix_chave?: string;
+  comprovantes?: Array<{
+    nome: string;
+    url: string;
+    tipo: string;
+    tamanho: number;
+  }>;
+  observacoes?: string;
   status: string;
   created_at: string;
+  updated_at?: string;
+  historico?: Array<{
+    data: string;
+    status: string;
+    observacao: string;
+  }>;
 }
 
 // Simplified version of the component to fix chunk loading issues
@@ -35,7 +65,9 @@ export default function ReimbursementDashboard() {
   const [tableExists, setTableExists] = useState<boolean | null>(null);
   const [tableName, setTableName] = useState<string | null>(null);
   const [creatingTable, setCreatingTable] = useState(false);
-  // Removido estado para modal, agora usando navegação de página
+  // Estado para modal de detalhes restaurado
+  const [selectedReimbursement, setSelectedReimbursement] = useState<Reimbursement | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [totalCount, setTotalCount] = useState(0);
@@ -550,8 +582,15 @@ export default function ReimbursementDashboard() {
 
   // Função para visualizar detalhes de uma solicitação
   const handleViewDetails = (reimbursement: Reimbursement) => {
-    console.log(`Navegando para detalhes do reembolso com protocolo: ${reimbursement.protocolo}`);
-    router.push(`/reembolso/${reimbursement.protocolo}`);
+    console.log(`Abrindo modal de detalhes do reembolso com protocolo: ${reimbursement.protocolo}`);
+    setSelectedReimbursement(reimbursement);
+    setShowDetailModal(true);
+  };
+
+  // Função para fechar o modal de detalhes
+  const handleCloseDetailModal = () => {
+    setShowDetailModal(false);
+    setSelectedReimbursement(null);
   };
 
   // Função para formatar valor monetário
@@ -813,7 +852,16 @@ export default function ReimbursementDashboard() {
         </div>
       )}
 
-      {/* Removido modal de detalhes, agora usando navegação de página */}
+      {/* Modal de detalhes do reembolso */}
+      {showDetailModal && selectedReimbursement && (
+        <ReimbursementDetailModal
+          reimbursement={selectedReimbursement}
+          isOpen={showDetailModal}
+          onClose={handleCloseDetailModal}
+          readOnly={true}
+          onStatusChange={fetchReimbursements}
+        />
+      )}
     </div>
   );
 }

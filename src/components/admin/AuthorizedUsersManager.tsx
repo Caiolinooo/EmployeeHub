@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { FiPlus, FiCheck, FiX, FiMail, FiPhone, FiGlobe, FiKey, FiRefreshCw, FiFilter, FiTrash2, FiAlertCircle } from 'react-icons/fi';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 type AuthorizedUser = {
   _id: string;
@@ -39,7 +40,8 @@ type AuthStats = {
 };
 
 export default function AuthorizedUsersManager() {
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
+  const { t } = useI18n();
   const [authorizedUsers, setAuthorizedUsers] = useState<AuthorizedUser[]>([]);
   const [stats, setStats] = useState<AuthStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -510,7 +512,7 @@ export default function AuthorizedUsersManager() {
             className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             <FiPlus className="mr-2" />
-            {showAddForm ? 'Cancelar' : 'Adicionar'}
+            {showAddForm ? t('common.cancel', 'Cancelar') : t('common.add', 'Adicionar')}
           </button>
 
           <button
@@ -521,7 +523,7 @@ export default function AuthorizedUsersManager() {
             className="flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
           >
             <FiRefreshCw className="mr-2" />
-            Atualizar
+            {t('common.refresh', 'Atualizar')}
           </button>
         </div>
 
@@ -543,7 +545,7 @@ export default function AuthorizedUsersManager() {
       {/* Formulário de adição */}
       {showAddForm && (
         <div className="bg-gray-50 p-4 rounded-lg mb-6">
-          <h3 className="text-lg font-semibold mb-4">Adicionar Autorização</h3>
+          <h3 className="text-lg font-semibold mb-4">{t('admin.addAuthorization', 'Adicionar Autorização')}</h3>
 
           <div className="flex flex-wrap gap-2 mb-4">
             <button
@@ -718,7 +720,7 @@ export default function AuthorizedUsersManager() {
                     type="submit"
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                   >
-                    {formType === 'invite' ? 'Gerar Código' : 'Adicionar'}
+                    {formType === 'invite' ? t('admin.generateCode', 'Gerar Código') : t('common.add', 'Adicionar')}
                   </button>
                 </div>
               </>
@@ -837,7 +839,7 @@ export default function AuthorizedUsersManager() {
                       <button
                         onClick={() => handleDelete(user._id)}
                         className="text-gray-600 hover:text-gray-900"
-                        title="Excluir"
+                        title={t('common.delete', 'Excluir')}
                       >
                         <FiTrash2 className="h-5 w-5" />
                       </button>
@@ -875,7 +877,7 @@ export default function AuthorizedUsersManager() {
                 onClick={() => setShowRejectModal(false)}
                 className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
               >
-                Cancelar
+                {t('common.cancel', 'Cancelar')}
               </button>
               <button
                 onClick={handleReject}

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 import { calculateEmployeePayroll } from '@/lib/payroll/calculations';
 import { PayrollApiResponse, PayrollCalculationResult, PayrollCalculationInput } from '@/types/payroll';
 
@@ -52,7 +52,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Buscar folha de pagamento
-    const { data: sheet, error: sheetError } = await supabase
+    const { data: sheet, error: sheetError } = await supabaseAdmin
       .from('payroll_sheets')
       .select(`
         *,
@@ -70,7 +70,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Buscar funcionários da empresa/departamento
-    let employeesQuery = supabase
+    let employeesQuery = supabaseAdminAdmin
       .from('payroll_employees')
       .select('*')
       .eq('company_id', sheet.company_id)

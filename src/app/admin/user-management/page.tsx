@@ -2,14 +2,14 @@
 
 import React from 'react';
 import UnifiedUserManager from '@/components/admin/UnifiedUserManager';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useRouter } from 'next/navigation';
 import { FiUsers, FiUploadCloud, FiUserPlus } from 'react-icons/fi';
 import Link from 'next/link';
 import { useI18n } from '@/contexts/I18nContext';
 
 export default function UserManagementPage() {
-  const { isAdmin, isAuthenticated, isLoading } = useAuth();
+  const { isAdmin, isAuthenticated, isLoading } = useSupabaseAuth();
   const router = useRouter();
   const { t } = useI18n();
 

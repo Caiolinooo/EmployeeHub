@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { FiGlobe, FiCheck } from 'react-icons/fi';
+import React, { useState, useEffect } from 'react';
+import { FiGlobe, FiCheck, FiLoader } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
 import { Locale } from '@/i18n';
 
@@ -13,6 +13,17 @@ interface LanguageSelectorProps {
 export default function LanguageSelector({ variant = 'dropdown', className = '' }: LanguageSelectorProps) {
   const { locale, setLocale, t, availableLocales } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
+  const [isChanging, setIsChanging] = useState(false);
+
+  // Reset changing state when locale actually changes
+  useEffect(() => {
+    if (isChanging) {
+      const timer = setTimeout(() => {
+        setIsChanging(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [locale, isChanging]);
 
   const getLanguageName = (localeCode: Locale) => {
     switch (localeCode) {
@@ -36,8 +47,24 @@ export default function LanguageSelector({ variant = 'dropdown', className = '' 
     }
   };
 
-  const handleSelectLanguage = (localeCode: Locale) => {
-    setLocale(localeCode);
+  const handleSelectLanguage = async (localeCode: Locale) => {
+    console.log('🌐 LanguageSelector: Selecionando idioma:', localeCode);
+    console.log('🌐 LanguageSelector: Idioma atual:', locale);
+
+    // Only change if different
+    if (localeCode !== locale) {
+      setIsChanging(true);
+      setLocale(localeCode);
+      console.log('🌐 LanguageSelector: Idioma alterado para:', localeCode);
+
+      // Small delay to show the change is happening
+      setTimeout(() => {
+        setIsChanging(false);
+      }, 500);
+    } else {
+      console.log('🌐 LanguageSelector: Idioma já é o atual, não alterando');
+    }
+
     setIsOpen(false);
   };
 
@@ -49,8 +76,13 @@ export default function LanguageSelector({ variant = 'dropdown', className = '' 
           onClick={() => setIsOpen(!isOpen)}
           className="flex items-center space-x-1 text-gray-700 hover:text-gray-900 focus:outline-none"
           aria-label={t('common.chooseLanguage')}
+          disabled={isChanging}
         >
-          <FiGlobe className="h-5 w-5" />
+          {isChanging ? (
+            <FiLoader className="h-5 w-5 animate-spin" />
+          ) : (
+            <FiGlobe className="h-5 w-5" />
+          )}
           <span className="inline-block">{getLanguageFlag(locale)}</span>
         </button>
 
@@ -132,14 +164,18 @@ export default function LanguageSelector({ variant = 'dropdown', className = '' 
   // Inline variant
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
+      {isChanging && (
+        <FiLoader className="h-4 w-4 animate-spin text-blue-500" />
+      )}
       {availableLocales.map((localeCode) => (
         <button
           key={localeCode}
           onClick={() => handleSelectLanguage(localeCode)}
-          className={`flex items-center px-2 py-1 rounded ${
+          className={`flex items-center px-2 py-1 rounded transition-colors ${
             locale === localeCode ? 'bg-gray-200 text-gray-900' : 'text-gray-700 hover:bg-gray-100'
-          }`}
+          } ${isChanging ? 'opacity-50 cursor-not-allowed' : ''}`}
           aria-label={getLanguageName(localeCode)}
+          disabled={isChanging}
         >
           <span className="mr-1">{getLanguageFlag(localeCode)}</span>
           <span className="text-sm">{localeCode.split('-')[0].toUpperCase()}</span>

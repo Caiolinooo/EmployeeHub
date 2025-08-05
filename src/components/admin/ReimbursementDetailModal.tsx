@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { FiX, FiCheck, FiDownload, FiFileText, FiDollarSign, FiUser, FiCalendar, FiClock, FiInfo, FiAlertTriangle } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface Reimbursement {
   id: string;
@@ -69,6 +70,7 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { t } = useI18n();
 
   if (!isOpen) return null;
 
@@ -192,7 +194,7 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-xl font-semibold text-gray-800 flex items-center">
             <FiFileText className="mr-2" />
-            Detalhes do Reembolso
+            {t('reimbursement.modal.title', 'Detalhes do Reembolso')}
           </h2>
           <button
             onClick={onClose}
@@ -209,22 +211,22 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
             <div className="bg-gray-50 p-4 rounded-lg">
               <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center">
                 <FiUser className="mr-2 text-abz-blue" />
-                Informações do Solicitante
+                {t('reimbursement.modal.applicantInfo', 'Informações do Solicitante')}
               </h3>
               <div className="space-y-2">
-                <p><span className="font-medium">Nome:</span> {reimbursement.nome}</p>
-                <p><span className="font-medium">Email:</span> {reimbursement.email}</p>
+                <p><span className="font-medium">{t('reimbursement.modal.name', 'Nome')}:</span> {reimbursement.nome}</p>
+                <p><span className="font-medium">{t('reimbursement.modal.email', 'Email')}:</span> {reimbursement.email}</p>
                 {reimbursement.telefone && (
-                  <p><span className="font-medium">Telefone:</span> {reimbursement.telefone}</p>
+                  <p><span className="font-medium">{t('reimbursement.modal.phone', 'Telefone')}:</span> {reimbursement.telefone}</p>
                 )}
                 {reimbursement.cpf && (
-                  <p><span className="font-medium">CPF:</span> {reimbursement.cpf}</p>
+                  <p><span className="font-medium">{t('reimbursement.modal.cpf', 'CPF')}:</span> {reimbursement.cpf}</p>
                 )}
                 {reimbursement.cargo && (
-                  <p><span className="font-medium">Cargo:</span> {reimbursement.cargo}</p>
+                  <p><span className="font-medium">{t('reimbursement.modal.position', 'Cargo')}:</span> {reimbursement.cargo}</p>
                 )}
                 {(reimbursement.centroCusto || reimbursement.centro_custo) && (
-                  <p><span className="font-medium">Centro de Custo:</span> {reimbursement.centroCusto || reimbursement.centro_custo}</p>
+                  <p><span className="font-medium">{t('reimbursement.modal.costCenter', 'Centro de Custo')}:</span> {reimbursement.centroCusto || reimbursement.centro_custo}</p>
                 )}
               </div>
             </div>
@@ -232,14 +234,14 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
             <div className="bg-gray-50 p-4 rounded-lg">
               <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center">
                 <FiDollarSign className="mr-2 text-abz-blue" />
-                Informações do Reembolso
+                {t('reimbursement.modal.reimbursementInfo', 'Informações do Reembolso')}
               </h3>
               <div className="space-y-2">
-                <p><span className="font-medium">Protocolo:</span> {reimbursement.protocolo}</p>
-                <p><span className="font-medium">Tipo:</span> {reimbursement.tipoReembolso || reimbursement.tipo_reembolso}</p>
-                <p><span className="font-medium">Valor:</span> {formatCurrency(reimbursement.valorTotal || reimbursement.valor_total)}</p>
-                <p><span className="font-medium">Data:</span> {formatDate(reimbursement.data || reimbursement.created_at)}</p>
-                <p><span className="font-medium">Status:</span>
+                <p><span className="font-medium">{t('reimbursement.modal.protocol', 'Protocolo')}:</span> {reimbursement.protocolo}</p>
+                <p><span className="font-medium">{t('reimbursement.modal.type', 'Tipo')}:</span> {reimbursement.tipoReembolso || reimbursement.tipo_reembolso}</p>
+                <p><span className="font-medium">{t('reimbursement.modal.value', 'Valor')}:</span> {formatCurrency(reimbursement.valorTotal || reimbursement.valor_total)}</p>
+                <p><span className="font-medium">{t('reimbursement.modal.date', 'Data')}:</span> {formatDate(reimbursement.data || reimbursement.created_at)}</p>
+                <p><span className="font-medium">{t('reimbursement.modal.status', 'Status')}:</span>
                   <span className={`ml-2 px-2 py-0.5 text-xs rounded-full
                     ${reimbursement.status === 'aprovado' ? 'bg-green-100 text-green-800' :
                       reimbursement.status === 'rejeitado' ? 'bg-red-100 text-red-800' :
@@ -256,7 +258,7 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
             <div className="mb-6">
               <h3 className="text-lg font-medium text-gray-800 mb-2 flex items-center">
                 <FiInfo className="mr-2 text-abz-blue" />
-                Descrição
+                {t('reimbursement.modal.description', 'Descrição')}
               </h3>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <p className="text-gray-700">{reimbursement.descricao}</p>
@@ -268,10 +270,10 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
           <div className="mb-6">
             <h3 className="text-lg font-medium text-gray-800 mb-2 flex items-center">
               <FiDollarSign className="mr-2 text-abz-blue" />
-              Método de Pagamento
+              {t('reimbursement.modal.paymentMethod', 'Método de Pagamento')}
             </h3>
             <div className="bg-gray-50 p-4 rounded-lg">
-              <p><span className="font-medium">Método:</span> {reimbursement.metodoPagamento || reimbursement.metodo_pagamento || 'Não informado'}</p>
+              <p><span className="font-medium">{t('reimbursement.modal.method', 'Método')}:</span> {reimbursement.metodoPagamento || reimbursement.metodo_pagamento || t('reimbursement.modal.notInformed', 'Não informado')}</p>
 
               {(reimbursement.metodoPagamento === 'deposito' || reimbursement.metodo_pagamento === 'deposito') && (
                 <div className="mt-2 ml-4">
@@ -380,7 +382,7 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
                   className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
                   disabled={loading}
                 >
-                  Cancelar
+                  {t('common.cancel', 'Cancelar')}
                 </button>
                 <button
                   onClick={handleRejectWithReason}
@@ -392,7 +394,7 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
                   ) : (
                     <FiX className="mr-2" />
                   )}
-                  Confirmar Rejeição
+                  {t('reimbursement.confirmRejection', 'Confirmar Rejeição')}
                 </button>
               </>
             ) : (
@@ -404,7 +406,7 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
                     // Pequeno atraso para garantir que o DOM seja atualizado
                     setTimeout(() => {
                       // Tentar focar no textarea
-                      const textarea = document.querySelector('textarea[placeholder="Informe o motivo da rejeição..."]');
+                      const textarea = document.querySelector(`textarea[placeholder="${t('reimbursement.rejectionReasonPlaceholder', 'Informe o motivo da rejeição...')}"]`);
                       if (textarea) {
                         (textarea as HTMLTextAreaElement).focus();
                       }

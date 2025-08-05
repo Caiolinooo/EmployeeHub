@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 import { PayrollCompany, PayrollCompanyForm, PayrollApiResponse, PayrollPaginatedResponse } from '@/types/payroll';
 
 /**
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const cnpj = searchParams.get('cnpj');
     const isActive = searchParams.get('isActive');
 
-    let query = supabase
+    let query = supabaseAdminAdmin
       .from('payroll_companies')
       .select('*', { count: 'exact' });
 
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se CNPJ já existe
-    const { data: existingCompany } = await supabase
+    const { data: existingCompany } = await supabaseAdmin
       .from('payroll_companies')
       .select('id')
       .eq('cnpj', body.cnpj)
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Criar empresa
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('payroll_companies')
       .insert([{
         name: body.name,

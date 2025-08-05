@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 import { PayrollCode, PayrollApiResponse, PayrollPaginatedResponse } from '@/types/payroll';
 
 /**
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const isActive = searchParams.get('isActive');
     const isSystem = searchParams.get('isSystem');
 
-    let query = supabase
+    let query = supabaseAdmin
       .from('payroll_codes')
       .select('*', { count: 'exact' });
 

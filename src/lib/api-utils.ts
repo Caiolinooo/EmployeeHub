@@ -48,7 +48,7 @@ export async function verifyAuth(request: NextRequest, requireAdmin = false) {
     }
 
     // Buscar usuário pelo ID
-    let { data: user, error } = await supabase
+    let { data: user } = await supabase
       .from('users_unified')
       .select('*')
       .eq('id', payload.userId)

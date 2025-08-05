@@ -201,7 +201,10 @@ export default function UnifiedUserManager() {
     console.log('UnifiedUserManager - Tab changed to:', activeTab);
     if (activeTab === 'users') {
       console.log('Iniciando busca de usuários devido à mudança de aba');
-      fetchUsers();
+      // Adicionar um pequeno delay para garantir que o componente esteja totalmente montado
+      setTimeout(() => {
+        fetchUsers();
+      }, 100);
     } else if (activeTab === 'authorized') {
       fetchAuthorizedUsers();
       fetchStats();
@@ -331,45 +334,17 @@ export default function UnifiedUserManager() {
     setLoading(true);
     setError(null);
     try {
-      // Tentar renovar o token primeiro
-      try {
-        const refreshToken = localStorage.getItem('token') || localStorage.getItem('abzToken');
-        if (refreshToken) {
-          console.log('Tentando renovar token antes de buscar usuários...');
-          const refreshResponse = await fetch('/api/auth/token-refresh', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${refreshToken}`,
-            },
-          });
-
-          if (refreshResponse.ok) {
-            const refreshData = await refreshResponse.json();
-            console.log('Token renovado com sucesso antes de buscar usuários');
-
-            if (refreshData.token && refreshData.token !== refreshToken) {
-              console.log('Atualizando token renovado no localStorage');
-              localStorage.setItem('token', refreshData.token);
-              // Remover o token antigo se existir
-              localStorage.removeItem('abzToken');
-            }
-          }
-        }
-      } catch (refreshError) {
-        console.error('Erro ao renovar token antes de buscar usuários:', refreshError);
-      }
-
-      // Obter o token (possivelmente renovado)
+      // Obter o token
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error('Não autorizado');
+        throw new Error('Token de autenticação não encontrado. Faça login novamente.');
       }
 
       console.log('Buscando usuários com token:', token.substring(0, 10) + '...');
 
-      // Usar o endpoint de usuários unificados para garantir que estamos obtendo os dados mais recentes
-      console.log('Iniciando requisição para /api/users-unified...');
+      // Usar a API unificada que é mais simples e confiável
+      console.log('Tentando API /api/users-unified...');
 
       // Adicionar timestamp para evitar cache
       const timestamp = new Date().getTime();
@@ -386,62 +361,8 @@ export default function UnifiedUserManager() {
       console.log('Resposta da API de usuários:', response.status, response.statusText);
 
       if (!response.ok) {
-        // Se receber 401 ou 403, tentar corrigir o token e tentar novamente
-        if (response.status === 401 || response.status === 403) {
-          console.log('Acesso negado, tentando corrigir token...');
-
-          try {
-            const fixResponse = await fetch('/api/auth/fix-token', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-              },
-            });
-
-            if (fixResponse.ok) {
-              const fixData = await fixResponse.json();
-              console.log('Token corrigido com sucesso');
-
-              if (fixData.token) {
-                console.log('Usando novo token para tentar novamente');
-                localStorage.setItem('token', fixData.token);
-                localStorage.removeItem('abzToken');
-
-                // Tentar novamente com o novo token usando a API direta do Supabase
-                const retryResponse = await fetch(`/api/users/supabase?_=${new Date().getTime()}`, {
-                  method: 'GET',
-                  headers: {
-                    'Authorization': `Bearer ${fixData.token}`,
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache',
-                    'Expires': '0'
-                  }
-                });
-
-                if (retryResponse.ok) {
-                  const retryText = await retryResponse.text();
-                  if (retryText && retryText.trim() !== '') {
-                    try {
-                      const retryData = JSON.parse(retryText);
-                      console.log('Usuários recebidos após correção de token:', retryData.length);
-                      setUsers(retryData);
-                      setFilteredUsers(retryData);
-                      setLoading(false);
-                      return;
-                    } catch (parseError) {
-                      console.error('Erro ao analisar resposta JSON após correção de token:', parseError);
-                    }
-                  }
-                }
-              }
-            }
-          } catch (fixError) {
-            console.error('Erro ao tentar corrigir token:', fixError);
-          }
-        }
-
         const errorText = await response.text();
-        let errorData = {};
+        let errorData: any = {};
 
         try {
           errorData = JSON.parse(errorText);
@@ -451,7 +372,13 @@ export default function UnifiedUserManager() {
         }
 
         console.error('Erro ao buscar usuários:', errorData);
-        throw new Error((errorData as any)?.error || `Erro ao carregar usuários: ${response.status} ${response.statusText}`);
+
+        // Se for erro de autenticação, mostrar mensagem específica
+        if (response.status === 401 || response.status === 403) {
+          throw new Error('Sessão expirada. Faça login novamente.');
+        }
+
+        throw new Error(errorData?.error || `Erro ao carregar usuários: ${response.status} ${response.statusText}`);
       }
 
       const responseText = await response.text();
@@ -470,83 +397,39 @@ export default function UnifiedUserManager() {
       // Log dos primeiros 200 caracteres da resposta para depuração
       console.log('Primeiros 200 caracteres da resposta:', responseText.substring(0, 200));
 
-      let data = [];
+      let data;
       try {
         data = JSON.parse(responseText);
-        console.log('Usuários recebidos:', data.length);
+        console.log('Dados recebidos:', Array.isArray(data) ? `Array com ${data.length} usuários` : typeof data);
 
-        if (data.length > 0) {
-          console.log('Amostra do primeiro usuário:', JSON.stringify(data[0], null, 2));
-          console.log('Campos do primeiro usuário:', Object.keys(data[0]).join(', '));
+        if (Array.isArray(data)) {
+          console.log('Usuários recebidos com sucesso:', data.length);
+          if (data.length > 0) {
+            console.log('Primeiro usuário:', JSON.stringify(data[0], null, 2));
+          }
+
+          // A API /api/users-unified já retorna os dados no formato correto
+          setUsers(data);
+          setFilteredUsers(data);
+          console.log('Estado de usuários atualizado com', data.length, 'registros');
         } else {
-          console.log('Array de usuários vazio retornado pela API');
+          console.error('Resposta não é um array:', data);
+          setUsers([]);
+          setFilteredUsers([]);
+          setError('Formato de resposta inválido. Esperado um array de usuários.');
         }
-
-        // Sempre mapear os dados para garantir o formato correto
-        console.log('Mapeando dados para o formato padrão...');
-
-        // Mapear para o formato correto independentemente da estrutura original
-        const mappedData = Array.isArray(data) ? data.map((user: any) => {
-          const mappedUser = {
-            _id: user.id || user._id || '',
-            firstName: user.first_name || user.firstName || 'Usuário',
-            lastName: user.last_name || user.lastName || 'Desconhecido',
-            email: user.email || '',
-            phoneNumber: user.phone_number || user.phoneNumber || '',
-            role: user.role || 'USER',
-            position: user.position || '',
-            department: user.department || '',
-            active: user.active !== undefined ? user.active : true,
-            createdAt: user.created_at || user.createdAt || new Date().toISOString(),
-            updatedAt: user.updated_at || user.updatedAt || new Date().toISOString(),
-            accessPermissions: user.access_permissions || user.accessPermissions || {},
-            isAuthorized: user.is_authorized || user.isAuthorized || false,
-            authorizationStatus: user.authorization_status || user.authorizationStatus || null
-          };
-
-          console.log(`Usuário mapeado: ${mappedUser.firstName} ${mappedUser.lastName} (${mappedUser._id})`);
-          return mappedUser;
-        }) : [];
-
-        console.log('Total de dados mapeados:', mappedData.length);
-
-        if (mappedData.length > 0) {
-          console.log('Exemplo de usuário mapeado:', JSON.stringify(mappedData[0], null, 2));
-        }
-
-        // Atualizar o estado com os dados mapeados
-        setUsers(mappedData);
-        setFilteredUsers(mappedData);
-        console.log('Estado de usuários atualizado com', mappedData.length, 'registros');
-
-        // Verificar se os dados foram definidos corretamente
-        setTimeout(() => {
-          console.log('Verificando estado após atualização:');
-          console.log('- users.length:', users.length);
-          console.log('- filteredUsers.length:', filteredUsers.length);
-        }, 100);
       } catch (parseError) {
         console.error('Erro ao analisar resposta JSON:', parseError);
-        console.log('Primeiros 100 caracteres da resposta:', responseText.substring(0, 100));
+        console.log('Resposta que causou erro:', responseText.substring(0, 200));
         throw new Error('Erro ao processar dados de usuários. Formato inválido.');
       }
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
-      setError(`Erro ao carregar usuários: ${error instanceof Error ? error.message : String(error)}`);
-
-      // Definir um array vazio em caso de erro para evitar que a interface fique presa em "Carregando..."
+      setError(error instanceof Error ? error.message : 'Erro desconhecido ao carregar usuários');
       setUsers([]);
       setFilteredUsers([]);
     } finally {
       setLoading(false);
-
-      // Garantir que o estado de carregamento seja desativado mesmo em caso de erro
-      setTimeout(() => {
-        if (loading) {
-          console.log('Forçando desativação do estado de carregamento após timeout');
-          setLoading(false);
-        }
-      }, 5000);
     }
   };
 
@@ -1312,10 +1195,10 @@ export default function UnifiedUserManager() {
                   fetchUsers();
                 }}
                 className="flex items-center px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-                title="Atualizar lista de usuários"
+                title={t('admin.refreshUserList', 'Atualizar lista de usuários')}
               >
                 <FiRefreshCw className="mr-1" />
-                Atualizar
+                {t('common.refresh', 'Atualizar')}
               </button>
             </div>
 
@@ -1324,7 +1207,7 @@ export default function UnifiedUserManager() {
               className="flex items-center px-4 py-2 bg-abz-blue text-white rounded-md hover:bg-abz-blue-dark transition-colors"
             >
               <FiPlus className="mr-2" />
-              Novo Usuário
+              {t('userEditor.newUser', 'Novo Usuário')}
             </button>
           </div>
 
@@ -1549,7 +1432,7 @@ export default function UnifiedUserManager() {
                 className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
                 <FiPlus className="mr-2" />
-                {showAddForm ? 'Cancelar' : 'Adicionar'}
+                {showAddForm ? t('common.cancel', 'Cancelar') : t('common.add', 'Adicionar')}
               </button>
 
               <button
@@ -1560,7 +1443,7 @@ export default function UnifiedUserManager() {
                 className="flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
               >
                 <FiRefreshCw className="mr-2" />
-                Atualizar
+                {t('common.refresh', 'Atualizar')}
               </button>
             </div>
 
@@ -1930,23 +1813,23 @@ export default function UnifiedUserManager() {
       {showDeleteConfirm && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-4">Confirmar Exclusão</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('common.confirmDelete', 'Confirmar Exclusão')}</h3>
             <p className="mb-4">
-              Tem certeza que deseja excluir o usuário <strong>{selectedUser.firstName} {selectedUser.lastName}</strong>?
-              Esta ação não pode ser desfeita.
+              {t('admin.users.confirmDeleteMessage', 'Tem certeza que deseja excluir o usuário')} <strong>{selectedUser.firstName} {selectedUser.lastName}</strong>?
+              {t('admin.users.actionCannotBeUndone', 'Esta ação não pode ser desfeita.')}
             </p>
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
                 className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
               >
-                Cancelar
+                {t('common.cancel', 'Cancelar')}
               </button>
               <button
                 onClick={handleDeleteUser}
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
               >
-                Excluir
+                {t('common.delete', 'Excluir')}
               </button>
             </div>
           </div>

@@ -29,18 +29,16 @@ export default function ClientProviders({ children }: { children: React.ReactNod
     <>
       <GlobalErrorHandler />
       <SupabaseAuthProvider>
-        <AuthProvider>
-          <I18nProvider>
-            <SiteConfigProvider>
-              <SiteHead />
-              {/* Only render components that might cause hydration issues when mounted on client */}
-              {isMounted && <LanguageDialog />}
-              {isMounted && <ToastContainer position="top-right" theme="colored" />}
-              {/* Render the children directly without the problematic icon wrappers */}
-              {children}
-            </SiteConfigProvider>
-          </I18nProvider>
-        </AuthProvider>
+        <I18nProvider>
+          <SiteConfigProvider>
+            <SiteHead />
+            {/* Only render components that might cause hydration issues when mounted on client */}
+            {isMounted && <LanguageDialog />}
+            {isMounted && <ToastContainer position="top-right" theme="colored" />}
+            {/* Render the children directly without the problematic icon wrappers */}
+            {children}
+          </SiteConfigProvider>
+        </I18nProvider>
       </SupabaseAuthProvider>
     </>
   );

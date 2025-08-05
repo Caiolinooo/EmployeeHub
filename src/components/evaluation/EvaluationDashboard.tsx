@@ -42,10 +42,10 @@ export default function EvaluationDashboard() {
   // Verificar se o usuário tem acesso ao módulo de avaliação
   useEffect(() => {
     if (!hasEvaluationAccess && !isAdmin && !isManager) {
-      toast.error('Você não tem permissão para acessar o módulo de avaliação.');
+      toast.error(t('evaluation.noPermission', 'You do not have permission to access the evaluation module.'));
       router.push('/dashboard');
     }
-  }, [hasEvaluationAccess, isAdmin, isManager, router]);
+  }, [hasEvaluationAccess, isAdmin, isManager, router, t]);
 
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,7 +64,7 @@ export default function EvaluationDashboard() {
 
       // Verificar se o usuário está autenticado
       if (!user || !user.id) {
-        throw new Error('Usuário não autenticado');
+        throw new Error(t('auth.userNotAuthenticated', 'User not authenticated'));
       }
 
       // Verificar se a view existe antes de tentar consultar
@@ -167,16 +167,16 @@ export default function EvaluationDashboard() {
       console.error('Erro ao carregar avaliações:', err);
 
       // Tratar o erro de forma mais amigável
-      let errorMessage = 'Erro ao carregar avaliações';
+      let errorMessage = t('evaluation.errorLoadingEvaluations', 'Error loading evaluations');
 
       if (err instanceof Error) {
         // Verificar se é um erro específico do Supabase
         if (err.message.includes('relation "vw_avaliacoes_desempenho" does not exist')) {
-          errorMessage = 'A visualização de avaliações não está configurada. Entre em contato com o administrador.';
+          errorMessage = t('evaluation.viewNotConfigured', 'The evaluation view is not configured. Contact the administrator.');
         } else if (err.message.includes('permission denied')) {
-          errorMessage = 'Você não tem permissão para acessar as avaliações.';
+          errorMessage = t('evaluation.noPermissionAccess', 'You do not have permission to access evaluations.');
         } else {
-          errorMessage = `Erro: ${err.message}`;
+          errorMessage = `${t('common.error', 'Error')}: ${err.message}`;
         }
       }
 
@@ -207,7 +207,7 @@ export default function EvaluationDashboard() {
     if (isAdmin || isManager) {
       return (
         <p className="text-sm text-gray-600">
-          <span className="font-medium">Avaliador:</span> {evaluation.avaliador_nome}
+          <span className="font-medium">{t('evaluation.evaluator', 'Evaluator')}:</span> {evaluation.avaliador_nome}
           {evaluation.avaliador_cargo && ` (${evaluation.avaliador_cargo})`}
         </p>
       );
@@ -220,9 +220,9 @@ export default function EvaluationDashboard() {
     if (isAdmin || isManager) {
       return (
         <p className="text-xs text-gray-500 mt-2">
-          Criado em: {formatDate(evaluation.created_at)}
+          {t('common.createdAt', 'Created at')}: {formatDate(evaluation.created_at)}
           {evaluation.updated_at && evaluation.updated_at !== evaluation.created_at &&
-            ` | Atualizado em: ${formatDate(evaluation.updated_at)}`}
+            ` | ${t('common.updatedAt', 'Updated at')}: ${formatDate(evaluation.updated_at)}`}
         </p>
       );
     }
@@ -273,10 +273,10 @@ export default function EvaluationDashboard() {
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
                 <option value="">{t('common.all')}</option>
-                <option value="pendente">Pendente</option>
-                <option value="em_andamento">Em Andamento</option>
-                <option value="concluida">Concluída</option>
-                <option value="cancelada">Cancelada</option>
+                <option value="pendente">{t('evaluation.status.pending', 'Pending')}</option>
+                <option value="em_andamento">{t('evaluation.status.inProgress', 'In Progress')}</option>
+                <option value="concluida">{t('evaluation.status.completed', 'Completed')}</option>
+                <option value="cancelada">{t('evaluation.status.cancelled', 'Cancelled')}</option>
               </select>
               <FiFilter className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>
@@ -322,13 +322,13 @@ export default function EvaluationDashboard() {
                     {evaluation.funcionario_nome}
                   </h3>
                   <p className="text-sm text-gray-600">
-                    <span className="font-medium">Cargo:</span> {evaluation.funcionario_cargo || 'Não informado'}
+                    <span className="font-medium">{t('common.position', 'Position')}:</span> {evaluation.funcionario_cargo || t('common.notInformed', 'Not informed')}
                     {evaluation.funcionario_departamento && ` | ${evaluation.funcionario_departamento}`}
                   </p>
                   {renderEvaluatorInfo(evaluation)}
                   <p className="text-sm text-gray-600 mt-2">
-                    <span className="font-medium">Período:</span> {evaluation.periodo}
-                    <span className="ml-3 font-medium">Status:</span>
+                    <span className="font-medium">{t('evaluation.period', 'Period')}:</span> {evaluation.periodo}
+                    <span className="ml-3 font-medium">{t('common.status', 'Status')}:</span>
                     <span className={`ml-1 px-2 py-0.5 text-xs rounded-full inline-flex items-center
                       ${evaluation.status === 'concluida' ? 'bg-green-100 text-green-800' :
                         evaluation.status === 'cancelada' ? 'bg-red-100 text-red-800' :
@@ -348,7 +348,7 @@ export default function EvaluationDashboard() {
                     className="flex items-center px-4 py-2 bg-abz-blue text-white rounded-md hover:bg-abz-blue-dark"
                   >
                     <FiEye className="mr-2" />
-                    Detalhes
+                    {t('common.details', 'Details')}
                   </button>
                 </div>
               </div>

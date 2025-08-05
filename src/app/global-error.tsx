@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { FiAlertTriangle, FiRefreshCw, FiHome } from 'react-icons/fi';
+import { useI18n } from '@/contexts/I18nContext';
 
 export default function GlobalError({
   error,
@@ -10,6 +11,8 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { t } = useI18n();
+
   // Log the error to help with debugging
   React.useEffect(() => {
     console.error('Global application error:', error);
@@ -36,11 +39,11 @@ export default function GlobalError({
             </div>
 
             <h1 className="text-2xl font-bold text-gray-800 mb-2">
-              🇧🇷 Erro na Aplicação
+              {t('errors.errorOccurred', 'Erro na Aplicação')}
             </h1>
 
             <p className="text-gray-600 mb-6">
-              Desculpe, ocorreu um erro inesperado na aplicação. Nossa equipe foi notificada.
+              {t('errors.somethingWentWrong', 'Desculpe, ocorreu um erro inesperado na aplicação. Nossa equipe foi notificada.')}
             </p>
 
             {error.message && (

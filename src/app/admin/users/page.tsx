@@ -19,7 +19,8 @@ import {
   FiUserCheck,
   FiSettings
 } from 'react-icons/fi';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 import UserEditor, { UserEditorData } from '@/components/admin/UserEditor';
 import UserAccessHistory from '@/components/admin/UserAccessHistory';
 import UserPasswordReset from '@/components/admin/UserPasswordReset';
@@ -41,7 +42,8 @@ interface User {
 }
 
 export default function UsersPage() {
-  const { isAdmin, isAuthenticated } = useAuth();
+  const { isAdmin, isAuthenticated } = useSupabaseAuth();
+  const { t } = useI18n();
   const router = useRouter();
 
   const [users, setUsers] = useState<User[]>([]);
@@ -290,7 +292,7 @@ export default function UsersPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-abz-blue flex items-center">
-          <FiUsers className="mr-2" /> Gerenciamento de Usuários
+          <FiUsers className="mr-2" /> {t('userEditor.usersSection', 'Gerenciamento de Usuários')}
         </h1>
         <div className="flex space-x-3">
           <button
@@ -298,14 +300,14 @@ export default function UsersPage() {
             className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
           >
             <FiUserCheck className="mr-2" />
-            Usuários Autorizados
+            {t('userEditor.authorizedUsers', 'Usuários Autorizados')}
           </button>
           <button
             onClick={handleAddUser}
             className="flex items-center px-4 py-2 bg-abz-blue text-white rounded-md hover:bg-abz-blue-dark transition-colors"
           >
             <FiPlus className="mr-2" />
-            Novo Usuário
+            {t('userEditor.newUser', 'Novo Usuário')}
           </button>
         </div>
       </div>
@@ -510,17 +512,17 @@ export default function UsersPage() {
       {showDeleteConfirm && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Confirmar Exclusão</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('common.confirmDelete', 'Confirmar Exclusão')}</h2>
             <p className="text-gray-700 mb-6">
-              Tem certeza que deseja excluir o usuário <strong>{selectedUser.firstName} {selectedUser.lastName}</strong>?
-              Esta ação não pode ser desfeita.
+              {t('admin.users.confirmDeleteMessage', 'Tem certeza que deseja excluir o usuário')} <strong>{selectedUser.firstName} {selectedUser.lastName}</strong>?
+              {t('admin.users.actionCannotBeUndone', 'Esta ação não pode ser desfeita.')}
             </p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
                 className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
               >
-                Cancelar
+                {t('common.cancel', 'Cancelar')}
               </button>
               <button
                 onClick={handleDeleteUser}

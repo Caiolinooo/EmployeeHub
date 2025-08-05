@@ -18,38 +18,103 @@ interface I18nProviderProps {
 }
 
 export function I18nProvider({ children }: I18nProviderProps) {
-  const [locale, setLocaleState] = useState<Locale>(getInitialLocale());
+  // Initialize with default locale to avoid hydration mismatch
+  const [locale, setLocaleState] = useState<Locale>('pt-BR');
   const [mounted, setMounted] = useState(false);
 
-  // Set mounted state when component mounts
+  // Set mounted state and initialize locale on client side
   useEffect(() => {
     setMounted(true);
+
+    // Get the actual initial locale on client side
+    const initialLocale = getInitialLocale();
+    console.log('🌐 Locale inicial detectado:', initialLocale);
+
+    if (initialLocale !== locale) {
+      setLocaleState(initialLocale);
+    }
+
+    // Set document language
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = initialLocale;
+    }
   }, []);
 
   // Function to set locale and save to localStorage
   const setLocale = (newLocale: Locale) => {
-    console.log('Alterando idioma para:', newLocale);
+    console.log('🌐 Alterando idioma para:', newLocale);
+    console.log('🌐 Idioma anterior:', locale);
+
+    // Verificar se o idioma é válido
+    if (!Object.keys(locales).includes(newLocale)) {
+      console.error('🌐 Idioma inválido:', newLocale);
+      return;
+    }
+
+    // Update state first
     setLocaleState(newLocale);
+
+    // Save to localStorage
     setLocalStorageLocale(newLocale);
 
     // Atualizar o atributo lang do documento
-    document.documentElement.lang = newLocale;
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = newLocale;
+    }
 
     // Definir um cookie para persistir o idioma entre sessões
-    document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
+    if (typeof document !== 'undefined') {
+      document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
+      console.log('🌐 Cookie definido para:', newLocale);
+    }
 
     // Forçar uma atualização da interface
     if (typeof window !== 'undefined') {
       // Disparar um evento personalizado para notificar outros componentes
       window.dispatchEvent(new CustomEvent('localeChanged', { detail: { locale: newLocale } }));
+      console.log('🌐 Evento localeChanged disparado para:', newLocale);
+
+      // Force a re-render by triggering a storage event
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'locale',
+        newValue: newLocale,
+        oldValue: locale
+      }));
     }
   };
 
-  // Set initial locale on mount
+  // Listen for locale changes from other tabs/windows
   useEffect(() => {
-    if (mounted) {
-      document.documentElement.lang = locale;
-    }
+    if (!mounted) return;
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'locale' && e.newValue) {
+        const newLocale = e.newValue as Locale;
+        if (Object.keys(locales).includes(newLocale) && newLocale !== locale) {
+          console.log('🌐 Locale alterado em outra aba:', newLocale);
+          setLocaleState(newLocale);
+          if (typeof document !== 'undefined') {
+            document.documentElement.lang = newLocale;
+          }
+        }
+      }
+    };
+
+    const handleLocaleChange = (e: CustomEvent) => {
+      const newLocale = e.detail.locale as Locale;
+      if (Object.keys(locales).includes(newLocale) && newLocale !== locale) {
+        console.log('🌐 Locale alterado via evento customizado:', newLocale);
+        setLocaleState(newLocale);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('localeChanged', handleLocaleChange as EventListener);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('localeChanged', handleLocaleChange as EventListener);
+    };
   }, [mounted, locale]);
 
   // Translation function

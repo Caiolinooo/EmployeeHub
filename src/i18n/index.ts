@@ -12,6 +12,17 @@ export const locales: Record<Locale, any> = {
 export const defaultLocale: Locale = 'pt-BR';
 
 export function getTranslation(locale: Locale, key: string, defaultValue?: string): string {
+  // Validate inputs
+  if (!key || typeof key !== 'string') {
+    console.warn('🌐 Invalid translation key:', key);
+    return defaultValue || key || '';
+  }
+
+  if (!locale || !Object.keys(locales).includes(locale)) {
+    console.warn('🌐 Invalid locale:', locale, 'falling back to default');
+    locale = defaultLocale;
+  }
+
   // Check cache first
   const cacheKey = `i18n:${locale}:${key}`;
   const cachedValue = getCacheValue<string>(cacheKey);
@@ -35,7 +46,7 @@ export function getTranslation(locale: Locale, key: string, defaultValue?: strin
 
   // Try to find the translation in the current locale
   for (const k of keys) {
-    if (!translation || !translation[k]) {
+    if (!translation || typeof translation !== 'object' || !translation[k]) {
       found = false;
       break;
     }
@@ -43,7 +54,7 @@ export function getTranslation(locale: Locale, key: string, defaultValue?: strin
   }
 
   // If found in current locale, cache and return it
-  if (found) {
+  if (found && typeof translation === 'string') {
     setCacheValue(cacheKey, translation);
     return translation;
   }
@@ -55,14 +66,14 @@ export function getTranslation(locale: Locale, key: string, defaultValue?: strin
     found = true;
 
     for (const k of modifiedKeys) {
-      if (!translation || !translation[k]) {
+      if (!translation || typeof translation !== 'object' || !translation[k]) {
         found = false;
         break;
       }
       translation = translation[k];
     }
 
-    if (found) {
+    if (found && typeof translation === 'string') {
       setCacheValue(cacheKey, translation);
       return translation;
     }
@@ -75,14 +86,15 @@ export function getTranslation(locale: Locale, key: string, defaultValue?: strin
     found = true;
 
     for (const k of keys) {
-      if (!translation || !translation[k]) {
+      if (!translation || typeof translation !== 'object' || !translation[k]) {
         found = false;
         break;
       }
       translation = translation[k];
     }
 
-    if (found) {
+    if (found && typeof translation === 'string') {
+      console.log(`🌐 Found translation for '${key}' in default locale ${defaultLocale}`);
       setCacheValue(cacheKey, translation);
       return translation;
     }
@@ -94,14 +106,15 @@ export function getTranslation(locale: Locale, key: string, defaultValue?: strin
       found = true;
 
       for (const k of modifiedKeys) {
-        if (!translation || !translation[k]) {
+        if (!translation || typeof translation !== 'object' || !translation[k]) {
           found = false;
           break;
         }
         translation = translation[k];
       }
 
-      if (found) {
+      if (found && typeof translation === 'string') {
+        console.log(`🌐 Found translation for modified key '${modifiedKey}' in default locale ${defaultLocale}`);
         setCacheValue(cacheKey, translation);
         return translation;
       }
@@ -110,12 +123,14 @@ export function getTranslation(locale: Locale, key: string, defaultValue?: strin
 
   // Cache and return default value or key if not found in any locale
   const result = defaultValue || key;
+  console.warn(`🌐 Translation missing for key '${key}' in locale '${locale}', using fallback: '${result}'`);
   setCacheValue(cacheKey, result);
   return result;
 }
 
 export function getBrowserLocale(): Locale {
   if (typeof window === 'undefined') {
+    console.log('🌐 getBrowserLocale: Servidor, retornando padrão');
     return defaultLocale;
   }
 
@@ -127,17 +142,25 @@ export function getBrowserLocale(): Locale {
                          (navigator as any).systemLanguage ||
                          defaultLocale;
 
-    console.log('Idioma detectado do navegador:', browserLocale);
+    console.log('🌐 Idioma detectado do navegador:', browserLocale);
 
     // Verificar se o idioma começa com 'pt' (português)
     if (browserLocale.toLowerCase().startsWith('pt')) {
+      console.log('🌐 Navegador detectado como português, retornando pt-BR');
       return 'pt-BR';
     }
 
-    // Caso contrário, usar inglês
+    // Verificar se o idioma começa com 'en' (inglês)
+    if (browserLocale.toLowerCase().startsWith('en')) {
+      console.log('🌐 Navegador detectado como inglês, retornando en-US');
+      return 'en-US';
+    }
+
+    // Para outros idiomas, usar inglês como padrão
+    console.log('🌐 Navegador com idioma não suportado, retornando en-US');
     return 'en-US';
   } catch (error) {
-    console.error('Erro ao detectar idioma do navegador:', error);
+    console.error('🌐 Erro ao detectar idioma do navegador:', error);
     return defaultLocale;
   }
 }
@@ -165,18 +188,42 @@ export function setLocalStorageLocale(locale: Locale): void {
 }
 
 export function getInitialLocale(): Locale {
-  // First check localStorage
+  console.log('🌐 Obtendo idioma inicial...');
+
+  // Only run on client side to avoid hydration issues
+  if (typeof window === 'undefined') {
+    console.log('🌐 Servidor: retornando idioma padrão pt-BR');
+    return defaultLocale;
+  }
+
+  // First check localStorage - this should have priority over browser detection
   const localStorageLocale = getLocalStorageLocale();
   if (localStorageLocale) {
+    console.log('🌐 Idioma encontrado no localStorage:', localStorageLocale);
     return localStorageLocale;
   }
 
-  // Then check browser locale
-  const browserLocale = getBrowserLocale();
-  if (browserLocale) {
-    return browserLocale;
+  // Check for cookie (for server-side rendering)
+  if (typeof document !== 'undefined') {
+    const cookieLocale = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('NEXT_LOCALE='))
+      ?.split('=')[1] as Locale;
+
+    if (cookieLocale && Object.keys(locales).includes(cookieLocale)) {
+      console.log('🌐 Idioma encontrado no cookie:', cookieLocale);
+      // Also save to localStorage for consistency
+      setLocalStorageLocale(cookieLocale);
+      return cookieLocale;
+    }
   }
 
-  // Fallback to default locale
-  return defaultLocale;
+  // Only use browser locale if no user preference is set
+  const browserLocale = getBrowserLocale();
+  console.log('🌐 Usando idioma do navegador:', browserLocale);
+
+  // Save the detected locale to localStorage for future use
+  setLocalStorageLocale(browserLocale);
+
+  return browserLocale;
 }

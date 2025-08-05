@@ -44,7 +44,7 @@ const ContactPopup: React.FC<ContactPopupProps> = ({ onClose }) => {
               <FiMail className="text-blue-600 w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-medium text-gray-800">Email</h3>
+              <h3 className="font-medium text-gray-800">{t('common.email')}</h3>
               <a href="mailto:logistica@groupabz.com" className="text-blue-600 hover:underline">
                 logistica@groupabz.com
               </a>
@@ -56,12 +56,12 @@ const ContactPopup: React.FC<ContactPopupProps> = ({ onClose }) => {
               <FiPhone className="text-green-600 w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-medium text-gray-800">Telefone</h3>
+              <h3 className="font-medium text-gray-800">{t('common.phone')}</h3>
               <a href="tel:+5522992074646" className="text-blue-600 hover:underline">
                 (22) 99207-4646
               </a>
               <p className="text-sm text-gray-500 mt-1">
-                Segunda a Sexta, das 9h às 18h
+                {t('contact.businessHoursTime')}
               </p>
             </div>
           </div>

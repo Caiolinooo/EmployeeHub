@@ -2,14 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { FiArrowLeft, FiUserPlus, FiSave, FiX } from 'react-icons/fi';
 import Link from 'next/link';
 import { useI18n } from '@/contexts/I18nContext';
 import UserEditor from '@/components/admin/UserEditor';
 
 export default function AddUserPage() {
-  const { isAdmin, isAuthenticated, isLoading } = useAuth();
+  const { isAdmin, isAuthenticated, isLoading } = useSupabaseAuth();
   const router = useRouter();
   const { t } = useI18n();
   const [error, setError] = useState<string | null>(null);

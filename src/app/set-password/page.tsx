@@ -4,7 +4,7 @@ import { useState, FormEvent, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { FiLock, FiEye, FiEyeOff, FiShield, FiAlertCircle, FiCheck } from 'react-icons/fi';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useSiteConfig } from '@/contexts/SiteConfigContext';
 
@@ -18,7 +18,7 @@ export default function SetPassword() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const { isAuthenticated, isLoading, passwordExpired, updatePassword } = useAuth();
+  const { isAuthenticated, isLoading, passwordExpired, updatePassword } = useSupabaseAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const inviteCode = searchParams?.get('invite');

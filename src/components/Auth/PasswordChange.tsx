@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { FiCheck, FiAlertTriangle, FiEye, FiEyeOff } from 'react-icons/fi';
 
 export default function PasswordChange() {
-  const { updatePassword } = useAuth();
+  const { updatePassword } = useSupabaseAuth();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

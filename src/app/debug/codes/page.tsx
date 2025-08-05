@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { FiRefreshCw, FiSearch, FiCopy, FiCheck } from 'react-icons/fi';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface CodeEntry {
   identifier: string;
@@ -13,6 +14,7 @@ interface CodeEntry {
 }
 
 export default function DebugCodesPage() {
+  const { t } = useI18n();
   const [codes, setCodes] = useState<CodeEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -103,24 +105,24 @@ export default function DebugCodesPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por email, telefone ou código..."
+              placeholder={t('common.search', 'Buscar por email, telefone ou código...')}
               className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <FiSearch className="absolute left-3 top-3 text-gray-400" />
           </div>
         </div>
         
-        {loading && <p className="text-gray-500">Carregando códigos...</p>}
-        
+        {loading && <p className="text-gray-500">{t('common.loading', 'Carregando códigos...')}</p>}
+
         {error && (
           <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6">
-            <p className="font-bold">Erro</p>
+            <p className="font-bold">{t('common.error', 'Erro')}</p>
             <p>{error}</p>
           </div>
         )}
-        
+
         {!loading && !error && filteredCodes.length === 0 && (
-          <p className="text-gray-500">Nenhum código ativo encontrado.</p>
+          <p className="text-gray-500">{t('debug.noCodesFound', 'Nenhum código ativo encontrado.')}</p>
         )}
         
         {filteredCodes.length > 0 && (
