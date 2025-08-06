@@ -460,21 +460,48 @@ export async function POST(request: NextRequest) {
       // Não interromper o fluxo se o histórico falhar
     }
 
-    // Enviar código de verificação por e-mail se tiver email
+    // Enviar emails baseado no status do bypass
     let sendResult: any = { success: false, previewUrl: undefined };
-    if (email) {
-      sendResult = await sendVerificationEmail(email, verificationCode);
-    }
 
-    // Enviar e-mail de confirmação para o usuário se tiver email
     if (email) {
-      try {
-        console.log(`Enviando email de confirmação para ${email}`);
-        const emailResult = await sendNewUserWelcomeEmail(email, firstName);
-        console.log(`Resultado do envio de email: ${emailResult.success ? 'Sucesso' : 'Falha'}`);
-      } catch (emailError) {
-        console.error('Erro ao enviar email de confirmação:', emailError);
-        // Não interromper o fluxo se o email falhar
+      if (approvalSettings.bypassApproval) {
+        // Com bypass ativo: enviar apenas email de verificação por link
+        console.log('Bypass ativo - enviando apenas email de verificação por link');
+
+        // Gerar token de verificação por email
+        const emailVerificationToken = require('uuid').v4();
+
+        // Atualizar usuário com token de verificação
+        const { error: updateError } = await supabase
+          .from('users_unified')
+          .update({
+            email_verification_token: emailVerificationToken,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', userData.id);
+
+        if (updateError) {
+          console.error('Erro ao atualizar token de verificação:', updateError);
+        }
+
+        // Enviar email com link de verificação
+        const { sendEmailVerificationLink } = await import('@/lib/email-verification');
+        sendResult = await sendEmailVerificationLink(email, firstName, emailVerificationToken);
+
+      } else {
+        // Sem bypass: fluxo tradicional com código
+        console.log('Bypass inativo - enviando código de verificação');
+        sendResult = await sendVerificationEmail(email, verificationCode);
+
+        // Enviar e-mail de confirmação para o usuário
+        try {
+          console.log(`Enviando email de confirmação para ${email}`);
+          const emailResult = await sendNewUserWelcomeEmail(email, firstName);
+          console.log(`Resultado do envio de email: ${emailResult.success ? 'Sucesso' : 'Falha'}`);
+        } catch (emailError) {
+          console.error('Erro ao enviar email de confirmação:', emailError);
+          // Não interromper o fluxo se o email falhar
+        }
       }
     }
 

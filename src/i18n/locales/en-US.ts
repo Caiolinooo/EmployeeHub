@@ -239,6 +239,12 @@ export default {
     completeRegistration: 'Complete your registration to access the system',
     registrationIncomplete: 'Incomplete registration',
     registrationSuccessRedirect: 'Registration completed! Redirecting to dashboard...',
+    protocolNumber: 'Protocol Number',
+    backToLogin: 'Back to Login',
+    successMessage: 'Your registration has been completed successfully. Please check your email to confirm your account.',
+    successMessageActive: 'Your registration has been completed successfully and your account is already active.',
+    loginNow: 'You can now log in immediately with your email or phone.',
+    checkEmail: 'Please check your email to activate your account.',
     notRegisteredYet: 'This email/phone is not yet registered. Please complete your registration below.',
   },
   viewer: {

@@ -269,6 +269,12 @@ export default {
     completeRegistration: 'Complete seu cadastro para acessar o sistema',
     registrationIncomplete: 'Registro incompleto',
     registrationSuccessRedirect: 'Registro concluído! Redirecionando para o dashboard...',
+    protocolNumber: 'Número do Protocolo',
+    backToLogin: 'Voltar ao Login',
+    successMessage: 'Seu registro foi concluído com sucesso. Verifique seu e-mail para confirmar seu cadastro.',
+    successMessageActive: 'Seu registro foi concluído com sucesso e sua conta já está ativa.',
+    loginNow: 'Você já pode fazer login imediatamente com seu e-mail ou telefone.',
+    checkEmail: 'Verifique seu e-mail para ativar sua conta.',
     notRegisteredYet: 'Este email/telefone ainda não está cadastrado. Por favor, complete seu cadastro abaixo.'
   },
   dashboard: {
