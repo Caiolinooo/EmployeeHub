@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FiSettings, FiGrid, FiUsers, FiFileText, FiMenu, FiX, FiLogOut, FiLayers, FiList, FiEdit, FiUser, FiUserCheck, FiDollarSign, FiCheck, FiTool } from 'react-icons/fi';
+import { FiSettings, FiGrid, FiUsers, FiFileText, FiMenu, FiX, FiLogOut, FiLayers, FiList, FiEdit, FiUser, FiUserCheck, FiDollarSign, FiCheck, FiTool, FiKey } from 'react-icons/fi';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import Footer from '@/components/Footer';
@@ -21,6 +21,7 @@ const adminMenuItems = [
   { id: 'documents', href: '/admin/documents', label: 'admin.documentsSection', icon: FiFileText },
   { id: 'news', href: '/admin/news', label: 'admin.news', icon: FiEdit },
   { id: 'user-management', href: '/admin/user-management', label: 'admin.usersSection', icon: FiUsers },
+  { id: 'role-permissions', href: '/admin/role-permissions', label: 'admin.rolePermissions', icon: FiKey },
   { id: 'user-approval-settings', href: '/admin/user-approval-settings', label: 'Configurações de Aprovação', icon: FiUserCheck },
   // Seção de Reembolsos
   { id: 'reimbursement-dashboard', href: '/reembolso?tab=dashboard', label: 'Meus Reembolsos', icon: FiDollarSign },

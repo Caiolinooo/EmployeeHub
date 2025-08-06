@@ -101,14 +101,14 @@ export async function POST(request: NextRequest) {
     if (authError) {
       console.error('Erro ao criar usuário na autenticação:', authError);
       return NextResponse.json(
-        { error: 'Erro ao criar usuário' },
-        { status: 500 }
+        { error: 'Erro ao criar usuário: ' + authError.message },
+        { status: 400 }
       );
     }
 
     if (!authData.user) {
       return NextResponse.json(
-        { error: 'Erro ao criar usuário' },
+        { error: 'Erro ao criar usuário - dados de autenticação inválidos' },
         { status: 500 }
       );
     }
@@ -164,27 +164,31 @@ export async function POST(request: NextRequest) {
     });
 
     // Criar usuário na tabela users_unified
+    // IMPORTANTE: Conta sempre inicia inativa, será ativada após verificação do email
+    const userDataToInsert = {
+      id: authData.user.id,
+      email,
+      phone_number: phoneNumber,
+      first_name: firstName,
+      last_name: lastName,
+      position: position || 'Não informado',
+      department: department || 'Não informado',
+      role: 'USER',
+      active: false, // Sempre inativo até verificar email
+      is_authorized: true, // Autorizado para receber email de verificação
+      authorization_status: 'pending', // Pendente até verificar email
+      verification_code: verificationCode,
+      verification_code_expires: verificationCodeExpires.toISOString(),
+      protocol: protocol,
+      invite_code: isInviteValid ? inviteCode : null,
+      email_verified: false, // Email não verificado
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
     const { data: userData, error: userError } = await supabase
       .from('users_unified')
-      .insert({
-        id: authData.user.id,
-        email,
-        phone_number: phoneNumber,
-        first_name: firstName,
-        last_name: lastName,
-        position: position || 'Não informado',
-        department: department || 'Não informado',
-        role: 'USER',
-        active: shouldAutoActivate, // Ativo se bypass estiver ativo ou convite válido
-        is_authorized: shouldAutoActivate, // Autorizado se bypass estiver ativo ou convite válido
-        authorization_status: shouldAutoActivate ? 'active' : 'pending',
-        verification_code: verificationCode,
-        verification_code_expires: verificationCodeExpires.toISOString(),
-        protocol: protocol,
-        invite_code: isInviteValid ? inviteCode : null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
+      .insert(userDataToInsert)
       .select()
       .single();
 
@@ -206,7 +210,7 @@ export async function POST(request: NextRequest) {
     if (userError) {
       console.error('Erro ao criar usuário na tabela users_unified:', userError);
       return NextResponse.json(
-        { error: 'Erro ao criar usuário' },
+        { error: 'Erro ao criar usuário na tabela: ' + userError.message },
         { status: 500 }
       );
     }
@@ -255,84 +259,40 @@ export async function POST(request: NextRequest) {
       // Não interromper o fluxo se o histórico falhar
     }
 
-    // Enviar emails baseado no status do bypass
-    let sendResult;
+    // Sempre enviar email de verificação por link
+    console.log('Enviando email de verificação por link para ativação da conta');
 
-    if (approvalSettings.bypassApproval) {
-      // Com bypass ativo: enviar apenas email de verificação por link
-      console.log('Bypass ativo - enviando apenas email de verificação por link');
+    // Gerar token de verificação por email
+    const emailVerificationToken = uuidv4();
 
-      // Gerar token de verificação por email
-      const emailVerificationToken = uuidv4();
+    // Armazenar token na tabela para validação posterior
+    const { error: updateError } = await supabase
+      .from('users_unified')
+      .update({
+        email_verification_token: emailVerificationToken,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userData.id);
 
-      // Atualizar usuário com token de verificação
-      const { error: updateError } = await supabase
-        .from('users_unified')
-        .update({
-          email_verification_token: emailVerificationToken,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userData.id);
-
-      if (updateError) {
-        console.error('Erro ao atualizar token de verificação:', updateError);
-      }
-
-      // Enviar email com link de verificação
-      const { sendEmailVerificationLink } = await import('@/lib/email-verification');
-      sendResult = await sendEmailVerificationLink(email, firstName, emailVerificationToken);
-
-    } else {
-      // Sem bypass: fluxo tradicional com código
-      console.log('Bypass inativo - enviando código de verificação');
-      sendResult = await sendVerificationEmail(email, verificationCode);
-
-      // Enviar e-mail de confirmação para o usuário
-      try {
-        console.log(`Enviando email de confirmação para ${email}`);
-        const emailResult = await sendNewUserWelcomeEmail(email, firstName);
-        console.log(`Resultado do envio de email: ${emailResult.success ? 'Sucesso' : 'Falha'}`);
-      } catch (emailError) {
-        console.error('Erro ao enviar email de confirmação:', emailError);
-        // Não interromper o fluxo se o email falhar
-      }
+    if (updateError) {
+      console.error('Erro ao armazenar token de verificação:', updateError);
+      // Continuar mesmo se não conseguir armazenar o token
     }
 
-    // Enviar notificação para o administrador apenas se bypass não estiver ativo
-    if (!approvalSettings.bypassApproval) {
-      try {
-        console.log('Enviando notificação para administrador (aprovação manual necessária)');
-        await sendAdminNotificationEmail(
-          process.env.ADMIN_EMAIL || 'caio.correia@groupabz.com',
-          {
-            name: `${firstName} ${lastName}`,
-            email,
-            phoneNumber,
-            position: position || 'Não informado',
-            department: department || 'Não informado',
-            protocol
-          }
-        );
-      } catch (notifyError) {
-        console.error('Erro ao enviar notificação para o administrador:', notifyError);
-        // Não interromper o fluxo se a notificação falhar
-      }
-    } else {
-      console.log('Bypass de aprovação ativo - não enviando notificação para administrador');
-    }
+    // Enviar email com link de verificação
+    const { sendEmailVerificationLink } = await import('@/lib/email-verification');
+    const sendResult = await sendEmailVerificationLink(email, firstName, emailVerificationToken);
+
+    // Não enviar notificação para administrador - fluxo automático com verificação de email
+    console.log('Fluxo de verificação por email ativo - não enviando notificação para administrador');
 
     return NextResponse.json({
       success: true,
-      message: approvalSettings.bypassApproval
-        ? 'Registro realizado com sucesso. Verifique seu e-mail para ativar sua conta e fazer login.'
-        : shouldAutoActivate
-        ? 'Registro realizado com sucesso. Sua conta já está ativa e você pode fazer login imediatamente.'
-        : 'Registro realizado com sucesso. Verifique seu e-mail para confirmar seu cadastro.',
+      message: 'Registro realizado com sucesso. Verifique seu e-mail para ativar sua conta e fazer login.',
       protocol,
       previewUrl: sendResult.previewUrl,
-      accountActive: shouldAutoActivate,
-      bypassActive: approvalSettings.bypassApproval,
-      emailVerificationRequired: approvalSettings.bypassApproval
+      accountActive: false, // Conta sempre inativa até verificar email
+      emailVerificationRequired: true // Verificação de email sempre obrigatória
     });
   } catch (error) {
     console.error('Erro ao registrar usuário:', error);

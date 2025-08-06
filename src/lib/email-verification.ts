@@ -178,11 +178,13 @@ export async function verifyEmailToken(token: string): Promise<{
       };
     }
 
-    // Marcar email como verificado e limpar token
+    // Marcar email como verificado, ativar conta e limpar token
     const { error: updateError } = await supabaseAdmin
       .from('users_unified')
       .update({
         email_verified: true,
+        active: true, // Ativar a conta após verificação do email
+        authorization_status: 'active', // Mudar status para ativo
         email_verification_token: null,
         updated_at: new Date().toISOString()
       })

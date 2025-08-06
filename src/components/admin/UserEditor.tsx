@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FiSave, FiX, FiUser, FiMail, FiPhone, FiBriefcase, FiUsers, FiPlus, FiTrash2, FiDollarSign } from 'react-icons/fi';
+import { FiSave, FiX, FiUser, FiMail, FiPhone, FiBriefcase, FiUsers, FiPlus, FiTrash2, FiDollarSign, FiShield } from 'react-icons/fi';
 import { AccessPermissions } from '@/models/User';
 import ServerUserReimbursementSettings from './ServerUserReimbursementSettings';
 import ReimbursementPermissionsEditor from './ReimbursementPermissionsEditor';
+import ACLPermissionTreeSelector from './ACLPermissionTreeSelector';
 import { useI18n } from '@/contexts/I18nContext';
+import { useACLPermissions } from '@/hooks/useACLPermissions';
 
 // Interface para o usuário no editor
 export interface UserEditorData {
@@ -75,21 +77,113 @@ const UserEditor: React.FC<UserEditorProps> = ({
   const [passwordError, setPasswordError] = useState('');
   const [showPermissions, setShowPermissions] = useState(false);
   const [showReimbursementSettings, setShowReimbursementSettings] = useState(false);
+  const [showACLPermissions, setShowACLPermissions] = useState(false);
+  const [loadingModules, setLoadingModules] = useState(false);
+  const [selectedACLPermissions, setSelectedACLPermissions] = useState<string[]>([]);
+  const [roleACLPermissions, setRoleACLPermissions] = useState<string[]>([]);
 
 
-  // Lista de módulos disponíveis
-  const availableModules = [
-    { id: 'dashboard', label: 'Dashboard' },
-    { id: 'manual', label: 'Manual' },
-    { id: 'procedimentos', label: 'Procedimentos' },
-    { id: 'politicas', label: 'Políticas' },
-    { id: 'calendario', label: 'Calendário' },
-    { id: 'noticias', label: 'Notícias' },
-    { id: 'reembolso', label: 'Reembolso' },
-    { id: 'contracheque', label: 'Contracheque' },
-    { id: 'ponto', label: 'Ponto' },
-    { id: 'admin', label: 'Administração' },
-  ];
+  // Estado para módulos disponíveis (carregados dinamicamente)
+  const [availableModules, setAvailableModules] = useState<Array<{id: string, label: string, description: string}>>([]);
+  const [rolePermissions, setRolePermissions] = useState<any>({});
+
+  // Hook para gerenciar permissões ACL
+  const {
+    permissions: userACLPermissions,
+    loading: loadingACL,
+    loadUserPermissions,
+    grantPermission,
+    revokePermission
+  } = useACLPermissions();
+
+  // Carregar módulos disponíveis e permissões por role
+  useEffect(() => {
+    const loadModulesAndPermissions = async () => {
+      try {
+        setLoadingModules(true);
+
+        // Carregar módulos disponíveis
+        const modulesResponse = await fetch('/api/admin/available-modules');
+        const modules = await modulesResponse.json();
+        setAvailableModules(modules);
+
+        // Carregar permissões por role
+        const permissionsResponse = await fetch('/api/admin/role-permissions');
+        const permissions = await permissionsResponse.json();
+        setRolePermissions(permissions);
+
+      } catch (error) {
+        console.error('Erro ao carregar módulos e permissões:', error);
+      } finally {
+        setLoadingModules(false);
+      }
+    };
+
+    loadModulesAndPermissions();
+  }, []);
+
+  // Carregar permissões ACL quando o usuário for selecionado
+  useEffect(() => {
+    if (editedUser._id && showACLPermissions) {
+      loadUserACLPermissions();
+    }
+  }, [editedUser._id, showACLPermissions]);
+
+  const loadUserACLPermissions = async () => {
+    if (!editedUser._id) return;
+
+    try {
+      await loadUserPermissions(editedUser._id);
+
+      // Carregar permissões individuais do usuário
+      if (userACLPermissions) {
+        const individualPermissionIds = userACLPermissions.individual_permissions
+          .filter(up => !up.is_expired)
+          .map(up => up.permission.id);
+        setSelectedACLPermissions(individualPermissionIds);
+
+        // Carregar permissões do role
+        const rolePermissionIds = userACLPermissions.role_permissions
+          .map(rp => rp.permission.id);
+        setRoleACLPermissions(rolePermissionIds);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar permissões ACL:', error);
+    }
+  };
+
+  const handleACLPermissionChange = async (permissionIds: string[]) => {
+    if (!editedUser._id) return;
+
+    setSelectedACLPermissions(permissionIds);
+
+    try {
+      // Obter permissões atuais
+      const currentPermissions = userACLPermissions?.individual_permissions
+        .filter(up => !up.is_expired)
+        .map(up => up.permission.id) || [];
+
+      // Encontrar permissões a adicionar
+      const toAdd = permissionIds.filter(id => !currentPermissions.includes(id));
+
+      // Encontrar permissões a remover
+      const toRemove = currentPermissions.filter(id => !permissionIds.includes(id));
+
+      // Adicionar novas permissões
+      for (const permissionId of toAdd) {
+        await grantPermission(editedUser._id, permissionId);
+      }
+
+      // Remover permissões desmarcadas
+      for (const permissionId of toRemove) {
+        await revokePermission(editedUser._id, permissionId);
+      }
+
+      console.log('✅ Permissões ACL atualizadas com sucesso');
+    } catch (error) {
+      console.error('Erro ao atualizar permissões ACL:', error);
+    }
+  };
 
   // Permissões padrão para cada papel
   const defaultPermissions = {
@@ -404,39 +498,96 @@ const UserEditor: React.FC<UserEditorProps> = ({
 
           {/* Permissões de acesso */}
           <div className="mb-6">
-            <button
-              type="button"
-              onClick={() => setShowPermissions(!showPermissions)}
-              className="flex items-center text-abz-blue hover:text-abz-blue-dark font-medium"
-            >
-              <FiUsers className="mr-2" />
-              {showPermissions ? 'Ocultar Permissões' : 'Configurar Permissões de Acesso'}
-            </button>
+            <div className="flex items-center space-x-4 mb-4">
+              <button
+                type="button"
+                onClick={() => setShowPermissions(!showPermissions)}
+                className="flex items-center text-abz-blue hover:text-abz-blue-dark font-medium"
+              >
+                <FiUsers className="mr-2" />
+                {showPermissions ? 'Ocultar Permissões' : 'Configurar Permissões de Acesso'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowACLPermissions(!showACLPermissions)}
+                className="flex items-center text-green-600 hover:text-green-700 font-medium"
+              >
+                <FiShield className="mr-2" />
+                {showACLPermissions ? 'Ocultar ACL' : 'Permissões ACL Avançadas'}
+              </button>
+            </div>
 
             {showPermissions && (
               <div className="mt-4 p-4 border border-gray-200 rounded-lg">
                 <h3 className="text-lg font-medium text-gray-900 mb-3">Módulos do Sistema</h3>
                 <p className="text-sm text-gray-500 mb-4">
-                  Selecione os módulos que este usuário poderá acessar. Administradores têm acesso a todos os módulos automaticamente.
+                  Configure as permissões individuais deste usuário. As permissões individuais têm prioridade sobre as permissões do role.
                 </p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  {availableModules.map((module) => (
-                    <div key={module.id} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id={`module-${module.id}`}
-                        checked={editedUser.accessPermissions?.modules?.[module.id] || false}
-                        onChange={(e) => handleModulePermissionChange(module.id, e.target.checked)}
-                        disabled={editedUser.role === 'ADMIN'} // Administradores têm acesso a tudo
-                        className="h-4 w-4 text-abz-blue focus:ring-abz-blue border-gray-300 rounded"
-                      />
-                      <label htmlFor={`module-${module.id}`} className="ml-2 block text-sm text-gray-900">
-                        {module.label}
-                      </label>
+                {/* Mostrar permissões padrão do role */}
+                {editedUser.role && rolePermissions[editedUser.role] && (
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h4 className="text-sm font-medium text-blue-900 mb-2">
+                      Permissões Padrão do Role "{editedUser.role}"
+                    </h4>
+                    <div className="text-xs text-blue-700">
+                      {Object.entries(rolePermissions[editedUser.role]?.modules || {})
+                        .filter(([_, enabled]) => enabled)
+                        .map(([moduleId]) => {
+                          const module = availableModules.find(m => m.id === moduleId);
+                          return module?.label;
+                        })
+                        .filter(Boolean)
+                        .join(', ')}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
+
+                {loadingModules ? (
+                  <div className="text-center py-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="text-sm text-gray-500 mt-2">Carregando módulos...</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {availableModules.map((module) => {
+                      const hasIndividualPermission = editedUser.accessPermissions?.modules?.[module.id] !== undefined;
+                      const isEnabledByRole = rolePermissions[editedUser.role]?.modules?.[module.id] || false;
+                      const isEnabledIndividually = editedUser.accessPermissions?.modules?.[module.id] || false;
+                      const finalEnabled = hasIndividualPermission ? isEnabledIndividually : isEnabledByRole;
+
+                      return (
+                        <div key={module.id} className="flex items-start p-2 border rounded-lg">
+                          <input
+                            type="checkbox"
+                            id={`module-${module.id}`}
+                            checked={finalEnabled}
+                            onChange={(e) => handleModulePermissionChange(module.id, e.target.checked)}
+                            disabled={editedUser.role === 'ADMIN'} // Administradores têm acesso a tudo
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5"
+                          />
+                          <div className="ml-2 flex-1">
+                            <label htmlFor={`module-${module.id}`} className="block text-sm font-medium text-gray-900">
+                              {module.label}
+                            </label>
+                            <p className="text-xs text-gray-500">{module.description}</p>
+                            {hasIndividualPermission && (
+                              <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded">
+                                Personalizado
+                              </span>
+                            )}
+                            {!hasIndividualPermission && isEnabledByRole && (
+                              <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded">
+                                Por Role
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
 
                 {/* Permissões específicas de reembolso */}
                 <ReimbursementPermissionsEditor
@@ -449,6 +600,46 @@ const UserEditor: React.FC<UserEditorProps> = ({
                   }}
                   readOnly={editedUser.role === 'ADMIN'} // Administradores têm todas as permissões
                 />
+              </div>
+            )}
+
+            {/* Permissões ACL Avançadas */}
+            {showACLPermissions && (
+              <div className="mt-6 p-4 border border-green-200 rounded-lg bg-green-50">
+                <div className="flex items-center mb-4">
+                  <FiShield className="h-5 w-5 text-green-600 mr-2" />
+                  <h3 className="text-lg font-medium text-green-900">Permissões ACL Avançadas</h3>
+                </div>
+
+                <p className="text-sm text-green-700 mb-4">
+                  Sistema de controle de acesso hierárquico com permissões granulares.
+                  As permissões individuais têm prioridade sobre as permissões do role.
+                </p>
+
+                {loadingACL ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
+                    <span className="ml-2 text-green-700">Carregando permissões ACL...</span>
+                  </div>
+                ) : (
+                  <ACLPermissionTreeSelector
+                    selectedPermissions={selectedACLPermissions}
+                    onPermissionChange={handleACLPermissionChange}
+                    userRole={editedUser.role}
+                    showRolePermissions={true}
+                    rolePermissions={roleACLPermissions}
+                    disabled={editedUser.role === 'ADMIN'} // Administradores têm todas as permissões
+                  />
+                )}
+
+                {editedUser.role === 'ADMIN' && (
+                  <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Nota:</strong> Administradores têm acesso automático a todas as permissões ACL,
+                      independente das configurações individuais.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

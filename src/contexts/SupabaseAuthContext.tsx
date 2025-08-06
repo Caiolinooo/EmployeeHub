@@ -100,7 +100,23 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   const [loginStep, setLoginStep] = useState<'phone' | 'verification' | 'password' | 'complete' | 'unauthorized' | 'pending' | 'quick_register'>('phone');
   const [hasPassword, setHasPassword] = useState(false);
   const [authStatus, setAuthStatus] = useState<string | undefined>(undefined);
+  const [rolePermissions, setRolePermissions] = useState<any>({});
   const router = useRouter();
+
+  // Carregar permissões por role
+  useEffect(() => {
+    const loadRolePermissions = async () => {
+      try {
+        const response = await fetch('/api/admin/role-permissions');
+        const permissions = await response.json();
+        setRolePermissions(permissions);
+      } catch (error) {
+        console.error('Erro ao carregar permissões por role:', error);
+      }
+    };
+
+    loadRolePermissions();
+  }, []);
 
   // Função para renovar o token JWT personalizado
   const refreshCustomToken = async () => {
@@ -1965,14 +1981,25 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
             return true;
           }
 
-          // Verificar permissões de módulo (verificar tanto accessPermissions quanto access_permissions)
-          const hasModuleAccess = !!(
-            profile?.accessPermissions?.modules?.[module] ||
-            profile?.access_permissions?.modules?.[module]
-          );
+          // Verificar permissões individuais primeiro (prioridade)
+          const individualPermissions = profile?.accessPermissions?.modules || profile?.access_permissions?.modules;
+          if (individualPermissions && individualPermissions[module] !== undefined) {
+            const hasIndividualAccess = individualPermissions[module];
+            console.log(`Acesso ao módulo ${module} baseado em permissões individuais: ${hasIndividualAccess}`);
+            return hasIndividualAccess;
+          }
 
-          console.log(`Acesso ao módulo ${module} baseado em permissões: ${hasModuleAccess}`);
-          return hasModuleAccess;
+          // Se não há permissões individuais, verificar permissões do role
+          const roleModulePermissions = rolePermissions[profile?.role]?.modules;
+          if (roleModulePermissions && roleModulePermissions[module] !== undefined) {
+            const hasRoleAccess = roleModulePermissions[module];
+            console.log(`Acesso ao módulo ${module} baseado em permissões do role ${profile?.role}: ${hasRoleAccess}`);
+            return hasRoleAccess;
+          }
+
+          // Fallback para permissões padrão se não encontrar nas configurações
+          console.log(`Módulo ${module} não encontrado nas permissões, negando acesso`);
+          return false;
         },
         hasFeature: (feature: string) => {
           // Administradores têm acesso a todas as funcionalidades

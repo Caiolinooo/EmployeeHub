@@ -1,0 +1,308 @@
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { FiBell, FiX, FiCheck, FiCheckCircle, FiClock, FiHeart, FiMessageCircle, FiAlertCircle, FiInfo } from 'react-icons/fi';
+
+interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  data: any;
+  read_at: string | null;
+  action_url: string | null;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  created_at: string;
+  expires_at: string | null;
+}
+
+interface NotificationHUDProps {
+  userId: string;
+  position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+  maxVisible?: number;
+}
+
+const NotificationHUD: React.FC<NotificationHUDProps> = ({
+  userId,
+  position = 'top-right',
+  maxVisible = 5
+}) => {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Carregar notificações
+  const loadNotifications = async (pageNum: number = 1, reset: boolean = false) => {
+    try {
+      setLoading(true);
+      
+      const params = new URLSearchParams({
+        user_id: userId,
+        page: pageNum.toString(),
+        limit: '20'
+      });
+
+      const response = await fetch(`/api/notifications?${params}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        if (reset) {
+          setNotifications(data.notifications);
+        } else {
+          setNotifications(prev => [...prev, ...data.notifications]);
+        }
+        
+        setUnreadCount(data.unreadCount);
+        setHasMore(data.pagination.hasNext);
+        setPage(pageNum);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar notificações:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Marcar notificação como lida
+  const markAsRead = async (notificationId: string) => {
+    try {
+      const response = await fetch(`/api/notifications/${notificationId}/read`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId })
+      });
+
+      if (response.ok) {
+        setNotifications(prev => 
+          prev.map(notif => 
+            notif.id === notificationId 
+              ? { ...notif, read_at: new Date().toISOString() }
+              : notif
+          )
+        );
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      console.error('Erro ao marcar notificação como lida:', error);
+    }
+  };
+
+  // Marcar todas como lidas
+  const markAllAsRead = async () => {
+    try {
+      const response = await fetch('/api/notifications/mark-all-read', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(prev => 
+          prev.map(notif => ({ ...notif, read_at: new Date().toISOString() }))
+        );
+        setUnreadCount(0);
+      }
+    } catch (error) {
+      console.error('Erro ao marcar todas como lidas:', error);
+    }
+  };
+
+  // Carregar mais notificações
+  const loadMore = () => {
+    if (!loading && hasMore) {
+      loadNotifications(page + 1, false);
+    }
+  };
+
+  // Fechar dropdown ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Carregar notificações iniciais e configurar polling
+  useEffect(() => {
+    if (userId) {
+      loadNotifications(1, true);
+      
+      // Polling a cada 30 segundos
+      intervalRef.current = setInterval(() => {
+        loadNotifications(1, true);
+      }, 30000);
+
+      return () => {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+        }
+      };
+    }
+  }, [userId]);
+
+  // Obter ícone por tipo de notificação
+  const getNotificationIcon = (type: string, priority: string) => {
+    const iconClass = `w-4 h-4 ${
+      priority === 'urgent' ? 'text-red-500' :
+      priority === 'high' ? 'text-orange-500' :
+      priority === 'low' ? 'text-gray-400' : 'text-blue-500'
+    }`;
+
+    switch (type) {
+      case 'news_post': return <FiInfo className={iconClass} />;
+      case 'comment': return <FiMessageCircle className={iconClass} />;
+      case 'like': return <FiHeart className={iconClass} />;
+      case 'reminder': return <FiClock className={iconClass} />;
+      case 'system': return <FiAlertCircle className={iconClass} />;
+      default: return <FiBell className={iconClass} />;
+    }
+  };
+
+  // Formatar tempo relativo
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+
+    if (diffInMinutes < 1) return 'Agora';
+    if (diffInMinutes < 60) return `${diffInMinutes}m`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h`;
+    return `${Math.floor(diffInMinutes / 1440)}d`;
+  };
+
+  // Posicionamento do dropdown
+  const getPositionClasses = () => {
+    switch (position) {
+      case 'top-left': return 'top-12 left-0';
+      case 'bottom-right': return 'bottom-12 right-0';
+      case 'bottom-left': return 'bottom-12 left-0';
+      default: return 'top-12 right-0';
+    }
+  };
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      {/* Botão de Notificações */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
+      >
+        <FiBell className="w-6 h-6" />
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {/* Dropdown de Notificações */}
+      {isOpen && (
+        <div className={`absolute ${getPositionClasses()} w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden`}>
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-100">
+            <h3 className="font-semibold text-gray-900">Notificações</h3>
+            <div className="flex items-center space-x-2">
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllAsRead}
+                  className="text-sm text-blue-600 hover:text-blue-700"
+                >
+                  Marcar todas como lidas
+                </button>
+              )}
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-1 hover:bg-gray-100 rounded"
+              >
+                <FiX className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Lista de Notificações */}
+          <div className="max-h-80 overflow-y-auto">
+            {notifications.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                <FiBell className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p>Nenhuma notificação</p>
+              </div>
+            ) : (
+              <>
+                {notifications.slice(0, maxVisible).map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={`p-4 border-b border-gray-50 hover:bg-gray-50 cursor-pointer ${
+                      !notification.read_at ? 'bg-blue-50' : ''
+                    }`}
+                    onClick={() => {
+                      if (!notification.read_at) {
+                        markAsRead(notification.id);
+                      }
+                      if (notification.action_url) {
+                        window.location.href = notification.action_url;
+                      }
+                    }}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0 mt-1">
+                        {getNotificationIcon(notification.type, notification.priority)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <p className={`text-sm font-medium ${
+                            !notification.read_at ? 'text-gray-900' : 'text-gray-700'
+                          }`}>
+                            {notification.title}
+                          </p>
+                          <div className="flex items-center space-x-1">
+                            <span className="text-xs text-gray-500">
+                              {formatTimeAgo(notification.created_at)}
+                            </span>
+                            {!notification.read_at && (
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            )}
+                          </div>
+                        </div>
+                        {notification.message && (
+                          <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                            {notification.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Load More */}
+                {hasMore && notifications.length > maxVisible && (
+                  <div className="p-4 text-center border-t border-gray-100">
+                    <button
+                      onClick={loadMore}
+                      disabled={loading}
+                      className="text-sm text-blue-600 hover:text-blue-700 disabled:opacity-50"
+                    >
+                      {loading ? 'Carregando...' : 'Ver mais notificações'}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default NotificationHUD;

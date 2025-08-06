@@ -1053,4 +1053,143 @@ export default {
     welcome: 'Bem-vindo ao Módulo Gerencial',
     moduleIntro: 'Este módulo fornece ferramentas e recursos especiais projetados especificamente para gerentes. Aqui você pode acessar relatórios avançados, ferramentas de gestão de equipe e outros recursos para ajudá-lo a gerenciar sua equipe de forma eficaz.',
   },
+
+  // Sistema de Notícias
+  newsSystem: {
+    title: 'Central de Notícias',
+    subtitle: 'Sistema estilo Instagram',
+    feed: 'Feed de Notícias',
+    admin: 'Gerenciar Posts',
+    reminders: 'Lembretes',
+    acl: 'Permissões ACL',
+    createPost: 'Criar Post',
+    newPost: 'Novo Post',
+    whatAreYouThinking: 'No que você está pensando? Compartilhe uma notícia...',
+    photoVideo: 'Foto/Vídeo',
+    event: 'Evento',
+    featured: 'Destaque',
+    selectMedia: 'Selecione fotos e vídeos',
+    selectMediaDesc: 'Compartilhe até 10 fotos ou vídeos',
+    selectFromComputer: 'Selecionar do computador',
+    edit: 'Editar',
+    newPublication: 'Nova publicação',
+    sharing: 'Compartilhando...',
+    advance: 'Avançar',
+    share: 'Compartilhar',
+    writeCaption: 'Escreva uma legenda...',
+    addLocation: 'Adicionar localização',
+    tagPeople: 'Marcar pessoas',
+    audienceSettings: 'Configurações de audiência',
+    publicationShared: 'Publicação compartilhada!',
+    publicationSharedDesc: 'Sua publicação foi compartilhada com sucesso',
+    processing: 'Aguarde enquanto sua publicação é processada',
+    likes: 'curtidas',
+    comments: 'comentários',
+    views: 'visualizações',
+    categories: {
+      comunicados: 'Comunicados',
+      noticias: 'Notícias',
+      eventos: 'Eventos',
+      treinamentos: 'Treinamentos',
+      beneficios: 'Benefícios',
+      tecnologia: 'Tecnologia'
+    },
+    filters: {
+      allCategories: 'Todas as categorias',
+      featuredOnly: 'Apenas destaques'
+    },
+    stats: {
+      systemFunctional: 'Sistema Funcional',
+      tablesCreated: 'Tabelas Criadas',
+      aclPermissions: 'Permissões ACL',
+      notifications: 'Notificações'
+    }
+  },
+
+  // Sistema ACL
+  acl: {
+    title: 'Gerenciamento ACL',
+    subtitle: 'Controle de acesso hierárquico avançado',
+    permissions: 'Permissões',
+    roles: 'Roles',
+    users: 'Usuários',
+    managePermissions: 'Gerenciar permissões ACL',
+    configureRoles: 'Configurar permissões por role',
+    individualPermissions: 'Permissões individuais',
+    newPermission: 'Nova Permissão',
+    permissionName: 'Nome da Permissão',
+    description: 'Descrição',
+    resource: 'Recurso',
+    action: 'Ação',
+    hierarchicalLevel: 'Nível Hierárquico',
+    level0: 'Nível 0 - Básico (USER)',
+    level1: 'Nível 1 - Intermediário',
+    level2: 'Nível 2 - Avançado (MANAGER)',
+    level3: 'Nível 3 - Administrativo (ADMIN)',
+    createPermission: 'Criar Permissão',
+    permissionsByRole: 'Permissões por Role',
+    userManagement: 'Gerenciamento de Usuários',
+    userManagementDesc: 'Para gerenciar permissões individuais de usuários, acesse o painel de gerenciamento de usuários.',
+    goToUserManagement: 'Ir para Gerenciamento de Usuários',
+    resources: {
+      news: 'Notícias',
+      comments: 'Comentários',
+      notifications: 'Notificações',
+      reminders: 'Lembretes',
+      admin: 'Administração'
+    },
+    actions: {
+      read: 'Ler',
+      create: 'Criar',
+      update: 'Atualizar',
+      delete: 'Excluir',
+      publish: 'Publicar',
+      moderate: 'Moderar',
+      send: 'Enviar',
+      manage: 'Gerenciar'
+    }
+  },
+
+  // Sistema de Notificações
+  notifications: {
+    title: 'Notificações',
+    markAsRead: 'Marcar como lida',
+    markAllAsRead: 'Marcar todas como lidas',
+    noNotifications: 'Nenhuma notificação',
+    unreadCount: '{count} não lidas',
+    types: {
+      info: 'Informação',
+      warning: 'Aviso',
+      error: 'Erro',
+      success: 'Sucesso'
+    },
+    priorities: {
+      low: 'Baixa',
+      normal: 'Normal',
+      high: 'Alta',
+      urgent: 'Urgente'
+    }
+  },
+
+  // Sistema de Lembretes
+  reminders: {
+    title: 'Lembretes',
+    create: 'Criar Lembrete',
+    manage: 'Gerenciar Lembretes',
+    reminderTitle: 'Título do Lembrete',
+    message: 'Mensagem',
+    remindAt: 'Lembrar em',
+    targetRoles: 'Roles de Destino',
+    targetUsers: 'Usuários de Destino',
+    status: 'Status',
+    pending: 'Pendente',
+    sent: 'Enviado',
+    cancelled: 'Cancelado',
+    processing: 'Processando lembretes...',
+    statistics: 'Estatísticas de Processamento'
+  },
+
+  locale: {
+    code: 'pt-BR'
+  }
 };

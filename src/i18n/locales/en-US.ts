@@ -1103,4 +1103,143 @@ export default {
   debug: {
     noCodesFound: 'No active codes found.',
   },
+
+  // News System
+  newsSystem: {
+    title: 'News Center',
+    subtitle: 'Instagram-style system',
+    feed: 'News Feed',
+    admin: 'Manage Posts',
+    reminders: 'Reminders',
+    acl: 'ACL Permissions',
+    createPost: 'Create Post',
+    newPost: 'New Post',
+    whatAreYouThinking: 'What are you thinking? Share some news...',
+    photoVideo: 'Photo/Video',
+    event: 'Event',
+    featured: 'Featured',
+    selectMedia: 'Select photos and videos',
+    selectMediaDesc: 'Share up to 10 photos or videos',
+    selectFromComputer: 'Select from computer',
+    edit: 'Edit',
+    newPublication: 'New publication',
+    sharing: 'Sharing...',
+    advance: 'Next',
+    share: 'Share',
+    writeCaption: 'Write a caption...',
+    addLocation: 'Add location',
+    tagPeople: 'Tag people',
+    audienceSettings: 'Audience settings',
+    publicationShared: 'Publication shared!',
+    publicationSharedDesc: 'Your publication was shared successfully',
+    processing: 'Please wait while your publication is being processed',
+    likes: 'likes',
+    comments: 'comments',
+    views: 'views',
+    categories: {
+      comunicados: 'Announcements',
+      noticias: 'News',
+      eventos: 'Events',
+      treinamentos: 'Training',
+      beneficios: 'Benefits',
+      tecnologia: 'Technology'
+    },
+    filters: {
+      allCategories: 'All categories',
+      featuredOnly: 'Featured only'
+    },
+    stats: {
+      systemFunctional: 'System Functional',
+      tablesCreated: 'Tables Created',
+      aclPermissions: 'ACL Permissions',
+      notifications: 'Notifications'
+    }
+  },
+
+  // ACL System
+  acl: {
+    title: 'ACL Management',
+    subtitle: 'Advanced hierarchical access control',
+    permissions: 'Permissions',
+    roles: 'Roles',
+    users: 'Users',
+    managePermissions: 'Manage ACL permissions',
+    configureRoles: 'Configure permissions by role',
+    individualPermissions: 'Individual permissions',
+    newPermission: 'New Permission',
+    permissionName: 'Permission Name',
+    description: 'Description',
+    resource: 'Resource',
+    action: 'Action',
+    hierarchicalLevel: 'Hierarchical Level',
+    level0: 'Level 0 - Basic (USER)',
+    level1: 'Level 1 - Intermediate',
+    level2: 'Level 2 - Advanced (MANAGER)',
+    level3: 'Level 3 - Administrative (ADMIN)',
+    createPermission: 'Create Permission',
+    permissionsByRole: 'Permissions by Role',
+    userManagement: 'User Management',
+    userManagementDesc: 'To manage individual user permissions, access the user management panel.',
+    goToUserManagement: 'Go to User Management',
+    resources: {
+      news: 'News',
+      comments: 'Comments',
+      notifications: 'Notifications',
+      reminders: 'Reminders',
+      admin: 'Administration'
+    },
+    actions: {
+      read: 'Read',
+      create: 'Create',
+      update: 'Update',
+      delete: 'Delete',
+      publish: 'Publish',
+      moderate: 'Moderate',
+      send: 'Send',
+      manage: 'Manage'
+    }
+  },
+
+  // Notifications System
+  notifications: {
+    title: 'Notifications',
+    markAsRead: 'Mark as read',
+    markAllAsRead: 'Mark all as read',
+    noNotifications: 'No notifications',
+    unreadCount: '{count} unread',
+    types: {
+      info: 'Information',
+      warning: 'Warning',
+      error: 'Error',
+      success: 'Success'
+    },
+    priorities: {
+      low: 'Low',
+      normal: 'Normal',
+      high: 'High',
+      urgent: 'Urgent'
+    }
+  },
+
+  // Reminders System
+  reminders: {
+    title: 'Reminders',
+    create: 'Create Reminder',
+    manage: 'Manage Reminders',
+    reminderTitle: 'Reminder Title',
+    message: 'Message',
+    remindAt: 'Remind at',
+    targetRoles: 'Target Roles',
+    targetUsers: 'Target Users',
+    status: 'Status',
+    pending: 'Pending',
+    sent: 'Sent',
+    cancelled: 'Cancelled',
+    processing: 'Processing reminders...',
+    statistics: 'Processing Statistics'
+  },
+
+  locale: {
+    code: 'en-US'
+  }
 };

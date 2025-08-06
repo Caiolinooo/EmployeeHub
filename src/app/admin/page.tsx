@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FiLayers, FiList, FiFileText, FiEdit, FiUsers, FiSettings, FiUserCheck, FiRefreshCw, FiBarChart2 } from 'react-icons/fi';
+import { FiLayers, FiList, FiFileText, FiEdit, FiUsers, FiSettings, FiUserCheck, FiRefreshCw, FiBarChart2, FiKey } from 'react-icons/fi';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 
@@ -136,6 +136,13 @@ export default function AdminDashboard() {
           icon={FiBarChart2}
           href="/admin/avaliacao"
           color="border-teal-500"
+        />
+        <AdminCard
+          title="Permissões por Role"
+          description="Configure permissões padrão para cada tipo de usuário"
+          icon={FiKey}
+          href="/admin/role-permissions"
+          color="border-orange-500"
         />
       </div>
 
