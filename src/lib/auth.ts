@@ -1281,13 +1281,24 @@ export async function loginWithPassword(identifier: string, password: string): P
             phoneNumber: fallbackData.phone_number,
             firstName: fallbackData.first_name,
             lastName: fallbackData.last_name,
-              createdAt: fallbackData.created_at,
-              updatedAt: fallbackData.updated_at,
-              accessPermissions: fallbackData.access_permissions,
-              accessHistory: fallbackData.access_history
-            };
-            console.log('Usuário encontrado pelo telefone:', user.id);
-          }
+            createdAt: fallbackData.created_at,
+            updatedAt: fallbackData.updated_at,
+            accessPermissions: fallbackData.access_permissions,
+            accessHistory: fallbackData.access_history
+          };
+          console.log('Usuário encontrado pelo telefone:', user.id);
+        } else {
+          user = {
+            ...userData,
+            phoneNumber: userData.phone_number,
+            firstName: userData.first_name,
+            lastName: userData.last_name,
+            createdAt: userData.created_at,
+            updatedAt: userData.updated_at,
+            accessPermissions: userData.access_permissions,
+            accessHistory: userData.access_history
+          };
+          console.log('Usuário encontrado pelo email:', user.id);
         }
       } else {
         // Buscar por número de telefone
@@ -1618,16 +1629,33 @@ export async function loginWithPassword(identifier: string, password: string): P
     });
 
     try {
-      // Atualizar histórico de acesso no PostgreSQL
-      await pool.query(`
-        UPDATE "users_unified"
-        SET
-          "access_history" = $1,
-          "updated_at" = CURRENT_TIMESTAMP
-        WHERE "id" = $2
-      `, [JSON.stringify(accessHistory), user.id]);
+      // Atualizar histórico de acesso no Supabase
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
-      console.log('Histórico de acesso atualizado após login bem-sucedido');
+      if (supabaseUrl && supabaseServiceKey) {
+        const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        });
+
+        const { error } = await supabase
+          .from('users_unified')
+          .update({
+            access_history: accessHistory,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+
+        if (error) {
+          console.error('Erro ao atualizar histórico de acesso:', error);
+        } else {
+          console.log('Histórico de acesso atualizado após login bem-sucedido');
+        }
+      }
     } catch (error) {
       console.error('Erro ao atualizar histórico de acesso:', error);
     }
