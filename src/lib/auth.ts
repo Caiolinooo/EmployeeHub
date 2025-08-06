@@ -1138,10 +1138,25 @@ const LOCK_TIME = 15 * 60 * 1000; // 15 minutos em milissegundos
 
 // Função para autenticar com senha
 export async function loginWithPassword(identifier: string, password: string): Promise<{ success: boolean; message: string; user?: User; token?: string; locked?: boolean; lockExpires?: Date; attempts?: number; maxAttempts?: number; authStatus?: string }> {
-  // Verificar se é o administrador
-  const adminEmail = process.env.ADMIN_EMAIL || 'caio.correia@groupabz.com';
-  const adminPhone = process.env.ADMIN_PHONE_NUMBER || '+5522997847289';
-  const adminPassword = process.env.ADMIN_PASSWORD || 'Caio@2122@';
+  // Buscar credenciais do administrador do Supabase
+  let adminEmail = process.env.ADMIN_EMAIL;
+  let adminPhone = process.env.ADMIN_PHONE_NUMBER;
+  let adminPassword = process.env.ADMIN_PASSWORD;
+
+  // Se não estão nas variáveis de ambiente, buscar do Supabase
+  if (!adminEmail || !adminPhone || !adminPassword) {
+    try {
+      const { getCredential } = await import('@/lib/secure-credentials');
+      adminEmail = adminEmail || await getCredential('ADMIN_EMAIL') || 'caio.correia@groupabz.com';
+      adminPhone = adminPhone || await getCredential('ADMIN_PHONE_NUMBER') || '+5522997847289';
+      adminPassword = adminPassword || await getCredential('ADMIN_PASSWORD') || 'Caio@2122@';
+    } catch (error) {
+      console.warn('Erro ao buscar credenciais do Supabase, usando fallback:', error);
+      adminEmail = adminEmail || 'caio.correia@groupabz.com';
+      adminPhone = adminPhone || '+5522997847289';
+      adminPassword = adminPassword || 'Caio@2122@';
+    }
+  }
 
   const isAdminEmail = identifier === adminEmail;
   const isAdminPhone = identifier === adminPhone;
