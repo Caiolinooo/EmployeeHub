@@ -97,8 +97,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar a senha
-    const passwordMatches = password === adminPassword;
+    // Verificar a senha usando bcrypt com o hash do banco
+    console.log('API login-password: Verificando senha com bcrypt');
+    console.log('API login-password: Senha fornecida (primeiros 3 chars):', password.substring(0, 3) + '...');
+    console.log('API login-password: Hash no banco (primeiros 20 chars):', user.password ? user.password.substring(0, 20) + '...' : 'Não definido');
+
+    let passwordMatches = false;
+
+    if (user.password) {
+      // Usar bcrypt para comparar com o hash do banco
+      const bcrypt = require('bcryptjs');
+      passwordMatches = await bcrypt.compare(password, user.password);
+      console.log('API login-password: Resultado da comparação bcrypt:', passwordMatches);
+    } else {
+      // Fallback: comparar diretamente com a variável de ambiente
+      passwordMatches = password === adminPassword;
+      console.log('API login-password: Usando fallback (comparação direta):', passwordMatches);
+    }
 
     if (!passwordMatches) {
       console.log('API login-password: Senha incorreta');

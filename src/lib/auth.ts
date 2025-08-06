@@ -1223,65 +1223,68 @@ export async function loginWithPassword(identifier: string, password: string): P
   }
   console.log('Tentando login com senha para:', identifier);
 
-  // Criar pool de conexão com o PostgreSQL
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL
-  });
-
   try {
     // Verificar se o identificador é um email ou número de telefone
     const isEmail = identifier.includes('@');
     console.log('Identificador é um email:', isEmail);
 
-    // Buscar o usuário pelo email ou número de telefone
+    // Buscar o usuário pelo email ou número de telefone usando Supabase
     console.log('Buscando usuário com', isEmail ? 'email' : 'telefone', ':', identifier);
 
-    // Buscar o usuário diretamente no banco de dados PostgreSQL
     let user;
     try {
-      // Se for email, buscar por email ou tentar buscar por phoneNumber
+      // Usar Supabase em vez de PostgreSQL direto
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+
+      if (!supabaseUrl || !supabaseServiceKey) {
+        throw new Error('Configurações do Supabase não encontradas');
+      }
+
+      const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      });
+
+      // Se for email, buscar por email
       if (isEmail) {
         console.log('Buscando por email:', identifier);
-        const userResult = await pool.query(`
-          SELECT * FROM "users_unified"
-          WHERE "email" = $1
-        `, [identifier]);
+        const { data: userData, error: userError } = await supabase
+          .from('users_unified')
+          .select('*')
+          .eq('email', identifier)
+          .single();
 
-        if (userResult.rows.length > 0) {
-          const rawUser = userResult.rows[0];
-          // Mapear os campos para o formato esperado pelo resto do código
+        if (userError) {
+          console.log('Erro ao buscar usuário pelo email:', userError.message);
+
+          // Se não encontrou por email, tentar por telefone
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('users_unified')
+            .select('*')
+            .eq('phone_number', identifier)
+            .single();
+
+          if (fallbackError) {
+            console.log('Usuário não encontrado por email nem telefone');
+            return {
+              success: false,
+              message: 'Usuário não encontrado'
+            };
+          }
+
           user = {
-            ...rawUser,
-            phoneNumber: rawUser.phone_number,
-            firstName: rawUser.first_name,
-            lastName: rawUser.last_name,
-            createdAt: rawUser.created_at,
-            updatedAt: rawUser.updated_at,
-            accessPermissions: rawUser.access_permissions,
-            accessHistory: rawUser.access_history
-          };
-          console.log('Usuário encontrado pelo email:', user.id);
-        } else {
-          console.log('Usuário não encontrado pelo email, tentando buscar por outros campos');
-
-          // Tentar buscar por outros campos (como phoneNumber)
-          const fallbackResult = await pool.query(`
-            SELECT * FROM "users_unified"
-            WHERE "phone_number" = $1
-          `, [identifier]);
-
-          if (fallbackResult.rows.length > 0) {
-            const rawUser = fallbackResult.rows[0];
-            // Mapear os campos para o formato esperado pelo resto do código
-            user = {
-              ...rawUser,
-              phoneNumber: rawUser.phone_number,
-              firstName: rawUser.first_name,
-              lastName: rawUser.last_name,
-              createdAt: rawUser.created_at,
-              updatedAt: rawUser.updated_at,
-              accessPermissions: rawUser.access_permissions,
-              accessHistory: rawUser.access_history
+            ...fallbackData,
+            phoneNumber: fallbackData.phone_number,
+            firstName: fallbackData.first_name,
+            lastName: fallbackData.last_name,
+              createdAt: fallbackData.created_at,
+              updatedAt: fallbackData.updated_at,
+              accessPermissions: fallbackData.access_permissions,
+              accessHistory: fallbackData.access_history
             };
             console.log('Usuário encontrado pelo telefone:', user.id);
           }
@@ -1289,26 +1292,31 @@ export async function loginWithPassword(identifier: string, password: string): P
       } else {
         // Buscar por número de telefone
         console.log('Buscando por telefone:', identifier);
-        const userResult = await pool.query(`
-          SELECT * FROM "users_unified"
-          WHERE "phone_number" = $1
-        `, [identifier]);
+        const { data: userData, error: userError } = await supabase
+          .from('users_unified')
+          .select('*')
+          .eq('phone_number', identifier)
+          .single();
 
-        if (userResult.rows.length > 0) {
-          const rawUser = userResult.rows[0];
-          // Mapear os campos para o formato esperado pelo resto do código
-          user = {
-            ...rawUser,
-            phoneNumber: rawUser.phone_number,
-            firstName: rawUser.first_name,
-            lastName: rawUser.last_name,
-            createdAt: rawUser.created_at,
-            updatedAt: rawUser.updated_at,
-            accessPermissions: rawUser.access_permissions,
-            accessHistory: rawUser.access_history
+        if (userError) {
+          console.log('Usuário não encontrado por telefone:', userError.message);
+          return {
+            success: false,
+            message: 'Usuário não encontrado'
           };
-          console.log('Usuário encontrado pelo telefone:', user.id);
         }
+
+        user = {
+          ...userData,
+          phoneNumber: userData.phone_number,
+          firstName: userData.first_name,
+          lastName: userData.last_name,
+          createdAt: userData.created_at,
+          updatedAt: userData.updated_at,
+          accessPermissions: userData.access_permissions,
+          accessHistory: userData.access_history
+        };
+        console.log('Usuário encontrado pelo telefone:', user.id);
       }
 
       if (!user) {
@@ -1639,8 +1647,5 @@ export async function loginWithPassword(identifier: string, password: string): P
       success: false,
       message: 'Erro interno do servidor. Por favor, tente novamente.'
     };
-  } finally {
-    // Fechar a conexão com o PostgreSQL
-    await pool.end();
   }
 }
