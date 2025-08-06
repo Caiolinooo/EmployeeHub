@@ -354,6 +354,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Verificar configurações de bypass de aprovação
+    const { getUserApprovalSettings } = await import('@/lib/user-approval');
+    const approvalSettings = await getUserApprovalSettings();
+    console.log('Configurações de aprovação:', approvalSettings);
+
+    // Se o bypass está ativo, ativar usuário automaticamente
+    const shouldAutoActivate = approvalSettings.bypassApproval || isInviteValid;
+    console.log('Deve ativar automaticamente:', shouldAutoActivate, {
+      bypassApproval: approvalSettings.bypassApproval,
+      isInviteValid
+    });
+
     // Criar usuário na tabela users_unified
     const { data: userData, error: userError } = await supabase
       .from('users_unified')
@@ -367,9 +379,9 @@ export async function POST(request: NextRequest) {
         position: position || 'Não informado',
         department: 'Não informado',
         role: 'USER',
-        active: isInviteValid, // Ativo imediatamente se o convite for válido
-        is_authorized: isInviteValid, // Autorizado imediatamente se o convite for válido
-        authorization_status: isInviteValid ? 'active' : 'pending',
+        active: shouldAutoActivate, // Ativo se bypass estiver ativo ou convite válido
+        is_authorized: shouldAutoActivate, // Autorizado se bypass estiver ativo ou convite válido
+        authorization_status: shouldAutoActivate ? 'active' : 'pending',
         verification_code: verificationCode,
         verification_code_expires: verificationCodeExpires.toISOString(),
         protocol: protocol,

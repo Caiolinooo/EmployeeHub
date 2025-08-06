@@ -21,6 +21,7 @@ const adminMenuItems = [
   { id: 'documents', href: '/admin/documents', label: 'admin.documentsSection', icon: FiFileText },
   { id: 'news', href: '/admin/news', label: 'admin.news', icon: FiEdit },
   { id: 'user-management', href: '/admin/user-management', label: 'admin.usersSection', icon: FiUsers },
+  { id: 'user-approval-settings', href: '/admin/user-approval-settings', label: 'Configurações de Aprovação', icon: FiUserCheck },
   // Seção de Reembolsos
   { id: 'reimbursement-dashboard', href: '/reembolso?tab=dashboard', label: 'Meus Reembolsos', icon: FiDollarSign },
   { id: 'reimbursement-approval', href: '/reembolso?tab=approval', label: 'Aprovar Reembolsos', icon: FiCheck },

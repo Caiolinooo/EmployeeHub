@@ -113,6 +113,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verificar configurações de bypass de aprovação
+    const { getUserApprovalSettings } = await import('@/lib/user-approval');
+    const approvalSettings = await getUserApprovalSettings();
+    console.log('Configurações de aprovação:', approvalSettings);
+
     // Verificar se o código de convite é válido
     let isInviteValid = false;
     let inviteData = null;
@@ -151,6 +156,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Se o bypass está ativo, ativar usuário automaticamente
+    const shouldAutoActivate = approvalSettings.bypassApproval || isInviteValid;
+    console.log('Deve ativar automaticamente:', shouldAutoActivate, {
+      bypassApproval: approvalSettings.bypassApproval,
+      isInviteValid
+    });
+
     // Criar usuário na tabela users_unified
     const { data: userData, error: userError } = await supabase
       .from('users_unified')
@@ -163,9 +175,9 @@ export async function POST(request: NextRequest) {
         position: position || 'Não informado',
         department: department || 'Não informado',
         role: 'USER',
-        active: isInviteValid, // Ativo imediatamente se o convite for válido
-        is_authorized: isInviteValid, // Autorizado imediatamente se o convite for válido
-        authorization_status: isInviteValid ? 'active' : 'pending',
+        active: shouldAutoActivate, // Ativo se bypass estiver ativo ou convite válido
+        is_authorized: shouldAutoActivate, // Autorizado se bypass estiver ativo ou convite válido
+        authorization_status: shouldAutoActivate ? 'active' : 'pending',
         verification_code: verificationCode,
         verification_code_expires: verificationCodeExpires.toISOString(),
         protocol: protocol,
@@ -256,32 +268,38 @@ export async function POST(request: NextRequest) {
       // Não interromper o fluxo se o email falhar
     }
 
-    // Enviar notificação para o administrador
-    try {
-      await sendAdminNotificationEmail(
-        process.env.ADMIN_EMAIL || 'caio.correia@groupabz.com',
-        {
-          name: `${firstName} ${lastName}`,
-          email,
-          phoneNumber,
-          position: position || 'Não informado',
-          department: department || 'Não informado',
-          protocol
-        }
-      );
-    } catch (notifyError) {
-      console.error('Erro ao enviar notificação para o administrador:', notifyError);
-      // Não interromper o fluxo se a notificação falhar
+    // Enviar notificação para o administrador apenas se bypass não estiver ativo
+    if (!approvalSettings.bypassApproval) {
+      try {
+        console.log('Enviando notificação para administrador (aprovação manual necessária)');
+        await sendAdminNotificationEmail(
+          process.env.ADMIN_EMAIL || 'caio.correia@groupabz.com',
+          {
+            name: `${firstName} ${lastName}`,
+            email,
+            phoneNumber,
+            position: position || 'Não informado',
+            department: department || 'Não informado',
+            protocol
+          }
+        );
+      } catch (notifyError) {
+        console.error('Erro ao enviar notificação para o administrador:', notifyError);
+        // Não interromper o fluxo se a notificação falhar
+      }
+    } else {
+      console.log('Bypass de aprovação ativo - não enviando notificação para administrador');
     }
 
     return NextResponse.json({
       success: true,
-      message: isInviteValid
+      message: shouldAutoActivate
         ? 'Registro realizado com sucesso. Sua conta já está ativa e você pode fazer login imediatamente.'
         : 'Registro realizado com sucesso. Verifique seu e-mail para confirmar seu cadastro.',
       protocol,
       previewUrl: sendResult.previewUrl,
-      accountActive: isInviteValid
+      accountActive: shouldAutoActivate,
+      bypassActive: approvalSettings.bypassApproval
     });
   } catch (error) {
     console.error('Erro ao registrar usuário:', error);
