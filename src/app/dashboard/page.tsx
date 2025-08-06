@@ -133,7 +133,7 @@ export default function Dashboard() {
         setCards(getTranslatedCards((key: string) => t(key)));
       }
     }
-  }, [locale, t, loadingCards, cards]);
+  }, [locale, t, loadingCards]); // Removido 'cards' das dependências para evitar loop infinito
 
   if (isLoading) {
     return <LoadingSpinner />;

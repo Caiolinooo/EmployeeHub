@@ -1726,17 +1726,16 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
     const result = hasAdminRole || isAdminEmail || hasAdminPermission;
 
-    // Debug: verificar se o usuário é administrador
-    console.log('SupabaseAuthContext - isAdmin:', result);
-    console.log('SupabaseAuthContext - hasAdminRole:', hasAdminRole);
-    console.log('SupabaseAuthContext - isAdminEmail:', isAdminEmail);
-    console.log('SupabaseAuthContext - hasAdminPermission:', hasAdminPermission);
-    console.log('SupabaseAuthContext - user email:', user?.email);
-    console.log('SupabaseAuthContext - profile email:', profile?.email);
-    console.log('SupabaseAuthContext - profile role:', profile?.role);
-    console.log('SupabaseAuthContext - token role:', tokenPayload?.role);
-    console.log('SupabaseAuthContext - profile permissions:', JSON.stringify(profile?.access_permissions));
-    console.log('SupabaseAuthContext - accessPermissions:', JSON.stringify(profile?.accessPermissions));
+    // Debug apenas quando há mudanças significativas
+    if (result && !isLoading) {
+      console.log('SupabaseAuthContext - Admin access confirmed:', {
+        hasAdminRole,
+        isAdminEmail,
+        hasAdminPermission,
+        userEmail: user?.email,
+        profileRole: profile?.role
+      });
+    }
 
     return result;
   }, [profile, user, adminEmail]);
