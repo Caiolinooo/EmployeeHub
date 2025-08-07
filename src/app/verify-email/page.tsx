@@ -21,8 +21,17 @@ export default function VerifyEmailPage() {
   } | null>(null);
 
   useEffect(() => {
+    if (!searchParams) {
+      setVerificationResult({
+        success: false,
+        message: 'Parâmetros de busca não disponíveis'
+      });
+      setIsVerifying(false);
+      return;
+    }
+
     const token = searchParams.get('token');
-    
+
     if (!token) {
       setVerificationResult({
         success: false,
