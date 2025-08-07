@@ -1,51 +1,92 @@
-# Painel ABZ Group
+# 🚀 Painel ABZ - Sistema de Gestão Empresarial
 
 <div align="center">
-  <img src="public/images/LC1_Azul.png" alt="ABZ Group Logo" width="300px">
-  <br>
-  <h3>Plataforma de Gestão Interna</h3>
+
+![Painel ABZ Logo](public/images/LC1_Azul.png)
+
+[![Next.js](https://img.shields.io/badge/Next.js-14.2.3-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-Database-green?style=for-the-badge&logo=supabase)](https://supabase.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
+[![Netlify](https://img.shields.io/badge/Netlify-Deploy-00C7B7?style=for-the-badge&logo=netlify)](https://netlify.com/)
+
+**Sistema completo de gestão empresarial com foco em reembolsos, avaliações e administração de usuários**
+
+[🌐 Demo Live](https://painelabz.netlify.app) • [📖 Documentação](#-documentação) • [🚀 Deploy](#-deploy)
+
 </div>
+
+---
 
 ## 📋 Sobre o Projeto
 
-O Painel ABZ Group é uma plataforma de gestão interna desenvolvida para centralizar e otimizar processos administrativos da empresa. A plataforma oferece módulos para gerenciamento de usuários, reembolsos, documentos, notícias e outras funcionalidades essenciais para a operação diária.
+O **Painel ABZ** é uma plataforma moderna de gestão empresarial desenvolvida para centralizar e otimizar processos administrativos. Com arquitetura robusta e interface intuitiva, oferece módulos completos para gerenciamento de usuários, sistema de reembolsos, avaliações de desempenho e muito mais.
 
-## 🌟 Principais Características
+## ✨ Funcionalidades Principais
 
-- **Sistema de Autenticação Seguro**: Login com e-mail/telefone e senha
-- **Gerenciamento de Usuários**: Cadastro, importação e controle de acesso
-- **Módulo de Reembolso**: Solicitação e aprovação de reembolsos com fluxo completo
-- **Módulo de Avaliação de Desempenho**: Sistema para avaliação de funcionários
-- **Painel Administrativo**: Interface intuitiva para gestão de todas as funcionalidades
-- **Multilíngue**: Suporte para múltiplos idiomas
-- **Design Responsivo**: Funciona em dispositivos desktop e móveis
-- **Banco de Dados PostgreSQL (Supabase)**: Armazenamento robusto, escalável e relacional
-- **API RESTful**: Endpoints para gerenciamento de todos os recursos
-- **Upload de Arquivos**: Sistema para upload e gerenciamento de documentos e imagens
-- **Personalização**: Configurações de cores, logo, favicon e textos
-- **Tabela Unificada de Usuários**: Sistema consolidado de gerenciamento de usuários
+### 🏢 **Gestão Empresarial**
+- **Dashboard Interativo** - Visão geral com métricas em tempo real
+- **Sistema de Reembolsos** - Solicitação, aprovação e controle financeiro completo
+- **Gestão de Usuários** - Controle de acesso e permissões granulares por role
+- **Avaliações de Desempenho** - Sistema completo de avaliação de funcionários
+- **Módulo de Documentos** - Repositório centralizado com controle de acesso
 
-## 🚀 Tecnologias Utilizadas
+### 🔐 **Segurança & Autenticação**
+- **Autenticação Supabase** - Login seguro com JWT e verificação em duas etapas
+- **Controle de Acesso** - Sistema de roles: Admin, Manager, User
+- **Proteção de Rotas** - Middleware de segurança em todas as páginas
+- **Auditoria Completa** - Log de ações e alterações do sistema
+- **Criptografia** - Senhas com bcrypt e dados sensíveis protegidos
 
-- **Frontend**:
-  - [Next.js 14](https://nextjs.org/) - Framework React com SSR e SSG
-  - [React](https://reactjs.org/) - Biblioteca JavaScript para interfaces
-  - [Tailwind CSS](https://tailwindcss.com/) - Framework CSS utilitário
-  - [TypeScript](https://www.typescriptlang.org/) - Superset tipado de JavaScript
+### 🌐 **Experiência do Usuário**
+- **Interface Responsiva** - Design adaptável para todos os dispositivos
+- **Internacionalização** - Suporte completo a múltiplos idiomas (PT/EN/ES)
+- **Tema Customizável** - Cores, logos e favicon personalizáveis via admin
+- **Notificações** - Sistema de alertas em tempo real via email e SMS
+- **Performance** - Carregamento otimizado e cache inteligente
 
-- **Backend**:
-  - [Next.js API Routes](https://nextjs.org/docs/api-routes/introduction) - API serverless
-  - [PostgreSQL](https://www.postgresql.org/) - Banco de dados relacional
-  - [Supabase](https://supabase.com/) - Plataforma de banco de dados e autenticação
-  - [Prisma](https://www.prisma.io/) - ORM para TypeScript e Node.js
+### 📊 **Relatórios & Analytics**
+- **Métricas de Reembolso** - Análise financeira detalhada com gráficos
+- **Performance do Sistema** - Monitoramento em tempo real
+- **Exportação** - Relatórios em PDF, Excel e CSV
+- **Dashboard Customizável** - Cards e widgets configuráveis
 
-- **Autenticação e Segurança**:
-  - [JWT](https://jwt.io/) - Tokens de autenticação
-  - [bcrypt](https://github.com/kelektiv/node.bcrypt.js) - Criptografia de senhas
+## 🏗️ Arquitetura do Sistema
 
-- **Email e Notificações**:
-  - [Nodemailer](https://nodemailer.com/) - Envio de e-mails via Exchange Server
-  - [Supabase](https://supabase.com/) - Envio de SMS e códigos de verificação
+```mermaid
+graph TB
+    A[Frontend - Next.js 14] --> B[API Routes]
+    B --> C[Supabase Database]
+    B --> D[Authentication]
+    B --> E[File Storage]
+
+    F[Admin Panel] --> A
+    G[User Dashboard] --> A
+    H[Reimbursement System] --> A
+    I[Evaluation System] --> A
+
+    C --> J[PostgreSQL]
+    D --> K[JWT Tokens]
+    E --> L[File Upload]
+
+    style A fill:#0066cc,stroke:#fff,color:#fff
+    style C fill:#3ecf8e,stroke:#fff,color:#fff
+    style F fill:#ff6b6b,stroke:#fff,color:#fff
+```
+
+### 🛠️ **Stack Tecnológico**
+
+| Categoria | Tecnologia | Versão | Descrição |
+|-----------|------------|--------|-----------|
+| **Frontend** | Next.js | 14.2.3 | Framework React com SSR |
+| **Linguagem** | TypeScript | 5.0+ | Tipagem estática |
+| **Styling** | Tailwind CSS | 3.4+ | Framework CSS utilitário |
+| **Database** | Supabase | Latest | PostgreSQL como serviço |
+| **Auth** | Supabase Auth | Latest | Autenticação e autorização |
+| **Deploy** | Netlify | Latest | Hospedagem e CI/CD |
+| **Icons** | React Icons | 5.0+ | Biblioteca de ícones |
+| **Email** | Nodemailer | Latest | Envio de emails |
+| **Security** | bcrypt | Latest | Criptografia de senhas |
 
 ## 💻 Requisitos do Sistema
 
@@ -227,12 +268,65 @@ painel-abz/
 - **Menu**: Configuração dos itens do menu lateral
 - **Configurações**: Personalização do sistema (cores, logo, favicon, textos)
 
+## 📱 Screenshots do Sistema
+
+### 🏠 **Dashboard Principal**
+![Dashboard](https://via.placeholder.com/800x400/0066CC/FFFFFF?text=Dashboard+Principal)
+*Dashboard com métricas em tempo real e cards customizáveis*
+
+### 💰 **Sistema de Reembolsos**
+![Reembolsos](https://via.placeholder.com/800x400/28A745/FFFFFF?text=Sistema+de+Reembolsos)
+*Interface completa para solicitação e aprovação de reembolsos*
+
+### 👥 **Gestão de Usuários**
+![Usuários](https://via.placeholder.com/800x400/DC3545/FFFFFF?text=Gestão+de+Usuários)
+*Painel administrativo para gerenciamento de usuários e permissões*
+
+### 📊 **Relatórios e Analytics**
+![Relatórios](https://via.placeholder.com/800x400/FFC107/000000?text=Relatórios+e+Analytics)
+*Gráficos interativos e relatórios detalhados*
+
+---
+
+## 🗺️ Roadmap de Desenvolvimento
+
+### ✅ **Concluído (v1.0)**
+- [x] Sistema de autenticação completo com Supabase
+- [x] Dashboard interativo com métricas em tempo real
+- [x] Sistema de reembolsos com fluxo completo
+- [x] Gestão de usuários e permissões por role
+- [x] Internacionalização (PT/EN/ES)
+- [x] Deploy automatizado no Netlify
+- [x] Sistema de notificações por email
+- [x] Interface responsiva e moderna
+
+### 🚧 **Em Desenvolvimento (v1.1)**
+- [ ] Sistema de avaliações avançado com métricas
+- [ ] Relatórios em PDF com gráficos
+- [ ] Notificações push em tempo real
+- [ ] API mobile para aplicativo
+- [ ] Integração com sistemas externos (ERP)
+- [ ] Dashboard de BI avançado
+
+### 🔮 **Planejado (v2.0)**
+- [ ] Módulo de RH completo
+- [ ] Sistema de workflows automatizados
+- [ ] BI e Analytics com Machine Learning
+- [ ] Aplicativo mobile nativo (React Native)
+- [ ] Integração com Microsoft 365
+- [ ] Sistema de chat interno
+
+---
+
 ## 🌎 Internacionalização
 
-O sistema suporta múltiplos idiomas, incluindo:
-- Português (Brasil)
-- Inglês
-- Espanhol
+O sistema possui suporte completo a múltiplos idiomas:
+
+| Idioma | Status | Cobertura |
+|--------|--------|-----------|
+| 🇧🇷 **Português (Brasil)** | ✅ Completo | 100% |
+| 🇺🇸 **Inglês** | ✅ Completo | 95% |
+| 🇪🇸 **Espanhol** | 🚧 Em desenvolvimento | 80% |
 
 ## 🔗 API RESTful
 
@@ -271,32 +365,83 @@ Você pode testar a configuração de email acessando a rota:
 /api/test-email
 ```
 
-## 🤝 Contribuição
+## 🤝 Como Contribuir
 
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/nova-funcionalidade`)
-3. Faça commit das suas alterações (`git commit -m 'Adiciona nova funcionalidade'`)
-4. Faça push para a branch (`git push origin feature/nova-funcionalidade`)
-5. Abra um Pull Request
+Contribuições são sempre bem-vindas! Siga os passos abaixo:
 
-## 📄 Licença
+### 📝 **Processo de Contribuição**
 
-Este projeto é propriedade pessoal de Caio Valerio Goulart Correia. Todos os direitos reservados.
-O uso, distribuição ou modificação deste código sem autorização expressa do autor é proibido.
+1. **Fork** o projeto
+2. **Clone** seu fork: `git clone https://github.com/seu-usuario/painelabz.git`
+3. **Crie** uma branch: `git checkout -b feature/nova-funcionalidade`
+4. **Desenvolva** sua funcionalidade
+5. **Teste** suas alterações
+6. **Commit** com mensagem descritiva: `git commit -m 'feat: adiciona nova funcionalidade'`
+7. **Push** para sua branch: `git push origin feature/nova-funcionalidade`
+8. **Abra** um Pull Request
 
-Este software é licenciado sob uma licença proprietária. Veja o arquivo [LICENSE](./LICENSE) para mais detalhes.
+### 🐛 **Reportar Bugs**
 
-## 📞 Contato
+Use as [Issues](https://github.com/Caiolinooo/painelabz/issues) para reportar bugs:
 
-Para suporte ou dúvidas, entre em contato através do e-mail pessoal do desenvolvedor: caiovaleriogoulartcorreia@gmail.com
+- **Descreva** o problema detalhadamente
+- **Inclua** steps para reproduzir
+- **Adicione** screenshots se necessário
+- **Especifique** seu ambiente (OS, browser, etc.)
+
+### 💡 **Sugerir Funcionalidades**
+
+Tem uma ideia? Abra uma [Issue](https://github.com/Caiolinooo/painelabz/issues) com:
+
+- **Descrição** clara da funcionalidade
+- **Justificativa** do valor que agregaria
+- **Mockups** ou exemplos (se aplicável)
 
 ---
 
+## 📊 Estatísticas do Projeto
+
 <div align="center">
-  <p>Desenvolvido com ❤️ por Caio Valerio Goulart Correia</p>
-  <div class="social-links" style="margin-top: 10px;">
-    <a href="https://www.linkedin.com/in/caio-goulart/" target="_blank">LinkedIn</a> |
-    <a href="https://github.com/Caiolinooo" target="_blank">GitHub</a> |
-    <a href="https://www.instagram.com/Tal_do_Goulart" target="_blank">Instagram</a>
-  </div>
+
+![GitHub stars](https://img.shields.io/github/stars/Caiolinooo/painelabz?style=social)
+![GitHub forks](https://img.shields.io/github/forks/Caiolinooo/painelabz?style=social)
+![GitHub issues](https://img.shields.io/github/issues/Caiolinooo/painelabz)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/Caiolinooo/painelabz)
+
+</div>
+
+---
+
+## 📄 Licença
+
+Este projeto é propriedade de **Caio Valerio Goulart Correia**.
+
+**Licença Proprietária** - Todos os direitos reservados. O uso, distribuição ou modificação deste código sem autorização expressa é proibido.
+
+Para licenciamento comercial, entre em contato: [caiovaleriogoulartcorreia@gmail.com](mailto:caiovaleriogoulartcorreia@gmail.com)
+
+---
+
+## 📞 Contato & Suporte
+
+<div align="center">
+
+### 👨‍💻 **Desenvolvedor Principal**
+**Caio Valerio Goulart Correia**
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/caio-goulart/)
+[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Caiolinooo)
+[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://www.instagram.com/Tal_do_Goulart)
+[![Email](https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:caiovaleriogoulartcorreia@gmail.com)
+
+### 🏢 **Suporte Empresarial**
+Para suporte técnico ou dúvidas sobre implementação:
+📧 **Email:** [caiovaleriogoulartcorreia@gmail.com](mailto:caiovaleriogoulartcorreia@gmail.com)
+
+---
+
+**Desenvolvido com ❤️ e muito ☕ por Caio Valerio Goulart Correia**
+
+*"Transformando ideias em soluções digitais que fazem a diferença"*
+
 </div>
