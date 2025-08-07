@@ -163,35 +163,30 @@ export async function GET(request: NextRequest) {
     console.log('🔄 API Reminders Process - Obtendo estatísticas...');
 
     // Contar lembretes por status
-    const { data: stats, error } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from('reminders')
-      .select('status')
-      .then(async ({ data, error }) => {
-        if (error) throw error;
-
-        const statusCounts = {
-          pending: 0,
-          sent: 0,
-          cancelled: 0,
-          total: data?.length || 0
-        };
-
-        data?.forEach(reminder => {
-          if (reminder.status in statusCounts) {
-            statusCounts[reminder.status as keyof typeof statusCounts]++;
-          }
-        });
-
-        return statusCounts;
-      });
+      .select('status');
 
     if (error) {
-      console.error('Erro ao obter estatísticas:', error);
+      console.error('Erro ao obter lembretes:', error);
       return NextResponse.json(
         { error: 'Erro ao obter estatísticas' },
         { status: 500 }
       );
     }
+
+    const stats = {
+      pending: 0,
+      sent: 0,
+      cancelled: 0,
+      total: data?.length || 0
+    };
+
+    data?.forEach(reminder => {
+      if (reminder.status in stats) {
+        stats[reminder.status as keyof typeof stats]++;
+      }
+    });
 
     // Contar lembretes que devem ser processados agora
     const now = new Date().toISOString();
