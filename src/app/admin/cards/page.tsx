@@ -537,9 +537,9 @@ export default function CardsPage() {
     }
   };
 
-  // Função para criar a tabela cards
-  const createCardsTable = async () => {
-    try {
+  // Função para criar a tabela cards (temporariamente desabilitada)
+  // const createCardsTable = async () => {
+  //   try {
       // setCreatingTable(true); // Removido - variável não existe
       setError(null);
 
@@ -594,7 +594,7 @@ export default function CardsPage() {
     };
 
     init();
-  }, []);
+  }, [checkCardsTable, loadCards]);
 
   // Funções para gerenciar os cards
   const handleEdit = (card: DashboardCard) => {
@@ -619,7 +619,7 @@ export default function CardsPage() {
       adminOnly: false
     };
 
-    console.log('Criando novo card com ícone:', typeof newCard.icon, (newCard.icon as any).displayName || newCard.iconName);
+    console.log('Criando novo card com ícone:', typeof newCard.icon, (newCard.icon as React.ComponentType)?.displayName || newCard.iconName);
 
     setEditingCard(newCard);
     setIsAdding(true);
@@ -631,7 +631,7 @@ export default function CardsPage() {
         const cardToSend = {
           ...card,
           // Se o ícone for um componente, extrair o nome do ícone (string)
-          icon: typeof card.icon === 'function' ? (card.icon as any).displayName || 'FiGrid' : card.icon
+          icon: typeof card.icon === 'function' ? (card.icon as React.ComponentType)?.displayName || 'FiGrid' : card.icon
         };
 
       console.log('Salvando card:', cardToSend);
@@ -785,7 +785,7 @@ export default function CardsPage() {
         ...card,
         enabled,
         // Se o ícone for um componente, extrair o displayName
-        icon: typeof card.icon === 'function' ? (card.icon as any).displayName || card.iconName || 'FiGrid' : card.icon
+        icon: typeof card.icon === 'function' ? (card.icon as React.ComponentType)?.displayName || card.iconName || 'FiGrid' : card.icon
       };
 
       console.log('Atualizando visibilidade do card:', cardToSend);
@@ -855,14 +855,14 @@ export default function CardsPage() {
         ...currentCard,
         order: prevOrder,
         // Se o ícone for um componente, extrair o displayName
-        icon: typeof currentCard.icon === 'function' ? (currentCard.icon as any).displayName || 'FiGrid' : currentCard.icon
+        icon: typeof currentCard.icon === 'function' ? (currentCard.icon as React.ComponentType)?.displayName || 'FiGrid' : currentCard.icon
       };
 
       const prevCardToSend = {
         ...prevCard,
         order: currentOrder,
         // Se o ícone for um componente, extrair o displayName
-        icon: typeof prevCard.icon === 'function' ? (prevCard.icon as any).displayName || 'FiGrid' : prevCard.icon
+        icon: typeof prevCard.icon === 'function' ? (prevCard.icon as React.ComponentType)?.displayName || 'FiGrid' : prevCard.icon
       };
 
       console.log('Atualizando ordem dos cards:', { currentCardToSend, prevCardToSend });
@@ -947,7 +947,7 @@ export default function CardsPage() {
         ...currentCard,
         order: nextOrder,
         // Se o ícone for um componente, extrair o displayName
-        icon: typeof currentCard.icon === 'function' ? (currentCard.icon as any).displayName || 'FiGrid' : currentCard.icon
+        icon: typeof currentCard.icon === 'function' ? (currentCard.icon as React.ComponentType)?.displayName || 'FiGrid' : currentCard.icon
       };
 
       const nextCardToSend = {
