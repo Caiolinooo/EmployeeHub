@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
 
     if (user.password) {
       // Usar bcrypt para comparar com o hash do banco
-      const bcrypt = require('bcryptjs');
+      const bcrypt = await import('bcryptjs');
       passwordMatches = await bcrypt.compare(password, user.password);
       console.log('API login-password: Resultado da comparação bcrypt:', passwordMatches);
     } else {

@@ -6,6 +6,7 @@ const nextConfig = {
   },
   eslint: {
     ignoreDuringBuilds: false,
+    dirs: ['pages', 'utils', 'src'],
   },
 
   // Configurações de imagens

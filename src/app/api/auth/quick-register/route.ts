@@ -469,7 +469,8 @@ export async function POST(request: NextRequest) {
         console.log('Bypass ativo - enviando apenas email de verificação por link');
 
         // Gerar token de verificação por email
-        const emailVerificationToken = require('uuid').v4();
+        const { v4: uuidv4 } = await import('uuid');
+        const emailVerificationToken = uuidv4();
 
         // Atualizar usuário com token de verificação
         const { error: updateError } = await supabase

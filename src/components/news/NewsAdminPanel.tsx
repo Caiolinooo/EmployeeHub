@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FiPlus, FiEdit, FiTrash2, FiEye, FiCalendar, FiHeart, FiMessageCircle, FiStar, FiPin, FiFilter, FiSearch, FiRefreshCw } from 'react-icons/fi';
+import { FiPlus, FiEdit, FiTrash2, FiEye, FiCalendar, FiHeart, FiMessageCircle, FiStar, FiBookmark, FiFilter, FiSearch, FiRefreshCw } from 'react-icons/fi';
 import { useACLPermissions } from '@/hooks/useACLPermissions';
 import NewsPostEditor from './NewsPostEditor';
 
@@ -320,7 +320,7 @@ const NewsAdminPanel: React.FC<NewsAdminPanelProps> = ({ userId }) => {
                       )}
                       {post.pinned && (
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                          <FiPin className="w-3 h-3 mr-1" />
+                          <FiBookmark className="w-3 h-3 mr-1" />
                           Fixado
                         </span>
                       )}
