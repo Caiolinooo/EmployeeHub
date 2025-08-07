@@ -540,49 +540,49 @@ export default function CardsPage() {
   // Função para criar a tabela cards (temporariamente desabilitada)
   // const createCardsTable = async () => {
   //   try {
-      // setCreatingTable(true); // Removido - variável não existe
-      setError(null);
+  //     // setCreatingTable(true); // Removido - variável não existe
+  //     setError(null);
 
-      // Obter o token de autenticação do localStorage
-      const token = localStorage.getItem('token');
+  //     // Obter o token de autenticação do localStorage
+  //     const token = localStorage.getItem('token');
 
-      if (!token) {
-        throw new Error('Você precisa estar autenticado para criar a tabela');
-      }
+  //     if (!token) {
+  //       throw new Error('Você precisa estar autenticado para criar a tabela');
+  //     }
 
-      console.log('Criando tabela cards...');
+  //     console.log('Criando tabela cards...');
 
-      const response = await fetch('/api/admin/cards/create-table', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+  //     const response = await fetch('/api/admin/cards/create-table', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Authorization': `Bearer ${token}`
+  //       }
+  //     });
 
-      if (!response.ok) {
-        throw new Error(`Erro ao criar tabela: ${response.status} ${response.statusText}`);
-      }
+  //     if (!response.ok) {
+  //       throw new Error(`Erro ao criar tabela: ${response.status} ${response.statusText}`);
+  //     }
 
-      const data = await response.json();
-      console.log('Resultado da criação da tabela cards:', data);
+  //     const data = await response.json();
+  //     console.log('Resultado da criação da tabela cards:', data);
 
-      if (data.success) {
-        setSuccessMessage('Tabela de cards criada com sucesso!');
-        setTableExists(true);
-        setTimeout(() => {
-          setSuccessMessage(null);
-          loadCards();
-        }, 2000);
-      } else {
-        throw new Error(data.error || 'Erro ao criar tabela');
-      }
-    } catch (err) {
-      console.error('Erro ao criar tabela cards:', err);
-      setError(err instanceof Error ? err.message : 'Erro desconhecido');
-    } finally {
-      // setCreatingTable(false); // Removido - variável não existe
-    }
-  };
+  //     if (data.success) {
+  //       setSuccessMessage('Tabela de cards criada com sucesso!');
+  //       setTableExists(true);
+  //       setTimeout(() => {
+  //         setSuccessMessage(null);
+  //         loadCards();
+  //       }, 2000);
+  //     } else {
+  //       throw new Error(data.error || 'Erro ao criar tabela');
+  //     }
+  //   } catch (err) {
+  //     console.error('Erro ao criar tabela cards:', err);
+  //     setError(err instanceof Error ? err.message : 'Erro desconhecido');
+  //   } finally {
+  //     // setCreatingTable(false); // Removido - variável não existe
+  //   }
+  // };
 
   // Carregar cards quando o componente montar
   useEffect(() => {
