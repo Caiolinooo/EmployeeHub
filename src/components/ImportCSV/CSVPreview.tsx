@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { FiCheck, FiSquare } from 'react-icons/fi';
 
 interface CSVPreviewProps {
-  data: Record<string, any>[];
+  data: Record<string, string | number>[];
   selectedRows?: number[];
   onSelectedRowsChange?: (selectedRows: number[]) => void;
 }

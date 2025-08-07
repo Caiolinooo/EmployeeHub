@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { FiPlus, FiTrash2, FiDollarSign } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
-import { InputField, TextArea, SelectField } from './FormFields';
+// import { InputField, TextArea, SelectField } from './FormFields';
 import CurrencyInput from './CurrencyInput';
 import FileUploader, { UploadedFile } from './FileUploader';
 
@@ -20,7 +20,7 @@ interface MultipleExpensesProps {
   onChange: (expenses: Expense[]) => void;
   currency: string;
   onCurrencyChange?: (currency: string) => void;
-  errors?: Record<string, any>;
+  errors?: Record<string, string | string[]>;
 }
 
 const MultipleExpenses: React.FC<MultipleExpensesProps> = ({

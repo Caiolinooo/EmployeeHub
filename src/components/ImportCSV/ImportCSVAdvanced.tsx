@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { FiUpload, FiFile, FiX, FiCheck, FiAlertCircle, FiLoader, FiEdit, FiSettings } from 'react-icons/fi';
 import CSVPreview from './CSVPreview';
@@ -16,7 +16,7 @@ const SEPARATORS = [
 ];
 
 interface ImportCSVAdvancedProps {
-  onImportComplete?: (data: any[]) => void;
+  onImportComplete?: (data: Record<string, string | number>[]) => void;
   apiEndpoint: string;
   importType: string;
   fieldDefinitions: {
@@ -35,10 +35,10 @@ export default function ImportCSVAdvanced({
   const { t } = useI18n();
   const [file, setFile] = useState<File | null>(null);
   const [separator, setSeparator] = useState<string>(',');
-  const [previewData, setPreviewData] = useState<any[]>([]);
+  const [previewData, setPreviewData] = useState<Record<string, string | number>[]>([]);
   const [rawData, setRawData] = useState<string>('');
   const [headers, setHeaders] = useState<string[]>([]);
-  const [mappedData, setMappedData] = useState<any[]>([]);
+  // const [mappedData, setMappedData] = useState<Record<string, string | number>[]>([]);
   const [fieldMapping, setFieldMapping] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);

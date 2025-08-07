@@ -7,7 +7,7 @@ import { FaWhatsapp } from 'react-icons/fa';
 const InstructionsPanel: React.FC = () => {
   const [show, setShow] = useState(false);
   const [reachedBottom, setReachedBottom] = useState(false);
-  const [showContactButtons, setShowContactButtons] = useState(true);
+  // const [showContactButtons, setShowContactButtons] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -35,7 +35,7 @@ const InstructionsPanel: React.FC = () => {
 
   // Standard Blue Button Style (Apply identified style)
   const standardButtonStyle = "px-6 py-3 bg-abz-blue-dark text-white rounded-lg font-semibold hover:bg-opacity-90 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed";
-  const secondaryButtonStyle = "px-5 py-2 bg-gray-600 text-white rounded-md font-medium hover:bg-gray-700 transition duration-150 text-sm shadow-sm";
+  // const secondaryButtonStyle = "px-5 py-2 bg-gray-600 text-white rounded-md font-medium hover:bg-gray-700 transition duration-150 text-sm shadow-sm";
   const whatsappButtonStyle = "px-5 py-2 bg-green-500 text-white rounded-md font-medium hover:bg-green-600 transition duration-150 text-sm shadow-sm flex items-center";
 
   return (

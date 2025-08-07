@@ -3,9 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-    FiLogOut, FiGrid, FiBookOpen, FiClipboard, FiDollarSign,
-    FiLifeBuoy, FiClock, FiPhone, FiShield, FiBriefcase, FiCalendar,
-    FiRss, FiFileText, FiSettings, FiLoader, FiMenu, FiX, FiUser, FiGlobe
+    FiLogOut, FiLoader, FiUser
 } from 'react-icons/fi';
 import Footer from '@/components/Footer';
 import { usePathname, useRouter } from 'next/navigation';
@@ -14,7 +12,7 @@ import { useI18n } from '@/contexts/I18nContext';
 import { useSiteConfig } from '@/contexts/SiteConfigContext';
 import LanguageSelector from '@/components/LanguageSelector';
 import PerformanceMonitor from '@/components/Performance/PerformanceMonitor';
-import menuItems, { getTranslatedMenu } from '@/data/menu';
+import { getTranslatedMenu } from '@/data/menu';
 import { startMeasure, endMeasure, logPerformance } from '@/lib/performance';
 import { PasswordRequiredGuard } from '@/components/Auth/PasswordRequiredGuard';
 
@@ -64,9 +62,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
   }
 
   // Alternar menu mobile
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
+  // const toggleMobileMenu = () => {
+  //   setIsMobileMenuOpen(!isMobileMenuOpen);
+  // };
 
   return (
     <PasswordRequiredGuard>

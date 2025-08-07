@@ -18,13 +18,13 @@ interface MaterialIconProviderProps {
 }
 
 // Lista de nomes de ícones do Material Design que precisam ser substituídos
-const materialIconNames = [
-  'book', 'description', 'policy', 'calendar_today', 'newspaper',
-  'receipt', 'payments', 'schedule', 'assessment', 'admin_panel_settings',
-  'dashboard', 'people', 'person', 'settings', 'menu', 'close', 'logout',
-  'layers', 'list', 'edit', 'image', 'check', 'alert', 'info', 'warning',
-  'error', 'success'
-];
+// const materialIconNames = [
+  // 'book', 'description', 'policy', 'calendar_today', 'newspaper',
+  // 'receipt', 'payments', 'schedule', 'assessment', 'admin_panel_settings',
+  // 'dashboard', 'people', 'person', 'settings', 'menu', 'close', 'logout',
+  // 'layers', 'list', 'edit', 'image', 'check', 'alert', 'info', 'warning',
+  // 'error', 'success'
+// ];
 
 /**
  * Função recursiva para processar os filhos e substituir tags de ícones

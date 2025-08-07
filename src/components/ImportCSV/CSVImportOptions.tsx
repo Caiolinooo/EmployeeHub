@@ -10,7 +10,12 @@ interface CSVImportOptionsProps {
     skipEmptyRows: boolean;
     validateData: boolean;
   };
-  onChange: (options: any) => void;
+  onChange: (options: {
+    hasHeader: boolean;
+    trimValues: boolean;
+    skipEmptyRows: boolean;
+    validateData: boolean;
+  }) => void;
   separators: { id: string; label: string }[];
   currentSeparator: string;
   onSeparatorChange: (separator: string) => void;

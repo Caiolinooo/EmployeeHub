@@ -1,7 +1,7 @@
 'use client';
 
 import React, { lazy, Suspense } from 'react';
-import { IconType } from 'react-icons';
+// import { IconType } from 'react-icons';
 
 // Import dinâmico de ícones específicos para reduzir bundle size
 const iconComponents = {
