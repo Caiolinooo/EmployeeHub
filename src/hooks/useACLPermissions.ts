@@ -180,10 +180,11 @@ export function useACLPermissions(userId?: string) {
   // Verificar se usuário tem permissão (usando dados carregados)
   const hasPermission = useCallback((permissionName: string): boolean => {
     if (!permissions) return false;
-    
-    // Administradores têm acesso a tudo
-    if (permissions.user.role === 'ADMIN') return true;
-    
+
+    // Administradores têm acesso a tudo (verificar tanto ADMIN quanto admin)
+    const userRole = permissions.user.role?.toUpperCase();
+    if (userRole === 'ADMIN') return true;
+
     // Verificar nas permissões efetivas
     return permissions.effective_permissions.some(p => p.name === permissionName);
   }, [permissions]);
@@ -191,12 +192,13 @@ export function useACLPermissions(userId?: string) {
   // Verificar se usuário tem permissão por recurso e ação
   const hasResourcePermission = useCallback((resource: string, action: string): boolean => {
     if (!permissions) return false;
-    
-    // Administradores têm acesso a tudo
-    if (permissions.user.role === 'ADMIN') return true;
-    
+
+    // Administradores têm acesso a tudo (verificar tanto ADMIN quanto admin)
+    const userRole = permissions.user.role?.toUpperCase();
+    if (userRole === 'ADMIN') return true;
+
     // Verificar nas permissões efetivas
-    return permissions.effective_permissions.some(p => 
+    return permissions.effective_permissions.some(p =>
       p.resource === resource && p.action === action
     );
   }, [permissions]);
@@ -232,7 +234,7 @@ export function useACLPermissions(userId?: string) {
     canModerateComments: hasPermission('comments.moderate'),
     canSendNotifications: hasPermission('notifications.send'),
     canManageReminders: hasPermission('reminders.manage'),
-    isAdmin: permissions?.user.role === 'ADMIN',
-    isManager: permissions?.user.role === 'MANAGER'
+    isAdmin: permissions?.user.role?.toUpperCase() === 'ADMIN',
+    isManager: permissions?.user.role?.toUpperCase() === 'MANAGER'
   };
 }

@@ -30,13 +30,15 @@ export function I18nProvider({ children }: I18nProviderProps) {
     const initialLocale = getInitialLocale();
     console.log('🌐 Locale inicial detectado:', initialLocale);
 
-    if (initialLocale !== locale) {
+    // Only set the locale if it's different from the current one AND we haven't mounted yet
+    // This prevents overriding user selections
+    if (initialLocale !== locale && !mounted) {
       setLocaleState(initialLocale);
     }
 
     // Set document language
     if (typeof document !== 'undefined') {
-      document.documentElement.lang = initialLocale;
+      document.documentElement.lang = locale;
     }
   }, []);
 

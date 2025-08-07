@@ -196,10 +196,10 @@ export function getInitialLocale(): Locale {
     return defaultLocale;
   }
 
-  // First check localStorage - this should have priority over browser detection
+  // First check localStorage - this should have ABSOLUTE priority
   const localStorageLocale = getLocalStorageLocale();
   if (localStorageLocale) {
-    console.log('🌐 Idioma encontrado no localStorage:', localStorageLocale);
+    console.log('🌐 Idioma encontrado no localStorage (prioridade absoluta):', localStorageLocale);
     return localStorageLocale;
   }
 
@@ -220,7 +220,7 @@ export function getInitialLocale(): Locale {
 
   // Only use browser locale if no user preference is set
   const browserLocale = getBrowserLocale();
-  console.log('🌐 Usando idioma do navegador:', browserLocale);
+  console.log('🌐 Usando idioma do navegador (primeira vez):', browserLocale);
 
   // Save the detected locale to localStorage for future use
   setLocalStorageLocale(browserLocale);

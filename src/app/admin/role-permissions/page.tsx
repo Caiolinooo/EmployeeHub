@@ -4,6 +4,7 @@ import React from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import RolePermissionsEditor from '@/components/admin/RolePermissionsEditor';
+import RolePermissionsInitializer from '@/components/admin/RolePermissionsInitializer';
 import { FiArrowLeft } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 
@@ -32,6 +33,11 @@ export default function RolePermissionsPage() {
                 As permissões individuais sempre têm prioridade sobre as permissões do role.
               </p>
             </div>
+          </div>
+
+          {/* Inicializador da Tabela */}
+          <div className="mb-8">
+            <RolePermissionsInitializer />
           </div>
 
           {/* Editor de Permissões */}

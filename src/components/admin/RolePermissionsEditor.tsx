@@ -118,6 +118,9 @@ const RolePermissionsEditor: React.FC<RolePermissionsEditorProps> = ({ onClose }
 
   const currentPermissions = rolePermissions[selectedRole] || { modules: {}, features: {} };
 
+  // Garantir que features sempre existe
+  const safeFeatures = currentPermissions.features || {};
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -210,7 +213,7 @@ const RolePermissionsEditor: React.FC<RolePermissionsEditorProps> = ({ onClose }
             </div>
             <input
               type="checkbox"
-              checked={currentPermissions.features.reimbursement_approval || false}
+              checked={safeFeatures.reimbursement_approval || false}
               onChange={(e) => handleFeatureChange('reimbursement_approval', e.target.checked)}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
@@ -223,7 +226,7 @@ const RolePermissionsEditor: React.FC<RolePermissionsEditorProps> = ({ onClose }
             </div>
             <input
               type="checkbox"
-              checked={currentPermissions.features.reimbursement_view || false}
+              checked={safeFeatures.reimbursement_view || false}
               onChange={(e) => handleFeatureChange('reimbursement_view', e.target.checked)}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
@@ -236,7 +239,7 @@ const RolePermissionsEditor: React.FC<RolePermissionsEditorProps> = ({ onClose }
             </div>
             <input
               type="checkbox"
-              checked={currentPermissions.features.reimbursement_edit || false}
+              checked={safeFeatures.reimbursement_edit || false}
               onChange={(e) => handleFeatureChange('reimbursement_edit', e.target.checked)}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />

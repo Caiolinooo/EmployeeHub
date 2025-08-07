@@ -6,33 +6,58 @@ import NewsFeed from '@/components/news/NewsFeed';
 import NewsAdminPanel from '@/components/news/NewsAdminPanel';
 import NotificationHUD from '@/components/notifications/NotificationHUD';
 import ReminderManager from '@/components/reminders/ReminderManager';
+import ACLManagementPanel from '@/components/admin/ACLManagementPanel';
+import ACLInitializer from '@/components/admin/ACLInitializer';
 import { useACLPermissions } from '@/hooks/useACLPermissions';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useI18n } from '@/contexts/I18nContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 const NewsPage: React.FC = () => {
   const { t } = useI18n();
-  const [activeTab, setActiveTab] = useState<'feed' | 'admin' | 'reminders'>('feed');
-  const [userId, setUserId] = useState<string>('demo-user-id'); // Em produção, vem da autenticação
+  const { user, profile, isAuthenticated, isLoading } = useSupabaseAuth();
+  const [activeTab, setActiveTab] = useState<'feed' | 'admin' | 'reminders' | 'acl'>('feed');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
 
-  const { 
-    hasPermission, 
-    canCreateNews, 
-    canPublishNews, 
+  // Obter userId do usuário autenticado
+  const userId = user?.id || profile?.id || '';
+
+  const {
+    hasPermission,
+    canCreateNews,
+    canPublishNews,
     canManageReminders,
     isAdmin,
-    isManager 
+    isManager
   } = useACLPermissions(userId);
 
   const { unreadCount } = useNotifications(userId);
 
-  // Simular autenticação (em produção, isso viria do contexto de auth)
-  useEffect(() => {
-    // Aqui você obteria o userId real do sistema de autenticação
-    // setUserId(authUser.id);
-  }, []);
+  // Verificar se o usuário está autenticado
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !userId) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">Você precisa estar logado para acessar esta página.</p>
+          <a href="/login" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            Fazer Login
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   const tabs = [
     {
@@ -191,7 +216,10 @@ const NewsPage: React.FC = () => {
         )}
 
         {activeTab === 'acl' && (
-          <ACLManagementPanel />
+          <div className="space-y-6">
+            <ACLInitializer />
+            <ACLManagementPanel />
+          </div>
         )}
       </div>
 

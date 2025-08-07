@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FiSave, FiX, FiUser, FiMail, FiPhone, FiBriefcase, FiUsers, FiPlus, FiTrash2, FiDollarSign, FiShield } from 'react-icons/fi';
 import { AccessPermissions } from '@/models/User';
 import ServerUserReimbursementSettings from './ServerUserReimbursementSettings';
 import ReimbursementPermissionsEditor from './ReimbursementPermissionsEditor';
 import ACLPermissionTreeSelector from './ACLPermissionTreeSelector';
 import { useI18n } from '@/contexts/I18nContext';
-import { useACLPermissions } from '@/hooks/useACLPermissions';
+// import { useACLPermissions } from '@/hooks/useACLPermissions'; // Temporariamente desabilitado
 
 // Interface para o usuário no editor
 export interface UserEditorData {
@@ -87,14 +87,26 @@ const UserEditor: React.FC<UserEditorProps> = ({
   const [availableModules, setAvailableModules] = useState<Array<{id: string, label: string, description: string}>>([]);
   const [rolePermissions, setRolePermissions] = useState<any>({});
 
-  // Hook para gerenciar permissões ACL
-  const {
-    permissions: userACLPermissions,
-    loading: loadingACL,
-    loadUserPermissions,
-    grantPermission,
-    revokePermission
-  } = useACLPermissions();
+  // Hook para gerenciar permissões ACL (temporariamente desabilitado)
+  // const {
+  //   permissions: userACLPermissions,
+  //   loading: loadingACL,
+  //   loadUserPermissions,
+  //   grantPermission,
+  //   revokePermission
+  // } = useACLPermissions(editedUser._id);
+
+  // Definir função loadUserACLPermissions primeiro (temporariamente desabilitada)
+  const loadUserACLPermissions = useCallback(async () => {
+    if (!editedUser._id) return;
+    console.log('ACL permissions loading disabled temporarily');
+    // try {
+    //   await loadUserPermissions(editedUser._id);
+    //   // ... resto do código ACL
+    // } catch (error) {
+    //   console.error('Erro ao carregar permissões ACL:', error);
+    // }
+  }, [editedUser._id]);
 
   // Carregar módulos disponíveis e permissões por role
   useEffect(() => {
@@ -122,35 +134,14 @@ const UserEditor: React.FC<UserEditorProps> = ({
     loadModulesAndPermissions();
   }, []);
 
-  // Carregar permissões ACL quando o usuário for selecionado
-  useEffect(() => {
-    if (editedUser._id && showACLPermissions) {
-      loadUserACLPermissions();
-    }
-  }, [editedUser._id, showACLPermissions]);
+  // Carregar permissões ACL quando o usuário for selecionado (temporariamente desabilitado)
+  // useEffect(() => {
+  //   if (editedUser._id && showACLPermissions) {
+  //     loadUserACLPermissions();
+  //   }
+  // }, [editedUser._id, showACLPermissions, loadUserACLPermissions]);
 
-  const loadUserACLPermissions = async () => {
-    if (!editedUser._id) return;
 
-    try {
-      await loadUserPermissions(editedUser._id);
-
-      // Carregar permissões individuais do usuário
-      if (userACLPermissions) {
-        const individualPermissionIds = userACLPermissions.individual_permissions
-          .filter(up => !up.is_expired)
-          .map(up => up.permission.id);
-        setSelectedACLPermissions(individualPermissionIds);
-
-        // Carregar permissões do role
-        const rolePermissionIds = userACLPermissions.role_permissions
-          .map(rp => rp.permission.id);
-        setRoleACLPermissions(rolePermissionIds);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar permissões ACL:', error);
-    }
-  };
 
   const handleACLPermissionChange = async (permissionIds: string[]) => {
     if (!editedUser._id) return;
@@ -508,6 +499,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
                 {showPermissions ? 'Ocultar Permissões' : 'Configurar Permissões de Acesso'}
               </button>
 
+              {/* Temporariamente desabilitado
               <button
                 type="button"
                 onClick={() => setShowACLPermissions(!showACLPermissions)}
@@ -516,6 +508,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
                 <FiShield className="mr-2" />
                 {showACLPermissions ? 'Ocultar ACL' : 'Permissões ACL Avançadas'}
               </button>
+              */}
             </div>
 
             {showPermissions && (
@@ -603,8 +596,8 @@ const UserEditor: React.FC<UserEditorProps> = ({
               </div>
             )}
 
-            {/* Permissões ACL Avançadas */}
-            {showACLPermissions && (
+            {/* Permissões ACL Avançadas - Temporariamente desabilitado */}
+            {false && showACLPermissions && (
               <div className="mt-6 p-4 border border-green-200 rounded-lg bg-green-50">
                 <div className="flex items-center mb-4">
                   <FiShield className="h-5 w-5 text-green-600 mr-2" />
