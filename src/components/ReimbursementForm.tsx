@@ -691,7 +691,7 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
                     setSelectedCurrency(currency as any);
                     setValue('moeda', currency as any);
                   }}
-                  errors={errors.expenses}
+                  errors={errors.expenses as Record<string, string | string[]> | undefined}
                 />
               )}
             />
