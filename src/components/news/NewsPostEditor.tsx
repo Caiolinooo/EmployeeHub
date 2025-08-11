@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FiSave, FiEye, FiCalendar, FiImage, FiLink, FiTag, FiUsers, FiStar, FiPin, FiX, FiPlus } from 'react-icons/fi';
+import { FiSave, FiEye, FiCalendar, FiImage, FiLink, FiTag, FiUsers, FiStar, FiX, FiPlus } from 'react-icons/fi';
 import { useACLPermissions } from '@/hooks/useACLPermissions';
 import ReminderManager from '../reminders/ReminderManager';
 
