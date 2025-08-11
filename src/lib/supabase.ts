@@ -117,9 +117,15 @@ async function getSupabaseAdminClient(): Promise<SupabaseClient> {
     }
   }
 
-  // Verificar se a chave de serviço está presente
+  // Verificar se a chave de serviço está presente e é válida
   if (!serviceKey) {
     console.error('ERRO CRÍTICO: Chave de serviço do Supabase ausente!');
+  } else if (serviceKey.length < 100 || !serviceKey.startsWith('eyJ')) {
+    console.error('ERRO CRÍTICO: Chave de serviço do Supabase inválida ou ausente!');
+    console.error('Comprimento da chave:', serviceKey.length);
+    console.error('A chave deve ser um JWT completo, não apenas um prefixo como "sbp_"');
+    console.error('Verifique a variável SUPABASE_SERVICE_KEY no Netlify');
+    console.error('A chave deve começar com "eyJ" e ter mais de 200 caracteres');
   }
 
   // Criar uma nova instância apenas se ainda não existir
