@@ -1187,9 +1187,5 @@ export default {
     cancelled: 'Cancelado',
     processing: 'Processando lembretes...',
     statistics: 'Estatísticas de Processamento'
-  },
-
-  locale: {
-    code: 'pt-BR'
   }
 };
