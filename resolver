@@ -1,0 +1,2080 @@
+3:14:53 PM: Netlify Build                                                 
+3:14:53 PM: ────────────────────────────────────────────────────────────────
+3:14:53 PM: ​
+3:14:53 PM: ❯ Version
+3:14:53 PM:   @netlify/build 35.0.5
+3:14:53 PM: ​
+3:14:53 PM: ❯ Flags
+3:14:53 PM:   accountId: 68253f7ec0e25e8cf6ce2255
+3:14:53 PM:   baseRelDir: true
+3:14:53 PM:   buildId: 689a32f5adcb53aea6459f74
+3:14:53 PM:   deployId: 689a32f5adcb53aea6459f76
+3:14:53 PM: ​
+3:14:53 PM: ❯ Current directory
+3:14:53 PM:   /opt/build/repo
+3:14:53 PM: ​
+3:14:53 PM: ❯ Config file
+3:14:53 PM:   /opt/build/repo/netlify.toml
+3:14:53 PM: ​
+3:14:53 PM: ❯ Context
+3:14:53 PM:   production
+3:14:54 PM: ​
+3:14:54 PM: ❯ Installing plugins
+3:14:54 PM:    - @netlify/plugin-nextjs@5.12.0
+3:14:54 PM:    - @netlify/plugin-lighthouse@6.0.1
+3:15:04 PM: ​
+3:15:04 PM: ❯ Installing extensions
+3:15:04 PM:    - neon
+3:15:25 PM: ​
+3:15:25 PM: ❯ Using Next.js Runtime - v5.12.0
+3:15:25 PM: ​
+3:15:25 PM: ❯ Loading plugins
+3:15:25 PM:    - @netlify/plugin-lighthouse@6.0.1 from Netlify app
+3:15:25 PM: ​
+3:15:25 PM: ❯ Loading extensions
+3:15:25 PM:    - neon
+3:15:27 PM: No Next.js cache to restore
+3:15:27 PM: ​
+3:15:27 PM: build.command from netlify.toml                               
+3:15:27 PM: ────────────────────────────────────────────────────────────────
+3:15:27 PM: ​
+3:15:27 PM: $ NEXT_TELEMETRY_DISABLED=1 npm run build
+3:15:27 PM: > painel-abz@0.1.0 build
+3:15:27 PM: > rimraf .next && next build
+3:15:27 PM: ⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+3:15:28 PM:   ▲ Next.js 14.2.3
+3:15:28 PM:   - Environments: .env.production
+3:15:28 PM:   - Experiments (use with caution):
+3:15:28 PM:     · optimizeCss
+3:15:28 PM:    Creating an optimized production build ...
+3:16:24 PM:  ✓ Compiled successfully
+3:16:24 PM:    Skipping linting
+3:16:24 PM:    Checking validity of types ...
+3:16:48 PM:    Collecting page data ...
+3:16:52 PM: Configuração de email carregada: {
+3:16:52 PM:   host: '****',
+3:16:52 PM:   port: 465,
+3:16:52 PM:   secure: true,
+3:16:52 PM:   user: '****'
+3:16:52 PM: }
+3:16:52 PM: Configuração de email carregada: {
+3:16:52 PM:   host: '****',
+3:16:52 PM:   port: 465,
+3:16:52 PM:   secure: true,
+3:16:52 PM:   user: '****'
+3:16:52 PM: }
+3:16:52 PM: Configuração de email carregada: {
+3:16:52 PM:   host: '****',
+3:16:52 PM:   port: 465,
+3:16:52 PM:   secure: true,
+3:16:52 PM:   user: '****'
+3:16:52 PM: }
+3:16:52 PM: Configuração de email carregada: {
+3:16:52 PM:   host: '****',
+3:16:52 PM:   port: 465,
+3:16:52 PM:   secure: true,
+3:16:52 PM:   user: '****'
+3:16:52 PM: }
+3:16:52 PM: Configuração de email carregada: {
+3:16:52 PM:   host: '****',
+3:16:52 PM:   port: 465,
+3:16:52 PM:   secure: true,
+3:16:52 PM:   user: '****'
+3:16:52 PM: }
+3:16:52 PM: Configuração de email carregada: {
+3:16:52 PM:   host: '****',
+3:16:52 PM:   port: 465,
+3:16:52 PM:   secure: true,
+3:16:52 PM:   user: '****'
+3:16:52 PM: }
+3:16:52 PM: Configuração de email carregada: {
+3:16:52 PM:   host: '****',
+3:16:52 PM:   port: 465,
+3:16:52 PM:   secure: true,
+3:16:52 PM:   user: '****'
+3:16:52 PM: }
+3:16:53 PM: Configuração de email carregada: {
+3:16:53 PM:   host: '****',
+3:16:53 PM:   port: 465,
+3:16:53 PM:   secure: true,
+3:16:53 PM:   user: '****'
+3:16:53 PM: }
+3:16:53 PM: ERRO CRÍTICO: Chave de serviço do Supabase inválida ou ausente!
+3:16:53 PM: Comprimento da chave: 39
+3:16:53 PM: A chave deve ser um JWT completo, não apenas um prefixo como "sbp_"
+3:16:53 PM: Usando cliente Supabase com URL: ****
+3:16:53 PM: Chave de serviço presente: Sim
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: Configuração de email carregada: {
+3:16:53 PM:   host: '****',
+3:16:53 PM:   port: 465,
+3:16:53 PM:   secure: true,
+3:16:53 PM:   user: '****'
+3:16:53 PM: }
+3:16:53 PM: Configuração de email carregada: {
+3:16:53 PM:   host: '****',
+3:16:53 PM:   port: 465,
+3:16:53 PM:   secure: true,
+3:16:53 PM:   user: '****'
+3:16:53 PM: }
+3:16:53 PM: Configuração de email carregada: {
+3:16:53 PM:   host: '****',
+3:16:53 PM:   port: 465,
+3:16:53 PM:   secure: true,
+3:16:53 PM:   user: '****'
+3:16:53 PM: }
+3:16:53 PM: Configuração de email carregada: {
+3:16:53 PM:   host: '****',
+3:16:53 PM:   port: 465,
+3:16:53 PM:   secure: true,
+3:16:53 PM:   user: '****'
+3:16:53 PM: }
+3:16:53 PM: Configuração de email carregada: {
+3:16:53 PM:   host: '****',
+3:16:53 PM:   port: 465,
+3:16:53 PM:   secure: true,
+3:16:53 PM:   user: '****'
+3:16:53 PM: }
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: Configuração de email carregada: {
+3:16:53 PM:   host: '****',
+3:16:53 PM:   port: 465,
+3:16:53 PM:   secure: true,
+3:16:53 PM:   user: '****'
+3:16:53 PM: }
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: Configuração de email carregada: {
+3:16:53 PM:   host: '****',
+3:16:53 PM:   port: 465,
+3:16:53 PM:   secure: true,
+3:16:53 PM:   user: '****'
+3:16:53 PM: }
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: Configuração de email carregada: {
+3:16:53 PM:   host: '****',
+3:16:53 PM:   port: 465,
+3:16:53 PM:   secure: true,
+3:16:53 PM:   user: '****'
+3:16:53 PM: }
+3:16:53 PM: Configuração de email carregada: {
+3:16:53 PM:   host: '****',
+3:16:53 PM:   port: 465,
+3:16:53 PM:   secure: true,
+3:16:53 PM:   user: '****'
+3:16:53 PM: }
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: Configuração de email carregada: {
+3:16:53 PM:   host: '****',
+3:16:53 PM:   port: 465,
+3:16:53 PM:   secure: true,
+3:16:53 PM:   user: '****'
+3:16:53 PM: }
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: ERRO CRÍTICO: Chave de serviço do Supabase inválida ou ausente!
+3:16:53 PM: Comprimento da chave: 39
+3:16:53 PM: A chave deve ser um JWT completo, não apenas um prefixo como "sbp_"
+3:16:53 PM: Usando cliente Supabase com URL: ****
+3:16:53 PM: Chave de serviço presente: Sim
+3:16:53 PM: Inicializando API de estatísticas de acesso
+3:16:53 PM: Inicializando cliente Supabase para fix-token
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: Configuração de email carregada: {
+3:16:53 PM:   host: '****',
+3:16:53 PM:   port: 465,
+3:16:53 PM:   secure: true,
+3:16:53 PM:   user: '****'
+3:16:53 PM: }
+3:16:53 PM: Configuração de email carregada: {
+3:16:53 PM:   host: '****',
+3:16:53 PM:   port: 465,
+3:16:53 PM:   secure: true,
+3:16:53 PM:   user: '****'
+3:16:53 PM: }
+3:16:53 PM: Inicializando API de usuários autorizados
+3:16:53 PM: Configuração de email carregada: {
+3:16:53 PM:   host: '****',
+3:16:53 PM:   port: 465,
+3:16:53 PM:   secure: true,
+3:16:53 PM:   user: '****'
+3:16:53 PM: }
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: Configuração de email carregada: {
+3:16:53 PM:   host: '****',
+3:16:53 PM:   port: 465,
+3:16:53 PM:   secure: true,
+3:16:53 PM:   user: '****'
+3:16:53 PM: }
+3:16:53 PM: Configuração de email carregada: {
+3:16:53 PM:   host: '****',
+3:16:53 PM:   port: 465,
+3:16:53 PM:   secure: true,
+3:16:53 PM:   user: '****'
+3:16:53 PM: }
+3:16:53 PM: Email configuration loaded for production environment
+3:16:53 PM: Configuração de email carregada: {
+3:16:53 PM:   host: '****',
+3:16:53 PM:   port: 465,
+3:16:53 PM:   secure: true,
+3:16:53 PM:   user: '****'
+3:16:53 PM: }
+3:16:54 PM: Configuração de email carregada: {
+3:16:54 PM:   host: '****',
+3:16:54 PM:   port: 465,
+3:16:54 PM:   secure: true,
+3:16:54 PM:   user: '****'
+3:16:54 PM: }
+3:16:54 PM: Email configuration loaded for production environment
+3:16:54 PM: API de usuários Supabase inicializada - Versão corrigida
+3:16:54 PM: Configuração de email carregada: {
+3:16:54 PM:   host: '****',
+3:16:54 PM:   port: 465,
+3:16:54 PM:   secure: true,
+3:16:54 PM:   user: '****'
+3:16:54 PM: }
+3:16:54 PM: Configuração de email carregada: {
+3:16:54 PM:   host: '****',
+3:16:54 PM:   port: 465,
+3:16:54 PM:   secure: true,
+3:16:54 PM:   user: '****'
+3:16:54 PM: }
+3:16:54 PM: Configuração de email carregada: {
+3:16:54 PM:   host: '****',
+3:16:54 PM:   port: 465,
+3:16:54 PM:   secure: true,
+3:16:54 PM:   user: '****'
+3:16:54 PM: }
+3:16:54 PM: Email configuration loaded for production environment
+3:16:54 PM: Email configuration loaded for production environment
+3:16:54 PM: Email configuration loaded for production environment
+3:16:54 PM: API token-refresh - Inicializando cliente Supabase
+3:16:54 PM: Email configuration loaded for production environment
+3:16:54 PM: Email configuration loaded for production environment
+3:16:54 PM: Configuração de email carregada: {
+3:16:54 PM:   host: '****',
+3:16:54 PM:   port: 465,
+3:16:54 PM:   secure: true,
+3:16:54 PM:   user: '****'
+3:16:54 PM: }
+3:16:54 PM: Email configuration loaded for production environment
+3:16:54 PM: Configuração de email carregada: {
+3:16:54 PM:   host: '****',
+3:16:54 PM:   port: 465,
+3:16:54 PM:   secure: true,
+3:16:54 PM:   user: '****'
+3:16:54 PM: }
+3:16:54 PM: Email configuration loaded for production environment
+3:16:58 PM:    Generating static pages (0/252) ...
+3:16:59 PM: ERRO CRÍTICO: Chave de serviço do Supabase inválida ou ausente!
+3:16:59 PM: Comprimento da chave: 39
+3:16:59 PM: A chave deve ser um JWT completo, não apenas um prefixo como "sbp_"
+3:16:59 PM: Usando cliente Supabase com URL: ****
+3:16:59 PM: Chave de serviço presente: Sim
+3:16:59 PM: Verificando usuário administrador no Supabase: {
+3:16:59 PM:   adminEmail: '****',
+3:16:59 PM:   adminPhone: '****'
+3:16:59 PM: }
+3:16:59 PM: Erro ao processar requisição: q [Error]: Dynamic server usage: Route /api/auth/check-has-password couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:37835)
+3:16:59 PM:     at u (/opt/build/repo/.next/server/app/api/auth/check-has-password/route.js:1:1341)
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:16:59 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:16:59 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:16:59 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:16:59 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+3:16:59 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19) {
+3:16:59 PM:   description: "Route /api/auth/check-has-password couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:16:59 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:16:59 PM: }
+3:16:59 PM: Erro ao verificar se o usuário é administrador: q [Error]: Dynamic server usage: Route /api/admin/cards/check-table couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:37835)
+3:16:59 PM:     at b (/opt/build/repo/.next/server/chunks/9196.js:40:628)
+3:16:59 PM:     at u (/opt/build/repo/.next/server/app/api/admin/cards/check-table/route.js:1:1379)
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:16:59 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:16:59 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:16:59 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:16:59 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103 {
+3:16:59 PM:   description: "Route /api/admin/cards/check-table couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:16:59 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:16:59 PM: }
+3:16:59 PM: 🔍 API Users Check - Verificando sistema de usuários...
+3:16:59 PM: Erro ao verificar status da senha: q [Error]: Dynamic server usage: Route /api/auth/password-status couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:37835)
+3:16:59 PM:     at d (/opt/build/repo/.next/server/app/api/auth/password-status/route.js:1:1341)
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:16:59 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:16:59 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:16:59 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:16:59 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+3:16:59 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19) {
+3:16:59 PM:   description: "Route /api/auth/password-status couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:16:59 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:16:59 PM: }
+3:16:59 PM: Erro ao verificar se o usuário é administrador: q [Error]: Dynamic server usage: Route /api/admin/users/check couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:37835)
+3:16:59 PM:     at b (/opt/build/repo/.next/server/chunks/9196.js:40:628)
+3:16:59 PM:     at c (/opt/build/repo/.next/server/app/api/admin/users/check/route.js:1:1452)
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:16:59 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:16:59 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:16:59 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:16:59 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103 {
+3:16:59 PM:   description: "Route /api/admin/users/check couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:16:59 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:16:59 PM: }
+3:16:59 PM: 🔄 API Role Permissions - Buscando permissões por role...
+3:16:59 PM: 🔄 API Available Modules - Buscando cards/módulos disponíveis...
+3:16:59 PM: Iniciando verificação e criação do perfil de administrador
+3:16:59 PM: Usando cliente Supabase pré-inicializado com URL: ****
+3:16:59 PM: Buscando administrador com email: ****
+3:16:59 PM: Session request received
+3:16:59 PM: Error getting session: q [Error]: Dynamic server usage: Route /api/auth/session couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:37835)
+3:16:59 PM:     at l (/opt/build/repo/.next/server/app/api/auth/session/route.js:1:1381)
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:16:59 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:16:59 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:16:59 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:16:59 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+3:16:59 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19) {
+3:16:59 PM:   description: "Route /api/auth/session couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:16:59 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:16:59 PM: }
+3:16:59 PM: Inicializando API de estatísticas de acesso
+3:16:59 PM: ERRO CRÍTICO: Chave de serviço do Supabase inválida ou ausente!
+3:16:59 PM: Comprimento da chave: 39
+3:16:59 PM: A chave deve ser um JWT completo, não apenas um prefixo como "sbp_"
+3:16:59 PM: Usando cliente Supabase com URL: ****
+3:16:59 PM: Chave de serviço presente: Sim
+3:16:59 PM: Erro ao listar usuários: q [Error]: Dynamic server usage: Route /api/avaliacao-desempenho/usuarios couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:37835)
+3:16:59 PM:     at d (/opt/build/repo/.next/server/app/api/avaliacao-desempenho/usuarios/route.js:1:4689)
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:16:59 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:16:59 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:16:59 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:16:59 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+3:16:59 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19) {
+3:16:59 PM:   description: "Route /api/avaliacao-desempenho/usuarios couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:16:59 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:16:59 PM: }
+3:16:59 PM: Erro ao obter informações de debug: q [Error]: Dynamic server usage: Route /api/admin/debug couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:37835)
+3:16:59 PM:     at l (/opt/build/repo/.next/server/app/api/admin/debug/route.js:1:1383)
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:16:59 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:16:59 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:16:59 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:16:59 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+3:16:59 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19) {
+3:16:59 PM:   description: "Route /api/admin/debug couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:16:59 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:16:59 PM: }
+3:16:59 PM: Erro ao processar requisição: q [Error]: Dynamic server usage: Route /api/admin/access-stats couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:37835)
+3:16:59 PM:     at d (/opt/build/repo/.next/server/app/api/admin/access-stats/route.js:1:1340)
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:16:59 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:16:59 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:16:59 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:16:59 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+3:16:59 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19) {
+3:16:59 PM:   description: "Route /api/admin/access-stats couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:16:59 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:16:59 PM: }
+3:16:59 PM: Configuração de email carregada: {
+3:16:59 PM:   host: '****',
+3:16:59 PM:   port: 465,
+3:16:59 PM:   secure: true,
+3:16:59 PM:   user: '****'
+3:16:59 PM: }
+3:16:59 PM: Email configuration loaded for production environment
+3:16:59 PM: Erro ao processar requisição de verificação de token: q [Error]: Dynamic server usage: Route /api/auth/verify-token couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:37835)
+3:16:59 PM:     at l (/opt/build/repo/.next/server/app/api/auth/verify-token/route.js:1:1350)
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:16:59 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:16:59 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:16:59 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:16:59 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:16:59 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+3:16:59 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19) {
+3:16:59 PM:   description: "Route /api/auth/verify-token couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:16:59 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:16:59 PM: }
+3:16:59 PM: Erro ao verificar tabela avaliacoes: {
+3:16:59 PM:   message: 'Invalid API key',
+3:16:59 PM:   hint: 'Double check your Supabase `anon` or `service_role` API key.'
+3:16:59 PM: }
+3:16:59 PM: Erro ao verificar tabela funcionarios: {
+3:16:59 PM:   message: 'Invalid API key',
+3:16:59 PM:   hint: 'Double check your Supabase `anon` or `service_role` API key.'
+3:16:59 PM: }
+3:16:59 PM: Usuário não encontrado pelo email, tentando pelo telefone
+3:16:59 PM: Usuário administrador não encontrado pelo telefone: {
+3:16:59 PM:   message: 'Invalid API key',
+3:16:59 PM:   hint: 'Double check your Supabase `anon` or `service_role` API key.'
+3:16:59 PM: }
+3:16:59 PM: Usuário administrador não encontrado, criando...
+3:16:59 PM: Tentando criar usuário na autenticação do Supabase com: {
+3:16:59 PM:   email: '****',
+3:16:59 PM:   phone: '****',
+3:16:59 PM:   anonKey: 'Presente'
+3:16:59 PM: }
+3:16:59 PM: Usando chave anônima, não é possível criar usuários diretamente na autenticação
+3:16:59 PM: Criando usuário diretamente na tabela users
+3:16:59 PM: Dados do usuário para criação: {
+3:16:59 PM:   id: '00000000-0000-0000-0000-000000000000',
+3:16:59 PM:   email: '****',
+3:16:59 PM:   phone: '****',
+3:16:59 PM:   user_metadata: { first_name: '****', last_name: '****', role: 'ADMIN' }
+3:16:59 PM: }
+3:16:59 PM: Criando perfil do usuário na tabela users com ID: 00000000-0000-0000-0000-000000000000
+3:16:59 PM: Dados do usuário a serem inseridos: {
+3:16:59 PM:   id: '00000000-0000-0000-0000-000000000000',
+3:16:59 PM:   email: '****',
+3:16:59 PM:   phone_number: '****',
+3:16:59 PM:   first_name: '****',
+3:16:59 PM:   last_name: '****',
+3:16:59 PM:   role: 'ADMIN',
+3:16:59 PM:   position: 'Administrador do Sistema',
+3:16:59 PM:   department: 'TI',
+3:16:59 PM:   active: true,
+3:16:59 PM:   created_at: '2025-08-11T18:16:59.661Z',
+3:16:59 PM:   updated_at: '2025-08-11T18:16:59.661Z'
+3:16:59 PM: }
+3:16:59 PM: Verificação de usuário existente por ID: Não encontrado {
+3:16:59 PM:   message: 'Invalid API key',
+3:16:59 PM:   hint: 'Double check your Supabase `anon` or `service_role` API key.'
+3:16:59 PM: }
+3:16:59 PM: Inserindo novo usuário...
+3:16:59 PM: Administrador não encontrado por email, tentando por telefone
+3:16:59 PM: Administrador não encontrado, tentando criar...
+3:16:59 PM: Erro ao buscar cards do Supabase: {
+3:16:59 PM:   message: 'Invalid API key',
+3:16:59 PM:   hint: 'Double check your Supabase `anon` or `service_role` API key.'
+3:16:59 PM: }
+3:16:59 PM: Erro ao buscar permissões por role: {
+3:16:59 PM:   message: 'Invalid API key',
+3:16:59 PM:   hint: 'Double check your Supabase `anon` or `service_role` API key.'
+3:16:59 PM: }
+3:16:59 PM: Buscando configurações do site
+3:16:59 PM: Inicializando cliente Supabase para fix-token
+3:16:59 PM: API de verificação do banco de dados - Iniciando...
+3:16:59 PM: Erro ao criar usuário administrador: eI [AuthApiError]: Invalid API key
+3:16:59 PM:     at au (/opt/build/repo/.next/server/chunks/2438.js:6:27473)
+3:16:59 PM:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+3:16:59 PM:     at async af (/opt/build/repo/.next/server/chunks/2438.js:6:28472)
+3:16:59 PM:     at async av (/opt/build/repo/.next/server/chunks/2438.js:6:28128)
+3:16:59 PM:     at async aL.signUp (/opt/build/repo/.next/server/chunks/2438.js:6:40610)
+3:16:59 PM:     at async l (/opt/build/repo/.next/server/app/api/admin/ensure-admin/route.js:1:2287)
+3:16:59 PM:     at async /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34666
+3:16:59 PM:     at async eS.execute (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:25813)
+3:16:59 PM:     at async eS.handle (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:35920)
+3:16:59 PM:     at async exportAppRoute (/opt/build/repo/node_modules/next/dist/export/routes/app-route.js:77:26) {
+3:16:59 PM:   __isAuthError: true,
+3:16:59 PM:   status: 401,
+3:16:59 PM:   code: undefined
+3:16:59 PM: }
+3:16:59 PM: Erro ao fazer login com o usuário administrador: eI [AuthApiError]: Invalid API key
+3:16:59 PM:     at au (/opt/build/repo/.next/server/chunks/2438.js:6:27473)
+3:16:59 PM:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+3:16:59 PM:     at async af (/opt/build/repo/.next/server/chunks/2438.js:6:28472)
+3:16:59 PM:     at async av (/opt/build/repo/.next/server/chunks/2438.js:6:28128)
+3:16:59 PM:     at async aL.signInWithPassword (/opt/build/repo/.next/server/chunks/2438.js:6:41768)
+3:16:59 PM:     at async l (/opt/build/repo/.next/server/app/api/admin/ensure-admin/route.js:1:2581)
+3:16:59 PM:     at async /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34666
+3:16:59 PM:     at async eS.execute (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:25813)
+3:16:59 PM:     at async eS.handle (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:35920)
+3:16:59 PM:     at async exportAppRoute (/opt/build/repo/node_modules/next/dist/export/routes/app-route.js:77:26) {
+3:16:59 PM:   __isAuthError: true,
+3:16:59 PM:   status: 401,
+3:16:59 PM:   code: undefined
+3:16:59 PM: }
+3:16:59 PM: Erro ao criar perfil de administrador: {
+3:16:59 PM:   message: 'Invalid API key',
+3:16:59 PM:   hint: 'Double check your Supabase `anon` or `service_role` API key.'
+3:16:59 PM: }
+3:16:59 PM: Tentando fazer login com o usuário administrador...
+3:16:59 PM: Resultado da operação na tabela users: Sem dados {
+3:16:59 PM:   message: 'Invalid API key',
+3:16:59 PM:   hint: 'Double check your Supabase `anon` or `service_role` API key.'
+3:16:59 PM: }
+3:16:59 PM: Erro ao criar perfil do usuário administrador: {
+3:16:59 PM:   message: 'Invalid API key',
+3:16:59 PM:   hint: 'Double check your Supabase `anon` or `service_role` API key.'
+3:16:59 PM: }
+3:17:00 PM: Testando conexão com o servidor SMTP...
+3:17:00 PM: Testando conexão com o servidor de email Gmail...
+3:17:00 PM: Configuração: {
+3:17:00 PM:   service: 'gmail',
+3:17:00 PM:   host: '****',
+3:17:00 PM:   port: 465,
+3:17:00 PM:   secure: true,
+3:17:00 PM:   user: '****',
+3:17:00 PM:   environment: 'production'
+3:17:00 PM: }
+3:17:00 PM: Iniciando geração de token de administrador para debug
+3:17:00 PM: Buscando administrador com email: ****
+3:17:00 PM: Testando conexão com o servidor de email Gmail...
+3:17:00 PM: Configuração: {
+3:17:00 PM:   service: 'gmail',
+3:17:00 PM:   host: '****',
+3:17:00 PM:   port: 465,
+3:17:00 PM:   secure: true,
+3:17:00 PM:   user: '****',
+3:17:00 PM:   environment: 'production'
+3:17:00 PM: }
+3:17:00 PM: Erro ao testar conexão com Gmail: q [Error]: Dynamic server usage: Route /api/email/test-gmail couldn't be rendered statically because it accessed `nextUrl.searchParams`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38289)
+3:17:00 PM:     at u (/opt/build/repo/.next/server/app/api/email/test-gmail/route.js:1:1104)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:17:00 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:17:00 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:17:00 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19) {
+3:17:00 PM:   description: "Route /api/email/test-gmail couldn't be rendered statically because it accessed `nextUrl.searchParams`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:17:00 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:17:00 PM: }
+3:17:00 PM: Detalhes do erro: Dynamic server usage: Route /api/email/test-gmail couldn't be rendered statically because it accessed `nextUrl.searchParams`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+Stack trace: Error: Dynamic server usage: Route /api/email/test-gmail couldn't be rendered statically because it accessed `nextUrl.searchParams`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38289)
+3:17:00 PM:     at u (/opt/build/repo/.next/server/app/api/email/test-gmail/route.js:1:1104)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:17:00 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:17:00 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:17:00 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:17:00 PM: Erro ao processar solicitação de debug de email: q [Error]: Dynamic server usage: Route /api/email/debug couldn't be rendered statically because it accessed `nextUrl.searchParams`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38289)
+3:17:00 PM:     at c (/opt/build/repo/.next/server/app/api/email/debug/route.js:1:1115)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:17:00 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:17:00 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:17:00 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19) {
+3:17:00 PM:   description: "Route /api/email/debug couldn't be rendered statically because it accessed `nextUrl.searchParams`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:17:00 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:17:00 PM: }
+3:17:00 PM:    Generating static pages (63/252)
+3:17:00 PM: Iniciando diagnóstico de autenticação do Supabase
+3:17:00 PM: Status das configurações: {
+3:17:00 PM:   supabaseUrl: 'Configurado',
+3:17:00 PM:   supabaseAnonKey: 'Configurado',
+3:17:00 PM:   supabaseServiceKey: 'Configurado'
+3:17:00 PM: }
+3:17:00 PM: Usando clientes Supabase pré-inicializados
+3:17:00 PM: Testando conexão com o Supabase...
+3:17:00 PM: Teste de autenticação anônima: Sucesso
+3:17:00 PM: Inicializando API de usuários autorizados
+3:17:00 PM: API: Verificando status do módulo de avaliação de desempenho
+3:17:00 PM: Inicializando módulo de avaliação de desempenho...
+3:17:00 PM: Inicializando stub do módulo de avaliação de desempenho
+3:17:00 PM: Módulo de avaliação de desempenho inicializado com sucesso!
+3:17:00 PM: API: Módulo de avaliação inicializado com sucesso: { version: '0.1.0-stub', name: 'avaliacao-desempenho-stub' }
+3:17:00 PM: API: Status do módulo: { status: 'online', mode: 'stub' }
+3:17:00 PM: API de cards Supabase - Recebendo requisição GET
+3:17:00 PM: Erro ao obter cards: q [Error]: Dynamic server usage: Route /api/cards/supabase couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:37835)
+3:17:00 PM:     at d (/opt/build/repo/.next/server/app/api/cards/supabase/route.js:1:1416)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:17:00 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:17:00 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:17:00 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19) {
+3:17:00 PM:   description: "Route /api/cards/supabase couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:17:00 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:17:00 PM: }
+3:17:00 PM: Erro ao verificar reembolsos do usuário: q [Error]: Dynamic server usage: Route /api/reembolso/check-user couldn't be rendered statically because it accessed `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:37835)
+3:17:00 PM:     at m (/opt/build/repo/.next/server/app/api/reembolso/check-user/route.js:1:2068)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:17:00 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:17:00 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:17:00 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19) {
+3:17:00 PM:   description: "Route /api/reembolso/check-user couldn't be rendered statically because it accessed `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:17:00 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:17:00 PM: }
+3:17:00 PM: Requisição de reembolsos do usuário recebida
+3:17:00 PM: Erro ao obter feriados: q [Error]: Dynamic server usage: Route /api/scrape-holidays couldn't be rendered statically because it accessed `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:37835)
+3:17:00 PM:     at c (/opt/build/repo/.next/server/app/api/scrape-holidays/route.js:1:2936)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:17:00 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:17:00 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:17:00 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19) {
+3:17:00 PM:   description: "Route /api/scrape-holidays couldn't be rendered statically because it accessed `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:17:00 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:17:00 PM: }
+3:17:00 PM: Erro ao buscar reembolsos do usuário: q [Error]: Dynamic server usage: Route /api/reembolso/user couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:37835)
+3:17:00 PM:     at d (/opt/build/repo/.next/server/app/api/reembolso/user/route.js:1:1410)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:17:00 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:17:00 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:17:00 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19) {
+3:17:00 PM:   description: "Route /api/reembolso/user couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:17:00 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:17:00 PM: }
+3:17:00 PM: Teste de API de usuários unificados iniciado
+3:17:00 PM: Testando conexão com a tabela users_unified...
+3:17:00 PM: API de notícias mock - Iniciando busca
+3:17:00 PM: Teste de conexão com Supabase iniciado
+3:17:00 PM: URL do Supabase: ****
+3:17:00 PM: Chave de serviço presente: Sim
+3:17:00 PM: Tentando buscar usuários do Supabase...
+3:17:00 PM: Erro ao obter notícias de exemplo: q [Error]: Dynamic server usage: Route /api/news/mock couldn't be rendered statically because it accessed `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:37835)
+3:17:00 PM:     at u (/opt/build/repo/.next/server/app/api/news/mock/route.js:1:3694)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:17:00 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:17:00 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:17:00 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19) {
+3:17:00 PM:   description: "Route /api/news/mock couldn't be rendered statically because it accessed `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:17:00 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:17:00 PM: }
+3:17:00 PM: Teste de API de usuários iniciado
+3:17:00 PM: Testando conexão com a tabela users_unified...
+3:17:00 PM: === API TEST ROUTE DEBUG ===
+3:17:00 PM: Recebida requisição de teste
+3:17:00 PM: Método: GET
+3:17:00 PM: === API TEST SUPABASE ROUTE DEBUG ===
+3:17:00 PM: Recebida requisição de teste do Supabase
+3:17:00 PM: Erro ao conectar ao banco de dados: Error: Erro ao conectar ao Supabase: Invalid API key
+3:17:00 PM:     at l (/opt/build/repo/.next/server/app/api/db-check/route.js:1:1156)
+3:17:00 PM:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+3:17:00 PM:     at async /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34666
+3:17:00 PM:     at async eS.execute (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:25813)
+3:17:00 PM:     at async eS.handle (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:35920)
+3:17:00 PM:     at async exportAppRoute (/opt/build/repo/node_modules/next/dist/export/routes/app-route.js:77:26)
+3:17:00 PM:     at async exportPageImpl (/opt/build/repo/node_modules/next/dist/export/worker.js:175:20)
+3:17:00 PM:     at async Span.traceAsyncFn (/opt/build/repo/node_modules/next/dist/trace/trace.js:154:20)
+3:17:00 PM:     at async Object.exportPage (/opt/build/repo/node_modules/next/dist/export/worker.js:236:20)
+3:17:00 PM: Erro ao buscar usuários: {
+3:17:00 PM:   message: 'Invalid API key',
+3:17:00 PM:   hint: 'Double check your Supabase `anon` or `service_role` API key.'
+3:17:00 PM: }
+3:17:00 PM: Erro ao buscar configuração: {
+3:17:00 PM:   message: 'Invalid API key',
+3:17:00 PM:   hint: 'Double check your Supabase `anon` or `service_role` API key.'
+3:17:00 PM: }
+3:17:00 PM: Retornando configuração padrão devido ao erro
+3:17:00 PM: Conexão com o banco de dados estabelecida via health check
+3:17:00 PM: Verificando tabelas existentes...
+3:17:00 PM: Teste de acesso à tabela users_unified: Falha
+3:17:00 PM:    Generating static pages (126/252)
+3:17:00 PM: Administrador não encontrado por email, tentando por telefone
+3:17:00 PM: API de usuários Supabase inicializada - Versão corrigida
+3:17:00 PM: Erro ao extrair conteúdo do PDF: q [Error]: Dynamic server usage: Route /api/pdf-extract couldn't be rendered statically because it accessed `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:37835)
+3:17:00 PM:     at d (/opt/build/repo/.next/server/app/api/pdf-extract/route.js:1:546)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:17:00 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:17:00 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:17:00 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19) {
+3:17:00 PM:   description: "Route /api/pdf-extract couldn't be rendered statically because it accessed `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:17:00 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:17:00 PM: }
+3:17:00 PM: Erro ao obter usuários: q [Error]: Dynamic server usage: Route /api/users/supabase couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:37835)
+3:17:00 PM:     at c (/opt/build/repo/.next/server/app/api/users/supabase/route.js:1:1346)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:17:00 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:17:00 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:17:00 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19) {
+3:17:00 PM:   description: "Route /api/users/supabase couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:17:00 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:17:00 PM: }
+3:17:00 PM: API de usuários unificados para o painel de administração iniciada (App Router)
+3:17:00 PM: Erro na API de usuários unificados: q [Error]: Dynamic server usage: Route /api/users-unified couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:37835)
+3:17:00 PM:     at p (/opt/build/repo/.next/server/app/api/users-unified/route.js:1:1441)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:17:00 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:17:00 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:17:00 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19) {
+3:17:00 PM:   description: "Route /api/users-unified couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:17:00 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:17:00 PM: }
+3:17:00 PM: Erro ao verificar se o usuário é administrador: q [Error]: Dynamic server usage: Route /api/files couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:37835)
+3:17:00 PM:     at b (/opt/build/repo/.next/server/chunks/9196.js:40:628)
+3:17:00 PM:     at x (/opt/build/repo/.next/server/app/api/files/route.js:1:1397)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:17:00 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:17:00 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:17:00 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:17:00 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:17:00 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103 {
+3:17:00 PM:   description: "Route /api/files couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:17:00 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:17:00 PM: }
+3:17:01 PM: Erro ao verificar tabela News: {
+3:17:01 PM:   message: 'Invalid API key',
+3:17:01 PM:   hint: 'Double check your Supabase `anon` or `service_role` API key.'
+3:17:01 PM: }
+3:17:01 PM: Erro ao verificar tabela users: {
+3:17:01 PM:   message: 'Invalid API key',
+3:17:01 PM:   hint: 'Double check your Supabase `anon` or `service_role` API key.'
+3:17:01 PM: }
+3:17:01 PM: Erro ao verificar tabela Reimbursement: {
+3:17:01 PM:   message: 'Invalid API key',
+3:17:01 PM:   hint: 'Double check your Supabase `anon` or `service_role` API key.'
+3:17:01 PM: }
+3:17:01 PM: Verificando usuário administrador: {
+3:17:01 PM:   adminEmail: '****',
+3:17:01 PM:   adminPhone: '****'
+3:17:01 PM: }
+3:17:01 PM: Usuário administrador já existe: c9b1e9a2-3c80-4b3d-9f75-fc7a00d7cdbb
+3:17:01 PM: === API SUPABASE STATUS ===
+3:17:01 PM: URL do Supabase: ****
+3:17:01 PM: Chave de serviço presente: Sim
+3:17:01 PM: Comprimento da chave de serviço: 39
+3:17:01 PM: Primeiros 10 caracteres da chave de serviço: eyJhbGciOi
+3:17:01 PM: Usando cliente supabaseAdmin pré-inicializado
+3:17:01 PM: Testando conexão com o Supabase...
+3:17:01 PM: API token-refresh - Inicializando cliente Supabase
+3:17:01 PM: Erro ao obter dados do usuário: q [Error]: Dynamic server usage: Route /api/auth/me couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:37835)
+3:17:01 PM:     at l (/opt/build/repo/.next/server/app/api/auth/me/route.js:1:1341)
+3:17:01 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:17:01 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:17:01 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:17:01 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:17:01 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:17:01 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:17:01 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+3:17:01 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19) {
+3:17:01 PM:   description: "Route /api/auth/me couldn't be rendered statically because it accessed `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:17:01 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:17:01 PM: }
+3:17:01 PM: Erro ao buscar usuários: {
+3:17:01 PM:   message: 'Invalid API key',
+3:17:01 PM:   hint: 'Double check your Supabase `anon` or `service_role` API key.'
+3:17:01 PM: }
+3:17:01 PM: Erro ao conectar com o Supabase: Invalid API key
+3:17:01 PM: Teste de conexão com Gmail bem-sucedido!
+3:17:01 PM: Teste de conexão com Gmail bem-sucedido!
+3:17:01 PM: Administrador não encontrado, verificando na autenticação...
+3:17:01 PM: Administrador não encontrado na autenticação, criando do zero...
+3:17:01 PM: Teste de busca do administrador: Falha
+3:17:01 PM: Teste de listagem de usuários auth: Falha
+3:17:01 PM: Erro ao buscar usuários: {
+3:17:01 PM:   message: 'Invalid API key',
+3:17:01 PM:   hint: 'Double check your Supabase `anon` or `service_role` API key.'
+3:17:01 PM: }
+3:17:01 PM: Erro ao criar usuário administrador na autenticação: eI [AuthApiError]: Invalid API key
+3:17:01 PM:     at au (/opt/build/repo/.next/server/chunks/2438.js:6:27473)
+3:17:01 PM:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+3:17:01 PM:     at async af (/opt/build/repo/.next/server/chunks/2438.js:6:28472)
+3:17:01 PM:     at async av (/opt/build/repo/.next/server/chunks/2438.js:6:28128)
+3:17:01 PM:     at async ak.createUser (/opt/build/repo/.next/server/chunks/2438.js:6:31182)
+3:17:01 PM:     at async m (/opt/build/repo/.next/server/app/api/debug-admin-token/route.js:1:3832)
+3:17:01 PM:     at async /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34666
+3:17:01 PM:     at async eS.execute (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:25813)
+3:17:01 PM:     at async eS.handle (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:35920)
+3:17:01 PM:     at async exportAppRoute (/opt/build/repo/node_modules/next/dist/export/routes/app-route.js:77:26) {
+3:17:01 PM:   __isAuthError: true,
+3:17:01 PM:   status: 401,
+3:17:01 PM:   code: undefined
+3:17:01 PM: }
+3:17:01 PM: Erro na exportação: q [Error]: Dynamic server usage: Route /api/payroll/luz-maritima/export couldn't be rendered statically because it accessed `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at Object.get (/opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:37835)
+3:17:01 PM:     at u (/opt/build/repo/.next/server/app/api/payroll/luz-maritima/export/route.js:1:1020)
+3:17:01 PM:     at /opt/build/repo/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:34672
+3:17:01 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+3:17:01 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+3:17:01 PM:     at ContextAPI.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+3:17:01 PM:     at NoopTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+3:17:01 PM:     at ProxyTracer.startActiveSpan (/opt/build/repo/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+3:17:01 PM:     at /opt/build/repo/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+3:17:01 PM:     at NoopContextManager.with (/opt/build/repo/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19) {
+3:17:01 PM:   description: "Route /api/payroll/luz-maritima/export couldn't be rendered statically because it accessed `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+3:17:01 PM:   digest: 'DYNAMIC_SERVER_USAGE'
+3:17:01 PM: }
+3:17:01 PM: Time 5.844004
+3:17:01 PM: Time 98.506312
+3:17:01 PM: Erro ao conectar ao Supabase: {
+3:17:01 PM:   message: 'Invalid API key',
+3:17:01 PM:   hint: 'Double check your Supabase `anon` or `service_role` API key.'
+3:17:01 PM: }
+3:17:02 PM:    Generating static pages (189/252)
+3:17:05 PM:  ✓ Generating static pages (252/252)
+3:17:08 PM:    Finalizing page optimization ...
+3:17:08 PM:    Collecting build traces ...
+3:17:17 PM: Route (app)                                           Size     First Load JS
+3:17:17 PM: ┌ ○ /                                                 621 B           285 kB
+3:17:17 PM: ├ ○ /_not-found                                       147 B          87.9 kB
+3:17:17 PM: ├ ○ /admin                                            2.64 kB         334 kB
+3:17:17 PM: ├ ○ /admin-fix                                        3.02 kB         104 kB
+3:17:17 PM: ├ ○ /admin-setup                                      2.6 kB          108 kB
+3:17:17 PM: ├ ○ /admin-test                                       1.37 kB         286 kB
+3:17:17 PM: ├ ○ /admin-token-test                                 2.33 kB         103 kB
+3:17:17 PM: ├ ○ /admin/acl-management                             309 B           104 kB
+3:17:17 PM: ├ ○ /admin/authorized-users                           5.71 kB         330 kB
+3:17:17 PM: ├ ○ /admin/avaliacao                                  5.67 kB         366 kB
+3:17:17 PM: ├ ○ /admin/cards                                      11.2 kB         146 kB
+3:17:17 PM: ├ ○ /admin/documentos                                 1.98 kB         403 kB
+3:17:17 PM: ├ ○ /admin/documents                                  5.12 kB         133 kB
+3:17:17 PM: ├ ○ /admin/menu                                       6.08 kB         134 kB
+3:17:17 PM: ├ ○ /admin/news                                       5.93 kB         134 kB
+3:17:17 PM: ├ ○ /admin/noticias                                   3.3 kB          400 kB
+3:17:17 PM: ├ ○ /admin/reimbursement-approval                     2.38 kB         130 kB
+3:17:17 PM: ├ ○ /admin/reimbursement-migration                    10.5 kB         303 kB
+3:17:17 PM: ├ ○ /admin/reimbursement-settings                     4.51 kB         137 kB
+3:17:17 PM: ├ ○ /admin/role-permissions                           6.22 kB         310 kB
+3:17:17 PM: ├ ○ /admin/settings                                   3.73 kB         104 kB
+3:17:17 PM: ├ ○ /admin/setup                                      5.2 kB          365 kB
+3:17:17 PM: ├ ○ /admin/system/cards                               4.51 kB         365 kB
+3:17:17 PM: ├ ○ /admin/user-approval-settings                     3.08 kB         332 kB
+3:17:17 PM: ├ ○ /admin/user-management                            8.78 kB         357 kB
+3:17:17 PM: ├ ○ /admin/user-management/add                        1.19 kB         345 kB
+3:17:17 PM: ├ ○ /admin/user-management/convert-office365          4.57 kB         122 kB
+3:17:17 PM: ├ ○ /admin/user-management/import                     9.22 kB         341 kB
+3:17:17 PM: ├ ○ /admin/user-management/import/dashboard           4.13 kB         326 kB
+3:17:17 PM: ├ ○ /admin/user-management/import/documentation       5.06 kB         139 kB
+3:17:17 PM: ├ ○ /admin/users                                      3.34 kB         345 kB
+3:17:17 PM: ├ ○ /api                                              0 B                0 B
+3:17:17 PM: ├ ƒ /api/acl/check                                    0 B                0 B
+3:17:17 PM: ├ ƒ /api/acl/init                                     0 B                0 B
+3:17:17 PM: ├ ƒ /api/acl/permissions                              0 B                0 B
+3:17:17 PM: ├ ƒ /api/acl/users/[userId]/permissions               0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/access-stats                           0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/authorized-users                       0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/authorized-users/[id]                  0 B                0 B
+3:17:17 PM: ├ ○ /api/admin/available-modules                      0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/cards                                  0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/cards/[id]                             0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/cards/[id]/supabase                    0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/cards/check-table                      0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/cards/create-table                     0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/cards/migrate                          0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/cards/supabase                         0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/cards/update                           0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/check-payroll-tables                   0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/debug                                  0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/ensure-admin                           0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/execute-sql                            0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/fix-admin                              0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/fix-permissions                        0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/generate-token                         0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/init-role-permissions                  0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/migrate-cards                          0 B                0 B
+3:17:17 PM: ├ ○ /api/admin/role-permissions                       0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/send-invite                            0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/test-email                             0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/user-approval-settings                 0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/users/[id]/approve                     0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/users/[id]/reject                      0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/users/check                            0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/users/check-duplicates                 0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/users/import                           0 B                0 B
+3:17:17 PM: ├ ƒ /api/admin/users/upload                           0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/2fa                                     0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/change-password                         0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/check-has-password                      0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/create-admin                            0 B                0 B
+3:17:17 PM: ├ ○ /api/auth/ensure-admin                            0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/fix-admin                               0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/fix-auth                                0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/fix-permissions                         0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/fix-token                               0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/forgot-password                         0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/generate-token                          0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/login                                   0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/login-password                          0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/logout                                  0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/me                                      0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/password                                0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/password-status                         0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/quick-register                          0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/register                                0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/register-supabase                       0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/resend-code                             0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/session                                 0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/set-password                            0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/set-password-after-verification         0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/token-refresh                           0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/verify-email-link                       0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/verify-password                         0 B                0 B
+3:17:17 PM: ├ ƒ /api/auth/verify-token                            0 B                0 B
+3:17:17 PM: ├ ○ /api/avaliacao-desempenho                         0 B                0 B
+3:17:17 PM: ├ ƒ /api/avaliacao-desempenho/avaliacoes              0 B                0 B
+3:17:17 PM: ├ ƒ /api/avaliacao-desempenho/avaliacoes/[id]         0 B                0 B
+3:17:17 PM: ├ ƒ /api/avaliacao-desempenho/criterios               0 B                0 B
+3:17:17 PM: ├ ƒ /api/avaliacao-desempenho/criterios/create-table  0 B                0 B
+3:17:17 PM: ├ ƒ /api/avaliacao-desempenho/funcionarios            0 B                0 B
+3:17:17 PM: ├ ƒ /api/avaliacao-desempenho/funcionarios/[id]       0 B                0 B
+3:17:17 PM: ├ ƒ /api/avaliacao-desempenho/importar                0 B                0 B
+3:17:17 PM: ├ ƒ /api/avaliacao-desempenho/preview                 0 B                0 B
+3:17:17 PM: ├ ƒ /api/avaliacao-desempenho/usuarios                0 B                0 B
+3:17:17 PM: ├ ƒ /api/avaliacao/avaliacoes/[id]                    0 B                0 B
+3:17:17 PM: ├ ○ /api/avaliacao/check-tables                       0 B                0 B
+3:17:17 PM: ├ ƒ /api/avaliacao/create                             0 B                0 B
+3:17:17 PM: ├ ƒ /api/avaliacao/create-tables                      0 B                0 B
+3:17:17 PM: ├ ƒ /api/avaliacao/import-criterios                   0 B                0 B
+3:17:17 PM: ├ ƒ /api/avaliacao/setup-tables                       0 B                0 B
+3:17:17 PM: ├ ƒ /api/cards                                        0 B                0 B
+3:17:17 PM: ├ ƒ /api/cards/[id]                                   0 B                0 B
+3:17:17 PM: ├ ƒ /api/cards/supabase                               0 B                0 B
+3:17:17 PM: ├ ○ /api/config                                       0 B                0 B
+3:17:17 PM: ├ ƒ /api/create-tables                                0 B                0 B
+3:17:17 PM: ├ ○ /api/db-check                                     0 B                0 B
+3:17:17 PM: ├ ƒ /api/debug-admin-token                            0 B                0 B
+3:17:17 PM: ├ ○ /api/debug-supabase-auth                          0 B                0 B
+3:17:17 PM: ├ ƒ /api/debug/codes                                  0 B                0 B
+3:17:17 PM: ├ ƒ /api/debug/test-code                              0 B                0 B
+3:17:17 PM: ├ ƒ /api/debug/test-verification                      0 B                0 B
+3:17:17 PM: ├ ƒ /api/documents                                    0 B                0 B
+3:17:17 PM: ├ ƒ /api/documents/[id]                               0 B                0 B
+3:17:17 PM: ├ ƒ /api/documents/convert                            0 B                0 B
+3:17:17 PM: ├ ƒ /api/email                                        0 B                0 B
+3:17:17 PM: ├ ƒ /api/email/debug                                  0 B                0 B
+3:17:17 PM: ├ ƒ /api/email/password-reset                         0 B                0 B
+3:17:17 PM: ├ ƒ /api/email/send-invitation                        0 B                0 B
+3:17:17 PM: ├ ƒ /api/email/send-test                              0 B                0 B
+3:17:17 PM: ├ ƒ /api/email/send-verification                      0 B                0 B
+3:17:17 PM: ├ ○ /api/email/test                                   0 B                0 B
+3:17:17 PM: ├ ○ /api/email/test-connection                        0 B                0 B
+3:17:17 PM: ├ ƒ /api/email/test-gmail                             0 B                0 B
+3:17:17 PM: ├ ƒ /api/execute-sql                                  0 B                0 B
+3:17:17 PM: ├ ƒ /api/files                                        0 B                0 B
+3:17:17 PM: ├ ƒ /api/files/[...path]                              0 B                0 B
+3:17:17 PM: ├ ƒ /api/files/create-folder                          0 B                0 B
+3:17:17 PM: ├ ƒ /api/files/upload                                 0 B                0 B
+3:17:17 PM: ├ ƒ /api/menu                                         0 B                0 B
+3:17:17 PM: ├ ƒ /api/menu/[id]                                    0 B                0 B
+3:17:17 PM: ├ ƒ /api/news                                         0 B                0 B
+3:17:17 PM: ├ ƒ /api/news/[id]                                    0 B                0 B
+3:17:17 PM: ├ ƒ /api/news/categories                              0 B                0 B
+3:17:17 PM: ├ ƒ /api/news/mock                                    0 B                0 B
+3:17:17 PM: ├ ƒ /api/news/posts                                   0 B                0 B
+3:17:17 PM: ├ ƒ /api/news/posts/[postId]                          0 B                0 B
+3:17:17 PM: ├ ƒ /api/news/posts/[postId]/comments                 0 B                0 B
+3:17:17 PM: ├ ƒ /api/news/posts/[postId]/like                     0 B                0 B
+3:17:17 PM: ├ ƒ /api/notifications                                0 B                0 B
+3:17:17 PM: ├ ƒ /api/notifications/[notificationId]/read          0 B                0 B
+3:17:17 PM: ├ ƒ /api/notifications/mark-all-read                  0 B                0 B
+3:17:17 PM: ├ ƒ /api/payroll/calculate                            0 B                0 B
+3:17:17 PM: ├ ƒ /api/payroll/codes                                0 B                0 B
+3:17:17 PM: ├ ƒ /api/payroll/companies                            0 B                0 B
+3:17:17 PM: ├ ƒ /api/payroll/companies/[id]                       0 B                0 B
+3:17:17 PM: ├ ƒ /api/payroll/employees                            0 B                0 B
+3:17:17 PM: ├ ƒ /api/payroll/luz-maritima/export                  0 B                0 B
+3:17:17 PM: ├ ƒ /api/payroll/luz-maritima/import                  0 B                0 B
+3:17:17 PM: ├ ƒ /api/payroll/luz-maritima/manual-data             0 B                0 B
+3:17:17 PM: ├ ƒ /api/payroll/sheets                               0 B                0 B
+3:17:17 PM: ├ ƒ /api/pdf-extract                                  0 B                0 B
+3:17:17 PM: ├ ƒ /api/reembolso                                    0 B                0 B
+3:17:17 PM: ├ ƒ /api/reembolso/[protocolo]                        0 B                0 B
+3:17:17 PM: ├ ƒ /api/reembolso/add-user-id-column                 0 B                0 B
+3:17:17 PM: ├ ƒ /api/reembolso/check-user                         0 B                0 B
+3:17:17 PM: ├ ƒ /api/reembolso/create                             0 B                0 B
+3:17:17 PM: ├ ƒ /api/reembolso/create-bucket                      0 B                0 B
+3:17:17 PM: ├ ƒ /api/reembolso/create-table                       0 B                0 B
+3:17:17 PM: ├ ƒ /api/reembolso/update-rls                         0 B                0 B
+3:17:17 PM: ├ ƒ /api/reembolso/user                               0 B                0 B
+3:17:17 PM: ├ ƒ /api/reimbursement-settings                       0 B                0 B
+3:17:17 PM: ├ ƒ /api/reimbursement-settings-fallback              0 B                0 B
+3:17:17 PM: ├ ƒ /api/reimbursement-settings-local                 0 B                0 B
+3:17:17 PM: ├ ƒ /api/reimbursement/approve                        0 B                0 B
+3:17:17 PM: ├ ƒ /api/reimbursement/reject                         0 B                0 B
+3:17:17 PM: ├ ƒ /api/reminders                                    0 B                0 B
+3:17:17 PM: ├ ƒ /api/reminders/[reminderId]                       0 B                0 B
+3:17:17 PM: ├ ƒ /api/reminders/process                            0 B                0 B
+3:17:17 PM: ├ ƒ /api/scrape-holidays                              0 B                0 B
+3:17:17 PM: ├ ƒ /api/setup-payroll                                0 B                0 B
+3:17:17 PM: ├ ƒ /api/setup-settings-table                         0 B                0 B
+3:17:17 PM: ├ ƒ /api/setup-storage-buckets                        0 B                0 B
+3:17:17 PM: ├ ƒ /api/setup-user-preferences-column                0 B                0 B
+3:17:17 PM: ├ ƒ /api/setup-user-reimbursement-column              0 B                0 B
+3:17:17 PM: ├ ƒ /api/sql/execute                                  0 B                0 B
+3:17:17 PM: ├ ƒ /api/supabase-status                              0 B                0 B
+3:17:17 PM: ├ ƒ /api/test                                         0 B                0 B
+3:17:17 PM: ├ ƒ /api/test-email                                   0 B                0 B
+3:17:17 PM: ├ ƒ /api/test-supabase-users                          0 B                0 B
+3:17:17 PM: ├ ƒ /api/test-token                                   0 B                0 B
+3:17:17 PM: ├ ƒ /api/test-users                                   0 B                0 B
+3:17:17 PM: ├ ƒ /api/test-users-unified                           0 B                0 B
+3:17:17 PM: ├ ƒ /api/test/supabase                                0 B                0 B
+3:17:17 PM: ├ ƒ /api/upload                                       0 B                0 B
+3:17:17 PM: ├ ƒ /api/users                                        0 B                0 B
+3:17:17 PM: ├ ƒ /api/users-unified                                0 B                0 B
+3:17:17 PM: ├ ƒ /api/users-unified/[id]/emails                    0 B                0 B
+3:17:17 PM: ├ ƒ /api/users-unified/[id]/emails/[emailId]          0 B                0 B
+3:17:17 PM: ├ ƒ /api/users-unified/[id]/phones                    0 B                0 B
+3:17:17 PM: ├ ƒ /api/users-unified/[id]/phones/[phoneId]          0 B                0 B
+3:17:17 PM: ├ ƒ /api/users-unified/[id]/reset-password            0 B                0 B
+3:17:17 PM: ├ ƒ /api/users-unified/profile                        0 B                0 B
+3:17:17 PM: ├ ƒ /api/users-unified/upload-photo                   0 B                0 B
+3:17:17 PM: ├ ƒ /api/users/[id]                                   0 B                0 B
+3:17:17 PM: ├ ƒ /api/users/[id]/reset-password                    0 B                0 B
+3:17:17 PM: ├ ƒ /api/users/[id]/role                              0 B                0 B
+3:17:17 PM: ├ ƒ /api/users/access                                 0 B                0 B
+3:17:17 PM: ├ ƒ /api/users/access-history                         0 B                0 B
+3:17:17 PM: ├ ƒ /api/users/reimbursement-settings                 0 B                0 B
+3:17:17 PM: ├ ƒ /api/users/reimbursement-settings-local           0 B                0 B
+3:17:17 PM: ├ ƒ /api/users/reimbursement-settings-server          0 B                0 B
+3:17:17 PM: ├ ƒ /api/users/supabase                               0 B                0 B
+3:17:17 PM: ├ ƒ /api/verification/send-code                       0 B                0 B
+3:17:17 PM: ├ ƒ /api/verify-token                                 0 B                0 B
+3:17:17 PM: ├ ○ /avaliacao                                        3.75 kB         361 kB
+3:17:17 PM: ├ ƒ /avaliacao/[id]                                   4.93 kB         358 kB
+3:17:17 PM: ├ ○ /avaliacao/avaliacoes                             2.56 kB         355 kB
+3:17:17 PM: ├ ƒ /avaliacao/avaliacoes/[id]                        511 B          88.3 kB
+3:17:17 PM: ├ ƒ /avaliacao/avaliacoes/[id]/editar                 6.19 kB         359 kB
+3:17:17 PM: ├ ○ /avaliacao/avaliacoes/debug                       2.64 kB         355 kB
+3:17:17 PM: ├ ○ /avaliacao/avaliacoes/nova                        589 B          88.3 kB
+3:17:17 PM: ├ ○ /avaliacao/criterios                              3.06 kB         356 kB
+3:17:17 PM: ├ ○ /avaliacao/dashboard                              5.14 kB         363 kB
+3:17:17 PM: ├ ƒ /avaliacao/editar/[id]                            2.55 kB         355 kB
+3:17:17 PM: ├ ○ /avaliacao/funcionarios                           3.06 kB         356 kB
+3:17:17 PM: ├ ƒ /avaliacao/funcionarios/[id]                      4.6 kB          357 kB
+3:17:17 PM: ├ ○ /avaliacao/funcionarios/novo                      1.24 kB         354 kB
+3:17:17 PM: ├ ○ /avaliacao/importacao                             8.15 kB         361 kB
+3:17:17 PM: ├ ○ /avaliacao/lista-avaliacoes/debug                 1.35 kB        89.1 kB
+3:17:17 PM: ├ ○ /avaliacao/lixeira                                2.44 kB         355 kB
+3:17:17 PM: ├ ○ /avaliacao/nova                                   4.88 kB         357 kB
+3:17:17 PM: ├ ○ /avaliacao/novo                                   2.12 kB         355 kB
+3:17:17 PM: ├ ○ /avaliacao/relatorios                             4.61 kB         357 kB
+3:17:17 PM: ├ ƒ /avaliacao/ver/[id]                               2.56 kB         355 kB
+3:17:17 PM: ├ ○ /calendario                                       16 kB           369 kB
+3:17:17 PM: ├ ○ /contatos                                         1.42 kB         354 kB
+3:17:17 PM: ├ ○ /contracheque                                     687 B           353 kB
+3:17:17 PM: ├ ○ /dashboard                                        3.42 kB         356 kB
+3:17:17 PM: ├ ○ /debug/codes                                      3.42 kB         131 kB
+3:17:17 PM: ├ ○ /emergencia                                       881 B           353 kB
+3:17:17 PM: ├ ○ /folha-pagamento                                  5.2 kB          127 kB
+3:17:17 PM: ├ ○ /folha-pagamento/configuracoes/codigos            2.49 kB         124 kB
+3:17:17 PM: ├ ○ /folha-pagamento/configuracoes/perfis             2.51 kB         124 kB
+3:17:17 PM: ├ ○ /folha-pagamento/configuracoes/tabelas            2.5 kB          124 kB
+3:17:17 PM: ├ ○ /folha-pagamento/empresas                         4.73 kB         126 kB
+3:17:17 PM: ├ ○ /folha-pagamento/funcionarios                     4.32 kB        98.9 kB
+3:17:17 PM: ├ ○ /folha-pagamento/nova                             3.28 kB         125 kB
+3:17:17 PM: ├ ○ /folha-pagamento/relatorios/custos                2.35 kB         124 kB
+3:17:17 PM: ├ ○ /folha-pagamento/relatorios/guias                 2.38 kB         124 kB
+3:17:17 PM: ├ ○ /folha-pagamento/relatorios/mensal                3.53 kB         125 kB
+3:17:17 PM: ├ ○ /folha-pagamento/sheets                           4.83 kB         126 kB
+3:17:17 PM: ├ ○ /login                                            8.93 kB         370 kB
+3:17:17 PM: ├ ○ /login-test                                       2.57 kB         117 kB
+3:17:17 PM: ├ ○ /manager-module                                   2.53 kB         355 kB
+3:17:17 PM: ├ ○ /manual                                           2.18 kB         391 kB
+3:17:17 PM: ├ ○ /news                                             12.9 kB         341 kB
+3:17:17 PM: ├ ○ /noticias                                         2.82 kB         392 kB
+3:17:17 PM: ├ ○ /politicas                                        2.48 kB         391 kB
+3:17:17 PM: ├ ○ /ponto                                            1.36 kB         354 kB
+3:17:17 PM: ├ ○ /procedimentos                                    608 B           353 kB
+3:17:17 PM: ├ ○ /procedimentos-logistica                          2.19 kB         391 kB
+3:17:17 PM: ├ ○ /profile                                          6.48 kB         380 kB
+3:17:17 PM: ├ ○ /reembolso                                        12 kB           458 kB
+3:17:17 PM: ├ ○ /reembolso-form                                   2.38 kB         433 kB
+3:17:17 PM: ├ ƒ /reembolso/[protocolo]                            2.16 kB         360 kB
+3:17:17 PM: ├ ○ /register                                         4.94 kB         152 kB
+3:17:17 PM: ├ ○ /reimbursement-dashboard                          2.37 kB         130 kB
+3:17:17 PM: ├ ○ /reimbursement-settings                           3.91 kB         136 kB
+3:17:17 PM: ├ ○ /reset-password                                   6.45 kB         341 kB
+3:17:17 PM: ├ ○ /set-password                                     4.32 kB         334 kB
+3:17:17 PM: ├ ○ /settings/security                                4.61 kB         302 kB
+3:17:17 PM: ├ ○ /test-documents                                   1.65 kB         354 kB
+3:17:17 PM: ├ ○ /test-final                                       4.52 kB         132 kB
+3:17:17 PM: ├ ○ /test-i18n                                        1.49 kB         116 kB
+3:17:17 PM: ├ ○ /test-import                                      1.03 kB         354 kB
+3:17:17 PM: ├ ○ /test-login                                       1.76 kB         354 kB
+3:17:17 PM: ├ ○ /test-pdf                                         3.35 kB         392 kB
+3:17:17 PM: ├ ○ /test-translations                                1.6 kB          116 kB
+3:17:17 PM: ├ ○ /test-user-management                             3.42 kB         104 kB
+3:17:17 PM: ├ ○ /test-users                                       3.11 kB        98.5 kB
+3:17:17 PM: ├ ○ /test-viewer                                      1.53 kB         395 kB
+3:17:17 PM: ├ ○ /token-tester                                     2.49 kB         103 kB
+3:17:17 PM: ├ ○ /translation-debug                                2.22 kB         117 kB
+3:17:17 PM: └ ○ /verify-email                                     4.67 kB         149 kB
+3:17:17 PM: + First Load JS shared by all                         87.8 kB
+3:17:17 PM:   ├ chunks/7023-2b03b84f1819ee44.js                   31.6 kB
+3:17:17 PM:   ├ chunks/fd9d1056-158ac2c9d594a992.js               53.7 kB
+3:17:17 PM:   └ other shared chunks (total)                       2.47 kB
+3:17:17 PM: Route (pages)                                         Size     First Load JS
+3:17:17 PM: ─ ƒ /api/check-env                                    0 B            81.5 kB
+3:17:17 PM: + First Load JS shared by all                         81.5 kB
+3:17:17 PM:   ├ chunks/framework-8e0e0f4a6b83a956.js              45.2 kB
+3:17:17 PM:   ├ chunks/main-fd7a0de17520446f.js                   33.9 kB
+3:17:17 PM:   └ other shared chunks (total)                       2.44 kB
+3:17:17 PM: ƒ Middleware                                          27.8 kB
+3:17:17 PM: ○  (Static)   prerendered as static content
+3:17:17 PM: ƒ  (Dynamic)  server-rendered on demand
+3:17:17 PM: ​
+3:17:17 PM: (build.command completed in 1m 49.9s)
+3:17:18 PM: Next.js cache saved
+3:17:18 PM: Next.js cache saved
+3:17:19 PM: ​
+3:17:19 PM: Functions bundling                                            
+3:17:19 PM: ────────────────────────────────────────────────────────────────
+3:17:19 PM: ​
+3:17:19 PM: Packaging Functions from .netlify/functions-internal directory:
+3:17:19 PM:  - ___netlify-server-handler/___netlify-server-handler.mjs
+3:17:19 PM: ​
+3:17:21 PM: ​
+3:17:21 PM: (Functions bundling completed in 2.2s)
+3:17:21 PM: ​
+3:17:21 PM: Edge Functions bundling                                       
+3:17:21 PM: ────────────────────────────────────────────────────────────────
+3:17:21 PM: ​
+3:17:21 PM: Packaging Edge Functions from .netlify/edge-functions directory:
+3:17:21 PM:  - ___netlify-edge-handler-middleware
+3:17:24 PM: ​
+3:17:24 PM: (Edge Functions bundling completed in 3s)
+3:17:36 PM: ​
+3:17:36 PM: Scanning for secrets in code and build output.                
+3:17:36 PM: ────────────────────────────────────────────────────────────────
+3:17:36 PM: ​
+3:17:36 PM: ​
+3:17:36 PM: ❯ Scanning complete. 5169 file(s) scanned. Secrets scanning found 13 instance(s) of secrets in build output or repo code.
+3:17:36 PM: ​
+3:17:36 PM: Secret env var "ADMIN_LAST_NAME"'s value detected:
+  found value at line 2 in -remote origin main
+3:17:36 PM:   found value at line 39 in .env.production
+3:17:36 PM:   found value at line 14853 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 54198 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 54346 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 55999 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 301019 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 301098 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 751752 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 753208 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 754665 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 756448 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 820833 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 820981 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 822539 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 822687 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 824243 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 824391 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 826037 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 826185 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 940525 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 940604 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 940681 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 940764 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 940843 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 941840 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1069183 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1070639 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1072096 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1073879 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1075661 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1077440 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1079227 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1082956 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1130771 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1130850 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1130927 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1131010 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1131089 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1138243 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2460539 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2460687 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2462245 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2462393 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2463949 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2464097 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2465743 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2465891 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2467533 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2467681 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2469328 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2469476 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2471122 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2471270 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2476093 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2476241 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2482629 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2482708 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2482785 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2482867 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2482948 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2488904 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2558597 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2559042 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 28723 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 32191 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 33683 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 33873 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 35361 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 41177 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 41293 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 50853 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 53363 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 53400 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 56572 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 103703 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 1010835 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 1034853 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 2990750 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 2990831 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3623583 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3623697 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3623809 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3624142 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3629907 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3631321 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3632737 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3634471 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3700670 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3700914 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3701157 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3701534 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3722650 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3722914 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3723176 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3723572 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3728859 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3729049 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3729441 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3729631 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3730021 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3730211 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3730734 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3730924 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3734791 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3735063 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3735335 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3735736 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3758150 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3758266 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3758392 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3758508 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3758632 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3758748 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3759007 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3759123 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3802026 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3802259 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3802492 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3802854 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3813118 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3813155 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3813260 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3813297 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3813402 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3813439 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3813674 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3813711 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3829993 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3830285 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3830577 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3831001 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4003787 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4004031 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4004274 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4004651 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4004962 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4005278 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4005593 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4007044 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4093070 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4093334 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4093596 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4093992 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4094322 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4094657 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4094991 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4096461 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4117924 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4118114 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4118506 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4118696 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4119086 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4119276 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4119799 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4119989 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4120447 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4120637 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4121100 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4121290 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4121752 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4121942 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4123603 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4123793 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4139107 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4139379 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4139651 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4140052 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4140389 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4140731 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4141072 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4142549 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4297553 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4297667 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4297779 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4298112 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4298325 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4298543 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4298760 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4300177 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4304236 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4304352 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4304478 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4304594 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4304718 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4304834 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4305093 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4305209 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4305400 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4305516 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4305712 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4305828 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4306023 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4306139 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4307533 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4307649 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4470871 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4471104 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4471337 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4471699 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4471997 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4472300 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4472602 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4474040 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4512073 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4512110 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4512215 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4512252 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4512357 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4512394 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4512629 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4512666 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4512836 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4512873 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4513048 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4513085 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4513259 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4513296 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4514606 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4514643 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4603625 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4603706 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4603785 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4603870 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4603951 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4604493 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4747247 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4748661 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4750077 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4751811 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4753550 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4755286 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4757027 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4761062 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4824549 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4824841 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4825133 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4825557 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4825916 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4826280 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4826643 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4828205 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4875242 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4875323 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4875402 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4875487 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4875568 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4878310 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4896375 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4896456 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4896535 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4896620 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4896701 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4901743 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5065410 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5065491 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5065570 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5065655 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5065736 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5067787 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5078882 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5078963 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5079042 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5079127 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5079208 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5081466 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5087388 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5087469 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5087548 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5087633 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5087714 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5090658 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5092206 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5092287 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5092366 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5092451 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5092532 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5094602 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5103891 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5103972 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5104051 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5104136 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5104217 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5107387 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5113951 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5114032 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5114111 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5114196 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5114277 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5117057 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5129886 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5129967 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5130046 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5130131 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5130212 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5133891 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5149631 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5149712 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5149791 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5149876 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5149957 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5157290 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5178556 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5178637 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5178716 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5178801 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5178882 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5181674 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5186327 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5186408 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5186487 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5186572 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5186653 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5193159 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5223729 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5223810 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5223889 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5223974 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5224055 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5230348 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5245265 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5245346 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5245425 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5245510 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5245591 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5248216 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5264261 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5264342 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5264421 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5264506 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5264587 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5267798 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5274167 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5274248 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5274327 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5274412 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5274493 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 5277352 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 11942684 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 11942765 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 11942844 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 11942928 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 11943011 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 11946055 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 11976918 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 11976999 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 11977078 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 11977162 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 11977245 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 11987414 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 12055718 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 12055901 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 12055959 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 12055993 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 12056046 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 12056657 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 12056778 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 12056810 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 12057037 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 12057215 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 12057828 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 12057833 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 12057838 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 12057858 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 12058034 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 12058210 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 12058424 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 12059779 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 12060260 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/admin/acl-management/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/admin/authorized-users/page.js
+3:17:36 PM:   found value at line 6 in .netlify/.next/server/app/admin/cards/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/admin/documents/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/admin/news/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/admin/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/admin/reimbursement-approval/page.js
+3:17:36 PM:   found value at line 21 in .netlify/.next/server/app/admin/reimbursement-migration/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/admin/reimbursement-settings/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/admin/role-permissions/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/admin/settings/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/admin/user-approval-settings/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/admin/user-management/convert-office365/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/admin/user-management/import/dashboard/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/admin/user-management/import/documentation/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/admin/user-management/import/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/api/admin/authorized-users/route.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/api/admin/ensure-admin/route.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/api/admin/fix-admin/route.js
+3:17:36 PM:   found value at line 29 in .netlify/.next/server/app/api/auth/ensure-admin/route.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/api/auth/token-refresh/route.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/api/debug-admin-token/route.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/api/setup-payroll/route.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/api/test-users/route.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/api/users/supabase/route.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/login/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/app/reembolso-form/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/chunks/2698.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/server/chunks/2864.js
+3:17:36 PM:   found value at line 39 in .netlify/.next/standalone/.env.production
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/admin/acl-management/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/admin/authorized-users/page.js
+3:17:36 PM:   found value at line 6 in .netlify/.next/standalone/.next/server/app/admin/cards/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/admin/documents/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/admin/news/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/admin/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/admin/reimbursement-approval/page.js
+3:17:36 PM:   found value at line 21 in .netlify/.next/standalone/.next/server/app/admin/reimbursement-migration/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/admin/reimbursement-settings/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/admin/role-permissions/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/admin/settings/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/admin/user-approval-settings/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/admin/user-management/convert-office365/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/admin/user-management/import/dashboard/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/admin/user-management/import/documentation/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/admin/user-management/import/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/api/admin/authorized-users/route.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/api/admin/ensure-admin/route.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/api/admin/fix-admin/route.js
+3:17:36 PM:   found value at line 29 in .netlify/.next/standalone/.next/server/app/api/auth/ensure-admin/route.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/api/auth/token-refresh/route.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/api/debug-admin-token/route.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/api/setup-payroll/route.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/api/test-users/route.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/api/users/supabase/route.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/login/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/app/reembolso-form/page.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/chunks/2698.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/standalone/.next/server/chunks/2864.js
+3:17:36 PM:   found value at line 51 in .netlify/.next/standalone/public/admin-token.html
+3:17:36 PM:   found value at line 19797 in .netlify/.next/standalone/public/documentos/e-mail_sobre_ponto.pdf
+3:17:36 PM:   found value at line 4 in .netlify/.next/standalone/public/documentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 7 in .netlify/.next/standalone/public/documentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 13 in .netlify/.next/standalone/public/documentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 24 in .netlify/.next/standalone/public/documentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 19797 in .netlify/.next/standalone/public/documentos/procedimentos/e-mail_sobre_ponto.pdf
+3:17:36 PM:   found value at line 4 in .netlify/.next/standalone/public/documentos/procedimentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 7 in .netlify/.next/standalone/public/documentos/procedimentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 13 in .netlify/.next/standalone/public/documentos/procedimentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 24 in .netlify/.next/standalone/public/documentos/procedimentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 1 in .netlify/.next/static/chunks/1254-37cb41d22370467d.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/static/chunks/7837-54ffebc532e2df7f.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/static/chunks/app/admin/layout-a110443bb55c79f3.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/static/chunks/app/login/page-df38252b1b7ef35f.js
+3:17:36 PM:   found value at line 1 in .netlify/.next/static/chunks/app/reembolso-form/page-fe29f392b7df7cb2.js
+3:17:36 PM:   found value at line 39 in .netlify/functions-internal/___netlify-server-handler/.env.production
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/admin/acl-management/page.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/admin/authorized-users/page.js
+3:17:36 PM:   found value at line 6 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/admin/cards/page.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/admin/documents/page.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/admin/news/page.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/admin/page.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/admin/reimbursement-approval/page.js
+3:17:36 PM:   found value at line 21 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/admin/reimbursement-migration/page.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/admin/reimbursement-settings/page.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/admin/role-permissions/page.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/admin/settings/page.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/admin/user-approval-settings/page.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/admin/user-management/convert-office365/page.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/admin/user-management/import/dashboard/page.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/admin/user-management/import/documentation/page.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/admin/user-management/import/page.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/api/admin/authorized-users/route.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/api/admin/ensure-admin/route.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/api/admin/fix-admin/route.js
+3:17:36 PM:   found value at line 29 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/api/auth/ensure-admin/route.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/api/auth/token-refresh/route.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/api/debug-admin-token/route.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/api/setup-payroll/route.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/api/test-users/route.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/api/users/supabase/route.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/login/page.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/app/reembolso-form/page.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/chunks/2698.js
+3:17:36 PM:   found value at line 1 in .netlify/functions-internal/___netlify-server-handler/.next/server/chunks/2864.js
+3:17:36 PM:   found value at line 51 in .netlify/functions-internal/___netlify-server-handler/public/admin-token.html
+3:17:36 PM:   found value at line 19797 in .netlify/functions-internal/___netlify-server-handler/public/documentos/e-mail_sobre_ponto.pdf
+3:17:36 PM:   found value at line 4 in .netlify/functions-internal/___netlify-server-handler/public/documentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 7 in .netlify/functions-internal/___netlify-server-handler/public/documentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 13 in .netlify/functions-internal/___netlify-server-handler/public/documentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 24 in .netlify/functions-internal/___netlify-server-handler/public/documentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 19797 in .netlify/functions-internal/___netlify-server-handler/public/documentos/procedimentos/e-mail_sobre_ponto.pdf
+3:17:36 PM:   found value at line 4 in .netlify/functions-internal/___netlify-server-handler/public/documentos/procedimentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 7 in .netlify/functions-internal/___netlify-server-handler/public/documentos/procedimentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 13 in .netlify/functions-internal/___netlify-server-handler/public/documentos/procedimentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 24 in .netlify/functions-internal/___netlify-server-handler/public/documentos/procedimentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 1 in .next/_next/static/chunks/1254-37cb41d22370467d.js
+3:17:36 PM:   found value at line 1 in .next/_next/static/chunks/7837-54ffebc532e2df7f.js
+3:17:36 PM:   found value at line 1 in .next/_next/static/chunks/app/admin/layout-a110443bb55c79f3.js
+3:17:36 PM:   found value at line 1 in .next/_next/static/chunks/app/login/page-df38252b1b7ef35f.js
+3:17:36 PM:   found value at line 1 in .next/_next/static/chunks/app/reembolso-form/page-fe29f392b7df7cb2.js
+3:17:36 PM:   found value at line 51 in .next/admin-token.html
+3:17:36 PM:   found value at line 19797 in .next/documentos/e-mail_sobre_ponto.pdf
+3:17:36 PM:   found value at line 4 in .next/documentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 7 in .next/documentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 13 in .next/documentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 24 in .next/documentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 19797 in .next/documentos/procedimentos/e-mail_sobre_ponto.pdf
+3:17:36 PM:   found value at line 4 in .next/documentos/procedimentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 7 in .next/documentos/procedimentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 13 in .next/documentos/procedimentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 24 in .next/documentos/procedimentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 50 in CORRIGIR_ADMIN_HASH_FIXO.sql
+3:17:36 PM:   found value at line 58 in CORRIGIR_ADMIN_SIMPLES.sql
+3:17:36 PM:   found value at line 48 in CORRIGIR_ADMIN_SUPABASE.sql
+3:17:36 PM:   found value at line 53 in EXECUTAR_NO_SUPABASE.sql
+3:17:36 PM:   found value at line 3 in LICENSE
+3:17:36 PM:   found value at line 7 in LICENSE
+3:17:36 PM:   found value at line 85 in PRODUCTION_AUTH_ISSUES.md
+3:17:36 PM:   found value at line 127 in PRODUCTION_AUTH_ISSUES.md
+3:17:36 PM:   found value at line 417 in README.md
+3:17:36 PM:   found value at line 430 in README.md
+3:17:36 PM:   found value at line 443 in README.md
+3:17:36 PM:   found value at line 46 in SOLUCAO_COMPLETA.md
+3:17:36 PM:   found value at line 86 in SOLUCAO_COMPLETA.md
+3:17:36 PM:   found value at line 174 in SOLUCAO_COMPLETA.md
+3:17:36 PM:   found value at line 80 in criar_hash.js
+3:17:36 PM:   found value at line 52 in gerar_hash_real.js
+3:17:36 PM:   found value at line 2 in h
+3:17:36 PM:   found value at line 51 in public/admin-token.html
+3:17:36 PM:   found value at line 19797 in public/documentos/e-mail_sobre_ponto.pdf
+3:17:36 PM:   found value at line 4 in public/documentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 7 in public/documentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 13 in public/documentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 24 in public/documentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 19797 in public/documentos/procedimentos/e-mail_sobre_ponto.pdf
+3:17:36 PM:   found value at line 4 in public/documentos/procedimentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 7 in public/documentos/procedimentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 13 in public/documentos/procedimentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 24 in public/documentos/procedimentos/e-mail_sobre_ponto.txt
+3:17:36 PM:   found value at line 123 in scripts/check-admin-password.js
+3:17:36 PM:   found value at line 17 in scripts/create-admin-direct-sql.js
+3:17:36 PM:   found value at line 25 in scripts/create-admin-direct.js
+3:17:36 PM:   found value at line 17 in scripts/create-admin-simple.js
+3:17:36 PM:   found value at line 25 in scripts/create-admin-user.js
+3:17:36 PM:   found value at line 184 in scripts/create-db-structure.js
+3:17:36 PM:   found value at line 232 in scripts/create-db-structure.js
+3:17:36 PM:   found value at line 176 in scripts/create-users-unified.sql
+3:17:36 PM:   found value at line 16 in scripts/direct-admin-token.js
+3:17:36 PM:   found value at line 15 in scripts/ensure-admin-profile.js
+3:17:36 PM:   found value at line 25 in scripts/ensure-admin-user.js
+3:17:36 PM:   found value at line 16 in scripts/fix-admin-access.js
+3:17:36 PM:   found value at line 17 in scripts/fix-admin-direct.js
+3:17:36 PM:   found value at line 36 in scripts/fix-admin-user.js
+3:17:36 PM:   found value at line 56 in scripts/fix-admin-user.sql
+3:17:36 PM:   found value at line 40 in scripts/fix-auth.js
+3:17:36 PM:   found value at line 78 in scripts/fix-auth.js
+3:17:36 PM:   found value at line 115 in scripts/fix-login-issue.js
+3:17:36 PM:   found value at line 17 in scripts/fix-production-auth.js
+3:17:36 PM:   found value at line 129 in scripts/migrate-hardcoded-data.js
+3:17:36 PM:   found value at line 54 in scripts/seed-payroll-data.sql
+3:17:36 PM:   found value at line 92 in scripts/seed-payroll-data.sql
+3:17:36 PM:   found value at line 33 in scripts/seed-supabase.js
+3:17:36 PM:   found value at line 105 in scripts/setup-admin.js
+3:17:36 PM:   found value at line 127 in scripts/setup-admin.js
+3:17:36 PM:   found value at line 156 in scripts/setup-admin.js
+3:17:36 PM:   found value at line 22 in scripts/test-fix-admin.js
+3:17:36 PM:   found value at line 133 in scripts/test-login-direct.js
+3:17:36 PM:   found value at line 75 in scripts/test-login-with-email.js
+3:17:36 PM:   found value at line 100 in scripts/test-supabase-login.js
+3:17:36 PM:   found value at line 336 in scripts/unify-user-tables.sql
+3:17:36 PM:   found value at line 84 in src/app/api/admin/authorized-users/route.ts
+3:17:36 PM:   found value at line 312 in src/app/api/admin/authorized-users/route.ts
+3:17:36 PM:   found value at line 34 in src/app/api/admin/ensure-admin/route.ts
+3:17:36 PM:   found value at line 25 in src/app/api/admin/fix-admin/route.ts
+3:17:36 PM:   found value at line 101 in src/app/api/auth/token-refresh/route.ts
+3:17:36 PM:   found value at line 228 in src/app/api/auth/token-refresh/route.ts
+3:17:36 PM:   found value at line 33 in src/app/api/debug-admin-token/route.ts
+3:17:36 PM:   found value at line 29 in src/app/api/setup-payroll/route.ts
+3:17:36 PM:   found value at line 56 in src/app/api/test-users/route.ts
+3:17:36 PM:   found value at line 105 in src/app/api/test-users/route.ts
+3:17:36 PM:   found value at line 90 in src/app/api/users/supabase/route.ts
+3:17:36 PM:   found value at line 1261 in src/app/login/page.tsx
+3:17:36 PM:   found value at line 988 in src/app/login/page.tsx.bak
+3:17:36 PM:   found value at line 20 in src/components/Footer.tsx
+3:17:36 PM:   found value at line 1318 in src/contexts/SupabaseAuthContext.tsx
+3:17:36 PM:   found value at line 1506 in src/contexts/SupabaseAuthContext.tsx
+3:17:36 PM:   found value at line 1037 in src/contexts/SupabaseAuthContext.tsx.fixed
+3:17:36 PM:   found value at line 1225 in src/contexts/SupabaseAuthContext.tsx.fixed
+3:17:36 PM:   found value at line 90 in src/lib/admin-utils.ts
+3:17:36 PM: Secret env var "ADMIN_FIRST_NAME"'s value detected:
+  found value at line 2 in -remote origin main
+3:17:36 PM:   found value at line 15 in .env.production
+3:17:36 PM:   found value at line 37 in .env.production
+3:17:36 PM:   found value at line 38 in .env.production
+3:17:36 PM:   found value at line 8655 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 14853 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 14870 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 53723 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 53733 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 54197 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 54345 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 55999 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 56016 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 246038 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 246159 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 301019 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 301036 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 301098 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 301115 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 751752 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 751769 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 753208 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 753225 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 754665 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 754682 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 756448 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 756465 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 820358 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 820368 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 820832 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 820980 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 822064 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 822074 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 822538 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 822686 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 823768 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 823778 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 824242 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 824390 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 825562 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 825572 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 826036 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 826184 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 940525 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 940542 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 940604 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 940621 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 940681 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 940698 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 940764 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 940781 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 940843 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 940860 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 941840 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 941857 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 954076 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 954197 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 954314 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 954437 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 954559 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 956055 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1069183 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1069200 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1070639 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1070656 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1072096 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1072113 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1073879 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1073896 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1075661 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1075678 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1077440 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1077457 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1079227 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1079244 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1082956 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1082973 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1130771 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1130788 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1130850 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1130867 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1130927 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1130944 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1131010 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1131027 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1131089 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1131106 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1138243 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 1138260 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2460064 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2460074 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2460538 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2460686 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2461770 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2461780 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2462244 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2462392 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2463474 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2463484 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2463948 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2464096 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2465268 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2465278 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2465742 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2465890 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2467058 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2467068 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2467532 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2467680 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2468853 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2468863 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2469327 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2469475 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2470647 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2470657 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2471121 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2471269 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2475618 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2475628 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2476092 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2476240 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2482629 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2482646 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2482708 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2482725 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2482785 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2482802 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2482867 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2482884 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2482948 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2482965 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2488904 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2488921 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2558597 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 2559042 in .netlify/.next/cache/webpack/client-production/0.pack
+3:17:36 PM:   found value at line 28722 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 28765 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 28820 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 29851 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 32190 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 32204 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 32219 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 33682 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 33872 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 34506 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 35360 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 39504 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 41176 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 41292 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 50853 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 53362 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 53399 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 56571 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 61372 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 61377 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 103632 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 103702 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 1005018 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 1010835 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 1010852 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 1034853 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 1034870 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 1035851 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 1035861 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 2947700 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 2947823 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 2990750 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 2990767 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 2990831 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 2990848 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3623512 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3623582 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3623626 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3623696 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3623738 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3623808 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3624071 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3624141 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3629907 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3629924 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3631321 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3631338 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3632737 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3632754 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3634471 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3634488 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3700669 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3700712 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3700767 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3700913 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3700956 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3701011 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3701156 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3701199 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3701254 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3701533 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3701576 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3701631 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3702623 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3702716 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3702809 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3703033 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3722649 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3722663 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3722678 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3722913 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3722927 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3722942 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3723175 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3723189 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3723204 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3723571 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3723585 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3723600 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3728858 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3729048 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3729440 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3729630 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3730020 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3730210 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3730733 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3730923 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3733492 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3733605 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3733718 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3733964 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3734790 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3735062 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3735334 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3735735 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3749851 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3750010 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3750169 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3750462 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3758149 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3758265 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3758391 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3758507 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3758631 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3758747 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3759006 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3759122 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3802026 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3802259 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3802492 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3802854 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3813117 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3813154 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3813259 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3813296 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3813401 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3813438 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3813673 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3813710 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3829992 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3830284 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3830576 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3831000 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3873285 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3873290 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3874776 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3874781 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3876269 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3876274 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3877917 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3877922 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3882070 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3882080 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3883346 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3883356 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3884622 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3884632 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3885986 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 3885996 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4003786 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4003829 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4003884 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4004030 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4004073 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4004128 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4004273 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4004316 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4004371 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4004650 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4004693 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4004748 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4004961 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4005004 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4005059 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4005277 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4005320 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4005375 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4005592 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4005635 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4005690 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4007043 in .netlify/.next/cache/webpack/server-production/0.pack
+3:17:36 PM:   found value at line 4007086 in .netlify/.next/cache/webpack/server-production/0.pack

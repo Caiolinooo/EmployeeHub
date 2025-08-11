@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { testEmailConnection, sendVerificationEmail } from '@/lib/email';
 import nodemailer from 'nodemailer';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API para depurar problemas com o serviço de email
  * @route GET /api/email/debug

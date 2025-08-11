@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 // Interface para os feriados
 interface Holiday {
   date: string; // Format: YYYY-MM-DD

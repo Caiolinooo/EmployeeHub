@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API endpoint to get the current session
  * This endpoint returns the current session information

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API para testar a conexão com o Gmail usando configuração simplificada
  * @route GET /api/email/test-gmail
