@@ -149,26 +149,30 @@ const UserEditor: React.FC<UserEditorProps> = ({
     setSelectedACLPermissions(permissionIds);
 
     try {
-      // Obter permissões atuais
-      const currentPermissions = userACLPermissions?.individual_permissions
-        .filter(up => !up.is_expired)
-        .map(up => up.permission.id) || [];
+      // Sistema ACL temporariamente desabilitado
+      console.log('ACL permission change disabled temporarily');
+      return;
 
-      // Encontrar permissões a adicionar
-      const toAdd = permissionIds.filter(id => !currentPermissions.includes(id));
+      // // Obter permissões atuais
+      // const currentPermissions = userACLPermissions?.individual_permissions
+      //   .filter((up: any) => !up.is_expired)
+      //   .map((up: any) => up.permission.id) || [];
 
-      // Encontrar permissões a remover
-      const toRemove = currentPermissions.filter(id => !permissionIds.includes(id));
+      // // Encontrar permissões a adicionar
+      // const toAdd = permissionIds.filter(id => !currentPermissions.includes(id));
 
-      // Adicionar novas permissões
-      for (const permissionId of toAdd) {
-        await grantPermission(editedUser._id, permissionId);
-      }
+      // // Encontrar permissões a remover
+      // const toRemove = currentPermissions.filter(id => !permissionIds.includes(id));
 
-      // Remover permissões desmarcadas
-      for (const permissionId of toRemove) {
-        await revokePermission(editedUser._id, permissionId);
-      }
+      // // Adicionar novas permissões
+      // for (const permissionId of toAdd) {
+      //   await grantPermission(editedUser._id, permissionId);
+      // }
+
+      // // Remover permissões desmarcadas
+      // for (const permissionId of toRemove) {
+      //   await revokePermission(editedUser._id, permissionId);
+      // }
 
       console.log('✅ Permissões ACL atualizadas com sucesso');
     } catch (error) {
@@ -609,7 +613,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
                   As permissões individuais têm prioridade sobre as permissões do role.
                 </p>
 
-                {loadingACL ? (
+                {false ? (
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
                     <span className="ml-2 text-green-700">Carregando permissões ACL...</span>
