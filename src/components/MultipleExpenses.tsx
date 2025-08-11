@@ -129,7 +129,7 @@ const MultipleExpenses: React.FC<MultipleExpensesProps> = ({
                   { value: 'material', label: t('locale.code') === 'en-US' ? 'Materials' : 'Material de Escritório' },
                   { value: 'outros', label: t('locale.code') === 'en-US' ? 'Others' : 'Outros' }
                 ]}
-                error={typeof errors[`expenses.${index}.tipoReembolso`] === 'string' ? errors[`expenses.${index}.tipoReembolso`] : errors[`expenses.${index}.tipoReembolso`]?.[0]}
+                error={typeof errors[`expenses.${index}.tipoReembolso`] === 'string' ? errors[`expenses.${index}.tipoReembolso`] as string : Array.isArray(errors[`expenses.${index}.tipoReembolso`]) ? errors[`expenses.${index}.tipoReembolso`][0] : undefined}
                 required
               />
 
@@ -140,7 +140,7 @@ const MultipleExpenses: React.FC<MultipleExpensesProps> = ({
                 onChange={(value) => updateExpense(expense.id, 'valor', value)}
                 currency={currency as any}
                 onCurrencyChange={onCurrencyChange}
-                error={typeof errors[`expenses.${index}.valor`] === 'string' ? errors[`expenses.${index}.valor`] : errors[`expenses.${index}.valor`]?.[0]}
+                error={typeof errors[`expenses.${index}.valor`] === 'string' ? errors[`expenses.${index}.valor`] as string : Array.isArray(errors[`expenses.${index}.valor`]) ? errors[`expenses.${index}.valor`][0] : undefined}
                 required
               />
             </div>
@@ -154,7 +154,7 @@ const MultipleExpenses: React.FC<MultipleExpensesProps> = ({
                   updateExpense(expense.id, 'descricao', e.target.value);
                 }}
                 placeholder={t('reimbursement.form.descriptionPlaceholder')}
-                error={typeof errors[`expenses.${index}.descricao`] === 'string' ? errors[`expenses.${index}.descricao`] : errors[`expenses.${index}.descricao`]?.[0]}
+                error={typeof errors[`expenses.${index}.descricao`] === 'string' ? errors[`expenses.${index}.descricao`] as string : Array.isArray(errors[`expenses.${index}.descricao`]) ? errors[`expenses.${index}.descricao`][0] : undefined}
                 required
                 rows={3}
               />
