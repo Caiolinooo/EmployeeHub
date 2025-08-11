@@ -3,7 +3,7 @@
 import React from 'react';
 import { FiPlus, FiTrash2, FiDollarSign } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
-// import { InputField, TextArea, SelectField } from './FormFields';
+import { SelectField, TextArea } from './FormFields';
 import CurrencyInput from './CurrencyInput';
 import FileUploader, { UploadedFile } from './FileUploader';
 
