@@ -1237,9 +1237,5 @@ export default {
     cancelled: 'Cancelled',
     processing: 'Processing reminders...',
     statistics: 'Processing Statistics'
-  },
-
-  locale: {
-    code: 'en-US'
   }
 };
