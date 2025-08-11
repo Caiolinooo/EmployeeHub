@@ -7,7 +7,7 @@ import { FaWhatsapp } from 'react-icons/fa';
 const InstructionsPanel: React.FC = () => {
   const [show, setShow] = useState(false);
   const [reachedBottom, setReachedBottom] = useState(false);
-  // const [showContactButtons, setShowContactButtons] = useState(true);
+  const [showContactButtons, setShowContactButtons] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => {
