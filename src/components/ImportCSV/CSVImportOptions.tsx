@@ -11,7 +11,7 @@ interface CSVImportOptionsProps {
     validateData: boolean;
   };
   onChange: (options: {
-    hasHeader: boolean;
+    skipFirstRow: boolean;
     trimValues: boolean;
     skipEmptyRows: boolean;
     validateData: boolean;
@@ -32,7 +32,7 @@ export default function CSVImportOptions({
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
-    onChange({ ...options, [name]: checked });
+    onChange({ ...options, [name]: checked } as CSVImportOptionsProps['options']);
   };
 
   return (
