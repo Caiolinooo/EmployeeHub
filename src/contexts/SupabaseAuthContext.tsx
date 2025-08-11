@@ -1990,7 +1990,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
           }
 
           // Se não há permissões individuais, verificar permissões do role
-          const roleModulePermissions = rolePermissions[profile?.role]?.modules;
+          const roleModulePermissions = profile?.role ? rolePermissions[profile.role]?.modules : undefined;
           if (roleModulePermissions && roleModulePermissions[module] !== undefined) {
             const hasRoleAccess = roleModulePermissions[module];
             console.log(`Acesso ao módulo ${module} baseado em permissões do role ${profile?.role}: ${hasRoleAccess}`);
