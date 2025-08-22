@@ -44,22 +44,4 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# Redirects and rewrites
-[[redirects]]
-  from = "/*"
-  to = "/_next/static/:splat"
-  status = 200
-  force = true
-  conditions = {Path = ["/_next/static/*"]}
-
-[[redirects]]
-  from = "/*"
-  to = "/api/:splat"
-  status = 200
-  force = true
-  conditions = {Path = ["/api/*"]}
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# Redirects are handled by @netlify/plugin-nextjs. Custom catch-all redirects are removed to avoid conflicts.

@@ -65,8 +65,11 @@ export async function POST(request: NextRequest) {
         first_name: firstName,
         last_name: lastName,
         phone_number: username, // Usando username como phone_number temporariamente
-        password: hashedPassword,
         password_hash: hashedPassword,
+        email_verified: false,
+        phone_verified: false,
+        is_authorized: false,
+        authorization_status: 'pending',
         // Apenas o admin principal pode ser criado como ADMIN
         role: (role === 'ADMIN' && email === process.env.ADMIN_EMAIL) ? 'ADMIN' : 'USER',
         department,
