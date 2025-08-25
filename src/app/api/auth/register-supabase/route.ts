@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar se o usuário já existe
+    // Verificar se o usuário já existe na tabela unificada
     const { data: existingUserByEmail, error: emailError } = await supabase
       .from('users_unified')
       .select('*')
@@ -84,22 +84,28 @@ export async function POST(request: NextRequest) {
     // Gerar senha temporária
     const temporaryPassword = uuidv4().substring(0, 8);
 
-    // Criar usuário na autenticação do Supabase
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // Criar usuário na autenticação do Supabase via Admin API (lado servidor)
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password: temporaryPassword,
-      options: {
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          phone_number: phoneNumber,
-          role: 'USER'
-        }
+      user_metadata: {
+        first_name: firstName,
+        last_name: lastName,
+        phone_number: phoneNumber,
+        role: 'USER'
       }
     });
 
     if (authError) {
-      console.error('Erro ao criar usuário na autenticação:', authError);
+      console.error('Erro ao criar usuário na autenticação (admin.createUser):', authError);
+      // Mapear e-mail já existente para 409
+      const msg = (authError.message || '').toLowerCase();
+      if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('duplicate')) {
+        return NextResponse.json(
+          { error: 'E-mail já registrado. Use login ou a recuperação de senha.' },
+          { status: 409 }
+        );
+      }
       return NextResponse.json(
         { error: 'Erro ao criar usuário: ' + authError.message },
         { status: 400 }
