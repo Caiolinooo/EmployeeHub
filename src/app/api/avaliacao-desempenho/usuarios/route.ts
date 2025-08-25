@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
 
+// Force this route to be dynamic
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 /**
  * Função auxiliar para criar funcionários a partir dos usuários existentes
  */
@@ -164,6 +168,22 @@ async function criarFuncionariosAPartirDeUsuarios() {
  */
 export async function GET(request: NextRequest) {
   try {
+    // Runtime check to ensure this only runs during actual HTTP requests
+    if (typeof window !== 'undefined') {
+      return NextResponse.json(
+        { error: 'Esta rota só pode ser executada no servidor' },
+        { status: 500 }
+      );
+    }
+
+    // Check if we're in a static generation context
+    if (!request || !request.headers) {
+      return NextResponse.json(
+        { error: 'Rota não disponível durante geração estática' },
+        { status: 503 }
+      );
+    }
+
     // Verificar autenticação
     const authHeader = request.headers.get('authorization');
     const token = extractTokenFromHeader(authHeader || undefined);
@@ -183,10 +203,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Obter parâmetros da URL
-    const url = new URL(request.url);
-    const role = url.searchParams.get('role');
-    const searchTerm = url.searchParams.get('search');
+    // Obter parâmetros da URL com verificação de runtime
+    let role = null;
+    let searchTerm = null;
+    
+    try {
+      if (request.url) {
+        const url = new URL(request.url);
+        role = url.searchParams.get('role');
+        searchTerm = url.searchParams.get('search');
+      }
+    } catch (error) {
+      console.error('Erro ao processar URL:', error);
+      // Continue sem os parâmetros se houver erro
+    }
 
     // Sempre verificar se há novos usuários para criar funcionários
     console.log('Verificando se há novos usuários para criar funcionários...');
@@ -284,7 +314,15 @@ export async function GET(request: NextRequest) {
       .is('deleted_at', null);
 
     // Verificar o propósito da consulta
-    const purpose = url.searchParams.get('purpose') || '';
+    let purpose = '';
+    try {
+      if (request.url) {
+        const url = new URL(request.url);
+        purpose = url.searchParams.get('purpose') || '';
+      }
+    } catch (error) {
+      console.error('Erro ao obter parâmetro purpose:', error);
+    }
 
     console.log('Parâmetros da consulta:', { role, purpose, searchTerm });
 

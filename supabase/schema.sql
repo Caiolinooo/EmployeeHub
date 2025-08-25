@@ -2,8 +2,25 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- Tabela de usuários
+-- Tabela de usuários (deprecated - use users_unified instead)
 CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email TEXT UNIQUE NOT NULL,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  phone_number TEXT UNIQUE,
+  role TEXT NOT NULL DEFAULT 'USER' CHECK (role IN ('ADMIN', 'USER', 'MANAGER')),
+  position TEXT,
+  department TEXT,
+  avatar TEXT,
+  active BOOLEAN NOT NULL DEFAULT TRUE,
+  password_last_changed TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+-- Tabela de usuários unificados
+CREATE TABLE IF NOT EXISTS users_unified (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email TEXT UNIQUE NOT NULL,
   first_name TEXT NOT NULL,
@@ -22,7 +39,8 @@ CREATE TABLE IF NOT EXISTS users (
 -- Tabela de permissões de usuários
 CREATE TABLE IF NOT EXISTS user_permissions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users_unified(id) ON DELETE CASCADE,
+  user_unified_id UUID REFERENCES users_unified(id) ON DELETE CASCADE,
   module TEXT,
   feature TEXT,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
@@ -39,8 +57,8 @@ CREATE TABLE IF NOT EXISTS documents (
   file_url TEXT,
   category TEXT NOT NULL,
   subcategory TEXT,
-  created_by UUID NOT NULL REFERENCES users(id),
-  updated_by UUID,
+  created_by UUID NOT NULL REFERENCES users_unified(id),
+  updated_by UUID REFERENCES users_unified(id),
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
@@ -54,8 +72,8 @@ CREATE TABLE IF NOT EXISTS news (
   image_url TEXT,
   published BOOLEAN NOT NULL DEFAULT FALSE,
   published_at TIMESTAMP WITH TIME ZONE,
-  created_by UUID NOT NULL REFERENCES users(id),
-  updated_by UUID,
+  created_by UUID NOT NULL REFERENCES users_unified(id),
+  updated_by UUID REFERENCES users_unified(id),
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
@@ -100,7 +118,7 @@ CREATE TABLE IF NOT EXISTS settings (
 -- Tabela de histórico de acesso
 CREATE TABLE IF NOT EXISTS access_history (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES users(id),
+  user_id UUID NOT NULL REFERENCES users_unified(id),
   action TEXT NOT NULL,
   details TEXT,
   ip_address TEXT,
@@ -111,7 +129,7 @@ CREATE TABLE IF NOT EXISTS access_history (
 -- Tabela de códigos de verificação
 CREATE TABLE IF NOT EXISTS verification_codes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id),
+  user_id UUID REFERENCES users_unified(id),
   phone_number TEXT,
   email TEXT,
   code TEXT NOT NULL,
@@ -128,7 +146,7 @@ CREATE TABLE IF NOT EXISTS invite_codes (
   phone_number TEXT,
   expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
   used BOOLEAN NOT NULL DEFAULT FALSE,
-  created_by UUID NOT NULL REFERENCES users(id),
+  created_by UUID NOT NULL REFERENCES users_unified(id),
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
@@ -143,8 +161,8 @@ CREATE TABLE IF NOT EXISTS authorized_users (
   expires_at TIMESTAMP WITH TIME ZONE,
   max_uses INTEGER,
   uses INTEGER NOT NULL DEFAULT 0,
-  created_by UUID REFERENCES users(id),
-  updated_by UUID,
+  created_by UUID REFERENCES users_unified(id),
+  updated_by UUID REFERENCES users_unified(id),
   notes JSONB,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
@@ -154,7 +172,14 @@ CREATE TABLE IF NOT EXISTS authorized_users (
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone_number);
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+
+CREATE INDEX IF NOT EXISTS idx_users_unified_email ON users_unified(email);
+CREATE INDEX IF NOT EXISTS idx_users_unified_phone ON users_unified(phone_number);
+CREATE INDEX IF NOT EXISTS idx_users_unified_role ON users_unified(role);
+
 CREATE INDEX IF NOT EXISTS idx_user_permissions_user_id ON user_permissions(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_permissions_user_unified_id ON user_permissions(user_unified_id);
+
 CREATE INDEX IF NOT EXISTS idx_documents_category ON documents(category);
 CREATE INDEX IF NOT EXISTS idx_news_published ON news(published);
 CREATE INDEX IF NOT EXISTS idx_menu_items_parent ON menu_items(parent_id);
@@ -180,6 +205,10 @@ $$ LANGUAGE plpgsql;
 -- Aplicar o trigger a todas as tabelas que têm o campo updated_at
 CREATE TRIGGER update_users_updated_at
 BEFORE UPDATE ON users
+FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER update_users_unified_updated_at
+BEFORE UPDATE ON users_unified
 FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 CREATE TRIGGER update_user_permissions_updated_at
@@ -212,6 +241,7 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- Criar políticas de segurança RLS (Row Level Security)
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE users_unified ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_permissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE news ENABLE ROW LEVEL SECURITY;
@@ -227,27 +257,50 @@ ALTER TABLE authorized_users ENABLE ROW LEVEL SECURITY;
 CREATE POLICY users_select_policy ON users
 FOR SELECT USING (
   auth.uid() = id OR
-  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'ADMIN')
+  EXISTS (SELECT 1 FROM users_unified WHERE id = auth.uid() AND role = 'ADMIN')
 );
 
 CREATE POLICY users_insert_policy ON users
 FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'ADMIN')
+  EXISTS (SELECT 1 FROM users_unified WHERE id = auth.uid() AND role = 'ADMIN')
 );
 
 CREATE POLICY users_update_policy ON users
 FOR UPDATE USING (
   auth.uid() = id OR
-  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'ADMIN')
+  EXISTS (SELECT 1 FROM users_unified WHERE id = auth.uid() AND role = 'ADMIN')
 );
 
 CREATE POLICY users_delete_policy ON users
 FOR DELETE USING (
-  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'ADMIN')
+  EXISTS (SELECT 1 FROM users_unified WHERE id = auth.uid() AND role = 'ADMIN')
+);
+
+-- Política para usuários unificados (apenas administradores podem ver todos os usuários)
+CREATE POLICY users_unified_select_policy ON users_unified
+FOR SELECT USING (
+  auth.uid() = id OR
+  EXISTS (SELECT 1 FROM users_unified WHERE id = auth.uid() AND role = 'ADMIN')
+);
+
+CREATE POLICY users_unified_insert_policy ON users_unified
+FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM users_unified WHERE id = auth.uid() AND role = 'ADMIN')
+);
+
+CREATE POLICY users_unified_update_policy ON users_unified
+FOR UPDATE USING (
+  auth.uid() = id OR
+  EXISTS (SELECT 1 FROM users_unified WHERE id = auth.uid() AND role = 'ADMIN')
+);
+
+CREATE POLICY users_unified_delete_policy ON users_unified
+FOR DELETE USING (
+  EXISTS (SELECT 1 FROM users_unified WHERE id = auth.uid() AND role = 'ADMIN')
 );
 
 -- Inserir usuário administrador padrão
-INSERT INTO users (
+INSERT INTO users_unified (
   id,
   email,
   first_name,
@@ -291,20 +344,20 @@ ON CONFLICT (user_id, module, feature) DO NOTHING;
 -- Políticas para a tabela authorized_users (apenas administradores podem gerenciar)
 CREATE POLICY authorized_users_select_policy ON authorized_users
 FOR SELECT USING (
-  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'ADMIN')
+  EXISTS (SELECT 1 FROM users_unified WHERE id = auth.uid() AND role = 'ADMIN')
 );
 
 CREATE POLICY authorized_users_insert_policy ON authorized_users
 FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'ADMIN')
+  EXISTS (SELECT 1 FROM users_unified WHERE id = auth.uid() AND role = 'ADMIN')
 );
 
 CREATE POLICY authorized_users_update_policy ON authorized_users
 FOR UPDATE USING (
-  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'ADMIN')
+  EXISTS (SELECT 1 FROM users_unified WHERE id = auth.uid() AND role = 'ADMIN')
 );
 
 CREATE POLICY authorized_users_delete_policy ON authorized_users
 FOR DELETE USING (
-  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'ADMIN')
+  EXISTS (SELECT 1 FROM users_unified WHERE id = auth.uid() AND role = 'ADMIN')
 );

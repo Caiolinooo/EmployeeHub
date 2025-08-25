@@ -10,7 +10,22 @@
 export function getApiBaseUrl(): string {
   // Use the environment variable if available
   if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
+    const envUrl = process.env.NEXT_PUBLIC_API_URL;
+    // In browser, avoid cross-origin during dev (e.g., env points to localhost but page runs on 192.168.x.x)
+    if (typeof window !== 'undefined') {
+      try {
+        const envOrigin = new URL(envUrl).origin;
+        const winOrigin = window.location.origin;
+        if (envOrigin !== winOrigin) {
+          // Prefer current origin to prevent CORS in local dev
+          return `${winOrigin}/api`;
+        }
+      } catch {
+        // If envUrl is not absolute, fall back to current origin
+        return `${window.location.origin}/api`;
+      }
+    }
+    return envUrl;
   }
   
   // In browser context, try to get from window

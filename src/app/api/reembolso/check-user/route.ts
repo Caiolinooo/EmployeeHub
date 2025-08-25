@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 
+// Force this route to be dynamic
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // Função auxiliar para verificar se a tabela de reembolsos existe
 async function checkReimbursementTableExists() {
   try {
@@ -63,10 +67,37 @@ async function checkUserIdColumnExists(tableName: string) {
 // GET - Verificar se um usuário tem reembolsos
 export async function GET(request: NextRequest) {
   try {
-    // Obter parâmetros de consulta
-    const { searchParams } = new URL(request.url);
-    const email = searchParams.get('email');
-    const userId = searchParams.get('userId');
+    // Runtime check to ensure this only runs during actual HTTP requests
+    if (typeof window !== 'undefined') {
+      return NextResponse.json(
+        { error: 'Esta rota só pode ser executada no servidor' },
+        { status: 500 }
+      );
+    }
+
+    // Check if we're in a static generation context
+    if (!request || !request.url) {
+      return NextResponse.json(
+        { error: 'Rota não disponível durante geração estática' },
+        { status: 503 }
+      );
+    }
+
+    // Obter parâmetros de consulta com verificação de runtime
+    let email = null;
+    let userId = null;
+    
+    try {
+      const { searchParams } = new URL(request.url);
+      email = searchParams.get('email');
+      userId = searchParams.get('userId');
+    } catch (error) {
+      console.error('Erro ao processar URL:', error);
+      return NextResponse.json(
+        { error: 'URL inválida' },
+        { status: 400 }
+      );
+    }
 
     if (!email && !userId) {
       return NextResponse.json(

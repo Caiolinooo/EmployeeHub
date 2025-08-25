@@ -3,9 +3,29 @@ import { supabaseAdmin } from '@/lib/db';
 import { isAdminFromRequest } from '@/lib/auth';
 import dashboardCards from '@/data/cards';
 
+// Force this route to be dynamic
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // GET - Verificar se a tabela cards existe
 export async function GET(request: NextRequest) {
   try {
+    // Runtime check to ensure this only runs during actual HTTP requests
+    if (typeof window !== 'undefined') {
+      return NextResponse.json(
+        { success: false, error: 'Esta rota só pode ser executada no servidor' },
+        { status: 500 }
+      );
+    }
+
+    // Check if we're in a static generation context
+    if (!request || !request.headers) {
+      return NextResponse.json(
+        { success: false, error: 'Rota não disponível durante geração estática' },
+        { status: 503 }
+      );
+    }
+
     // Verificar se o usuário é administrador
     const adminCheck = await isAdminFromRequest(request);
     if (!adminCheck.isAdmin) {

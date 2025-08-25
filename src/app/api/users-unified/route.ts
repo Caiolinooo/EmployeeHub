@@ -2,10 +2,30 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { verifyToken } from '@/lib/auth';
 
+// Force this route to be dynamic
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
   console.log('API de usuários unificados para o painel de administração iniciada (App Router)');
 
   try {
+    // Runtime check to ensure this only runs during actual HTTP requests
+    if (typeof window !== 'undefined') {
+      return NextResponse.json(
+        { error: 'Esta rota só pode ser executada no servidor' },
+        { status: 500 }
+      );
+    }
+
+    // Check if we're in a static generation context
+    if (!request || !request.headers) {
+      return NextResponse.json(
+        { error: 'Rota não disponível durante geração estática' },
+        { status: 503 }
+      );
+    }
+
     // Verificar autenticação
     const authHeader = request.headers.get('authorization') || '';
     if (!authHeader) {

@@ -3,9 +3,29 @@ import fs from 'fs';
 import path from 'path';
 import { isAdminFromRequest } from '@/lib/auth';
 
+// Force this route to be dynamic
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // GET - Listar arquivos e pastas
 export async function GET(request: NextRequest) {
   try {
+    // Runtime check to ensure this only runs during actual HTTP requests
+    if (typeof window !== 'undefined') {
+      return NextResponse.json(
+        { success: false, error: 'Esta rota só pode ser executada no servidor' },
+        { status: 500 }
+      );
+    }
+
+    // Check if we're in a static generation context
+    if (!request || !request.headers || !request.url) {
+      return NextResponse.json(
+        { success: false, error: 'Rota não disponível durante geração estática' },
+        { status: 503 }
+      );
+    }
+
     // Verificar se o usuário é administrador
     const adminCheck = await isAdminFromRequest(request);
     if (!adminCheck.isAdmin) {
@@ -15,9 +35,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Obter o caminho da consulta
-    const { searchParams } = new URL(request.url);
-    let requestedPath = searchParams.get('path') || '';
+    // Obter o caminho da consulta com verificação de runtime
+    let requestedPath = '';
+    try {
+      const { searchParams } = new URL(request.url);
+      requestedPath = searchParams.get('path') || '';
+    } catch (error) {
+      console.error('Erro ao processar URL:', error);
+      return NextResponse.json(
+        { success: false, error: 'URL inválida' },
+        { status: 400 }
+      );
+    }
 
     console.log('Caminho solicitado:', requestedPath);
 

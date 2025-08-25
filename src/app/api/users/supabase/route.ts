@@ -2,11 +2,31 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
+// Force this route to be dynamic
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 console.log('API de usuários Supabase inicializada - Versão corrigida');
 
 // GET - Obter todos os usuários
 export async function GET(request: NextRequest) {
   try {
+    // Runtime check to ensure this only runs during actual HTTP requests
+    if (typeof window !== 'undefined') {
+      return NextResponse.json(
+        { error: 'Esta rota só pode ser executada no servidor' },
+        { status: 500 }
+      );
+    }
+
+    // Check if we're in a static generation context
+    if (!request || !request.headers) {
+      return NextResponse.json(
+        { error: 'Rota não disponível durante geração estática' },
+        { status: 503 }
+      );
+    }
+
     // Verificar autenticação
     const authHeader = request.headers.get('authorization') || '';
     const token = extractTokenFromHeader(authHeader);

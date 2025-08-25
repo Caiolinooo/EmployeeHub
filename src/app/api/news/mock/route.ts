@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Force this route to be dynamic
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // Dados de exemplo para notícias
 const mockNews = [
   {
@@ -82,10 +86,35 @@ const mockNews = [
 // GET - Obter todas as notícias de exemplo
 export async function GET(request: NextRequest) {
   try {
+    // Runtime check to ensure this only runs during actual HTTP requests
+    if (typeof window !== 'undefined') {
+      return NextResponse.json(
+        { error: 'Esta rota só pode ser executada no servidor' },
+        { status: 500 }
+      );
+    }
+
+    // Check if we're in a static generation context
+    if (!request || !request.url) {
+      return NextResponse.json(
+        { error: 'Rota não disponível durante geração estática' },
+        { status: 503 }
+      );
+    }
+
     console.log('API de notícias mock - Iniciando busca');
-    const { searchParams } = new URL(request.url);
-    const category = searchParams.get('category');
-    const featured = searchParams.get('featured');
+    
+    let category = null;
+    let featured = null;
+    
+    try {
+      const { searchParams } = new URL(request.url);
+      category = searchParams.get('category');
+      featured = searchParams.get('featured');
+    } catch (error) {
+      console.error('Erro ao processar URL:', error);
+      // Continue sem os parâmetros se houver erro
+    }
     
     console.log('Parâmetros de busca:', { category, featured });
     

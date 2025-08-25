@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import * as XLSX from 'xlsx';
 
+// Force this route to be dynamic
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 /**
  * API para exportação de dados do cliente LUZ Marítima
  * Gera arquivo Excel com o mesmo layout da planilha AN-FIN-005-R0
@@ -9,9 +13,36 @@ import * as XLSX from 'xlsx';
  */
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const sheetId = searchParams.get('sheetId');
-    const format = searchParams.get('format') || 'excel'; // excel ou invoice
+    // Runtime check to ensure this only runs during actual HTTP requests
+    if (typeof window !== 'undefined') {
+      return NextResponse.json({
+        success: false,
+        error: 'Esta rota só pode ser executada no servidor'
+      }, { status: 500 });
+    }
+
+    // Check if we're in a static generation context
+    if (!request || !request.url) {
+      return NextResponse.json({
+        success: false,
+        error: 'Rota não disponível durante geração estática'
+      }, { status: 503 });
+    }
+
+    let sheetId = null;
+    let format = 'excel';
+    
+    try {
+      const { searchParams } = new URL(request.url);
+      sheetId = searchParams.get('sheetId');
+      format = searchParams.get('format') || 'excel'; // excel ou invoice
+    } catch (error) {
+      console.error('Erro ao processar URL:', error);
+      return NextResponse.json({
+        success: false,
+        error: 'URL inválida'
+      }, { status: 400 });
+    }
 
     if (!sheetId) {
       return NextResponse.json({

@@ -2,12 +2,32 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 import { extractTokenFromHeader, verifyToken, TokenPayload } from '@/lib/auth'; // Importar TokenPayload
 
+// Force this route to be dynamic
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 /**
  * API endpoint para obter reembolsos para um usuário específico.
  * Este endpoint lida com a busca de reembolsos com autenticação adequada e permissões baseadas no papel do usuário.
  */
 export async function GET(request: NextRequest) {
   try {
+    // Runtime check to ensure this only runs during actual HTTP requests
+    if (typeof window !== 'undefined') {
+      return NextResponse.json(
+        { error: 'Esta rota só pode ser executada no servidor' },
+        { status: 500 }
+      );
+    }
+
+    // Check if we're in a static generation context
+    if (!request || !request.headers || !request.url) {
+      return NextResponse.json(
+        { error: 'Rota não disponível durante geração estática' },
+        { status: 503 }
+      );
+    }
+
     console.log('Requisição de reembolsos do usuário recebida');
 
     // 1. Verificar autenticação e obter payload do token
@@ -56,8 +76,14 @@ export async function GET(request: NextRequest) {
     console.log('Usuário autenticado:', userId, 'Papel:', userRole, 'Email principal:', userEmail);
 
     // 2. Obter email do parâmetro de query (usado principalmente para admins/gerentes buscarem por email)
-    const { searchParams } = new URL(request.url);
-    const queryEmail = searchParams.get('email');
+    let queryEmail = null;
+    try {
+      const { searchParams } = new URL(request.url);
+      queryEmail = searchParams.get('email');
+    } catch (error) {
+      console.error('Erro ao processar URL:', error);
+      // Continue sem o parâmetro se houver erro
+    }
 
     // 3. Verificar permissões
     const isAdmin = userRole === 'ADMIN';
@@ -139,10 +165,19 @@ export async function GET(request: NextRequest) {
     }
 
     // 4. Obter parâmetros de paginação e filtro
-    const { searchParams: paginationParams } = new URL(request.url);
-    const status = paginationParams.get('status');
-    const page = parseInt(paginationParams.get('page') || '1', 10);
-    const limit = parseInt(paginationParams.get('limit') || '10', 10);
+    let status = null;
+    let page = 1;
+    let limit = 10;
+    
+    try {
+      const { searchParams: paginationParams } = new URL(request.url);
+      status = paginationParams.get('status');
+      page = parseInt(paginationParams.get('page') || '1', 10);
+      limit = parseInt(paginationParams.get('limit') || '10', 10);
+    } catch (error) {
+      console.error('Erro ao processar parâmetros de paginação:', error);
+      // Use valores padrão se houver erro
+    }
 
     // Calcular range de paginação
     const from = (page - 1) * limit;

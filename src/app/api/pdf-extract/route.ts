@@ -3,13 +3,42 @@ import { join } from 'path';
 import { writeFile, mkdir } from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 
+// Force this route to be dynamic
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // Função para extrair texto de um PDF
 // Esta é uma implementação simulada, pois a extração real de PDF requer bibliotecas adicionais
 // como pdf.js, pdf-parse ou pdfjs-dist que precisariam ser instaladas
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    let pdfUrl = searchParams.get('url');
+    // Runtime check to ensure this only runs during actual HTTP requests
+    if (typeof window !== 'undefined') {
+      return NextResponse.json(
+        { error: 'Esta rota só pode ser executada no servidor' },
+        { status: 500 }
+      );
+    }
+
+    // Check if we're in a static generation context
+    if (!request || !request.url) {
+      return NextResponse.json(
+        { error: 'Rota não disponível durante geração estática' },
+        { status: 503 }
+      );
+    }
+
+    let pdfUrl = null;
+    try {
+      const { searchParams } = new URL(request.url);
+      pdfUrl = searchParams.get('url');
+    } catch (error) {
+      console.error('Erro ao processar URL:', error);
+      return NextResponse.json(
+        { error: 'URL inválida' },
+        { status: 400 }
+      );
+    }
 
     if (!pdfUrl) {
       return NextResponse.json(
@@ -26,9 +55,20 @@ export async function GET(request: NextRequest) {
         pdfUrl = `/${pdfUrl}`;
       }
 
-      // Construir URL completa
-      const host = request.headers.get('host') || 'localhost:3000';
-      const protocol = host.includes('localhost') ? 'http' : 'https';
+      // Construir URL completa com verificação de runtime
+      let host = 'localhost:3000';
+      let protocol = 'http';
+      
+      try {
+        if (request.headers) {
+          host = request.headers.get('host') || 'localhost:3000';
+          protocol = host.includes('localhost') ? 'http' : 'https';
+        }
+      } catch (error) {
+        console.error('Erro ao obter host:', error);
+        // Use valores padrão se houver erro
+      }
+      
       pdfUrl = `${protocol}://${host}${pdfUrl}`;
     }
 

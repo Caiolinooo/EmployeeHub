@@ -22,12 +22,10 @@
 
 # misc
 .DS_Store
-*.pem
 *.zip
 login-error.png
 admin-token-tester.html
 token-tester.html
-.token
 phone-validation-test.js
 
 # debug
@@ -36,8 +34,35 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# Environment files - sensitive configuration
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+
+# Token files
+.token
+*.token
+
+# Configuration files with sensitive data
+config.json
+secrets.json
+credentials.json
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Database configuration
+database.json
+db.json
+
+# API keys and secrets
+api-keys.json
+secrets.yaml
+secrets.yml
 
 # vercel
 .vercel
@@ -59,3 +84,6 @@ next-env.d.ts
 # test files
 /test-*.csv
 /test-*.js
+
+# Local Netlify folder
+.netlify

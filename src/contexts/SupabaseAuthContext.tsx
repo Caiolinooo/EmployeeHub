@@ -42,8 +42,31 @@ const generateToken = async (user: any) => {
   }
 };
 
-// Tipo para usuário
-export interface UserProfile extends Tables<'users'> {
+// Tipo para usuário - usando Partial para permitir flexibilidade
+export interface UserProfile {
+  id: string;
+  email?: string | null;
+  phone_number?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  role?: string | null;
+  position?: string | null;
+  department?: string | null;
+  active?: boolean | null;
+  is_active?: boolean | null;
+  is_verified?: boolean | null;
+  is_authorized?: boolean | null;
+  authorization_status?: string | null;
+  authorized_by?: string | null;
+  authorization_notes?: any;
+  password?: string | null;
+  password_last_changed?: string | null;
+  avatar?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  access_history?: any;
+  verification_code?: string | null;
+  verification_code_expires?: string | null;
   accessPermissions?: {
     modules?: {
       [key: string]: boolean;
@@ -381,164 +404,23 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       // Buscar o usuário no Supabase
       console.log('Buscando usuário no Supabase com ID:', verifyData.userId);
 
-      // Primeiro tentar buscar na tabela users_unified
-      let { data: userData, error: userError } = await supabase
+      // Buscar o usuário na tabela users_unified
+      const { data: userData, error: userError } = await supabase
         .from('users_unified')
         .select('*')
         .eq('id', verifyData.userId)
         .single();
 
-      // Se não encontrou na tabela users_unified, tentar na tabela users
-      if (userError) {
-        console.log('Usuário não encontrado na tabela users_unified, tentando na tabela users');
-        const { data: legacyData, error: legacyError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', verifyData.userId)
-          .single();
-
-        if (!legacyError && legacyData) {
-          console.log('Usuário encontrado na tabela users:', legacyData.id);
-
-          // Converter para o formato da tabela users_unified
-          userData = {
-            id: legacyData.id,
-            email: legacyData.email,
-            phone_number: legacyData.phoneNumber || legacyData.phone_number,
-            first_name: legacyData.firstName || legacyData.first_name,
-            last_name: legacyData.lastName || legacyData.last_name,
-            role: legacyData.role,
-            active: true,
-            created_at: legacyData.createdAt || legacyData.created_at || new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            access_permissions: {
-              modules: {
-                dashboard: true,
-                manual: true,
-                procedimentos: true,
-                politicas: true,
-                calendario: true,
-                noticias: true,
-                reembolso: true,
-                contracheque: true,
-                ponto: true,
-                ...(legacyData.role === 'ADMIN' ? { admin: true, avaliacao: true } : {}),
-                ...(legacyData.role === 'MANAGER' ? { avaliacao: true } : {})
-              },
-              features: {}
-            }
-          };
-
-          // Limpar o erro
-          userError = null;
-        }
-      }
-
       if (userError) {
         console.error('Erro ao buscar usuário pelo ID do token:', userError);
+        setIsLoading(false);
+        return false;
+      }
 
-        // Tentar buscar na tabela users como fallback
-        console.log('Tentando buscar na tabela users como fallback');
-        const { data: legacyUserData, error: legacyUserError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', verifyData.userId)
-          .single();
-
-        if (legacyUserError) {
-          console.error('Erro ao buscar usuário na tabela legacy:', legacyUserError);
-          setIsLoading(false);
-          return false;
-        }
-
-        console.log('Usuário encontrado na tabela legacy:', legacyUserData);
-
-        // Criar um perfil na tabela users_unified
-        try {
-          const { data: newUnifiedUser, error: createError } = await supabase
-            .from('users_unified')
-            .insert({
-              id: legacyUserData.id,
-              email: legacyUserData.email,
-              phone_number: legacyUserData.phoneNumber || legacyUserData.phone_number,
-              first_name: legacyUserData.firstName || legacyUserData.first_name,
-              last_name: legacyUserData.lastName || legacyUserData.last_name,
-              role: legacyUserData.role,
-              active: true,
-              created_at: legacyUserData.createdAt || legacyUserData.created_at || new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              access_permissions: {
-                modules: {
-                  dashboard: true,
-                  manual: true,
-                  procedimentos: true,
-                  politicas: true,
-                  calendario: true,
-                  noticias: true,
-                  reembolso: true,
-                  contracheque: true,
-                  ponto: true,
-                  ...(legacyUserData.role === 'ADMIN' ? { admin: true, avaliacao: true } : {}),
-                  ...(legacyUserData.role === 'MANAGER' ? { avaliacao: true } : {})
-                },
-                features: {}
-              }
-            })
-            .select()
-            .single();
-
-          if (createError) {
-            console.error('Erro ao criar usuário na tabela unificada:', createError);
-
-            // Usar os dados da tabela legacy mesmo assim
-            const supabaseUser: User = {
-              id: legacyUserData.id,
-              app_metadata: {},
-              user_metadata: {},
-              aud: 'authenticated',
-              created_at: legacyUserData.createdAt || legacyUserData.created_at,
-              email: legacyUserData.email,
-              phone: legacyUserData.phoneNumber || legacyUserData.phone_number,
-              role: legacyUserData.role,
-              updated_at: legacyUserData.updatedAt || legacyUserData.updated_at
-            };
-
-            setUser(supabaseUser);
-
-            const profileData: UserProfile = {
-              ...legacyUserData,
-              accessPermissions: {
-                modules: {
-                  dashboard: true,
-                  manual: true,
-                  procedimentos: true,
-                  politicas: true,
-                  calendario: true,
-                  noticias: true,
-                  reembolso: true,
-                  contracheque: true,
-                  ponto: true,
-                  ...(legacyUserData.role === 'ADMIN' ? { admin: true, avaliacao: true } : {}),
-                  ...(legacyUserData.role === 'MANAGER' ? { avaliacao: true } : {})
-                },
-                features: {}
-              }
-            };
-
-            setProfile(profileData);
-            console.log('Perfil do usuário carregado da tabela legacy');
-            setIsLoading(false);
-            return true;
-          }
-
-          // Usar o novo usuário unificado
-          console.log('Usuário criado na tabela unificada:', newUnifiedUser);
-          userData = newUnifiedUser;
-        } catch (createError) {
-          console.error('Erro ao criar usuário na tabela unificada:', createError);
-          setIsLoading(false);
-          return false;
-        }
+      if (!userData) {
+        console.error('Usuário não encontrado na tabela users_unified');
+        setIsLoading(false);
+        return false;
       }
 
       console.log('Usuário encontrado pelo token:', userData);
@@ -635,9 +517,9 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       if (email) {
-        // Verificar se o email existe
+        // Verificar se o email existe na tabela users_unified
         const { data: userData, error: userError } = await supabase
-          .from('users')
+          .from('users_unified')
           .select('*')
           .eq('email', email)
           .single();
@@ -655,13 +537,13 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         }
 
         // Email encontrado, verificar se tem senha
-        setHasPassword(true);
+        setHasPassword(!!userData.password);
         setLoginStep('password');
         return true;
       } else if (phoneNumber) {
-        // Verificar se o telefone existe
+        // Verificar se o telefone existe na tabela users_unified
         const { data: userData, error: userError } = await supabase
-          .from('users')
+          .from('users_unified')
           .select('*')
           .eq('phone_number', phoneNumber)
           .single();
@@ -679,7 +561,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         }
 
         // Telefone encontrado, verificar se tem senha
-        setHasPassword(true);
+        setHasPassword(!!userData.password);
         setLoginStep('password');
         return true;
       }
@@ -1282,61 +1164,76 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
               console.log('Perfil encontrado na tabela users_unified:', unifiedData.id);
               profileData = unifiedData;
             } else {
-              console.log('Perfil não encontrado na tabela users_unified, tentando na tabela users');
+              console.error('Erro ao buscar perfil do usuário:', unifiedError);
 
-              // Tentar buscar na tabela users como fallback
-              const { data, error } = await supabase
-                .from('users')
-                .select('*')
-                .eq('id', session.user.id)
-                .single();
+              // Verificar se o perfil não existe e criar um perfil básico
+              if (unifiedError && unifiedError.code === 'PGRST116') {
+                console.log('Perfil não encontrado, criando perfil básico para:', session.user.email);
 
-              if (error) {
-                console.error('Erro ao buscar perfil do usuário:', error);
+                try {
+                  // Extrair informações do usuário da autenticação
+                  const email = session.user.email;
+                  const phone = session.user.phone;
 
-                // Verificar se o perfil não existe e criar um perfil básico
-                if (error.code === 'PGRST116') {
-                  console.log('Perfil não encontrado, criando perfil básico para:', session.user.email);
+                  // Verificar se o usuário é o administrador principal
+                  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'caio.correia@groupabz.com';
+                  const isAdmin = email === adminEmail;
 
-                  try {
-                    // Extrair informações do usuário da autenticação
-                    const email = session.user.email;
-                    const phone = session.user.phone;
+                  // Criar um perfil básico na tabela users_unified
+                  const { data: newProfile, error: insertError } = await supabase
+                    .from('users_unified')
+                    .insert({
+                      id: session.user.id,
+                      email: email,
+                      phone_number: phone,
+                      first_name: isAdmin ? 'Caio' : 'Usuário',
+                      last_name: isAdmin ? 'Correia' : 'ABZ',
+                      role: isAdmin ? 'ADMIN' : 'USER',
+                      active: true,
+                      is_authorized: true,
+                      authorization_status: 'active',
+                      created_at: new Date().toISOString(),
+                      updated_at: new Date().toISOString(),
+                      access_permissions: isAdmin ? {
+                        modules: {
+                          admin: true,
+                          avaliacao: true,
+                          dashboard: true,
+                          manual: true,
+                          procedimentos: true,
+                          politicas: true,
+                          calendario: true,
+                          noticias: true,
+                          reembolso: true,
+                          contracheque: true,
+                          ponto: true
+                        }
+                      } : {
+                        modules: {
+                          dashboard: true,
+                          manual: true,
+                          procedimentos: true,
+                          politicas: true,
+                          calendario: true,
+                          noticias: true,
+                          reembolso: true,
+                          contracheque: true,
+                          ponto: true
+                        }
+                      }
+                    })
+                    .select('*')
+                    .single();
 
-                    // Verificar se o usuário é o administrador principal
-                    const adminEmail = process.env.ADMIN_EMAIL || 'caio.correia@groupabz.com';
-                    const isAdmin = email === adminEmail;
-
-                    // Criar um perfil básico na tabela users_unified
-                    const { data: newProfile, error: insertError } = await supabase
-                      .from('users_unified')
-                      .insert({
-                        id: session.user.id,
-                        email: email,
-                        phone_number: phone,
-                        first_name: isAdmin ? 'Caio' : 'Usuário',
-                        last_name: isAdmin ? 'Correia' : 'ABZ',
-                        role: isAdmin ? 'ADMIN' : 'USER',
-                        active: true,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString(),
-                        access_permissions: isAdmin ? { modules: { admin: true, avaliacao: true } } : {}
-                      })
-                      .select('*')
-                      .single();
-
-                    if (insertError) {
-                      console.error('Erro ao criar perfil básico:', insertError);
-                    } else {
-                      console.log('Perfil básico criado com sucesso:', newProfile);
-                      profileData = newProfile;
-                    }
-                  } catch (createError) {
-                    console.error('Exceção ao criar perfil básico:', createError);
+                  if (insertError) {
+                    console.error('Erro ao criar perfil básico:', insertError);
+                  } else {
+                    console.log('Perfil básico criado com sucesso:', newProfile);
+                    profileData = newProfile;
                   }
+                } catch (createError) {
+                  console.error('Exceção ao criar perfil básico:', createError);
                 }
-              } else {
-                profileData = data;
               }
             }
           } catch (fetchError) {
@@ -1470,61 +1367,76 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
             console.log('Perfil encontrado na tabela users_unified:', unifiedData.id);
             profileData = unifiedData;
           } else {
-            console.log('Perfil não encontrado na tabela users_unified, tentando na tabela users');
+            console.error('Erro ao buscar perfil do usuário:', unifiedError);
 
-            // Tentar buscar na tabela users como fallback
-            const { data, error } = await supabase
-              .from('users')
-              .select('*')
-              .eq('id', session.user.id)
-              .single();
+            // Verificar se o perfil não existe e criar um perfil básico
+            if (unifiedError && unifiedError.code === 'PGRST116') {
+              console.log('Perfil não encontrado, criando perfil básico para:', session.user.email);
 
-            if (error) {
-              console.error('Erro ao buscar perfil do usuário:', error);
+              try {
+                // Extrair informações do usuário da autenticação
+                const email = session.user.email;
+                const phone = session.user.phone;
 
-              // Verificar se o perfil não existe e criar um perfil básico
-              if (error.code === 'PGRST116') {
-                console.log('Perfil não encontrado, criando perfil básico para:', session.user.email);
+                // Verificar se o usuário é o administrador principal
+                const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'caio.correia@groupabz.com';
+                const isAdmin = email === adminEmail;
 
-                try {
-                  // Extrair informações do usuário da autenticação
-                  const email = session.user.email;
-                  const phone = session.user.phone;
+                // Criar um perfil básico na tabela users_unified
+                const { data: newProfile, error: insertError } = await supabase
+                  .from('users_unified')
+                  .insert({
+                    id: session.user.id,
+                    email: email,
+                    phone_number: phone,
+                    first_name: isAdmin ? 'Caio' : 'Usuário',
+                    last_name: isAdmin ? 'Correia' : 'ABZ',
+                    role: isAdmin ? 'ADMIN' : 'USER',
+                    active: true,
+                    is_authorized: true,
+                    authorization_status: 'active',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    access_permissions: isAdmin ? {
+                      modules: {
+                        admin: true,
+                        avaliacao: true,
+                        dashboard: true,
+                        manual: true,
+                        procedimentos: true,
+                        politicas: true,
+                        calendario: true,
+                        noticias: true,
+                        reembolso: true,
+                        contracheque: true,
+                        ponto: true
+                      }
+                    } : {
+                      modules: {
+                        dashboard: true,
+                        manual: true,
+                        procedimentos: true,
+                        politicas: true,
+                        calendario: true,
+                        noticias: true,
+                        reembolso: true,
+                        contracheque: true,
+                        ponto: true
+                      }
+                    }
+                  })
+                  .select('*')
+                  .single();
 
-                  // Verificar se o usuário é o administrador principal
-                  const adminEmail = process.env.ADMIN_EMAIL || 'caio.correia@groupabz.com';
-                  const isAdmin = email === adminEmail;
-
-                  // Criar um perfil básico na tabela users_unified
-                  const { data: newProfile, error: insertError } = await supabase
-                    .from('users_unified')
-                    .insert({
-                      id: session.user.id,
-                      email: email,
-                      phone_number: phone,
-                      first_name: isAdmin ? 'Caio' : 'Usuário',
-                      last_name: isAdmin ? 'Correia' : 'ABZ',
-                      role: isAdmin ? 'ADMIN' : 'USER',
-                      active: true,
-                      created_at: new Date().toISOString(),
-                      updated_at: new Date().toISOString(),
-                      access_permissions: isAdmin ? { modules: { admin: true, avaliacao: true } } : {}
-                    })
-                    .select('*')
-                    .single();
-
-                  if (insertError) {
-                    console.error('Erro ao criar perfil básico:', insertError);
-                  } else {
-                    console.log('Perfil básico criado com sucesso:', newProfile);
-                    profileData = newProfile;
-                  }
-                } catch (createError) {
-                  console.error('Exceção ao criar perfil básico:', createError);
+                if (insertError) {
+                  console.error('Erro ao criar perfil básico:', insertError);
+                } else {
+                  console.log('Perfil básico criado com sucesso:', newProfile);
+                  profileData = newProfile;
                 }
+              } catch (createError) {
+                console.error('Exceção ao criar perfil básico:', createError);
               }
-            } else {
-              profileData = data;
             }
           }
         } catch (fetchError) {
@@ -1784,30 +1696,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
           if (error) {
             console.error('Erro ao atualizar perfil do administrador:', error);
 
-            // Tentar atualizar na tabela users como fallback
-            const { error: legacyError } = await supabase
-              .from('users')
-              .update({
-                role: 'ADMIN',
-                access_permissions: {
-                  ...(profile?.access_permissions || {}),
-                  modules: {
-                    ...(profile?.access_permissions?.modules || {}),
-                    admin: true,
-                    avaliacao: true
-                  }
-                },
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', profile?.id);
-
-            if (legacyError) {
-              console.error('Erro ao atualizar perfil do administrador na tabela legacy:', legacyError);
-            } else {
-              console.log('Perfil do administrador atualizado com sucesso na tabela legacy!');
-              // Recarregar a página para aplicar as alterações
-              window.location.reload();
-            }
+            console.error('Falha ao atualizar perfil do administrador. Verifique as permissões do banco de dados.');
           } else {
             console.log('Perfil do administrador atualizado com sucesso!');
             // Recarregar a página para aplicar as alterações

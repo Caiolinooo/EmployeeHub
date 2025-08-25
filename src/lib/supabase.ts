@@ -5,34 +5,35 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 
 // Estas variáveis devem ser definidas no arquivo .env
-// Buscar configurações do Supabase das variáveis de ambiente ou da tabela settings
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-// Inicialmente usar a chave do ambiente, depois tentar buscar da tabela app_secrets
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || '';
+// Buscar configurações do Supabase das variáveis de ambiente
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// Usar a nomenclatura padrão do Supabase para a chave de serviço
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
 
-// Função para obter configurações do Supabase dinamicamente
-async function getSupabaseConfig() {
-  try {
-    // Se as variáveis de ambiente estão definidas, usá-las
-    if (supabaseUrl && supabaseAnonKey) {
-      return { url: supabaseUrl, anonKey: supabaseAnonKey };
-    }
-
-    // Caso contrário, tentar buscar da tabela settings (se disponível)
-    console.warn('Configurações do Supabase não encontradas nas variáveis de ambiente');
-    return {
-      url: supabaseUrl || 'https://arzvingdtnttiejcvucs.supabase.co',
-      anonKey: supabaseAnonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyenZpbmdkdG50dGllamN2dWNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5NDY3MjksImV4cCI6MjA2MDUyMjcyOX0.8OYE8Dg3haAxQ7p3MUiLJE_wiy2rCKsWiszMVwwo1LI'
-    };
-  } catch (error) {
-    console.error('Erro ao obter configurações do Supabase:', error);
-    // Fallback para valores padrão
-    return {
-      url: 'https://arzvingdtnttiejcvucs.supabase.co',
-      anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyenZpbmdkdG50dGllamN2dWNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5NDY3MjksImV4cCI6MjA2MDUyMjcyOX0.8OYE8Dg3haAxQ7p3MUiLJE_wiy2rCKsWiszMVwwo1LI'
-    };
+// Função para validar configurações do Supabase
+function validateSupabaseConfig() {
+  if (!supabaseUrl) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_URL is required but not defined in environment variables');
   }
+
+  if (!supabaseAnonKey) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY is required but not defined in environment variables');
+  }
+
+  // Validar formato da URL
+  try {
+    new URL(supabaseUrl);
+  } catch (error) {
+    throw new Error(`Invalid NEXT_PUBLIC_SUPABASE_URL format: ${supabaseUrl}`);
+  }
+
+  // Validar formato da chave anônima (deve ser um JWT)
+  if (!supabaseAnonKey.startsWith('eyJ')) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY must be a valid JWT token starting with "eyJ"');
+  }
+
+  return { url: supabaseUrl, anonKey: supabaseAnonKey };
 }
 
 // Implementar padrão Singleton para evitar múltiplas instâncias do GoTrueClient
@@ -59,16 +60,8 @@ function getSupabaseClient(): SupabaseClient {
     return globalWithSupabase._supabaseClient;
   }
 
-  // Obter configurações do Supabase com fallback
-  const config = {
-    url: supabaseUrl || 'https://arzvingdtnttiejcvucs.supabase.co',
-    anonKey: supabaseAnonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyenZpbmdkdG50dGllamN2dWNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5NDY3MjksImV4cCI6MjA2MDUyMjcyOX0.8OYE8Dg3haAxQ7p3MUiLJE_wiy2rCKsWiszMVwwo1LI'
-  };
-
-  // Verificar se as configurações estão definidas
-  if (!config.url || !config.anonKey) {
-    console.error('Configurações do Supabase não encontradas. Usando valores padrão.');
-  }
+  // Validar e obter configurações do Supabase
+  const config = validateSupabaseConfig();
 
   // Criar uma nova instância apenas se ainda não existir
   if (isBrowser) {
@@ -87,6 +80,23 @@ function getSupabaseClient(): SupabaseClient {
   return instance;
 }
 
+// Função para validar a chave de serviço
+function validateServiceKey(serviceKey: string | undefined): string {
+  if (!serviceKey) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is required but not defined in environment variables');
+  }
+
+  if (serviceKey.length < 100 || !serviceKey.startsWith('eyJ')) {
+    throw new Error(
+      `Invalid SUPABASE_SERVICE_ROLE_KEY format. ` +
+      `Expected a JWT token starting with "eyJ" and at least 100 characters long. ` +
+      `Current length: ${serviceKey.length}, starts with: ${serviceKey.substring(0, 10)}...`
+    );
+  }
+
+  return serviceKey;
+}
+
 // Função para criar ou retornar a instância do cliente Supabase Admin
 async function getSupabaseAdminClient(): Promise<SupabaseClient> {
   // Usar o objeto global para armazenar a instância
@@ -97,17 +107,20 @@ async function getSupabaseAdminClient(): Promise<SupabaseClient> {
     return globalWithSupabase._supabaseAdminClient;
   }
 
-  // Tentar obter a chave de serviço da tabela app_secrets
+  // Validar configurações básicas
+  const config = validateSupabaseConfig();
+  
+  // Tentar obter a chave de serviço da tabela app_secrets primeiro
   let serviceKey = supabaseServiceKey;
 
   // Se não temos a chave no ambiente, tentar buscar da tabela app_secrets
   if (!serviceKey) {
     try {
-      // Inicializar o cliente Supabase com a chave do ambiente
-      initializeSupabaseClient(supabaseUrl, serviceKey);
+      // Inicializar o cliente Supabase com a chave anônima para buscar secrets
+      initializeSupabaseClient(config.url, config.anonKey);
 
       // Buscar a chave de serviço da tabela app_secrets
-      const secretKey = await getCredential('SUPABASE_SERVICE_KEY');
+      const secretKey = await getCredential('SUPABASE_SERVICE_ROLE_KEY') || await getCredential('SUPABASE_SERVICE_KEY');
       if (secretKey) {
         serviceKey = secretKey;
         console.log('Chave de serviço obtida da tabela app_secrets');
@@ -117,16 +130,8 @@ async function getSupabaseAdminClient(): Promise<SupabaseClient> {
     }
   }
 
-  // Verificar se a chave de serviço está presente e é válida
-  if (!serviceKey) {
-    console.error('ERRO CRÍTICO: Chave de serviço do Supabase ausente!');
-  } else if (serviceKey.length < 100 || !serviceKey.startsWith('eyJ')) {
-    console.error('ERRO CRÍTICO: Chave de serviço do Supabase inválida ou ausente!');
-    console.error('Comprimento da chave:', serviceKey.length);
-    console.error('A chave deve ser um JWT completo, não apenas um prefixo como "sbp_"');
-    console.error('Verifique a variável SUPABASE_SERVICE_KEY no Netlify');
-    console.error('A chave deve começar com "eyJ" e ter mais de 200 caracteres');
-  }
+  // Validar a chave de serviço
+  const validatedServiceKey = validateServiceKey(serviceKey);
 
   // Criar uma nova instância apenas se ainda não existir
   if (isBrowser) {
@@ -135,8 +140,8 @@ async function getSupabaseAdminClient(): Promise<SupabaseClient> {
 
   // Criar a instância e armazená-la no objeto global
   const instance = createClient(
-    supabaseUrl,
-    serviceKey || supabaseAnonKey,
+    config.url,
+    validatedServiceKey,
     {
       auth: {
         autoRefreshToken: false,
@@ -163,16 +168,53 @@ export function getSupabaseAdmin(): Promise<SupabaseClient> {
 
 // Para compatibilidade com código existente, criar uma versão síncrona
 // Isso usará a chave do ambiente inicialmente, mas será atualizado quando getSupabaseAdmin() for chamado
-export const supabaseAdmin = createClient(
-  supabaseUrl,
-  supabaseServiceKey || supabaseAnonKey,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
+export const supabaseAdmin = (() => {
+  try {
+    const config = validateSupabaseConfig();
+    // Evitar inicializar com chave de serviço no navegador
+    if (isBrowser) {
+      // No browser nunca devemos usar a service role key
+      return createClient(
+        config.url,
+        config.anonKey,
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        }
+      );
     }
+    const validatedServiceKey = validateServiceKey(supabaseServiceKey);
+    return createClient(
+      config.url,
+      validatedServiceKey,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
+  } catch (error) {
+    // Em ambiente de servidor, logar; no browser, silenciar para evitar ruído
+    if (!isBrowser) {
+      console.error('Failed to initialize supabaseAdmin:', error);
+    }
+    // Retorna cliente com anon key como fallback
+    const config = validateSupabaseConfig();
+    return createClient(
+      config.url,
+      config.anonKey,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
   }
-);
+})();
 
 // Adicionar logs para depuração apenas no navegador
 if (isBrowser) {
@@ -226,8 +268,8 @@ export async function signInWithEmail(email: string, password: string) {
       throw new Error('Usuário não encontrado');
     }
 
-    // Verificar a senha usando bcrypt
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    // Verificar a senha usando bcrypt contra password_hash
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
 
     if (!isPasswordValid) {
       throw new Error('Senha incorreta');
@@ -305,8 +347,8 @@ export async function signInWithPhone(phone: string, password: string) {
       throw new Error('Usuário não encontrado');
     }
 
-    // Verificar a senha usando bcrypt
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    // Verificar a senha usando bcrypt contra password_hash
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
 
     if (!isPasswordValid) {
       throw new Error('Senha incorreta');
