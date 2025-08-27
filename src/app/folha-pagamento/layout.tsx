@@ -1,4 +1,5 @@
 import React from 'react';
+import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 
 /**
  * Layout do módulo de folha de pagamento
@@ -11,7 +12,9 @@ export default function PayrollLayout({
 }) {
   return (
     <div className="min-h-screen bg-abz-background">
-      {children}
+      <ProtectedRoute moduleName="folha_pagamento">
+        {children}
+      </ProtectedRoute>
     </div>
   );
 }

@@ -25,7 +25,7 @@ interface MainLayoutProps {
 export default function MainLayout({ children }: MainLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isAuthenticated, isLoading, isAdmin, logout } = useSupabaseAuth();
+  const { user, isAuthenticated, isLoading, isAdmin, logout, hasAccess } = useSupabaseAuth();
   const { t } = useI18n();
   const { config } = useSiteConfig();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -97,6 +97,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
               // Verificar permissões de gerente
               if (item.managerOnly && !(isAdmin || user?.role === 'MANAGER')) return false;
+
+              // Verificar permissões de módulo específicas
+              if (item.moduleKey && !hasAccess(item.moduleKey) && !isAdmin) return false;
 
               return true;
             })

@@ -51,7 +51,7 @@ function LoadingSpinner() {
 }
 
 export default function Dashboard() {
-  const { user, isAdmin, isAuthenticated, isLoading } = useSupabaseAuth();
+  const { user, isAdmin, isAuthenticated, isLoading, hasAccess } = useSupabaseAuth();
   const { t, locale } = useI18n();
   const { config } = useSiteConfig();
   const router = useRouter();
@@ -184,6 +184,7 @@ export default function Dashboard() {
                     if (!card.enabled) return false;
                     if (card.adminOnly && !isAdmin) return false;
                     if (card.managerOnly && !(isAdmin || user?.role === 'MANAGER')) return false;
+                    if (card.moduleKey && !hasAccess(card.moduleKey) && !isAdmin) return false;
                     return true;
                   })
                   .sort((a, b) => a.order - b.order)

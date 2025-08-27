@@ -32,6 +32,8 @@ export interface MenuItem {
   adminOnly: boolean;
   managerOnly?: boolean;
   forceShow?: boolean;
+  // Optional module key to drive fine-grained permission via hasAccess(moduleKey)
+  moduleKey?: string;
 }
 
 // Função para obter os itens do menu com traduções
@@ -145,7 +147,8 @@ export function getTranslatedMenu(t: (key: string, defaultValue?: string) => str
       external: false,
       enabled: true,
       order: 11,
-      adminOnly: false
+      adminOnly: false,
+      moduleKey: 'folha_pagamento'
     },
     {
       id: 'avaliacao',
@@ -284,7 +287,8 @@ const menuItems: MenuItem[] = [
     external: false,
     enabled: true,
     order: 11,
-    adminOnly: false
+    adminOnly: false,
+    moduleKey: 'folha_pagamento'
   },
   {
     id: 'avaliacao',

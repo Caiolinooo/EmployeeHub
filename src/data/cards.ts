@@ -52,6 +52,8 @@ export interface DashboardCard {
   managerOnly?: boolean;
   allowedRoles?: string[];
   allowedUserIds?: string[];
+  // Optional module key to drive fine-grained permission via hasAccess(moduleKey)
+  moduleKey?: string;
 }
 
 // Função para obter cards hardcoded (usada como fallback na API)
@@ -87,6 +89,7 @@ export function getHardcodedCards(): DashboardCard[] {
       order: 2,
       adminOnly: false,
       managerOnly: true,
+      moduleKey: 'folha_pagamento',
     },
     // Adicionar outros cards aqui conforme necessário
   ];
@@ -238,7 +241,8 @@ export function getTranslatedCards(t: (key: string) => string): DashboardCard[] 
       external: false,
       enabled: true,
       order: 11,
-      managerOnly: true
+      managerOnly: true,
+      moduleKey: 'folha_pagamento'
     },
     {
       id: 'admin',
