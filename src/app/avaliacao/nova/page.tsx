@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import MainLayout from '@/components/Layout/MainLayout';
 import { FiSave, FiX, FiArrowLeft, FiPlus } from 'react-icons/fi';
 import Link from 'next/link';
@@ -58,11 +58,6 @@ export default function NovaAvaliacaoPage() {
     const fetchFuncionarios = async () => {
       try {
         setLoadingFuncionarios(true);
-
-        // Criar cliente Supabase
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-        const supabase = createClient(supabaseUrl, supabaseKey);
 
         // Buscar todos os funcionários da tabela funcionarios
         const { data, error } = await supabase

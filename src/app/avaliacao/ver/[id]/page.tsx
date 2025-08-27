@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import MainLayout from '@/components/Layout/MainLayout';
 import { FiArrowLeft, FiEdit, FiTrash2, FiCheck, FiX, FiAlertTriangle } from 'react-icons/fi';
 import Link from 'next/link';
@@ -82,11 +82,6 @@ export default function VerAvaliacaoPage({ params }: { params: { id: string } })
         setLoading(true);
         setError(null);
 
-        // Criar cliente Supabase
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-        const supabase = createClient(supabaseUrl, supabaseKey);
-
         // Buscar avaliação pelo ID
         const { data, error } = await supabase
           .from('avaliacoes')
@@ -128,11 +123,6 @@ export default function VerAvaliacaoPage({ params }: { params: { id: string } })
     try {
       setApproveLoading(true);
 
-      // Criar cliente Supabase
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-      const supabase = createClient(supabaseUrl, supabaseKey);
-
       // Atualizar o status para 'completed'
       const { error } = await supabase
         .from('avaliacoes')
@@ -168,11 +158,6 @@ export default function VerAvaliacaoPage({ params }: { params: { id: string } })
 
     try {
       setDeleteLoading(true);
-
-      // Criar cliente Supabase
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-      const supabase = createClient(supabaseUrl, supabaseKey);
 
       // Atualizar o campo deleted_at para a data atual
       const { error } = await supabase

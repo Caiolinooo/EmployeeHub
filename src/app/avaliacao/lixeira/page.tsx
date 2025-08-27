@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import MainLayout from '@/components/Layout/MainLayout';
 import { FiSearch, FiAlertTriangle, FiArrowLeft, FiTrash2, FiRefreshCw } from 'react-icons/fi';
 import Link from 'next/link';
@@ -33,11 +33,6 @@ export default function LixeiraPage() {
     const fetchAvaliacoes = async () => {
       try {
         setLoading(true);
-
-        // Criar cliente Supabase
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-        const supabase = createClient(supabaseUrl, supabaseKey);
 
         // Buscar avaliações que estão na lixeira (deleted_at não é null)
         const { data, error } = await supabase
@@ -95,11 +90,6 @@ export default function LixeiraPage() {
     try {
       setRestoreLoading(id);
 
-      // Criar cliente Supabase
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-      const supabase = createClient(supabaseUrl, supabaseKey);
-
       // Atualizar o campo deleted_at para null
       const { error } = await supabase
         .from('avaliacoes')
@@ -140,11 +130,6 @@ export default function LixeiraPage() {
 
     try {
       setDeleteLoading(id);
-
-      // Criar cliente Supabase
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-      const supabase = createClient(supabaseUrl, supabaseKey);
 
       // Excluir a avaliação permanentemente
       const { error } = await supabase
