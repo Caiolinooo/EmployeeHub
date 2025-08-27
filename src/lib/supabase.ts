@@ -171,19 +171,9 @@ export function getSupabaseAdmin(): Promise<SupabaseClient> {
 export const supabaseAdmin = (() => {
   try {
     const config = validateSupabaseConfig();
-    // Evitar inicializar com chave de serviço no navegador
+    // No navegador, reutilize o singleton 'supabase' para evitar múltiplas instâncias do GoTrueClient
     if (isBrowser) {
-      // No browser nunca devemos usar a service role key
-      return createClient(
-        config.url,
-        config.anonKey,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
-          }
-        }
-      );
+      return supabase;
     }
     const validatedServiceKey = validateServiceKey(supabaseServiceKey);
     return createClient(
@@ -201,7 +191,11 @@ export const supabaseAdmin = (() => {
     if (!isBrowser) {
       console.error('Failed to initialize supabaseAdmin:', error);
     }
-    // Retorna cliente com anon key como fallback
+    // No navegador, mantenha o mesmo singleton para não criar nova instância
+    if (isBrowser) {
+      return supabase;
+    }
+    // Fallback seguro no servidor com anon key (não ideal, mas evita crash em setup)
     const config = validateSupabaseConfig();
     return createClient(
       config.url,

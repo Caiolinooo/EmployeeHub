@@ -25,11 +25,23 @@ BEGIN
   END IF;
   
   -- Criar a política
-  EXECUTE format(
-    'CREATE POLICY %I ON storage.objects FOR %s TO authenticated USING (%s)',
-    policy_name,
-    operation,
-    definition
-  );
+  -- IMPORTANTE: Para INSERT/UPDATE é necessário usar WITH CHECK para validar as linhas novas/alteradas
+  -- Para SELECT/DELETE a cláusula USING é suficiente
+  IF upper(operation) IN ('INSERT', 'UPDATE') THEN
+    EXECUTE format(
+      'CREATE POLICY %I ON storage.objects FOR %s TO authenticated USING (%s) WITH CHECK (%s)',
+      policy_name,
+      operation,
+      definition,
+      definition
+    );
+  ELSE
+    EXECUTE format(
+      'CREATE POLICY %I ON storage.objects FOR %s TO authenticated USING (%s)',
+      policy_name,
+      operation,
+      definition
+    );
+  END IF;
 END;
 $$;

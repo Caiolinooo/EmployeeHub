@@ -130,7 +130,7 @@ export async function POST(request: Request) {
             });
           }
           
-          // Política para permitir que usuários atualizem suas próprias imagens
+          // Política para permitir que usuários façam upload/insert de suas próprias imagens
           const { error: updatePolicyError } = await supabase.rpc('create_storage_policy', {
             bucket_name: 'profile-images',
             policy_name: 'User Profile Images Update Policy',
@@ -149,6 +149,50 @@ export async function POST(request: Request) {
               bucket: bucket.name,
               status: 'policy_created',
               message: 'Política de atualização criada com sucesso'
+            });
+          }
+
+          // Política para permitir UPDATE (substituições/metadados) nas próprias imagens
+          const { error: updateObjPolicyError } = await supabase.rpc('create_storage_policy', {
+            bucket_name: 'profile-images',
+            policy_name: 'User Profile Images Modify Policy',
+            definition: `(bucket_id = 'profile-images'::text) AND (auth.uid() = SPLIT_PART(name, '/', 1)::uuid OR auth.role() = 'service_role'::text)`,
+            operation: 'UPDATE'
+          });
+
+          if (updateObjPolicyError) {
+            results.push({
+              bucket: bucket.name,
+              status: 'error',
+              message: `Erro ao criar política de UPDATE: ${updateObjPolicyError.message}`
+            });
+          } else {
+            results.push({
+              bucket: bucket.name,
+              status: 'policy_created',
+              message: 'Política de UPDATE criada com sucesso'
+            });
+          }
+
+          // Política para permitir DELETE das próprias imagens
+          const { error: deletePolicyError } = await supabase.rpc('create_storage_policy', {
+            bucket_name: 'profile-images',
+            policy_name: 'User Profile Images Delete Policy',
+            definition: `(bucket_id = 'profile-images'::text) AND (auth.uid() = SPLIT_PART(name, '/', 1)::uuid OR auth.role() = 'service_role'::text)`,
+            operation: 'DELETE'
+          });
+
+          if (deletePolicyError) {
+            results.push({
+              bucket: bucket.name,
+              status: 'error',
+              message: `Erro ao criar política de DELETE: ${deletePolicyError.message}`
+            });
+          } else {
+            results.push({
+              bucket: bucket.name,
+              status: 'policy_created',
+              message: 'Política de DELETE criada com sucesso'
             });
           }
         }
