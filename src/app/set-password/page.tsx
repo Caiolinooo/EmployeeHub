@@ -22,11 +22,12 @@ export default function SetPassword() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const inviteCode = searchParams?.get('invite');
+  const emailToken = searchParams?.get('token');
 
-  // Verificar se o usuário está autenticado ou tem código de convite
+  // Verificar se o usuário está autenticado ou tem código de convite/token
   useEffect(() => {
-    // Se temos um código de convite, não precisamos verificar autenticação
-    if (inviteCode) {
+    // Se temos um código de convite ou token de email, não precisamos verificar autenticação
+    if (inviteCode || emailToken) {
       return;
     }
 
@@ -38,7 +39,7 @@ export default function SetPassword() {
         router.replace('/dashboard');
       }
     }
-  }, [isAuthenticated, passwordExpired, isLoading, router, inviteCode]);
+  }, [isAuthenticated, passwordExpired, isLoading, router, inviteCode, emailToken]);
 
   // Função para atualizar a senha
   const handleSubmit = async (e: FormEvent) => {
@@ -73,6 +74,28 @@ export default function SetPassword() {
             inviteCode,
             password,
           }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setSuccess(t('auth.passwordSetSuccessfully'));
+
+          // Redirecionar para o login após 2 segundos
+          setTimeout(() => {
+            router.push('/login');
+          }, 2000);
+        } else {
+          setError(data.error || t('auth.errorSettingPassword'));
+        }
+      } else if (emailToken) {
+        // Se temos um token de verificação de email, usar a nova API
+        const response = await fetch('/api/auth/set-password-by-token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token: emailToken, password }),
         });
 
         const data = await response.json();
@@ -123,10 +146,10 @@ export default function SetPassword() {
           />
         </div>
         <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-abz-blue-dark">
-          {inviteCode ? t('auth.setYourPassword') : t('auth.updateYourPassword')}
+          {(inviteCode || emailToken) ? t('auth.setYourPassword') : t('auth.updateYourPassword')}
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          {inviteCode
+          {(inviteCode || emailToken)
             ? t('auth.createPasswordForAccount')
             : passwordExpired
               ? t('auth.passwordExpiredMessage')
@@ -150,7 +173,7 @@ export default function SetPassword() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
-                Nova Senha
+                {t('auth.newPassword')}
               </label>
               <div className="mt-2 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -164,6 +187,7 @@ export default function SetPassword() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  placeholder={t('register.passwordPlaceholder')}
                   className="block w-full rounded-md border-0 py-2.5 pl-10 pr-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-abz-blue sm:text-sm sm:leading-6"
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -187,7 +211,7 @@ export default function SetPassword() {
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium leading-6 text-gray-900">
-                Confirmar Senha
+                {t('auth.confirmPassword')}
               </label>
               <div className="mt-2 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -201,6 +225,7 @@ export default function SetPassword() {
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder={t('register.confirmPasswordPlaceholder')}
                   className="block w-full rounded-md border-0 py-2.5 pl-10 pr-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-abz-blue sm:text-sm sm:leading-6"
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -228,10 +253,10 @@ export default function SetPassword() {
                 {isLoading || isProcessing ? (
                   <>
                     <span className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-                    {inviteCode ? t('auth.settingPassword') : t('auth.updatingPassword')}
+                    {(inviteCode || emailToken) ? t('auth.settingPassword') : t('auth.updatingPassword')}
                   </>
                 ) : (
-                  inviteCode ? t('auth.setPassword') : t('auth.updatePassword')
+                  (inviteCode || emailToken) ? t('auth.setPassword') : t('auth.updatePassword')
                 )}
               </button>
             </div>

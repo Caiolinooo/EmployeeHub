@@ -19,8 +19,14 @@ export async function sendEmailVerificationLink(
   try {
     console.log(`Enviando email de verificação por link para: ${email}`);
 
-    // Obter a URL base do sistema
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    // Obter a URL base do sistema (priorizar URL configurada de produção)
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.APP_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
+      process.env.NETLIFY_SITE_URL ||
+      process.env.RENDER_EXTERNAL_URL ||
+      'http://localhost:3000';
     const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
 
     // Texto simples para clientes que não suportam HTML
@@ -178,14 +184,14 @@ export async function verifyEmailToken(token: string): Promise<{
       };
     }
 
-    // Marcar email como verificado, ativar conta e limpar token
+    // Marcar email como verificado e ativar conta
+    // Importante: NÃO limpar o token aqui; ele será usado para definir a senha e então será limpo
     const { error: updateError } = await supabaseAdmin
       .from('users_unified')
       .update({
         email_verified: true,
         active: true, // Ativar a conta após verificação do email
         authorization_status: 'active', // Mudar status para ativo
-        email_verification_token: null,
         updated_at: new Date().toISOString()
       })
       .eq('id', user.id);

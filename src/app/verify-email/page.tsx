@@ -63,11 +63,8 @@ export default function VerifyEmailPage() {
 
       if (data.success) {
         toast.success('Email verificado com sucesso!');
-        
-        // Redirecionar para login após 3 segundos
-        setTimeout(() => {
-          router.push('/login');
-        }, 3000);
+        // Redirecionar imediatamente para definição de senha com o mesmo token
+        router.replace(`/set-password?token=${encodeURIComponent(token)}`);
       } else {
         toast.error(data.message || 'Erro ao verificar email');
       }
@@ -125,7 +122,7 @@ export default function VerifyEmailPage() {
                 Email verificado com sucesso!
               </h2>
               <p className="text-green-700 mb-4">
-                Seu endereço de email foi confirmado. Sua conta está agora ativa.
+                Seu endereço de email foi confirmado e sua conta está ativa.
               </p>
               {verificationResult.user && (
                 <div className="bg-white p-4 rounded border border-green-200 mb-4">
@@ -138,17 +135,24 @@ export default function VerifyEmailPage() {
                 </div>
               )}
               <p className="text-green-600 text-sm">
-                Você será redirecionado para a página de login em alguns segundos...
+                Redirecionando para a criação de senha...
               </p>
             </div>
 
             <div className="text-center">
-              <Link
-                href="/login"
-                className="inline-block bg-green-600 text-white px-6 py-2 rounded-md font-medium hover:bg-green-700 transition-colors"
-              >
-                Ir para Login
-              </Link>
+              {/* Fallback: caso não redirecione automaticamente */}
+              {(() => {
+                const token = searchParams?.get('token');
+                const href = token ? `/set-password?token=${encodeURIComponent(token)}` : '/set-password';
+                return (
+                  <Link
+                    href={href}
+                    className="inline-block bg-green-600 text-white px-6 py-2 rounded-md font-medium hover:bg-green-700 transition-colors"
+                  >
+                    Criar senha agora
+                  </Link>
+                );
+              })()}
             </div>
           </div>
         ) : (

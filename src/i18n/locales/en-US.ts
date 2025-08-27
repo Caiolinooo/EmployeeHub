@@ -197,7 +197,22 @@ export default {
     backToIdentifier: 'Back to identification',
     setPasswordWithInvite: 'Set password with invite code',
     notRegistered: 'Not registered yet?',
-    createAccount: 'Create account'
+    createAccount: 'Create account',
+
+    // Set/Update password flow
+    setYourPassword: 'Set your password',
+    createPasswordForAccount: 'Create a password for your account',
+    updateYourPassword: 'Update your password',
+    passwordExpiredMessage: 'Your password has expired. Please set a new one to continue.',
+    definePasswordForAccount: 'Set a new password for your account',
+    settingPassword: 'Setting password...',
+    updatingPassword: 'Updating password...',
+    setPassword: 'Set password',
+    updatePassword: 'Update password',
+    passwordSetSuccessfully: 'Password set successfully. Redirecting to login...',
+    errorSettingPassword: 'Error setting password',
+    passwordUpdatedSuccessfully: 'Password updated successfully. Redirecting...',
+    errorUpdatingPassword: 'Error updating password'
   },
   register: {
     title: 'Complete your registration',

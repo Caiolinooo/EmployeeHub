@@ -227,7 +227,22 @@ export default {
     backToIdentifier: 'Voltar para identificação',
     setPasswordWithInvite: 'Definir senha com código de convite',
     notRegistered: 'Ainda não tem cadastro?',
-    createAccount: 'Criar conta'
+    createAccount: 'Criar conta',
+
+    // Set/Update password flow
+    setYourPassword: 'Defina sua senha',
+    createPasswordForAccount: 'Crie uma senha para sua conta',
+    updateYourPassword: 'Atualize sua senha',
+    passwordExpiredMessage: 'Sua senha expirou. Defina uma nova senha para continuar.',
+    definePasswordForAccount: 'Defina uma nova senha para sua conta',
+    settingPassword: 'Definindo senha...',
+    updatingPassword: 'Atualizando senha...',
+    setPassword: 'Definir senha',
+    updatePassword: 'Atualizar senha',
+    passwordSetSuccessfully: 'Senha definida com sucesso. Redirecionando para o login...',
+    errorSettingPassword: 'Erro ao definir a senha',
+    passwordUpdatedSuccessfully: 'Senha atualizada com sucesso. Redirecionando...',
+    errorUpdatingPassword: 'Erro ao atualizar a senha'
   },
   register: {
     title: 'Complete seu cadastro',
