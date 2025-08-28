@@ -20,14 +20,27 @@ export async function sendEmailVerificationLink(
     console.log(`Enviando email de verificação por link para: ${email}`);
 
     // Obter a URL base do sistema (priorizar URL configurada de produção)
-    const baseUrl =
+    // Netlify: URL (primary), DEPLOY_URL (preview), SITE_URL (old), NETLIFY_SITE_URL (plugin)
+    // Vercel: VERCEL_URL
+    let baseUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
       process.env.APP_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
+      process.env.URL ||
+      process.env.DEPLOY_URL ||
+      process.env.SITE_URL ||
       process.env.NETLIFY_SITE_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
       process.env.RENDER_EXTERNAL_URL ||
-      'http://localhost:3000';
-    const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
+      '';
+
+    // Evitar usar localhost em produção por engano
+    if (!baseUrl) {
+      if (process.env.NODE_ENV === 'production') {
+        console.warn('Base URL não definida em produção. Defina NEXT_PUBLIC_APP_URL (ex.: https://painelabzgroup.netlify.app).');
+      }
+      baseUrl = process.env.NODE_ENV === 'production' ? 'https://painelabzgroup.netlify.app' : 'http://localhost:3000';
+    }
+    const verificationUrl = `${baseUrl.replace(/\/$/, '')}/verify-email?token=${token}`;
 
     // Texto simples para clientes que não suportam HTML
     const text = `
