@@ -532,8 +532,8 @@ const UserEditor: React.FC<UserEditorProps> = ({
                       {Object.entries(rolePermissions[editedUser.role]?.modules || {})
                         .filter(([_, enabled]) => enabled)
                         .map(([moduleId]) => {
-                          const module = availableModules.find(m => m.id === moduleId);
-                          return module?.label;
+                          const modItem = availableModules.find(m => m.id === moduleId);
+                          return modItem?.label;
                         })
                         .filter(Boolean)
                         .join(', ')}

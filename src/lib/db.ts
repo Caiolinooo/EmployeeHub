@@ -10,10 +10,7 @@ export { supabase, supabaseAdmin };
 // NOTA: Este é um objeto temporário para facilitar a migração
 // Eventualmente, todo o código deve ser atualizado para usar diretamente o Supabase
 
-// Aviso de depreciação apenas em desenvolvimento
-if (process.env.NODE_ENV === 'development') {
-  console.warn('AVISO: O objeto prisma está depreciado. Use supabase ou supabaseAdmin diretamente.');
-}
+// Aviso de depreciação será exibido somente quando o objeto "prisma" for realmente acessado
 
 // Criar um proxy para redirecionar chamadas do Prisma para o Supabase
 export const prisma = new Proxy({}, {

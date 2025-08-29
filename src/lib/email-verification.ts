@@ -19,26 +19,35 @@ export async function sendEmailVerificationLink(
   try {
     console.log(`Enviando email de verificação por link para: ${email}`);
 
-    // Obter a URL base do sistema (priorizar URL configurada de produção)
+    // Obter a URL base do sistema (priorizar URL configurada)
+    // Em produção, padronizamos o domínio do Netlify caso a variável não esteja definida
     // Netlify: URL (primary), DEPLOY_URL (preview), SITE_URL (old), NETLIFY_SITE_URL (plugin)
     // Vercel: VERCEL_URL
     let baseUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
       process.env.APP_URL ||
-      process.env.URL ||
-      process.env.DEPLOY_URL ||
-      process.env.SITE_URL ||
-      process.env.NETLIFY_SITE_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
-      process.env.RENDER_EXTERNAL_URL ||
       '';
 
-    // Evitar usar localhost em produção por engano
+    // Fallbacks somente se ainda não definido por config explícita
+    if (!baseUrl) {
+      baseUrl =
+        process.env.URL ||
+        process.env.DEPLOY_URL ||
+        process.env.SITE_URL ||
+        process.env.NETLIFY_SITE_URL ||
+        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
+        process.env.RENDER_EXTERNAL_URL ||
+        '';
+    }
+
+    // Em produção, forçar domínio oficial se nada confiável foi encontrado
     if (!baseUrl) {
       if (process.env.NODE_ENV === 'production') {
-        console.warn('Base URL não definida em produção. Defina NEXT_PUBLIC_APP_URL (ex.: https://painelabzgroup.netlify.app).');
+        console.warn('Base URL não definida em produção. Usando https://painelabzgroup.netlify.app. Configure NEXT_PUBLIC_APP_URL para customizar.');
+        baseUrl = 'https://painelabzgroup.netlify.app';
+      } else {
+        baseUrl = 'http://localhost:3000';
       }
-      baseUrl = process.env.NODE_ENV === 'production' ? 'https://painelabzgroup.netlify.app' : 'http://localhost:3000';
     }
     const verificationUrl = `${baseUrl.replace(/\/$/, '')}/verify-email?token=${token}`;
 

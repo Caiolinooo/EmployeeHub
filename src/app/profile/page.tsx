@@ -72,7 +72,7 @@ export default function ProfilePage() {
   // Função para carregar a imagem de perfil
   const loadProfileImage = async () => {
     if (!profile?.id) {
-      setProfileImage('/images/default-avatar.png'); // Default if no profile ID
+      setProfileImage(null); // Default to icon if no profile ID
       return;
     }
 
@@ -84,7 +84,7 @@ export default function ProfilePage() {
 
       if (!data?.publicUrl) {
         console.error('Erro ao obter URL pública da imagem de perfil');
-        setProfileImage('/images/default-avatar.png'); // Fallback to default
+        setProfileImage(null); // Fallback to icon
         return;
       }
 
@@ -95,13 +95,13 @@ export default function ProfilePage() {
       };
       checkImage.onerror = () => {
         console.warn('Imagem de perfil não encontrada ou inacessível na URL:', data.publicUrl);
-        setProfileImage('/images/default-avatar.png'); // Fallback to default
+        setProfileImage(null); // Fallback to icon
       };
       checkImage.src = data.publicUrl;
 
     } catch (error) { // Catch errors from the async/await block itself
       console.error('Erro geral ao carregar imagem de perfil:', error);
-      setProfileImage('/images/default-avatar.png'); // Fallback to default
+      setProfileImage(null); // Fallback to icon
     }
   };
 
@@ -708,7 +708,7 @@ export default function ProfilePage() {
                     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
                       <div className="max-w-2xl w-full">
                         <ServerUserReimbursementSettings
-                          email={profile.email}
+                          email={profile.email || undefined}
                           onClose={() => setShowReimbursementSettings(false)}
                         />
                       </div>

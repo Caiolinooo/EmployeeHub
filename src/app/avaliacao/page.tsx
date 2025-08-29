@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import MainLayout from '@/components/Layout/MainLayout';
 import { FiPlus, FiSearch, FiEdit, FiTrash2, FiEye, FiAlertTriangle } from 'react-icons/fi';
 import Link from 'next/link';
@@ -119,17 +119,6 @@ export default function AvaliacaoPage() {
 
         console.log('Iniciando busca de avaliações...');
         console.log('Verificando permissões:', { isAdmin, isManager, hasEvaluationAccess });
-
-        // Criar cliente Supabase
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-        if (!supabaseUrl || !supabaseKey) {
-          throw new Error('Configurações do Supabase não encontradas');
-        }
-
-        console.log('Criando cliente Supabase...');
-        const supabase = createClient(supabaseUrl, supabaseKey);
 
         // Abordagem simplificada: buscar diretamente da tabela avaliacoes
         console.log('Buscando avaliações na tabela avaliacoes...');
@@ -257,11 +246,6 @@ export default function AvaliacaoPage() {
 
     try {
       setDeleteLoading(id);
-
-      // Criar cliente Supabase
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-      const supabase = createClient(supabaseUrl, supabaseKey);
 
       // Atualizar o campo deleted_at para a data atual
       const { error } = await supabase

@@ -9,7 +9,8 @@ function requireAdminAuth(req: NextRequest) {
     ? authHeader.substring('Bearer '.length)
     : '';
   const expected = process.env.ADMIN_API_TOKEN || '';
-  return expected && token && token === expected;
+  // Return a strict boolean to satisfy TypeScript
+  return Boolean(expected) && Boolean(token) && token === expected;
 }
 
 export async function POST(request: NextRequest) {
@@ -58,24 +59,29 @@ export async function POST(request: NextRequest) {
       // Continue to clean local even if Auth deletion failed (idempotent cleanup)
     }
 
-    // Cleanup local tables referencing the user
-    const deletions: Array<Promise<any>> = [];
+    // Cleanup local tables referencing the user (execute sequentially to satisfy TS)
+    const r1 = await supabaseAdmin
+      .from('user_permissions')
+      .delete()
+      .eq('user_id', targetUserId);
+    if ((r1 as any)?.error) {
+      console.error('Erro ao deletar em user_permissions:', (r1 as any).error);
+    }
 
-    deletions.push(
-      supabaseAdmin.from('user_permissions').delete().eq('user_id', targetUserId)
-    );
-    deletions.push(
-      supabaseAdmin.from('access_history').delete().eq('user_id', targetUserId)
-    );
-    deletions.push(
-      supabaseAdmin.from('users_unified').delete().eq('id', targetUserId)
-    );
+    const r2 = await supabaseAdmin
+      .from('access_history')
+      .delete()
+      .eq('user_id', targetUserId);
+    if ((r2 as any)?.error) {
+      console.error('Erro ao deletar em access_history:', (r2 as any).error);
+    }
 
-    const results = await Promise.all(deletions);
-    for (const r of results) {
-      if ((r as any)?.error) {
-        console.error('Erro ao deletar registros locais:', (r as any).error);
-      }
+    const r3 = await supabaseAdmin
+      .from('users_unified')
+      .delete()
+      .eq('id', targetUserId);
+    if ((r3 as any)?.error) {
+      console.error('Erro ao deletar em users_unified:', (r3 as any).error);
     }
 
     return NextResponse.json({ success: true, userId: targetUserId });
