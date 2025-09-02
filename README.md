@@ -25,11 +25,13 @@ O **Painel ABZ** é uma plataforma moderna de gestão empresarial desenvolvida p
 ## ✨ Funcionalidades Principais
 
 ### 🏢 **Gestão Empresarial**
-- **Dashboard Interativo** - Visão geral com métricas em tempo real
-- **Sistema de Reembolsos** - Solicitação, aprovação e controle financeiro completo
+- **Dashboard Interativo** - Visão geral com métricas em tempo real e cards customizáveis
+- **Sistema de Reembolsos** - Solicitação, aprovação e controle financeiro completo com PDF
 - **Gestão de Usuários** - Controle de acesso e permissões granulares por role
-- **Avaliações de Desempenho** - Sistema completo de avaliação de funcionários
+- **Avaliações de Desempenho** - Sistema completo de avaliação de funcionários com critérios
 - **Módulo de Documentos** - Repositório centralizado com controle de acesso
+- **Sistema de Perfil** - Gerenciamento completo de perfis com fotos e configurações
+- **Sistema de Banimento** - Controle de usuários banidos com histórico
 
 ### 🔐 **Segurança & Autenticação**
 - **Autenticação Supabase** - Login seguro com JWT e verificação em duas etapas
@@ -44,6 +46,8 @@ O **Painel ABZ** é uma plataforma moderna de gestão empresarial desenvolvida p
 - **Tema Customizável** - Cores, logos e favicon personalizáveis via admin
 - **Notificações** - Sistema de alertas em tempo real via email e SMS
 - **Performance** - Carregamento otimizado e cache inteligente
+- **Sistema de Perfil Completo** - Upload de fotos, edição de dados e configurações
+- **Configurações Personalizadas** - Preferências de tema, idioma e notificações
 
 ### 📊 **Relatórios & Analytics**
 - **Métricas de Reembolso** - Análise financeira detalhada com gráficos
@@ -83,10 +87,13 @@ graph TB
 | **Styling** | Tailwind CSS | 3.4+ | Framework CSS utilitário |
 | **Database** | Supabase | Latest | PostgreSQL como serviço |
 | **Auth** | Supabase Auth | Latest | Autenticação e autorização |
+| **Storage** | Google Drive API | Latest | Armazenamento de fotos |
 | **Deploy** | Netlify | Latest | Hospedagem e CI/CD |
 | **Icons** | React Icons | 5.0+ | Biblioteca de ícones |
-| **Email** | Nodemailer | Latest | Envio de emails |
+| **Email** | Gmail SMTP | Latest | Envio de emails |
 | **Security** | bcrypt | Latest | Criptografia de senhas |
+| **PDF** | jsPDF | Latest | Geração de PDFs |
+| **Forms** | React Hook Form | Latest | Gerenciamento de formulários |
 
 ## 💻 Requisitos do Sistema
 
@@ -234,16 +241,20 @@ painel-abz/
 
 ### Gerenciamento de Usuários
 - Cadastro e edição de usuários
-- Importação em lote
-- Controle de permissões
-- Histórico de acesso
+- Importação em lote (Excel, CSV)
+- Controle de permissões granulares
+- Histórico de acesso e auditoria
 - Tabela unificada de usuários
+- Sistema de banimento com histórico
+- Perfis completos com fotos do Google Drive
 
 ### Reembolsos
-- Solicitação de reembolsos
-- Upload de comprovantes
-- Fluxo de aprovação
-- Notificações por e-mail
+- Solicitação de reembolsos com formulário completo
+- Upload de comprovantes (múltiplos arquivos)
+- Fluxo de aprovação com status em tempo real
+- Notificações por e-mail automáticas
+- Geração de PDF com dados completos
+- Configurações de email personalizadas por usuário
 
 ### Avaliação de Desempenho
 - Avaliação de funcionários
@@ -257,6 +268,14 @@ painel-abz/
 - Controle de acesso por grupo
 - Visualização integrada de PDFs
 
+### Sistema de Perfil Completo
+- **Upload de Fotos**: Integração com Google Drive para armazenamento
+- **Edição de Dados**: Informações pessoais e profissionais completas
+- **Alteração de Senha**: Sistema seguro com validação
+- **Configurações de Preferências**: Tema, idioma e notificações
+- **Configurações de Email**: Personalização para reembolsos
+- **Interface Responsiva**: Design moderno e intuitivo
+
 ### Notícias e Comunicados
 - Publicação de notícias
 - Destaque de conteúdo
@@ -267,6 +286,7 @@ painel-abz/
 - **Cards**: Gerenciamento dos cards do dashboard
 - **Menu**: Configuração dos itens do menu lateral
 - **Configurações**: Personalização do sistema (cores, logo, favicon, textos)
+- **Usuários Banidos**: Controle de acesso com histórico
 
 ## 📱 Screenshots do Sistema
 
@@ -293,12 +313,17 @@ painel-abz/
 ### ✅ **Concluído (v1.0)**
 - [x] Sistema de autenticação completo com Supabase
 - [x] Dashboard interativo com métricas em tempo real
-- [x] Sistema de reembolsos com fluxo completo
+- [x] Sistema de reembolsos com fluxo completo e PDF
 - [x] Gestão de usuários e permissões por role
+- [x] Sistema de perfil completo com upload de fotos
+- [x] Sistema de avaliações de desempenho funcional
+- [x] Sistema de banimento de usuários
 - [x] Internacionalização (PT/EN/ES)
 - [x] Deploy automatizado no Netlify
 - [x] Sistema de notificações por email
 - [x] Interface responsiva e moderna
+- [x] Integração com Google Drive para fotos
+- [x] Configurações personalizadas por usuário
 
 ### 🚧 **Em Desenvolvimento (v1.1)**
 - [ ] Sistema de avaliações avançado com métricas
@@ -336,12 +361,16 @@ O sistema possui uma API RESTful completa para gerenciamento de todos os recurso
 - `/api/admin`: Endpoints administrativos
 - `/api/users`: Gerenciamento de usuários
 - `/api/users-unified`: Gerenciamento de usuários unificados
+- `/api/users-unified/profile`: Gerenciamento de perfis de usuário
+- `/api/users-unified/upload-photo`: Upload de fotos de perfil
+- `/api/admin/banned-users`: Gerenciamento de usuários banidos
 - `/api/cards`: Gerenciamento de cards
 - `/api/menu`: Gerenciamento de menu
 - `/api/documents`: Gerenciamento de documentos
 - `/api/news`: Gerenciamento de notícias
 - `/api/reimbursement`: Gerenciamento de reembolsos
-- `/api/evaluation`: Gerenciamento de avaliações de desempenho
+- `/api/reimbursement-settings`: Configurações de reembolso
+- `/api/avaliacao-desempenho`: Gerenciamento de avaliações de desempenho
 - `/api/config`: Configurações do sistema
 - `/api/upload`: Upload de arquivos
 - `/api/token-refresh`: Atualização de tokens de autenticação
