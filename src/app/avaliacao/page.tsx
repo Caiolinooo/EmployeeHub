@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import MainLayout from '@/components/Layout/MainLayout';
-import { FiPlus, FiSearch, FiEdit, FiTrash2, FiEye, FiAlertTriangle } from 'react-icons/fi';
+import { FiPlus, FiSearch, FiEdit, FiTrash2, FiEye, FiAlertTriangle, FiBarChart2 } from 'react-icons/fi';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/contexts/I18nContext';
@@ -27,7 +27,7 @@ interface Avaliacao {
 
 export default function AvaliacaoPage() {
   const router = useRouter();
-  const { user, isAdmin, isManager, hasEvaluationAccess } = useSupabaseAuth();
+  const { user, isAdmin, isManager, hasEvaluationAccess, hasAccess, profile, isLoading } = useSupabaseAuth();
   const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,11 +37,25 @@ export default function AvaliacaoPage() {
 
   // Verificar se o usuário tem acesso ao módulo de avaliação
   useEffect(() => {
-    if (!hasEvaluationAccess && !isAdmin && !isManager) {
-      toast.error('Você não tem permissão para acessar o módulo de avaliação.');
-      router.push('/dashboard');
+    // Aguardar o carregamento completo da autenticação
+    if (isLoading) {
+      console.log('🔄 Aguardando carregamento da autenticação...');
+      return;
     }
-  }, [hasEvaluationAccess, isAdmin, isManager, router]);
+
+    // Verificar se o usuário está autenticado
+    if (!user) {
+      console.log('❌ Usuário não autenticado, redirecionando para login');
+      router.push('/login');
+      return;
+    }
+
+    // Para o módulo de avaliação, permitir acesso para todos os usuários autenticados
+    console.log('✅ Usuário autenticado, permitindo acesso ao módulo de avaliação:', {
+      userId: user.id,
+      email: user.email
+    });
+  }, [router, user, isLoading]);
 
   // Estado para verificação de tabelas
   const [tablesChecked, setTablesChecked] = useState(false);
@@ -92,9 +106,9 @@ export default function AvaliacaoPage() {
   }, []);
 
   useEffect(() => {
-    // Verificar se o usuário tem acesso antes de buscar dados
-    if (!hasEvaluationAccess && !isAdmin && !isManager) {
-      console.log('Usuário não tem acesso ao módulo de avaliação');
+    // Verificar se o usuário está autenticado antes de buscar dados
+    if (!user) {
+      console.log('Usuário não autenticado, não buscando avaliações');
       return;
     }
 
@@ -122,14 +136,22 @@ export default function AvaliacaoPage() {
 
         // Abordagem simplificada: buscar diretamente da tabela avaliacoes
         console.log('Buscando avaliações na tabela avaliacoes...');
-        const { data: avaliacoes, error: avaliacoesError } = await supabase
+        let query = supabase
           .from('avaliacoes')
           .select(`
             *,
             funcionario:funcionario_id(id, nome, email),
             avaliador:avaliador_id(id, nome, email)
           `)
-          .is('deleted_at', null)
+          .is('deleted_at', null);
+
+        // Filtrar por usuário se não for admin ou manager
+        if (!isAdmin && !isManager) {
+          console.log('Filtrando avaliações para usuário comum:', user?.id);
+          query = query.eq('funcionario_id', user?.id || '');
+        }
+
+        const { data: avaliacoes, error: avaliacoesError } = await query
           .order('created_at', { ascending: false });
 
         if (avaliacoesError) {
@@ -279,19 +301,46 @@ export default function AvaliacaoPage() {
     }
   };
 
+  // Mostrar loading enquanto a autenticação está carregando
+  if (isLoading || !user || !profile) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">{t('avaliacao.avaliacoes.title', 'Lista de Avaliações')}</h1>
-          <div className="flex space-x-2">
-            <Link href="/avaliacao/lixeira" className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md flex items-center">
-              <FiTrash2 className="mr-2" /> {t('avaliacao.trashLink', 'Lixeira')}
-            </Link>
-            <Link href="/avaliacao/nova" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center">
-              <FiPlus className="mr-2" /> {t('avaliacao.novaAvaliacao', 'Nova Avaliação')}
-            </Link>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">
+              {isAdmin || isManager
+                ? t('avaliacao.avaliacoes.title', 'Lista de Avaliações')
+                : t('avaliacao.minhasAvaliacoes.title', 'Minhas Avaliações')
+              }
+            </h1>
+            {!isAdmin && !isManager && (
+              <p className="text-gray-600 mt-1">
+                {t('avaliacao.minhasAvaliacoes.description', 'Visualize suas avaliações de desempenho')}
+              </p>
+            )}
           </div>
+          {(isAdmin || isManager) && (
+            <div className="flex space-x-2">
+              <Link href="/avaliacao/lixeira" className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md flex items-center">
+                <FiTrash2 className="mr-2" /> {t('avaliacao.trashLink', 'Lixeira')}
+              </Link>
+              <Link href="/avaliacao/nova" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center">
+                <FiPlus className="mr-2" /> {t('avaliacao.novaAvaliacao', 'Nova Avaliação')}
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Mensagem de sucesso */}
@@ -368,8 +417,20 @@ export default function AvaliacaoPage() {
             )}
           </div>
         ) : filteredAvaliacoes.length === 0 ? (
-          <div className="bg-gray-50 border border-gray-200 text-gray-700 p-6 rounded-md text-center">
-            <p className="text-lg">{t('avaliacao.noAvaliacoes', 'Nenhuma avaliação encontrada.')}</p>
+          <div className="bg-gray-50 border border-gray-200 text-gray-700 p-8 rounded-md text-center">
+            <FiBarChart2 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              {isAdmin || isManager
+                ? t('avaliacao.noAvaliacoes', 'Nenhuma avaliação encontrada')
+                : t('avaliacao.noMinhasAvaliacoes', 'Você ainda não possui avaliações')
+              }
+            </h3>
+            <p className="text-gray-500">
+              {isAdmin || isManager
+                ? t('avaliacao.noAvaliacoesDesc', 'Nenhuma avaliação foi criada ainda. Clique em "Nova Avaliação" para começar.')
+                : t('avaliacao.noMinhasAvaliacoesDesc', 'Suas avaliações de desempenho aparecerão aqui quando forem criadas pelos seus supervisores.')
+              }
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto bg-white rounded-lg shadow">

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FiLayers, FiList, FiFileText, FiEdit, FiUsers, FiSettings, FiUserCheck, FiRefreshCw, FiBarChart2, FiKey } from 'react-icons/fi';
+import { FiLayers, FiList, FiFileText, FiEdit, FiUsers, FiSettings, FiUserCheck, FiRefreshCw, FiBarChart2, FiKey, FiTool, FiUserX, FiDollarSign, FiCheck } from 'react-icons/fi';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 
@@ -88,6 +88,16 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Configuração do Sistema */}
+        <AdminCard
+          title={t('admin.systemSetup')}
+          description={t('admin.systemSetupDesc')}
+          icon={FiTool}
+          href="/admin/setup"
+          color="border-gray-500"
+        />
+
+        {/* Gerenciamento de Conteúdo */}
         <AdminCard
           title={t('admin.cards')}
           description={t('admin.cardsDesc')}
@@ -106,7 +116,7 @@ export default function AdminDashboard() {
           title={t('admin.documentsSection')}
           description={t('admin.documentsDesc')}
           icon={FiFileText}
-          href="/admin/documentos"
+          href="/admin/documents"
           color="border-purple-500"
         />
         <AdminCard
@@ -116,6 +126,8 @@ export default function AdminDashboard() {
           href="/admin/noticias"
           color="border-pink-500"
         />
+
+        {/* Gerenciamento de Usuários */}
         <AdminCard
           title={t('admin.usersSection')}
           description={t('admin.usersSectionDesc')}
@@ -124,12 +136,51 @@ export default function AdminDashboard() {
           color="border-yellow-500"
         />
         <AdminCard
-          title={t('admin.settings')}
-          description={t('admin.settingsDesc')}
-          icon={FiSettings}
-          href="/admin/settings"
-          color="border-green-500"
+          title={t('admin.rolePermissions')}
+          description={t('admin.rolePermissionsDesc')}
+          icon={FiKey}
+          href="/admin/role-permissions"
+          color="border-orange-500"
         />
+        <AdminCard
+          title={t('admin.userApprovalSettings')}
+          description={t('admin.userApprovalSettingsDesc')}
+          icon={FiUserCheck}
+          href="/admin/user-approval-settings"
+          color="border-cyan-500"
+        />
+        <AdminCard
+          title={t('admin.bannedUsers')}
+          description={t('admin.bannedUsersDesc')}
+          icon={FiUserX}
+          href="/admin/banned-users"
+          color="border-red-500"
+        />
+
+        {/* Módulo de Reembolsos */}
+        <AdminCard
+          title={t('admin.myReimbursements')}
+          description={t('admin.myReimbursementsDesc')}
+          icon={FiDollarSign}
+          href="/reembolso?tab=dashboard"
+          color="border-green-600"
+        />
+        <AdminCard
+          title={t('admin.approveReimbursements')}
+          description={t('admin.approveReimbursementsDesc')}
+          icon={FiCheck}
+          href="/reembolso?tab=approval"
+          color="border-emerald-500"
+        />
+        <AdminCard
+          title={t('admin.reimbursementSettings')}
+          description={t('admin.reimbursementSettingsDesc')}
+          icon={FiSettings}
+          href="/admin/reimbursement-settings"
+          color="border-lime-500"
+        />
+
+        {/* Avaliação de Desempenho */}
         <AdminCard
           title={t('admin.avaliacao.title', 'Avaliação de Desempenho')}
           description={t('admin.avaliacao.description', 'Gerencie o módulo de avaliação de desempenho')}
@@ -137,12 +188,21 @@ export default function AdminDashboard() {
           href="/admin/avaliacao"
           color="border-teal-500"
         />
+
+        {/* Configurações Gerais */}
         <AdminCard
-          title="Permissões por Role"
-          description="Configure permissões padrão para cada tipo de usuário"
-          icon={FiKey}
-          href="/admin/role-permissions"
-          color="border-orange-500"
+          title={t('admin.settings')}
+          description={t('admin.settingsDesc')}
+          icon={FiSettings}
+          href="/admin/settings"
+          color="border-slate-500"
+        />
+        <AdminCard
+          title={t('admin.fixPermissions')}
+          description={t('admin.fixPermissionsDesc')}
+          icon={FiUserCheck}
+          href="/admin-fix"
+          color="border-amber-500"
         />
       </div>
 

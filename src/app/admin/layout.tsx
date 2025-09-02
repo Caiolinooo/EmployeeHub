@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FiSettings, FiGrid, FiUsers, FiFileText, FiMenu, FiX, FiLogOut, FiLayers, FiList, FiEdit, FiUser, FiUserCheck, FiDollarSign, FiCheck, FiTool, FiKey } from 'react-icons/fi';
+import { FiSettings, FiGrid, FiUsers, FiFileText, FiMenu, FiX, FiLogOut, FiLayers, FiList, FiEdit, FiUser, FiUserCheck, FiDollarSign, FiCheck, FiTool, FiKey, FiUserX } from 'react-icons/fi';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import Footer from '@/components/Footer';
@@ -22,14 +22,15 @@ const adminMenuItems = [
   { id: 'news', href: '/admin/news', label: 'admin.news', icon: FiEdit },
   { id: 'user-management', href: '/admin/user-management', label: 'admin.usersSection', icon: FiUsers },
   { id: 'role-permissions', href: '/admin/role-permissions', label: 'admin.rolePermissions', icon: FiKey },
-  { id: 'user-approval-settings', href: '/admin/user-approval-settings', label: 'Configurações de Aprovação', icon: FiUserCheck },
+  { id: 'user-approval-settings', href: '/admin/user-approval-settings', label: 'admin.userApprovalSettings', icon: FiUserCheck },
+  { id: 'banned-users', href: '/admin/banned-users', label: 'admin.bannedUsers', icon: FiUserX },
   // Seção de Reembolsos
-  { id: 'reimbursement-dashboard', href: '/reembolso?tab=dashboard', label: 'Meus Reembolsos', icon: FiDollarSign },
-  { id: 'reimbursement-approval', href: '/reembolso?tab=approval', label: 'Aprovar Reembolsos', icon: FiCheck },
-  { id: 'reimbursement-settings', href: '/admin/reimbursement-settings', label: 'Configurações de Reembolso', icon: FiSettings },
+  { id: 'reimbursement-dashboard', href: '/reembolso?tab=dashboard', label: 'admin.myReimbursements', icon: FiDollarSign },
+  { id: 'reimbursement-approval', href: '/reembolso?tab=approval', label: 'admin.approveReimbursements', icon: FiCheck },
+  { id: 'reimbursement-settings', href: '/admin/reimbursement-settings', label: 'admin.reimbursementSettings', icon: FiSettings },
   // Configurações gerais
   { id: 'settings', href: '/admin/settings', label: 'admin.settings', icon: FiSettings },
-  { id: 'admin-fix', href: '/admin-fix', label: 'Corrigir Permissões', icon: FiUserCheck },
+  { id: 'admin-fix', href: '/admin-fix', label: 'admin.fixPermissions', icon: FiUserCheck },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

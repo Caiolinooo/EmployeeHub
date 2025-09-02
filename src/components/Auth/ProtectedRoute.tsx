@@ -319,7 +319,8 @@ export default function ProtectedRoute({
     !isAuthenticated ||
     (adminOnly && !isAdmin && !forceAdmin && !isAvaliacaoRoute && !window.location.pathname.includes('/admin')) ||
     (managerOnly && !isAdmin && !isManager && !forceAdmin && !isAvaliacaoRoute) ||
-    (moduleName && !hasAccess(moduleName) && !isAdmin && !forceAdmin && !isAvaliacaoRoute)
+    (moduleName && moduleName !== 'avaliacao' && !hasAccess(moduleName) && !isAdmin && !forceAdmin && !isAvaliacaoRoute) ||
+    (moduleName === 'avaliacao' && !hasAccess(moduleName))
   )) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-abz-background">

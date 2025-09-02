@@ -52,14 +52,51 @@ export async function POST(
       );
     }
 
+    // Primeiro, buscar os dados do usuário para adicionar à lista de banidos
+    const { data: userToReject, error: fetchError } = await supabaseAdmin
+      .from('users_unified')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (fetchError || !userToReject) {
+      return NextResponse.json(
+        { error: 'Usuário não encontrado' },
+        { status: 404 }
+      );
+    }
+
+    // Adicionar usuário à lista de banidos permanentes
+    const { error: banError } = await supabaseAdmin
+      .from('banned_users')
+      .insert({
+        email: userToReject.email,
+        phone_number: userToReject.phone_number,
+        cpf: userToReject.cpf,
+        banned_by: payload.userId,
+        ban_reason: 'Usuário rejeitado pelo administrador',
+        original_user_id: userToReject.id,
+        first_name: userToReject.first_name,
+        last_name: userToReject.last_name,
+        banned_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+
+    if (banError) {
+      console.error('Erro ao adicionar usuário à lista de banidos:', banError);
+      // Continuar mesmo se falhar o banimento, pois a rejeição ainda deve ocorrer
+    }
+
     // Atualizar o status de autorização do usuário
     const { data, error } = await supabaseAdmin
       .from('users_unified')
-      .update({ 
+      .update({
         authorization_status: 'rejected',
+        active: false,
         updated_at: new Date().toISOString()
       })
-      .eq('_id', userId)
+      .eq('id', userId)
       .select();
 
     if (error) {

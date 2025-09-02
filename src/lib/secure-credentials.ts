@@ -113,6 +113,11 @@ export async function getCredential(key: string): Promise<string | null> {
     }
   }
   
+  if (!supabaseClient) {
+    console.error('Cliente Supabase não disponível para buscar credencial');
+    return null;
+  }
+
   try {
     // Buscar a credencial no Supabase
     const { data, error } = await supabaseClient

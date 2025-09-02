@@ -98,8 +98,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
               // Verificar permissões de gerente
               if (item.managerOnly && !(isAdmin || user?.role === 'MANAGER')) return false;
 
+              // Caso especial para avaliação - sempre mostrar para usuários autenticados
+              if (item.moduleKey === 'avaliacao') {
+                return !!user;
+              }
+
               // Verificar permissões de módulo específicas
-              if (item.moduleKey && !hasAccess(item.moduleKey) && !isAdmin) return false;
+              if (item.moduleKey && !hasAccess(item.moduleKey)) return false;
 
               return true;
             })

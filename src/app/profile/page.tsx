@@ -7,8 +7,7 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import MainLayout from '@/components/Layout/MainLayout';
 import ServerUserReimbursementSettings from '@/components/admin/ServerUserReimbursementSettings';
 import { supabase } from '@/lib/supabase';
-// Importar o componente Image diretamente, não usando o default
-import { default as NextImage } from 'next/image';
+import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import ChangePasswordTab from '@/components/Profile/ChangePasswordTab';
@@ -39,34 +38,47 @@ export default function ProfilePage() {
 
   useEffect(() => {
     setIsClient(true);
+  }, []);
 
-    // Redirect if not authenticated after loading
-    // This check should be primary
-    if (!isLoading && !user) {
+  useEffect(() => {
+    // Aguardar o carregamento completo da autenticação
+    if (isLoading) {
+      console.log('🔄 Aguardando carregamento da autenticação...');
+      return;
+    }
+
+    // Verificar se o usuário está autenticado
+    if (!user) {
+      console.log('❌ Usuário não autenticado, redirecionando para login');
       toast.error('Você precisa estar logado para acessar esta página.');
       router.replace('/login');
-      return; // Important to return early after redirect
+      return;
     }
 
-    // Carregar a foto de perfil se existir
-    if (profile?.id) {
-      loadProfileImage();
-
-      // Inicializar o formulário com os dados do perfil
-      // Usando type assertion para acessar propriedades que podem não estar definidas na interface
-      const extendedProfile = profile as any;
-      setFormData({
-        firstName: profile.first_name || '',
-        lastName: profile.last_name || '',
-        email: profile.email || '',
-        phoneNumber: profile.phone_number || '',
-        position: profile.position || '',
-        department: profile.department || '',
-        theme: extendedProfile.theme || 'light',
-        language: extendedProfile.language || 'pt-BR',
-        notifications: true // Valor padrão para notificações
-      });
+    // Aguardar o carregamento do perfil
+    if (!profile) {
+      console.log('🔄 Aguardando carregamento do perfil...');
+      return;
     }
+
+    console.log('✅ Usuário e perfil carregados, inicializando página de perfil');
+
+    // Carregar a foto de perfil
+    loadProfileImage();
+
+    // Inicializar o formulário com os dados do perfil
+    const extendedProfile = profile as any;
+    setFormData({
+      firstName: profile.first_name || '',
+      lastName: profile.last_name || '',
+      email: profile.email || '',
+      phoneNumber: profile.phone_number || '',
+      position: profile.position || '',
+      department: profile.department || '',
+      theme: extendedProfile.theme || 'light',
+      language: extendedProfile.language || 'pt-BR',
+      notifications: true
+    });
   }, [profile, isLoading, user, router]);
 
   // Função para carregar a imagem de perfil
@@ -77,29 +89,44 @@ export default function ProfilePage() {
     }
 
     try {
-      const { data } = await supabase
-        .storage
-        .from('profile-images')
-        .getPublicUrl(`${profile.id}/profile.jpg`);
+      // Buscar a URL da foto do Google Drive no banco de dados
+      const { data: userData, error } = await supabase
+        .from('users_unified')
+        .select('drive_photo_url, avatar')
+        .eq('id', profile.id)
+        .single();
 
-      if (!data?.publicUrl) {
-        console.error('Erro ao obter URL pública da imagem de perfil');
+      if (error) {
+        console.error('Erro ao buscar dados do usuário:', error);
+        setProfileImage(null);
+        return;
+      }
+
+      // Usar drive_photo_url se disponível, senão usar avatar como fallback
+      const photoUrl = userData?.drive_photo_url || userData?.avatar;
+
+      if (!photoUrl) {
         setProfileImage(null); // Fallback to icon
         return;
       }
 
       // Verify the image URL is accessible
-      const checkImage = new Image();
-      checkImage.onload = () => {
-        setProfileImage(data.publicUrl);
-      };
-      checkImage.onerror = () => {
-        console.warn('Imagem de perfil não encontrada ou inacessível na URL:', data.publicUrl);
-        setProfileImage(null); // Fallback to icon
-      };
-      checkImage.src = data.publicUrl;
+      if (typeof window !== 'undefined') {
+        const checkImage = new window.Image();
+        checkImage.onload = () => {
+          setProfileImage(photoUrl);
+        };
+        checkImage.onerror = () => {
+          console.warn('Imagem de perfil não encontrada ou inacessível na URL:', photoUrl);
+          setProfileImage(null); // Fallback to icon
+        };
+        checkImage.src = photoUrl;
+      } else {
+        // Server-side rendering fallback
+        setProfileImage(photoUrl);
+      }
 
-    } catch (error) { // Catch errors from the async/await block itself
+    } catch (error) {
       console.error('Erro geral ao carregar imagem de perfil:', error);
       setProfileImage(null); // Fallback to icon
     }
@@ -112,24 +139,39 @@ export default function ProfilePage() {
     try {
       setUploading(true);
 
-      // Upload da imagem para o bucket 'profile-images'
-      const { error } = await supabase
-        .storage
-        .from('profile-images')
-        .upload(`${profile.id}/profile.jpg`, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
+      const token = localStorage.getItem('token');
 
-      if (error) {
-        toast.error('Erro ao fazer upload da imagem');
-        console.error('Erro ao fazer upload:', error);
+      if (!token) {
+        toast.error('Não autorizado');
         return;
       }
 
-      // Atualizar a URL da imagem
-      await loadProfileImage();
-      toast.success('Imagem de perfil atualizada com sucesso');
+      // Criar FormData para upload via API do Google Drive
+      const formData = new FormData();
+      formData.append('photo', file);
+      formData.append('userId', profile.id);
+
+      const response = await fetch('/api/users-unified/upload-photo', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast.success('Foto de perfil atualizada com sucesso');
+
+        // Atualizar a URL da imagem
+        await loadProfileImage();
+
+        // Atualizar o perfil no contexto
+        await refreshProfile();
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Erro ao atualizar foto de perfil');
+      }
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
       toast.error('Erro ao fazer upload da imagem');
@@ -258,10 +300,6 @@ export default function ProfilePage() {
     }));
   };
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
   if (!isClient) {
     return null;
   }
@@ -309,7 +347,7 @@ export default function ProfilePage() {
               <div className="relative mb-4 md:mb-0 md:mr-8">
                 <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center border border-gray-200">
                   {profileImage ? (
-                    <NextImage
+                    <Image
                       src={profileImage}
                       alt="Foto de perfil"
                       width={128}

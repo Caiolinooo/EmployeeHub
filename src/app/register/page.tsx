@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useI18n } from '@/contexts/I18nContext';
 import { toast } from 'react-hot-toast';
-import { FaUser, FaEnvelope, FaPhone, FaBriefcase, FaBuilding } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaBriefcase, FaBuilding, FaIdCard } from 'react-icons/fa';
 import Image from 'next/image';
 import Link from 'next/link';
 import LanguageSelector from '@/components/LanguageSelector';
@@ -26,6 +26,7 @@ export default function RegisterPage() {
     phoneNumber: phoneFromUrl,
     position: '',
     department: '',
+    cpf: '',
     inviteCode: inviteCodeFromUrl,
   });
 
@@ -33,6 +34,21 @@ export default function RegisterPage() {
   const [protocol, setProtocol] = useState('');
   const [registrationComplete, setRegistrationComplete] = useState(false);
   const [accountActive, setAccountActive] = useState(false);
+
+  // Função para formatar CPF/CNPJ
+  const formatCpfCnpj = (value: string) => {
+    // Remove tudo que não é dígito
+    const numbers = value.replace(/\D/g, '');
+
+    // Se tem 11 dígitos ou menos, formata como CPF
+    if (numbers.length <= 11) {
+      return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
+    // Se tem mais de 11 dígitos, formata como CNPJ
+    else {
+      return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -42,7 +58,13 @@ export default function RegisterPage() {
       // Permitir apenas números, +, parênteses, traços e espaços
       const sanitizedValue = value.replace(/[^0-9+\s\(\)\-]/g, '');
       setFormData(prev => ({ ...prev, [name]: sanitizedValue }));
-    } else {
+    }
+    // Formatação especial para CPF/CNPJ
+    else if (name === 'cpf') {
+      const formatted = formatCpfCnpj(value);
+      setFormData(prev => ({ ...prev, [name]: formatted }));
+    }
+    else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
@@ -269,6 +291,27 @@ export default function RegisterPage() {
                 placeholder={t('register.phonePlaceholder')}
                 required
                 readOnly={!!phoneFromUrl}
+              />
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-medium mb-1" htmlFor="cpf">
+              {t('register.cpf')}
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FaIdCard className="text-gray-400" />
+              </div>
+              <input
+                type="text"
+                id="cpf"
+                name="cpf"
+                value={formData.cpf}
+                onChange={handleChange}
+                className="pl-10 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder={t('register.cpfPlaceholder')}
+                maxLength={14}
               />
             </div>
           </div>

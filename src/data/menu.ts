@@ -159,8 +159,9 @@ export function getTranslatedMenu(t: (key: string, defaultValue?: string) => str
       enabled: true,
       order: 12,
       adminOnly: false,
-      managerOnly: true, // Restringir acesso apenas para gerentes e administradores
-      forceShow: false // Não forçar exibição do item de menu
+      managerOnly: false, // Permitir acesso para todos os usuários
+      moduleKey: 'avaliacao', // Usar verificação de módulo
+      forceShow: false
     },
     {
       id: 'admin',

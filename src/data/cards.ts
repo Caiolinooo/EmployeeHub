@@ -76,6 +76,22 @@ export function getHardcodedCards(): DashboardCard[] {
       managerOnly: false,
     },
     {
+      id: 'avaliacao',
+      title: 'Avaliação de Desempenho',
+      description: 'Visualize suas avaliações de desempenho',
+      href: '/avaliacao',
+      icon: FiBarChart2,
+      iconName: 'FiBarChart2',
+      color: 'bg-abz-blue',
+      hoverColor: 'hover:bg-abz-blue-dark',
+      external: false,
+      enabled: true,
+      order: 2,
+      adminOnly: false,
+      managerOnly: false,
+      moduleKey: 'avaliacao',
+    },
+    {
       id: 'folhaPagamento',
       title: 'Folha de Pagamento',
       description: 'Gerencie a folha de pagamento dos colaboradores',
@@ -86,7 +102,7 @@ export function getHardcodedCards(): DashboardCard[] {
       hoverColor: 'hover:bg-green-600',
       external: false,
       enabled: true,
-      order: 2,
+      order: 3,
       adminOnly: false,
       managerOnly: true,
       moduleKey: 'folha_pagamento',
@@ -227,7 +243,7 @@ export function getTranslatedCards(t: (key: string) => string): DashboardCard[] 
       external: false,
       enabled: true,
       order: 10,
-      managerOnly: true
+      moduleKey: 'avaliacao' // Permite acesso baseado em permissões do módulo
     },
     {
       id: 'folha-pagamento',

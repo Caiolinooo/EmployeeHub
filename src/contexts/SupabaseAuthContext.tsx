@@ -363,15 +363,17 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   // Função para carregar o perfil do usuário a partir do token
   const loadUserProfileFromToken = async () => {
     try {
+      console.log('🔍 loadUserProfileFromToken - Iniciando carregamento do perfil...');
+
       // Obter o token usando o utilitário
       const token = getToken();
       if (!token) {
-        console.log('Nenhum token encontrado para carregar perfil');
+        console.log('❌ loadUserProfileFromToken - Nenhum token encontrado para carregar perfil');
         setIsLoading(false);
         return false;
       }
 
-      console.log('Carregando perfil do usuário a partir do token... Comprimento do token:', token.length);
+      console.log('✅ loadUserProfileFromToken - Token encontrado, comprimento:', token.length);
 
       // Verificar o token na API
       const verifyResponse = await fetch('/api/auth/verify-token', {
@@ -496,12 +498,6 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       // Atualizar o estado do perfil
       setProfile(profileData);
 
-      // Verificar se o perfil foi definido corretamente
-      setTimeout(() => {
-        console.log('Verificando se o perfil foi definido corretamente:');
-        console.log('User:', user);
-        console.log('Profile:', profile);
-      }, 100);
       console.log('Perfil do usuário carregado com sucesso a partir do token');
       setIsLoading(false);
       return true;
@@ -1560,26 +1556,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         if (token) {
           console.log('SupabaseAuthContext - Token encontrado, tentando carregar perfil...');
 
-          // Primeiro tentar carregar o perfil a partir do token
-          const tokenProfileLoaded = await loadUserProfileFromToken();
-
-          if (tokenProfileLoaded) {
-            console.log('SupabaseAuthContext - Perfil carregado com sucesso a partir do token');
-
-            // Verificar se o perfil foi realmente carregado
-            if (!profile) {
-              console.log('SupabaseAuthContext - Perfil não foi definido corretamente, tentando novamente...');
-
-              // Tentar novamente após um breve atraso
-              setTimeout(async () => {
-                const secondAttempt = await loadUserProfileFromToken();
-                console.log('SupabaseAuthContext - Segunda tentativa de carregar perfil:', secondAttempt ? 'Sucesso' : 'Falha');
-              }, 500);
-            }
-          } else {
-            console.log('SupabaseAuthContext - Falha ao carregar perfil do token, verificando sessão...');
-            await checkAuth();
-          }
+          // Carregar o perfil a partir do token
+          await loadUserProfileFromToken();
         } else {
           console.log('SupabaseAuthContext - Nenhum token encontrado, verificando sessão...');
           await checkAuth();
@@ -1786,11 +1764,9 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     if (isAdmin) return true;
     if (isManager) return true;
 
-    // Verificar permissões específicas para o módulo de avaliação
-    return !!(
-      profile.accessPermissions?.modules?.avaliacao ||
-      profile.access_permissions?.modules?.avaliacao
-    );
+    // Todos os usuários autenticados podem acessar o módulo de avaliação
+    // (para visualizar suas próprias avaliações)
+    return true;
   }, [profile, isAdmin, isManager]);
 
   return (
@@ -1817,7 +1793,22 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         updatePassword,
         checkPasswordStatus,
         hasAccess: (module: string) => {
-          console.log(`Verificando acesso ao módulo: ${module}`);
+          console.log(`🔍 Verificando acesso ao módulo: ${module}`);
+
+          // Caso especial para o módulo de avaliação - ACESSO UNIVERSAL
+          if (module === 'avaliacao') {
+            // Se há um usuário autenticado (mesmo sem profile carregado), permitir acesso
+            const hasUser = !!user;
+            console.log(`✅ Módulo avaliacao - Acesso ${hasUser ? 'PERMITIDO' : 'NEGADO'}:`, {
+              user: !!user,
+              userId: user?.id,
+              profile: !!profile,
+              isAdmin,
+              isManager
+            });
+            return hasUser;
+          }
+
           console.log('Estado atual do usuário:', {
             isAdmin,
             isManager,
@@ -1826,35 +1817,6 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
             accessPermissions: profile?.accessPermissions,
             access_permissions: profile?.access_permissions
           });
-
-          // Caso especial para o módulo de avaliação
-          if (module === 'avaliacao') {
-            // Administradores têm acesso
-            if (isAdmin) {
-              console.log('Usuário é admin, concedendo acesso ao módulo avaliacao');
-              return true;
-            }
-
-            // Gerentes têm acesso
-            if (profile?.role === 'MANAGER') {
-              console.log('Usuário é gerente (role), concedendo acesso ao módulo avaliacao');
-              return true;
-            }
-
-            // Verificar permissões específicas
-            const hasAvaliacaoPermission = !!(
-              profile?.accessPermissions?.modules?.avaliacao ||
-              profile?.access_permissions?.modules?.avaliacao
-            );
-
-            if (hasAvaliacaoPermission) {
-              console.log('Usuário tem permissão específica para o módulo avaliacao');
-              return true;
-            }
-
-            console.log('Usuário não tem acesso ao módulo avaliacao');
-            return false;
-          }
 
           // Para outros módulos, seguir a lógica padrão
 

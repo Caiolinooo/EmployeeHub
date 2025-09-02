@@ -55,11 +55,11 @@ export async function POST(
     // Atualizar o status de autorização do usuário
     const { data, error } = await supabaseAdmin
       .from('users_unified')
-      .update({ 
+      .update({
         authorization_status: 'active',
         updated_at: new Date().toISOString()
       })
-      .eq('_id', userId)
+      .eq('id', userId)
       .select();
 
     if (error) {

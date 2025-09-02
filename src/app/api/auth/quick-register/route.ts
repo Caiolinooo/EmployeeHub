@@ -3,6 +3,7 @@ import { sendVerificationEmail } from '@/lib/email';
 import { sendNewUserWelcomeEmail, sendAdminNotificationEmail } from '@/lib/notifications';
 import bcrypt from 'bcryptjs';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { checkIfUserIsBanned } from '@/lib/banned-users';
 
 // Função para gerar número de protocolo
 function generateProtocolNumber() {
@@ -55,6 +56,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'CPF deve ter 11 dígitos' },
         { status: 400 }
+      );
+    }
+
+    // Verificar se o usuário está banido permanentemente
+    const banCheck = await checkIfUserIsBanned(email, phoneNumber, cpf);
+    if (banCheck.isBanned) {
+      console.log('Tentativa de registro de usuário banido:', { email, phoneNumber, cpf });
+      return NextResponse.json(
+        {
+          error: 'Este usuário foi banido permanentemente e não pode se cadastrar novamente. Entre em contato com o administrador se acredita que isso é um erro.',
+          banned: true,
+          banInfo: {
+            bannedAt: banCheck.banInfo?.banned_at,
+            reason: banCheck.banInfo?.ban_reason
+          }
+        },
+        { status: 403 }
       );
     }
 

@@ -184,7 +184,13 @@ export default function Dashboard() {
                     if (!card.enabled) return false;
                     if (card.adminOnly && !isAdmin) return false;
                     if (card.managerOnly && !(isAdmin || user?.role === 'MANAGER')) return false;
-                    if (card.moduleKey && !hasAccess(card.moduleKey) && !isAdmin) return false;
+
+                    // Caso especial para avaliação - sempre mostrar para usuários autenticados
+                    if (card.moduleKey === 'avaliacao') {
+                      return !!user;
+                    }
+
+                    if (card.moduleKey && !hasAccess(card.moduleKey)) return false;
                     return true;
                   })
                   .sort((a, b) => a.order - b.order)

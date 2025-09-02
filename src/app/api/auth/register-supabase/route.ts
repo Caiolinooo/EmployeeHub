@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { sendVerificationEmail } from '@/lib/email';
 import { sendNewUserWelcomeEmail, sendAdminNotificationEmail } from '@/lib/notifications';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { checkIfUserIsBanned } from '@/lib/banned-users';
 
 // Função para gerar número de protocolo
 function generateProtocolNumber() {
@@ -29,12 +30,14 @@ export async function POST(request: NextRequest) {
       lastName,
       position,
       department,
-      inviteCode
+      inviteCode,
+      cpf
     } = body;
 
     // Normalizar e validar
     const normalizedEmail = (email || '').trim().toLowerCase();
     const normalizedPhone = (phoneNumber || '').trim();
+    const normalizedCpf = (cpf || '').trim();
 
     // Gerar número de protocolo cedo para estar disponível em todas as respostas de sucesso
     const protocol = generateProtocolNumber();
@@ -46,6 +49,7 @@ export async function POST(request: NextRequest) {
       lastName,
       position,
       department,
+      cpf: normalizedCpf || 'não informado',
       hasInviteCode: !!inviteCode
     });
 
@@ -54,6 +58,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Todos os campos obrigatórios devem ser preenchidos' },
         { status: 400 }
+      );
+    }
+
+    // Verificar se o usuário está banido permanentemente
+    const banCheck = await checkIfUserIsBanned(normalizedEmail, normalizedPhone, normalizedCpf);
+    if (banCheck.isBanned) {
+      console.log('Tentativa de registro de usuário banido:', { email: normalizedEmail, phone: normalizedPhone, cpf: normalizedCpf });
+      return NextResponse.json(
+        {
+          error: 'Este usuário foi banido permanentemente e não pode se cadastrar novamente. Entre em contato com o administrador se acredita que isso é um erro.',
+          banned: true,
+          banInfo: {
+            bannedAt: banCheck.banInfo?.banned_at,
+            reason: banCheck.banInfo?.ban_reason
+          }
+        },
+        { status: 403 }
       );
     }
 
@@ -229,6 +250,7 @@ export async function POST(request: NextRequest) {
       last_name: lastName,
       position: position || 'Não informado',
       department: department || 'Não informado',
+      tax_id: normalizedCpf || null, // CPF/CNPJ opcional
       role: 'USER',
       active: false, // Sempre inativo até verificar email
       is_authorized: true, // Autorizado para receber email de verificação

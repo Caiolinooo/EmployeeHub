@@ -78,8 +78,8 @@ export function PhotoUploadModal({ isOpen, onClose, userId, currentPhotoUrl }: P
         toast.success(t('profile.photoUploaded', 'Foto de perfil atualizada com sucesso'));
         onClose();
         
-        // Recarregar a página para mostrar a nova foto
-        window.location.reload();
+        // Não recarregar a página, deixar o componente pai atualizar
+        // window.location.reload();
       } else {
         const error = await response.json();
         toast.error(error.error || t('profile.photoUploadError', 'Erro ao atualizar foto de perfil'));

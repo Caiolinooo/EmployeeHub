@@ -340,6 +340,20 @@ export async function DELETE(
     // Armazenar informações do usuário para o log
     const userInfo = `${user.first_name} ${user.last_name} (${user.phone_number})`;
 
+    // Remover usuário da lista de banidos (se estiver banido)
+    // Isso permite que o usuário se cadastre novamente
+    const { error: unbanError } = await supabaseAdmin
+      .from('banned_users')
+      .delete()
+      .or(`email.eq.${user.email},phone_number.eq.${user.phone_number},cpf.eq.${user.cpf}`);
+
+    if (unbanError) {
+      console.error('Erro ao remover usuário da lista de banidos:', unbanError);
+      // Continuar mesmo se falhar, pois a exclusão ainda deve ocorrer
+    } else {
+      console.log(`Usuário ${userInfo} removido da lista de banidos (se estava banido)`);
+    }
+
     // Excluir o usuário
     const { error: deleteError } = await supabaseAdmin
       .from('users_unified')
