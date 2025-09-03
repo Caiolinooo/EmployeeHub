@@ -59,6 +59,6 @@ EMAIL_SECURE=true
 EMAIL_USER=apiabzgroup@gmail.com
 EMAIL_PASSWORD=zbli vdst fmco dtfc
 EMAIL_FROM=apiabzgroup@gmail.com
-NEXT_PUBLIC_APP_URL=https://painelabz.netlify.app
-NEXT_PUBLIC_API_URL=https://painelabz.netlify.app/api
+NEXT_PUBLIC_APP_URL=https://painelabzgroup.netlify.app
+NEXT_PUBLIC_API_URL=https://painelabzgroup.netlify.app/api
 ```

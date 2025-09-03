@@ -1,2 +1,0 @@
-This is a test file for profile photo upload testing.
-It simulates an image file for testing purposes.

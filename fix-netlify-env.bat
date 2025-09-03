@@ -34,8 +34,8 @@ netlify env:set EMAIL_SECURE "true"
 netlify env:set EMAIL_USER "apiabzgroup@gmail.com"
 netlify env:set EMAIL_PASSWORD "zbli vdst fmco dtfc"
 netlify env:set EMAIL_FROM "apiabzgroup@gmail.com"
-netlify env:set NEXT_PUBLIC_APP_URL "https://painelabz.netlify.app"
-netlify env:set NEXT_PUBLIC_API_URL "https://painelabz.netlify.app/api"
+netlify env:set NEXT_PUBLIC_APP_URL "https://painelabzgroup.netlify.app"
+netlify env:set NEXT_PUBLIC_API_URL "https://painelabzgroup.netlify.app/api"
 
 echo ✅ Variáveis de ambiente aplicadas!
 

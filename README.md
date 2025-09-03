@@ -12,7 +12,7 @@
 
 **Sistema completo de gestão empresarial com foco em reembolsos, avaliações e administração de usuários**
 
-[🌐 Demo Live](https://painelabz.netlify.app) • [📖 Documentação](#-documentação) • [🚀 Deploy](#-deploy)
+[🌐 Demo Live](https://painelabzgroup.netlify.app) • [📖 Documentação](#-documentação) • [🚀 Deploy](#-deploy)
 
 </div>
 
