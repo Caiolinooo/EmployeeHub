@@ -5,6 +5,7 @@ import { FiHeart, FiMessageCircle, FiShare2, FiBookmark, FiMoreHorizontal, FiEye
 import { useACLPermissions } from '@/hooks/useACLPermissions';
 import { useI18n } from '@/contexts/I18nContext';
 import InstagramStylePostCreator from './InstagramStylePostCreator';
+import NewsCommentSection from './NewsCommentSection';
 
 interface NewsPost {
   id: string;
@@ -57,6 +58,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
 
   const { hasPermission } = useACLPermissions(userId);
 
@@ -194,6 +196,25 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
     return date.toLocaleDateString('pt-BR');
   };
 
+  // Compartilhar post
+  const handleShare = async (post: NewsPost) => {
+    try {
+      const shareData: ShareData = {
+        title: post.title,
+        text: post.excerpt || post.title,
+        url: `${window.location.origin}/noticias?id=${post.id}`
+      };
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareData.url || '');
+        alert('Link copiado para a área de transferência');
+      }
+    } catch (e) {
+      console.error('Falha ao compartilhar:', e);
+    }
+  };
+
   // Renderizar post individual
   const renderPost = (post: NewsPost) => (
     <div key={post.id} className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
@@ -209,7 +230,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
                 {post.author.first_name} {post.author.last_name}
               </h3>
               {post.category && (
-                <span 
+                <span
                   className="px-2 py-1 text-xs rounded-full text-white"
                   style={{ backgroundColor: post.category.color }}
                 >
@@ -240,7 +261,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
       <div className="px-4 pb-3">
         <h2 className="text-lg font-semibold text-gray-900 mb-2">{post.title}</h2>
         <p className="text-gray-700 leading-relaxed">{post.excerpt}</p>
-        
+
         {/* Tags */}
         {Array.isArray(post.tags) && post.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-3">
@@ -324,18 +345,34 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
                 {post.user_liked && (
                   <div className="absolute inset-0 animate-ping">
                     <FiHeart className="w-5 h-5 text-red-300 fill-current" />
+      </div>
+
+      {/* Comentários */}
+      {expandedComments[post.id] && (
+        <div className="px-4 pb-4">
+          {/* Seção de comentários para News */}
+          <NewsCommentSection postId={post.id} userId={userId || ''} />
+        </div>
+      )}
+
                   </div>
                 )}
               </div>
               <span className="text-sm font-medium">{post.likes_count}</span>
             </button>
 
-            <button className="flex items-center space-x-2 text-gray-500 hover:text-blue-500 transition-colors">
+            <button
+              onClick={() => setExpandedComments(prev => ({ ...prev, [post.id]: !prev[post.id] }))}
+              className="flex items-center space-x-2 text-gray-500 hover:text-blue-500 transition-colors"
+            >
               <FiMessageCircle className="w-5 h-5" />
               <span className="text-sm font-medium">{post.comments_count}</span>
             </button>
 
-            <button className="flex items-center space-x-2 text-gray-500 hover:text-green-500 transition-colors">
+            <button
+              onClick={() => handleShare(post)}
+              className="flex items-center space-x-2 text-gray-500 hover:text-green-500 transition-colors"
+            >
               <FiShare2 className="w-5 h-5" />
               <span className="text-sm font-medium">Compartilhar</span>
             </button>
