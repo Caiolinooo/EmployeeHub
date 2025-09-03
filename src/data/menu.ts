@@ -16,7 +16,8 @@ import {
   FiSettings,
   FiUsers,
   FiKey,
-  FiBarChart2
+  FiBarChart2,
+  FiPlay
 } from 'react-icons/fi';
 import { IconType } from 'react-icons';
 
@@ -164,13 +165,25 @@ export function getTranslatedMenu(t: (key: string, defaultValue?: string) => str
       forceShow: false
     },
     {
+      id: 'academy',
+      title: 'ABZ Academy',
+      href: '/academy',
+      icon: FiPlay,
+      external: false,
+      enabled: true,
+      order: 13,
+      adminOnly: false,
+      managerOnly: false,
+      moduleKey: 'academy'
+    },
+    {
       id: 'admin',
       title: t('menu.administracao') || 'Administração',
       href: '/admin',
       icon: FiSettings,
       external: false,
       enabled: true,
-      order: 13,
+      order: 14,
       adminOnly: true
     },
     // Removido o item 'usuarios-autorizados' do menu principal

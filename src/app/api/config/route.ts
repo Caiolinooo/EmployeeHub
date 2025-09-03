@@ -12,7 +12,12 @@ const defaultConfig: SiteConfig = {
   secondaryColor: "#6339F5", // abz-purple
   companyName: "ABZ Group",
   contactEmail: "contato@groupabz.com",
-  footerText: "© 2024 ABZ Group. Todos os direitos reservados."
+  footerText: "© 2024 ABZ Group. Todos os direitos reservados.",
+  dashboardTitle: "Painel de Logística ABZ Group",
+  dashboardDescription: "Bem-vindo ao centro de recursos para colaboradores da logística.",
+  googleClientId: "",
+  googleClientSecret: "",
+  googleRedirectUri: ""
 };
 
 // GET - Obter a configuração do site
@@ -24,7 +29,7 @@ export async function GET() {
       .from('SiteConfig')
       .select('*')
       .eq('id', 'default')
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Erro ao buscar configuração:', error);
@@ -67,12 +72,17 @@ export async function PUT(request: NextRequest) {
       companyName,
       contactEmail,
       footerText,
+      dashboardTitle,
+      dashboardDescription,
+      googleClientId,
+      googleClientSecret,
+      googleRedirectUri
     } = body;
 
-    // Validar os dados de entrada
-    if (!title || !description || !logo || !favicon || !primaryColor || !secondaryColor || !companyName || !contactEmail || !footerText) {
+    // Validar os dados de entrada obrigatórios
+    if (!title || !description || !companyName || !contactEmail) {
       return NextResponse.json(
-        { error: 'Todos os campos são obrigatórios' },
+        { error: 'Campos obrigatórios: title, description, companyName, contactEmail' },
         { status: 400 }
       );
     }
@@ -102,6 +112,11 @@ export async function PUT(request: NextRequest) {
       companyName,
       contactEmail,
       footerText,
+      dashboardTitle,
+      dashboardDescription,
+      googleClientId,
+      googleClientSecret,
+      googleRedirectUri,
       updatedAt: new Date()
     };
 

@@ -13,8 +13,10 @@ import {
   FiDollarSign,
   FiClock,
   FiUser,
+  FiUsers,
   FiBarChart2,
-  FiActivity
+  FiActivity,
+  FiPlay
 } from 'react-icons/fi';
 import { IconType } from 'react-icons';
 
@@ -31,6 +33,7 @@ export const iconMap: { [key: string]: IconType } = {
   FiUser,
   FiBarChart2,
   FiActivity,
+  FiPlay,
   // Adicione outros ícones do react-icons/fi aqui se necessário
   // Exemplo: FiAlertCircle: FiAlertCircle,
 };
@@ -106,6 +109,38 @@ export function getHardcodedCards(): DashboardCard[] {
       adminOnly: false,
       managerOnly: true,
       moduleKey: 'folha_pagamento',
+    },
+    {
+      id: 'academy',
+      title: 'ABZ Academy',
+      description: 'Centro de treinamento e desenvolvimento profissional',
+      href: '/academy',
+      icon: FiPlay,
+      iconName: 'FiPlay',
+      color: 'bg-blue-600',
+      hoverColor: 'hover:bg-blue-700',
+      external: false,
+      enabled: true,
+      order: 4,
+      adminOnly: false,
+      managerOnly: false,
+      moduleKey: 'academy',
+    },
+    {
+      id: 'social',
+      title: 'ABZ Social',
+      description: 'Rede social interna da empresa',
+      href: '/social',
+      icon: FiUsers,
+      iconName: 'FiUsers',
+      color: 'bg-purple-600',
+      hoverColor: 'hover:bg-purple-700',
+      external: false,
+      enabled: true,
+      order: 5,
+      adminOnly: false,
+      managerOnly: false,
+      moduleKey: 'social',
     },
     // Adicionar outros cards aqui conforme necessário
   ];
@@ -259,6 +294,38 @@ export function getTranslatedCards(t: (key: string) => string): DashboardCard[] 
       order: 11,
       managerOnly: true,
       moduleKey: 'folha_pagamento'
+    },
+    {
+      id: 'academy',
+      title: 'ABZ Academy',
+      description: 'Centro de treinamento e desenvolvimento profissional',
+      href: '/academy',
+      icon: FiPlay,
+      iconName: 'FiPlay',
+      color: 'bg-blue-600',
+      hoverColor: 'hover:bg-blue-700',
+      external: false,
+      enabled: true,
+      order: 12,
+      adminOnly: false,
+      managerOnly: false,
+      moduleKey: 'academy'
+    },
+    {
+      id: 'social',
+      title: 'ABZ Social',
+      description: 'Rede social interna da empresa',
+      href: '/social',
+      icon: FiUsers,
+      iconName: 'FiUsers',
+      color: 'bg-purple-600',
+      hoverColor: 'hover:bg-purple-700',
+      external: false,
+      enabled: true,
+      order: 13,
+      adminOnly: false,
+      managerOnly: false,
+      moduleKey: 'social'
     },
     {
       id: 'admin',

@@ -25,6 +25,7 @@ export async function GET() {
         { id: 'noticias', label: 'Notícias', description: 'Notícias da empresa' },
         { id: 'reembolso', label: 'Reembolso', description: 'Sistema de reembolsos' },
         { id: 'contracheque', label: 'Contracheque', description: 'Contracheques dos funcionários' },
+        { id: 'academy', label: 'ABZ Academy', description: 'Centro de treinamento e desenvolvimento profissional' },
         { id: 'ponto', label: 'Ponto', description: 'Sistema de ponto eletrônico' },
         { id: 'admin', label: 'Administração', description: 'Área administrativa do sistema' },
         { id: 'avaliacao', label: 'Avaliação', description: 'Sistema de avaliações' }

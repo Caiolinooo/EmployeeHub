@@ -16,6 +16,7 @@ import dashboardCards, { getTranslatedCards, DashboardCard, iconMap } from '@/da
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useSiteConfig } from '@/contexts/SiteConfigContext';
+import DashboardSearch from '@/components/Search/DashboardSearch';
 
 // Error Fallback Component
 function ErrorFallback({error, resetErrorBoundary}: {error: Error; resetErrorBoundary: () => void}) {
@@ -70,9 +71,61 @@ export default function Dashboard() {
         setLoadingCards(true);
         setError(null);
 
-        const response = await fetch('/api/cards');
+        console.log('🔄 Dashboard - Carregando cards do Supabase...');
+
+        // SEMPRE tentar carregar do Supabase primeiro
+        let response = await fetch('/api/cards/supabase', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: user?.id,
+            userRole: user?.role,
+            userEmail: user?.email,
+            userPhone: user?.phone_number
+          })
+        });
+
+        // Se falhar, tentar fazer upgrade da tabela
         if (!response.ok) {
-          throw new Error('Failed to fetch cards');
+          console.warn('⚠️ Erro ao carregar do Supabase, tentando upgrade da tabela...');
+
+          try {
+            const upgradeResponse = await fetch('/api/admin/cards/upgrade-table', {
+              method: 'POST'
+            });
+
+            if (upgradeResponse.ok) {
+              console.log('✅ Tabela cards atualizada, tentando novamente...');
+
+              // Tentar novamente após upgrade
+              response = await fetch('/api/cards/supabase', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  userId: user?.id,
+                  userRole: user?.role,
+                  userEmail: user?.email,
+                  userPhone: user?.phone_number
+                })
+              });
+            }
+          } catch (upgradeError) {
+            console.warn('⚠️ Erro no upgrade da tabela:', upgradeError);
+          }
+        }
+
+        // Se ainda falhar, usar API de fallback
+        if (!response.ok) {
+          console.warn('⚠️ Usando API de fallback...');
+          response = await fetch('/api/cards');
+        }
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch cards from all sources');
         }
 
         const data = await response.json();
@@ -83,9 +136,9 @@ export default function Dashboard() {
           const description = currentLanguage === 'en-US' && card.descriptionEn ? card.descriptionEn : card.description;
 
           // Resolve icon component from iconName string
-          let resolvedIcon = iconMap[card.icon]; // card.icon is expected to be a string like 'FiBookOpen'
+          let resolvedIcon = iconMap[card.iconName || card.icon];
           if (!resolvedIcon) {
-            console.warn(`Icon not found in map: ${card.icon}. Using default.`);
+            console.warn(`Icon not found in map: ${card.iconName || card.icon}. Using default.`);
             resolvedIcon = FiAlertCircle; // Fallback icon
           }
 
@@ -93,19 +146,24 @@ export default function Dashboard() {
             ...card,
             title,
             description,
-            icon: resolvedIcon, // Use the resolved icon component
+            icon: resolvedIcon,
+            moduleKey: card.module_key || card.moduleKey // Garantir que moduleKey está presente
           };
         });
+
+        console.log(`✅ ${dbCards.length} cards carregados com sucesso`);
 
         if (dbCards && dbCards.length > 0) {
           setCards(dbCards);
         } else {
           // Se não há cards no banco, usar cards estáticos traduzidos
+          console.log('⚠️ Nenhum card encontrado, usando cards hardcoded');
           setCards(getTranslatedCards((key: string) => t(key)));
         }
       } catch (err) {
         console.error('Error loading cards:', err);
         // Fallback to static cards - refresh with current translations
+        console.log('⚠️ Erro crítico, usando cards hardcoded');
         setCards(getTranslatedCards((key: string) => t(key)));
       } finally {
         setLoadingCards(false);
@@ -159,17 +217,27 @@ export default function Dashboard() {
               {user && (
                 <div className="mb-4">
                   <h1 className="text-2xl font-bold text-gray-800">
-                    {t('dashboard.greeting', locale === 'en-US' ? 'Welcome' : 'Olá')}, {(user as any).first_name || (user as any).firstName || user.email?.split('@')[0]}! 👋
+                    {t('dashboard.greeting', locale === 'en-US' ? 'Welcome' : 'Olá')}, {
+                      (user as any).first_name?.split(' ')[0] ||
+                      (user as any).firstName?.split(' ')[0] ||
+                      user.email?.split('@')[0]?.split('.')[0] ||
+                      'Usuário'
+                    }! 👋
                   </h1>
                 </div>
               )}
 
               <h2 className="text-3xl font-extrabold text-abz-blue-dark">
-                {t('dashboard.logisticsPanel')}
+                {config.dashboardTitle || t('dashboard.logisticsPanel')}
               </h2>
               <p className="mt-2 text-sm text-gray-500">
-                {t('dashboard.welcomeMessage')}
+                {config.dashboardDescription || t('dashboard.welcomeMessage')}
               </p>
+            </div>
+
+            {/* Busca Global */}
+            <div className="mb-8">
+              <DashboardSearch />
             </div>
 
             {loadingCards && <LoadingSpinner />}
@@ -196,6 +264,11 @@ export default function Dashboard() {
 
                     // Caso especial para avaliação - sempre mostrar para usuários autenticados
                     if (card.moduleKey === 'avaliacao') {
+                      return !!user;
+                    }
+
+                    // Caso especial para academy - sempre mostrar para usuários autenticados
+                    if (card.moduleKey === 'academy') {
                       return !!user;
                     }
 

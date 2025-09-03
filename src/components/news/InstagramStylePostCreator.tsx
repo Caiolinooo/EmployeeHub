@@ -93,10 +93,27 @@ const InstagramStylePostCreator: React.FC<InstagramStylePostCreatorProps> = ({
   // Compartilhar post
   const handleShare = async () => {
     setIsUploading(true);
-    
+
     try {
-      // Simular upload de imagens (em produção, fazer upload real)
-      const mediaUrls = previewUrls; // Em produção, fazer upload para storage
+      // Upload real de imagens via API local (/api/upload) que salva em public/uploads
+      let mediaUrls: string[] = [];
+      if (selectedFiles.length > 0) {
+        const form = new FormData();
+        form.append('folder', 'posts');
+        selectedFiles.forEach((file) => {
+          form.append('file', file);
+        });
+        const uploadResp = await fetch('/api/news/upload', { method: 'POST', body: form });
+        if (uploadResp.ok) {
+          const uploadData = await uploadResp.json();
+          mediaUrls = (uploadData.files || []).map((f: any) => f.url);
+        } else {
+          console.warn('Falha no upload, usando previews');
+          mediaUrls = previewUrls;
+        }
+      } else {
+        mediaUrls = previewUrls;
+      }
 
       const newPost = {
         title: postData.title || 'Nova publicação',

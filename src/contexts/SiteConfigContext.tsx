@@ -20,7 +20,12 @@ const defaultConfig: SiteConfig = {
   secondaryColor: "#6339F5", // abz-purple
   companyName: "ABZ Group",
   contactEmail: "contato@groupabz.com",
-  footerText: "© 2024 ABZ Group. Todos os direitos reservados."
+  footerText: "© 2024 ABZ Group. Todos os direitos reservados.",
+  dashboardTitle: "Centro de Recursos ABZ Group",
+  dashboardDescription: "Bem-vindo ao centro de recursos para colaboradores da logística.",
+  googleClientId: "",
+  googleClientSecret: "",
+  googleRedirectUri: ""
 };
 
 const SiteConfigContext = createContext<SiteConfigContextType | undefined>(undefined);

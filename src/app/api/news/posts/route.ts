@@ -232,7 +232,34 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Post criado: ${newPost.title} (ID: ${newPost.id})`);
 
-    // TODO: Enviar notificações para usuários relevantes
+    // Notificar usuários ativos sobre nova publicação
+    try {
+      const { data: users } = await supabaseAdmin
+        .from('users_unified')
+        .select('id, first_name, last_name, role')
+        .eq('is_active', true);
+
+      if (users && users.length > 0) {
+        const notifications = users.map(u => ({
+          user_id: u.id,
+          type: 'news_post',
+          title: 'Nova publicação no ABZ News',
+          message: `${author?.first_name || 'Alguém'} publicou: ${title}`,
+          data: {
+            post_id: newPost.id,
+            category_id: category_id || null,
+            featured: !!featured
+          },
+          action_url: `/noticias`,
+          priority: 'normal',
+          created_at: new Date().toISOString()
+        }));
+        await supabaseAdmin.from('notifications').insert(notifications as any);
+      }
+    } catch (notifyError) {
+      console.warn('Falha ao criar notificações de novo post:', notifyError);
+    }
+
     // TODO: Agendar publicação se scheduled_for estiver definido
 
     return NextResponse.json(newPost, { status: 201 });

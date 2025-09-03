@@ -12,6 +12,8 @@ import { useI18n } from '@/contexts/I18nContext';
 import { useSiteConfig } from '@/contexts/SiteConfigContext';
 import LanguageSelector from '@/components/LanguageSelector';
 import PerformanceMonitor from '@/components/Performance/PerformanceMonitor';
+import GlobalSearch from '@/components/GlobalSearch';
+import NotificationBell from '@/components/Academy/NotificationBell';
 import { getTranslatedMenu } from '@/data/menu';
 import { startMeasure, endMeasure, logPerformance } from '@/lib/performance';
 import { PasswordRequiredGuard } from '@/components/Auth/PasswordRequiredGuard';
@@ -134,6 +136,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 return !!user;
               }
 
+              // Caso especial para academy - sempre mostrar para usuários autenticados
+              if (item.moduleKey === 'academy') {
+                return !!user;
+              }
+
               // Verificar permissões de módulo específicas
               if (item.moduleKey && !hasAccess(item.moduleKey)) return false;
 
@@ -163,11 +170,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
             })}
         </nav>
 
-        {/* Seletor de idioma, Perfil e Botão de Logout no Sidebar */}
+        {/* Busca Global, Seletor de idioma, Perfil e Botão de Logout no Sidebar */}
         <div className={`${isCollapsed ? 'p-2' : 'p-4'} border-t space-y-3`}>
             {!isCollapsed && (
-              <div className="flex items-center justify-center">
+              <div className="space-y-3">
+                <GlobalSearch />
+                <div className="flex items-center justify-center">
                   <LanguageSelector variant="inline" />
+                </div>
               </div>
             )}
             <Link
@@ -207,12 +217,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
                     </Link>
                     </div>
                     {/* TODO: Adicionar botão para abrir/fechar um *sidebar mobile* se necessário */}
-                     <div className="flex items-center">
-                         {/* Placeholder para botão de menu mobile se for diferente de um sidebar fixo */}
-                         <LanguageSelector variant="dropdown" className="mr-2" />
+                     <div className="flex items-center space-x-2">
+                         {/* Busca Global para mobile */}
+                         <GlobalSearch />
+                         <NotificationBell />
+                         <LanguageSelector variant="dropdown" />
                          <Link
                             href="/profile"
-                            className="ml-2 px-3 py-1.5 rounded-md text-sm font-medium text-abz-blue bg-gray-100 hover:bg-gray-200"
+                            className="px-3 py-1.5 rounded-md text-sm font-medium text-abz-blue bg-gray-100 hover:bg-gray-200"
                          >
                             <FiUser />
                          </Link>

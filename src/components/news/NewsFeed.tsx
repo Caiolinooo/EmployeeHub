@@ -367,7 +367,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
   return (
     <div className="max-w-2xl mx-auto">
       {/* Create Post Card - Instagram Style */}
-      {userId && hasPermission('news.create') && (
+      {userId && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6 p-4">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
@@ -440,8 +440,8 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
       {!loading && posts.length === 0 && (
         <div className="text-center py-12">
           <div className="text-gray-500 mb-2">Nenhum post encontrado</div>
-          {hasPermission('news.create') && (
-            <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+          {userId && (
+            <button onClick={() => setShowCreateModal(true)} className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
               Criar Primeiro Post
             </button>
           )}

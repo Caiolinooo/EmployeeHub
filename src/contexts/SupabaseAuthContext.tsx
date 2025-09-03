@@ -108,6 +108,7 @@ interface AuthContextType {
   checkPasswordStatus: () => Promise<boolean>;
   hasAccess: (module: string) => boolean;
   hasFeature: (feature: string) => boolean;
+  getToken: () => string | null;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
   logout: () => Promise<void>;
@@ -1269,7 +1270,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
                   noticias: true,
                   reembolso: true,
                   contracheque: true,
-                  ponto: true
+                  ponto: true,
+                  academy: true
                 };
 
                 // Adicionar permissão de admin se for admin
@@ -1472,7 +1474,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
                 noticias: true,
                 reembolso: true,
                 contracheque: true,
-                ponto: true
+                ponto: true,
+                academy: true
               };
 
               // Adicionar permissão de admin se for admin
@@ -1809,6 +1812,20 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
             return hasUser;
           }
 
+          // Caso especial para o módulo Academy - ACESSO UNIVERSAL
+          if (module === 'academy') {
+            // Se há um usuário autenticado (mesmo sem profile carregado), permitir acesso
+            const hasUser = !!user;
+            console.log(`✅ Módulo academy - Acesso ${hasUser ? 'PERMITIDO' : 'NEGADO'}:`, {
+              user: !!user,
+              userId: user?.id,
+              profile: !!profile,
+              isAdmin,
+              isManager
+            });
+            return hasUser;
+          }
+
           console.log('Estado atual do usuário:', {
             isAdmin,
             isManager,
@@ -1898,7 +1915,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
           }
         },
         signOut,
-        logout
+        logout,
+        getToken: () => getToken()
       }}
     >
       {children}

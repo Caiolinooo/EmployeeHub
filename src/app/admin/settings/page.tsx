@@ -309,6 +309,44 @@ export default function SettingsPage() {
                 />
               </div>
 
+              <div>
+                <label htmlFor="dashboardTitle" className="block text-sm font-medium text-gray-700 mb-1">
+                  Título do Dashboard
+                </label>
+                <input
+                  type="text"
+                  id="dashboardTitle"
+                  name="dashboardTitle"
+                  value={config.dashboardTitle}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
+                  placeholder="Ex: Painel de Logística ABZ Group"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Este título aparecerá na página principal do dashboard
+                </p>
+              </div>
+
+              <div>
+                <label htmlFor="dashboardDescription" className="block text-sm font-medium text-gray-700 mb-1">
+                  Descrição do Dashboard
+                </label>
+                <input
+                  type="text"
+                  id="dashboardDescription"
+                  name="dashboardDescription"
+                  value={config.dashboardDescription}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
+                  placeholder="Ex: Bem-vindo ao centro de recursos para colaboradores da logística."
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Este texto aparecerá abaixo do título do dashboard
+                </p>
+              </div>
+
               <div className="md:col-span-2">
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
                   Descrição
@@ -353,6 +391,76 @@ export default function SettingsPage() {
                   required
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Integração Google Calendar */}
+          <div className="mb-8">
+            <h4 className="text-md font-medium text-gray-900 mb-4">Integração Google Calendar</h4>
+            <p className="text-sm text-gray-600 mb-4">
+              Configure a integração global com Google Calendar. Esta configuração será aplicada para todos os usuários do sistema.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="googleClientId" className="block text-sm font-medium text-gray-700 mb-1">
+                  Google Client ID
+                </label>
+                <input
+                  type="text"
+                  id="googleClientId"
+                  name="googleClientId"
+                  value={config.googleClientId || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
+                  placeholder="Seu Google Client ID"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="googleClientSecret" className="block text-sm font-medium text-gray-700 mb-1">
+                  Google Client Secret
+                </label>
+                <input
+                  type="password"
+                  id="googleClientSecret"
+                  name="googleClientSecret"
+                  value={config.googleClientSecret || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
+                  placeholder="Seu Google Client Secret"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label htmlFor="googleRedirectUri" className="block text-sm font-medium text-gray-700 mb-1">
+                  Redirect URI
+                </label>
+                <input
+                  type="url"
+                  id="googleRedirectUri"
+                  name="googleRedirectUri"
+                  value={config.googleRedirectUri || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
+                  placeholder="https://seudominio.com/api/calendar/callback"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  URI de redirecionamento configurada no Google Cloud Console
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+              <h4 className="text-sm font-medium text-blue-900 mb-2">Como configurar:</h4>
+              <ol className="text-xs text-blue-800 space-y-1">
+                <li>1. Acesse o Google Cloud Console</li>
+                <li>2. Crie um projeto ou selecione um existente</li>
+                <li>3. Ative a Google Calendar API</li>
+                <li>4. Crie credenciais OAuth 2.0</li>
+                <li>5. Configure o Redirect URI</li>
+                <li>6. Cole as credenciais nos campos acima</li>
+              </ol>
             </div>
           </div>
 

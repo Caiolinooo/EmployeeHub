@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FiLayers, FiList, FiFileText, FiEdit, FiUsers, FiSettings, FiUserCheck, FiRefreshCw, FiBarChart2, FiKey, FiTool, FiUserX, FiDollarSign, FiCheck } from 'react-icons/fi';
+import { FiLayers, FiList, FiFileText, FiEdit, FiUsers, FiSettings, FiUserCheck, FiRefreshCw, FiBarChart2, FiKey, FiTool, FiUserX, FiDollarSign, FiCheck, FiEdit3 } from 'react-icons/fi';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 
@@ -155,6 +155,13 @@ export default function AdminDashboard() {
           icon={FiUserX}
           href="/admin/banned-users"
           color="border-red-500"
+        />
+        <AdminCard
+          title="Gerenciar Editores"
+          description="Configure editores para Academy e Social/News"
+          icon={FiEdit3}
+          href="/admin/editors"
+          color="border-violet-500"
         />
 
         {/* Módulo de Reembolsos */}

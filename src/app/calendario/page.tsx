@@ -6,6 +6,7 @@ import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { FiInfo } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
+import GoogleCalendarIntegration from '@/components/Calendar/GoogleCalendarIntegration';
 
 // Define the structure for a holiday
 interface Holiday {
@@ -380,6 +381,11 @@ export default function CalendarioPage() {
             </ul>
           )}
         </div>
+      </div>
+
+      {/* Google Calendar Integration */}
+      <div className="mt-8">
+        <GoogleCalendarIntegration />
       </div>
 
       {/* Custom CSS for tile styling (existing styles can likely remain) */}

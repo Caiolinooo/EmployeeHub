@@ -13,6 +13,11 @@ export interface SiteConfig {
   companyName: string;
   contactEmail: string;
   footerText: string;
+  dashboardTitle: string;
+  dashboardDescription: string;
+  googleClientId?: string;
+  googleClientSecret?: string;
+  googleRedirectUri?: string;
 }
 
 // Configuração padrão do site
@@ -25,7 +30,8 @@ const siteConfig: SiteConfig = {
   secondaryColor: "#6339F5", // abz-purple
   companyName: "ABZ Group",
   contactEmail: "contato@groupabz.com",
-  footerText: "© 2024 ABZ Group. Todos os direitos reservados."
+  footerText: "© 2024 ABZ Group. Todos os direitos reservados.",
+  dashboardTitle: "Painel de Logística ABZ Group"
 };
 
 export default siteConfig;

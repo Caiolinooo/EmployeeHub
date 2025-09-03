@@ -8,7 +8,7 @@ export async function GET() {
     console.log('🔄 API Cards - Buscando cards do Supabase...');
 
     // Tentar buscar do Supabase primeiro
-    const { data: cards, error } = await supabaseAdmin
+    let { data: cards, error } = await supabaseAdmin
       .from('cards')
       .select('*')
       .order('order', { ascending: true });
@@ -49,37 +49,66 @@ export async function GET() {
     }
 
     if (!cards || cards.length === 0) {
-      console.log('📦 Nenhum card encontrado no Supabase, usando dados hardcoded');
-      const fallbackCards = getTranslatedCards((key: string) => {
-        const translations: { [key: string]: string } = {
-          'cards.manualColaborador': 'Manual do Colaborador',
-          'cards.manualColaboradorDesc': 'Acesse o manual completo do colaborador',
-          'cards.procedimentosLogistica': 'Procedimentos de Logística',
-          'cards.procedimentosLogisticaDesc': 'Consulte os procedimentos padrões da área',
-          'cards.politicas': 'Políticas',
-          'cards.politicasDesc': 'Consulte as políticas da empresa',
-          'cards.procedimentosGerais': 'Procedimentos Gerais',
-          'cards.procedimentosGeraisDesc': 'Consulte os procedimentos gerais da empresa',
-          'cards.calendario': 'Calendário',
-          'cards.calendarioDesc': 'Visualize eventos e datas importantes',
-          'cards.noticias': 'ABZ News',
-          'cards.noticiasDesc': 'Fique por dentro das novidades da empresa',
-          'cards.reembolso': 'Reembolso',
-          'cards.reembolsoDesc': 'Solicite reembolsos de despesas',
-          'cards.contracheque': 'Contracheque',
-          'cards.contrachequeDesc': 'Acesse seus contracheques',
-          'cards.ponto': 'Ponto',
-          'cards.pontoDesc': 'Registre seu ponto e consulte seu histórico',
-          'avaliacao.title': 'Avaliação de Desempenho',
-          'avaliacao.description': 'Gerencie avaliações de desempenho dos colaboradores',
-          'cards.folhaPagamento': 'Folha de Pagamento',
-          'cards.folhaPagamentoDesc': 'Gerencie a folha de pagamento dos colaboradores',
-          'admin.title': 'Administração',
-          'admin.dashboard': 'Painel administrativo',
-        };
-        return translations[key] || key;
-      });
-      return NextResponse.json(fallbackCards);
+      console.log('📦 Nenhum card encontrado no Supabase, tentando popular automaticamente...');
+
+      // Tentar popular a tabela automaticamente
+      try {
+        const populateResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/admin/cards/populate`, {
+          method: 'POST'
+        });
+
+        if (populateResponse.ok) {
+          console.log('✅ Tabela cards populada automaticamente');
+
+          // Tentar buscar novamente
+          const { data: newCards, error: newError } = await supabaseAdmin
+            .from('cards')
+            .select('*')
+            .order('order', { ascending: true });
+
+          if (!newError && newCards && newCards.length > 0) {
+            cards = newCards;
+            console.log(`✅ ${cards.length} cards carregados após população automática`);
+          }
+        }
+      } catch (populateError) {
+        console.warn('⚠️ Erro na população automática:', populateError);
+      }
+
+      // Se ainda não há cards, usar fallback
+      if (!cards || cards.length === 0) {
+        console.log('📦 Usando dados hardcoded como fallback');
+        const fallbackCards = getTranslatedCards((key: string) => {
+          const translations: { [key: string]: string } = {
+            'cards.manualColaborador': 'Manual do Colaborador',
+            'cards.manualColaboradorDesc': 'Acesse o manual completo do colaborador',
+            'cards.procedimentosLogistica': 'Procedimentos de Logística',
+            'cards.procedimentosLogisticaDesc': 'Consulte os procedimentos padrões da área',
+            'cards.politicas': 'Políticas',
+            'cards.politicasDesc': 'Consulte as políticas da empresa',
+            'cards.procedimentosGerais': 'Procedimentos Gerais',
+            'cards.procedimentosGeraisDesc': 'Consulte os procedimentos gerais da empresa',
+            'cards.calendario': 'Calendário',
+            'cards.calendarioDesc': 'Visualize eventos e datas importantes',
+            'cards.noticias': 'ABZ News',
+            'cards.noticiasDesc': 'Fique por dentro das novidades da empresa',
+            'cards.reembolso': 'Reembolso',
+            'cards.reembolsoDesc': 'Solicite reembolsos de despesas',
+            'cards.contracheque': 'Contracheque',
+            'cards.contrachequeDesc': 'Acesse seus contracheques',
+            'cards.ponto': 'Ponto',
+            'cards.pontoDesc': 'Registre seu ponto e consulte seu histórico',
+            'avaliacao.title': 'Avaliação de Desempenho',
+            'avaliacao.description': 'Gerencie avaliações de desempenho dos colaboradores',
+            'cards.folhaPagamento': 'Folha de Pagamento',
+            'cards.folhaPagamentoDesc': 'Gerencie a folha de pagamento dos colaboradores',
+            'admin.title': 'Administração',
+            'admin.dashboard': 'Painel administrativo',
+          };
+          return translations[key] || key;
+        });
+        return NextResponse.json(fallbackCards);
+      }
     }
 
     console.log(`✅ ${cards.length} cards carregados do Supabase`);
@@ -90,7 +119,7 @@ export async function GET() {
       title: card.title,
       description: card.description,
       href: card.href,
-      iconName: card.icon_name,
+      iconName: card.icon_name || card.icon,
       color: card.color,
       hoverColor: card.hover_color,
       external: card.external || false,
@@ -100,6 +129,11 @@ export async function GET() {
       managerOnly: card.manager_only || false,
       allowedRoles: card.allowed_roles || [],
       allowedUserIds: card.allowed_user_ids || [],
+      moduleKey: card.module_key,
+      titleEn: card.title_en,
+      descriptionEn: card.description_en,
+      category: card.category,
+      tags: card.tags || []
     }));
 
     return NextResponse.json(formattedCards);
