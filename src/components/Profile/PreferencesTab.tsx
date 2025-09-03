@@ -14,12 +14,10 @@ export function PreferencesTab({ user = null }: PreferencesTabProps) {
   const { t, locale, setLocale } = useI18n();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  type Theme = 'light' | 'dark' | 'system';
   type Language = string;
 
   const [preferences, setPreferences] = useState<{
     language: Language;
-    theme: Theme;
     notifications: {
       email: boolean;
       browser: boolean;
@@ -27,7 +25,6 @@ export function PreferencesTab({ user = null }: PreferencesTabProps) {
     };
   }>({
     language: locale || 'pt-BR',
-    theme: 'light',
     notifications: {
       email: true,
       browser: true,
@@ -35,31 +32,7 @@ export function PreferencesTab({ user = null }: PreferencesTabProps) {
     }
   });
 
-  // Aplica o tema no <html>
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const root = window.document.documentElement;
-    if (preferences.theme === 'dark') {
-      root.classList.add('dark');
-      root.classList.remove('light');
-    } else if (preferences.theme === 'light') {
-      root.classList.add('light');
-      root.classList.remove('dark');
-    } else {
-      // Sistema
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        root.classList.add('dark');
-        root.classList.remove('light');
-      } else {
-        root.classList.add('light');
-        root.classList.remove('dark');
-      }
-    }
-  }, [preferences.theme]);
-
-  const handleThemeChange = (theme: Theme) => {
-    setPreferences(prev => ({ ...prev, theme }));
-  };
+  // Tema removido - lógica desnecessária
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newLocale = e.target.value;
@@ -153,43 +126,7 @@ export function PreferencesTab({ user = null }: PreferencesTabProps) {
           </div>
         </div>
 
-        {/* Tema */}
-        <div>
-          <h3 className="text-md font-medium text-gray-800 mb-3 flex items-center">
-            <FiMoon className="h-5 w-5 mr-2 text-gray-600" />
-            {t('profile.theme', 'Tema')}
-          </h3>
-
-          <div className="flex space-x-4">
-            <Button
-              type="button"
-              onClick={() => handleThemeChange('light')}
-              variant={preferences.theme === 'light' ? 'default' : 'outline'}
-              className={preferences.theme === 'light' ? 'bg-abz-blue text-white' : ''}
-            >
-              {t('profile.lightTheme', 'Claro')}
-            </Button>
-            <Button
-              type="button"
-              onClick={() => handleThemeChange('dark')}
-              variant={preferences.theme === 'dark' ? 'default' : 'outline'}
-              className={preferences.theme === 'dark' ? 'bg-abz-blue text-white' : ''}
-            >
-              {t('profile.darkTheme', 'Escuro')}
-            </Button>
-            <Button
-              type="button"
-              onClick={() => handleThemeChange('system')}
-              variant={preferences.theme === 'system' ? 'default' : 'outline'}
-              className={preferences.theme === 'system' ? 'bg-abz-blue text-white' : ''}
-            >
-              {t('profile.systemTheme', 'Sistema')}
-            </Button>
-          </div>
-          <p className="text-sm text-gray-500 mt-2">
-            {t('profile.themeDescription', 'Escolha o tema de exibição do sistema')}
-          </p>
-        </div>
+        {/* Tema removido - não é necessário para este projeto */}
 
         {/* Notificações */}
         <div>

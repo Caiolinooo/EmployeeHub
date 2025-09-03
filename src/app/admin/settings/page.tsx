@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { FiSave, FiRefreshCw, FiUpload } from 'react-icons/fi';
+import { useSiteConfig } from '@/contexts/SiteConfigContext';
 
 interface SiteConfig {
   id: string;
@@ -18,6 +19,7 @@ interface SiteConfig {
 }
 
 export default function SettingsPage() {
+  const siteConfig = useSiteConfig();
   const [config, setConfig] = useState<SiteConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -199,9 +201,20 @@ export default function SettingsPage() {
         setConfig(savedConfig);
         setSuccess('Configurações salvas com sucesso!');
 
+        // Atualizar o contexto global para aplicar as mudanças imediatamente
+        if (siteConfig?.refreshConfig) {
+          console.log('Atualizando contexto global de configurações...');
+          await siteConfig.refreshConfig();
+        }
+
         // Limpar arquivos
         setLogoFile(null);
         setFaviconFile(null);
+
+        // Forçar recarregamento da página após 2 segundos para garantir que as mudanças sejam aplicadas
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       } catch (error) {
         console.error('Erro ao salvar configurações:', error);
         setError('Erro ao salvar configurações. Por favor, tente novamente.');

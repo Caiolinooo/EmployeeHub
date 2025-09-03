@@ -410,7 +410,7 @@ export default function ProfilePage() {
                   </h2>
 
                   <Button
-                    onClick={() => setEditing(!editing)}
+                    onClick={editing ? updateProfile : () => setEditing(true)}
                     variant="link"
                     className="hidden md:flex items-center text-abz-blue hover:text-abz-blue-dark p-0 h-auto"
                   >
@@ -446,7 +446,7 @@ export default function ProfilePage() {
 
                 {/* Botão de editar para mobile */}
                 <Button
-                  onClick={() => setEditing(!editing)}
+                  onClick={editing ? updateProfile : () => setEditing(true)}
                   variant="link"
                   className="mt-4 md:hidden flex items-center justify-center text-abz-blue hover:text-abz-blue-dark mx-auto p-0 h-auto"
                 >
@@ -610,19 +610,7 @@ export default function ProfilePage() {
 
               {editing ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <label className="block text-sm text-gray-500 mb-1">{t('common.theme')}</label>
-                    <select
-                      name="theme"
-                      value={formData.theme}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-md"
-                    >
-                      <option value="light">{t('common.light')}</option>
-                      <option value="dark">{t('common.dark')}</option>
-                      <option value="system">{t('common.system')}</option>
-                    </select>
-                  </div>
+                  {/* Tema removido - não necessário para este projeto */}
 
                   <div>
                     <label className="block text-sm text-gray-500 mb-1">{t('common.language')}</label>
@@ -653,13 +641,7 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <p className="text-sm text-gray-500">{t('common.theme')}</p>
-                    <p className="font-medium">
-                      {(profile as any).theme === 'dark' ? t('common.dark') :
-                       (profile as any).theme === 'system' ? t('common.system') : t('common.light')}
-                    </p>
-                  </div>
+                  {/* Tema removido - não necessário para este projeto */}
 
                   <div>
                     <p className="text-sm text-gray-500">{t('common.language')}</p>

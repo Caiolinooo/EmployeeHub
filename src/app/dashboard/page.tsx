@@ -155,9 +155,18 @@ export default function Dashboard() {
         <Suspense fallback={<LoadingSpinner />}>
           <div className="space-y-8">
             <div className="pb-5 border-b border-gray-200">
-              <h1 className="text-3xl font-extrabold text-abz-blue-dark">
+              {/* Saudação personalizada com nome do usuário */}
+              {user && (
+                <div className="mb-4">
+                  <h1 className="text-2xl font-bold text-gray-800">
+                    {t('dashboard.greeting', locale === 'en-US' ? 'Welcome' : 'Olá')}, {(user as any).first_name || (user as any).firstName || user.email?.split('@')[0]}! 👋
+                  </h1>
+                </div>
+              )}
+
+              <h2 className="text-3xl font-extrabold text-abz-blue-dark">
                 {t('dashboard.logisticsPanel')}
-              </h1>
+              </h2>
               <p className="mt-2 text-sm text-gray-500">
                 {t('dashboard.welcomeMessage')}
               </p>
