@@ -242,10 +242,10 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
         <p className="text-gray-700 leading-relaxed">{post.excerpt}</p>
         
         {/* Tags */}
-        {post.tags.length > 0 && (
+        {Array.isArray(post.tags) && post.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-3">
             {post.tags.map((tag, index) => (
-              <span 
+              <span
                 key={index}
                 className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full"
               >
@@ -256,7 +256,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
         )}
 
         {/* Links Externos */}
-        {post.external_links.length > 0 && (
+        {Array.isArray(post.external_links) && post.external_links.length > 0 && (
           <div className="mt-3 space-y-2">
             {post.external_links.map((link, index) => (
               <a

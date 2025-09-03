@@ -1,6 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+// Helpers para garantir tipos consistentes ao retornar os posts
+function safeParseArray(value: any): any[] {
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+function safeParseObject<T = Record<string, any>>(value: any): T {
+  if (value && typeof value === 'object') return value as T;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return (parsed && typeof parsed === 'object') ? (parsed as T) : ({} as T);
+    } catch {
+      return {} as T;
+    }
+  }
+  return {} as T;
+}
+
+function normalizePost(post: any) {
+  if (!post) return post;
+  return {
+    ...post,
+    media_urls: safeParseArray(post?.media_urls),
+    external_links: safeParseArray(post?.external_links),
+    tags: safeParseArray(post?.tags),
+    visibility_settings: safeParseObject(post?.visibility_settings),
+  };
+}
+
 // GET - Listar posts de notícias
 export async function GET(request: NextRequest) {
   try {
@@ -72,6 +110,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Normalizar campos serializados para arrays/objetos
+    const normalizedPosts = (posts || []).map(normalizePost);
+
     // Buscar contagem total para paginação
     let totalQuery = supabaseAdmin
       .from('news_posts')
@@ -95,10 +136,10 @@ export async function GET(request: NextRequest) {
 
     const { count: totalCount } = await totalQuery;
 
-    console.log(`✅ ${posts?.length || 0} posts carregados de ${totalCount || 0} total`);
+    console.log(`✅ ${normalizedPosts?.length || 0} posts carregados de ${totalCount || 0} total`);
 
     return NextResponse.json({
-      posts: posts || [],
+      posts: normalizedPosts,
       pagination: {
         page,
         limit,
@@ -200,7 +241,7 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString()
     };
 
-    const { data: newPost, error: insertError } = await supabaseAdmin
+    const { data: inserted, error: insertError } = await supabaseAdmin
       .from('news_posts')
       .insert(postData)
       .select(`
@@ -221,6 +262,8 @@ export async function POST(request: NextRequest) {
         )
       `)
       .single();
+
+    const newPost = normalizePost(inserted);
 
     if (insertError) {
       console.error('Erro ao criar post:', insertError);
