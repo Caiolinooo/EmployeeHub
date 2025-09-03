@@ -1,5 +1,5 @@
 [build]
-  command = "NEXT_TELEMETRY_DISABLED=1 npm run build"
+  command = "npm run build"
   publish = ".next"
   ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ./package-lock.json"
 
