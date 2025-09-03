@@ -54,11 +54,11 @@ export async function GET(
     }
 
     // Organizar comentários em árvore (comentários e respostas)
-    const organizedComments = organizeComments(comments || []);
+    const organized = organizeComments(comments || []);
 
     return NextResponse.json({
-      comments: organizedComments,
-      total: comments?.length || 0,
+      comments: organized.tree,
+      total: organized.total,
       hasMore: (comments?.length || 0) === limit
     });
 
@@ -228,25 +228,22 @@ export async function POST(
   }
 }
 
-// Função auxiliar para organizar comentários em árvore
-function organizeComments(comments: any[]): any[] {
+// Função auxiliar para organizar comentários em árvore e contar total
+function organizeComments(comments: any[]): { tree: any[]; total: number } {
   const commentMap = new Map();
   const rootComments: any[] = [];
 
-  // Primeiro, criar um mapa de todos os comentários
   comments.forEach(comment => {
     comment.replies = [];
     commentMap.set(comment.id, comment);
   });
 
-  // Depois, organizar em árvore
   comments.forEach(comment => {
     if (comment.parent_id) {
       const parent = commentMap.get(comment.parent_id);
       if (parent) {
         parent.replies.push(comment);
       } else {
-        // Se o pai não foi encontrado, tratar como comentário raiz
         rootComments.push(comment);
       }
     } else {
@@ -254,5 +251,5 @@ function organizeComments(comments: any[]): any[] {
     }
   });
 
-  return rootComments;
+  return { tree: rootComments, total: comments.length };
 }

@@ -58,6 +58,22 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [openMenuPostId, setOpenMenuPostId] = useState<string | null>(null);
+
+  const handleDeletePost = async (postId: string) => {
+    if (!confirm('Tem certeza que deseja excluir este post?')) return;
+    try {
+      const res = await fetch(`/api/news/posts/${postId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setPosts(prev => prev.filter(p => p.id !== postId));
+      }
+    } catch (e) {
+      console.error('Erro ao excluir post:', e);
+    } finally {
+      setOpenMenuPostId(null);
+    }
+  };
+
   const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
 
   const { hasPermission } = useACLPermissions(userId);
@@ -252,9 +268,28 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
             </div>
           </div>
         </div>
-        <button className="p-2 hover:bg-gray-100 rounded-full">
-          <FiMoreHorizontal className="w-5 h-5 text-gray-500" />
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => setOpenMenuPostId(openMenuPostId === post.id ? null : post.id)}
+            className="p-2 hover:bg-gray-100 rounded-full"
+          >
+            <FiMoreHorizontal className="w-5 h-5 text-gray-500" />
+          </button>
+          {openMenuPostId === post.id && (
+            <div className="absolute right-0 mt-2 w-44 bg-white border rounded shadow z-10">
+              <button
+                onClick={() => handleShare(post)}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+              >Copiar link</button>
+              {(hasPermission('news.delete') || hasPermission('news.publish')) && (
+                <button
+                  onClick={() => handleDeletePost(post.id)}
+                  className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                >Excluir</button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Conteúdo do Post */}

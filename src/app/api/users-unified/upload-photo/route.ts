@@ -3,31 +3,25 @@ import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { createClient } from '@supabase/supabase-js';
 import { Readable } from 'stream';
 import { getCredential } from '@/lib/secure-credentials';
+import { supabaseAdmin } from '@/lib/supabase';
 
-// Configurar cliente do Google Drive com import dinâmico
+// OBS: Preferimos Supabase Storage para fotos de perfil. Google Drive fica como fallback legado.
 async function initializeGoogleDriveClient() {
   try {
-    // Import dinâmico para reduzir o tamanho do bundle
     const { google } = await import('googleapis');
-    
     const googleServiceAccountEmail = await getCredential('GOOGLE_SERVICE_ACCOUNT_EMAIL');
     const googleServiceAccountPrivateKey = await getCredential('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY');
-
     if (!googleServiceAccountEmail || !googleServiceAccountPrivateKey) {
-      console.error('Credenciais do Google Drive Service Account não encontradas na tabela app_secrets.');
-      return null;
+      return null; // Sem credenciais -> usaremos Supabase Storage
     }
-
     const auth = new google.auth.JWT({
       email: googleServiceAccountEmail,
       key: googleServiceAccountPrivateKey.replace(/\\n/g, '\n'),
       scopes: ['https://www.googleapis.com/auth/drive']
     });
-
-    const drive = google.drive({ version: 'v3', auth });
-    return drive;
+    return google.drive({ version: 'v3', auth });
   } catch (error) {
-    console.error('Erro ao inicializar cliente do Google Drive:', error);
+    console.warn('Drive desabilitado, usando Supabase Storage. Detalhes:', error);
     return null;
   }
 }
@@ -131,63 +125,54 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Inicializar cliente do Google Drive (import dinâmico acontece aqui)
-    const drive = await initializeGoogleDriveClient();
-
-    if (!drive) {
-      return NextResponse.json(
-        { error: 'Erro de configuração do Google Drive.' },
-        { status: 500 }
-      );
-    }
-
-    // Converter o arquivo para um buffer de forma mais eficiente
-    const arrayBuffer = await photo.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // Criar um stream a partir do buffer
-    const stream = new Readable();
-    stream.push(buffer);
-    stream.push(null);
-
-    // Nome do arquivo no Google Drive
+    // Nome base do arquivo
     const fileName = generateFileName(
       userData.first_name || 'user',
       userData.last_name || 'photo',
       photo.name
     );
 
-    // Se o usuário já tem uma foto, atualizar em vez de criar nova
-    let fileId = userData.drive_photo_id;
+    // Tentar enviar para Supabase Storage (bucket: profile-photos)
     let fileUrl = '';
+    try {
+      const arrayBuffer = await photo.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
 
-    if (fileId) {
-      // Atualizar arquivo existente
-      try {
-        await drive.files.update({
-          fileId,
-          media: {
-            body: stream,
-            mimeType: photo.type
-          }
+      const { data: uploadData, error: uploadError } = await supabaseAdmin
+        .storage
+        .from('profile-photos')
+        .upload(`${userId}/${fileName}`, buffer, {
+          contentType: photo.type,
+          upsert: true
         });
 
-        // Obter URL do arquivo
-        const fileResponse = await drive.files.get({
-          fileId,
-          fields: 'webViewLink, webContentLink'
-        });
+      if (uploadError) throw uploadError;
 
-        fileUrl = fileResponse.data.webContentLink || fileResponse.data.webViewLink || '';
-      } catch (driveError) {
-        console.error('Erro ao atualizar arquivo existente:', driveError);
-        // Se falhar ao atualizar, criar novo arquivo
-        fileId = '';
+      // Obter URL pública
+      const { data: publicUrl } = supabaseAdmin.storage
+        .from('profile-photos')
+        .getPublicUrl(`${userId}/${fileName}`);
+
+      fileUrl = publicUrl.publicUrl;
+    } catch (storageError) {
+      console.warn('Falha ao usar Supabase Storage, tentando Google Drive…', storageError);
+
+      // Fallback para Google Drive se storage falhar e credenciais estiverem disponíveis
+      const drive = await initializeGoogleDriveClient();
+      if (!drive) {
+        return NextResponse.json(
+          { error: 'Upload falhou: Storage e Drive indisponíveis' },
+          { status: 500 }
+        );
       }
-    }
 
-    if (!fileId) {
-      // Criar novo arquivo
+      // Converter o arquivo para stream e enviar para Drive
+      const arrayBuffer = await photo.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const stream = new Readable();
+      stream.push(buffer);
+      stream.push(null);
+
       const response = await drive.files.create({
         requestBody: {
           name: fileName,
@@ -200,41 +185,31 @@ export async function POST(request: NextRequest) {
         }
       });
 
-      fileId = response.data.id || '';
+      const fileId = response.data.id || '';
+      if (!fileId) throw new Error('Falha ao criar arquivo no Google Drive');
 
-      if (!fileId) {
-        throw new Error('Falha ao criar arquivo no Google Drive');
-      }
-
-      // Tornar o arquivo público
       await drive.permissions.create({
         fileId,
-        requestBody: {
-          role: 'reader',
-          type: 'anyone'
-        }
+        requestBody: { role: 'reader', type: 'anyone' }
       });
 
-      // Obter URL do arquivo
-      const fileResponse = await drive.files.get({
-        fileId,
-        fields: 'webViewLink, webContentLink'
-      });
-
+      const fileResponse = await drive.files.get({ fileId, fields: 'webViewLink, webContentLink' });
       fileUrl = fileResponse.data.webContentLink || fileResponse.data.webViewLink || '';
     }
 
     if (!fileUrl) {
-      throw new Error('Falha ao obter URL do arquivo');
+      return NextResponse.json(
+        { error: 'Falha ao obter URL do arquivo após upload' },
+        { status: 500 }
+      );
     }
 
     // Atualizar referência no banco de dados
     const { error: updateError } = await supabase
       .from('users_unified')
       .update({
-        drive_photo_id: fileId,
+        avatar: fileUrl,
         drive_photo_url: fileUrl,
-        avatar: fileUrl, // Manter compatibilidade com o campo avatar existente
         updated_at: new Date().toISOString()
       })
       .eq('id', userId);
