@@ -74,6 +74,10 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
     }
   };
 
+  const handleEditPost = (postId: string) => {
+    window.location.href = `/news?tab=admin&edit=${postId}`;
+  };
+
   const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
 
   const { hasPermission } = useACLPermissions(userId);
@@ -277,10 +281,21 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
           </button>
           {openMenuPostId === post.id && (
             <div className="absolute right-0 mt-2 w-44 bg-white border rounded shadow z-10">
+              {/* Copiar link */}
               <button
                 onClick={() => handleShare(post)}
                 className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
               >Copiar link</button>
+
+              {/* Editar post (somente autorizado) */}
+              {(hasPermission('news.edit') || hasPermission('news.publish')) && (
+                <button
+                  onClick={() => handleEditPost(post.id)}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                >Editar</button>
+              )}
+
+              {/* Excluir post (somente autorizado) */}
               {(hasPermission('news.delete') || hasPermission('news.publish')) && (
                 <button
                   onClick={() => handleDeletePost(post.id)}

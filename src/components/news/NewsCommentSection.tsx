@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { FiSend } from 'react-icons/fi';
 import { useToast } from '@/hooks/useToast';
+import CommentActions from './CommentActions';
 
 interface UserInfo {
   id: string;
@@ -78,6 +79,27 @@ const NewsCommentSection: React.FC<Props> = ({ postId, userId }) => {
 
   const formatTime = (d: string) => new Date(d).toLocaleString('pt-BR');
 
+  const canEditComment = (c: NewsComment) => c.user?.id === userId; // admins/gerentes podem ser adicionados depois
+  const canDeleteComment = (c: NewsComment) => c.user?.id === userId; // idem
+
+  const handleEdit = async (commentId: string, newContent: string) => {
+    const res = await fetch(`/api/news/${postId}/comments/${commentId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: newContent })
+    });
+    if (res.ok) {
+      setComments(prev => prev.map(c => c.id === commentId ? { ...c, content: newContent, edited: true } : c));
+    }
+  };
+
+  const handleDelete = async (commentId: string) => {
+    const res = await fetch(`/api/news/${postId}/comments/${commentId}`, { method: 'DELETE' });
+    if (res.ok) {
+      setComments(prev => prev.filter(c => c.id !== commentId));
+    }
+  };
+
   return (
     <div className="border-t border-gray-100">
       <div className="p-4 space-y-3 max-h-80 overflow-y-auto">
@@ -94,6 +116,13 @@ const NewsCommentSection: React.FC<Props> = ({ postId, userId }) => {
                 </div>
                 <div className="text-gray-700">{c.content}</div>
                 <div className="text-xs text-gray-500 mt-1">{formatTime(c.created_at)}</div>
+                <CommentActions
+                  canEdit={canEditComment(c)}
+                  canDelete={canDeleteComment(c)}
+                  onEdit={(text) => handleEdit(c.id, text)}
+                  onDelete={() => handleDelete(c.id)}
+                  content={c.content}
+                />
               </div>
               {c.replies && c.replies.length > 0 && (
                 <div className="ml-4 mt-2 space-y-2">
