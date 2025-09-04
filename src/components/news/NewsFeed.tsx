@@ -7,6 +7,7 @@ import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/hooks/useToast';
 import InstagramStylePostCreator from './InstagramStylePostCreator';
 import NewsCommentSection from './NewsCommentSection';
+import NewsPostEditor from './NewsPostEditor';
 
 interface NewsCategory { id: string; name: string; color: string; }
 
@@ -60,6 +61,9 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingPost, setEditingPost] = useState<NewsPost | null>(null);
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [openMenuPostId, setOpenMenuPostId] = useState<string | null>(null);
   const { toast } = useToast();
@@ -319,32 +323,6 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
             <FiUser className="w-5 h-5 text-white" />
-          <textarea
-            value={editingContent}
-            onChange={(e) => setEditingContent(e.target.value)}
-            className="w-full px-3 py-2 border rounded"
-            rows={8}
-            placeholder="Conteúdo completo"
-          />
-          <div className="flex items-center gap-3">
-            <select
-              value={editingCategory}
-              onChange={(e) => setEditingCategory(e.target.value)}
-              className="px-3 py-2 border rounded"
-            >
-              <option value="">Sem categoria</option>
-              {categories.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-            <input
-              value={editingTags}
-              onChange={(e) => setEditingTags(e.target.value)}
-              className="flex-1 px-3 py-2 border rounded"
-              placeholder="tags separadas por vírgula"
-            />
-          </div>
-
           </div>
           <div>
             <div className="flex items-center space-x-2">
@@ -369,55 +347,25 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
               <FiCalendar className="w-4 h-4" />
               <span>{formatDate(post.published_at)}</span>
               <span>•</span>
-      {/* Edição inline */}
-      {editingPostId === post.id ? (
-        <div className="px-4 pb-3 space-y-3">
-          <input
-            value={editingTitle}
-            onChange={(e) => setEditingTitle(e.target.value)}
-            className="w-full px-3 py-2 border rounded"
-          />
-          <textarea
-            value={editingExcerpt}
-            onChange={(e) => setEditingExcerpt(e.target.value)}
-            className="w-full px-3 py-2 border rounded"
-            rows={4}
-          />
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => saveInlineEdit(post)}
-              disabled={savingEdit}
-              className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
-            >Salvar</button>
-            <button
-              onClick={cancelInlineEdit}
-              className="px-4 py-2 border rounded"
-            >Cancelar</button>
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* Conteúdo do Post */}
-          <div className="px-4 pb-3">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">{post.title}</h2>
-            <p className="text-gray-700 leading-relaxed">{post.excerpt}</p>
+      {/* Edição inline removida: será via modal NewsPostEditor */}
+      <div className="px-4 pb-3">
+        <h2 className="text-lg font-semibold text-gray-900 mb-2">{post.title}</h2>
+        <p className="text-gray-700 leading-relaxed">{post.excerpt}</p>
 
-            {/* Tags */}
-            {Array.isArray(post.tags) && post.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-3">
-                {post.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
+        {/* Tags */}
+        {Array.isArray(post.tags) && post.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {post.tags.map((tag, index) => (
+              <span
+                key={index}
+                className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full"
+              >
+                #{tag}
+              </span>
+            ))}
           </div>
-        </>
-      )}
+        )}
+      </div>
 
               <FiEye className="w-4 h-4" />
               <span>{post.views_count} visualizações</span>
@@ -442,7 +390,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
               {/* Editar post inline (somente autorizado) */}
               {(hasPermission('news.edit') || hasPermission('news.publish')) && (
                 <button
-                  onClick={() => beginInlineEdit(post)}
+                  onClick={() => { setEditingPost(post); setShowEditModal(true); setOpenMenuPostId(null); }}
                   className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
                 >Editar</button>
               )}
@@ -697,6 +645,33 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
           setShowCreateModal(false);
         }}
       />
+
+      {/* Edit Post Modal */}
+      {showEditModal && editingPost && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowEditModal(false)} />
+          <div className="relative z-10 max-w-5xl w-full mx-4">
+            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+              <NewsPostEditor
+                userId={userId || ''}
+                postId={editingPost.id}
+                onSave={(updated) => {
+                  setPosts(prev => prev.map(p => p.id === updated.id ? {
+                    ...p,
+                    ...updated,
+                    media_urls: Array.isArray(updated.media_urls) ? updated.media_urls : JSON.parse(updated.media_urls || '[]'),
+                    tags: Array.isArray(updated.tags) ? updated.tags : JSON.parse(updated.tags || '[]')
+                  } : p));
+                  setShowEditModal(false);
+                  setEditingPost(null);
+                }}
+                onCancel={() => { setShowEditModal(false); setEditingPost(null); }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
