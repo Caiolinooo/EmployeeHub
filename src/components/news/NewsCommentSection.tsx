@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { FiSend } from 'react-icons/fi';
 import { useToast } from '@/hooks/useToast';
 import CommentActions from './CommentActions';
+import { useACLPermissions } from '@/hooks/useACLPermissions';
 
 interface UserInfo {
   id: string;
@@ -21,6 +22,8 @@ interface NewsComment {
   user: UserInfo;
   replies?: NewsComment[];
 }
+  const { hasPermission } = useACLPermissions(userId);
+
 
 interface Props {
   postId: string;
@@ -79,8 +82,9 @@ const NewsCommentSection: React.FC<Props> = ({ postId, userId }) => {
 
   const formatTime = (d: string) => new Date(d).toLocaleString('pt-BR');
 
-  const canEditComment = (c: NewsComment) => c.user?.id === userId; // admins/gerentes podem ser adicionados depois
-  const canDeleteComment = (c: NewsComment) => c.user?.id === userId; // idem
+  // Autor OU moderadores (admins/gerentes via permissão comments.moderate)
+  const canEditComment = (c: NewsComment) => c.user?.id === userId || hasPermission('comments.moderate');
+  const canDeleteComment = (c: NewsComment) => c.user?.id === userId || hasPermission('comments.moderate');
 
   const handleEdit = async (commentId: string, newContent: string) => {
     const res = await fetch(`/api/news/${postId}/comments/${commentId}`, {
@@ -94,7 +98,10 @@ const NewsCommentSection: React.FC<Props> = ({ postId, userId }) => {
   };
 
   const handleDelete = async (commentId: string) => {
-    const res = await fetch(`/api/news/${postId}/comments/${commentId}`, { method: 'DELETE' });
+    const endpoint = canDeleteComment({ id: commentId } as any) && hasPermission('comments.moderate')
+      ? `/api/news/${postId}/comments/${commentId}/moderate`
+      : `/api/news/${postId}/comments/${commentId}`;
+    const res = await fetch(endpoint, { method: 'DELETE' });
     if (res.ok) {
       setComments(prev => prev.filter(c => c.id !== commentId));
     }

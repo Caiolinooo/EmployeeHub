@@ -8,6 +8,8 @@ import { useToast } from '@/hooks/useToast';
 import InstagramStylePostCreator from './InstagramStylePostCreator';
 import NewsCommentSection from './NewsCommentSection';
 
+interface NewsCategory { id: string; name: string; color: string; }
+
 interface NewsPost {
   id: string;
   title: string;
@@ -62,6 +64,10 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
   const [openMenuPostId, setOpenMenuPostId] = useState<string | null>(null);
   const { toast } = useToast();
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState('');
+  const [editingCategory, setEditingCategory] = useState<string>('');
+  const [editingTags, setEditingTags] = useState<string>(''); // CSV simples
+
   const [editingTitle, setEditingTitle] = useState('');
   const [editingExcerpt, setEditingExcerpt] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
@@ -70,6 +76,9 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
     setEditingPostId(post.id);
     setEditingTitle(post.title);
     setEditingExcerpt(post.excerpt);
+    setEditingContent(post.content || '');
+    setEditingCategory(post.category?.id || '');
+    setEditingTags(Array.isArray(post.tags) ? post.tags.join(', ') : '');
     setOpenMenuPostId(null);
   };
 
@@ -82,20 +91,46 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
   const saveInlineEdit = async (post: NewsPost) => {
     try {
       setSavingEdit(true);
+      const payload: any = {
+        title: editingTitle,
+        excerpt: editingExcerpt,
+        content: editingContent,
+        category_id: editingCategory || null,
+        tags: editingTags.split(',').map(t => t.trim()).filter(Boolean)
+      };
       const res = await fetch(`/api/news/posts/${post.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: editingTitle, excerpt: editingExcerpt })
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erro ao salvar');
-      setPosts(prev => prev.map(p => p.id === post.id ? { ...p, title: data.title, excerpt: data.excerpt } : p));
+      setPosts(prev => prev.map(p => p.id === post.id ? {
+        ...p,
+        title: data.title,
+        excerpt: data.excerpt,
+        content: data.content,
+        category: data.category,
+        tags: Array.isArray(data.tags) ? data.tags : (typeof data.tags === 'string' ? JSON.parse(data.tags || '[]') : [])
+      } : p));
       toast.success('Post atualizado');
       cancelInlineEdit();
     } catch (e) {
       console.error(e);
       toast.error('Falha ao salvar alterações');
     } finally {
+  const [categories, setCategories] = useState<NewsCategory[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch('/api/news/categories');
+        const d = await r.json();
+        if (r.ok && Array.isArray(d)) setCategories(d);
+      } catch {}
+    })();
+  }, []);
+
       setSavingEdit(false);
     }
   };
@@ -284,6 +319,32 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
             <FiUser className="w-5 h-5 text-white" />
+          <textarea
+            value={editingContent}
+            onChange={(e) => setEditingContent(e.target.value)}
+            className="w-full px-3 py-2 border rounded"
+            rows={8}
+            placeholder="Conteúdo completo"
+          />
+          <div className="flex items-center gap-3">
+            <select
+              value={editingCategory}
+              onChange={(e) => setEditingCategory(e.target.value)}
+              className="px-3 py-2 border rounded"
+            >
+              <option value="">Sem categoria</option>
+              {categories.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            <input
+              value={editingTags}
+              onChange={(e) => setEditingTags(e.target.value)}
+              className="flex-1 px-3 py-2 border rounded"
+              placeholder="tags separadas por vírgula"
+            />
+          </div>
+
           </div>
           <div>
             <div className="flex items-center space-x-2">

@@ -154,47 +154,83 @@ export async function POST(request: NextRequest) {
         .getPublicUrl(`${userId}/${fileName}`);
 
       fileUrl = publicUrl.publicUrl;
-    } catch (storageError) {
-      console.warn('Falha ao usar Supabase Storage, tentando Google Drive…', storageError);
+    } catch (storageError: any) {
+      console.warn('Falha ao usar Supabase Storage, tentando criar bucket e reenviar…', storageError);
 
-      // Fallback para Google Drive se storage falhar e credenciais estiverem disponíveis
-      const drive = await initializeGoogleDriveClient();
-      if (!drive) {
-        return NextResponse.json(
-          { error: 'Upload falhou: Storage e Drive indisponíveis' },
-          { status: 500 }
-        );
+      // Se bucket não existir, criar e tentar novamente
+      try {
+        const msg = storageError?.message || storageError?.error || '';
+        const notFound = msg.includes('Bucket not found') || storageError?.statusCode === '404';
+        if (notFound) {
+          const { error: createBucketError } = await (supabaseAdmin as any).storage.createBucket('profile-photos', {
+            public: true,
+            fileSizeLimit: 5 * 1024 * 1024,
+            allowedMimeTypes: ['image/jpeg','image/png','image/webp','image/gif'],
+          });
+          if (createBucketError) {
+            console.warn('Erro ao criar bucket profile-photos:', createBucketError);
+          } else {
+            // Retry upload
+            const arrayBufferRetry = await photo.arrayBuffer();
+            const bufferRetry = Buffer.from(arrayBufferRetry);
+            const { data: uploadData2, error: uploadError2 } = await (supabaseAdmin as any)
+              .storage
+              .from('profile-photos')
+              .upload(`${userId}/${fileName}`, bufferRetry, {
+                contentType: photo.type,
+                upsert: true
+              });
+            if (!uploadError2) {
+              const { data: publicUrl2 } = (supabaseAdmin as any).storage
+                .from('profile-photos')
+                .getPublicUrl(`${userId}/${fileName}`);
+              fileUrl = publicUrl2.publicUrl;
+            }
+          }
+        }
+      } catch (bucketCreateErr) {
+        console.warn('Erro ao tentar criar bucket automaticamente:', bucketCreateErr);
       }
 
-      // Converter o arquivo para stream e enviar para Drive
-      const arrayBuffer = await photo.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      const stream = new Readable();
-      stream.push(buffer);
-      stream.push(null);
-
-      const response = await drive.files.create({
-        requestBody: {
-          name: fileName,
-          mimeType: photo.type,
-          parents: process.env.GOOGLE_DRIVE_FOLDER_ID ? [process.env.GOOGLE_DRIVE_FOLDER_ID] : undefined
-        },
-        media: {
-          body: stream,
-          mimeType: photo.type
+      // Se ainda não temos URL, fallback para Google Drive se credenciais existirem
+      if (!fileUrl) {
+        const drive = await initializeGoogleDriveClient();
+        if (!drive) {
+          return NextResponse.json(
+            { error: 'Upload falhou: Storage e Drive indisponíveis' },
+            { status: 500 }
+          );
         }
-      });
 
-      const fileId = response.data.id || '';
-      if (!fileId) throw new Error('Falha ao criar arquivo no Google Drive');
+        const arrayBuffer = await photo.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const stream = new Readable();
+        stream.push(buffer);
+        stream.push(null);
 
-      await drive.permissions.create({
-        fileId,
-        requestBody: { role: 'reader', type: 'anyone' }
-      });
+        const response = await drive.files.create({
+          requestBody: {
+            name: fileName,
+            mimeType: photo.type,
+            parents: process.env.GOOGLE_DRIVE_FOLDER_ID ? [process.env.GOOGLE_DRIVE_FOLDER_ID] : undefined
+          },
+          media: {
+            body: stream,
+            mimeType: photo.type
+          }
+        });
 
-      const fileResponse = await drive.files.get({ fileId, fields: 'webViewLink, webContentLink' });
-      fileUrl = fileResponse.data.webContentLink || fileResponse.data.webViewLink || '';
+        const fileId = response.data.id || '';
+        if (!fileId) throw new Error('Falha ao criar arquivo no Google Drive');
+
+        await drive.permissions.create({
+          fileId,
+          requestBody: { role: 'reader', type: 'anyone' }
+        });
+
+        const fileResponse = await drive.files.get({ fileId, fields: 'webViewLink, webContentLink' });
+        fileUrl = fileResponse.data.webContentLink || fileResponse.data.webViewLink || '';
+      }
     }
 
     if (!fileUrl) {
@@ -225,8 +261,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Foto de perfil atualizada com sucesso',
-      photoUrl: fileUrl,
-      fileId
+      photoUrl: fileUrl
     });
   } catch (error) {
     console.error('Erro ao processar requisição de upload:', error);

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 import { isAdminFromRequest } from '@/lib/auth';
 
 /**
@@ -39,10 +39,10 @@ export async function POST(request: Request) {
     for (const bucket of buckets) {
       try {
         // Verificar se o bucket já existe
-        const { data: existingBucket, error: checkError } = await supabase
+        const { data: existingBucket, error: checkError } = await (supabaseAdmin as any)
           .storage
           .getBucket(bucket.name);
-          
+
         if (checkError && checkError.message !== 'The resource was not found') {
           results.push({
             bucket: bucket.name,
@@ -61,12 +61,12 @@ export async function POST(request: Request) {
           });
           
           // Atualizar as configurações do bucket
-          const { error: updateError } = await supabase
+          const { error: updateError } = await (supabaseAdmin as any)
             .storage
             .updateBucket(bucket.name, {
               public: bucket.public
             });
-            
+
           if (updateError) {
             results.push({
               bucket: bucket.name,
@@ -85,12 +85,12 @@ export async function POST(request: Request) {
         }
         
         // Criar o bucket
-        const { error: createError } = await supabase
+        const { error: createError } = await (supabaseAdmin as any)
           .storage
           .createBucket(bucket.name, {
             public: bucket.public
           });
-          
+
         if (createError) {
           results.push({
             bucket: bucket.name,
@@ -109,7 +109,7 @@ export async function POST(request: Request) {
         // Configurar políticas de acesso para o bucket profile-images
         if (bucket.name === 'profile-images') {
           // Política para permitir que usuários leiam suas próprias imagens
-          const { error: policyError } = await supabase.rpc('create_storage_policy', {
+          const { error: policyError } = await (supabaseAdmin as any).rpc('create_storage_policy', {
             bucket_name: 'profile-images',
             policy_name: 'User Profile Images Policy',
             definition: `(bucket_id = 'profile-images'::text) AND (auth.uid() = SPLIT_PART(name, '/', 1)::uuid OR auth.role() = 'service_role'::text)`,
@@ -131,7 +131,7 @@ export async function POST(request: Request) {
           }
           
           // Política para permitir que usuários façam upload/insert de suas próprias imagens
-          const { error: updatePolicyError } = await supabase.rpc('create_storage_policy', {
+          const { error: updatePolicyError } = await (supabaseAdmin as any).rpc('create_storage_policy', {
             bucket_name: 'profile-images',
             policy_name: 'User Profile Images Update Policy',
             definition: `(bucket_id = 'profile-images'::text) AND (auth.uid() = SPLIT_PART(name, '/', 1)::uuid OR auth.role() = 'service_role'::text)`,
@@ -153,7 +153,7 @@ export async function POST(request: Request) {
           }
 
           // Política para permitir UPDATE (substituições/metadados) nas próprias imagens
-          const { error: updateObjPolicyError } = await supabase.rpc('create_storage_policy', {
+          const { error: updateObjPolicyError } = await (supabaseAdmin as any).rpc('create_storage_policy', {
             bucket_name: 'profile-images',
             policy_name: 'User Profile Images Modify Policy',
             definition: `(bucket_id = 'profile-images'::text) AND (auth.uid() = SPLIT_PART(name, '/', 1)::uuid OR auth.role() = 'service_role'::text)`,
@@ -175,7 +175,7 @@ export async function POST(request: Request) {
           }
 
           // Política para permitir DELETE das próprias imagens
-          const { error: deletePolicyError } = await supabase.rpc('create_storage_policy', {
+          const { error: deletePolicyError } = await (supabaseAdmin as any).rpc('create_storage_policy', {
             bucket_name: 'profile-images',
             policy_name: 'User Profile Images Delete Policy',
             definition: `(bucket_id = 'profile-images'::text) AND (auth.uid() = SPLIT_PART(name, '/', 1)::uuid OR auth.role() = 'service_role'::text)`,
