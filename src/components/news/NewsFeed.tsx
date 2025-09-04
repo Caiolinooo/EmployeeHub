@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { FiHeart, FiMessageCircle, FiShare2, FiBookmark, FiMoreHorizontal, FiEye, FiCalendar, FiUser, FiImage, FiStar, FiPlus } from 'react-icons/fi';
 import { useACLPermissions } from '@/hooks/useACLPermissions';
 import { useI18n } from '@/contexts/I18nContext';
+import { useToast } from '@/hooks/useToast';
 import InstagramStylePostCreator from './InstagramStylePostCreator';
 import NewsCommentSection from './NewsCommentSection';
 
@@ -59,6 +60,46 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [openMenuPostId, setOpenMenuPostId] = useState<string | null>(null);
+  const { toast } = useToast();
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
+  const [editingExcerpt, setEditingExcerpt] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const beginInlineEdit = (post: NewsPost) => {
+    setEditingPostId(post.id);
+    setEditingTitle(post.title);
+    setEditingExcerpt(post.excerpt);
+    setOpenMenuPostId(null);
+  };
+
+  const cancelInlineEdit = () => {
+    setEditingPostId(null);
+    setEditingTitle('');
+    setEditingExcerpt('');
+  };
+
+  const saveInlineEdit = async (post: NewsPost) => {
+    try {
+      setSavingEdit(true);
+      const res = await fetch(`/api/news/posts/${post.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: editingTitle, excerpt: editingExcerpt })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao salvar');
+      setPosts(prev => prev.map(p => p.id === post.id ? { ...p, title: data.title, excerpt: data.excerpt } : p));
+      toast.success('Post atualizado');
+      cancelInlineEdit();
+    } catch (e) {
+      console.error(e);
+      toast.error('Falha ao salvar alterações');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
 
   const handleDeletePost = async (postId: string) => {
     if (!confirm('Tem certeza que deseja excluir este post?')) return;
@@ -267,6 +308,56 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
               <FiCalendar className="w-4 h-4" />
               <span>{formatDate(post.published_at)}</span>
               <span>•</span>
+      {/* Edição inline */}
+      {editingPostId === post.id ? (
+        <div className="px-4 pb-3 space-y-3">
+          <input
+            value={editingTitle}
+            onChange={(e) => setEditingTitle(e.target.value)}
+            className="w-full px-3 py-2 border rounded"
+          />
+          <textarea
+            value={editingExcerpt}
+            onChange={(e) => setEditingExcerpt(e.target.value)}
+            className="w-full px-3 py-2 border rounded"
+            rows={4}
+          />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => saveInlineEdit(post)}
+              disabled={savingEdit}
+              className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
+            >Salvar</button>
+            <button
+              onClick={cancelInlineEdit}
+              className="px-4 py-2 border rounded"
+            >Cancelar</button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Conteúdo do Post */}
+          <div className="px-4 pb-3">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">{post.title}</h2>
+            <p className="text-gray-700 leading-relaxed">{post.excerpt}</p>
+
+            {/* Tags */}
+            {Array.isArray(post.tags) && post.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {post.tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
               <FiEye className="w-4 h-4" />
               <span>{post.views_count} visualizações</span>
             </div>
@@ -287,10 +378,10 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
                 className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
               >Copiar link</button>
 
-              {/* Editar post (somente autorizado) */}
+              {/* Editar post inline (somente autorizado) */}
               {(hasPermission('news.edit') || hasPermission('news.publish')) && (
                 <button
-                  onClick={() => handleEditPost(post.id)}
+                  onClick={() => beginInlineEdit(post)}
                   className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
                 >Editar</button>
               )}
