@@ -158,6 +158,12 @@ export default function DocumentsAdminPage() {
                           <FiDownload className="mr-1" />
                           {t('common.download', 'Download')}
                         </a>
+                        <button
+                          onClick={() => { navigator.clipboard.writeText(`/${selectedFile}`); toast.success(t('admin.documents.copied','Caminho copiado!') as string); }}
+                          className="flex items-center px-3 py-2 bg-gray-100 text-abz-text-dark rounded-md hover:bg-gray-200 transition-colors"
+                        >
+                          {t('common.copy', 'Copiar caminho')}
+                        </button>
                       </div>
                     </div>
                   ) : (

@@ -37,8 +37,7 @@ export async function GET(request: NextRequest) {
           .from('documents')
           .select('id, title, content, created_at, updated_at')
           .or(`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%`)
-          .limit(limit)
-          .offset(offset);
+          .range(offset, offset + limit - 1);
 
         if (!docError && documents) {
           documents.forEach(doc => {
@@ -67,8 +66,7 @@ export async function GET(request: NextRequest) {
           .from('news')
           .select('id, title, content, created_at, updated_at, author')
           .or(`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%`)
-          .limit(limit)
-          .offset(offset);
+          .range(offset, offset + limit - 1);
 
         if (!newsError && news) {
           news.forEach(item => {
@@ -98,8 +96,7 @@ export async function GET(request: NextRequest) {
           .from('users_unified')
           .select('id, first_name, last_name, email, role, position, department')
           .or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,position.ilike.%${searchTerm}%,department.ilike.%${searchTerm}%`)
-          .limit(limit)
-          .offset(offset);
+          .range(offset, offset + limit - 1);
 
         if (!userError && users) {
           users.forEach(user => {
@@ -238,8 +235,7 @@ export async function GET(request: NextRequest) {
           .from('dashboard_cards')
           .select('id, title, description, url, icon, created_at')
           .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
-          .limit(limit)
-          .offset(offset);
+          .range(offset, offset + limit - 1);
 
         if (!cardError && cards) {
           cards.forEach(card => {
@@ -268,8 +264,7 @@ export async function GET(request: NextRequest) {
           .from('Reimbursement')
           .select('id, protocol, description, status, amount, created_at')
           .or(`protocol.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
-          .limit(limit)
-          .offset(offset);
+          .range(offset, offset + limit - 1);
 
         if (!reimbError && reimbursements) {
           reimbursements.forEach(reimb => {
@@ -300,8 +295,7 @@ export async function GET(request: NextRequest) {
           .from('paystubs')
           .select('id, month, year, gross_salary, net_salary, user_id, users_unified!inner(first_name, last_name)')
           .or(`month.ilike.%${searchTerm}%,year::text.ilike.%${searchTerm}%`)
-          .limit(limit)
-          .offset(offset);
+          .range(offset, offset + limit - 1);
 
         if (!paystubError && paystubs) {
           paystubs.forEach(paystub => {
@@ -332,8 +326,7 @@ export async function GET(request: NextRequest) {
           .from('performance_evaluations')
           .select('id, title, period, status, score, created_at')
           .or(`title.ilike.%${searchTerm}%,period.ilike.%${searchTerm}%,status.ilike.%${searchTerm}%`)
-          .limit(limit)
-          .offset(offset);
+          .range(offset, offset + limit - 1);
 
         if (!evalError && evaluations) {
           evaluations.forEach(evaluation => {
@@ -364,8 +357,7 @@ export async function GET(request: NextRequest) {
           .from('policies')
           .select('id, title, description, category, version, created_at')
           .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`)
-          .limit(limit)
-          .offset(offset);
+          .range(offset, offset + limit - 1);
 
         if (!policyError && policies) {
           policies.forEach(policy => {
@@ -395,8 +387,7 @@ export async function GET(request: NextRequest) {
           .from('procedures')
           .select('id, title, description, category, version, created_at')
           .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`)
-          .limit(limit)
-          .offset(offset);
+          .range(offset, offset + limit - 1);
 
         if (!procError && procedures) {
           procedures.forEach(procedure => {
@@ -427,8 +418,7 @@ export async function GET(request: NextRequest) {
           .select('id, title, description, category, difficulty, instructor, duration')
           .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,instructor.ilike.%${searchTerm}%`)
           .eq('is_active', true)
-          .limit(limit)
-          .offset(offset);
+          .range(offset, offset + limit - 1);
 
         if (!courseError && courses) {
           courses.forEach(course => {

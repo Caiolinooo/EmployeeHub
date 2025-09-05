@@ -58,7 +58,10 @@ export default function FileExplorer({
     setError(null);
 
     try {
-      const response = await fetch(`/api/files?path=${encodeURIComponent(getFullPath(currentPath))}`);
+      const token = (typeof window !== 'undefined' && (localStorage.getItem('token') || localStorage.getItem('abzToken'))) || '';
+      const response = await fetch(`/api/files?path=${encodeURIComponent(getFullPath(currentPath))}` , {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
       
       if (!response.ok) {
         throw new Error(`Erro ao carregar arquivos: ${response.status} ${response.statusText}`);
@@ -130,10 +133,12 @@ export default function FileExplorer({
     }
 
     try {
+      const token = (typeof window !== 'undefined' && (localStorage.getItem('token') || localStorage.getItem('abzToken'))) || '';
       const response = await fetch('/api/files/create-folder', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           path: getFullPath(currentPath),
@@ -172,8 +177,10 @@ export default function FileExplorer({
         formData.append('files', files[i]);
       }
 
+      const token = (typeof window !== 'undefined' && (localStorage.getItem('token') || localStorage.getItem('abzToken'))) || '';
       const response = await fetch('/api/files/upload', {
         method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData,
       });
 

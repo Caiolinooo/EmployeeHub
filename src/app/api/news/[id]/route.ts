@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { withPermission } from '@/lib/api-auth';
 
 // GET - Obter uma notícia pelo ID
 export async function GET(
@@ -35,11 +36,12 @@ export async function GET(
   }
 }
 
-// PUT - Atualizar uma notícia
-export async function PUT(
+// PUT - Atualizar uma notícia (somente ADMIN ou MANAGER)
+export const PUT = withPermission('manager', async (
   request: NextRequest,
+  _user: any,
   context: { params: { id: string } }
-) {
+) => {
   const { params } = context;
   try {
     // Garantir que params seja await antes de acessar suas propriedades
@@ -118,13 +120,14 @@ export async function PUT(
       { status: 500 }
     );
   }
-}
+});
 
-// DELETE - Excluir uma notícia
-export async function DELETE(
+// DELETE - Excluir uma notícia (somente ADMIN ou MANAGER)
+export const DELETE = withPermission('manager', async (
   request: NextRequest,
+  _user: any,
   context: { params: { id: string } }
-) {
+) => {
   const { params } = context;
   try {
     // Garantir que params seja await antes de acessar suas propriedades
@@ -173,4 +176,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});

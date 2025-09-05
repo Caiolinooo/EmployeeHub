@@ -5,24 +5,19 @@ import { supabase, supabaseAdmin } from './supabase';
 // Exportar o cliente Supabase para uso em toda a aplicação
 export { supabase, supabaseAdmin };
 
-// Para manter a compatibilidade com o código existente que usa prisma
-// Criamos um objeto de compatibilidade que redireciona as chamadas para o Supabase
-// NOTA: Este é um objeto temporário para facilitar a migração
-// Eventualmente, todo o código deve ser atualizado para usar diretamente o Supabase
-
-// Aviso de depreciação será exibido somente quando o objeto "prisma" for realmente acessado
-
-// Criar um proxy para redirecionar chamadas do Prisma para o Supabase
-export const prisma = new Proxy({}, {
-  get: function(target, prop) {
-    // Registrar tentativa de uso do Prisma apenas em desenvolvimento
-    if (process.env.NODE_ENV === 'development') {
-      console.warn(`Tentativa de usar prisma.${String(prop)}. Use supabase diretamente.`);
+// Compat de prisma removida. Export mantido apenas para evitar que imports quebrem durante migração.
+// Não loga mais em acesso de propriedades internas do React (ex.: $$typeof).
+export const prisma: any = new Proxy({}, {
+  get: (_target, prop) => {
+    // Suprimir verificações internas (React/ESM)
+    if (prop === '$$typeof' || prop === '__esModule' || typeof prop === 'symbol') {
+      return undefined;
     }
-
-    // Retornar uma função que registra um erro
-    return () => {
-      throw new Error(`O Prisma foi removido. Atualize seu código para usar o Supabase diretamente.`);
-    };
+    // Retornar um encadeador que só lança se alguém tentar invocar como função
+    const thrower: any = new Proxy(function () {}, {
+      get: () => thrower, // permite prisma.x.y.z sem erro até a invocação
+      apply: () => { throw new Error('Prisma foi removido. Use Supabase diretamente.'); }
+    });
+    return thrower;
   }
 });

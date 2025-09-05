@@ -14,16 +14,60 @@ import { SiteConfigProvider } from '@/contexts/SiteConfigContext';
 import MaterialDesignIcon from '@/components/MaterialDesignIcon';
 import LanguageDialog from '@/components/LanguageDialog';
 import SiteHead from '@/components/SiteHead';
+import CompleteProfilePrompt from '@/components/Profile/CompleteProfilePrompt';
+import { usePathname } from 'next/navigation';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+
+
+// Renders the profile completion prompt only when under SupabaseAuthProvider
+function ProfilePromptGate({ isMounted, pathname }: { isMounted: boolean; pathname?: string | null }) {
+  const { isAuthenticated, isLoading, profile, user } = useSupabaseAuth();
+  const isAuthRoute = pathname?.startsWith('/login') || pathname?.startsWith('/register') || pathname?.startsWith('/set-password') || pathname?.startsWith('/reset-password');
+
+  const hasProfile = !!profile;
+  const fullNameFromProfileData = ((): { first?: string; last?: string } => {
+    const pd: any = (profile as any)?.profile_data || {};
+    const name: string | undefined = pd?.full_name || pd?.name || (profile as any)?.name;
+    if (name && typeof name === 'string') {
+      const parts = name.trim().split(/\s+/);
+      if (parts.length >= 2) return { first: parts[0], last: parts[parts.length - 1] };
+      if (parts.length === 1) return { first: parts[0] };
+    }
+    return { first: pd?.first_name || pd?.firstName, last: pd?.last_name || pd?.lastName };
+  })();
+
+  const firstCandidate = (
+    (profile?.first_name ?? (profile as any)?.firstName ?? fullNameFromProfileData.first ?? (user as any)?.first_name ?? (user as any)?.firstName ?? '') as string
+  ).trim();
+
+  let lastCandidate = (
+    (profile?.last_name ?? (profile as any)?.lastName ?? fullNameFromProfileData.last ?? (user as any)?.last_name ?? (user as any)?.lastName ?? '') as string
+  ).trim();
+
+  // As a last resort, try to infer last name from email pattern like john.doe@...
+  if (!lastCandidate && (user?.email || profile?.email)) {
+    const email = (user?.email || profile?.email) as string;
+    const local = email.split('@')[0];
+    const parts = local.split('.');
+    if (parts.length >= 2) lastCandidate = parts[parts.length - 1];
+  }
+
+  const needsProfile = hasProfile && !(firstCandidate && lastCandidate);
+  const showProfilePrompt = isMounted && !isLoading && isAuthenticated && !isAuthRoute && hasProfile && needsProfile;
+  return showProfilePrompt ? <CompleteProfilePrompt reminderMinutes={2} /> : null;
+}
 
 // Client-side only component to wrap all providers
 export default function ClientProviders({ children }: { children: React.ReactNode }) {
   // Use state to track client-side mounting to prevent hydration mismatches
   const [isMounted, setIsMounted] = useState(false);
+  const pathname = usePathname();
+
 
   useEffect(() => {
-    // Set mounted state after hydration
     setIsMounted(true);
   }, []);
+
 
   return (
     <>
@@ -32,10 +76,9 @@ export default function ClientProviders({ children }: { children: React.ReactNod
         <I18nProvider>
           <SiteConfigProvider>
             <SiteHead />
-            {/* Only render components that might cause hydration issues when mounted on client */}
             {isMounted && <LanguageDialog />}
             {isMounted && <ToastContainer position="top-right" theme="colored" />}
-            {/* Render the children directly without the problematic icon wrappers */}
+            <ProfilePromptGate isMounted={isMounted} pathname={pathname} />
             {children}
           </SiteConfigProvider>
         </I18nProvider>

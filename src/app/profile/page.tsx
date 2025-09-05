@@ -12,6 +12,7 @@ import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import ChangePasswordTab from '@/components/Profile/ChangePasswordTab';
 import { useI18n } from '@/contexts/I18nContext';
+import NotificationPreferencesPanel from '@/components/Profile/NotificationPreferencesPanel';
 
 export default function ProfilePage() {
   const { user, profile, isLoading, refreshProfile } = useSupabaseAuth();
@@ -734,6 +735,9 @@ export default function ProfilePage() {
                       </div>
                     </div>
                   )}
+
+                  {/* Preferências de Notificação */}
+                  <NotificationPreferencesPanel />
                 </div>
               )}
 

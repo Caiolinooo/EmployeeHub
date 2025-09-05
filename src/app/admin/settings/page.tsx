@@ -15,6 +15,11 @@ interface SiteConfig {
   companyName: string;
   contactEmail: string;
   footerText: string;
+  dashboardTitle: string;
+  dashboardDescription: string;
+  googleClientId?: string;
+  googleClientSecret?: string;
+  googleRedirectUri?: string;
   updatedAt: string;
 }
 
@@ -27,6 +32,32 @@ export default function SettingsPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [faviconFile, setFaviconFile] = useState<File | null>(null);
+
+  // Calendário da empresa (ICS)
+  const [calUrlInput, setCalUrlInput] = useState<string>('');
+  const [calNotifyMins, setCalNotifyMins] = useState<number>(60);
+  const [calExtraRecipients, setCalExtraRecipients] = useState<string>('');
+  const [calMarkerColor, setCalMarkerColor] = useState<string>('#6339F5');
+  const [calIsSaving, setCalIsSaving] = useState(false);
+  const [calLoaded, setCalLoaded] = useState(false);
+
+  const loadCompanyCalendarSettings = async () => {
+    try {
+      const res = await fetch('/api/admin/calendar/company/settings');
+      const data = await res.json();
+      if (res.ok) {
+        const { ics_url, notify_minutes_before, extra_recipients, marker_color } = data || {};
+        setCalUrlInput(ics_url || '');
+        setCalNotifyMins(typeof notify_minutes_before === 'number' ? notify_minutes_before : 60);
+        setCalExtraRecipients(Array.isArray(extra_recipients) ? extra_recipients.join(', ') : '');
+        setCalMarkerColor(typeof marker_color === 'string' ? marker_color : '#6339F5');
+      }
+    } catch (e) {
+      console.error('Falha ao carregar company_calendar', e);
+    } finally {
+      setCalLoaded(true);
+    }
+  };
 
   // Carregar configurações
   const fetchConfig = async () => {
@@ -48,6 +79,8 @@ export default function SettingsPage() {
             companyName: 'ABZ Group',
             contactEmail: 'contato@groupabz.com',
             footerText: '© 2024 ABZ Group. Todos os direitos reservados.',
+            dashboardTitle: 'Painel de Logística ABZ Group',
+            dashboardDescription: 'Bem-vindo ao centro de recursos para colaboradores da logística.',
             updatedAt: new Date().toISOString(),
           };
 
@@ -92,6 +125,8 @@ export default function SettingsPage() {
         companyName: 'ABZ Group',
         contactEmail: 'contato@groupabz.com',
         footerText: '© 2024 ABZ Group. Todos os direitos reservados.',
+        dashboardTitle: 'Painel de Logística ABZ Group',
+        dashboardDescription: 'Bem-vindo ao centro de recursos para colaboradores da logística.',
         updatedAt: new Date().toISOString(),
       });
     } finally {
@@ -101,6 +136,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     fetchConfig();
+    loadCompanyCalendarSettings();
   }, []);
 
   // Função para lidar com mudanças nos campos
@@ -264,353 +300,45 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-          <h3 className="text-lg font-medium leading-6 text-gray-900">
-            Configurações Gerais
-          </h3>
-          <p className="mt-1 text-sm text-gray-500">
-            Última atualização: {new Date(config.updatedAt).toLocaleString()}
-          </p>
-        </div>
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Configurações Básicas */}
+        <div className="bg-white shadow rounded-lg p-6">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Configurações Básicas</h2>
 
-        <div className="p-6 space-y-6">
-          {/* Informações Básicas */}
-          <div>
-            <h4 className="text-md font-medium text-gray-900 mb-4">Informações Básicas</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-                  Título do Site
-                </label>
-                <input
-                  type="text"
-                  id="title"
-                  name="title"
-                  value={config.title}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
-                  required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
-                  Nome da Empresa
-                </label>
-                <input
-                  type="text"
-                  id="companyName"
-                  name="companyName"
-                  value={config.companyName}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
-                  required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="dashboardTitle" className="block text-sm font-medium text-gray-700 mb-1">
-                  Título do Dashboard
-                </label>
-                <input
-                  type="text"
-                  id="dashboardTitle"
-                  name="dashboardTitle"
-                  value={config.dashboardTitle}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
-                  placeholder="Ex: Painel de Logística ABZ Group"
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Este título aparecerá na página principal do dashboard
-                </p>
-              </div>
-
-              <div>
-                <label htmlFor="dashboardDescription" className="block text-sm font-medium text-gray-700 mb-1">
-                  Descrição do Dashboard
-                </label>
-                <input
-                  type="text"
-                  id="dashboardDescription"
-                  name="dashboardDescription"
-                  value={config.dashboardDescription}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
-                  placeholder="Ex: Bem-vindo ao centro de recursos para colaboradores da logística."
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Este texto aparecerá abaixo do título do dashboard
-                </p>
-              </div>
-
-              <div className="md:col-span-2">
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                  Descrição
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={config.description}
-                  onChange={handleChange}
-                  rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
-                  required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="contactEmail" className="block text-sm font-medium text-gray-700 mb-1">
-                  E-mail de Contato
-                </label>
-                <input
-                  type="email"
-                  id="contactEmail"
-                  name="contactEmail"
-                  value={config.contactEmail}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
-                  required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="footerText" className="block text-sm font-medium text-gray-700 mb-1">
-                  Texto do Rodapé
-                </label>
-                <input
-                  type="text"
-                  id="footerText"
-                  name="footerText"
-                  value={config.footerText}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Integração Google Calendar */}
-          <div className="mb-8">
-            <h4 className="text-md font-medium text-gray-900 mb-4">Integração Google Calendar</h4>
-            <p className="text-sm text-gray-600 mb-4">
-              Configure a integração global com Google Calendar. Esta configuração será aplicada para todos os usuários do sistema.
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="googleClientId" className="block text-sm font-medium text-gray-700 mb-1">
-                  Google Client ID
-                </label>
-                <input
-                  type="text"
-                  id="googleClientId"
-                  name="googleClientId"
-                  value={config.googleClientId || ''}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
-                  placeholder="Seu Google Client ID"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="googleClientSecret" className="block text-sm font-medium text-gray-700 mb-1">
-                  Google Client Secret
-                </label>
-                <input
-                  type="password"
-                  id="googleClientSecret"
-                  name="googleClientSecret"
-                  value={config.googleClientSecret || ''}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
-                  placeholder="Seu Google Client Secret"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label htmlFor="googleRedirectUri" className="block text-sm font-medium text-gray-700 mb-1">
-                  Redirect URI
-                </label>
-                <input
-                  type="url"
-                  id="googleRedirectUri"
-                  name="googleRedirectUri"
-                  value={config.googleRedirectUri || ''}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
-                  placeholder="https://seudominio.com/api/calendar/callback"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  URI de redirecionamento configurada no Google Cloud Console
-                </p>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+                Título do Site
+              </label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                value={config.title}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
+                required
+              />
             </div>
 
-            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-              <h4 className="text-sm font-medium text-blue-900 mb-2">Como configurar:</h4>
-              <ol className="text-xs text-blue-800 space-y-1">
-                <li>1. Acesse o Google Cloud Console</li>
-                <li>2. Crie um projeto ou selecione um existente</li>
-                <li>3. Ative a Google Calendar API</li>
-                <li>4. Crie credenciais OAuth 2.0</li>
-                <li>5. Configure o Redirect URI</li>
-                <li>6. Cole as credenciais nos campos acima</li>
-              </ol>
-            </div>
-          </div>
-
-          {/* Aparência */}
-          <div>
-            <h4 className="text-md font-medium text-gray-900 mb-4">Aparência</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="primaryColor" className="block text-sm font-medium text-gray-700 mb-1">
-                  Cor Primária
-                </label>
-                <div className="flex items-center">
-                  <input
-                    type="color"
-                    id="primaryColorPicker"
-                    value={config.primaryColor}
-                    onChange={(e) => setConfig({ ...config, primaryColor: e.target.value })}
-                    className="h-10 w-10 border border-gray-300 rounded mr-2"
-                  />
-                  <input
-                    type="text"
-                    id="primaryColor"
-                    name="primaryColor"
-                    value={config.primaryColor}
-                    onChange={handleChange}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="secondaryColor" className="block text-sm font-medium text-gray-700 mb-1">
-                  Cor Secundária
-                </label>
-                <div className="flex items-center">
-                  <input
-                    type="color"
-                    id="secondaryColorPicker"
-                    value={config.secondaryColor}
-                    onChange={(e) => setConfig({ ...config, secondaryColor: e.target.value })}
-                    className="h-10 w-10 border border-gray-300 rounded mr-2"
-                  />
-                  <input
-                    type="text"
-                    id="secondaryColor"
-                    name="secondaryColor"
-                    value={config.secondaryColor}
-                    onChange={handleChange}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="logo" className="block text-sm font-medium text-gray-700 mb-1">
-                  Logo
-                </label>
-                <div className="flex items-center">
-                  <input
-                    type="text"
-                    id="logo"
-                    name="logo"
-                    value={config.logo}
-                    onChange={handleChange}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
-                    required
-                  />
-                  <label
-                    htmlFor="logoFile"
-                    className="ml-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue cursor-pointer"
-                  >
-                    <FiUpload className="inline-block mr-1" />
-                    Upload
-                  </label>
-                  <input
-                    type="file"
-                    id="logoFile"
-                    onChange={(e) => handleFileChange(e, 'logo')}
-                    className="hidden"
-                    accept="image/*"
-                  />
-                </div>
-                {logoFile && (
-                  <p className="mt-1 text-sm text-gray-500">
-                    Arquivo selecionado: {logoFile.name}
-                  </p>
-                )}
-                <div className="mt-2">
-                  <img
-                    src={config.logo}
-                    alt="Logo"
-                    className="h-12 object-contain"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/placeholder-image.png';
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="favicon" className="block text-sm font-medium text-gray-700 mb-1">
-                  Favicon
-                </label>
-                <div className="flex items-center">
-                  <input
-                    type="text"
-                    id="favicon"
-                    name="favicon"
-                    value={config.favicon}
-                    onChange={handleChange}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
-                    required
-                  />
-                  <label
-                    htmlFor="faviconFile"
-                    className="ml-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue cursor-pointer"
-                  >
-                    <FiUpload className="inline-block mr-1" />
-                    Upload
-                  </label>
-                  <input
-                    type="file"
-                    id="faviconFile"
-                    onChange={(e) => handleFileChange(e, 'favicon')}
-                    className="hidden"
-                    accept="image/x-icon,image/png,image/jpeg"
-                  />
-                </div>
-                {faviconFile && (
-                  <p className="mt-1 text-sm text-gray-500">
-                    Arquivo selecionado: {faviconFile.name}
-                  </p>
-                )}
-                <div className="mt-2">
-                  <img
-                    src={config.favicon}
-                    alt="Favicon"
-                    className="h-8 w-8 object-contain"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/placeholder-image.png';
-                    }}
-                  />
-                </div>
-              </div>
+            <div>
+              <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
+                Nome da Empresa
+              </label>
+              <input
+                type="text"
+                id="companyName"
+                name="companyName"
+                value={config.companyName}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
+                required
+              />
             </div>
           </div>
         </div>
 
+        {/* Botões de ação */}
         <div className="px-4 py-3 bg-gray-50 text-right sm:px-6 flex justify-end space-x-3">
           <button
             type="button"
@@ -625,17 +353,8 @@ export default function SettingsPage() {
             disabled={isSaving}
             className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-abz-blue hover:bg-abz-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue disabled:opacity-70"
           >
-            {isSaving ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Salvando...
-              </>
-            ) : (
-              <>
-                <FiSave className="mr-2 h-4 w-4" />
-                Salvar Configurações
-              </>
-            )}
+            <FiSave className="mr-2 h-4 w-4" />
+            {isSaving ? 'Salvando...' : 'Salvar Configurações'}
           </button>
         </div>
       </form>

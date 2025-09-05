@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import MainLayout from '@/components/Layout/MainLayout';
 import { FiFileText, FiDownload, FiEye } from 'react-icons/fi';
 import LazyDocumentViewer from '@/components/LazyLoad/LazyDocumentViewer';
@@ -38,9 +38,26 @@ const getPolicies = (t: (key: string, defaultValue?: string) => string) => [
 export default function PoliticasPage() {
   const { t } = useI18n();
   const [selectedPolicy, setSelectedPolicy] = useState<string | null>(null);
+  const [docs, setDocs] = useState<any[]>([]);
 
-  // Obter políticas traduzidas com medição de performance
-  const politicas = measure('getPolicies', () => getPolicies(t), { locale: t('locale.code', 'pt-BR') });
+  // Carregar documentos da categoria Políticas/HSE/Qualidade
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/documents');
+        if (res.ok) {
+          const data = await res.json();
+          const allowed = ['HSE','Qualidade','Políticas'];
+          setDocs((data || []).filter((d: any) => allowed.includes(d.category)));
+        }
+      } catch (e) {
+        console.warn('Falha ao carregar documentos de políticas, usando fallback.', e);
+      }
+    })();
+  }, []);
+
+  // Fallback para políticas hardcoded se não houver docs
+  const politicas = (docs.length ? docs.map((d: any) => ({ id: d.id || d.title, title: d.title, description: d.description, language: d.language || '', category: d.category, file: d.file })) : measure('getPolicies', () => getPolicies(t), { locale: t('locale.code', 'pt-BR') }));
 
   // Função para abrir a visualização do documento
   const openPolicyViewer = (policyId: string) => {

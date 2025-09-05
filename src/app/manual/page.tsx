@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import MainLayout from '@/components/Layout/MainLayout';
 import { FiBookOpen, FiDownload, FiEye } from 'react-icons/fi';
 import LazyDocumentViewer from '@/components/LazyLoad/LazyDocumentViewer';
@@ -19,10 +19,27 @@ const getManualDoc = (t: (key: string) => string) => ({
 
 export default function ManualPage() {
   const [showViewer, setShowViewer] = useState(false);
+  const [docs, setDocs] = useState<Array<{id:string; title:string; description:string; file:string;}>>([]);
   const { t } = useI18n();
 
   // Get translated manual document with performance measurement
   const manualDoc = measure('getManualDoc', () => getManualDoc(t), { locale: t('locale.code', 'pt-BR') });
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/documents?category=' + encodeURIComponent('Manual'));
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length) {
+            setDocs(data.map((d: any) => ({ id: d.id || d.title, title: d.title, description: d.description, file: d.file })));
+          }
+        }
+      } catch (e) {
+        console.warn('Falha ao carregar documentos do Manual, usando fallback.', e);
+      }
+    })();
+  }, []);
 
   const openViewer = () => setShowViewer(true);
   const closeViewer = () => setShowViewer(false);
@@ -33,45 +50,31 @@ export default function ManualPage() {
 
       <div className="bg-white p-6 rounded-lg shadow-md">
          <h2 className="text-2xl font-semibold text-abz-text-black mb-6">{t('manual.mainDocument', 'Documento Principal')}</h2>
-        {/* List structure similar to /politicas */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div
-              key={manualDoc.id}
-              className="border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow"
-            >
+          {(docs.length ? docs : [manualDoc]).map((doc) => (
+            <div key={doc.id} className="border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
               <div className="flex items-start mb-3">
-                <div className={`bg-abz-light-blue p-3 rounded-full mr-3`}>
-                    <FiBookOpen className="text-abz-blue w-5 h-5" />
+                <div className="bg-abz-light-blue p-3 rounded-full mr-3">
+                  <FiBookOpen className="text-abz-blue w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-abz-text-black">{manualDoc.title}</h3>
+                  <h3 className="font-semibold text-abz-text-black">{doc.title}</h3>
                 </div>
               </div>
-
-              <p className="text-sm text-abz-text-dark mb-4">
-                {manualDoc.description}
-              </p>
-
+              <p className="text-sm text-abz-text-dark mb-4">{('description' in doc && (doc as any).description) || manualDoc.description}</p>
               <div className="flex items-center gap-2 mt-4">
-                <button
-                  onClick={openViewer} // Opens modal
-                  className="inline-flex items-center px-4 py-2 bg-abz-blue text-white rounded-md hover:bg-abz-blue-dark transition-colors text-sm font-medium shadow-sm"
-                  title="Visualizar o manual"
-                >
-                  <FiEye className="mr-1.5" />
-                  {t('manual.view')}
+                <button onClick={() => { setShowViewer(true); }} className="inline-flex items-center px-4 py-2 bg-abz-blue text-white rounded-md hover:bg-abz-blue-dark transition-colors text-sm font-medium shadow-sm">
+                  <FiEye className="mr-1.5" />{t('manual.view')}
                 </button>
-                <a
-                  href={manualDoc.file}
-                  download={`${t('manual.title')} - ABZ Group.pdf`}
-                  className="inline-flex items-center px-4 py-2 bg-gray-100 text-abz-text-dark rounded-md hover:bg-gray-200 transition-colors text-sm font-medium shadow-sm"
-                >
-                  <FiDownload className="mr-1.5" />
-                  {t('manual.download')}
+                <a href={(doc as any).file} download className="inline-flex items-center px-4 py-2 bg-gray-100 text-abz-text-dark rounded-md hover:bg-gray-200 transition-colors text-sm font-medium shadow-sm">
+                  <FiDownload className="mr-1.5" />{t('manual.download')}
                 </a>
               </div>
+              {showViewer && (
+                <LazyDocumentViewer title={doc.title} filePath={(doc as any).file} onClose={() => setShowViewer(false)} accentColor="text-abz-blue" />
+              )}
             </div>
-          {/* Can add more documents here if needed in the future */}
+          ))}
         </div>
       </div>
 

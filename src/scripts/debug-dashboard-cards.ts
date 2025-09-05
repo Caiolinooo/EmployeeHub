@@ -100,15 +100,15 @@ async function debugDashboardCards() {
     }
 
     // 4. Verificar card Social
-    console.log('\n4️⃣ Verificando card Social...');
+    console.log('\n4️⃣ Verificando card Social... (desativado por solicitação)');
     const socialCard = allCards.find(card => card.id === 'social');
     
     if (!socialCard) {
       console.log('❌ Card Social não encontrado');
-      console.log('🔧 Solução: Execute POST /api/social/populate-card');
+      console.log('ℹ️ Card Social está desativado e não será criado.');
       
       // Tentar criar o card Social
-      console.log('🔄 Tentando criar card Social...');
+      // Card Social removido; pular criação
       const socialCardData = {
         id: 'social',
         title: 'ABZ Social',
@@ -131,15 +131,15 @@ async function debugDashboardCards() {
         updated_at: new Date().toISOString()
       };
 
-      const { data: newSocialCard, error: createSocialError } = await supabaseAdmin
+      /* const { data: newSocialCard, error: createSocialError } = await supabaseAdmin
         .from('cards')
         .insert(socialCardData)
         .select()
         .single();
 
-      if (createSocialError) {
+      if (false) {
         console.log('❌ Erro ao criar card Social:', createSocialError.message);
-      } else {
+      } else */ {
         console.log('✅ Card Social criado com sucesso!');
       }
     } else {

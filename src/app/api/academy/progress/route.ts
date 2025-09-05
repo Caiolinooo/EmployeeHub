@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { generateAndStoreCertificate } from '@/lib/certificates';
 
 // GET - Obter progresso do usuário
 export async function GET(request: NextRequest) {
@@ -251,10 +252,11 @@ export async function POST(request: NextRequest) {
 
     // Se o progresso chegou a 100%, marcar curso como concluído
     if (updatedProgress.progress_percentage >= 100) {
+      const nowIso = new Date().toISOString();
       const { error: completeError } = await supabaseAdmin
         .from('academy_enrollments')
         .update({
-          completed_at: new Date().toISOString()
+          completed_at: nowIso
         })
         .eq('id', targetEnrollmentId)
         .is('completed_at', null);
@@ -262,6 +264,60 @@ export async function POST(request: NextRequest) {
       if (completeError) {
         console.error('Erro ao marcar curso como concluído:', completeError);
         // Não falhar a atualização do progresso por causa disso
+      } else {
+        try {
+          // Buscar dados do enrollment + usuário + curso
+          const { data: enr, error: enrErr } = await supabaseAdmin
+            .from('academy_enrollments')
+            .select('id, user_id, course_id, completed_at, user:users_unified(id, email, first_name, last_name), course:academy_courses(id, title)')
+            .eq('id', targetEnrollmentId)
+            .single();
+
+          if (!enrErr && enr) {
+            const gen = await generateAndStoreCertificate(targetEnrollmentId);
+            if (!gen) return;
+            const downloadUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/academy/certificates/download?issue_id=${gen.issueId}`;
+
+            // Notificação in-app
+            const notification = {
+              user_id: enr.user_id,
+              type: 'certificate',
+              title: 'Certificado disponível',
+              message: `Seu certificado do curso "${enr.course?.title || ''}" está pronto`,
+              action_url: downloadUrl,
+              priority: 'normal',
+              created_at: nowIso
+            } as any;
+            await supabaseAdmin.from('notifications').insert(notification);
+
+            // E-mail com link e anexo do PDF
+            try {
+              const { sendEmail } = await import('@/lib/email-sendgrid');
+              const subject = `Certificado disponível - ${enr.course?.title || 'Curso'}`;
+              const html = `
+                <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
+                  <h2 style="margin:0 0 12px 0">Parabéns pela conclusão!</h2>
+                  <p style="margin:0 0 12px 0">Seu certificado do curso <strong>${enr.course?.title || ''}</strong> está disponível.</p>
+                  <p style="margin:16px 0">
+                    <a href="${downloadUrl}" style="display:inline-block;background:#005dff;color:#fff;padding:10px 14px;border-radius:6px;text-decoration:none">Baixar certificado (PDF)</a>
+                  </p>
+                  <p style="color:#666;font-size:12px">Você pode salvar como PDF ou imprimir.</p>
+                </div>
+              `;
+              if (enr.user?.email) {
+                await sendEmail(enr.user.email, subject, subject, html, {
+                  attachments: [
+                    { filename: `certificado-${gen.issueId}.pdf`, content: Buffer.from(gen.pdfBytes), contentType: 'application/pdf' }
+                  ]
+                });
+              }
+            } catch (e) {
+              console.warn('Falha ao enviar e-mail de certificado:', e);
+            }
+          }
+        } catch (e) {
+          console.warn('Falha no pós-processamento de conclusão:', e);
+        }
       }
     }
 

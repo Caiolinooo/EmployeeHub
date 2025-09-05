@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useAllUsers } from '@/hooks/useAllUsers';
 import { FiShield, FiUsers, FiKey, FiPlus, FiEdit, FiTrash2, FiCheck, FiX, FiInfo } from 'react-icons/fi';
 
 interface ACLPermission {
@@ -36,6 +37,7 @@ const ACLManagementPanel: React.FC = () => {
   const [permissions, setPermissions] = useState<ACLPermission[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { users: hookUsers, loading: usersLoading } = useAllUsers();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingPermission, setEditingPermission] = useState<ACLPermission | null>(null);
 
@@ -61,19 +63,12 @@ const ACLManagementPanel: React.FC = () => {
     }
   };
 
-  // Carregar usuários
-  const loadUsers = async () => {
-    try {
-      // Em produção, criar API específica para listar usuários
-      const response = await fetch('/api/users'); // API que precisa ser criada
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar usuários:', error);
+  // Unificar lista de usuários a partir do hook
+  useEffect(() => {
+    if (Array.isArray(hookUsers)) {
+      setUsers(hookUsers as any);
     }
-  };
+  }, [hookUsers]);
 
   // Criar nova permissão
   const createPermission = async () => {
@@ -102,7 +97,6 @@ const ACLManagementPanel: React.FC = () => {
 
   useEffect(() => {
     loadPermissions();
-    loadUsers();
     setLoading(false);
   }, []);
 

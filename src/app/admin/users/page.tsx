@@ -25,6 +25,7 @@ import UserEditor, { UserEditorData } from '@/components/admin/UserEditor';
 import UserAccessHistory from '@/components/admin/UserAccessHistory';
 import UserPasswordReset from '@/components/admin/UserPasswordReset';
 import UserRoleManager from '@/components/admin/UserRoleManager';
+import { useAllUsers } from '@/hooks/useAllUsers';
 
 // Interface para o usuário na lista
 interface User {
@@ -52,6 +53,18 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Unificado: usar lista geral de usuarios
+  const { users: hookUsers, loading: hookLoading, error: hookError, refresh } = useAllUsers();
+
+  useEffect(() => {
+    setLoading(hookLoading);
+    if (hookError) setError(hookError);
+    if (Array.isArray(hookUsers)) {
+      setUsers(hookUsers as any);
+      setFilteredUsers(hookUsers as any);
+    }
+  }, [hookUsers, hookLoading, hookError]);
+
   // Estados para modais
   const [showEditor, setShowEditor] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -72,31 +85,9 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     setLoading(true);
     setError(null);
-
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
-
-      if (!token) {
-        throw new Error('Não autorizado');
-      }
-
-      const response = await fetch('/api/users', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao obter usuários');
-      }
-
-      const data = await response.json();
-      setUsers(data);
-      setFilteredUsers(data);
-    } catch (error) {
-      console.error('Erro ao obter usuários:', error);
-      setError(error instanceof Error ? error.message : 'Erro desconhecido');
+      await refresh();
+      return;
     } finally {
       setLoading(false);
     }

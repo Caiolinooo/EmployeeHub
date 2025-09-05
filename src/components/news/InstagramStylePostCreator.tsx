@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { FiX, FiArrowLeft, FiImage, FiVideo, FiSmile, FiMapPin, FiTag, FiUsers, FiCheck } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
+import { fetchWithToken } from '@/lib/tokenStorage';
 
 interface InstagramStylePostCreatorProps {
   userId: string;
@@ -132,7 +133,7 @@ const InstagramStylePostCreator: React.FC<InstagramStylePostCreatorProps> = ({
         status: 'published'
       };
 
-      const response = await fetch('/api/news/posts', {
+      const response = await fetchWithToken('/api/news/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newPost)

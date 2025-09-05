@@ -29,6 +29,7 @@ import UserEditor, { UserEditorData } from '@/components/admin/UserEditor';
 import UserAccessHistory from '@/components/admin/UserAccessHistory';
 import UserPasswordReset from '@/components/admin/UserPasswordReset';
 import UserRoleManager from '@/components/admin/UserRoleManager';
+import { useAllUsers } from '@/hooks/useAllUsers';
 
 // Interface para o usuário na lista
 interface User {
@@ -89,6 +90,9 @@ export default function UnifiedUserManager() {
   const { user, isAdmin } = useSupabaseAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'users' | 'authorized'>('users');
+
+  // Lista unificada de usuários do projeto
+  const { users: hookUsers, loading: hookLoading, error: hookError, refresh: refreshAllUsers } = useAllUsers();
 
   // Estados para usuários regulares
   const [users, setUsers] = useState<User[]>([]);
@@ -329,111 +333,29 @@ export default function UnifiedUserManager() {
     }
   }, [searchTerm, users]);
 
+  // Sincronizar hook unificado -> estado local
+  useEffect(() => {
+    if (Array.isArray(hookUsers)) {
+      setUsers(hookUsers as any);
+      setFilteredUsers(hookUsers as any);
+    }
+    if (hookError) setError(hookError);
+  }, [hookUsers, hookError]);
 
   // Buscar usuários regulares
   const fetchUsers = async () => {
-    console.log('=== INICIANDO BUSCA DE USUÁRIOS ===');
+    console.log('=== INICIANDO BUSCA DE USUÁRIOS (useAllUsers) ===');
     setLoading(true);
     setError(null);
     try {
-      // Obter o token
-      const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
-
-      if (!token) {
-        throw new Error('Token de autenticação não encontrado. Faça login novamente.');
-      }
-
-      console.log('Buscando usuários com token:', token.substring(0, 10) + '...');
-
-      // Usar a API unificada que é mais simples e confiável
-      console.log('Tentando API /api/users-unified...');
-
-      // Adicionar timestamp para evitar cache
-      const timestamp = new Date().getTime();
-      const response = await fetch(`/api/users-unified?_=${timestamp}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-      });
-
-      console.log('Resposta da API de usuários:', response.status, response.statusText);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorData: any = {};
-
-        try {
-          errorData = JSON.parse(errorText);
-        } catch (parseError) {
-          console.error('Erro ao analisar resposta de erro:', parseError);
-          console.log('Texto da resposta de erro:', errorText);
-        }
-
-        console.error('Erro ao buscar usuários:', errorData);
-
-        // Se for erro de autenticação, mostrar mensagem específica
-        if (response.status === 401 || response.status === 403) {
-          throw new Error('Sessão expirada. Faça login novamente.');
-        }
-
-        throw new Error(errorData?.error || `Erro ao carregar usuários: ${response.status} ${response.statusText}`);
-      }
-
-      const responseText = await response.text();
-      console.log('Resposta recebida, tamanho:', responseText.length);
-
-      // Verificar se a resposta está vazia
-      if (!responseText || responseText.trim() === '') {
-        console.error('Resposta vazia recebida da API');
-        setUsers([]);
-        setFilteredUsers([]);
-        setError('Nenhum usuário encontrado. A resposta da API está vazia.');
-        setLoading(false);
-        return;
-      }
-
-      // Log dos primeiros 200 caracteres da resposta para depuração
-      console.log('Primeiros 200 caracteres da resposta:', responseText.substring(0, 200));
-
-      let data;
-      try {
-        data = JSON.parse(responseText);
-        console.log('Dados recebidos:', Array.isArray(data) ? `Array com ${data.length} usuários` : typeof data);
-
-        if (Array.isArray(data)) {
-          console.log('Usuários recebidos com sucesso:', data.length);
-          if (data.length > 0) {
-            console.log('Primeiro usuário:', JSON.stringify(data[0], null, 2));
-          }
-
-          // A API /api/users-unified já retorna os dados no formato correto
-          setUsers(data);
-          setFilteredUsers(data);
-          console.log('Estado de usuários atualizado com', data.length, 'registros');
-        } else {
-          console.error('Resposta não é um array:', data);
-          setUsers([]);
-          setFilteredUsers([]);
-          setError('Formato de resposta inválido. Esperado um array de usuários.');
-        }
-      } catch (parseError) {
-        console.error('Erro ao analisar resposta JSON:', parseError);
-        console.log('Resposta que causou erro:', responseText.substring(0, 200));
-        throw new Error('Erro ao processar dados de usuários. Formato inválido.');
-      }
-    } catch (error) {
-      console.error('Erro ao carregar usuários:', error);
-      setError(error instanceof Error ? error.message : 'Erro desconhecido ao carregar usuários');
-      setUsers([]);
-      setFilteredUsers([]);
+      await refreshAllUsers();
+      return; // restante mantido apenas por compatibilidade
     } finally {
       setLoading(false);
     }
+
   };
+
 
 
 

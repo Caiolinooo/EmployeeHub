@@ -136,7 +136,7 @@ export function getHardcodedCards(): DashboardCard[] {
       color: 'bg-purple-600',
       hoverColor: 'hover:bg-purple-700',
       external: false,
-      enabled: true,
+      enabled: false, // disabled per request: keep ABZ News only
       order: 5,
       adminOnly: false,
       managerOnly: false,
@@ -321,7 +321,7 @@ export function getTranslatedCards(t: (key: string) => string): DashboardCard[] 
       color: 'bg-purple-600',
       hoverColor: 'hover:bg-purple-700',
       external: false,
-      enabled: true,
+      enabled: false, // disabled per request: keep ABZ News only
       order: 13,
       adminOnly: false,
       managerOnly: false,

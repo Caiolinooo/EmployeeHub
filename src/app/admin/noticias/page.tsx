@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import MainLayout from '@/components/Layout/MainLayout';
+
 import { FiPlus, FiEdit, FiTrash2, FiFile, FiCalendar, FiTag } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
-import FileExplorer from '@/components/FileExplorer';
+import DocumentPicker from '@/components/DocumentPicker';
 import MultiPdfViewer from '@/components/MultiPdfViewer';
+import { fetchWithToken } from '@/lib/tokenStorage';
 
 interface News {
   id: string;
@@ -113,7 +114,7 @@ export default function NewsAdminPage() {
   // Função para criar uma nova notícia
   const createNews = async () => {
     try {
-      const response = await fetch('/api/news', {
+      const response = await fetchWithToken('/api/news', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -169,7 +170,7 @@ export default function NewsAdminPage() {
     if (!editingNews) return;
 
     try {
-      const response = await fetch(`/api/news/${editingNews.id}`, {
+      const response = await fetchWithToken(`/api/news/${editingNews.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -209,7 +210,7 @@ export default function NewsAdminPage() {
     if (!confirm('Tem certeza que deseja excluir esta notícia?')) return;
 
     try {
-      const response = await fetch(`/api/news/${id}`, {
+      const response = await fetchWithToken(`/api/news/${id}`, {
         method: 'DELETE',
       });
 
@@ -248,8 +249,8 @@ export default function NewsAdminPage() {
     }
   };
 
-  return (
-    <MainLayout>
+  return (<>
+
       <div className="container mx-auto px-4 py-6">
         <h1 className="text-3xl font-bold text-abz-text-black mb-6">
           {t('admin.news.title', 'Gerenciamento de Notícias')}
@@ -556,44 +557,14 @@ export default function NewsAdminPage() {
       </div>
       
       {/* Explorador de arquivos */}
-      {showFileExplorer && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
-            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900">
-                {t('admin.news.selectFile', 'Selecionar Arquivo')}
-              </h3>
-              <button
-                onClick={closeFileExplorer}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                &times;
-              </button>
-            </div>
-            
-            <div className="flex-1 overflow-auto p-4">
-              <FileExplorer
-                basePath="public/documentos"
-                onFileSelect={handleFileSelect}
-                allowUpload={true}
-                allowCreateFolder={true}
-                fileFilter={['.pdf']}
-                initialPath="noticias"
-                showFullPath={false}
-              />
-            </div>
-            
-            <div className="p-4 border-t border-gray-200 flex justify-end">
-              <button
-                onClick={closeFileExplorer}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-              >
-                {t('common.cancel', 'Cancelar')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DocumentPicker
+        isOpen={showFileExplorer}
+        onClose={closeFileExplorer}
+        onSelect={(p) => handleFileSelect(p)}
+        basePath="public/documentos"
+        fileFilter={['.pdf']}
+        initialPath="noticias"
+      />
       
       {/* Visualizador de documento */}
       {viewerOpen && viewingFile && (
@@ -603,6 +574,6 @@ export default function NewsAdminPage() {
           onClose={closeViewer}
         />
       )}
-    </MainLayout>
-  );
+
+  </>);
 }

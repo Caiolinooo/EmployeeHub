@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { authenticateUser } from '@/lib/auth';
+import { authenticateUser } from '@/lib/api-auth';
 
 // GET - Listar comentários de um post
 export async function GET(request: NextRequest) {

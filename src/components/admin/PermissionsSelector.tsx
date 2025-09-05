@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiUsers, FiUserCheck, FiUserX, FiPlus, FiX, FiSearch } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
+import { useAllUsers } from '@/hooks/useAllUsers';
 
 interface User {
   _id: string;
@@ -42,25 +43,22 @@ export default function PermissionsSelector({
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const [showUserSelector, setShowUserSelector] = useState(false);
 
-  // Carregar usuários
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setIsLoadingUsers(true);
-      try {
-        const response = await fetch('/api/users');
-        if (response.ok) {
-          const data = await response.json();
-          setUsers(data.users || []);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar usuários:', error);
-      } finally {
-        setIsLoadingUsers(false);
-      }
-    };
+  // Lista unificada de usuários
+  const { users: hookUsers, loading: hookLoading } = useAllUsers();
 
-    fetchUsers();
-  }, []);
+  useEffect(() => {
+    setIsLoadingUsers(hookLoading);
+    const mapped = (hookUsers || []).map((u: any) => ({
+      _id: u._id,
+      id: u._id,
+      name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email || u.phoneNumber || u._id,
+      email: u.email,
+      phoneNumber: u.phoneNumber,
+      role: u.role,
+    }));
+    setUsers(mapped as any);
+    setFilteredUsers(mapped as any);
+  }, [hookUsers, hookLoading]);
 
   // Filtrar usuários com base no termo de pesquisa
   useEffect(() => {

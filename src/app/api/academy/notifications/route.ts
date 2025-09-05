@@ -5,11 +5,15 @@ import { authenticateUser, logAction } from '@/lib/api-auth';
 // GET - Listar notificações do usuário
 export async function GET(request: NextRequest) {
   try {
-    const { user, error: authError } = await authenticateUser(request);
-    
+    const { user: authUser, error: authError } = await authenticateUser(request);
+
     if (authError) {
       return authError;
     }
+    if (!authUser) {
+      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    }
+    const user = authUser as any;
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -112,11 +116,15 @@ export async function POST(request: NextRequest) {
 // PUT - Marcar notificações como lidas
 export async function PUT(request: NextRequest) {
   try {
-    const { user, error: authError } = await authenticateUser(request);
-    
+    const { user: authUser, error: authError } = await authenticateUser(request);
+
     if (authError) {
       return authError;
     }
+    if (!authUser) {
+      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    }
+    const user = authUser as any;
 
     const body = await request.json();
     const { notification_ids, mark_all_read } = body;
@@ -137,7 +145,7 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({ error: 'Erro ao marcar notificações como lidas' }, { status: 500 });
       }
 
-      logAction(user, 'MARK_ALL_NOTIFICATIONS_READ', 'notification', null);
+      logAction(user, 'MARK_ALL_NOTIFICATIONS_READ', 'notification', undefined);
 
       return NextResponse.json({
         success: true,
@@ -164,7 +172,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Erro ao marcar notificações como lidas' }, { status: 500 });
     }
 
-    logAction(user, 'MARK_NOTIFICATIONS_READ', 'notification', null, { notification_ids });
+    logAction(user, 'MARK_NOTIFICATIONS_READ', 'notification', undefined, { notification_ids });
 
     return NextResponse.json({
       success: true,
@@ -180,11 +188,15 @@ export async function PUT(request: NextRequest) {
 // DELETE - Excluir notificações
 export async function DELETE(request: NextRequest) {
   try {
-    const { user, error: authError } = await authenticateUser(request);
-    
+    const { user: authUser, error: authError } = await authenticateUser(request);
+
     if (authError) {
       return authError;
     }
+    if (!authUser) {
+      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    }
+    const user = authUser as any;
 
     const { searchParams } = new URL(request.url);
     const notificationIds = searchParams.get('notification_ids')?.split(',');
@@ -202,7 +214,7 @@ export async function DELETE(request: NextRequest) {
         return NextResponse.json({ error: 'Erro ao excluir notificações' }, { status: 500 });
       }
 
-      logAction(user, 'DELETE_ALL_NOTIFICATIONS', 'notification', null);
+      logAction(user, 'DELETE_ALL_NOTIFICATIONS', 'notification', undefined);
 
       return NextResponse.json({
         success: true,
@@ -226,7 +238,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Erro ao excluir notificações' }, { status: 500 });
     }
 
-    logAction(user, 'DELETE_NOTIFICATIONS', 'notification', null, { notification_ids: notificationIds });
+    logAction(user, 'DELETE_NOTIFICATIONS', 'notification', undefined, { notification_ids: notificationIds });
 
     return NextResponse.json({
       success: true,
@@ -239,104 +251,3 @@ export async function DELETE(request: NextRequest) {
   }
 }
 
-// Função utilitária para criar notificações (exportada para uso em outras APIs)
-export async function createNotification(
-  userId: string,
-  type: string,
-  title: string,
-  message: string,
-  data?: any,
-  actionUrl?: string
-) {
-  try {
-    const { data: notification, error } = await supabaseAdmin
-      .from('notifications')
-      .insert({
-        user_id: userId,
-        type,
-        title,
-        message,
-        data: data || null,
-        action_url: actionUrl || null,
-        is_read: false,
-        created_at: new Date().toISOString()
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Erro ao criar notificação:', error);
-      return null;
-    }
-
-    return notification;
-  } catch (error) {
-    console.error('Erro ao criar notificação:', error);
-    return null;
-  }
-}
-
-// Função para notificar sobre novos cursos
-export async function notifyNewCourse(courseId: string, courseTitle: string) {
-  try {
-    // Buscar todos os usuários ativos
-    const { data: users, error } = await supabaseAdmin
-      .from('users_unified')
-      .select('id')
-      .eq('is_active', true);
-
-    if (error || !users) {
-      console.error('Erro ao buscar usuários para notificação:', error);
-      return;
-    }
-
-    // Criar notificação para cada usuário
-    const notifications = users.map(user => ({
-      user_id: user.id,
-      type: 'new_course',
-      title: 'Novo curso disponível!',
-      message: `O curso "${courseTitle}" foi adicionado ao Academy. Confira agora!`,
-      data: { course_id: courseId },
-      action_url: `/academy/course/${courseId}`,
-      is_read: false,
-      created_at: new Date().toISOString()
-    }));
-
-    // Inserir notificações em lote
-    const { error: insertError } = await supabaseAdmin
-      .from('notifications')
-      .insert(notifications);
-
-    if (insertError) {
-      console.error('Erro ao criar notificações em lote:', insertError);
-    } else {
-      console.log(`✅ Notificações criadas para ${users.length} usuários sobre novo curso: ${courseTitle}`);
-    }
-  } catch (error) {
-    console.error('Erro ao notificar sobre novo curso:', error);
-  }
-}
-
-// Função para notificar sobre conclusão de curso
-export async function notifyCourseCompletion(userId: string, courseTitle: string, courseId: string) {
-  await createNotification(
-    userId,
-    'course_completed',
-    'Parabéns! Curso concluído!',
-    `Você concluiu o curso "${courseTitle}". Seu certificado está disponível!`,
-    { course_id: courseId },
-    `/academy/certificates`
-  );
-}
-
-// Função para lembrete de estudo
-export async function notifyStudyReminder(userId: string, courseTitle: string, courseId: string) {
-  await createNotification(
-    userId,
-    'study_reminder',
-    'Hora de continuar estudando!',
-    `Que tal continuar o curso "${courseTitle}"? Você está quase terminando!`,
-    { course_id: courseId },
-    `/academy/course/${courseId}`
-  );
-}

@@ -33,15 +33,16 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  
+
   const dropdownRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const prevUnreadRef = useRef<number>(0);
 
   // Carregar notificações
   const loadNotifications = async (pageNum: number = 1, reset: boolean = false) => {
     try {
       setLoading(true);
-      
+
       const params = new URLSearchParams({
         user_id: userId,
         page: pageNum.toString(),
@@ -57,7 +58,7 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
         } else {
           setNotifications(prev => [...prev, ...data.notifications]);
         }
-        
+
         setUnreadCount(data.unreadCount);
         setHasMore(data.pagination.hasNext);
         setPage(pageNum);
@@ -79,9 +80,9 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
       });
 
       if (response.ok) {
-        setNotifications(prev => 
-          prev.map(notif => 
-            notif.id === notificationId 
+        setNotifications(prev =>
+          prev.map(notif =>
+            notif.id === notificationId
               ? { ...notif, read_at: new Date().toISOString() }
               : notif
           )
@@ -104,7 +105,7 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
 
       if (response.ok) {
         const data = await response.json();
-        setNotifications(prev => 
+        setNotifications(prev =>
           prev.map(notif => ({ ...notif, read_at: new Date().toISOString() }))
         );
         setUnreadCount(0);
@@ -113,6 +114,40 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
       console.error('Erro ao marcar todas como lidas:', error);
     }
   };
+  // Press-and-hold helpers
+  const handlePressStart = (id: string) => {
+    // create timer to mark as read after 600ms
+    (holdTimeoutsRef as any).current = (holdTimeoutsRef as any).current || {};
+    (holdTimeoutsRef as any).current[id] = setTimeout(() => {
+      markAsRead(id);
+      // clear after firing
+      if ((holdTimeoutsRef as any).current[id]) {
+        clearTimeout((holdTimeoutsRef as any).current[id]);
+        delete (holdTimeoutsRef as any).current[id];
+      }
+    }, 600);
+  };
+  const handlePressEnd = (id: string) => {
+    const timers = (holdTimeoutsRef as any).current || {};
+    if (timers[id]) {
+      clearTimeout(timers[id]);
+      delete timers[id];
+    }
+  };
+
+  // Shortcut: when dropdown open, press "r" to marcar todas como lidas
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        markAllAsRead();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen]);
+
 
   // Carregar mais notificações
   const loadMore = () => {
@@ -133,11 +168,74 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Chime curto "ABZ" com WebAudio (industria: curto, claro, não intrusivo)
+  const playABZChime = () => {
+    try {
+      const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+
+      const now = ctx.currentTime;
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.0001, now);
+      master.gain.exponentialRampToValueAtTime(0.15, now + 0.02);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+      master.connect(ctx.destination);
+
+      // Notas: A4 (440Hz) -> B4 (494Hz) -> E5 (659Hz) com leve brilho
+      const notes = [
+        { t: 0.00, freq: 440 },
+        { t: 0.28, freq: 494 },
+        { t: 0.56, freq: 659 }
+      ];
+
+      notes.forEach(({ t, freq }) => {
+        const o1 = ctx.createOscillator();
+        const o2 = ctx.createOscillator();
+        const g = ctx.createGain();
+        // Blend para timbre "chime"
+        o1.type = 'sine';
+        o2.type = 'triangle';
+        o1.frequency.setValueAtTime(freq, now + t);
+        o2.frequency.setValueAtTime(freq * 2, now + t); // harmônico
+
+        // Envelope por nota
+        g.gain.setValueAtTime(0.0001, now + t);
+        g.gain.exponentialRampToValueAtTime(0.12, now + t + 0.03);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + t + 0.35);
+
+        o1.connect(g); o2.connect(g); g.connect(master);
+        o1.start(now + t); o2.start(now + t);
+        o1.stop(now + t + 0.38); o2.stop(now + t + 0.38);
+      });
+
+      // "Z" sutil: pequena queda final
+      const oZ = ctx.createOscillator();
+      const gZ = ctx.createGain();
+      oZ.type = 'sine';
+      oZ.frequency.setValueAtTime(740, now + 0.88);
+      oZ.frequency.exponentialRampToValueAtTime(660, now + 1.1);
+      gZ.gain.setValueAtTime(0.0001, now + 0.88);
+      gZ.gain.exponentialRampToValueAtTime(0.08, now + 0.91);
+      gZ.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+      oZ.connect(gZ); gZ.connect(master);
+      oZ.start(now + 0.88); oZ.stop(now + 1.22);
+    } catch {}
+  };
+
+  // Aviso sonoro quando contador aumenta
+  useEffect(() => {
+    if (unreadCount > prevUnreadRef.current) {
+      playABZChime();
+    }
+    prevUnreadRef.current = unreadCount;
+  }, [unreadCount]);
+
   // Carregar notificações iniciais e configurar polling
   useEffect(() => {
     if (userId) {
       loadNotifications(1, true);
-      
+
       // Polling a cada 30 segundos
       intervalRef.current = setInterval(() => {
         loadNotifications(1, true);
@@ -197,10 +295,20 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
+        aria-label="Notificações"
+        title={unreadCount > 0 ? `${unreadCount} não lidas` : 'Notificações'}
       >
         <FiBell className="w-6 h-6" />
-        {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+        {unreadCount > 0 && !isOpen && (
+          <span className="absolute -top-1 -right-1 h-5 w-5">
+            <span className="absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-60 animate-ping"></span>
+            <span className="relative inline-flex items-center justify-center h-5 w-5 rounded-full bg-red-500 text-white text-xs">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          </span>
+        )}
+        {unreadCount > 0 && isOpen && (
+          <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full bg-red-500 text-white text-xs">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}

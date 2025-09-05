@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { withPermission } from '@/lib/api-auth';
 
 // GET - Obter post específico
 export async function GET(
@@ -58,11 +59,12 @@ export async function GET(
   }
 }
 
-// PUT - Atualizar post
-export async function PUT(
+// PUT - Atualizar post (somente ADMIN ou MANAGER)
+export const PUT = withPermission('manager', async (
   request: NextRequest,
+  _user: any,
   { params }: { params: { postId: string } }
-) {
+) => {
   try {
     const postId = params.postId;
     const body = await request.json();
@@ -162,13 +164,14 @@ export async function PUT(
       { status: 500 }
     );
   }
-}
+});
 
-// DELETE - Excluir post
-export async function DELETE(
+// DELETE - Excluir post (somente ADMIN ou MANAGER)
+export const DELETE = withPermission('manager', async (
   request: NextRequest,
+  _user: any,
   { params }: { params: { postId: string } }
-) {
+) => {
   try {
     const postId = params.postId;
     console.log(`🔄 API News Post - Excluindo post: ${postId}`);
@@ -214,4 +217,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});

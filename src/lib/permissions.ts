@@ -101,6 +101,31 @@ export function getSocialPermissionLevel(user: AppUserLike | null): 'none' | 'mo
 }
 
 /**
+ * Generic content moderation checker mapped by resource type
+ */
+export function canModerateContent(
+  user: AppUserLike | null,
+  resource: string
+): boolean {
+  if (!user) return false;
+  if (user.role === 'ADMIN') return true;
+
+  const academyTypes = ['comment', 'rating', 'course', 'lesson', 'announcement'];
+  const socialTypes = ['post', 'feed', 'social_comment'];
+
+  if (academyTypes.includes(resource)) {
+    return canModerateAcademy(user);
+  }
+  if (socialTypes.includes(resource)) {
+    return canModerateSocial(user);
+  }
+
+  // Fallback: any moderation permission
+  return canModerateAcademy(user) || canModerateSocial(user);
+}
+
+
+/**
  * Update user permissions (for admin use)
  */
 export async function updateUserPermissions(
@@ -159,7 +184,7 @@ export async function getUsersWithPermissions(token: string): Promise<{
     });
 
     const result = await response.json();
-    
+
     if (!response.ok) {
       return { success: false, error: result.error || 'Erro ao buscar usuários' };
     }

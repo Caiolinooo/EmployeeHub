@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import MainLayout from '@/components/Layout/MainLayout';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { getCards } from '@/data/cards';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { getTranslatedCards } from '@/data/cards';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface DebugInfo {
   user: any;
@@ -17,7 +17,7 @@ interface DebugInfo {
 
 const AcademyDebugPage: React.FC = () => {
   const { user, permissions, hasAccess } = useSupabaseAuth();
-  const { t } = useTranslation();
+  const { t } = useI18n();
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +32,7 @@ const AcademyDebugPage: React.FC = () => {
   const loadDebugInfo = async () => {
     try {
       // Obter cards
-      const cards = await getCards(t, user, permissions, hasAccess);
+      const cards = getTranslatedCards(t);
       const academyCard = cards.find(card => card.id === 'academy' || card.moduleKey === 'academy');
       
       // Verificar acesso ao Academy

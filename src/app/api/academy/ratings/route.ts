@@ -90,11 +90,15 @@ export async function GET(request: NextRequest) {
 // POST - Criar nova avaliação
 export async function POST(request: NextRequest) {
   try {
-    const { user, error: authError } = await authenticateUser(request);
-    
+    const { user: authUser, error: authError } = await authenticateUser(request);
+
     if (authError) {
       return authError;
     }
+    if (!authUser) {
+      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    }
+    const user = authUser as any;
 
     const body = await request.json();
     const { course_id, rating, review } = body;
@@ -202,11 +206,15 @@ export async function POST(request: NextRequest) {
 // PUT - Atualizar avaliação
 export async function PUT(request: NextRequest) {
   try {
-    const { user, error: authError } = await authenticateUser(request);
-    
+    const { user: authUser, error: authError } = await authenticateUser(request);
+
     if (authError) {
       return authError;
     }
+    if (!authUser) {
+      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    }
+    const user = authUser as any;
 
     const body = await request.json();
     const { rating_id, rating, review, is_active } = body;
@@ -302,11 +310,15 @@ export async function PUT(request: NextRequest) {
 // DELETE - Excluir avaliação
 export async function DELETE(request: NextRequest) {
   try {
-    const { user, error: authError } = await authenticateUser(request);
-    
+    const { user: authUser, error: authError } = await authenticateUser(request);
+
     if (authError) {
       return authError;
     }
+    if (!authUser) {
+      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    }
+    const user = authUser as any;
 
     const { searchParams } = new URL(request.url);
     const ratingId = searchParams.get('rating_id');

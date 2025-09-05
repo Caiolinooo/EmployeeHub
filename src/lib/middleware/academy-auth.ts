@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { canEditAcademy, canModerateAcademy } from '@/lib/permissions';
+import { verifyToken } from '@/lib/auth';
 
 export interface AuthenticatedUser {
   id: string;
@@ -53,11 +54,21 @@ export async function withAcademyAuth(
     }
 
     const token = authHeader.replace('Bearer ', '');
-    
-    // Verificar token e obter usuário
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (authError || !user) {
+
+    // Verificar token (Supabase) e fallback para nosso JWT
+    const { data: { user: spUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+    let resolvedUserId: string | null = null;
+    if (!authError && spUser) {
+      resolvedUserId = spUser.id;
+    } else {
+      const payload = verifyToken(token);
+      if (payload?.userId) {
+        resolvedUserId = payload.userId;
+      }
+    }
+
+    if (!resolvedUserId) {
       return {
         user: null,
         error: NextResponse.json(
@@ -71,7 +82,7 @@ export async function withAcademyAuth(
     const { data: userData, error: userError } = await supabaseAdmin
       .from('users_unified')
       .select('*')
-      .eq('id', user.id)
+      .eq('id', resolvedUserId)
       .single();
 
     if (userError || !userData) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { withPermission } from '@/lib/api-auth';
 
 // GET - Obter um documento pelo ID
 export async function GET(
@@ -35,28 +36,22 @@ export async function GET(
   }
 }
 
-// PUT - Atualizar um documento
-export async function PUT(
+// PUT - Atualizar um documento (somente ADMIN ou MANAGER)
+export const PUT = withPermission('manager', async (
   request: NextRequest,
+  _user: any,
   context: { params: { id: string } }
-) {
+) => {
   const { params } = context;
   try {
-    // Garantir que params seja await antes de acessar suas propriedades
-    // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
     const id = await Promise.resolve(params.id);
     const body = await request.json();
     const { title, description, category, language, file, enabled, order } = body;
 
-    // Validar os dados de entrada
     if (!title || !description || !category || !language || !file || order === undefined) {
-      return NextResponse.json(
-        { error: 'Todos os campos são obrigatórios' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Todos os campos são obrigatórios' }, { status: 400 });
     }
 
-    // Verificar se o documento existe
     const { data: existingDocument, error: existingError } = await supabaseAdmin
       .from('documents')
       .select('*')
@@ -64,13 +59,9 @@ export async function PUT(
       .single();
 
     if (existingError || !existingDocument) {
-      return NextResponse.json(
-        { error: 'Documento não encontrado' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Documento não encontrado' }, { status: 404 });
     }
 
-    // Atualizar o documento
     const { data: updatedDocument, error: updateError } = await supabaseAdmin
       .from('documents')
       .update({
@@ -87,33 +78,25 @@ export async function PUT(
       .single();
 
     if (updateError) {
-      return NextResponse.json(
-        { error: 'Erro ao atualizar documento' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Erro ao atualizar documento' }, { status: 500 });
     }
 
     return NextResponse.json(updatedDocument);
   } catch (error) {
     console.error('Erro ao atualizar documento:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
   }
-}
+});
 
-// DELETE - Excluir um documento
-export async function DELETE(
+// DELETE - Excluir um documento (somente ADMIN ou MANAGER)
+export const DELETE = withPermission('manager', async (
   request: NextRequest,
+  _user: any,
   { params }: { params: { id: string } }
-) {
+) => {
   try {
-    // Garantir que params seja await antes de acessar suas propriedades
-    // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
     const id = await Promise.resolve(params.id);
 
-    // Verificar se o documento existe
     const { data: existingDocument, error: findError } = await supabaseAdmin
       .from('documents')
       .select('*')
@@ -121,31 +104,21 @@ export async function DELETE(
       .single();
 
     if (findError || !existingDocument) {
-      return NextResponse.json(
-        { error: 'Documento não encontrado' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Documento não encontrado' }, { status: 404 });
     }
 
-    // Excluir o documento
     const { error: deleteError } = await supabaseAdmin
       .from('documents')
       .delete()
       .eq('id', id);
 
     if (deleteError) {
-      return NextResponse.json(
-        { error: 'Erro ao excluir documento' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Erro ao excluir documento' }, { status: 500 });
     }
 
     return NextResponse.json({ message: 'Documento excluído com sucesso' });
   } catch (error) {
     console.error('Erro ao excluir documento:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
   }
-}
+});

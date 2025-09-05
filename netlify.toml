@@ -44,4 +44,14 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+
+[functions]
+  node_bundler = "esbuild"
+  directory = "netlify/functions"
+
+# Scheduled function to send calendar notifications every 10 minutes
+[[scheduled.functions]]
+  name = "company-notify"
+  schedule = "*/10 * * * *"
+
 # Redirects are handled by @netlify/plugin-nextjs. Custom catch-all redirects are removed to avoid conflicts.

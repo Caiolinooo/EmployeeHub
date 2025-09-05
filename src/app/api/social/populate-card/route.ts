@@ -3,7 +3,8 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🎨 Adicionando card do sistema social...');
+    console.log('🎨 Card Social desativado por solicitação do cliente.');
+    return NextResponse.json({ ok: true, message: 'Social desativado' });
 
     // Verificar se o card social já existe
     const { data: existingCard, error: cardError } = await supabaseAdmin

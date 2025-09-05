@@ -5,11 +5,17 @@ import { authenticateUser, logAction } from '@/lib/api-auth';
 // GET - Listar certificados do usuário ou gerar certificado específico
 export async function GET(request: NextRequest) {
   try {
-    const { user, error: authError } = await authenticateUser(request);
-    
+    const { user: authUser, error: authError } = await authenticateUser(request);
+
     if (authError) {
       return authError;
     }
+
+    if (!authUser) {
+      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    }
+
+    const user = authUser as any;
 
     const { searchParams } = new URL(request.url);
     const courseId = searchParams.get('course_id');
@@ -57,18 +63,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Erro ao buscar certificados' }, { status: 500 });
     }
 
-    const certificates = enrollments?.map(enrollment => ({
-      id: enrollment.id,
-      course_id: enrollment.course_id,
-      course_title: enrollment.course.title,
-      course_duration: enrollment.course.duration,
-      course_difficulty: enrollment.course.difficulty_level,
-      category: enrollment.course.category,
-      instructor: enrollment.course.instructor,
-      completed_at: enrollment.completed_at,
-      enrolled_at: enrollment.enrolled_at,
-      certificate_url: `/api/academy/certificates?enrollment_id=${enrollment.id}&generate=true`
-    })) || [];
+    const certificates = enrollments?.map((enrollment: any) => {
+      const courseData = enrollment.course?.[0] || enrollment.course;
+      const category = Array.isArray(courseData?.category) ? courseData.category[0] : courseData?.category;
+      const instructor = Array.isArray(courseData?.instructor) ? courseData.instructor[0] : courseData?.instructor;
+
+      return {
+        id: enrollment.id,
+        course_id: enrollment.course_id,
+        course_title: courseData?.title,
+        course_duration: courseData?.duration,
+        course_difficulty: courseData?.difficulty_level,
+        category,
+        instructor,
+        completed_at: enrollment.completed_at,
+        enrolled_at: enrollment.enrolled_at,
+        certificate_url: `/api/academy/certificates?enrollment_id=${enrollment.id}&generate=true`
+      };
+    }) || [];
 
     return NextResponse.json({
       success: true,

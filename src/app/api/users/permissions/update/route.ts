@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { PermissionFeatures } from '@/lib/permissions';
+import { verifyToken } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,26 +14,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar autorização
+    // Verificar autorização (aceita token JWT próprio ou token do Supabase)
     const authHeader = request.headers.get('authorization');
     if (!authHeader) {
       return NextResponse.json({ error: 'Token de autorização necessário' }, { status: 401 });
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    
-    // Verificar token e obter usuário
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+    const token = authHeader.replace('Bearer ', '').trim();
+
+    let requesterUserId: string | null = null;
+    const payload = verifyToken(token);
+    if (payload?.userId) {
+      requesterUserId = payload.userId;
+    } else {
+      const { data: supaUser, error: authError } = await supabaseAdmin.auth.getUser(token);
+      if (authError || !supaUser?.user) {
+        return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+      }
+      requesterUserId = supaUser.user.id;
     }
 
     // Buscar dados do usuário que está fazendo a requisição
     const { data: requestingUser, error: requestingUserError } = await supabaseAdmin
       .from('users_unified')
       .select('role, first_name, last_name')
-      .eq('id', user.id)
+      .eq('id', requesterUserId)
       .single();
 
     if (requestingUserError || !requestingUser || requestingUser.role !== 'ADMIN') {
@@ -72,14 +78,15 @@ export async function POST(request: NextRequest) {
       features: updatedFeatures
     };
 
-    // Registrar no histórico
-    const currentHistory = targetUser.access_history || [];
+    // Registrar no histórico (garantir array)
+    const currentHistoryRaw = targetUser.access_history;
+    const currentHistory = Array.isArray(currentHistoryRaw) ? currentHistoryRaw : [];
     const historyEntry = {
       timestamp: new Date().toISOString(),
       action: 'PERMISSIONS_UPDATED',
       details: `Permissões atualizadas por ${requestingUser.first_name} ${requestingUser.last_name}`,
       changes: features,
-      updated_by: user.id
+      updated_by: requesterUserId
     };
 
     // Atualizar no banco de dados

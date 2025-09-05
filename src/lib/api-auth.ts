@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { canEditAcademy, canModerateAcademy, canEditSocial, canModerateSocial } from '@/lib/permissions';
+import { verifyToken } from '@/lib/auth';
 
 export interface AuthenticatedUser {
   id: string;
@@ -29,11 +30,21 @@ export async function authenticateUser(request: NextRequest): Promise<{
     }
 
     const token = authHeader.replace('Bearer ', '');
-    
-    // Verificar token
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (authError || !user) {
+
+    // Verificar token (Supabase) e fallback para nosso JWT
+    const { data: { user: spUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+    let resolvedUserId: string | null = null;
+    if (!authError && spUser) {
+      resolvedUserId = spUser.id;
+    } else {
+      const payload = verifyToken(token);
+      if (payload?.userId) {
+        resolvedUserId = payload.userId;
+      }
+    }
+
+    if (!resolvedUserId) {
       return {
         user: null,
         error: NextResponse.json({ error: 'Token inválido' }, { status: 401 })
@@ -44,7 +55,7 @@ export async function authenticateUser(request: NextRequest): Promise<{
     const { data: userData, error: userError } = await supabaseAdmin
       .from('users_unified')
       .select('*')
-      .eq('id', user.id)
+      .eq('id', resolvedUserId)
       .single();
 
     if (userError || !userData) {
@@ -98,6 +109,27 @@ export function checkPermissions(user: AuthenticatedUser, permission: string): b
 }
 
 /**
+ * Generic content moderation checker for API routes
+ */
+export function canModerateContent(user: AuthenticatedUser | null, resource: string): boolean {
+  if (!user) return false;
+  if (user.role === 'ADMIN') return true;
+
+  const academyTypes = ['comment', 'rating', 'course', 'lesson', 'announcement'];
+  const socialTypes = ['post', 'feed', 'social_comment'];
+
+  if (academyTypes.includes(resource)) {
+    return canModerateAcademy(user);
+  }
+  if (socialTypes.includes(resource)) {
+    return canModerateSocial(user);
+  }
+
+  return canModerateAcademy(user) || canModerateSocial(user);
+}
+
+
+/**
  * Middleware para verificar autenticação
  */
 export async function requireAuth(request: NextRequest): Promise<{
@@ -105,7 +137,7 @@ export async function requireAuth(request: NextRequest): Promise<{
   error?: NextResponse;
 }> {
   const { user, error } = await authenticateUser(request);
-  
+
   if (error || !user) {
     return { user: null as any, error: error || NextResponse.json({ error: 'Não autenticado' }, { status: 401 }) };
   }
@@ -121,7 +153,7 @@ export async function requirePermission(request: NextRequest, permission: string
   error?: NextResponse;
 }> {
   const { user, error } = await requireAuth(request);
-  
+
   if (error) {
     return { user, error };
   }
@@ -220,7 +252,7 @@ export function withAuth<T extends any[]>(
 ) {
   return async (request: NextRequest, ...args: T) => {
     const { user, error } = await requireAuth(request);
-    
+
     if (error) {
       return error;
     }
@@ -238,7 +270,7 @@ export function withPermission<T extends any[]>(
 ) {
   return async (request: NextRequest, ...args: T) => {
     const { user, error } = await requirePermission(request, permission);
-    
+
     if (error) {
       return error;
     }

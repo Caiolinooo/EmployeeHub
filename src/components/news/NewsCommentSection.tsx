@@ -22,8 +22,6 @@ interface NewsComment {
   user: UserInfo;
   replies?: NewsComment[];
 }
-  const { hasPermission } = useACLPermissions(userId);
-
 
 interface Props {
   postId: string;
@@ -40,7 +38,7 @@ const NewsCommentSection: React.FC<Props> = ({ postId, userId }) => {
   const loadComments = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/news/${postId}/comments?limit=50`);
+      const res = await fetch(`/api/news/posts/${postId}/comments?limit=50`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erro ao carregar comentários');
       setComments(data.comments || []);
@@ -62,7 +60,7 @@ const NewsCommentSection: React.FC<Props> = ({ postId, userId }) => {
 
     try {
       setSending(true);
-      const res = await fetch(`/api/news/${postId}/comments`, {
+      const res = await fetch(`/api/news/posts/${postId}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, content: text })
@@ -83,11 +81,11 @@ const NewsCommentSection: React.FC<Props> = ({ postId, userId }) => {
   const formatTime = (d: string) => new Date(d).toLocaleString('pt-BR');
 
   // Autor OU moderadores (admins/gerentes via permissão comments.moderate)
-  const canEditComment = (c: NewsComment) => c.user?.id === userId || hasPermission('comments.moderate');
-  const canDeleteComment = (c: NewsComment) => c.user?.id === userId || hasPermission('comments.moderate');
+  const canEditComment = (c: NewsComment) => c.user?.id === userId;
+  const canDeleteComment = (c: NewsComment) => c.user?.id === userId;
 
   const handleEdit = async (commentId: string, newContent: string) => {
-    const res = await fetch(`/api/news/${postId}/comments/${commentId}`, {
+    const res = await fetch(`/api/news/posts/${postId}/comments/${commentId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: newContent })
@@ -98,9 +96,7 @@ const NewsCommentSection: React.FC<Props> = ({ postId, userId }) => {
   };
 
   const handleDelete = async (commentId: string) => {
-    const endpoint = canDeleteComment({ id: commentId } as any) && hasPermission('comments.moderate')
-      ? `/api/news/${postId}/comments/${commentId}/moderate`
-      : `/api/news/${postId}/comments/${commentId}`;
+    const endpoint = `/api/news/posts/${postId}/comments/${commentId}`;
     const res = await fetch(endpoint, { method: 'DELETE' });
     if (res.ok) {
       setComments(prev => prev.filter(c => c.id !== commentId));

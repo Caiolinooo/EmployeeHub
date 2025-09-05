@@ -1,19 +1,22 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import MainLayout from '@/components/Layout/MainLayout';
-import SocialFeed from '@/components/Social/SocialFeed';
-import { 
-  UserGroupIcon,
-  HashtagIcon,
-  ArrowTrendingUpIcon,
-  Cog6ToothIcon
-} from '@heroicons/react/24/outline';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
+// ABZ Social module intentionally disabled per client request. Keeping a simple redirect UX.
 const SocialPage: React.FC = () => {
-  const { user } = useSupabaseAuth();
-  const [activeTab, setActiveTab] = useState<'feed' | 'trending' | 'hashtags'>('feed');
+  if (typeof window !== 'undefined') {
+    window.location.replace('/noticias');
+  }
+  return (
+    <MainLayout>
+      <div className="max-w-3xl mx-auto py-16 text-center">
+        <h1 className="text-2xl font-semibold mb-2">ABZ Social foi desativado</h1>
+        <p className="text-gray-600 mb-6">Redirecionando você para o ABZ News...</p>
+        <a href="/noticias" className="text-blue-600 underline">Ir para ABZ News</a>
+      </div>
+    </MainLayout>
+  );
 
   const tabs = [
     {

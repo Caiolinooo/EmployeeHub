@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
         console.error(`Erro ao processar usuário ${user.first_name} ${user.last_name}:`, error);
         errors.push({
           user: `${user.first_name} ${user.last_name}`,
-          error: error.message
+          error: error instanceof Error ? error.message : String(error)
         });
       }
     }
@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: false,
       error: 'Erro interno do servidor',
-      details: error.message
+      details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
 }

@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import DocumentPicker from '@/components/DocumentPicker';
 import { FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff, FiArrowUp, FiArrowDown, FiX, FiUpload, FiDownload } from 'react-icons/fi';
+import { fetchWithToken } from '@/lib/tokenStorage';
 import { useI18n } from '@/contexts/I18nContext';
 
 interface Document {
@@ -31,6 +33,7 @@ const DocumentEditor = ({ document, onSave, onCancel, isNew = false }: DocumentE
   const [file, setFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [showPicker, setShowPicker] = useState<boolean>(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -218,6 +221,13 @@ const DocumentEditor = ({ document, onSave, onCancel, isNew = false }: DocumentE
               <FiUpload className="inline-block mr-1" />
               {t('admin.documents.select')}
             </label>
+            <button
+              type="button"
+              onClick={() => setShowPicker(true)}
+              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            >
+              {t('admin.documents.pickFromExplorer','Escolher do Explorador')}
+            </button>
             {file && (
               <button
                 type="button"
@@ -268,6 +278,14 @@ const DocumentEditor = ({ document, onSave, onCancel, isNew = false }: DocumentE
           </button>
         </div>
       </form>
+      <DocumentPicker
+        isOpen={showPicker}
+        onClose={() => setShowPicker(false)}
+        onSelect={(p) => setEditedDocument(prev => ({ ...prev, file: `/${p}` }))}
+        basePath="public/documentos"
+        fileFilter={['.pdf','.doc','.docx','.xls','.xlsx','.ppt','.pptx','.txt']}
+      />
+
     </div>
   );
 };
@@ -419,7 +437,7 @@ export default function DocumentsPage() {
 
       if (isAdding) {
         // Adicionar novo documento
-        response = await fetch('/api/documents', {
+        response = await fetchWithToken('/api/documents', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -428,7 +446,7 @@ export default function DocumentsPage() {
         });
       } else {
         // Atualizar documento existente
-        response = await fetch(`/api/documents/${document.id}`, {
+        response = await fetchWithToken(`/api/documents/${document.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -461,7 +479,7 @@ export default function DocumentsPage() {
   const handleDelete = async (id: string) => {
     if (window.confirm(t('admin.documents.deleteConfirm'))) {
       try {
-        const response = await fetch(`/api/documents/${id}`, {
+        const response = await fetchWithToken(`/api/documents/${id}`, {
           method: 'DELETE',
         });
 
@@ -486,7 +504,7 @@ export default function DocumentsPage() {
         throw new Error('Documento não encontrado');
       }
 
-      const response = await fetch(`/api/documents/${id}`, {
+      const response = await fetchWithToken(`/api/documents/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -520,14 +538,14 @@ export default function DocumentsPage() {
 
       // Atualizar os documentos
       await Promise.all([
-        fetch(`/api/documents/${updatedDocument.id}`, {
+        fetchWithToken(`/api/documents/${updatedDocument.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(updatedDocument),
         }),
-        fetch(`/api/documents/${updatedPrevDocument.id}`, {
+        fetchWithToken(`/api/documents/${updatedPrevDocument.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -558,14 +576,14 @@ export default function DocumentsPage() {
 
       // Atualizar os documentos
       await Promise.all([
-        fetch(`/api/documents/${updatedDocument.id}`, {
+        fetchWithToken(`/api/documents/${updatedDocument.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(updatedDocument),
         }),
-        fetch(`/api/documents/${updatedNextDocument.id}`, {
+        fetchWithToken(`/api/documents/${updatedNextDocument.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { FiPlus, FiEdit, FiTrash2, FiEye, FiCalendar, FiHeart, FiMessageCircle, FiStar, FiBookmark, FiFilter, FiSearch, FiRefreshCw } from 'react-icons/fi';
 import { useACLPermissions } from '@/hooks/useACLPermissions';
 import NewsPostEditor from './NewsPostEditor';
+import { fetchWithToken } from '@/lib/tokenStorage';
 
 interface NewsPost {
   id: string;
@@ -111,7 +112,7 @@ const NewsAdminPanel: React.FC<NewsAdminPanelProps> = ({ userId }) => {
     if (!confirm('Tem certeza que deseja excluir este post?')) return;
 
     try {
-      const response = await fetch(`/api/news/posts/${postId}`, {
+      const response = await fetchWithToken(`/api/news/posts/${postId}`, {
         method: 'DELETE'
       });
 
@@ -126,7 +127,7 @@ const NewsAdminPanel: React.FC<NewsAdminPanelProps> = ({ userId }) => {
   // Alternar status de destaque
   const toggleFeatured = async (postId: string, featured: boolean) => {
     try {
-      const response = await fetch(`/api/news/posts/${postId}`, {
+      const response = await fetchWithToken(`/api/news/posts/${postId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ featured: !featured })

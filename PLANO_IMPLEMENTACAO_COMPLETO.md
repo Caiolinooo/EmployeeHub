@@ -167,7 +167,7 @@ CREATE TABLE academy_enrollments (
 ---
 
 ### **3. 📱 SISTEMA NEWS ESTILO INSTAGRAM**
-**Status:** 🔄 **PARCIALMENTE IMPLEMENTADO** | **Tempo gasto:** 2 horas
+**Status:** ✅ **EDITOR FULLSCREEN IMPLEMENTADO** | **Tempo gasto:** 8 horas
 
 #### **✅ Funcionalidades básicas implementadas:**
 - ✅ Card "ABZ News" configurado como função social
@@ -175,13 +175,19 @@ CREATE TABLE academy_enrollments (
 - ✅ Integração com sistema de cards do dashboard
 - ✅ Remoção do card "ABZ Social" desnecessário
 
+#### **✅ NOVO: Editor Fullscreen com Preview ao Vivo (2025-09-04):**
+- ✅ **Editor em tela cheia** - Substitui modal pequena por interface fullscreen
+- ✅ **Preview ao vivo** - Painel lateral mostra como o post aparecerá no feed
+- ✅ **Renderização Markdown** - Suporte a títulos, listas, código, links, negrito/itálico
+- ✅ **Atalhos de teclado** - Ctrl/Cmd+S (Salvar), Ctrl/Cmd+Enter (Publicar)
+- ✅ **Interface responsiva** - Grid adaptável para desktop/mobile
+- ✅ **Sanitização segura** - Preview sem execução de HTML/scripts maliciosos
+
 #### **🔄 Funcionalidades avançadas pendentes:**
-- 🔄 Feed de postagens estilo Instagram
-- 🔄 Sistema de likes
-- 🔄 Comentários aninhados
+- 🔄 Sistema de likes e comentários
 - 🔄 Stories/Destaques
-- 🔄 Upload de imagens
-- 🔄 Hashtags e menções
+- 🔄 Upload de imagens via drag-drop
+- 🔄 Hashtags e menções automáticas
 
 #### **Banco de dados necessário:**
 ```sql
@@ -224,12 +230,48 @@ CREATE TABLE social_stories (
 );
 ```
 
-#### **Componentes necessários:**
-- `SocialFeed.tsx` - Feed principal
-- `PostCard.tsx` - Card de postagem
-- `CommentSection.tsx` - Seção de comentários
-- `StoryViewer.tsx` - Visualizador de stories
-- `PostCreator.tsx` - Criador de posts
+#### **✅ Componentes implementados (2025-09-04):**
+- ✅ `NewsPostEditorFullScreen.tsx` - Editor em tela cheia com preview
+- ✅ `NewsPostPreview.tsx` - Preview ao vivo do post
+- ✅ `MarkdownPreview.tsx` - Renderizador seguro de Markdown
+- ✅ `NewsPostEditor.tsx` - Editor principal com atalhos de teclado
+- ✅ `NewsFeed.tsx` - Feed integrado com novo editor
+
+#### **🔄 Componentes pendentes:**
+- 🔄 `SocialFeed.tsx` - Feed principal expandido
+- 🔄 `PostCard.tsx` - Card de postagem melhorado
+- 🔄 `CommentSection.tsx` - Seção de comentários
+- 🔄 `StoryViewer.tsx` - Visualizador de stories
+- 🔄 `PostCreator.tsx` - Criador de posts simplificado
+
+#### ✅ Como testar as novas funcionalidades
+
+1. Acesse /noticias e clique em Editar em qualquer post.
+2. Verifique que o editor abre em tela cheia com preview ao lado.
+3. Edite Título/Resumo/Conteúdo/Tags/Mídia e confirme o preview em tempo real.
+4. Use atalhos: Ctrl/Cmd+S para salvar rascunho; Ctrl/Cmd+Enter para publicar.
+5. Feche pelo botão “Fechar” na topbar e confirme retorno seguro ao feed.
+
+#### 🗂️ Arquivos criados/alterados (2025-09-04)
+
+- src/components/news/NewsPostEditorFullScreen.tsx (novo)
+- src/components/news/NewsPostPreview.tsx (novo)
+- src/components/MarkdownPreview.tsx (novo)
+- src/components/news/NewsPostEditor.tsx (alterado: onDraftChange, containerClassName, atalhos)
+- src/components/news/NewsFeed.tsx (alterado: abre fullscreen)
+
+#### 🔧 Observações técnicas
+
+- Atalhos implementados via CustomEvent 'news-editor:shortcut' disparado no fullscreen.
+- Preview de Markdown feito sem bibliotecas externas (parser básico + URLs seguras).
+- Nenhuma dependência instalada; todas mudanças são componentes/client-side.
+
+#### 🚀 Próximas melhorias sugeridas
+
+- Preview de conteúdo avançado (imagens embutidas, citações, tabelas) mantendo segurança.
+- Barra de ações sticky com Salvar/Publicar e menu “•••” (Mover para lixeira/Restaurar/Excluir).
+- Autosave com indicador “Salvo há Xs” e proteção contra sair com alterações não salvas.
+- Comentários/likes no feed com contadores em tempo real.
 
 ---
 

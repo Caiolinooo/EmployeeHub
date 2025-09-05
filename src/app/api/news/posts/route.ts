@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { withPermission } from '@/lib/api-auth';
+import { sendCustomEmail } from '@/lib/notifications';
+import { newsPostTemplate } from '@/lib/emailTemplates';
+import { sendPushToUserIds } from '@/lib/push';
 
 // Helpers para garantir tipos consistentes ao retornar os posts
 function safeParseArray(value: any): any[] {
@@ -159,8 +163,8 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Criar novo post de notícia
-export async function POST(request: NextRequest) {
+// POST - Criar novo post de notícia (somente ADMIN ou MANAGER)
+export const POST = withPermission('manager', async (request: NextRequest) => {
   try {
     const body = await request.json();
     const {
@@ -277,27 +281,78 @@ export async function POST(request: NextRequest) {
 
     // Notificar usuários ativos sobre nova publicação
     try {
-      const { data: users } = await supabaseAdmin
-        .from('users_unified')
-        .select('id, first_name, last_name, role')
-        .eq('is_active', true);
+      const { data: settingsRow } = await supabaseAdmin
+        .from('settings')
+        .select('value')
+        .eq('key', 'notifications')
+        .maybeSingle();
+      const notifSettings: any = (settingsRow?.value as any) || {};
+      const shouldNotify = notifSettings.autoNotifyNewsPosts !== false;
 
-      if (users && users.length > 0) {
-        const notifications = users.map(u => ({
-          user_id: u.id,
-          type: 'news_post',
-          title: 'Nova publicação no ABZ News',
-          message: `${author?.first_name || 'Alguém'} publicou: ${title}`,
-          data: {
-            post_id: newPost.id,
-            category_id: category_id || null,
-            featured: !!featured
-          },
-          action_url: `/noticias`,
-          priority: 'normal',
-          created_at: new Date().toISOString()
-        }));
-        await supabaseAdmin.from('notifications').insert(notifications as any);
+      if (shouldNotify) {
+        const { data: users } = await supabaseAdmin
+          .from('users_unified')
+          .select('id, email, first_name, last_name, role, profile_data')
+          .eq('active', true)
+          .neq('id', author_id);
+
+        if (users && users.length > 0) {
+          const titleTpl = notifSettings.newsPostTitle || 'Nova publicação no ABZ News';
+          const msgTpl = notifSettings.newsPostMessage || '{{author}} publicou: {{title}}';
+          const resolvedTitle = titleTpl;
+          const resolvedMessage = msgTpl
+            .replace('{{author}}', author?.first_name || 'Alguém')
+            .replace('{{title}}', title);
+
+          const notifications = users.map(u => ({
+            user_id: u.id,
+            type: 'news_post',
+            title: resolvedTitle,
+            message: resolvedMessage,
+            data: { post_id: newPost.id, category_id: category_id || null, featured: !!featured },
+            action_url: `/news?post=${newPost.id}`,
+            priority: (notifSettings.defaultPriority as any) || 'normal',
+            created_at: new Date().toISOString()
+          }));
+          await supabaseAdmin.from('notifications').insert(notifications as any);
+
+          // Enviar e-mails (opt-in por prefer encias do usu e1rio)
+          const emailsToSend = (users || []).filter((u: any) => {
+            const pd = (u.profile_data as any) || {};
+            const np = (pd.notification_prefs as any) || {};
+            const typePrefs = (np.types && np.types.news_post) || {};
+            const channels = np.channels || {};
+            // por padr e3o email permitido (true) se n e3o configurado
+            const emailAllowed = (typePrefs.email ?? channels.email ?? true) === true;
+            return emailAllowed && u.email;
+          });
+
+          if (emailsToSend.length > 0) {
+            const postUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ''}/news?post=${newPost.id}`;
+            const subject = resolvedTitle;
+            const html = newsPostTemplate(author?.first_name || 'Alguém', title, excerpt || '', postUrl);
+            await Promise.allSettled(emailsToSend.map((u: any) => sendCustomEmail(u.email, subject, html)));
+          }
+
+          // Enviar push (respeitando preferências do usuário)
+          const pushUsers = (users || []).filter((u: any) => {
+            const pd = (u.profile_data as any) || {};
+            const np = (pd.notification_prefs as any) || {};
+            const typePrefs = (np.types && np.types.news_post) || {};
+            const channels = np.channels || {};
+            const pushAllowed = (typePrefs.push ?? channels.push ?? false) === true;
+            return pushAllowed;
+          }).map((u: any) => u.id);
+
+          if (pushUsers.length > 0) {
+            await sendPushToUserIds(pushUsers, {
+              title: resolvedTitle,
+              body: resolvedMessage,
+              url: `/news?post=${newPost.id}`
+            });
+          }
+
+        }
       }
     } catch (notifyError) {
       console.warn('Falha ao criar notificações de novo post:', notifyError);
@@ -314,4 +369,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

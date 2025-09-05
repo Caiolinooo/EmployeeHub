@@ -78,7 +78,7 @@ const CoursePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [enrolling, setEnrolling] = useState(false);
 
-  const courseId = params.id as string;
+  const courseId = (params as any)?.id as string | undefined;
 
   useEffect(() => {
     if (courseId) {
@@ -540,14 +540,18 @@ const CoursePage: React.FC = () => {
         </div>
 
         {/* Seção de avaliações */}
-        <div className="mt-12">
-          <Ratings courseId={courseId} isEnrolled={isEnrolled} />
-        </div>
+        {courseId && (
+          <div className="mt-12">
+            <Ratings courseId={courseId} isEnrolled={isEnrolled} />
+          </div>
+        )}
 
         {/* Seção de comentários */}
-        <div className="mt-12">
-          <Comments courseId={courseId} />
-        </div>
+        {courseId && (
+          <div className="mt-12">
+            <Comments courseId={courseId} />
+          </div>
+        )}
       </div>
     </MainLayout>
   );

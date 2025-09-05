@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { authenticateUser } from '@/lib/auth';
+import { authenticateUser } from '@/lib/api-auth';
 
 // POST - Curtir/Descurtir post
 export async function POST(request: NextRequest) {

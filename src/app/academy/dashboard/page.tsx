@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import MainLayout from '@/components/Layout/MainLayout';
-import { 
+import {
   ChartBarIcon,
   ClockIcon,
   TrophyIcon,
@@ -52,6 +52,27 @@ interface Course {
   }[];
 }
 
+interface EnrollmentLite {
+  id: string;
+  enrolled_at: string;
+  completed_at?: string | null;
+  progress?: Array<{
+    progress_percentage: number;
+    total_watch_time: number;
+    last_accessed_at: string;
+  }>;
+  course: {
+    id: string;
+    title: string;
+    thumbnail_url?: string;
+    category?: {
+      name: string;
+      color: string;
+    };
+  };
+}
+
+
 const AcademyDashboard: React.FC = () => {
   const router = useRouter();
   const { user, getToken } = useSupabaseAuth();
@@ -86,26 +107,26 @@ const AcademyDashboard: React.FC = () => {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       const enrollmentsData = await enrollmentsResponse.json();
 
       if (enrollmentsData.success) {
-        const enrollments = enrollmentsData.enrollments;
-        
+        const enrollments: EnrollmentLite[] = enrollmentsData.enrollments as EnrollmentLite[];
+
         // Calcular estatísticas
         const totalCourses = enrollments.length;
-        const completedCourses = enrollments.filter(e => 
+        const completedCourses = enrollments.filter(e =>
           e.completed_at || (e.progress?.[0]?.progress_percentage || 0) >= 100
         ).length;
-        const inProgressCourses = enrollments.filter(e => 
+        const inProgressCourses = enrollments.filter(e =>
           !e.completed_at && (e.progress?.[0]?.progress_percentage || 0) > 0 && (e.progress?.[0]?.progress_percentage || 0) < 100
         ).length;
-        
-        const totalWatchTime = enrollments.reduce((total, e) => 
+
+        const totalWatchTime = enrollments.reduce((total, e) =>
           total + (e.progress?.[0]?.total_watch_time || 0), 0
         );
-        
-        const averageProgress = totalCourses > 0 
+
+        const averageProgress = totalCourses > 0
           ? enrollments.reduce((total, e) => total + (e.progress?.[0]?.progress_percentage || 0), 0) / totalCourses
           : 0;
 
@@ -125,7 +146,7 @@ const AcademyDashboard: React.FC = () => {
         // Preparar cursos recentes (últimos acessados)
         const coursesWithProgress = enrollments
           .filter(e => e.progress?.[0]?.last_accessed_at)
-          .sort((a, b) => new Date(b.progress[0].last_accessed_at).getTime() - new Date(a.progress[0].last_accessed_at).getTime())
+          .sort((a, b) => new Date(b.progress?.[0]?.last_accessed_at || 0).getTime() - new Date(a.progress?.[0]?.last_accessed_at || 0).getTime())
           .slice(0, 6)
           .map(e => ({
             id: e.course.id,
@@ -139,7 +160,7 @@ const AcademyDashboard: React.FC = () => {
 
         // Preparar atividade recente
         const activities: RecentActivity[] = [];
-        
+
         // Adicionar matrículas recentes
         enrollments
           .sort((a, b) => new Date(b.enrolled_at).getTime() - new Date(a.enrolled_at).getTime())
@@ -200,7 +221,7 @@ const AcademyDashboard: React.FC = () => {
     if (diffDays === 1) return 'Hoje';
     if (diffDays === 2) return 'Ontem';
     if (diffDays <= 7) return `${diffDays} dias atrás`;
-    
+
     return date.toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
@@ -304,7 +325,7 @@ const AcademyDashboard: React.FC = () => {
             <ArrowLeftIcon className="h-5 w-5 mr-2" />
             Voltar ao Academy
           </button>
-          
+
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <ChartBarIcon className="w-8 h-8 text-blue-600 mr-3" />
@@ -480,7 +501,7 @@ const AcademyDashboard: React.FC = () => {
                     Ver todos
                   </button>
                 </div>
-                
+
                 {recentCourses.length === 0 ? (
                   <div className="text-center py-8">
                     <BookOpenIcon className="mx-auto h-8 w-8 text-gray-400" />
@@ -503,7 +524,7 @@ const AcademyDashboard: React.FC = () => {
                           )}
                           <div className="mt-1">
                             <div className="w-full bg-gray-200 rounded-full h-1">
-                              <div 
+                              <div
                                 className="bg-blue-600 h-1 rounded-full"
                                 style={{ width: `${course.progress?.[0]?.progress_percentage || 0}%` }}
                               ></div>
@@ -524,7 +545,7 @@ const AcademyDashboard: React.FC = () => {
               {/* Atividade recente */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Atividade Recente</h3>
-                
+
                 {recentActivity.length === 0 ? (
                   <div className="text-center py-8">
                     <CalendarIcon className="mx-auto h-8 w-8 text-gray-400" />

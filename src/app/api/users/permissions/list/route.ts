@@ -1,28 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { verifyToken } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    // Verificar autorização
+    // Verificar autorização (aceita token JWT próprio ou token do Supabase)
     const authHeader = request.headers.get('authorization');
     if (!authHeader) {
       return NextResponse.json({ error: 'Token de autorização necessário' }, { status: 401 });
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    
-    // Verificar token e obter usuário
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+    const token = authHeader.replace('Bearer ', '').trim();
+
+    // Tentar validar nosso JWT primeiro
+    let requesterUserId: string | null = null;
+    const payload = verifyToken(token);
+    if (payload?.userId) {
+      requesterUserId = payload.userId;
+    } else {
+      // Fallback: tentar validar como token do Supabase
+      const { data: supaUser, error: authError } = await supabaseAdmin.auth.getUser(token);
+      if (authError || !supaUser?.user) {
+        return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+      }
+      requesterUserId = supaUser.user.id;
     }
 
     // Buscar dados do usuário que está fazendo a requisição
     const { data: requestingUser, error: requestingUserError } = await supabaseAdmin
       .from('users_unified')
       .select('role')
-      .eq('id', user.id)
+      .eq('id', requesterUserId)
       .single();
 
     if (requestingUserError || !requestingUser || requestingUser.role !== 'ADMIN') {
@@ -30,7 +38,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Buscar todos os usuários com suas permissões
-    const { data: users, error: usersError } = await supabaseAdmin
+    const { searchParams } = new URL(request.url);
+    const activeOnly = searchParams.get('activeOnly') === 'true';
+
+    let usersQuery = supabaseAdmin
       .from('users_unified')
       .select(`
         id,
@@ -43,8 +54,13 @@ export async function GET(request: NextRequest) {
         created_at,
         updated_at
       `)
-      .eq('active', true)
       .order('first_name');
+
+    if (activeOnly) {
+      usersQuery = usersQuery.eq('active', true);
+    }
+
+    const { data: users, error: usersError } = await usersQuery;
 
     if (usersError) {
       console.error('Erro ao buscar usuários:', usersError);

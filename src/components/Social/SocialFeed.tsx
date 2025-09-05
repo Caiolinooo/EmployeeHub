@@ -42,6 +42,7 @@ interface SocialFeedProps {
   className?: string;
 }
 
+// Note: SocialFeed is disabled per client request and kept for reference only.
 const SocialFeed: React.FC<SocialFeedProps> = ({ className = '' }) => {
   const { user, getToken } = useSupabaseAuth();
   const [posts, setPosts] = useState<Post[]>([]);

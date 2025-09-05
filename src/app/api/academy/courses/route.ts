@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { canEditAcademy } from '@/lib/permissions';
-import { notifyNewCourse } from '@/app/api/academy/notifications/route';
+
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 
 // GET - Listar cursos

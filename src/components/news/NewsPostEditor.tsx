@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { FiSave, FiEye, FiCalendar, FiImage, FiLink, FiTag, FiUsers, FiStar, FiX, FiPlus } from 'react-icons/fi';
 import { useACLPermissions } from '@/hooks/useACLPermissions';
 import ReminderManager from '../reminders/ReminderManager';
+import { fetchWithToken } from '@/lib/tokenStorage';
 
 interface NewsCategory {
   id: string;
@@ -39,13 +40,19 @@ interface NewsPostEditorProps {
   postId?: string;
   onSave?: (post: NewsPost) => void;
   onCancel?: () => void;
+  // Opcional: reportar rascunho atual para preview em tempo real
+  onDraftChange?: (draft: NewsPost) => void;
+  // Opcional: sobrescrever classes do container externo (para layouts fullscreen)
+  containerClassName?: string;
 }
 
 const NewsPostEditor: React.FC<NewsPostEditorProps> = ({
   userId,
   postId,
   onSave,
-  onCancel
+  onCancel,
+  onDraftChange,
+  containerClassName
 }) => {
   const [post, setPost] = useState<NewsPost>({
     title: '',
@@ -89,6 +96,11 @@ const NewsPostEditor: React.FC<NewsPostEditorProps> = ({
     }
   };
 
+  // Atualiza o consumidor do editor sobre alterações do rascunho
+  useEffect(() => {
+    onDraftChange?.(post);
+  }, [post]);
+
   // Carregar post existente
   const loadPost = async () => {
     if (!postId) return;
@@ -99,13 +111,15 @@ const NewsPostEditor: React.FC<NewsPostEditorProps> = ({
       const data = await response.json();
       
       if (response.ok) {
-        setPost({
+        const hydrated = {
           ...data,
           media_urls: JSON.parse(data.media_urls || '[]'),
           external_links: JSON.parse(data.external_links || '[]'),
           tags: JSON.parse(data.tags || '[]'),
           visibility_settings: JSON.parse(data.visibility_settings || '{"public": true, "roles": [], "users": []}')
-        });
+        };
+        setPost(hydrated);
+        onDraftChange?.(hydrated);
       } else {
         setError(data.error || 'Erro ao carregar post');
       }
@@ -115,6 +129,18 @@ const NewsPostEditor: React.FC<NewsPostEditorProps> = ({
       setLoading(false);
     }
   };
+
+  // Ouvir atalhos vindos do container fullscreen
+  useEffect(() => {
+    const listener = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (!detail) return;
+      if (detail.action === 'save') savePost('draft');
+      if (detail.action === 'publish') savePost('published');
+    };
+    window.addEventListener('news-editor:shortcut', listener as EventListener);
+    return () => window.removeEventListener('news-editor:shortcut', listener as EventListener);
+  }, []);
 
   // Salvar post
   const savePost = async (status?: string) => {
@@ -130,7 +156,7 @@ const NewsPostEditor: React.FC<NewsPostEditorProps> = ({
       const url = postId ? `/api/news/posts/${postId}` : '/api/news/posts';
       const method = postId ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await fetchWithToken(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(postData)
@@ -218,6 +244,7 @@ const NewsPostEditor: React.FC<NewsPostEditorProps> = ({
             onClick={() => savePost('draft')}
             disabled={saving}
             className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50"
+            title="Ctrl/Cmd+S"
           >
             Salvar Rascunho
           </button>
@@ -226,6 +253,7 @@ const NewsPostEditor: React.FC<NewsPostEditorProps> = ({
               onClick={() => savePost('published')}
               disabled={saving}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              title="Ctrl/Cmd+Enter"
             >
               {saving ? 'Salvando...' : 'Publicar'}
             </button>

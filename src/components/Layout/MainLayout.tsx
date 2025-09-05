@@ -90,6 +90,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
   return (
     <PasswordRequiredGuard>
       <div className="min-h-screen flex bg-abz-background">
+        {/* Notificae3es globais fixas (desktop) */}
+        <div className="hidden md:block fixed top-4 right-4 z-50">
+          {user && <NotificationHUD userId={user.id} position="top-right" />}
+        </div>
         {/* Sidebar Fixa (Desktop) */}
         <aside className={`${isCollapsed ? 'w-16' : 'w-64'} bg-white shadow-md hidden md:flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out`}>
           {/* Logo e botão toggle no Sidebar */}

@@ -264,6 +264,20 @@ export const passwordExpiryTemplate = (daysRemaining: number) => {
 };
 
 // Template personalizado
+export const newsPostTemplate = (author: string, postTitle: string, excerpt: string, postUrl: string) => {
+  const config = getEmailConfig();
+  const content = `
+    <h2 style="text-align:center;color:${config.primaryColor}">Nova publicação no ${config.companyName}</h2>
+    <p>\n      <strong>${author || 'Alguém'}</strong> publicou: <strong>${postTitle}</strong>\n    </p>
+    ${excerpt ? `<p style="color:#444">${excerpt}</p>` : ''}
+    <div style="text-align:center;margin:24px 0;">
+      <a href="${postUrl}" class="button" style="background:${config.primaryColor};color:#fff;text-decoration:none;padding:12px 20px;border-radius:6px;font-weight:bold">Ver publicação</a>
+    </div>
+    <p style="font-size:12px;color:#777;text-align:center">Você está recebendo este email porque optou por notificações de novas publicações.</p>
+  `;
+  return baseTemplate(content);
+};
+
 export const customTemplate = (title: string, message: string, buttonText?: string, buttonUrl?: string) => {
   const config = getEmailConfig();
 

@@ -241,7 +241,7 @@ export async function DELETE(request: NextRequest) {
       }, { status: 400 });
     }
 
-    let query = supabaseAdmin.from('academy_enrollments');
+    let query: any = supabaseAdmin.from('academy_enrollments');
 
     if (enrollmentId) {
       query = query.eq('id', enrollmentId);

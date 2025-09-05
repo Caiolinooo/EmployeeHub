@@ -8,6 +8,9 @@ import { useToast } from '@/hooks/useToast';
 import InstagramStylePostCreator from './InstagramStylePostCreator';
 import NewsCommentSection from './NewsCommentSection';
 import NewsPostEditor from './NewsPostEditor';
+import NewsPostEditorFullScreen from './NewsPostEditorFullScreen';
+import useNewsRealtime from '@/hooks/useNewsRealtime';
+import { fetchWithToken } from '@/lib/tokenStorage';
 
 interface NewsCategory { id: string; name: string; color: string; }
 
@@ -102,7 +105,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
         category_id: editingCategory || null,
         tags: editingTags.split(',').map(t => t.trim()).filter(Boolean)
       };
-      const res = await fetch(`/api/news/posts/${post.id}`, {
+      const res = await fetchWithToken(`/api/news/posts/${post.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -123,18 +126,6 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
       console.error(e);
       toast.error('Falha ao salvar alterações');
     } finally {
-  const [categories, setCategories] = useState<NewsCategory[]>([]);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const r = await fetch('/api/news/categories');
-        const d = await r.json();
-        if (r.ok && Array.isArray(d)) setCategories(d);
-      } catch {}
-    })();
-  }, []);
-
       setSavingEdit(false);
     }
   };
@@ -143,7 +134,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
   const handleDeletePost = async (postId: string) => {
     if (!confirm('Tem certeza que deseja excluir este post?')) return;
     try {
-      const res = await fetch(`/api/news/posts/${postId}`, { method: 'DELETE' });
+      const res = await fetchWithToken(`/api/news/posts/${postId}`, { method: 'DELETE' });
       if (res.ok) {
         setPosts(prev => prev.filter(p => p.id !== postId));
       }
@@ -204,6 +195,28 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
   useEffect(() => {
     loadPosts(1, true);
   }, [category, featured, limit]);
+
+  // Realtime: likes/comentrios atualizados em tempo real
+  useNewsRealtime(
+    posts.map(p => p.id),
+    {
+      onLikesChange: (postId, payload) => {
+        setPosts(prev => prev.map(p => p.id === postId ? {
+          ...p,
+          likes_count: payload.count ?? (p.likes_count + (payload.delta || 0))
+        } : p));
+      },
+      onCommentsChange: (postId, payload) => {
+        setPosts(prev => prev.map(p => p.id === postId ? {
+          ...p,
+          comments_count: payload.count ?? (p.comments_count + (payload.delta || 0))
+        } : p));
+      },
+      onPostUpdate: (postId, partial) => {
+        setPosts(prev => prev.map(p => p.id === postId ? { ...p, ...partial } : p));
+      }
+    }
+  );
 
   // Função para curtir/descurtir post com animação
   const handleLike = async (postId: string) => {
@@ -316,7 +329,8 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
   };
 
   // Renderizar post individual
-  const renderPost = (post: NewsPost) => (
+  const renderPost = (post: NewsPost) => {
+    return (
     <div key={post.id} className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
       {/* Header do Post */}
       <div className="flex items-center justify-between p-4">
@@ -347,25 +361,6 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
               <FiCalendar className="w-4 h-4" />
               <span>{formatDate(post.published_at)}</span>
               <span>•</span>
-      {/* Edição inline removida: será via modal NewsPostEditor */}
-      <div className="px-4 pb-3">
-        <h2 className="text-lg font-semibold text-gray-900 mb-2">{post.title}</h2>
-        <p className="text-gray-700 leading-relaxed">{post.excerpt}</p>
-
-        {/* Tags */}
-        {Array.isArray(post.tags) && post.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-3">
-            {post.tags.map((tag, index) => (
-              <span
-                key={index}
-                className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full"
-              >
-                #{tag}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
 
               <FiEye className="w-4 h-4" />
               <span>{post.views_count} visualizações</span>
@@ -495,16 +490,6 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
                 {post.user_liked && (
                   <div className="absolute inset-0 animate-ping">
                     <FiHeart className="w-5 h-5 text-red-300 fill-current" />
-      </div>
-
-      {/* Comentários */}
-      {expandedComments[post.id] && (
-        <div className="px-4 pb-4">
-          {/* Seção de comentários para News */}
-          <NewsCommentSection postId={post.id} userId={userId || ''} />
-        </div>
-      )}
-
                   </div>
                 )}
               </div>
@@ -533,8 +518,17 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Comentários */}
+      {expandedComments[post.id] && (
+        <div className="border-t border-gray-100">
+          <NewsCommentSection postId={post.id} userId={userId || ''} />
+        </div>
+      )}
+
     </div>
   );
+  };
 
   if (error) {
     return (
@@ -648,28 +642,11 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
 
       {/* Edit Post Modal */}
       {showEditModal && editingPost && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowEditModal(false)} />
-          <div className="relative z-10 max-w-5xl w-full mx-4">
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <NewsPostEditor
-                userId={userId || ''}
-                postId={editingPost.id}
-                onSave={(updated) => {
-                  setPosts(prev => prev.map(p => p.id === updated.id ? {
-                    ...p,
-                    ...updated,
-                    media_urls: Array.isArray(updated.media_urls) ? updated.media_urls : JSON.parse(updated.media_urls || '[]'),
-                    tags: Array.isArray(updated.tags) ? updated.tags : JSON.parse(updated.tags || '[]')
-                  } : p));
-                  setShowEditModal(false);
-                  setEditingPost(null);
-                }}
-                onCancel={() => { setShowEditModal(false); setEditingPost(null); }}
-              />
-            </div>
-          </div>
-        </div>
+        <NewsPostEditorFullScreen
+          userId={userId || ''}
+          postId={editingPost.id}
+          onClose={() => { setShowEditModal(false); setEditingPost(null); }}
+        />
       )}
 
     </div>

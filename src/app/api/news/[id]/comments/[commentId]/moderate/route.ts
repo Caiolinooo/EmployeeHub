@@ -7,8 +7,9 @@ export async function DELETE(
   { params }: { params: { id: string; commentId: string } }
 ) {
   try {
-    const tokenHeader = request.headers.get('authorization') || '';
+    const tokenHeader = request.headers.get('authorization') ?? undefined;
     const token = extractTokenFromHeader(tokenHeader);
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const payload = verifyToken(token);
     if (!payload) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

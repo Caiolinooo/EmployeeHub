@@ -69,11 +69,15 @@ export async function GET(request: NextRequest) {
 // POST - Criar novo comentário
 export async function POST(request: NextRequest) {
   try {
-    const { user, error: authError } = await authenticateUser(request);
-    
+    const { user: authUser, error: authError } = await authenticateUser(request);
+
     if (authError) {
       return authError;
     }
+    if (!authUser) {
+      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    }
+    const user = authUser as any;
 
     const body = await request.json();
     const { course_id, content, parent_id } = body;
@@ -174,11 +178,15 @@ export async function POST(request: NextRequest) {
 // PUT - Atualizar comentário
 export async function PUT(request: NextRequest) {
   try {
-    const { user, error: authError } = await authenticateUser(request);
-    
+    const { user: authUser, error: authError } = await authenticateUser(request);
+
     if (authError) {
       return authError;
     }
+    if (!authUser) {
+      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    }
+    const user = authUser as any;
 
     const body = await request.json();
     const { comment_id, content, is_active } = body;
@@ -268,11 +276,15 @@ export async function PUT(request: NextRequest) {
 // DELETE - Excluir comentário
 export async function DELETE(request: NextRequest) {
   try {
-    const { user, error: authError } = await authenticateUser(request);
-    
+    const { user: authUser, error: authError } = await authenticateUser(request);
+
     if (authError) {
       return authError;
     }
+    if (!authUser) {
+      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    }
+    const user = authUser as any;
 
     const { searchParams } = new URL(request.url);
     const commentId = searchParams.get('comment_id');
