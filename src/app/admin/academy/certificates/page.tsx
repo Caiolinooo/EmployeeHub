@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import MainLayout from '@/components/Layout/MainLayout';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import { fetchWithToken } from '@/lib/tokenStorage';
-import CertificateTemplateEditor from '@/components/academy/CertificateTemplateEditor';
+import CertificateTemplateEditor from '@/components/Academy/CertificateTemplateEditor';
 
 export default function CertificatesAdminPage() {
   const [templates, setTemplates] = useState<any[]>([]);

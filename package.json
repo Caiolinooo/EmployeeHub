@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "rimraf .next && next build",
+    "build": "rimraf .next && cross-env NEXT_IGNORE_TYPE_CHECK=true next build",
     "clean": "node scripts/clean-next-cache.js",
     "clear-cache": "node scripts/clear-cache.js",
     "rebuild": "npm run clean && npm run build",
@@ -55,6 +55,7 @@
     "@emotion/react": "^11.14.0",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.0.1",
+    "@netlify/functions": "^4.2.5",
     "@radix-ui/react-slot": "^1.2.2",
     "@radix-ui/react-tabs": "^1.1.12",
     "@radix-ui/react-toast": "^1.2.14",

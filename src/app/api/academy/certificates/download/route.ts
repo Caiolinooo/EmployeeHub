@@ -20,7 +20,8 @@ export async function GET(request: NextRequest) {
     if (issueErr || !issue) return NextResponse.json({ error: 'Certificado n\u00e3o encontrado' }, { status: 404 });
 
     // permiss\u00e3o: dono do enrollment ou admin/editor
-    if (issue.enrollment?.user_id !== user?.id && !user?.canEditAcademy && user?.role !== 'ADMIN') {
+    const enrollment = issue.enrollment as any;
+    if (enrollment?.user_id !== user?.id && !user?.canEditAcademy && user?.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 

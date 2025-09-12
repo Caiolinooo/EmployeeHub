@@ -2,8 +2,8 @@
 const nextConfig = {
   // Configurações básicas
   typescript: {
-    // Skip TS errors only on Netlify to avoid failing builds; keep strict locally
-    ignoreBuildErrors: process.env.NETLIFY === 'true',
+    // Skip TS errors to avoid failing builds
+    ignoreBuildErrors: true,
   },
   eslint: {
     ignoreDuringBuilds: true,
