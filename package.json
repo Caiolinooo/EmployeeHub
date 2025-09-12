@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "rimraf .next && cross-env NEXT_IGNORE_TYPE_CHECK=true next build",
+    "build": "rimraf .next && next build",
     "clean": "node scripts/clean-next-cache.js",
     "clear-cache": "node scripts/clear-cache.js",
     "rebuild": "npm run clean && npm run build",
