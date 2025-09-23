@@ -30,6 +30,12 @@ export interface PermissionFeatures {
   'erp.sync'?: boolean;
   'erp.connections'?: boolean;
   'erp.jobs'?: boolean;
+  'bi.view'?: boolean;
+  'bi.create'?: boolean;
+  'bi.edit'?: boolean;
+  'bi.delete'?: boolean;
+  'bi.export'?: boolean;
+  'bi.admin'?: boolean;
   [key: string]: boolean | undefined;
 }
 

@@ -1368,5 +1368,57 @@ export default {
     },
     sem_permissao: 'Sem permissão para acessar a integração ERP',
     sem_permissao_desc: 'Você não tem permissão para visualizar ou gerenciar integrações ERP.'
+  },
+
+  // Dashboard de BI
+  dashboard_bi: {
+    titulo: 'Dashboard de BI',
+    descricao: 'Analytics avançados e visualizações interativas de dados',
+    dashboards: 'Dashboards',
+    templates: 'Templates',
+    metricas: 'Métricas',
+    configuracoes: 'Configurações',
+    novo_dashboard: 'Novo Dashboard',
+    duplicar: 'Duplicar',
+    excluir: 'Excluir',
+    visualizar: 'Visualizar',
+    exportar: 'Exportar',
+    filtros: 'Filtros',
+    tela_cheia: 'Tela Cheia',
+    sair_tela_cheia: 'Sair da Tela Cheia',
+    widgets: 'Widgets',
+    acessos: 'Acessos',
+    atualizado: 'Atualizado',
+    sem_dashboard: 'Nenhum dashboard encontrado',
+    criar_primeiro: 'Crie seu primeiro dashboard para começar',
+    dashboard_vazio: 'Dashboard vazio',
+    sem_widgets: 'Este dashboard não possui widgets configurados',
+    selecionar_dashboard: 'Selecione um dashboard',
+    escolher_dashboard: 'Escolha um dashboard da lista para visualizar',
+    voltar_dashboards: 'Voltar aos Dashboards',
+    meus_dashboards: 'Meus Dashboards',
+    gerenciar_visualizar: 'Gerencie e visualize seus dashboards de BI',
+    dashboard_criado: 'Dashboard criado com sucesso!',
+    dashboard_duplicado: 'Dashboard duplicado com sucesso!',
+    dashboard_excluido: 'Dashboard excluído com sucesso!',
+    dashboard_exportado: 'Dashboard exportado com sucesso!',
+    confirmar_exclusao: 'Tem certeza que deseja excluir este dashboard?',
+    tipos_widget: {
+      chart: 'Gráfico',
+      kpi: 'KPI',
+      table: 'Tabela',
+      text: 'Texto',
+      image: 'Imagem',
+      gauge: 'Medidor',
+      map: 'Mapa'
+    },
+    formatos_export: {
+      pdf: 'PDF',
+      png: 'PNG',
+      excel: 'Excel',
+      csv: 'CSV'
+    },
+    sem_permissao: 'Sem permissão para acessar o Dashboard de BI',
+    sem_permissao_desc: 'Você não tem permissão para visualizar ou gerenciar dashboards de BI.'
   }
 };

@@ -400,6 +400,21 @@ export function getTranslatedCards(t: (key: string) => string): DashboardCard[] 
       moduleKey: 'integracao_erp'
     },
     {
+      id: 'dashboard-bi',
+      title: 'Dashboard de BI',
+      description: 'Analytics avançados e visualizações interativas de dados',
+      href: '/dashboard-bi',
+      icon: FiBarChart,
+      iconName: 'FiBarChart',
+      color: 'bg-emerald-600',
+      hoverColor: 'hover:bg-emerald-700',
+      external: false,
+      enabled: true,
+      order: 12,
+      adminOnly: false,
+      moduleKey: 'dashboard_bi'
+    },
+    {
       id: 'admin',
       title: t('admin.title'),
       description: t('admin.dashboard'),
