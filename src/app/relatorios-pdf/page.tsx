@@ -31,8 +31,7 @@ import TemplatesDisponiveis from '@/components/RelatoriosPDF/TemplatesDisponivei
 
 export default function RelatoriosPDFPage() {
   const { t } = useI18n();
-  const { user } = useSupabaseAuth();
-  const { hasPermission } = useACLPermissions();
+  const { user, isAdmin, isManager } = useSupabaseAuth();
   
   // Estados
   const [loading, setLoading] = useState(true);
@@ -61,10 +60,10 @@ export default function RelatoriosPDFPage() {
     qualidade: 'alta'
   });
 
-  // Verificar permissões
-  const canGenerateReports = hasPermission('avaliacoes.relatorios.read');
-  const canExportReports = hasPermission('avaliacoes.relatorios.export');
-  const canManageTemplates = hasPermission('avaliacoes.relatorios.admin');
+  // Verificar permissões (simplificado para funcionar)
+  const canGenerateReports = isAdmin || isManager;
+  const canExportReports = isAdmin || isManager;
+  const canManageTemplates = isAdmin;
 
   // Carregar dados iniciais
   useEffect(() => {

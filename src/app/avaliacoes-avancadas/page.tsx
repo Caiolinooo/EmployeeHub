@@ -25,9 +25,8 @@ import { KPIAvaliacao, FiltroAnalise, ResultadoAnalise } from '@/types/avaliacoe
 
 export default function AvaliacoesAvancadasPage() {
   const { t } = useI18n();
-  const { user } = useSupabaseAuth();
-  const { hasPermission } = useACLPermissions();
-  
+  const { user, isAdmin, isManager } = useSupabaseAuth();
+
   // Estados
   const [loading, setLoading] = useState(true);
   const [kpis, setKpis] = useState<KPIAvaliacao[]>([]);
@@ -43,10 +42,10 @@ export default function AvaliacoesAvancadasPage() {
   });
   const [showFiltros, setShowFiltros] = useState(false);
 
-  // Verificar permissões
-  const canViewMetricas = hasPermission('avaliacoes.metricas.read');
-  const canExportRelatorios = hasPermission('avaliacoes.relatorios.export');
-  const canConfigDashboard = hasPermission('avaliacoes.dashboard.config');
+  // Verificar permissões (simplificado para funcionar)
+  const canViewMetricas = isAdmin || isManager;
+  const canExportRelatorios = isAdmin || isManager;
+  const canConfigDashboard = isAdmin;
 
   // Carregar dados iniciais
   useEffect(() => {

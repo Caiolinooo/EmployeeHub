@@ -1313,5 +1313,60 @@ export default {
     cancelled: 'Cancelado',
     processing: 'Processando lembretes...',
     statistics: 'Estatísticas de Processamento'
+  },
+
+  // API Mobile
+  api_mobile: {
+    titulo: 'API Mobile',
+    descricao: 'Gerenciamento e monitoramento da API para aplicativos móveis',
+    dashboard: 'Dashboard',
+    endpoints: 'Endpoints',
+    logs: 'Logs',
+    configuracoes: 'Configurações',
+    metricas: 'Métricas',
+    usuarios_conectados: 'Usuários Conectados',
+    requisicoes_hoje: 'Requisições Hoje',
+    tempo_resposta: 'Tempo de Resposta',
+    taxa_erro: 'Taxa de Erro',
+    sem_permissao: 'Sem permissão para acessar a API Mobile',
+    sem_permissao_desc: 'Você não tem permissão para visualizar ou gerenciar a API Mobile.'
+  },
+
+  // Integração ERP
+  integracao_erp: {
+    titulo: 'Integração ERP',
+    descricao: 'Conectores e sincronização com sistemas ERP externos',
+    conexoes: 'Conexões',
+    sincronizacao: 'Sincronização',
+    metricas: 'Métricas',
+    alertas: 'Alertas',
+    nova_conexao: 'Nova Conexão',
+    testar_conexao: 'Testar Conexão',
+    sincronizar: 'Sincronizar',
+    editar: 'Editar',
+    excluir: 'Excluir',
+    status: {
+      connected: 'Conectado',
+      disconnected: 'Desconectado',
+      error: 'Erro',
+      testing: 'Testando'
+    },
+    jobs: {
+      pendente: 'Pendente',
+      executando: 'Executando',
+      concluido: 'Concluído',
+      falhou: 'Falhou',
+      cancelado: 'Cancelado'
+    },
+    modulos: {
+      funcionarios: 'Funcionários',
+      folha_pagamento: 'Folha de Pagamento',
+      departamentos: 'Departamentos',
+      contabilidade: 'Contabilidade',
+      compras: 'Compras',
+      vendas: 'Vendas'
+    },
+    sem_permissao: 'Sem permissão para acessar a integração ERP',
+    sem_permissao_desc: 'Você não tem permissão para visualizar ou gerenciar integrações ERP.'
   }
 };
