@@ -385,6 +385,21 @@ export function getTranslatedCards(t: (key: string) => string): DashboardCard[] 
       moduleKey: 'api_mobile'
     },
     {
+      id: 'integracao-erp',
+      title: 'Integração ERP',
+      description: 'Conectores e sincronização com sistemas ERP externos',
+      href: '/integracao-erp',
+      icon: FiDatabase,
+      iconName: 'FiDatabase',
+      color: 'bg-purple-600',
+      hoverColor: 'hover:bg-purple-700',
+      external: false,
+      enabled: true,
+      order: 11,
+      adminOnly: true,
+      moduleKey: 'integracao_erp'
+    },
+    {
       id: 'admin',
       title: t('admin.title'),
       description: t('admin.dashboard'),

@@ -25,6 +25,11 @@ export interface PermissionFeatures {
   'api.mobile.devices'?: boolean;
   'api.mobile.notifications'?: boolean;
   'api.mobile.settings'?: boolean;
+  'erp.view'?: boolean;
+  'erp.manage'?: boolean;
+  'erp.sync'?: boolean;
+  'erp.connections'?: boolean;
+  'erp.jobs'?: boolean;
   [key: string]: boolean | undefined;
 }
 

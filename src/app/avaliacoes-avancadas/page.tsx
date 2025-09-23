@@ -21,9 +21,6 @@ import GraficosPerformance from '@/components/AvaliacoesAvancadas/GraficosPerfor
 import FiltrosAvancados from '@/components/AvaliacoesAvancadas/FiltrosAvancados';
 import TabelaAnalises from '@/components/AvaliacoesAvancadas/TabelaAnalises';
 import AlertasPerformance from '@/components/AvaliacoesAvancadas/AlertasPerformance';
-import TabelaAnalises from '@/components/AvaliacoesAvancadas/TabelaAnalises';
-import FiltrosAvancados from '@/components/AvaliacoesAvancadas/FiltrosAvancados';
-import AlertasPerformance from '@/components/AvaliacoesAvancadas/AlertasPerformance';
 import { KPIAvaliacao, FiltroAnalise, ResultadoAnalise } from '@/types/avaliacoes-avancadas';
 
 export default function AvaliacoesAvancadasPage() {

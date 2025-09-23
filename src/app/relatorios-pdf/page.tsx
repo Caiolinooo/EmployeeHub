@@ -16,7 +16,7 @@ import {
 } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { useACLPermissions } from '@/contexts/ACLContext';
+import { useACLPermissions } from '@/hooks/useACLPermissions';
 import { 
   ConfiguracaoRelatorio, 
   SolicitacaoRelatorio, 
