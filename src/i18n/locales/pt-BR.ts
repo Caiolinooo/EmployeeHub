@@ -1512,5 +1512,92 @@ export default {
     },
     sem_permissao: 'Sem permissão para acessar os workflows',
     sem_permissao_desc: 'Você não tem permissão para visualizar ou gerenciar workflows.'
+  },
+
+  // Chat Interno em Tempo Real
+  chat: {
+    titulo: 'Chat Interno',
+    descricao: 'Comunicação em tempo real com canais e mensagens diretas',
+    canais: 'Canais',
+    mensagens: 'Mensagens',
+    usuarios: 'Usuários',
+    configuracoes: 'Configurações',
+    buscar_canais: 'Buscar canais...',
+    novo_canal: 'Novo Canal',
+    selecionar_canal: 'Selecione um canal',
+    escolher_canal: 'Escolha um canal da lista para começar a conversar',
+    digite_mensagem: 'Digite sua mensagem...',
+    enviar: 'Enviar',
+    usuarios_online: 'Usuários Online',
+    online: 'online',
+    membros: 'membros',
+    digitando: 'digitando...',
+    canal_criado: 'Canal criado com sucesso!',
+    mensagem_enviada: 'Mensagem enviada com sucesso!',
+    arquivo_enviado: 'Arquivo enviado com sucesso!',
+    mensagem_deletada: 'Mensagem deletada com sucesso!',
+    confirmar_exclusao_mensagem: 'Tem certeza que deseja excluir esta mensagem?',
+    tipos_canal: {
+      public: 'Público',
+      private: 'Privado',
+      direct: 'Direto',
+      department: 'Departamento',
+      project: 'Projeto'
+    },
+    status: {
+      online: 'Online',
+      away: 'Ausente',
+      busy: 'Ocupado',
+      offline: 'Offline',
+      invisible: 'Invisível'
+    },
+    tipos_mensagem: {
+      text: 'Texto',
+      file: 'Arquivo',
+      image: 'Imagem',
+      video: 'Vídeo',
+      audio: 'Áudio',
+      system: 'Sistema',
+      poll: 'Enquete',
+      event: 'Evento'
+    },
+    acoes: {
+      responder: 'Responder',
+      editar: 'Editar',
+      excluir: 'Excluir',
+      fixar: 'Fixar',
+      copiar: 'Copiar',
+      baixar: 'Baixar',
+      reagir: 'Reagir',
+      mencionar: 'Mencionar',
+      compartilhar: 'Compartilhar'
+    },
+    notificacoes: {
+      nova_mensagem: 'Nova mensagem',
+      mencao: 'Você foi mencionado',
+      convite_canal: 'Convite para canal',
+      mensagem_direta: 'Mensagem direta'
+    },
+    configuracoes_canal: {
+      nome: 'Nome do canal',
+      descricao: 'Descrição',
+      tipo: 'Tipo',
+      privacidade: 'Privacidade',
+      membros: 'Membros',
+      permissoes: 'Permissões',
+      integracao: 'Integrações'
+    },
+    recursos: {
+      upload_arquivos: 'Upload de arquivos',
+      mensagens_voz: 'Mensagens de voz',
+      mensagens_video: 'Mensagens de vídeo',
+      compartilhar_tela: 'Compartilhar tela',
+      reacoes: 'Reações',
+      threads: 'Threads',
+      mencoes: 'Menções',
+      bots: 'Bots'
+    },
+    sem_permissao: 'Sem permissão para acessar o chat',
+    sem_permissao_desc: 'Você não tem permissão para usar o sistema de chat.'
   }
 };

@@ -430,6 +430,21 @@ export function getTranslatedCards(t: (key: string) => string): DashboardCard[] 
       moduleKey: 'workflows'
     },
     {
+      id: 'chat',
+      title: 'Chat Interno',
+      description: 'Comunicação em tempo real com canais e mensagens diretas',
+      href: '/chat',
+      icon: FiMessageSquare,
+      iconName: 'FiMessageSquare',
+      color: 'bg-green-600',
+      hoverColor: 'hover:bg-green-700',
+      external: false,
+      enabled: true,
+      order: 14,
+      adminOnly: false,
+      moduleKey: 'chat'
+    },
+    {
       id: 'admin',
       title: t('admin.title'),
       description: t('admin.dashboard'),

@@ -42,6 +42,12 @@ export interface PermissionFeatures {
   'workflows.delete'?: boolean;
   'workflows.execute'?: boolean;
   'workflows.admin'?: boolean;
+  'chat.view'?: boolean;
+  'chat.send'?: boolean;
+  'chat.create_channels'?: boolean;
+  'chat.manage_channels'?: boolean;
+  'chat.delete_messages'?: boolean;
+  'chat.admin'?: boolean;
   [key: string]: boolean | undefined;
 }
 
