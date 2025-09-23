@@ -42,6 +42,14 @@ export default function AvaliacoesAvancadasPage() {
   });
   const [showFiltros, setShowFiltros] = useState(false);
   const [activeTab, setActiveTab] = useState<'metricas' | 'relatorios'>('metricas');
+  const [reportGenerating, setReportGenerating] = useState(false);
+  const [reportType, setReportType] = useState<'individual' | 'departmental' | 'executive'>('individual');
+  const [reportParameters, setReportParameters] = useState({
+    targetUserId: '',
+    department: '',
+    periodStart: new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString().split('T')[0],
+    periodEnd: new Date().toISOString().split('T')[0]
+  });
 
   // Verificar permissões (simplificado para funcionar)
   const canViewMetricas = isAdmin || isManager;
@@ -97,6 +105,11 @@ export default function AvaliacoesAvancadasPage() {
       return;
     }
 
+    if (formato === 'pdf') {
+      await generatePDFReport();
+      return;
+    }
+
     try {
       const response = await fetch('/api/avaliacoes-avancadas/exportar', {
         method: 'POST',
@@ -119,7 +132,7 @@ export default function AvaliacoesAvancadasPage() {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        
+
         toast.success(t('avaliacoes.relatorio_exportado', 'Relatório exportado com sucesso'));
       } else {
         throw new Error('Erro ao exportar relatório');
@@ -127,6 +140,44 @@ export default function AvaliacoesAvancadasPage() {
     } catch (error) {
       console.error('Erro ao exportar:', error);
       toast.error(t('avaliacoes.erro_exportar', 'Erro ao exportar relatório'));
+    }
+  };
+
+  // Função para gerar relatório PDF
+  const generatePDFReport = async () => {
+    try {
+      setReportGenerating(true);
+
+      const response = await fetch('/api/reports/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user?.access_token || ''}`
+        },
+        body: JSON.stringify({
+          reportType,
+          parameters: reportParameters
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao gerar relatório');
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.filePath) {
+        // Abrir o PDF em nova aba
+        window.open(result.filePath, '_blank');
+        toast.success('Relatório gerado com sucesso!');
+      } else {
+        throw new Error('Erro na geração do relatório');
+      }
+    } catch (error) {
+      console.error('Erro ao gerar relatório:', error);
+      toast.error('Erro ao gerar relatório PDF');
+    } finally {
+      setReportGenerating(false);
     }
   };
 
@@ -294,37 +345,176 @@ export default function AvaliacoesAvancadasPage() {
         ) : (
           // Aba de Relatórios PDF
           <div className="space-y-6">
+            {/* Configuração do Relatório */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
                 <FiDownload className="mr-2 text-blue-600" />
-                Relatórios PDF Personalizados
+                Configurar Relatório PDF
               </h3>
-              <p className="text-gray-600 mb-6">
-                Gere relatórios personalizados com gráficos e visualizações detalhadas das avaliações de performance.
-              </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                {/* Tipo de Relatório */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tipo de Relatório
+                  </label>
+                  <select
+                    value={reportType}
+                    onChange={(e) => setReportType(e.target.value as any)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="individual">Performance Individual</option>
+                    <option value="departmental">Análise Departamental</option>
+                    <option value="executive">Relatório Executivo</option>
+                  </select>
+                </div>
+
+                {/* Período */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Data Início
+                    </label>
+                    <input
+                      type="date"
+                      value={reportParameters.periodStart}
+                      onChange={(e) => setReportParameters(prev => ({ ...prev, periodStart: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Data Fim
+                    </label>
+                    <input
+                      type="date"
+                      value={reportParameters.periodEnd}
+                      onChange={(e) => setReportParameters(prev => ({ ...prev, periodEnd: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Parâmetros específicos por tipo */}
+              {reportType === 'individual' && (
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Funcionário (deixe vazio para seu próprio relatório)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="ID do funcionário ou deixe vazio"
+                    value={reportParameters.targetUserId}
+                    onChange={(e) => setReportParameters(prev => ({ ...prev, targetUserId: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              )}
+
+              {reportType === 'departmental' && (
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Departamento
+                  </label>
+                  <select
+                    value={reportParameters.department}
+                    onChange={(e) => setReportParameters(prev => ({ ...prev, department: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Selecione um departamento</option>
+                    <option value="TI">Tecnologia da Informação</option>
+                    <option value="RH">Recursos Humanos</option>
+                    <option value="Vendas">Vendas</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Financeiro">Financeiro</option>
+                    <option value="Operações">Operações</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Botão de Gerar */}
+              <div className="flex justify-end">
+                <button
+                  onClick={generatePDFReport}
+                  disabled={reportGenerating}
+                  className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                >
+                  {reportGenerating ? (
+                    <>
+                      <FiRefreshCw className="animate-spin mr-2" />
+                      Gerando...
+                    </>
+                  ) : (
+                    <>
+                      <FiDownload className="mr-2" />
+                      Gerar Relatório PDF
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Templates de Relatório */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Templates Disponíveis
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                  <h4 className="font-medium text-gray-900 mb-2">Relatório de Performance Individual</h4>
-                  <p className="text-sm text-gray-600 mb-4">Análise detalhada de um funcionário específico</p>
-                  <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-                    Gerar PDF
+                  <h4 className="font-medium text-gray-900 mb-2">Performance Individual</h4>
+                  <p className="text-sm text-gray-600 mb-4">
+                    • Métricas pessoais<br/>
+                    • Gráficos de evolução<br/>
+                    • Histórico de avaliações<br/>
+                    • Reembolsos e benefícios
+                  </p>
+                  <button
+                    onClick={() => {
+                      setReportType('individual');
+                      generatePDFReport();
+                    }}
+                    className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors text-sm"
+                  >
+                    Gerar Agora
                   </button>
                 </div>
 
                 <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                  <h4 className="font-medium text-gray-900 mb-2">Relatório Departamental</h4>
-                  <p className="text-sm text-gray-600 mb-4">Comparativo de performance por departamento</p>
-                  <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-                    Gerar PDF
+                  <h4 className="font-medium text-gray-900 mb-2">Análise Departamental</h4>
+                  <p className="text-sm text-gray-600 mb-4">
+                    • Comparativo por equipe<br/>
+                    • Rankings de performance<br/>
+                    • Distribuição de notas<br/>
+                    • Tendências mensais
+                  </p>
+                  <button
+                    onClick={() => {
+                      setReportType('departmental');
+                      generatePDFReport();
+                    }}
+                    className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors text-sm"
+                  >
+                    Gerar Agora
                   </button>
                 </div>
 
                 <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                   <h4 className="font-medium text-gray-900 mb-2">Relatório Executivo</h4>
-                  <p className="text-sm text-gray-600 mb-4">Resumo executivo com KPIs principais</p>
-                  <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-                    Gerar PDF
+                  <p className="text-sm text-gray-600 mb-4">
+                    • Visão geral da empresa<br/>
+                    • KPIs principais<br/>
+                    • Resumo por departamento<br/>
+                    • Insights estratégicos
+                  </p>
+                  <button
+                    onClick={() => {
+                      setReportType('executive');
+                      generatePDFReport();
+                    }}
+                    className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors text-sm"
+                  >
+                    Gerar Agora
                   </button>
                 </div>
               </div>
