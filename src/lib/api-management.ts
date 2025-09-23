@@ -2,10 +2,12 @@ import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export interface APIKey {
   id: string;
@@ -60,6 +62,7 @@ export class APIKeyManager {
       user_id: userId
     };
 
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('api_keys')
       .insert([{ id: keyId, ...newKey }])
@@ -74,6 +77,7 @@ export class APIKeyManager {
   // Validar chave API
   async validateAPIKey(apiKey: string): Promise<{ valid: boolean; key?: APIKey; error?: string }> {
     try {
+      const supabase = getSupabaseClient();
       const { data, error } = await supabase
         .from('api_keys')
         .select('*')
@@ -121,9 +125,10 @@ export class APIKeyManager {
 
   // Atualizar último uso
   private async updateLastUsed(keyId: string): Promise<void> {
+    const supabase = getSupabaseClient();
     await supabase
       .from('api_keys')
-      .update({ 
+      .update({
         last_used: new Date().toISOString(),
         usage_count: supabase.sql`usage_count + 1`
       })
@@ -151,11 +156,13 @@ export class APIKeyManager {
       timestamp: new Date().toISOString()
     };
 
+    const supabase = getSupabaseClient();
     await supabase.from('api_usage').insert([usage]);
   }
 
   // Listar chaves API do usuário
   async getUserAPIKeys(userId: string): Promise<APIKey[]> {
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('api_keys')
       .select('*')
@@ -168,6 +175,7 @@ export class APIKeyManager {
 
   // Ativar/Desativar chave
   async toggleAPIKey(keyId: string, userId: string): Promise<void> {
+    const supabase = getSupabaseClient();
     const { error } = await supabase
       .from('api_keys')
       .update({ active: supabase.sql`NOT active` })
@@ -179,6 +187,7 @@ export class APIKeyManager {
 
   // Deletar chave API
   async deleteAPIKey(keyId: string, userId: string): Promise<void> {
+    const supabase = getSupabaseClient();
     const { error } = await supabase
       .from('api_keys')
       .delete()
