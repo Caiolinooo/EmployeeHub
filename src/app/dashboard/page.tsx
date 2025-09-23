@@ -66,12 +66,29 @@ export default function Dashboard() {
       return;
     }
 
-    const fetchCards = async () => {
+    const fetchCards = async (retryCount = 0) => {
       try {
         setLoadingCards(true);
         setError(null);
 
-        console.log('🔄 Dashboard - Carregando cards do Supabase...');
+        console.log(`🔄 Dashboard - Carregando cards do Supabase... (tentativa ${retryCount + 1})`);
+
+        // Tentar carregar do cache local primeiro se for retry
+        if (retryCount > 0) {
+          const cachedCards = localStorage.getItem('dashboard-cards-cache');
+          if (cachedCards) {
+            try {
+              const parsedCards = JSON.parse(cachedCards);
+              console.log('📦 Usando cards do cache local como fallback');
+              setCards(parsedCards);
+              setLoadingCards(false);
+              return;
+            } catch (e) {
+              console.warn('⚠️ Cache local inválido, removendo...');
+              localStorage.removeItem('dashboard-cards-cache');
+            }
+          }
+        }
 
         // SEMPRE tentar carregar do Supabase primeiro
         let response = await fetch('/api/cards/supabase', {
@@ -154,6 +171,14 @@ export default function Dashboard() {
         console.log(`✅ ${dbCards.length} cards carregados com sucesso`);
 
         if (dbCards && dbCards.length > 0) {
+          // Salvar no cache local para uso futuro
+          try {
+            localStorage.setItem('dashboard-cards-cache', JSON.stringify(dbCards));
+            console.log('💾 Cards salvos no cache local');
+          } catch (e) {
+            console.warn('⚠️ Não foi possível salvar no cache local:', e);
+          }
+
           setCards(dbCards);
         } else {
           // Se não há cards no banco, usar cards estáticos traduzidos
@@ -162,9 +187,36 @@ export default function Dashboard() {
         }
       } catch (err) {
         console.error('Error loading cards:', err);
-        // Fallback to static cards - refresh with current translations
+
+        // Tentar retry automático (máximo 2 tentativas)
+        if (retryCount < 2) {
+          console.log(`🔄 Tentando novamente em 2 segundos... (tentativa ${retryCount + 2})`);
+          setTimeout(() => {
+            fetchCards(retryCount + 1);
+          }, 2000);
+          return;
+        }
+
+        // Tentar carregar do cache local
+        const cachedCards = localStorage.getItem('dashboard-cards-cache');
+        if (cachedCards) {
+          try {
+            const parsedCards = JSON.parse(cachedCards);
+            console.log('📦 Usando cards do cache local após erro');
+            setCards(parsedCards);
+            setError('Usando dados em cache. Alguns cards podem estar desatualizados.');
+            setLoadingCards(false);
+            return;
+          } catch (e) {
+            console.warn('⚠️ Cache local inválido');
+            localStorage.removeItem('dashboard-cards-cache');
+          }
+        }
+
+        // Fallback final para cards estáticos
         console.log('⚠️ Erro crítico, usando cards hardcoded');
         setCards(getTranslatedCards((key: string) => t(key)));
+        setError('Não foi possível carregar os cards personalizados. Usando configuração padrão.');
       } finally {
         setLoadingCards(false);
       }
@@ -178,6 +230,15 @@ export default function Dashboard() {
       setLoadingCards(false);
     }
   }, [t, isAuthenticated, isLoading, router, locale]);
+
+  // Função para limpar cache e recarregar
+  const clearCacheAndReload = () => {
+    localStorage.removeItem('dashboard-cards-cache');
+    setError(null);
+    if (isAuthenticated) {
+      fetchCards();
+    }
+  };
 
   // Efeito adicional para atualizar traduções quando o idioma muda
   useEffect(() => {
@@ -241,15 +302,39 @@ export default function Dashboard() {
               <DashboardSearch />
             </div>
 
-            {loadingCards && <LoadingSpinner />}
+            {/* Loading State */}
+            {loadingCards && (
+              <div className="flex justify-center items-center py-12">
+                <LoadingSpinner />
+                <span className="ml-3 text-gray-600">{t('common.loading', 'Carregando cards...')}</span>
+              </div>
+            )}
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            {/* Error/Warning State */}
+            {error && !loadingCards && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
                 <div className="flex items-start">
-                  <FiAlertCircle className="text-red-500 mt-1 mr-2" />
-                  <div>
-                    <h3 className="font-medium text-red-800">{t('common.error')}</h3>
-                    <p className="text-sm text-red-700">{error}</p>
+                  <FiAlertCircle className="text-yellow-600 mt-1 mr-2" />
+                  <div className="flex-1">
+                    <h3 className="font-medium text-yellow-800">Aviso</h3>
+                    <p className="text-sm text-yellow-700 mt-1">{error}</p>
+                    <div className="mt-2 space-x-4">
+                      <button
+                        onClick={() => {
+                          setError(null);
+                          fetchCards();
+                        }}
+                        className="text-yellow-800 underline text-sm hover:text-yellow-900 transition-colors"
+                      >
+                        Tentar carregar novamente
+                      </button>
+                      <button
+                        onClick={clearCacheAndReload}
+                        className="text-yellow-800 underline text-sm hover:text-yellow-900 transition-colors"
+                      >
+                        Limpar cache e recarregar
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

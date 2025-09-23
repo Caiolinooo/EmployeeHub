@@ -21,7 +21,11 @@ import {
   FiPieChart,
   FiTarget,
   FiDownload,
-  FiSmartphone
+  FiSmartphone,
+  FiDatabase,
+  FiBarChart,
+  FiGitBranch,
+  FiMessageSquare
 } from 'react-icons/fi';
 import { IconType } from 'react-icons';
 
@@ -36,6 +40,7 @@ export const iconMap: { [key: string]: IconType } = {
   FiDollarSign,
   FiClock,
   FiUser,
+  FiUsers,
   FiBarChart2,
   FiActivity,
   FiPlay,
@@ -44,6 +49,10 @@ export const iconMap: { [key: string]: IconType } = {
   FiTarget,
   FiDownload,
   FiSmartphone,
+  FiDatabase,
+  FiBarChart,
+  FiGitBranch,
+  FiMessageSquare,
   // Adicione outros ícones do react-icons/fi aqui se necessário
   // Exemplo: FiAlertCircle: FiAlertCircle,
 };
