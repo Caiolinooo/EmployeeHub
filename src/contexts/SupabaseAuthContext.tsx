@@ -7,6 +7,9 @@ import { fetchWrapper } from '@/lib/fetch-wrapper';
 import { User } from '@supabase/supabase-js';
 import { Tables } from '@/types/supabase';
 import { getToken, saveToken, removeToken } from '@/lib/tokenStorage';
+import { saveRefreshToken, getRefreshToken, removeRefreshToken } from '@/lib/refreshTokenStorage';
+import tokenRefreshManager, { startTokenRefreshManager, stopTokenRefreshManager } from '@/lib/tokenRefreshManager';
+import { attemptSessionRecovery, recoverSessionOnReturn } from '@/lib/sessionRecovery';
 import { activateUserAfterEmailVerification } from '@/lib/user-approval';
 // Import a browser-compatible JWT library or use a safer approach
 
@@ -601,13 +604,30 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
           // Armazenar o token usando o utilitário tokenStorage para consistência
           console.log('🔐 Salvando token após login bem-sucedido...');
           localStorage.setItem('auth', 'true');
-          saveToken(response.token, 86400); // 24 horas
+
+          // Usar expiração diferente baseada em "lembrar-me"
+          const tokenExpiry = rememberMe ? 7 * 24 * 60 * 60 : 24 * 60 * 60; // 7 dias ou 1 dia
+          saveToken(response.token, tokenExpiry);
           localStorage.setItem('user', JSON.stringify(response.user));
           console.log('✅ Token salvo com sucesso!');
 
-          // Se a opção "lembrar-me" estiver marcada, definir um cookie de longa duração
+          // Se a opção "lembrar-me" estiver marcada, salvar refresh token
           if (rememberMe) {
             localStorage.setItem('rememberMe', 'true');
+
+            // Se a resposta incluir refresh token, salvá-lo
+            if (response.refreshToken) {
+              const refreshExpiry = 90 * 24 * 60 * 60; // 90 dias
+              saveRefreshToken(response.refreshToken, refreshExpiry, true);
+              console.log('✅ Refresh token salvo para "lembrar-me"');
+            }
+          } else {
+            // Para login normal, também salvar refresh token mas com expiração menor
+            if (response.refreshToken) {
+              const refreshExpiry = 30 * 24 * 60 * 60; // 30 dias
+              saveRefreshToken(response.refreshToken, refreshExpiry, false);
+              console.log('✅ Refresh token salvo para sessão normal');
+            }
           }
 
           setUser(response.user);
@@ -623,6 +643,18 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (fetchError: any) {
         console.error('Erro ao fazer login:', fetchError.message);
+
+        // Verificar se é erro de email não verificado
+        if (fetchError.status === 403 && fetchError.data?.code === 'EMAIL_NOT_VERIFIED') {
+          console.log('Email não verificado, mostrando prompt de verificação');
+          // Aqui podemos emitir um evento ou usar um callback para mostrar o prompt
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('emailNotVerified', {
+              detail: { email: fetchError.data.email }
+            }));
+          }
+          return false;
+        }
 
         // Verificar se é o administrador
         if (identifier === 'caio.correia@groupabz.com' || identifier === '+5522997847289') {
@@ -1554,20 +1586,37 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       console.log('SupabaseAuthContext - Iniciando autenticação...');
 
       try {
-        // Verificar se já temos um token
-        const token = getToken();
-        if (token) {
-          console.log('SupabaseAuthContext - Token encontrado, tentando carregar perfil...');
+        // Tentar recuperar sessão automaticamente
+        console.log('SupabaseAuthContext - Tentando recuperar sessão...');
+        const recoveryResult = await recoverSessionOnReturn();
 
-          // Carregar o perfil a partir do token
-          await loadUserProfileFromToken();
+        if (recoveryResult.success && recoveryResult.user) {
+          console.log('✅ Sessão recuperada automaticamente:', recoveryResult.message);
+          setUser(recoveryResult.user);
+          setIsLoading(false);
+        } else if (recoveryResult.requiresLogin) {
+          console.log('🔐 Login necessário:', recoveryResult.message);
+          setIsLoading(false);
         } else {
-          console.log('SupabaseAuthContext - Nenhum token encontrado, verificando sessão...');
-          await checkAuth();
+          // Fallback para método tradicional
+          console.log('🔄 Fallback para verificação tradicional...');
+
+          // Verificar se já temos um token
+          const token = getToken();
+          if (token) {
+            console.log('SupabaseAuthContext - Token encontrado, tentando carregar perfil...');
+            await loadUserProfileFromToken();
+          } else {
+            console.log('SupabaseAuthContext - Nenhum token encontrado, verificando sessão...');
+            await checkAuth();
+          }
         }
 
         // Configurar o refresh token
         cleanupRefresh = await setupRefreshToken();
+
+        // Iniciar o gerenciador de refresh automático
+        startTokenRefreshManager();
       } catch (error) {
         console.error('SupabaseAuthContext - Erro ao inicializar autenticação:', error);
         setIsLoading(false);
@@ -1576,10 +1625,54 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
     initAuth();
 
+    // Listeners para detectar retorno do usuário
+    const handleVisibilityChange = async () => {
+      if (!document.hidden && user) {
+        console.log('👁️ Usuário retornou à aba, verificando sessão...');
+        const recoveryResult = await recoverSessionOnReturn();
+
+        if (recoveryResult.success && recoveryResult.user) {
+          setUser(recoveryResult.user);
+        } else if (recoveryResult.requiresLogin) {
+          console.log('🔐 Sessão expirou, fazendo logout...');
+          await signOut();
+        }
+      }
+    };
+
+    const handleFocus = async () => {
+      if (user) {
+        console.log('🎯 Janela ganhou foco, verificando sessão...');
+        const recoveryResult = await recoverSessionOnReturn();
+
+        if (recoveryResult.success && recoveryResult.user) {
+          setUser(recoveryResult.user);
+        } else if (recoveryResult.requiresLogin) {
+          console.log('🔐 Sessão expirou, fazendo logout...');
+          await signOut();
+        }
+      }
+    };
+
+    // Adicionar listeners apenas no cliente
+    if (typeof window !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      window.addEventListener('focus', handleFocus);
+    }
+
     // Limpar o listener e o intervalo de refresh ao desmontar o componente
     return () => {
       subscription.unsubscribe();
       if (cleanupRefresh) cleanupRefresh();
+
+      // Parar o gerenciador de refresh automático
+      stopTokenRefreshManager();
+
+      // Remover listeners
+      if (typeof window !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        window.removeEventListener('focus', handleFocus);
+      }
     };
   }, []);
 

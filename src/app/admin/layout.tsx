@@ -110,7 +110,7 @@ const adminMenuGroups = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, logout, isAdmin } = useSupabaseAuth();
+  const { user, profile, logout, isAdmin } = useSupabaseAuth();
   const { t } = useI18n();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [isCollapsed, setIsCollapsed] = React.useState(false);
@@ -223,7 +223,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-700">{user?.email}</p>
-                <p className="text-xs text-gray-500">Usuário</p>
+                <p className="text-xs text-gray-500">
+                  {profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : 'Usuário'}
+                </p>
               </div>
             </div>
             <div className="mb-3">

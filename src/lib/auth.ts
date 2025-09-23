@@ -148,28 +148,34 @@ export interface PhoneCredentials {
 }
 
 // Função para gerar um token JWT
-export function generateToken(user: any): string {
+export function generateToken(user: any, rememberMe: boolean = false): string {
   const payload: TokenPayload = {
     userId: user.id,
     phoneNumber: user.phone_number || '',
     role: user.role,
   };
 
+  // Se "lembrar-me" estiver ativo, usar expiração mais longa
+  const expiresIn = rememberMe ? '7d' : '1d';
+
   return jwt.sign(payload, process.env.JWT_SECRET || 'fallback-secret', {
-    expiresIn: '1d', // Token expira em 1 dia (reduzido para segurança)
+    expiresIn,
   });
 }
 
 // Função para gerar um refresh token
-export function generateRefreshToken(user: any): { token: string; expiresAt: Date } {
+export function generateRefreshToken(user: any, rememberMe: boolean = false): { token: string; expiresAt: Date; expiresInSeconds: number } {
   // Gerar um token aleatório
   const token = crypto.randomBytes(40).toString('hex');
 
-  // Token expira em 30 dias
+  // Se "lembrar-me" estiver ativo, usar expiração mais longa
+  const daysToExpire = rememberMe ? 90 : 30; // 90 dias se lembrar-me, 30 dias normal
   const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 30);
+  expiresAt.setDate(expiresAt.getDate() + daysToExpire);
 
-  return { token, expiresAt };
+  const expiresInSeconds = daysToExpire * 24 * 60 * 60;
+
+  return { token, expiresAt, expiresInSeconds };
 }
 
 // Função para gerar um token de redefinição de senha
@@ -816,14 +822,33 @@ export async function verifyPhoneLogin(phoneNumber: string, code: string, email?
             throw updateError;
           }
 
-          // Gerar token JWT
-          const token = generateToken(adminUser);
+          // Gerar token JWT e refresh token
+          const token = generateToken(adminUser, rememberMe);
+          const refreshTokenData = generateRefreshToken(adminUser, rememberMe);
+
+          // Salvar refresh token no banco de dados
+          try {
+            const { supabaseAdmin } = await import('@/lib/supabase');
+            await supabaseAdmin
+              .from('refresh_tokens')
+              .insert({
+                user_id: adminUser.id,
+                token: refreshTokenData.token,
+                expires_at: refreshTokenData.expiresAt.toISOString(),
+                remember_me: rememberMe,
+                is_active: true,
+                created_at: new Date().toISOString()
+              });
+          } catch (refreshError) {
+            console.warn('Erro ao salvar refresh token:', refreshError);
+          }
 
           return {
             success: true,
             message: 'Login realizado com sucesso.',
             user: adminUser,
-            token
+            token,
+            refreshToken: refreshTokenData.token
           };
         } catch (error) {
           console.error('Erro ao criar usuário administrador:', error);
@@ -1137,7 +1162,7 @@ const MAX_LOGIN_ATTEMPTS = 5;
 const LOCK_TIME = 15 * 60 * 1000; // 15 minutos em milissegundos
 
 // Função para autenticar com senha
-export async function loginWithPassword(identifier: string, password: string): Promise<{ success: boolean; message: string; user?: User; token?: string; locked?: boolean; lockExpires?: Date; attempts?: number; maxAttempts?: number; authStatus?: string }> {
+export async function loginWithPassword(identifier: string, password: string, rememberMe: boolean = false): Promise<{ success: boolean; message: string; user?: User; token?: string; refreshToken?: string; locked?: boolean; lockExpires?: Date; attempts?: number; maxAttempts?: number; authStatus?: string }> {
   // Buscar credenciais do administrador do Supabase
   let adminEmail = process.env.ADMIN_EMAIL;
   let adminPhone = process.env.ADMIN_PHONE_NUMBER;
@@ -1197,14 +1222,33 @@ export async function loginWithPassword(identifier: string, password: string): P
             accessHistory: rawAdminUser.access_history
           };
 
-          // Gerar token JWT
-          const token = generateToken(adminUser);
+          // Gerar token JWT e refresh token
+          const token = generateToken(adminUser, rememberMe);
+          const refreshTokenData = generateRefreshToken(adminUser, rememberMe);
+
+          // Salvar refresh token no banco de dados
+          try {
+            const { supabaseAdmin } = await import('@/lib/supabase');
+            await supabaseAdmin
+              .from('refresh_tokens')
+              .insert({
+                user_id: adminUser.id,
+                token: refreshTokenData.token,
+                expires_at: refreshTokenData.expiresAt.toISOString(),
+                remember_me: rememberMe,
+                is_active: true,
+                created_at: new Date().toISOString()
+              });
+          } catch (refreshError) {
+            console.warn('Erro ao salvar refresh token:', refreshError);
+          }
 
           return {
             success: true,
             message: 'Login de administrador realizado com sucesso',
             user: adminUser,
-            token
+            token,
+            refreshToken: refreshTokenData.token
           };
         }
       } catch (error) {
@@ -1463,15 +1507,34 @@ export async function loginWithPassword(identifier: string, password: string): P
           };
           console.log('Usuário administrador criado com sucesso');
 
-          // Gerar token JWT
-          const token = generateToken(adminUser);
+          // Gerar token JWT e refresh token
+          const token = generateToken(adminUser, rememberMe);
+          const refreshTokenData = generateRefreshToken(adminUser, rememberMe);
+
+          // Salvar refresh token no banco de dados
+          try {
+            const { supabaseAdmin } = await import('@/lib/supabase');
+            await supabaseAdmin
+              .from('refresh_tokens')
+              .insert({
+                user_id: adminUser.id,
+                token: refreshTokenData.token,
+                expires_at: refreshTokenData.expiresAt.toISOString(),
+                remember_me: rememberMe,
+                is_active: true,
+                created_at: new Date().toISOString()
+              });
+          } catch (refreshError) {
+            console.warn('Erro ao salvar refresh token:', refreshError);
+          }
 
           await adminPool.end();
           return {
             success: true,
             message: 'Login realizado com sucesso.',
             user: adminUser,
-            token
+            token,
+            refreshToken: refreshTokenData.token
           };
         } catch (error) {
           console.error('Erro ao criar usuário administrador:', error);
@@ -1498,6 +1561,21 @@ export async function loginWithPassword(identifier: string, password: string): P
       };
     }
 
+    // Verificar se o email foi verificado (exceto para admin principal)
+    const adminEmail = process.env.ADMIN_EMAIL || 'caio.correia@groupabz.com';
+    const adminPhone = process.env.ADMIN_PHONE_NUMBER || '+5522997847289';
+    const isMainAdmin = user.email === adminEmail || user.phone_number === adminPhone;
+
+    if (!user.email_verified && !isMainAdmin) {
+      console.log('Email não verificado para usuário não-admin');
+      return {
+        success: false,
+        message: 'Seu e-mail ainda não foi verificado. Verifique sua caixa de entrada.',
+        authStatus: 'email_not_verified',
+        email: user.email
+      };
+    }
+
     // Verificar se a conta está ativa
     if (!user.active) {
       console.log('Conta do usuário está desativada');
@@ -1510,33 +1588,49 @@ export async function loginWithPassword(identifier: string, password: string): P
 
     // Verificar se a conta está bloqueada
     const now = new Date();
-    if (user.lockUntil && user.lockUntil > now) {
+    if (user.lock_until && user.lock_until > now) {
       // Calcular tempo restante em minutos
-      const remainingTimeMinutes = Math.ceil((user.lockUntil.getTime() - now.getTime()) / 60000);
-      console.log('Conta do usuário está bloqueada até:', user.lockUntil);
+      const remainingTimeMinutes = Math.ceil((user.lock_until.getTime() - now.getTime()) / 60000);
+      console.log('Conta do usuário está bloqueada até:', user.lock_until);
 
       return {
         success: false,
         message: `Conta temporariamente bloqueada devido a múltiplas tentativas de login. Tente novamente em ${remainingTimeMinutes} minutos.`,
         locked: true,
-        lockExpires: user.lockUntil
+        lockExpires: user.lock_until
       };
     }
 
     // Verificar se a senha está correta
-    console.log('Verificando senha para o usuário:', user.phone_number);
+    console.log('Verificando senha para o usuário:', user.email || user.phone_number);
     console.log('Senha fornecida (primeiros caracteres):', password.substring(0, 3) + '...');
-    console.log('Senha armazenada (hash):', user.password ? user.password.substring(0, 20) + '...' : 'Não definida');
+    console.log('Campo password:', user.password ? user.password.substring(0, 20) + '...' : 'Não definido');
+    console.log('Campo password_hash:', user.password_hash ? user.password_hash.substring(0, 20) + '...' : 'Não definido');
 
-    // Verificar a senha usando bcrypt
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    console.log('Resultado da verificação de senha:', isPasswordValid ? 'Válida' : 'Inválida');
+    // Verificar a senha usando bcrypt - tentar primeiro o campo 'password', depois 'password_hash'
+    let isPasswordValid = false;
+    let usedField = '';
+
+    if (user.password) {
+      isPasswordValid = await bcrypt.compare(password, user.password);
+      usedField = 'password';
+      console.log('Tentativa com campo "password":', isPasswordValid ? 'Válida' : 'Inválida');
+    }
+
+    // Se não funcionou com 'password', tentar com 'password_hash'
+    if (!isPasswordValid && user.password_hash) {
+      isPasswordValid = await bcrypt.compare(password, user.password_hash);
+      usedField = 'password_hash';
+      console.log('Tentativa com campo "password_hash":', isPasswordValid ? 'Válida' : 'Inválida');
+    }
+
+    console.log('Resultado final da verificação de senha:', isPasswordValid ? `Válida (usando ${usedField})` : 'Inválida');
 
     if (!isPasswordValid) {
       console.log('Senha inválida para o usuário:', user.phone_number);
 
       // Incrementar contador de tentativas falhas
-      const failedAttempts = (user.failedLoginAttempts || 0) + 1;
+      const failedAttempts = (user.failed_login_attempts || 0) + 1;
       console.log('Tentativas falhas de login:', failedAttempts);
 
       // Se excedeu o número máximo de tentativas, bloquear a conta

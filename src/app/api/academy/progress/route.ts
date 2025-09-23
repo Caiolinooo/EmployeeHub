@@ -283,7 +283,7 @@ export async function POST(request: NextRequest) {
               user_id: enr.user_id,
               type: 'certificate',
               title: 'Certificado disponível',
-              message: `Seu certificado do curso "${enr.course?.title || ''}" está pronto`,
+              message: `Seu certificado do curso "${(enr.course as any)?.title || ''}" está pronto`,
               action_url: downloadUrl,
               priority: 'normal',
               created_at: nowIso

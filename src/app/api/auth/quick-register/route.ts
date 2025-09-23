@@ -505,7 +505,7 @@ export async function POST(request: NextRequest) {
 
         // Enviar email com link de verificação
         const { sendEmailVerificationLink } = await import('@/lib/email-verification');
-        sendResult = await sendEmailVerificationLink(email, firstName, emailVerificationToken);
+        sendResult = await sendEmailVerificationLink(email, firstName, emailVerificationToken, request.headers);
 
       } else {
         // Sem bypass: fluxo tradicional com código

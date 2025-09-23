@@ -262,6 +262,17 @@ export default {
     checkEmail: 'Please check your email to activate your account.',
     notRegisteredYet: 'This email/phone is not yet registered. Please complete your registration below.',
   },
+  profile: {
+    completeNameTitle: 'Complete your profile',
+    completeNameDesc: 'Please fill in your first and last name for a better experience.',
+    completeNameReminder: 'Please complete your profile information.',
+    fillNameWarning: 'Please enter your first and last name.',
+    updateSuccess: 'Profile updated successfully! 🎉'
+  },
+  validation: {
+    suggestions: 'Suggestions',
+    nameValid: 'Valid name'
+  },
   viewer: {
     loading: 'Loading document...',
     error: 'Error loading document',

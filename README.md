@@ -9,6 +9,8 @@
 [![Supabase](https://img.shields.io/badge/Supabase-Database-green?style=for-the-badge&logo=supabase)](https://supabase.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 [![Netlify](https://img.shields.io/badge/Netlify-Deploy-00C7B7?style=for-the-badge&logo=netlify)](https://netlify.com/)
+[![React](https://img.shields.io/badge/React-18.2.0-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-336791?style=for-the-badge&logo=postgresql)](https://postgresql.org/)
 
 **Sistema completo de gestão empresarial com foco em reembolsos, avaliações e administração de usuários**
 
@@ -32,6 +34,10 @@ O **Painel ABZ** é uma plataforma moderna de gestão empresarial desenvolvida p
 - **Módulo de Documentos** - Repositório centralizado com controle de acesso
 - **Sistema de Perfil** - Gerenciamento completo de perfis com fotos e configurações
 - **Sistema de Banimento** - Controle de usuários banidos com histórico
+- **Academia Corporativa** - Sistema de cursos, certificados e treinamentos
+- **Calendário Empresarial** - Eventos, notificações e integração ICS
+- **Sistema de Notícias** - Feed de notícias com comentários e moderação
+- **Rede Social Interna** - Posts, likes, comentários e interação entre usuários
 
 ### 🔐 **Segurança & Autenticação**
 - **Autenticação Supabase** - Login seguro com JWT e verificação em duas etapas
@@ -39,15 +45,19 @@ O **Painel ABZ** é uma plataforma moderna de gestão empresarial desenvolvida p
 - **Proteção de Rotas** - Middleware de segurança em todas as páginas
 - **Auditoria Completa** - Log de ações e alterações do sistema
 - **Criptografia** - Senhas com bcrypt e dados sensíveis protegidos
+- **ACL Avançado** - Sistema de permissões granulares por módulo
+- **Verificação de Email/SMS** - Autenticação em duas etapas
 
 ### 🌐 **Experiência do Usuário**
 - **Interface Responsiva** - Design adaptável para todos os dispositivos
 - **Internacionalização** - Suporte completo a múltiplos idiomas (PT/EN/ES)
 - **Tema Customizável** - Cores, logos e favicon personalizáveis via admin
-- **Notificações** - Sistema de alertas em tempo real via email e SMS
+- **Notificações Push** - Sistema de alertas em tempo real via web push
 - **Performance** - Carregamento otimizado e cache inteligente
 - **Sistema de Perfil Completo** - Upload de fotos, edição de dados e configurações
 - **Configurações Personalizadas** - Preferências de tema, idioma e notificações
+- **Menu Colapsável** - Sidebar responsiva com persistência de estado
+- **Editor Markdown** - Editor avançado com preview em tempo real
 
 ### 📊 **Relatórios & Analytics**
 - **Métricas de Reembolso** - Análise financeira detalhada com gráficos
@@ -89,11 +99,16 @@ graph TB
 | **Auth** | Supabase Auth | Latest | Autenticação e autorização |
 | **Storage** | Google Drive API | Latest | Armazenamento de fotos |
 | **Deploy** | Netlify | Latest | Hospedagem e CI/CD |
-| **Icons** | React Icons | 5.0+ | Biblioteca de ícones |
+| **Icons** | React Icons | 5.5+ | Biblioteca de ícones |
 | **Email** | Gmail SMTP | Latest | Envio de emails |
 | **Security** | bcrypt | Latest | Criptografia de senhas |
-| **PDF** | jsPDF | Latest | Geração de PDFs |
-| **Forms** | React Hook Form | Latest | Gerenciamento de formulários |
+| **PDF** | jsPDF | 3.0+ | Geração de PDFs |
+| **Forms** | React Hook Form | 7.55+ | Gerenciamento de formulários |
+| **Notifications** | Web Push | 3.6+ | Notificações push |
+| **Animation** | Framer Motion | 12.6+ | Animações e transições |
+| **File Processing** | XLSX | 0.18+ | Processamento de planilhas |
+| **Calendar** | React Calendar | 5.1+ | Componente de calendário |
+| **Charts** | Chart.js | Latest | Gráficos e visualizações |
 
 ## 💻 Requisitos do Sistema
 
@@ -154,19 +169,17 @@ ADMIN_FIRST_NAME="Admin"
 ADMIN_LAST_NAME="ABZ"
 ```
 
-### Executando Migrações do Banco de Dados
+### Configurando o Banco de Dados
 
 ```bash
-npx prisma generate
-npx prisma db push
-```
+# Configurar tabelas e funções do Supabase
+npm run db:setup
 
-### Inicializando o Banco de Dados com Dados Iniciais
+# Verificar estrutura das tabelas
+npm run db:check
 
-```bash
-npm run db:setup-postgres
-# ou
-yarn db:setup-postgres
+# Adicionar histórico de acesso aos usuários
+npm run db:add-access-history
 ```
 
 ### Iniciando o Servidor de Desenvolvimento
@@ -217,17 +230,25 @@ Os novos usuários podem ser adicionados de três formas:
 
 ## 📚 Estrutura do Projeto
 
-```
+```text
 painel-abz/
 ├── public/             # Arquivos estáticos
-├── prisma/             # Esquemas e migrações do Prisma
+│   ├── images/         # Logos e imagens
+│   ├── documentos/     # Documentos públicos
+│   └── notifications-sw.js # Service Worker para notificações
 ├── scripts/            # Scripts de utilidade e inicialização
+├── supabase/           # Migrações e configurações Supabase
 ├── src/
 │   ├── app/            # Rotas e páginas Next.js App Router
+│   │   ├── api/        # API Routes
+│   │   ├── admin/      # Painel administrativo
+│   │   ├── academy/    # Academia corporativa
+│   │   └── profile/    # Sistema de perfil
 │   ├── components/     # Componentes React reutilizáveis
 │   ├── contexts/       # Contextos React (auth, i18n, etc.)
 │   ├── hooks/          # Hooks personalizados
 │   ├── lib/            # Bibliotecas e utilitários
+│   ├── i18n/           # Arquivos de internacionalização
 │   └── types/          # Definições de tipos TypeScript
 ├── .env                # Variáveis de ambiente (não versionado)
 ├── .env.example        # Exemplo de variáveis de ambiente
@@ -276,17 +297,34 @@ painel-abz/
 - **Configurações de Email**: Personalização para reembolsos
 - **Interface Responsiva**: Design moderno e intuitivo
 
-### Notícias e Comunicados
-- Publicação de notícias
-- Destaque de conteúdo
-- Notificações
+### Academia Corporativa
+- **Cursos Online**: Sistema completo de e-learning
+- **Certificados**: Geração automática com templates personalizáveis
+- **Progresso**: Acompanhamento detalhado do aprendizado
+- **Avaliações**: Sistema de notas e feedback
+- **Comentários**: Interação entre alunos e instrutores
+
+### Sistema de Notícias e Comunicação
+- **Feed de Notícias**: Publicação com editor markdown avançado
+- **Comentários**: Sistema de comentários com moderação
+- **Rede Social**: Posts, likes e interações entre usuários
+- **Notificações Push**: Alertas em tempo real via web push
+- **Editor Fullscreen**: Interface imersiva para criação de conteúdo
+
+### Calendário Empresarial
+- **Eventos**: Criação e gerenciamento de eventos corporativos
+- **Integração ICS**: Sincronização com calendários externos
+- **Notificações**: Lembretes automáticos por email
+- **Configurações**: Personalização por usuário e empresa
 
 ### Painel Administrativo
-- **Dashboard**: Visão geral do sistema
+- **Dashboard**: Visão geral do sistema com métricas em tempo real
 - **Cards**: Gerenciamento dos cards do dashboard
-- **Menu**: Configuração dos itens do menu lateral
+- **Menu**: Configuração dos itens do menu lateral colapsável
 - **Configurações**: Personalização do sistema (cores, logo, favicon, textos)
 - **Usuários Banidos**: Controle de acesso com histórico
+- **Permissões ACL**: Sistema granular de controle de acesso
+- **Auditoria**: Logs completos de ações do sistema
 
 ## 📱 Screenshots do Sistema
 
@@ -324,22 +362,50 @@ painel-abz/
 - [x] Interface responsiva e moderna
 - [x] Integração com Google Drive para fotos
 - [x] Configurações personalizadas por usuário
+- [x] Academia corporativa com certificados
+- [x] Sistema de notícias com comentários
+- [x] Rede social interna
+- [x] Notificações push web
+- [x] Menu colapsável responsivo
+- [x] Editor markdown avançado
+- [x] Sistema de calendário empresarial
 
 ### 🚧 **Em Desenvolvimento (v1.1)**
 - [ ] Sistema de avaliações avançado com métricas
 - [ ] Relatórios em PDF com gráficos
-- [ ] Notificações push em tempo real
 - [ ] API mobile para aplicativo
 - [ ] Integração com sistemas externos (ERP)
 - [ ] Dashboard de BI avançado
+- [ ] Sistema de workflows automatizados
+- [ ] Chat interno em tempo real
 
 ### 🔮 **Planejado (v2.0)**
 - [ ] Módulo de RH completo
-- [ ] Sistema de workflows automatizados
 - [ ] BI e Analytics com Machine Learning
 - [ ] Aplicativo mobile nativo (React Native)
 - [ ] Integração com Microsoft 365
-- [ ] Sistema de chat interno
+- [ ] Sistema de videoconferência
+- [ ] Automação de processos com IA
+
+---
+
+## 🆕 Atualizações Recentes
+
+### **Setembro 2025**
+- ✅ **Academia Corporativa**: Sistema completo de cursos, certificados e templates
+- ✅ **Notificações Push**: Implementação de web push notifications com service worker
+- ✅ **Sistema de Notícias**: Feed avançado com comentários, moderação e editor markdown
+- ✅ **Rede Social Interna**: Posts, likes, comentários e interação entre usuários
+- ✅ **Calendário Empresarial**: Eventos, notificações ICS e configurações personalizadas
+- ✅ **Editor Fullscreen**: Editor markdown com preview em tempo real
+- ✅ **Melhorias de UX**: Menu colapsável, saudação personalizada, tema consistente
+
+### **Agosto 2025**
+- ✅ **Correções de Segurança**: Hardening de autenticação e CORS
+- ✅ **Migração Supabase**: Transição completa do Prisma para Supabase
+- ✅ **Sistema de Perfil**: Upload de fotos via Google Drive e configurações avançadas
+- ✅ **Deploy Netlify**: Correção de URLs e configurações de ambiente
+- ✅ **Auditoria Completa**: Sistema de logs e histórico de acesso
 
 ---
 
@@ -374,6 +440,10 @@ O sistema possui uma API RESTful completa para gerenciamento de todos os recurso
 - `/api/config`: Configurações do sistema
 - `/api/upload`: Upload de arquivos
 - `/api/token-refresh`: Atualização de tokens de autenticação
+- `/api/academy`: Sistema de academia corporativa
+- `/api/calendar`: Gerenciamento de calendário
+- `/api/social`: Rede social interna
+- `/api/notifications`: Sistema de notificações push
 
 ## 📧 Sistema de Email
 
@@ -390,8 +460,8 @@ O sistema possui um sistema de envio de emails para notificações e comunicaç�
 
 Você pode testar a configuração de email acessando a rota:
 
-```
-/api/test-email
+```http
+GET /api/test-email
 ```
 
 ## 🤝 Como Contribuir

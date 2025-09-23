@@ -13,8 +13,8 @@ import { useSiteConfig } from '@/contexts/SiteConfigContext';
 import LanguageSelector from '@/components/LanguageSelector';
 import PerformanceMonitor from '@/components/Performance/PerformanceMonitor';
 import GlobalSearch from '@/components/GlobalSearch';
-import NotificationBell from '@/components/Academy/NotificationBell';
 import NotificationHUD from '@/components/notifications/NotificationHUD';
+import TokenExpirationNotifier from '@/components/Auth/TokenExpirationNotifier';
 import { getTranslatedMenu } from '@/data/menu';
 import { startMeasure, endMeasure, logPerformance } from '@/lib/performance';
 import { PasswordRequiredGuard } from '@/components/Auth/PasswordRequiredGuard';
@@ -225,8 +225,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
                      <div className="flex items-center space-x-2">
                          {/* Busca Global para mobile */}
                          <GlobalSearch />
-                         {/* Notificação global agregada */}
-                         {user && <NotificationHUD userId={user.id} position="top-right" />}
                          <LanguageSelector variant="dropdown" />
                          <Link
                             href="/profile"
@@ -256,6 +254,16 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
         {/* Performance Monitor (only visible in development) */}
         <PerformanceMonitor />
+
+        {/* Token Expiration Notifier */}
+        {isAuthenticated && (
+          <TokenExpirationNotifier
+            onSessionExpired={() => {
+              logout();
+              router.push('/login');
+            }}
+          />
+        )}
       </div>
     </div>
     </PasswordRequiredGuard>

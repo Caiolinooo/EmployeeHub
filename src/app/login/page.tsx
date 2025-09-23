@@ -13,6 +13,7 @@ import LanguageSelector from '@/components/LanguageSelector';
 import InviteCodeInput from '@/components/Auth/InviteCodeInput';
 import ForgotPasswordForm from '@/components/Auth/ForgotPasswordForm';
 import { SetPasswordModal } from '@/components/Auth/SetPasswordModal';
+import EmailVerificationPrompt from '@/components/Auth/EmailVerificationPrompt';
 
 import { fetchWrapper } from '@/lib/fetch-wrapper';
 import { ToastContainer } from 'react-toastify';
@@ -36,6 +37,8 @@ export default function Login() {
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [localLoading, setLocalLoading] = useState(false);
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [emailToVerify, setEmailToVerify] = useState('');
 
   // Campos para registro rápido
   const [firstName, setFirstName] = useState('');
@@ -101,6 +104,21 @@ export default function Login() {
     };
 
     ensureAdmin();
+  }, []);
+
+  // Listener para evento de email não verificado
+  useEffect(() => {
+    const handleEmailNotVerified = (event: CustomEvent) => {
+      const { email } = event.detail;
+      setEmailToVerify(email);
+      setShowEmailVerification(true);
+    };
+
+    window.addEventListener('emailNotVerified', handleEmailNotVerified as EventListener);
+
+    return () => {
+      window.removeEventListener('emailNotVerified', handleEmailNotVerified as EventListener);
+    };
   }, []);
 
   // Função para iniciar o login com número de telefone ou email
@@ -1273,6 +1291,21 @@ export default function Login() {
             </div>
           </div>
         </div>
+
+        {/* Modal de verificação de email */}
+        {showEmailVerification && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <EmailVerificationPrompt
+                email={emailToVerify}
+                onVerificationSent={() => {
+                  setShowEmailVerification(false);
+                }}
+                onClose={() => setShowEmailVerification(false)}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

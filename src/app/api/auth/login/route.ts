@@ -6,7 +6,7 @@ import { getLatestCode } from '@/lib/code-service';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { phoneNumber, verificationCode, password, email, inviteCode } = body;
+    const { phoneNumber, verificationCode, password, email, inviteCode, rememberMe } = body;
 
     console.log('Recebida solicitação de login:', { phoneNumber, email, hasPassword: !!password, hasVerificationCode: !!verificationCode, hasInviteCode: !!inviteCode });
     console.log('Senha (primeiros caracteres):', password ? password.substring(0, 3) + '...' : 'Não fornecida');
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
       try {
         const identifier = isAdminEmail ? adminEmail : adminPhone;
-        const result = await loginWithPassword(identifier, password);
+        const result = await loginWithPassword(identifier, password, rememberMe || false);
         console.log('Resultado do login de administrador:', result);
 
         if (!result.success) {
@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
           token: result.token,
+          refreshToken: result.refreshToken,
           user: result.user,
           message: result.message
         });
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest) {
       console.log('Senha fornecida (primeiros caracteres):', password.substring(0, 3) + '...');
 
       try {
-        const result = await loginWithPassword(identifier, password);
+        const result = await loginWithPassword(identifier, password, rememberMe || false);
         console.log('Resultado do login:', result);
 
         if (!result.success) {
@@ -81,6 +82,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
           token: result.token,
+          refreshToken: result.refreshToken,
           user: result.user,
           message: result.message
         });

@@ -287,6 +287,10 @@ const UserEditor: React.FC<UserEditorProps> = ({
       return;
     }
 
+    // Debug: Log dos dados antes de enviar
+    console.log('UserEditor - Dados sendo enviados:', JSON.stringify(editedUser, null, 2));
+    console.log('UserEditor - phoneNumber:', editedUser.phoneNumber);
+
     // Enviar dados para o componente pai
     onSave(editedUser, password || undefined);
   };

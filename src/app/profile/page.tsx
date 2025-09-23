@@ -59,10 +59,21 @@ export default function ProfilePage() {
     // Aguardar o carregamento do perfil
     if (!profile) {
       console.log('🔄 Aguardando carregamento do perfil...');
+      // Tentar recarregar o perfil se não estiver carregado
+      if (refreshProfile) {
+        console.log('🔄 Tentando recarregar perfil...');
+        refreshProfile();
+      }
       return;
     }
 
     console.log('✅ Usuário e perfil carregados, inicializando página de perfil');
+    console.log('👤 Dados do perfil:', {
+      id: profile.id,
+      email: profile.email,
+      firstName: profile.first_name,
+      lastName: profile.last_name
+    });
 
     // Carregar a foto de perfil
     loadProfileImage();
@@ -80,7 +91,7 @@ export default function ProfilePage() {
       language: extendedProfile.language || 'pt-BR',
       notifications: true
     });
-  }, [profile, isLoading, user, router]);
+  }, [profile, isLoading, user, router, refreshProfile]);
 
   // Função para carregar a imagem de perfil
   const loadProfileImage = async () => {

@@ -38,7 +38,7 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const prevUnreadRef = useRef<number>(0);
 
-  // Carregar notificações
+  // Carregar notificações (unificadas - incluindo Academy)
   const loadNotifications = async (pageNum: number = 1, reset: boolean = false) => {
     try {
       setLoading(true);

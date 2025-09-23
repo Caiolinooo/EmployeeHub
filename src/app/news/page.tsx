@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { FiRss, FiEdit, FiBell, FiClock, FiUsers, FiSettings } from 'react-icons/fi';
 import NewsFeed from '@/components/news/NewsFeed';
 import NewsAdminPanel from '@/components/news/NewsAdminPanel';
-import NotificationHUD from '@/components/notifications/NotificationHUD';
+
 import ReminderManager from '@/components/reminders/ReminderManager';
 import ACLManagementPanel from '@/components/admin/ACLManagementPanel';
 import ACLInitializer from '@/components/admin/ACLInitializer';
@@ -120,8 +120,7 @@ const NewsPage: React.FC = () => {
                 </span>
               </div>
 
-              {/* Notification HUD */}
-              <NotificationHUD userId={userId} position="top-right" />
+
 
               {/* Settings */}
               <button className="p-2 text-gray-400 hover:text-gray-600 rounded-full">

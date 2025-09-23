@@ -299,6 +299,17 @@ export default {
     checkEmail: 'Verifique seu e-mail para ativar sua conta.',
     notRegisteredYet: 'Este email/telefone ainda não está cadastrado. Por favor, complete seu cadastro abaixo.'
   },
+  profile: {
+    completeNameTitle: 'Complete seu perfil',
+    completeNameDesc: 'Por favor, preencha seu nome e sobrenome para uma melhor experiência.',
+    completeNameReminder: 'Por favor, complete as informações do seu perfil.',
+    fillNameWarning: 'Informe nome e sobrenome.',
+    updateSuccess: 'Perfil atualizado com sucesso! 🎉'
+  },
+  validation: {
+    suggestions: 'Sugestões',
+    nameValid: 'Nome válido'
+  },
   dashboard: {
     title: 'Painel',
     welcome: 'Bem-vindo ao Painel ABZ',

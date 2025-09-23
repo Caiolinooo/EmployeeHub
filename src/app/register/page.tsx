@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useI18n } from '@/contexts/I18nContext';
-import { toast } from 'react-hot-toast';
+import { toast, Toaster } from 'react-hot-toast';
 import { FaUser, FaEnvelope, FaPhone, FaBriefcase, FaBuilding, FaIdCard } from 'react-icons/fa';
 import Image from 'next/image';
 import Link from 'next/link';
 import LanguageSelector from '@/components/LanguageSelector';
+import EmailVerificationPrompt from '@/components/Auth/EmailVerificationPrompt';
+import NameValidationInput from '@/components/Auth/NameValidationInput';
 
 export default function RegisterPage() {
   const { t } = useI18n();
@@ -34,6 +36,8 @@ export default function RegisterPage() {
   const [protocol, setProtocol] = useState('');
   const [registrationComplete, setRegistrationComplete] = useState(false);
   const [accountActive, setAccountActive] = useState(false);
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [emailToVerify, setEmailToVerify] = useState('');
 
   // Função para formatar CPF/CNPJ
   const formatCpfCnpj = (value: string) => {
@@ -119,14 +123,41 @@ export default function RegisterPage() {
       });
 
       const data = await response.json();
+      console.log('Resposta da API de registro:', { status: response.status, data });
 
       if (response.ok && data.success) {
         setProtocol(data.protocol);
         setRegistrationComplete(true);
         setAccountActive(data.accountActive || false);
-        toast.success(t('register.success'));
+
+        // Verificar se é um reenvio de verificação
+        if (data.emailVerificationRequired) {
+          // Mostrar prompt de verificação em vez de apenas toast
+          setEmailToVerify(formData.email);
+          setShowEmailVerification(true);
+          toast.success('E-mail de verificação enviado! Verifique sua caixa de entrada para ativar sua conta.');
+        } else {
+          toast.success(t('register.success'));
+        }
       } else {
-        toast.error(data.error || t('register.error.generic'));
+        // Tratamento específico para diferentes tipos de erro
+        console.log('Tratando erro:', { status: response.status, code: data.code, error: data.error });
+        if (response.status === 409) {
+          if (data.code === 'EMAIL_EXISTS_VERIFIED') {
+            console.log('Mostrando toast para EMAIL_EXISTS_VERIFIED');
+            toast.error('Este e-mail já está cadastrado e verificado. Use a opção "Faça login" ou "Esqueci minha senha".');
+          } else if (data.code === 'PHONE_EXISTS') {
+            console.log('Mostrando toast para PHONE_EXISTS');
+            toast.error('Este telefone já está cadastrado para outra conta. Use um número diferente.');
+          } else {
+            console.log('Mostrando toast para erro 409 genérico');
+            toast.error(data.error || 'E-mail ou telefone já cadastrado. Verifique seus dados.');
+          }
+        } else if (response.status === 403 && data.banned) {
+          toast.error('Usuário banido. Entre em contato com o administrador.');
+        } else {
+          toast.error(data.error || t('register.error.generic'));
+        }
       }
     } catch (error) {
       console.error('Erro ao registrar:', error);
@@ -209,45 +240,29 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="col-span-1">
-              <label className="block text-gray-700 text-sm font-medium mb-1" htmlFor="firstName">
-                {t('register.firstName')}*
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaUser className="text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  id="firstName"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  className="pl-10 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={t('register.firstNamePlaceholder')}
-                  required
-                />
-              </div>
+              <NameValidationInput
+                label={t('register.firstName')}
+                value={formData.firstName}
+                onChange={(value) => setFormData(prev => ({ ...prev, firstName: value }))}
+                placeholder={t('register.firstNamePlaceholder')}
+                email={formData.email}
+                required
+                id="firstName"
+                name="firstName"
+              />
             </div>
 
             <div className="col-span-1">
-              <label className="block text-gray-700 text-sm font-medium mb-1" htmlFor="lastName">
-                {t('register.lastName')}*
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaUser className="text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  id="lastName"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  className="pl-10 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={t('register.lastNamePlaceholder')}
-                  required
-                />
-              </div>
+              <NameValidationInput
+                label={t('register.lastName')}
+                value={formData.lastName}
+                onChange={(value) => setFormData(prev => ({ ...prev, lastName: value }))}
+                placeholder={t('register.lastNamePlaceholder')}
+                email={formData.email}
+                required
+                id="lastName"
+                name="lastName"
+              />
             </div>
           </div>
 
@@ -380,6 +395,23 @@ export default function RegisterPage() {
           </p>
         </div>
       </div>
+
+      {/* Modal de verificação de email */}
+      {showEmailVerification && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <EmailVerificationPrompt
+              email={emailToVerify}
+              onVerificationSent={() => {
+                toast.success('Novo e-mail de verificação enviado!');
+              }}
+              onClose={() => setShowEmailVerification(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      <Toaster position="top-right" />
     </div>
   );
 }

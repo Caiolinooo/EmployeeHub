@@ -14,42 +14,57 @@ import { sendEmail } from '@/lib/email-service';
 export async function sendEmailVerificationLink(
   email: string,
   name: string,
-  token: string
+  token: string,
+  requestHeaders?: Headers
 ): Promise<{ success: boolean; message: string; previewUrl?: string }> {
   try {
-    console.log(`Enviando email de verificação por link para: ${email}`);
+    console.log(`📧 Enviando email de verificação para: ${email} com token: ${token.substring(0, 8)}...`);
 
-    // Obter a URL base do sistema (priorizar URL configurada)
-    // Em produção, padronizamos o domínio do Netlify caso a variável não esteja definida
-    // Netlify: URL (primary), DEPLOY_URL (preview), SITE_URL (old), NETLIFY_SITE_URL (plugin)
-    // Vercel: VERCEL_URL
-    let baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      process.env.APP_URL ||
-      '';
+    // Obter URL base dinamicamente baseada no request ou variáveis de ambiente
+    let baseUrl = '';
 
-    // Fallbacks somente se ainda não definido por config explícita
+    // 1. Tentar obter do header do request (mais confiável)
+    if (requestHeaders) {
+      const host = requestHeaders.get('host');
+      const protocol = requestHeaders.get('x-forwarded-proto') ||
+                      (host?.includes('localhost') ? 'http' : 'https');
+      if (host) {
+        baseUrl = `${protocol}://${host}`;
+        console.log(`🌐 URL base obtida do request: ${baseUrl}`);
+      }
+    }
+
+    // 2. Fallback para variáveis de ambiente (ordem de prioridade)
     if (!baseUrl) {
       baseUrl =
+        process.env.NEXT_PUBLIC_APP_URL ||
+        process.env.APP_URL ||
         process.env.URL ||
         process.env.DEPLOY_URL ||
         process.env.SITE_URL ||
         process.env.NETLIFY_SITE_URL ||
-        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
+        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '') ||
         process.env.RENDER_EXTERNAL_URL ||
         '';
-    }
 
-    // Em produção, forçar domínio oficial se nada confiável foi encontrado
-    if (!baseUrl) {
-      if (process.env.NODE_ENV === 'production') {
-        console.warn('Base URL não definida em produção. Usando https://painelabzgroup.netlify.app. Configure NEXT_PUBLIC_APP_URL para customizar.');
-        baseUrl = 'https://painelabzgroup.netlify.app';
-      } else {
-        baseUrl = 'http://localhost:3000';
+      if (baseUrl) {
+        console.log(`🌐 URL base obtida das variáveis de ambiente: ${baseUrl}`);
       }
     }
-    const verificationUrl = `${baseUrl.replace(/\/$/, '')}/verify-email?token=${token}`;
+
+    // 3. Fallback final baseado no ambiente
+    if (!baseUrl) {
+      if (process.env.NODE_ENV === 'production') {
+        baseUrl = 'https://painelabzgroup.netlify.app';
+        console.warn(`⚠️ URL base não definida em produção. Usando fallback: ${baseUrl}`);
+      } else {
+        baseUrl = 'http://localhost:3000';
+        console.log(`🔧 Ambiente de desenvolvimento, usando: ${baseUrl}`);
+      }
+    }
+
+    const verificationUrl = `${baseUrl.replace(/\/$/, '')}/verify-email?token=${encodeURIComponent(token)}`;
+    console.log(`🔗 URL de verificação gerada: ${verificationUrl}`);
 
     // Texto simples para clientes que não suportam HTML
     const text = `
@@ -178,57 +193,97 @@ export async function verifyEmailToken(token: string): Promise<{
   message: string;
 }> {
   try {
+    console.log(`🔍 Verificando token de email: ${token.substring(0, 8)}...`);
+
     const { supabaseAdmin } = await import('@/lib/supabase');
-    
-    // Buscar usuário pelo token
+
+    // Buscar usuário pelo token com logs detalhados
     const { data: user, error } = await supabaseAdmin
       .from('users_unified')
       .select('*')
       .eq('email_verification_token', token)
       .single();
 
-    if (error || !user) {
+    if (error) {
+      console.error('❌ Erro ao buscar usuário pelo token:', error);
       return {
         success: false,
-        message: 'Token de verificação inválido ou expirado'
+        message: 'Token de verificação inválido ou não encontrado'
       };
     }
 
-    // Verificar se o token não expirou (24 horas)
+    if (!user) {
+      console.log('❌ Nenhum usuário encontrado com este token');
+      return {
+        success: false,
+        message: 'Token de verificação inválido'
+      };
+    }
+
+    console.log(`👤 Usuário encontrado: ${user.email} (ID: ${user.id})`);
+
+    // Verificar se o email já foi verificado
+    if (user.email_verified) {
+      console.log('✅ Email já verificado anteriormente');
+      return {
+        success: false,
+        message: 'Este email já foi verificado. Você pode fazer login normalmente.'
+      };
+    }
+
+    // Verificar expiração do token (24 horas) usando updated_at como referência
     const tokenCreatedAt = new Date(user.updated_at);
     const now = new Date();
     const hoursDiff = (now.getTime() - tokenCreatedAt.getTime()) / (1000 * 60 * 60);
 
+    console.log(`⏰ Token criado em: ${tokenCreatedAt.toISOString()}`);
+    console.log(`⏰ Tempo atual: ${now.toISOString()}`);
+    console.log(`⏰ Diferença em horas: ${hoursDiff.toFixed(2)}`);
+
     if (hoursDiff > 24) {
+      console.log('❌ Token expirado (mais de 24 horas)');
       return {
         success: false,
-        message: 'Token de verificação expirado'
+        message: 'Token de verificação expirado. Solicite um novo link de verificação.'
       };
     }
 
     // Marcar email como verificado e ativar conta
-    // Importante: NÃO limpar o token aqui; ele será usado para definir a senha e então será limpo
+    console.log('✅ Token válido, marcando email como verificado...');
+
+    const updateData = {
+      email_verified: true,
+      active: true,
+      authorization_status: 'active',
+      email_verified_at: new Date().toISOString(), // Timestamp da verificação
+      updated_at: new Date().toISOString()
+      // Nota: NÃO limpar o token aqui; ele será usado para definir a senha
+    };
+
     const { error: updateError } = await supabaseAdmin
       .from('users_unified')
-      .update({
-        email_verified: true,
-        active: true, // Ativar a conta após verificação do email
-        authorization_status: 'active', // Mudar status para ativo
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', user.id);
 
     if (updateError) {
-      console.error('Erro ao atualizar verificação de email:', updateError);
+      console.error('❌ Erro ao atualizar verificação de email:', updateError);
       return {
         success: false,
-        message: 'Erro ao verificar email'
+        message: 'Erro interno ao verificar email. Tente novamente.'
       };
     }
 
+    console.log('✅ Email verificado com sucesso para usuário:', user.email);
+
     return {
       success: true,
-      user,
+      user: {
+        ...user,
+        email_verified: true,
+        active: true,
+        authorization_status: 'active',
+        email_verified_at: updateData.email_verified_at
+      },
       message: 'Email verificado com sucesso'
     };
 

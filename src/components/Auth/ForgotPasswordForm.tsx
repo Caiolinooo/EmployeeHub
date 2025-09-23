@@ -44,19 +44,17 @@ export default function ForgotPasswordForm({ onCancel, initialEmail = '' }: Forg
     }
 
     try {
-        // Usar o Supabase para enviar o email de recuperação de senha
+        // Usar nossa nova API de reset de senha
         if (useEmail) {
           console.log('Enviando email de recuperação para:', identifier);
 
-          // Usar nossa API personalizada para garantir o uso do Gmail
-          const response = await fetch('/api/email/password-reset', {
+          const response = await fetch('/api/auth/request-password-reset', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
               email: identifier,
-              resetUrl: `${window.location.origin}/reset-password`,
             }),
           });
 

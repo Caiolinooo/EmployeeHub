@@ -52,7 +52,7 @@ function LoadingSpinner() {
 }
 
 export default function Dashboard() {
-  const { user, isAdmin, isAuthenticated, isLoading, hasAccess } = useSupabaseAuth();
+  const { user, profile, isAdmin, isAuthenticated, isLoading, hasAccess } = useSupabaseAuth();
   const { t, locale } = useI18n();
   const { config } = useSiteConfig();
   const router = useRouter();
@@ -218,6 +218,7 @@ export default function Dashboard() {
                 <div className="mb-4">
                   <h1 className="text-2xl font-bold text-gray-800">
                     {t('dashboard.greeting', locale === 'en-US' ? 'Welcome' : 'Olá')}, {
+                      profile?.first_name?.split(' ')[0] ||
                       (user as any).first_name?.split(' ')[0] ||
                       (user as any).firstName?.split(' ')[0] ||
                       user.email?.split('@')[0]?.split('.')[0] ||

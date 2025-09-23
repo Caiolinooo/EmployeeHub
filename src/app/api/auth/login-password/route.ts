@@ -123,7 +123,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('API login-password: Senha correta, gerando token');
+    console.log('API login-password: Senha correta, verificando status do email');
+
+    // Verificar se o email foi verificado (exceto para admin principal)
+    if (!user.email_verified && user.email !== (process.env.ADMIN_EMAIL || 'caio.correia@groupabz.com')) {
+      console.log('API login-password: Email não verificado para usuário não-admin');
+      return NextResponse.json({
+        success: false,
+        message: 'Seu e-mail ainda não foi verificado. Verifique sua caixa de entrada.',
+        code: 'EMAIL_NOT_VERIFIED',
+        email: user.email,
+        requiresEmailVerification: true
+      }, { status: 403 });
+    }
+
+    console.log('API login-password: Email verificado ou usuário admin, gerando token');
 
     // Atualizar o papel do usuário para ADMIN se ainda não for
     if (user.role !== 'ADMIN') {

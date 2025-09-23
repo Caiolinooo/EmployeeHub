@@ -201,13 +201,15 @@ export async function GET(request: NextRequest) {
     // Aplicar filtros baseados em user_id ou email
     if (hasUserIdColumn && queryUserId) {
       // Se a coluna user_id existir e tivermos um user_id para filtrar, usar user_id
-      query = query.eq('user_id', queryUserId);
+      // Mas também incluir reembolsos antigos que podem ter apenas email
+      query = query.or(`user_id.eq.${queryUserId},and(user_id.is.null,email.eq.${userEmail})`);
     } else if (queryUserEmail) {
       // Se tivermos um email específico para filtrar, usar email
       query = query.eq('email', queryUserEmail);
     } else if (!isAdmin && !isManager) {
       // Se for um usuário normal sem user_id ou email para filtrar, usar o email do usuário
-      query = query.eq('email', userEmail);
+      // Incluir tanto reembolsos com user_id quanto reembolsos antigos apenas com email
+      query = query.or(`user_id.eq.${userId},and(user_id.is.null,email.eq.${userEmail})`);
     }
 
     // Aplicar filtro de status se fornecido

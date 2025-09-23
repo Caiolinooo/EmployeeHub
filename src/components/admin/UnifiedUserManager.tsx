@@ -634,16 +634,21 @@ export default function UnifiedUserManager() {
       const method = isNewUser ? 'POST' : 'PUT';
       const url = isNewUser ? '/api/users' : `/api/users/${userData._id}`;
 
+      // Debug: Log dos dados antes de enviar para a API
+      const requestData = {
+        ...userData,
+        password
+      };
+      console.log('UnifiedUserManager - Dados sendo enviados para API:', JSON.stringify(requestData, null, 2));
+      console.log('UnifiedUserManager - phoneNumber:', requestData.phoneNumber);
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          ...userData,
-          password
-        })
+        body: JSON.stringify(requestData)
       });
 
       if (!response.ok) {

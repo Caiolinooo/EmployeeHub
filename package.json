@@ -49,7 +49,14 @@
     "test:email:direct": "node scripts/test-email-direct.js",
     "setup:drive": "node scripts/setup-google-drive.js",
     "setup:drive:api": "node scripts/setup-drive-api.js",
-    "cleanup:temp": "node scripts/cleanup-temp-files.js"
+    "cleanup:temp": "node scripts/cleanup-temp-files.js",
+    "fix:reimbursement-user-ids": "node scripts/fix-reimbursement-user-ids.js",
+    "test:reimbursement-system": "node scripts/test-reimbursement-system.js",
+    "cleanup:notifications": "node scripts/cleanup-duplicate-notifications.js",
+    "verify:notifications": "node scripts/verify-notification-cleanup.js",
+    "fix:user-names": "node scripts/fix-user-names.js",
+    "list:users": "node scripts/fix-user-names.js --list",
+    "test:name-validation": "node scripts/test-name-validation.js"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

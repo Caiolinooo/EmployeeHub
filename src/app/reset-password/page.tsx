@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FiLock, FiEye, FiEyeOff, FiAlertCircle, FiCheck, FiArrowLeft } from 'react-icons/fi';
-import { supabase } from '@/lib/supabase';
+import { FiLock, FiEye, FiEyeOff, FiAlertCircle, FiCheck, FiArrowLeft, FiLoader } from 'react-icons/fi';
+import { toast, Toaster } from 'react-hot-toast';
 import { useI18n } from '@/contexts/I18nContext';
 import Image from 'next/image';
 import { useSiteConfig } from '@/contexts/SiteConfigContext';
@@ -24,30 +24,48 @@ export default function ResetPassword() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  const [hashParams, setHashParams] = useState<Record<string, string>>({});
-  const [tokenValid, setTokenValid] = useState(false);
+  const [tokenValid, setTokenValid] = useState<boolean | null>(null);
+  const [userEmail, setUserEmail] = useState('');
+  const [userName, setUserName] = useState('');
+  const [validatingToken, setValidatingToken] = useState(true);
 
   useEffect(() => {
     setIsClient(true);
 
-    // Parse the hash fragment from the URL
-    if (typeof window !== 'undefined') {
-      const hash = window.location.hash.substring(1);
-      const params = new URLSearchParams(hash);
-      const paramsObj: Record<string, string> = {};
+    const token = searchParams.get('token');
 
-      params.forEach((value, key) => {
-        paramsObj[key] = value;
-      });
-
-      setHashParams(paramsObj);
-
-      // Check if we have an access_token, which means the password reset link is valid
-      if (paramsObj.access_token) {
-        setTokenValid(true);
-      }
+    if (!token) {
+      setTokenValid(false);
+      setValidatingToken(false);
+      setError('Token de redefinição não encontrado na URL');
+      return;
     }
-  }, []);
+
+    // Validar o token
+    const validateToken = async () => {
+      try {
+        const response = await fetch(`/api/auth/reset-password-with-token?token=${encodeURIComponent(token)}`);
+        const data = await response.json();
+
+        if (data.valid) {
+          setTokenValid(true);
+          setUserEmail(data.email);
+          setUserName(data.userName);
+        } else {
+          setTokenValid(false);
+          setError(data.message || 'Token inválido ou expirado');
+        }
+      } catch (error) {
+        console.error('Erro ao validar token:', error);
+        setTokenValid(false);
+        setError('Erro ao validar token de redefinição');
+      } finally {
+        setValidatingToken(false);
+      }
+    };
+
+    validateToken();
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,27 +86,28 @@ export default function ResetPassword() {
     setIsLoading(true);
 
     try {
-      // Check if we have an access token from the URL hash
-      if (hashParams.access_token) {
-        // Create a new Supabase client with the access token
-        const supabaseWithToken = supabase.auth.setSession({
-          access_token: hashParams.access_token,
-          refresh_token: hashParams.refresh_token || '',
-        });
+      const token = searchParams.get('token');
 
-        // Update the user's password
-        const { error } = await supabase.auth.updateUser({
-          password: password
-        });
+      if (!token) {
+        setError('Token de redefinição não encontrado');
+        return;
+      }
 
-        if (error) {
-          console.error('Error updating password:', error);
-          setError(error.message || t('auth.resetPasswordError', 'Erro ao redefinir senha'));
-          return;
-        }
-      } else {
-        // No access token found in URL
-        setError(t('auth.invalidOrExpiredToken', 'Link de redefinição de senha inválido ou expirado'));
+      const response = await fetch('/api/auth/reset-password-with-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setError(data.message || 'Erro ao redefinir senha');
         return;
       }
 
@@ -96,6 +115,8 @@ export default function ResetPassword() {
       setSuccess(true);
       setPassword('');
       setConfirmPassword('');
+
+      toast.success('Senha redefinida com sucesso!');
 
       // Redirect to login page after 3 seconds
       setTimeout(() => {
@@ -134,7 +155,14 @@ export default function ResetPassword() {
 
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white px-6 py-8 shadow-md rounded-lg sm:px-10">
-          {!tokenValid && !success && (
+          {validatingToken && (
+            <div className="text-center py-8">
+              <FiLoader className="h-8 w-8 animate-spin mx-auto text-abz-blue mb-4" />
+              <p className="text-gray-600">Validando link de redefinição...</p>
+            </div>
+          )}
+
+          {!validatingToken && tokenValid === false && !success && (
             <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
               <div className="flex">
                 <div className="flex-shrink-0">
@@ -142,10 +170,10 @@ export default function ResetPassword() {
                 </div>
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-red-800">
-                    {t('auth.invalidOrExpiredToken', 'Link de redefinição de senha inválido ou expirado')}
+                    Link inválido ou expirado
                   </h3>
                   <div className="mt-2 text-sm text-red-700">
-                    <p>{t('auth.tokenVerificationError', 'O link que você clicou é inválido ou expirou. Por favor, solicite um novo link de redefinição de senha.')}</p>
+                    <p>{error || 'O link que você clicou é inválido ou expirou. Por favor, solicite um novo link de redefinição de senha.'}</p>
                   </div>
                   <div className="mt-4">
                     <Button
@@ -156,7 +184,7 @@ export default function ResetPassword() {
                       className="text-red-700 bg-red-50 border-red-200 hover:bg-red-100 hover:text-red-800"
                     >
                       <FiArrowLeft className="mr-2 h-4 w-4" />
-                      {t('common.backToLogin', 'Voltar para o Login')}
+                      Voltar para o Login
                     </Button>
                   </div>
                 </div>
@@ -164,7 +192,23 @@ export default function ResetPassword() {
             </div>
           )}
 
-          {error && (
+          {!validatingToken && tokenValid === true && userEmail && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+              <div className="flex items-start">
+                <FiCheck className="h-5 w-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-blue-800">
+                    Link válido para: {userName}
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    {userEmail}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {error && tokenValid !== false && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-start">
               <FiAlertCircle className="mt-0.5 mr-2 flex-shrink-0" />
               <span>{error}</span>
@@ -182,7 +226,7 @@ export default function ResetPassword() {
                 </Link>
               </div>
             </div>
-          ) : tokenValid ? (
+          ) : (!validatingToken && tokenValid === true) ? (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
@@ -279,6 +323,7 @@ export default function ResetPassword() {
           ) : null}
         </div>
       </div>
+      <Toaster position="top-right" />
     </div>
   );
 }

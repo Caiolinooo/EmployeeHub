@@ -134,10 +134,13 @@ export async function PUT(
 
     // Obter os dados do corpo da requisição
     const body = await request.json();
+    console.log('Dados recebidos para atualização:', JSON.stringify(body, null, 2));
+
     const {
       firstName,
       lastName,
       email,
+      phoneNumber,
       role,
       position,
       department,
@@ -145,6 +148,8 @@ export async function PUT(
       accessPermissions,
       password
     } = body;
+
+    console.log('Campo phoneNumber extraído:', phoneNumber);
 
     // Validar os dados
     if (!firstName || !lastName) {
@@ -174,11 +179,14 @@ export async function PUT(
       first_name: firstName,
       last_name: lastName,
       email,
+      phone_number: phoneNumber,
       role: ['ADMIN', 'USER', 'MANAGER'].includes(role) ? role : user.role,
       position,
       department,
       updated_at: now
     };
+
+    console.log('Dados preparados para atualização:', JSON.stringify(updateData, null, 2));
 
     if (active !== undefined) {
       updateData.active = active;

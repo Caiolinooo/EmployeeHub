@@ -112,7 +112,8 @@ export async function POST(request: NextRequest) {
           const sendResult = await sendEmailVerificationLink(
             existingUserByEmail.email,
             existingUserByEmail.first_name || 'usuário',
-            emailVerificationToken
+            emailVerificationToken,
+            request.headers
           );
 
           console.log('409 handled as resend verification (EMAIL_EXISTS_UNVERIFIED):', { userId: existingUserByEmail.id });
@@ -158,7 +159,8 @@ export async function POST(request: NextRequest) {
           const sendResult2 = await sendEmailVerificationLink(
             existingUserByPhone.email,
             existingUserByPhone.first_name || 'usuário',
-            emailVerificationToken
+            emailVerificationToken,
+            request.headers
           );
           console.log('409 handled as resend verification (PHONE_EXISTS_SAME_EMAIL_UNVERIFIED):', { userId: existingUserByPhone.id });
           return NextResponse.json({
@@ -307,7 +309,8 @@ export async function POST(request: NextRequest) {
               const sendResult3 = await sendEmailVerificationLink(
                 existingUnifiedFull.email,
                 existingUnifiedFull.first_name || 'usuário',
-                emailVerificationToken
+                emailVerificationToken,
+                request.headers
               );
               console.log('422/email_exists handled as resend verification:', { userId: existingUnifiedFull.id });
               return NextResponse.json({
@@ -433,7 +436,8 @@ export async function POST(request: NextRequest) {
           const sendResultRecon = await sendEmailVerificationLink(
             normalizedEmail,
             firstName || 'usuário',
-            emailVerificationToken
+            emailVerificationToken,
+            request.headers
           );
 
           console.log('Reconciliação concluída: criado users_unified e enviado link de verificação/set-password', { authUserId: authUser.id });
@@ -579,7 +583,7 @@ export async function POST(request: NextRequest) {
 
     // Enviar email com link de verificação
     const { sendEmailVerificationLink } = await import('@/lib/email-verification');
-    const sendResult = await sendEmailVerificationLink(normalizedEmail, firstName, emailVerificationToken);
+    const sendResult = await sendEmailVerificationLink(normalizedEmail, firstName, emailVerificationToken, request.headers);
 
     // Não enviar notificação para administrador - fluxo automático com verificação de email
     console.log('Fluxo de verificação por email ativo - não enviando notificação para administrador');

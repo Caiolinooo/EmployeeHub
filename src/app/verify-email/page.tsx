@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useI18n } from '@/contexts/I18nContext';
-import { toast } from 'react-hot-toast';
-import { FiCheck, FiX, FiLoader, FiMail } from 'react-icons/fi';
+import { toast, Toaster } from 'react-hot-toast';
+import { FiCheck, FiX, FiLoader, FiMail, FiClock, FiAlertCircle } from 'react-icons/fi';
 import Image from 'next/image';
 import Link from 'next/link';
 import LanguageSelector from '@/components/LanguageSelector';
@@ -167,14 +167,34 @@ export default function VerifyEmailPage() {
               </p>
               
               <div className="bg-white p-4 rounded border border-red-200 mb-4">
-                <p className="text-sm text-gray-600 mb-2">
-                  <strong>Possíveis causas:</strong>
-                </p>
-                <ul className="text-sm text-gray-600 text-left list-disc list-inside space-y-1">
-                  <li>Link de verificação expirado (válido por 24 horas)</li>
-                  <li>Link já foi usado anteriormente</li>
-                  <li>Link inválido ou corrompido</li>
-                </ul>
+                <div className="flex items-start space-x-2 mb-3">
+                  <FiAlertCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 mb-2">
+                      Possíveis causas do erro:
+                    </p>
+                    <ul className="text-sm text-gray-600 space-y-1">
+                      <li className="flex items-center">
+                        <FiClock className="h-3 w-3 mr-2 text-orange-500" />
+                        Link expirado (válido por 24 horas)
+                      </li>
+                      <li className="flex items-center">
+                        <FiCheck className="h-3 w-3 mr-2 text-green-500" />
+                        Link já foi usado anteriormente
+                      </li>
+                      <li className="flex items-center">
+                        <FiX className="h-3 w-3 mr-2 text-red-500" />
+                        Link inválido ou corrompido
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 p-3 rounded border border-blue-200 mt-3">
+                  <p className="text-xs text-blue-700">
+                    <strong>💡 Dica:</strong> Se você recebeu múltiplos emails, use sempre o link mais recente.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -210,6 +230,7 @@ export default function VerifyEmailPage() {
           </p>
         </div>
       </div>
+      <Toaster position="top-right" />
     </div>
   );
 }
