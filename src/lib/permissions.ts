@@ -36,6 +36,12 @@ export interface PermissionFeatures {
   'bi.delete'?: boolean;
   'bi.export'?: boolean;
   'bi.admin'?: boolean;
+  'workflows.view'?: boolean;
+  'workflows.create'?: boolean;
+  'workflows.edit'?: boolean;
+  'workflows.delete'?: boolean;
+  'workflows.execute'?: boolean;
+  'workflows.admin'?: boolean;
   [key: string]: boolean | undefined;
 }
 

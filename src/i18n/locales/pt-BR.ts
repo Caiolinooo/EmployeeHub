@@ -1420,5 +1420,97 @@ export default {
     },
     sem_permissao: 'Sem permissão para acessar o Dashboard de BI',
     sem_permissao_desc: 'Você não tem permissão para visualizar ou gerenciar dashboards de BI.'
+  },
+
+  // Workflows Automatizados
+  workflows: {
+    titulo: 'Workflows Automatizados',
+    descricao: 'Automatize processos empresariais com workflows inteligentes',
+    workflows: 'Workflows',
+    execucoes: 'Execuções',
+    templates: 'Templates',
+    configuracoes: 'Configurações',
+    novo_workflow: 'Novo Workflow',
+    designer_visual: 'Designer Visual',
+    duplicar: 'Duplicar',
+    excluir: 'Excluir',
+    executar: 'Executar',
+    visualizar: 'Visualizar',
+    cancelar: 'Cancelar',
+    pausar: 'Pausar',
+    retomar: 'Retomar',
+    meus_workflows: 'Meus Workflows',
+    gerenciar_executar: 'Gerencie e execute seus workflows automatizados',
+    workflow_criado: 'Workflow criado com sucesso!',
+    workflow_duplicado: 'Workflow duplicado com sucesso!',
+    workflow_excluido: 'Workflow excluído com sucesso!',
+    workflow_executado: 'Workflow executado com sucesso!',
+    confirmar_exclusao: 'Tem certeza que deseja excluir este workflow?',
+    sem_workflow: 'Nenhum workflow encontrado',
+    criar_primeiro: 'Crie seu primeiro workflow para começar a automatizar processos',
+    sem_execucoes: 'Nenhuma execução encontrada',
+    execucoes_aparecerao: 'As execuções dos workflows aparecerão aqui',
+    monitorar_execucoes: 'Monitore as execuções dos workflows',
+    atualizar: 'Atualizar',
+    status: {
+      draft: 'Rascunho',
+      active: 'Ativo',
+      inactive: 'Inativo',
+      archived: 'Arquivado',
+      queued: 'Na fila',
+      running: 'Executando',
+      success: 'Sucesso',
+      failed: 'Falhou',
+      timeout: 'Timeout',
+      cancelled: 'Cancelado',
+      paused: 'Pausado'
+    },
+    triggers: {
+      manual: 'Manual',
+      schedule: 'Agendado',
+      webhook: 'Webhook',
+      event: 'Evento',
+      email: 'Email',
+      database: 'Banco de dados',
+      api: 'API',
+      file: 'Arquivo'
+    },
+    steps: {
+      action: 'Ação',
+      condition: 'Condição',
+      loop: 'Loop',
+      parallel: 'Paralelo',
+      delay: 'Delay',
+      approval: 'Aprovação',
+      notification: 'Notificação',
+      integration: 'Integração'
+    },
+    actions: {
+      email: 'Enviar Email',
+      sms: 'Enviar SMS',
+      webhook: 'Chamar Webhook',
+      database: 'Operação BD',
+      file: 'Operação Arquivo',
+      api: 'Chamada API',
+      script: 'Executar Script',
+      notification: 'Notificação'
+    },
+    tabela: {
+      workflow: 'Workflow',
+      status: 'Status',
+      duracao: 'Duração',
+      iniciado: 'Iniciado',
+      executado_por: 'Executado por',
+      acoes: 'Ações'
+    },
+    campos: {
+      trigger: 'Trigger',
+      steps: 'Steps',
+      execucoes: 'Execuções',
+      ultima_execucao: 'Última execução',
+      nunca: 'Nunca'
+    },
+    sem_permissao: 'Sem permissão para acessar os workflows',
+    sem_permissao_desc: 'Você não tem permissão para visualizar ou gerenciar workflows.'
   }
 };

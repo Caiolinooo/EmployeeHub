@@ -415,6 +415,21 @@ export function getTranslatedCards(t: (key: string) => string): DashboardCard[] 
       moduleKey: 'dashboard_bi'
     },
     {
+      id: 'workflows',
+      title: 'Workflows Automatizados',
+      description: 'Automatize processos empresariais com workflows inteligentes',
+      href: '/workflows',
+      icon: FiGitBranch,
+      iconName: 'FiGitBranch',
+      color: 'bg-indigo-600',
+      hoverColor: 'hover:bg-indigo-700',
+      external: false,
+      enabled: true,
+      order: 13,
+      adminOnly: false,
+      moduleKey: 'workflows'
+    },
+    {
       id: 'admin',
       title: t('admin.title'),
       description: t('admin.dashboard'),
