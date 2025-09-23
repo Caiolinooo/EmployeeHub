@@ -20,7 +20,8 @@ import {
   FiTrendingUp,
   FiPieChart,
   FiTarget,
-  FiDownload
+  FiDownload,
+  FiSmartphone
 } from 'react-icons/fi';
 import { IconType } from 'react-icons';
 
@@ -42,6 +43,7 @@ export const iconMap: { [key: string]: IconType } = {
   FiPieChart,
   FiTarget,
   FiDownload,
+  FiSmartphone,
   // Adicione outros ícones do react-icons/fi aqui se necessário
   // Exemplo: FiAlertCircle: FiAlertCircle,
 };
@@ -366,6 +368,21 @@ export function getTranslatedCards(t: (key: string) => string): DashboardCard[] 
       adminOnly: false,
       managerOnly: true,
       moduleKey: 'relatorios_pdf'
+    },
+    {
+      id: 'api-mobile',
+      title: 'API Mobile',
+      description: 'Gerenciamento e monitoramento da API para aplicativos móveis',
+      href: '/api-mobile',
+      icon: FiSmartphone,
+      iconName: 'FiSmartphone',
+      color: 'bg-indigo-600',
+      hoverColor: 'hover:bg-indigo-700',
+      external: false,
+      enabled: true,
+      order: 10,
+      adminOnly: true,
+      moduleKey: 'api_mobile'
     },
     {
       id: 'admin',

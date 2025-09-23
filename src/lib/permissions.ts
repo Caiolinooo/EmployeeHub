@@ -20,6 +20,11 @@ export interface PermissionFeatures {
   'relatorios.templates.edit'?: boolean;
   'relatorios.historico.read'?: boolean;
   'relatorios.historico.manage'?: boolean;
+  'api.mobile.admin'?: boolean;
+  'api.mobile.view'?: boolean;
+  'api.mobile.devices'?: boolean;
+  'api.mobile.notifications'?: boolean;
+  'api.mobile.settings'?: boolean;
   [key: string]: boolean | undefined;
 }
 
