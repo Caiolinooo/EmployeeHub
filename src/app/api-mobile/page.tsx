@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
-import { useTranslation } from '@/contexts/I18nContext';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useI18n } from '@/contexts/I18nContext';
+import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import { 
   FiSmartphone, 
   FiUsers, 
@@ -11,7 +11,7 @@ import {
   FiUpload, 
   FiBell, 
   FiSettings,
-  FiBarChart3,
+  FiBarChart,
   FiAlertTriangle,
   FiRefreshCw,
   FiDownload
@@ -79,8 +79,8 @@ interface MobileStats {
 }
 
 export default function APIMobilePage() {
-  const { user, isAdmin } = useAuth();
-  const { t } = useTranslation();
+  const { user, isAdmin } = useSupabaseAuth();
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState<MobileStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -378,7 +378,7 @@ export default function APIMobilePage() {
           <div className="mb-8">
             <nav className="flex space-x-8">
               {[
-                { id: 'overview', label: 'Visão Geral', icon: FiBarChart3 },
+                { id: 'overview', label: 'Visão Geral', icon: FiBarChart },
                 { id: 'devices', label: 'Dispositivos', icon: FiSmartphone },
                 { id: 'notifications', label: 'Notificações', icon: FiBell },
                 { id: 'settings', label: 'Configurações', icon: FiSettings }

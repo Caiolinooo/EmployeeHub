@@ -14,8 +14,18 @@ export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
-    if (!authResult.valid || !authResult.payload) {
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+
+    if (!token) {
+      return NextResponse.json(
+        { success: false, error: 'Token não fornecido' },
+        { status: 401 }
+      );
+    }
+
+    const authResult = verifyToken(token);
+    if (!authResult) {
       return NextResponse.json(
         { success: false, error: 'Token inválido' },
         { status: 401 }
@@ -26,7 +36,7 @@ export async function POST(request: NextRequest) {
     const { data: user } = await supabase
       .from('users_unified')
       .select('access_permissions')
-      .eq('id', authResult.payload.userId)
+      .eq('id', authResult.userId)
       .single();
 
     const permissions = user?.access_permissions || {};
