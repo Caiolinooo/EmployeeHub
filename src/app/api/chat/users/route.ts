@@ -7,8 +7,11 @@ export const runtime = 'nodejs';
 export async function GET(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
-    if (!authResult.valid || !authResult.payload) {
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    const payload = verifyToken(token);
+
+    if (!payload) {
       return NextResponse.json({
         success: false,
         error: 'Token inválido'

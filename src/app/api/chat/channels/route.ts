@@ -8,8 +8,11 @@ export const runtime = 'nodejs';
 export async function GET(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
-    if (!authResult.valid || !authResult.payload) {
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    const payload = verifyToken(token);
+
+    if (!payload) {
       return NextResponse.json({
         success: false,
         error: 'Token inválido'
@@ -56,7 +59,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Filtrar canais que o usuário tem acesso
-    query = query.or(`permissions->isPublic.eq.true,permissions->members.cs.["${authResult.payload.userId}"],permissions->viewers.cs.["${authResult.payload.userId}"],created_by.eq.${authResult.payload.userId}`);
+    query = query.or(`permissions->isPublic.eq.true,permissions->members.cs.["${payload.userId}"],permissions->viewers.cs.["${payload.userId}"],created_by.eq.${payload.userId}`);
 
     const { data: channels, error } = await query;
 
@@ -75,7 +78,7 @@ export async function GET(request: NextRequest) {
           .from('chat_messages')
           .select('id', { count: 'exact' })
           .eq('channel_id', channel.id)
-          .not('read_by', 'cs', `["${authResult.payload.userId}"]`)
+          .not('read_by', 'cs', `["${payload.userId}"]`)
           .gte('timestamp', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()); // últimos 7 dias
 
         return {
@@ -102,8 +105,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
-    if (!authResult.valid || !authResult.payload) {
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    const payload = verifyToken(token);
+
+    if (!payload) {
       return NextResponse.json({
         success: false,
         error: 'Token inválido'
@@ -114,7 +120,7 @@ export async function POST(request: NextRequest) {
     const { data: user } = await supabase
       .from('users_unified')
       .select('role, access_permissions')
-      .eq('id', authResult.payload.userId)
+      .eq('id', payload.userId)
       .single();
 
     if (!user || (user.role !== 'ADMIN' && user.role !== 'MANAGER')) {
@@ -170,10 +176,10 @@ export async function POST(request: NextRequest) {
 
     // Permissões padrão do canal
     const defaultPermissions: ChannelPermissions = {
-      owner: authResult.payload.userId,
+      owner: payload.userId,
       admins: [],
       moderators: [],
-      members: [authResult.payload.userId, ...initialMembers],
+      members: [payload.userId, ...initialMembers],
       viewers: [],
       blocked: [],
       roles: {},
@@ -204,7 +210,7 @@ export async function POST(request: NextRequest) {
         type,
         avatar,
         is_archived: false,
-        created_by: authResult.payload.userId,
+        created_by: payload.userId,
         member_count: defaultPermissions.members.length,
         unread_count: 0,
         settings: defaultSettings,
@@ -244,7 +250,7 @@ export async function POST(request: NextRequest) {
       .from('chat_channel_members')
       .insert({
         channel_id: channel.id,
-        user_id: authResult.payload.userId,
+        user_id: payload.userId,
         role: 'owner',
         joined_at: new Date().toISOString()
       });
@@ -293,7 +299,7 @@ export async function POST(request: NextRequest) {
         entity_type: 'channel',
         entity_id: channel.id,
         new_values: { name, type, isPublic },
-        user_id: authResult.payload.userId,
+        user_id: payload.userId,
         user_email: user.email,
         ip_address: request.headers.get('x-forwarded-for') || 'unknown',
         user_agent: request.headers.get('user-agent'),
@@ -318,8 +324,11 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
-    if (!authResult.valid || !authResult.payload) {
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    const payload = verifyToken(token);
+
+    if (!payload) {
       return NextResponse.json({
         success: false,
         error: 'Token inválido'
@@ -354,11 +363,11 @@ export async function PUT(request: NextRequest) {
     const { data: user } = await supabase
       .from('users_unified')
       .select('role')
-      .eq('id', authResult.payload.userId)
+      .eq('id', payload.userId)
       .single();
 
-    const isOwner = existingChannel.created_by === authResult.payload.userId;
-    const isChannelAdmin = existingChannel.permissions?.admins?.includes(authResult.payload.userId);
+    const isOwner = existingChannel.created_by === payload.userId;
+    const isChannelAdmin = existingChannel.permissions?.admins?.includes(payload.userId);
     const isSystemAdmin = user?.role === 'ADMIN';
 
     if (!isOwner && !isChannelAdmin && !isSystemAdmin) {
@@ -397,7 +406,7 @@ export async function PUT(request: NextRequest) {
         entity_id: id,
         old_values: existingChannel,
         new_values: updateData,
-        user_id: authResult.payload.userId,
+        user_id: payload.userId,
         user_email: user?.email,
         ip_address: request.headers.get('x-forwarded-for') || 'unknown',
         user_agent: request.headers.get('user-agent'),
@@ -422,8 +431,11 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
-    if (!authResult.valid || !authResult.payload) {
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    const payload = verifyToken(token);
+
+    if (!payload) {
       return NextResponse.json({
         success: false,
         error: 'Token inválido'
@@ -458,10 +470,10 @@ export async function DELETE(request: NextRequest) {
     const { data: user } = await supabase
       .from('users_unified')
       .select('role')
-      .eq('id', authResult.payload.userId)
+      .eq('id', payload.userId)
       .single();
 
-    const isOwner = existingChannel.created_by === authResult.payload.userId;
+    const isOwner = existingChannel.created_by === payload.userId;
     const isSystemAdmin = user?.role === 'ADMIN';
 
     if (!isOwner && !isSystemAdmin) {
@@ -497,7 +509,7 @@ export async function DELETE(request: NextRequest) {
         entity_type: 'channel',
         entity_id: id,
         old_values: existingChannel,
-        user_id: authResult.payload.userId,
+        user_id: payload.userId,
         user_email: user?.email,
         ip_address: request.headers.get('x-forwarded-for') || 'unknown',
         user_agent: request.headers.get('user-agent'),

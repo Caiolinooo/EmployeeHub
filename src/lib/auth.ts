@@ -260,10 +260,10 @@ export async function sendPasswordResetSMS(phoneNumber: string, resetUrl: string
 }
 
 // Função para verificar um token JWT
-export function verifyToken(token: string): TokenPayload | null {
+export function verifyToken(token: string | null | undefined): TokenPayload | null {
   try {
-    if (!token) {
-      console.error('verifyToken: Token não fornecido');
+    if (!token || typeof token !== 'string') {
+      console.error('verifyToken: Token não fornecido ou inválido');
       return null;
     }
 

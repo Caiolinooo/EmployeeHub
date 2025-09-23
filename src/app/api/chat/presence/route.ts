@@ -8,8 +8,11 @@ export const runtime = 'nodejs';
 export async function GET(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
-    if (!authResult.valid || !authResult.payload) {
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    const payload = verifyToken(token);
+
+    if (!payload) {
       return NextResponse.json({
         success: false,
         error: 'Token inválido'
@@ -133,8 +136,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
-    if (!authResult.valid || !authResult.payload) {
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    const payload = verifyToken(token);
+
+    if (!payload) {
       return NextResponse.json({
         success: false,
         error: 'Token inválido'
@@ -163,7 +169,7 @@ export async function POST(request: NextRequest) {
     const { data: presence, error } = await supabase
       .from('chat_user_presence')
       .upsert({
-        user_id: authResult.payload.userId,
+        user_id: payload.userId,
         status: status || 'online',
         status_message: statusMessage,
         last_seen: new Date().toISOString(),
@@ -199,8 +205,11 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
-    if (!authResult.valid || !authResult.payload) {
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    const payload = verifyToken(token);
+
+    if (!payload) {
       return NextResponse.json({
         success: false,
         error: 'Token inválido'
@@ -216,7 +225,7 @@ export async function PUT(request: NextRequest) {
         await supabase
           .from('chat_user_presence')
           .upsert({
-            user_id: authResult.payload.userId,
+            user_id: payload.userId,
             current_channel: channelId,
             is_typing: isTyping,
             last_seen: new Date().toISOString()
@@ -235,7 +244,7 @@ export async function PUT(request: NextRequest) {
         await supabase
           .from('chat_user_presence')
           .upsert({
-            user_id: authResult.payload.userId,
+            user_id: payload.userId,
             last_seen: new Date().toISOString(),
             current_channel: channelId
           });
