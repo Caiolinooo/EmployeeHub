@@ -16,7 +16,11 @@ import {
   FiUsers,
   FiBarChart2,
   FiActivity,
-  FiPlay
+  FiPlay,
+  FiTrendingUp,
+  FiPieChart,
+  FiTarget,
+  FiDownload
 } from 'react-icons/fi';
 import { IconType } from 'react-icons';
 
@@ -34,6 +38,10 @@ export const iconMap: { [key: string]: IconType } = {
   FiBarChart2,
   FiActivity,
   FiPlay,
+  FiTrendingUp,
+  FiPieChart,
+  FiTarget,
+  FiDownload,
   // Adicione outros ícones do react-icons/fi aqui se necessário
   // Exemplo: FiAlertCircle: FiAlertCircle,
 };
@@ -326,6 +334,22 @@ export function getTranslatedCards(t: (key: string) => string): DashboardCard[] 
       adminOnly: false,
       managerOnly: false,
       moduleKey: 'social'
+    },
+    {
+      id: 'avaliacoes-avancadas',
+      title: 'Avaliações Avançadas',
+      description: 'Métricas, análises e relatórios detalhados de performance',
+      href: '/avaliacoes-avancadas',
+      icon: FiTrendingUp,
+      iconName: 'FiTrendingUp',
+      color: 'bg-blue-600',
+      hoverColor: 'hover:bg-blue-700',
+      external: false,
+      enabled: true,
+      order: 8,
+      adminOnly: false,
+      managerOnly: true,
+      moduleKey: 'avaliacoes_avancadas'
     },
     {
       id: 'admin',

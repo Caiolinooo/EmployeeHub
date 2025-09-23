@@ -5,6 +5,13 @@ export interface PermissionFeatures {
   academy_moderator?: boolean;
   social_editor?: boolean;
   social_moderator?: boolean;
+  'avaliacoes.metricas.read'?: boolean;
+  'avaliacoes.metricas.admin'?: boolean;
+  'avaliacoes.relatorios.read'?: boolean;
+  'avaliacoes.relatorios.export'?: boolean;
+  'avaliacoes.dashboard.config'?: boolean;
+  'avaliacoes.alertas.manage'?: boolean;
+  'avaliacoes.analytics.advanced'?: boolean;
   [key: string]: boolean | undefined;
 }
 
@@ -251,18 +258,39 @@ export const DEFAULT_PERMISSIONS_BY_ROLE = {
     academy_editor: true,
     academy_moderator: true,
     social_editor: true,
-    social_moderator: true
+    social_moderator: true,
+    'avaliacoes.metricas.read': true,
+    'avaliacoes.metricas.admin': true,
+    'avaliacoes.relatorios.read': true,
+    'avaliacoes.relatorios.export': true,
+    'avaliacoes.dashboard.config': true,
+    'avaliacoes.alertas.manage': true,
+    'avaliacoes.analytics.advanced': true
   },
   MANAGER: {
     academy_editor: false,
     academy_moderator: true,
     social_editor: false,
-    social_moderator: true
+    social_moderator: true,
+    'avaliacoes.metricas.read': true,
+    'avaliacoes.metricas.admin': false,
+    'avaliacoes.relatorios.read': true,
+    'avaliacoes.relatorios.export': true,
+    'avaliacoes.dashboard.config': false,
+    'avaliacoes.alertas.manage': false,
+    'avaliacoes.analytics.advanced': true
   },
   USER: {
     academy_editor: false,
     academy_moderator: false,
     social_editor: false,
-    social_moderator: false
+    social_moderator: false,
+    'avaliacoes.metricas.read': false,
+    'avaliacoes.metricas.admin': false,
+    'avaliacoes.relatorios.read': false,
+    'avaliacoes.relatorios.export': false,
+    'avaliacoes.dashboard.config': false,
+    'avaliacoes.alertas.manage': false,
+    'avaliacoes.analytics.advanced': false
   }
 } as const;
