@@ -352,6 +352,22 @@ export function getTranslatedCards(t: (key: string) => string): DashboardCard[] 
       moduleKey: 'avaliacoes_avancadas'
     },
     {
+      id: 'relatorios-pdf',
+      title: 'Relatórios PDF',
+      description: 'Gere relatórios personalizados com gráficos e visualizações',
+      href: '/relatorios-pdf',
+      icon: FiDownload,
+      iconName: 'FiDownload',
+      color: 'bg-purple-600',
+      hoverColor: 'hover:bg-purple-700',
+      external: false,
+      enabled: true,
+      order: 9,
+      adminOnly: false,
+      managerOnly: true,
+      moduleKey: 'relatorios_pdf'
+    },
+    {
       id: 'admin',
       title: t('admin.title'),
       description: t('admin.dashboard'),

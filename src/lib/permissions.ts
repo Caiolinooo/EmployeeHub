@@ -12,6 +12,14 @@ export interface PermissionFeatures {
   'avaliacoes.dashboard.config'?: boolean;
   'avaliacoes.alertas.manage'?: boolean;
   'avaliacoes.analytics.advanced'?: boolean;
+  'relatorios.pdf.read'?: boolean;
+  'relatorios.pdf.generate'?: boolean;
+  'relatorios.pdf.admin'?: boolean;
+  'relatorios.templates.read'?: boolean;
+  'relatorios.templates.create'?: boolean;
+  'relatorios.templates.edit'?: boolean;
+  'relatorios.historico.read'?: boolean;
+  'relatorios.historico.manage'?: boolean;
   [key: string]: boolean | undefined;
 }
 
@@ -265,7 +273,15 @@ export const DEFAULT_PERMISSIONS_BY_ROLE = {
     'avaliacoes.relatorios.export': true,
     'avaliacoes.dashboard.config': true,
     'avaliacoes.alertas.manage': true,
-    'avaliacoes.analytics.advanced': true
+    'avaliacoes.analytics.advanced': true,
+    'relatorios.pdf.read': true,
+    'relatorios.pdf.generate': true,
+    'relatorios.pdf.admin': true,
+    'relatorios.templates.read': true,
+    'relatorios.templates.create': true,
+    'relatorios.templates.edit': true,
+    'relatorios.historico.read': true,
+    'relatorios.historico.manage': true
   },
   MANAGER: {
     academy_editor: false,
@@ -278,7 +294,15 @@ export const DEFAULT_PERMISSIONS_BY_ROLE = {
     'avaliacoes.relatorios.export': true,
     'avaliacoes.dashboard.config': false,
     'avaliacoes.alertas.manage': false,
-    'avaliacoes.analytics.advanced': true
+    'avaliacoes.analytics.advanced': true,
+    'relatorios.pdf.read': true,
+    'relatorios.pdf.generate': true,
+    'relatorios.pdf.admin': false,
+    'relatorios.templates.read': true,
+    'relatorios.templates.create': false,
+    'relatorios.templates.edit': false,
+    'relatorios.historico.read': true,
+    'relatorios.historico.manage': false
   },
   USER: {
     academy_editor: false,
@@ -291,6 +315,14 @@ export const DEFAULT_PERMISSIONS_BY_ROLE = {
     'avaliacoes.relatorios.export': false,
     'avaliacoes.dashboard.config': false,
     'avaliacoes.alertas.manage': false,
-    'avaliacoes.analytics.advanced': false
+    'avaliacoes.analytics.advanced': false,
+    'relatorios.pdf.read': false,
+    'relatorios.pdf.generate': false,
+    'relatorios.pdf.admin': false,
+    'relatorios.templates.read': false,
+    'relatorios.templates.create': false,
+    'relatorios.templates.edit': false,
+    'relatorios.historico.read': false,
+    'relatorios.historico.manage': false
   }
 } as const;
