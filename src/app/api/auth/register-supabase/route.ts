@@ -6,12 +6,13 @@ import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { checkIfUserIsBanned } from '@/lib/banned-users';
 
 // Função para gerar número de protocolo
-function generateProtocolNumber() {
+async function generateProtocolNumber() {
   const date = new Date();
   const year = date.getFullYear().toString().slice(2);
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const day = date.getDate().toString().padStart(2, '0');
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  const { randomBytes } = await import('crypto');
+  const random = parseInt(randomBytes(2).toString('hex'), 16).toString().slice(0, 4).padStart(4, '0');
   return `REG-${year}${month}${day}-${random}`;
 }
 
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
     const normalizedCpf = (cpf || '').trim();
 
     // Gerar número de protocolo cedo para estar disponível em todas as respostas de sucesso
-    const protocol = generateProtocolNumber();
+    const protocol = await generateProtocolNumber();
 
     console.log('Dados recebidos para registro:', {
       email: normalizedEmail,

@@ -107,10 +107,14 @@ export async function getUserByPhone(phone: string) {
 // Função para criar um usuário
 export async function createUser(userData: CreateUserData) {
   try {
+    // Gerar senha segura se não fornecida
+    const { randomBytes } = await import('crypto');
+    const securePassword = userData.password || randomBytes(12).toString('base64').slice(0, 16);
+
     // Primeiro, criamos o usuário na autenticação do Supabase
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: userData.email,
-      password: userData.password || Math.random().toString(36).slice(-8),
+      password: securePassword,
       options: {
         data: {
           first_name: userData.first_name,

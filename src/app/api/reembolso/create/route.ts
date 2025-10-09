@@ -44,8 +44,10 @@ export async function POST(request: NextRequest) {
     // Verificação de colunas removida para evitar erro de variável não definida
     console.log('Prosseguindo com criação do reembolso sem verificação de colunas...');
 
-    // Gerar protocolo único
-    const protocolo = `REEMB-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    // Gerar protocolo único com timestamp e ID seguro
+    const { randomBytes } = await import('crypto');
+    const randomPart = randomBytes(2).toString('hex').toUpperCase();
+    const protocolo = `REEMB-${Date.now()}-${randomPart}`;
 
     // Validar centro de custo
     if (!formData.centroCusto || formData.centroCusto.trim() === '') {

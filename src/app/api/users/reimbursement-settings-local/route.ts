@@ -149,9 +149,9 @@ export async function POST(request: NextRequest) {
       userIdToUse = getUserIdByEmail(email);
 
       if (!userIdToUse) {
-        // Gerar ID aleatório para o usuário
-        userIdToUse = Math.random().toString(36).substring(2, 15) +
-                      Math.random().toString(36).substring(2, 15);
+        // Gerar ID seguro para o usuário
+        const { randomUUID } = await import('crypto');
+        userIdToUse = randomUUID();
 
         // Salvar mapeamento de email para ID
         saveEmailMapping(email, userIdToUse);
