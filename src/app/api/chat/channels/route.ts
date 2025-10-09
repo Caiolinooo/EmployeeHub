@@ -119,15 +119,16 @@ export async function POST(request: NextRequest) {
     // Verificar permissões
     const { data: user } = await supabase
       .from('users_unified')
-      .select('role, access_permissions')
+      .select('role, access_permissions, email, first_name, last_name')
       .eq('id', payload.userId)
       .single();
 
-    if (!user || (user.role !== 'ADMIN' && user.role !== 'MANAGER')) {
+    // Permitir criação de canais por qualquer usuário autenticado
+    if (!user) {
       return NextResponse.json({
         success: false,
-        error: 'Sem permissão para criar canais'
-      }, { status: 403 });
+        error: 'Usuário não encontrado'
+      }, { status: 404 });
     }
 
     const body = await request.json();
@@ -233,7 +234,7 @@ export async function POST(request: NextRequest) {
 
     // Adicionar membros ao canal
     if (initialMembers.length > 0) {
-      const memberInserts = initialMembers.map(memberId => ({
+      const memberInserts = initialMembers.map((memberId: string) => ({
         channel_id: channel.id,
         user_id: memberId,
         role: 'member',
@@ -267,7 +268,7 @@ export async function POST(request: NextRequest) {
             type: 'channel_created',
             data: {
               channelName: name,
-              createdBy: user.name || 'Usuário'
+              createdBy: ((user.first_name || '') + ' ' + (user.last_name || '')).trim() || user.email || 'Usuário'
             }
           }
         },
@@ -362,7 +363,7 @@ export async function PUT(request: NextRequest) {
     // Verificar permissões (owner, admin ou admin do sistema)
     const { data: user } = await supabase
       .from('users_unified')
-      .select('role')
+      .select('role, email')
       .eq('id', payload.userId)
       .single();
 
@@ -469,7 +470,7 @@ export async function DELETE(request: NextRequest) {
     // Verificar permissões (owner ou admin do sistema)
     const { data: user } = await supabase
       .from('users_unified')
-      .select('role')
+      .select('role, email')
       .eq('id', payload.userId)
       .single();
 

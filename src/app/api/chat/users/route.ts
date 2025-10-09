@@ -29,21 +29,24 @@ export async function GET(request: NextRequest) {
       .from('users_unified')
       .select(`
         id,
-        name,
+        first_name,
+        last_name,
         email,
         avatar,
         role,
         department,
         position,
         created_at,
+        updated_at,
         last_login
       `)
-      .order('name', { ascending: true })
+      .order('first_name', { ascending: true })
+      .order('last_name', { ascending: true })
       .range(offset, offset + limit - 1);
 
     // Filtrar por busca se especificado
     if (search) {
-      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%`);
+      query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%,email.ilike.%${search}%`);
     }
 
     const { data: users, error } = await query;
@@ -84,12 +87,13 @@ export async function GET(request: NextRequest) {
     // Enriquecer usuários com dados de presença
     const enrichedUsers = filteredUsers.map(user => ({
       id: user.id,
-      name: user.name,
+      name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
       email: user.email,
       avatar: user.avatar,
+      role: user.role,
       status: presenceMap[user.id]?.status || 'offline',
       statusMessage: presenceMap[user.id]?.status_message,
-      lastSeen: presenceMap[user.id]?.last_seen || user.last_login,
+      lastSeen: presenceMap[user.id]?.last_seen || user.updated_at,
       timezone: 'America/Sao_Paulo', // Padrão
       preferences: {
         theme: 'light',

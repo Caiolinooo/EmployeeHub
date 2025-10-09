@@ -8,8 +8,11 @@ export const runtime = 'nodejs';
 export async function GET(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
-    if (!authResult.valid || !authResult.payload) {
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    const payload = verifyToken(token);
+
+    if (!payload) {
       return NextResponse.json({
         success: false,
         error: 'Token inválido'
@@ -46,8 +49,8 @@ export async function GET(request: NextRequest) {
     }
 
     const hasAccess = channel.permissions?.isPublic ||
-                     channel.permissions?.members?.includes(authResult.payload.userId) ||
-                     channel.permissions?.viewers?.includes(authResult.payload.userId);
+                     channel.permissions?.members?.includes(payload.userId) ||
+                     channel.permissions?.viewers?.includes(payload.userId);
 
     if (!hasAccess) {
       return NextResponse.json({
@@ -132,8 +135,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
-    if (!authResult.valid || !authResult.payload) {
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    const payload = verifyToken(token);
+
+    if (!payload) {
       return NextResponse.json({
         success: false,
         error: 'Token inválido'
@@ -164,7 +170,7 @@ export async function POST(request: NextRequest) {
     // Verificar se usuário tem acesso ao canal
     const { data: channel } = await supabase
       .from('chat_channels')
-      .select('permissions, settings')
+      .select('permissions, settings, name')
       .eq('id', channelId)
       .single();
 
@@ -176,7 +182,7 @@ export async function POST(request: NextRequest) {
     }
 
     const canSendMessages = channel.permissions?.isPublic ||
-                           channel.permissions?.members?.includes(authResult.payload.userId);
+                           channel.permissions?.members?.includes(payload.userId);
 
     if (!canSendMessages) {
       return NextResponse.json({
@@ -188,8 +194,8 @@ export async function POST(request: NextRequest) {
     // Buscar informações do usuário
     const { data: user } = await supabase
       .from('users_unified')
-      .select('name, email, avatar')
-      .eq('id', authResult.payload.userId)
+      .select('first_name, last_name, email, avatar')
+      .eq('id', payload.userId)
       .single();
 
     // Processar menções
@@ -217,7 +223,7 @@ export async function POST(request: NextRequest) {
       uploadedAt: new Date().toISOString(),
       metadata: {
         originalName: attachment.name,
-        uploadedBy: authResult.payload.userId,
+        uploadedBy: payload.userId,
         isPublic: false,
         downloadCount: 0,
         virusScanStatus: 'clean',
@@ -238,17 +244,16 @@ export async function POST(request: NextRequest) {
     };
 
     // Criar mensagem
-    const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+    const senderName = `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.email || 'Usuário';
+
     const { data: message, error } = await supabase
       .from('chat_messages')
       .insert({
-        id: messageId,
         channel_id: channelId,
         thread_id: threadId,
         parent_message_id: parentMessageId,
-        sender_id: authResult.payload.userId,
-        sender_name: user?.name || 'Usuário',
+        sender_id: payload.userId,
+        sender_name: senderName,
         sender_avatar: user?.avatar,
         content,
         type,
@@ -262,7 +267,7 @@ export async function POST(request: NextRequest) {
         is_pinned: false,
         is_important: isImportant,
         reply_count: 0,
-        read_by: [authResult.payload.userId]
+        read_by: [payload.userId]
       })
       .select()
       .single();
@@ -285,28 +290,23 @@ export async function POST(request: NextRequest) {
 
     // Se é uma resposta, incrementar contador de replies
     if (parentMessageId) {
-      await supabase
-        .from('chat_messages')
-        .update({
-          reply_count: supabase.raw('reply_count + 1')
-        })
-        .eq('id', parentMessageId);
+      await supabase.rpc('increment_reply_count', { message_id: parentMessageId });
     }
 
     // Processar notificações para menções
     if (processedMentions.length > 0) {
-      const notificationPromises = processedMentions.map(async (mention) => {
-        if (mention.type === 'user' && mention.targetId !== authResult.payload.userId) {
+      const notificationPromises = processedMentions.map(async (mention: any) => {
+        if (mention.type === 'user' && mention.targetId !== payload.userId) {
           await supabase
             .from('chat_notifications')
             .insert({
               user_id: mention.targetId,
               type: 'mention',
               title: `Menção em #${channel.name || 'canal'}`,
-              message: `${user?.name || 'Usuário'} mencionou você`,
+              message: `${senderName} mencionou você`,
               channel_id: channelId,
-              message_id: messageId,
-              sender_id: authResult.payload.userId,
+              message_id: message.id,
+              sender_id: payload.userId,
               is_read: false,
               created_at: new Date().toISOString(),
               metadata: {
@@ -327,9 +327,9 @@ export async function POST(request: NextRequest) {
         channel_id: channelId,
         action: 'send_message',
         entity_type: 'message',
-        entity_id: messageId,
+        entity_id: message.id,
         new_values: { type, hasAttachments: attachments.length > 0, hasMentions: mentions.length > 0 },
-        user_id: authResult.payload.userId,
+        user_id: payload.userId,
         user_email: user?.email,
         ip_address: request.headers.get('x-forwarded-for') || 'unknown',
         user_agent: request.headers.get('user-agent'),
@@ -354,8 +354,11 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
-    if (!authResult.valid || !authResult.payload) {
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    const payload = verifyToken(token);
+
+    if (!payload) {
       return NextResponse.json({
         success: false,
         error: 'Token inválido'
@@ -387,7 +390,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Verificar permissões (apenas o autor pode editar)
-    if (existingMessage.sender_id !== authResult.payload.userId) {
+    if (existingMessage.sender_id !== payload.userId) {
       return NextResponse.json({
         success: false,
         error: 'Sem permissão para editar esta mensagem'
@@ -409,7 +412,7 @@ export async function PUT(request: NextRequest) {
     const editHistory = existingMessage.metadata?.editHistory || [];
     editHistory.push({
       editedAt: new Date().toISOString(),
-      editedBy: authResult.payload.userId,
+      editedBy: payload.userId,
       previousContent: existingMessage.content,
       reason
     });
@@ -447,7 +450,7 @@ export async function PUT(request: NextRequest) {
         entity_id: id,
         old_values: { content: existingMessage.content },
         new_values: { content, reason },
-        user_id: authResult.payload.userId,
+        user_id: payload.userId,
         ip_address: request.headers.get('x-forwarded-for') || 'unknown',
         user_agent: request.headers.get('user-agent'),
         timestamp: new Date().toISOString(),
@@ -471,8 +474,10 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
-    if (!authResult.valid || !authResult.payload) {
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    const payload = verifyToken(token);
+    if (!payload) {
       return NextResponse.json({
         success: false,
         error: 'Token inválido'
@@ -506,11 +511,11 @@ export async function DELETE(request: NextRequest) {
     // Verificar permissões (autor ou admin do canal/sistema)
     const { data: user } = await supabase
       .from('users_unified')
-      .select('role')
-      .eq('id', authResult.payload.userId)
+      .select('role, email')
+      .eq('id', payload.userId)
       .single();
 
-    const isAuthor = existingMessage.sender_id === authResult.payload.userId;
+    const isAuthor = existingMessage.sender_id === payload.userId;
     const isSystemAdmin = user?.role === 'ADMIN';
 
     // Verificar se é admin do canal
@@ -520,7 +525,7 @@ export async function DELETE(request: NextRequest) {
       .eq('id', existingMessage.channel_id)
       .single();
 
-    const isChannelAdmin = channel?.permissions?.admins?.includes(authResult.payload.userId);
+    const isChannelAdmin = channel?.permissions?.admins?.includes(payload.userId);
 
     if (!isAuthor && !isChannelAdmin && !isSystemAdmin) {
       return NextResponse.json({
@@ -534,8 +539,7 @@ export async function DELETE(request: NextRequest) {
       .from('chat_messages')
       .update({
         deleted_at: new Date().toISOString(),
-        content: { text: '[Mensagem deletada]' },
-        status: 'deleted'
+        content: { text: '[Mensagem deletada]' }
       })
       .eq('id', id);
 
@@ -556,7 +560,7 @@ export async function DELETE(request: NextRequest) {
         entity_type: 'message',
         entity_id: id,
         old_values: existingMessage,
-        user_id: authResult.payload.userId,
+        user_id: payload.userId,
         user_email: user?.email,
         ip_address: request.headers.get('x-forwarded-for') || 'unknown',
         user_agent: request.headers.get('user-agent'),

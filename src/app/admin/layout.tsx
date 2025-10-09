@@ -36,6 +36,7 @@ const adminMenuItems = [
   { id: 'reimbursement-settings', href: '/admin/reimbursement-settings', label: 'admin.reimbursementSettings', icon: FiSettings },
   { id: 'reimbursement-migration', href: '/admin/reimbursement-migration', label: 'admin.reimbursementMigration', icon: FiSettings },
   // Configurações gerais
+  { id: 'automation', href: '/admin/automation', label: 'admin.automation', icon: FiSettings },
   { id: 'settings', href: '/admin/settings', label: 'admin.settings', icon: FiSettings },
   { id: 'admin-fix', href: '/admin-fix', label: 'admin.fixPermissions', icon: FiUserCheck },
 ];
@@ -108,6 +109,7 @@ const adminMenuGroups = [
     label: 'admin.system',
     items: [
       { id: 'setup', href: '/admin/setup', label: 'admin.systemSetup', icon: FiTool },
+      { id: 'automation', href: '/admin/automation', label: 'admin.automation', icon: FiSettings },
       { id: 'settings', href: '/admin/settings', label: 'admin.settings', icon: FiSettings },
       { id: 'acl-management', href: '/admin/acl-management', label: 'admin.acl', icon: FiKey },
       { id: 'admin-fix', href: '/admin-fix', label: 'admin.fixPermissions', icon: FiUserCheck },
@@ -129,13 +131,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Estado persistente para recolher/expandir sidebar
   React.useEffect(() => {
-    const saved = localStorage.getItem('admin-sidebar-collapsed');
-    if (saved) setIsCollapsed(JSON.parse(saved));
+    // FORÇAR SIDEBAR SEMPRE EXPANDIDA
+    localStorage.removeItem('admin-sidebar-collapsed');
+    setIsCollapsed(false);
+    console.log('✅ Admin sidebar forçada para expandida');
   }, []);
+
   const toggleSidebar = () => {
-    const v = !isCollapsed;
-    setIsCollapsed(v);
-    localStorage.setItem('admin-sidebar-collapsed', JSON.stringify(v));
+    // TEMPORARIAMENTE DESABILITADO - Manter sidebar sempre expandida
+    console.log('🔒 Admin toggleSidebar desabilitado');
+    // const v = !isCollapsed;
+    // setIsCollapsed(v);
+    // localStorage.setItem('admin-sidebar-collapsed', JSON.stringify(v));
   };
 
   // Medir o tempo de renderização do layout
@@ -160,7 +167,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <ProtectedRoute adminOnly>
       <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
         {/* Sidebar para desktop */}
-        <aside className={`${isCollapsed ? 'w-16' : 'w-64'} bg-white shadow-md fixed inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-all duration-300 ease-in-out z-30 flex flex-col`}>
+        <aside
+          className={`bg-white shadow-md fixed inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-all duration-300 ease-in-out z-30 flex flex-col`}
+          style={{ width: isCollapsed ? '64px' : '256px' }}
+        >
           {/* Logo / título e botão de recolher */}
           <div className="p-4 border-b flex items-center justify-between">
             <Link href="/admin" className={`flex items-center ${isCollapsed ? 'justify-center w-full' : 'space-x-2'}`}
@@ -190,36 +200,49 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* Menu de navegação */}
           <nav className="flex-grow overflow-y-auto py-4 space-y-3 px-2">
-            {adminMenuGroups.map((group) => (
-              <div key={group.id}>
-                {!isCollapsed && (
-                  <div className="px-4 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    {t(group.label)}
+            {adminMenuGroups.map((group) => {
+              // Traduzir label do grupo
+              const groupLabel = t(group.label) || group.label.split('.').pop() || group.id;
+
+              return (
+                <div key={group.id}>
+                  {!isCollapsed && (
+                    <div className="px-4 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      {groupLabel}
+                    </div>
+                  )}
+                  <div className="space-y-1">
+                    {group.items.map((item) => {
+                      const isActive = pathname === item.href;
+                      const IconComponent = item.icon;
+
+                      // Traduzir label do item
+                      const translatedLabel = t(item.label);
+                      const lastPart = item.label.split('.').pop() || item.id;
+                      const displayLabel = translatedLabel && translatedLabel !== item.label
+                        ? translatedLabel
+                        : lastPart.charAt(0).toUpperCase() + lastPart.slice(1);
+
+                      return (
+                        <Link
+                          key={item.id}
+                          href={item.href}
+                          title={displayLabel}
+                          className={`flex items-center ${isCollapsed ? 'px-2 justify-center' : 'px-4'} py-2.5 rounded-md text-sm font-medium transition-colors duration-150 ${
+                            isActive
+                              ? 'bg-abz-blue text-white shadow-sm'
+                              : 'text-gray-600 hover:bg-gray-100 hover:text-abz-blue-dark'
+                          }`}
+                        >
+                          <IconComponent className={`${isCollapsed ? '' : 'mr-3'} h-5 w-5 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-gray-500'}`} />
+                          {!isCollapsed && <span className="whitespace-nowrap">{displayLabel}</span>}
+                        </Link>
+                      );
+                    })}
                   </div>
-                )}
-                <div className="space-y-1">
-                  {group.items.map((item) => {
-                    const isActive = pathname === item.href;
-                    const IconComponent = item.icon;
-                    return (
-                      <Link
-                        key={item.id}
-                        href={item.href}
-                        title={t(item.label) as string}
-                        className={`flex items-center ${isCollapsed ? 'px-2 justify-center' : 'px-4'} py-2.5 rounded-md text-sm font-medium transition-colors duration-150 ${
-                          isActive
-                            ? 'bg-abz-blue text-white shadow-sm'
-                            : 'text-gray-600 hover:bg-gray-100 hover:text-abz-blue-dark'
-                        }`}
-                      >
-                        <IconComponent className={`${isCollapsed ? '' : 'mr-3'} h-5 w-5 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-gray-500'}`} />
-                        {!isCollapsed && t(item.label)}
-                      </Link>
-                    );
-                  })}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </nav>
 
           {/* Rodapé com informações do usuário e botão de logout */}
