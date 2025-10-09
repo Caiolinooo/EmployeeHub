@@ -148,9 +148,25 @@ export default function Dashboard() {
         const data = await response.json();
         const currentLanguage = locale;
 
+        console.log('🌐 Dashboard - Locale atual:', currentLanguage);
+        console.log('📦 Dashboard - Cards do banco:', data.length);
+
         const dbCards = data.map((card: any) => {
           const title = currentLanguage === 'en-US' && card.titleEn ? card.titleEn : card.title;
           const description = currentLanguage === 'en-US' && card.descriptionEn ? card.descriptionEn : card.description;
+
+          // Debug para o primeiro card
+          if (card.id === data[0]?.id) {
+            console.log('🔍 Card Debug:', {
+              locale: currentLanguage,
+              title_pt: card.title,
+              title_en: card.titleEn,
+              selected_title: title,
+              description_pt: card.description,
+              description_en: card.descriptionEn,
+              selected_description: description
+            });
+          }
 
           // Resolve icon component from iconName string
           let resolvedIcon = iconMap[card.iconName || card.icon];

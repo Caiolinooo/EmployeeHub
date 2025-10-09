@@ -1,271 +1,312 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import {
-    FiLogOut, FiLoader, FiUser, FiMenu, FiChevronLeft, FiChevronRight
-} from 'react-icons/fi';
-import Footer from '@/components/Footer';
 import { usePathname, useRouter } from 'next/navigation';
+import { 
+  FiHome, 
+  FiUser, 
+  FiSettings, 
+  FiLogOut, 
+  FiMenu, 
+  FiX, 
+  FiGrid,
+  FiFileText,
+  FiDollarSign,
+  FiCalendar,
+  FiPhone,
+  FiClock,
+  FiTrendingUp,
+  FiBook,
+  FiMessageSquare,
+  FiUsers,
+  FiChevronLeft,
+  FiChevronRight
+} from 'react-icons/fi';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
-import { useSiteConfig } from '@/contexts/SiteConfigContext';
-import LanguageSelector from '@/components/LanguageSelector';
-import PerformanceMonitor from '@/components/Performance/PerformanceMonitor';
-import GlobalSearch from '@/components/GlobalSearch';
+import { useMenuItems } from '@/hooks/useUnifiedData';
 import NotificationHUD from '@/components/notifications/NotificationHUD';
-import TokenExpirationNotifier from '@/components/Auth/TokenExpirationNotifier';
-import { getTranslatedMenu } from '@/data/menu';
-import { startMeasure, endMeasure, logPerformance } from '@/lib/performance';
-import { PasswordRequiredGuard } from '@/components/Auth/PasswordRequiredGuard';
-
-// Os itens do menu agora são importados de src/data/menu.ts
+import LanguageSelector from '@/components/LanguageSelector';
+import Footer from '@/components/Footer';
+import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 
 interface MainLayoutProps {
   children: React.ReactNode;
 }
 
+// Menu principal do sistema
+const mainMenuItems = [
+  { id: 'dashboard', href: '/dashboard', label: 'common.dashboard', icon: FiHome },
+  { id: 'reembolso', href: '/reembolso', label: 'common.reimbursement', icon: FiDollarSign },
+  { id: 'avaliacao', href: '/avaliacao', label: 'common.evaluation', icon: FiTrendingUp },
+  { id: 'calendario', href: '/calendario', label: 'common.calendar', icon: FiCalendar },
+  { id: 'contatos', href: '/contatos', label: 'common.contacts', icon: FiPhone },
+  { id: 'ponto', href: '/ponto', label: 'common.timesheet', icon: FiClock },
+  { id: 'contracheque', href: '/contracheque', label: 'common.payroll', icon: FiFileText },
+  { id: 'academy', href: '/academy', label: 'common.academy', icon: FiBook },
+  { id: 'noticias', href: '/noticias', label: 'common.news', icon: FiMessageSquare },
+  { id: 'profile', href: '/profile', label: 'common.profile', icon: FiUser },
+];
+
 export default function MainLayout({ children }: MainLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isAuthenticated, isLoading, isAdmin, logout, hasAccess } = useSupabaseAuth();
-  const { t } = useI18n();
-  const { config } = useSiteConfig();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, profile, logout, isAdmin } = useSupabaseAuth();
+  const { t, locale } = useI18n();
+  const [isI18nReady, setIsI18nReady] = useState(false);
+  const [, forceUpdate] = useState({});
 
-  // Estado para controlar se o menu está recolhido
+  // Forçar re-render quando o locale mudar
+  useEffect(() => {
+    console.log('🌐 Locale mudou para:', locale);
+    forceUpdate({});
+  }, [locale]);
+
+  // Verificar se o I18n está pronto
+  useEffect(() => {
+    // Testar se a tradução está funcionando
+    const testTranslation = t('common.dashboard');
+    console.log('🔤 Teste de tradução - common.dashboard:', testTranslation);
+
+    if (testTranslation && testTranslation !== 'common.dashboard') {
+      console.log('✅ I18n está pronto!');
+      setIsI18nReady(true);
+    } else {
+      console.warn('⚠️ I18n ainda não está pronto, aguardando...');
+      // Tentar novamente após um pequeno delay
+      const timer = setTimeout(() => {
+        setIsI18nReady(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [locale, t]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // FORÇAR SIDEBAR EXPANDIDA - NÃO PERMITIR COLAPSAR
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // Obter os itens do menu traduzidos
-  const translatedMenu = getTranslatedMenu(t);
-
-  // Carregar estado do localStorage
+  // Debug: Verificar se isCollapsed está mudando
   useEffect(() => {
-    const savedState = localStorage.getItem('sidebar-collapsed');
-    if (savedState) {
-      setIsCollapsed(JSON.parse(savedState));
+    console.log('🔍 DEBUG: isCollapsed mudou para:', isCollapsed);
+    if (isCollapsed) {
+      console.warn('⚠️ ATENÇÃO: Sidebar está colapsada! Forçando expansão...');
+      setIsCollapsed(false);
     }
+  }, [isCollapsed]);
+
+  // Use unified data system for menu items
+  const { items: menuItems, loading: menuLoading } = useMenuItems(true);
+
+  // Debug: Log menu items
+  useEffect(() => {
+    console.log('🔍 Menu items loaded:', menuItems.length, 'items');
+    console.log('📝 Menu items:', menuItems);
+    console.log('🔄 Loading:', menuLoading);
+    console.log('📏 isCollapsed:', isCollapsed);
+  }, [menuItems, menuLoading, isCollapsed]);
+
+  // Estado persistente para recolher/expandir sidebar
+  useEffect(() => {
+    // FORÇAR SIDEBAR SEMPRE EXPANDIDA
+    console.log('🚀 Inicializando sidebar...');
+
+    // Limpar qualquer valor antigo do localStorage
+    localStorage.removeItem('main-sidebar-collapsed');
+
+    // Forçar estado expandido
+    setIsCollapsed(false);
+    console.log('✅ Sidebar forçada para expandida (isCollapsed = false)');
   }, []);
 
-  // Salvar estado no localStorage
   const toggleSidebar = () => {
-    const newState = !isCollapsed;
-    setIsCollapsed(newState);
-    localStorage.setItem('sidebar-collapsed', JSON.stringify(newState));
+    // TEMPORARIAMENTE DESABILITADO - Manter sidebar sempre expandida
+    console.log('🔒 toggleSidebar chamado, mas está desabilitado para manter sidebar expandida');
+    // const newState = !isCollapsed;
+    // setIsCollapsed(newState);
+    // localStorage.setItem('main-sidebar-collapsed', JSON.stringify(newState));
   };
 
-  // Medir o tempo de renderização do layout
-  useEffect(() => {
-    startMeasure('mainLayout-render');
-    return () => {
-      const duration = endMeasure('mainLayout-render');
-      logPerformance('MainLayout rendered', duration);
-    };
-  }, []);
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.replace('/login');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push('/login');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
     }
-  }, [isAuthenticated, isLoading, router]);
-
-  const handleLogout = () => {
-    logout();
-    router.push('/login');
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-abz-background">
-        <FiLoader className="animate-spin h-12 w-12 text-abz-blue" />
-      </div>
-    );
-  }
-
-  // Alternar menu mobile
-  // const toggleMobileMenu = () => {
-  //   setIsMobileMenuOpen(!isMobileMenuOpen);
-  // };
 
   return (
-    <PasswordRequiredGuard>
-      <div className="min-h-screen flex bg-abz-background">
-        {/* Notificae3es globais fixas (desktop) */}
-        <div className="hidden md:block fixed top-4 right-4 z-50">
-          {user && <NotificationHUD userId={user.id} position="top-right" />}
-        </div>
-        {/* Sidebar Fixa (Desktop) */}
-        <aside className={`${isCollapsed ? 'w-16' : 'w-64'} bg-white shadow-md hidden md:flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out`}>
-          {/* Logo e botão toggle no Sidebar */}
-          <div className="flex items-center justify-between h-16 border-b px-4">
-            {!isCollapsed && (
-              <Link href="/dashboard">
-                <img
-                  src={config.logo}
-                  alt={config.companyName + " Logo"}
-                  className="h-10 w-auto"
-                />
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
+        {/* Sidebar para desktop */}
+        <aside
+          className={`bg-white shadow-md fixed inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-all duration-300 ease-in-out z-30 flex flex-col`}
+          style={{ width: isCollapsed ? '64px' : '256px' }}
+        >
+          {/* Logo / título e botão de recolher */}
+          <div className="p-4 border-b flex items-center justify-between">
+            {!isCollapsed ? (
+              <Link href="/dashboard" className="flex items-center space-x-2"
+                title="Painel ABZ Group"
+              >
+                <FiGrid className="h-6 w-6 text-abz-blue" />
+                <span className="text-lg font-semibold text-abz-blue-dark">Painel ABZ</span>
+              </Link>
+            ) : (
+              <Link href="/dashboard" className="flex items-center justify-center w-full"
+                title="Painel ABZ Group"
+              >
+                <FiGrid className="h-6 w-6 text-abz-blue" />
               </Link>
             )}
-            <button
-              onClick={toggleSidebar}
-              className="p-2 rounded-md hover:bg-gray-100 transition-colors"
-              title={isCollapsed ? t('common.expandMenu', 'Expandir menu') : t('common.collapseMenu', 'Recolher menu')}
-            >
-              {isCollapsed ? (
-                <FiChevronRight className="h-5 w-5 text-gray-600" />
-              ) : (
-                <FiChevronLeft className="h-5 w-5 text-gray-600" />
-              )}
-            </button>
+            {!isCollapsed && (
+              <div className="flex items-center gap-2">
+                <button
+                  className="inline-flex rounded-md p-2 text-white bg-abz-blue hover:bg-abz-blue-dark transition-colors shadow-sm"
+                  onClick={toggleSidebar}
+                  title="Recolher menu"
+                >
+                  <FiChevronLeft className="h-5 w-5"/>
+                </button>
+              </div>
+            )}
           </div>
 
-        {/* Menu do Sidebar */}
-        <nav className="flex-grow overflow-y-auto py-4 space-y-1">
-          {translatedMenu
-            .filter(item => {
-              // Verificar se o item está habilitado
-              if (!item.enabled) return false;
-
-              // Se o item tem forceShow, sempre mostrar
-              if (item.forceShow) return true;
-
-              // Verificar permissões de administrador
-              if (item.adminOnly && !isAdmin) return false;
-
-              // Verificar permissões de gerente
-              if (item.managerOnly && !(isAdmin || user?.role === 'MANAGER')) return false;
-
-              // Caso especial para avaliação - sempre mostrar para usuários autenticados
-              if (item.moduleKey === 'avaliacao') {
-                return !!user;
-              }
-
-              // Caso especial para academy - sempre mostrar para usuários autenticados
-              if (item.moduleKey === 'academy') {
-                return !!user;
-              }
-
-              // Verificar permissões de módulo específicas
-              if (item.moduleKey && !hasAccess(item.moduleKey)) return false;
-
-              return true;
-            })
-            .sort((a, b) => a.order - b.order)
-            .map((item) => {
-              const isActive = pathname === item.href;
+          {/* Menu de navegação */}
+          <nav className="flex-grow overflow-y-auto py-4 space-y-1 px-2">
+            {isCollapsed && (
+              <div className="mb-4 px-2">
+                <button
+                  onClick={toggleSidebar}
+                  className="w-full p-2 bg-abz-blue text-white rounded-md hover:bg-abz-blue-dark transition-colors flex items-center justify-center"
+                  title="Expandir menu"
+                >
+                  <FiChevronRight className="h-5 w-5"/>
+                </button>
+              </div>
+            )}
+            {(menuItems.length > 0 ? menuItems : mainMenuItems).map((item) => {
+              const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
               const IconComponent = item.icon;
+
+              // Obter o texto a ser exibido
+              // Se vier do banco (menuItems), usar 'title'
+              // Se vier do hardcoded (mainMenuItems), usar 'label' e traduzir
+              const displayLabel = menuItems.length > 0
+                ? (item as any).title || item.id  // Dados do banco já vêm traduzidos
+                : t((item as any).label) || item.id;  // Dados hardcoded precisam ser traduzidos
+
               return (
                 <Link
                   key={item.id}
                   href={item.href}
-                  target={item.external ? '_blank' : '_self'}
-                  rel={item.external ? 'noopener noreferrer' : ''}
-                  className={`flex items-center ${isCollapsed ? 'px-2 justify-center' : 'px-4'} py-2.5 mx-2 rounded-md text-sm font-medium transition-all duration-150 ${
+                  title={displayLabel}
+                  className={`flex items-center ${isCollapsed ? 'px-2 justify-center' : 'px-4'} py-2.5 rounded-md text-sm font-medium transition-colors duration-150 ${
                     isActive
                       ? 'bg-abz-blue text-white shadow-sm'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-abz-blue-dark'
                   }`}
-                  title={isCollapsed ? item.title : ''}
                 >
-                  <IconComponent className={`${isCollapsed ? '' : 'mr-3'} h-5 w-5 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-gray-500'}`} />
-                  {!isCollapsed && item.title}
+                  <IconComponent className={`${isCollapsed ? '' : 'mr-3'} h-5 w-5 ${isActive ? 'text-white' : 'text-gray-400'}`} />
+                  {!isCollapsed && <span className="whitespace-nowrap">{displayLabel}</span>}
                 </Link>
               );
             })}
-        </nav>
+          </nav>
 
-        {/* Busca Global, Seletor de idioma, Perfil e Botão de Logout no Sidebar */}
-        <div className={`${isCollapsed ? 'p-2' : 'p-4'} border-t space-y-3`}>
+          {/* Rodapé com informações do usuário */}
+          <div className="p-4 border-t">
             {!isCollapsed && (
-              <div className="space-y-3">
-                <GlobalSearch />
-                <div className="flex items-center justify-center">
-                  <LanguageSelector variant="inline" />
+              <div className="flex items-center mb-4">
+                <div className="w-10 h-10 rounded-full bg-abz-light-blue flex items-center justify-center mr-3">
+                  <FiUser className="h-5 w-5 text-abz-blue" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-700 truncate">
+                    {profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : user?.email}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                 </div>
               </div>
             )}
-            <Link
-                href="/profile"
-                className={`w-full ${isCollapsed ? 'px-2' : 'px-4'} py-2 rounded-md text-sm font-medium text-abz-blue bg-gray-100 hover:bg-gray-200 hover:text-abz-blue-dark flex items-center ${isCollapsed ? 'justify-center' : 'justify-center'}`}
-                title={isCollapsed ? t('common.profile', 'Meu Perfil') : ''}
-            >
-                <FiUser className={`${isCollapsed ? '' : 'mr-2'} h-5 w-5`} />
-                {!isCollapsed && t('common.profile', 'Meu Perfil')}
-            </Link>
-            <button
+            
+            <div className={`flex ${isCollapsed ? 'flex-col space-y-2' : 'space-x-2'}`}>
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  className={`${isCollapsed ? 'p-2' : 'px-3 py-2'} text-xs bg-abz-blue text-white rounded hover:bg-abz-blue-dark transition-colors flex items-center justify-center`}
+                  title="Painel Admin"
+                >
+                  <FiSettings className={`h-4 w-4 ${!isCollapsed ? 'mr-1' : ''}`} />
+                  {!isCollapsed && 'Admin'}
+                </Link>
+              )}
+              
+              <button
                 onClick={handleLogout}
-                className={`w-full ${isCollapsed ? 'px-2' : 'px-4'} py-2 rounded-md text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 hover:text-red-800 flex items-center ${isCollapsed ? 'justify-center' : 'justify-center'}`}
-                title={isCollapsed ? t('common.logout') : ''}
-            >
-                <FiLogOut className={`${isCollapsed ? '' : 'mr-2'} h-5 w-5`} />
-                {!isCollapsed && t('common.logout')}
-            </button>
-        </div>
-      </aside>
-
-      {/* Conteúdo Principal e Header Mobile */}
-      <div className="flex-1 flex flex-col">
-        {/* Header Mobile (com logo e botão de menu) */}
-        {/* Você pode optar por manter um header simples ou removê-lo se o sidebar mobile for suficiente */}
-        <header className="md:hidden bg-white shadow-md sticky top-0 z-10">
-             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between h-16">
-                    {/* Logo */}
-                    <div className="flex-shrink-0 flex items-center">
-                    <Link href="/dashboard">
-                        <img
-                        src={config.logo}
-                        alt={config.companyName + " Logo"}
-                        className="h-10 w-auto"
-                        />
-                    </Link>
-                    </div>
-                    {/* TODO: Adicionar botão para abrir/fechar um *sidebar mobile* se necessário */}
-                     <div className="flex items-center space-x-2">
-                         {/* Busca Global para mobile */}
-                         <GlobalSearch />
-                         <LanguageSelector variant="dropdown" />
-                         <Link
-                            href="/profile"
-                            className="px-3 py-1.5 rounded-md text-sm font-medium text-abz-blue bg-gray-100 hover:bg-gray-200"
-                         >
-                            <FiUser />
-                         </Link>
-                         <button
-                            onClick={handleLogout}
-                            className="ml-2 px-3 py-1.5 rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700"
-                        >
-                            {t('common.logout')}
-                        </button>
-                     </div>
-                </div>
+                className={`${isCollapsed ? 'p-2' : 'px-3 py-2'} text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors flex items-center justify-center`}
+                title="Sair"
+              >
+                <FiLogOut className={`h-4 w-4 ${!isCollapsed ? 'mr-1' : ''}`} />
+                {!isCollapsed && 'Sair'}
+              </button>
             </div>
-        </header>
 
-        {/* Conteúdo Principal */}
-        <main className="flex-grow p-4 sm:p-6 lg:p-8 overflow-y-auto">
-             {/* Removido max-w-7xl e mx-auto para permitir que o conteúdo use a largura total */}
-            {children}
-        </main>
+            {!isCollapsed && (
+              <div className="mt-3">
+                <LanguageSelector variant="inline" className="justify-center" />
+              </div>
+            )}
+          </div>
+        </aside>
 
-        {/* Footer */}
-        <Footer />
-
-        {/* Performance Monitor (only visible in development) */}
-        <PerformanceMonitor />
-
-        {/* Token Expiration Notifier */}
-        {isAuthenticated && (
-          <TokenExpirationNotifier
-            onSessionExpired={() => {
-              logout();
-              router.push('/login');
-            }}
+        {/* Overlay para mobile */}
+        {isMobileMenuOpen && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
+            onClick={toggleMobileMenu}
           />
         )}
+
+        {/* Conteúdo principal */}
+        <div className="flex-1 flex flex-col min-h-screen" style={{marginLeft: typeof window === 'undefined' ? undefined : (window.innerWidth >= 768 ? (isCollapsed ? 64 : 256) : 0)}}>
+          {/* Notificações globais fixas (desktop) */}
+          <div className="hidden md:block fixed top-4 right-4 z-50">
+            {user && <NotificationHUD userId={user.id} position="top-right" />}
+          </div>
+
+          {/* Header mobile */}
+          <header className="bg-white shadow-sm md:hidden">
+            <div className="px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center">
+                <button
+                  onClick={toggleMobileMenu}
+                  className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                >
+                  <FiMenu className="h-6 w-6" />
+                </button>
+                <span className="ml-3 text-lg font-semibold text-abz-blue-dark">Painel ABZ</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                {user && <NotificationHUD userId={user.id} position="top-right" />}
+              </div>
+            </div>
+          </header>
+
+          {/* Conteúdo da página */}
+          <main className="flex-1 p-4 md:p-6 overflow-auto">
+            {children}
+          </main>
+
+          {/* Footer */}
+          <Footer />
+        </div>
       </div>
-    </div>
-    </PasswordRequiredGuard>
+    </ProtectedRoute>
   );
 }
+
