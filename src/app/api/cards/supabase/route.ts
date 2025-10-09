@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
 
     // Buscar todos os cards
     const { data: cards, error } = await supabaseAdmin
-      .from('cards')
+      .from('Card')
       .select('*')
       .order('order', { ascending: true });
 
@@ -106,21 +106,21 @@ export async function GET(request: NextRequest) {
       if (!card.enabled) return false;
 
       // Se o card for apenas para admin e o usuário não for admin, não mostrar
-      if (card.admin_only && !isAdmin) return false;
+      if (card.adminOnly && !isAdmin) return false;
 
       // Se o card for apenas para gerentes e o usuário não for gerente nem admin, não mostrar
-      if (card.manager_only && !(isManager || isAdmin)) return false;
+      if (card.managerOnly && !(isManager || isAdmin)) return false;
 
       // Se o card tiver roles permitidas e o usuário não estiver nelas, não mostrar (exceto se for admin)
-      if (card.allowed_roles && card.allowed_roles.length > 0) {
-        if (!isAdmin && !card.allowed_roles.includes(userRole.toLowerCase())) {
+      if (card.allowedRoles && card.allowedRoles.length > 0) {
+        if (!isAdmin && !card.allowedRoles.includes(userRole.toLowerCase())) {
           return false;
         }
       }
 
       // Se o card tiver IDs de usuários permitidos e o usuário não estiver neles, não mostrar (exceto se for admin)
-      if (card.allowed_user_ids && card.allowed_user_ids.length > 0) {
-        if (!isAdmin && !card.allowed_user_ids.includes(payload.userId)) {
+      if (card.allowedUserIds && card.allowedUserIds.length > 0) {
+        if (!isAdmin && !card.allowedUserIds.includes(payload.userId)) {
           return false;
         }
       }
@@ -137,19 +137,19 @@ export async function GET(request: NextRequest) {
       description: card.description,
       href: card.href,
       icon: card.icon,
-      iconName: card.icon_name || card.icon,
+      iconName: card.iconName || card.icon,
       color: card.color,
-      hoverColor: card.hover_color,
+      hoverColor: card.hoverColor,
       external: card.external || false,
       enabled: card.enabled !== false,
       order: card.order,
-      adminOnly: card.admin_only || false,
-      managerOnly: card.manager_only || false,
-      allowedRoles: card.allowed_roles || [],
-      allowedUserIds: card.allowed_user_ids || [],
-      moduleKey: card.module_key,
-      titleEn: card.title_en,
-      descriptionEn: card.description_en,
+      adminOnly: card.adminOnly || false,
+      managerOnly: card.managerOnly || false,
+      allowedRoles: card.allowedRoles || [],
+      allowedUserIds: card.allowedUserIds || [],
+      moduleKey: card.moduleKey,
+      titleEn: card.titleEn,
+      descriptionEn: card.descriptionEn,
       category: card.category,
       tags: card.tags || []
     }));
@@ -214,7 +214,7 @@ export async function POST(request: NextRequest) {
 
     // Buscar todos os cards
     const { data: cards, error } = await supabaseAdmin
-      .from('cards')
+      .from('Card')
       .select('*')
       .order('order', { ascending: true });
 
@@ -236,21 +236,21 @@ export async function POST(request: NextRequest) {
       if (!card.enabled) return false;
 
       // Se o card for apenas para admin e o usuário não for admin, não mostrar
-      if (card.admin_only && !isAdmin) return false;
+      if (card.adminOnly && !isAdmin) return false;
 
       // Se o card for apenas para gerentes e o usuário não for gerente nem admin, não mostrar
-      if (card.manager_only && !(isManager || isAdmin)) return false;
+      if (card.managerOnly && !(isManager || isAdmin)) return false;
 
       // Se o card tiver roles permitidas e o usuário não estiver nelas, não mostrar (exceto se for admin)
-      if (card.allowed_roles && card.allowed_roles.length > 0) {
-        if (!isAdmin && !card.allowed_roles.includes(finalUserRole.toLowerCase())) {
+      if (card.allowedRoles && card.allowedRoles.length > 0) {
+        if (!isAdmin && !card.allowedRoles.includes(finalUserRole.toLowerCase())) {
           return false;
         }
       }
 
       // Se o card tiver IDs de usuários permitidos e o usuário não estiver neles, não mostrar (exceto se for admin)
-      if (card.allowed_user_ids && card.allowed_user_ids.length > 0) {
-        if (!isAdmin && !card.allowed_user_ids.includes(userId)) {
+      if (card.allowedUserIds && card.allowedUserIds.length > 0) {
+        if (!isAdmin && !card.allowedUserIds.includes(userId)) {
           return false;
         }
       }
@@ -267,19 +267,19 @@ export async function POST(request: NextRequest) {
       description: card.description,
       href: card.href,
       icon: card.icon,
-      iconName: card.icon_name || card.icon,
+      iconName: card.iconName || card.icon,
       color: card.color,
-      hoverColor: card.hover_color,
+      hoverColor: card.hoverColor,
       external: card.external || false,
       enabled: card.enabled !== false,
       order: card.order,
-      adminOnly: card.admin_only || false,
-      managerOnly: card.manager_only || false,
-      allowedRoles: card.allowed_roles || [],
-      allowedUserIds: card.allowed_user_ids || [],
-      moduleKey: card.module_key,
-      titleEn: card.title_en,
-      descriptionEn: card.description_en,
+      adminOnly: card.adminOnly || false,
+      managerOnly: card.managerOnly || false,
+      allowedRoles: card.allowedRoles || [],
+      allowedUserIds: card.allowedUserIds || [],
+      moduleKey: card.moduleKey,
+      titleEn: card.titleEn,
+      descriptionEn: card.descriptionEn,
       category: card.category,
       tags: card.tags || []
     }));
