@@ -110,6 +110,18 @@ export default {
     user: 'User',
     // Missing keys from Portuguese
     backToDashboard: 'Back to Dashboard',
+
+    // Main menu
+    dashboard: 'Dashboard',
+    reimbursement: 'Reimbursement',
+    evaluation: 'Evaluation',
+    calendar: 'Calendar',
+    contacts: 'Contacts',
+    timesheet: 'Timesheet',
+    payroll: 'Payroll',
+    academy: 'Academy',
+    news: 'News',
+    profile: 'Profile',
   },
   auth: {
     phoneLogin: 'Phone Login',
@@ -363,6 +375,14 @@ export default {
     folhaPagamentoDesc: 'Complete payroll management and labor calculations.',
     admin: 'Admin',
     adminDesc: 'Administrative panel',
+    academy: 'ABZ Academy',
+    academyDesc: 'Training and professional development center',
+    social: 'ABZ Social',
+    socialDesc: 'Internal company social network',
+    avaliacoesAvancadas: 'Advanced Evaluations',
+    avaliacoesAvancadasDesc: 'Metrics, analysis and detailed performance reports',
+    relatoriosPdf: 'PDF Reports',
+    relatoriosPdfDesc: 'Generate custom reports with charts and visualizations',
 
     // Traduções para os cards do banco de dados (por ID)
     // Versão sem hífens (compatibilidade)
@@ -692,6 +712,7 @@ export default {
     title: 'Administration',
     dashboard: 'Administration Panel',
     systemSetup: 'System Setup',
+    automation: 'Automation',
     welcomeAdmin: 'Welcome, {name}. Manage system content and settings.',
     cards: 'Cards',
     cardsDesc: 'Manage cards displayed on the main dashboard.',
@@ -1246,7 +1267,22 @@ export default {
       tablesCreated: 'Tables Created',
       aclPermissions: 'ACL Permissions',
       notifications: 'Notifications'
-    }
+    },
+
+    // Translations for comments and posts
+    errorCreatingPost: 'Error creating post',
+    errorSharingPost: 'Error sharing post. Please try again.',
+    errorLoadingComments: 'Error loading comments',
+    errorSendingComment: 'Error sending comment',
+    commentSent: 'Comment sent',
+    couldNotSendComment: 'Could not send comment',
+    loadingComments: 'Loading comments...',
+    beFirstToComment: 'Be the first to comment',
+    writeComment: 'Write a comment...',
+
+    // Admin panel
+    admin: 'Manage News',
+    adminDesc: 'Create and manage Instagram-style news posts',
   },
 
   // ACL System

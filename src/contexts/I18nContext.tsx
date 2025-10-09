@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Locale, locales, getInitialLocale, setLocalStorageLocale, getTranslation } from '@/i18n';
+import { Locale, locales, getTranslation } from '@/i18n';
 
 interface I18nContextType {
   locale: Locale;
@@ -26,26 +26,26 @@ export function I18nProvider({ children }: I18nProviderProps) {
   useEffect(() => {
     setMounted(true);
 
-    // Get the actual initial locale on client side
-    const initialLocale = getInitialLocale();
-    console.log('🌐 Locale inicial detectado:', initialLocale);
-
-    // Only set the locale if it's different from the current one AND we haven't mounted yet
-    // This prevents overriding user selections
-    if (initialLocale !== locale && !mounted) {
-      setLocaleState(initialLocale);
+    // Get locale from localStorage on client side
+    if (typeof window !== 'undefined') {
+      const savedLocale = localStorage.getItem('locale') as Locale;
+      if (savedLocale && Object.keys(locales).includes(savedLocale)) {
+        console.log('🌐 Locale carregado do localStorage:', savedLocale);
+        setLocaleState(savedLocale);
+      }
     }
+  }, []);
 
-    // Set document language
+  // Update document language when locale changes
+  useEffect(() => {
     if (typeof document !== 'undefined') {
       document.documentElement.lang = locale;
     }
-  }, []);
+  }, [locale]);
 
   // Function to set locale and save to localStorage
   const setLocale = (newLocale: Locale) => {
     console.log('🌐 Alterando idioma para:', newLocale);
-    console.log('🌐 Idioma anterior:', locale);
 
     // Verificar se o idioma é válido
     if (!Object.keys(locales).includes(newLocale)) {
@@ -53,71 +53,16 @@ export function I18nProvider({ children }: I18nProviderProps) {
       return;
     }
 
-    // Update state first
+    // Update state
     setLocaleState(newLocale);
 
     // Save to localStorage
-    setLocalStorageLocale(newLocale);
-
-    // Atualizar o atributo lang do documento
-    if (typeof document !== 'undefined') {
-      document.documentElement.lang = newLocale;
-    }
-
-    // Definir um cookie para persistir o idioma entre sessões
-    if (typeof document !== 'undefined') {
-      document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
-      console.log('🌐 Cookie definido para:', newLocale);
-    }
-
-    // Forçar uma atualização da interface
     if (typeof window !== 'undefined') {
-      // Disparar um evento personalizado para notificar outros componentes
-      window.dispatchEvent(new CustomEvent('localeChanged', { detail: { locale: newLocale } }));
-      console.log('🌐 Evento localeChanged disparado para:', newLocale);
-
-      // Force a re-render by triggering a storage event
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'locale',
-        newValue: newLocale,
-        oldValue: locale
-      }));
+      localStorage.setItem('locale', newLocale);
     }
+
+    console.log('🌐 Idioma alterado com sucesso para:', newLocale);
   };
-
-  // Listen for locale changes from other tabs/windows
-  useEffect(() => {
-    if (!mounted) return;
-
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'locale' && e.newValue) {
-        const newLocale = e.newValue as Locale;
-        if (Object.keys(locales).includes(newLocale) && newLocale !== locale) {
-          console.log('🌐 Locale alterado em outra aba:', newLocale);
-          setLocaleState(newLocale);
-          if (typeof document !== 'undefined') {
-            document.documentElement.lang = newLocale;
-          }
-        }
-      }
-    };
-
-    const handleLocaleChange = (e: CustomEvent) => {
-      const newLocale = e.detail.locale as Locale;
-      if (Object.keys(locales).includes(newLocale) && newLocale !== locale) {
-        console.log('🌐 Locale alterado via evento customizado:', newLocale);
-        setLocaleState(newLocale);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('localeChanged', handleLocaleChange as EventListener);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('localeChanged', handleLocaleChange as EventListener);
-    };
-  }, [mounted, locale]);
 
   // Translation function
   const t = (key: string, defaultValue?: string) => {
@@ -126,11 +71,6 @@ export function I18nProvider({ children }: I18nProviderProps) {
 
   // Get available locales
   const availableLocales = Object.keys(locales) as Locale[];
-
-  // Only render children when mounted to avoid hydration mismatch
-  if (!mounted) {
-    return null;
-  }
 
   return (
     <I18nContext.Provider
@@ -142,7 +82,7 @@ export function I18nProvider({ children }: I18nProviderProps) {
         availableLocales,
       }}
     >
-      {children}
+      {mounted ? children : null}
     </I18nContext.Provider>
   );
 }

@@ -409,6 +409,14 @@ export default {
     folhaPagamentoDesc: 'Gestão completa de folha de pagamento e cálculos trabalhistas.',
     admin: 'Admin',
     adminDesc: 'Painel administrativo',
+    academy: 'ABZ Academy',
+    academyDesc: 'Centro de treinamento e desenvolvimento profissional',
+    social: 'ABZ Social',
+    socialDesc: 'Rede social interna da empresa',
+    avaliacoesAvancadas: 'Avaliações Avançadas',
+    avaliacoesAvancadasDesc: 'Métricas, análises e relatórios detalhados de performance',
+    relatoriosPdf: 'Relatórios PDF',
+    relatoriosPdfDesc: 'Gere relatórios personalizados com gráficos e visualizações',
 
     // Traduções para os cards do banco de dados (por ID)
     // Versão sem hífens (compatibilidade)
@@ -750,6 +758,7 @@ export default {
     title: 'Administração',
     dashboard: 'Painel de Administração',
     systemSetup: 'Setup do Sistema',
+    automation: 'Automação',
     welcomeAdmin: 'Bem-vindo, {name}. Gerencie o conteúdo e as configurações do sistema.',
     cards: 'Cards',
     cardsDesc: 'Gerencie os cards exibidos no dashboard principal.',
@@ -1148,6 +1157,18 @@ export default {
     voltar: 'Voltar',
     saving: 'Salvando...',
 
+    // Menu principal
+    dashboard: 'Painel',
+    reimbursement: 'Reembolso',
+    evaluation: 'Avaliação',
+    calendar: 'Calendário',
+    contacts: 'Contatos',
+    timesheet: 'Ponto',
+    payroll: 'Contracheque',
+    academy: 'Academia',
+    news: 'Notícias',
+    profile: 'Perfil',
+
   },
   payroll: {
     title: 'Folha de Pagamento',
@@ -1232,7 +1253,22 @@ export default {
       tablesCreated: 'Tabelas Criadas',
       aclPermissions: 'Permissões ACL',
       notifications: 'Notificações'
-    }
+    },
+
+    // Traduções para comentários e posts
+    errorCreatingPost: 'Erro ao criar post',
+    errorSharingPost: 'Erro ao compartilhar post. Tente novamente.',
+    errorLoadingComments: 'Erro ao carregar comentários',
+    errorSendingComment: 'Erro ao enviar comentário',
+    commentSent: 'Comentário enviado',
+    couldNotSendComment: 'Não foi possível enviar o comentário',
+    loadingComments: 'Carregando comentários...',
+    beFirstToComment: 'Seja o primeiro a comentar',
+    writeComment: 'Escreva um comentário...',
+
+    // Admin panel
+    admin: 'Gerenciar Notícias',
+    adminDesc: 'Crie e gerencie posts de notícias estilo Instagram',
   },
 
   // Sistema ACL
