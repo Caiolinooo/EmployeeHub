@@ -2,10 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import AdvancedPDFGenerator from '@/lib/advanced-pdf-generator';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Função para obter o cliente Supabase de forma lazy
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase credentials are not configured');
+  }
+
+  return createClient(supabaseUrl, supabaseKey);
+}
 
 // Verificar autenticação
 async function verifyAuth(request: NextRequest) {
@@ -14,8 +21,9 @@ async function verifyAuth(request: NextRequest) {
     if (!authHeader) return null;
 
     const token = authHeader.replace('Bearer ', '');
+    const supabase = getSupabaseClient();
     const { data: { user }, error } = await supabase.auth.getUser(token);
-    
+
     if (error || !user) return null;
     return user;
   } catch (error) {

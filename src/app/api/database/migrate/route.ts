@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY!;
+// Função para obter o cliente Supabase de forma lazy
+function getSupabaseAdmin() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Supabase credentials are not configured');
+  }
+
+  return createClient(supabaseUrl, supabaseServiceKey);
+}
 
 export async function POST(request: NextRequest) {
   try {
     console.log('🚀 Starting Academy tables migration...');
+    const supabaseAdmin = getSupabaseAdmin();
 
     // Create Academy Categories table
     const { error: categoriesError } = await supabaseAdmin.rpc('exec_sql', {
