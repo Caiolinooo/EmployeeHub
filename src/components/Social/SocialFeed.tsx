@@ -1,15 +1,16 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
+import DOMPurify from 'dompurify';
+import {
   HeartIcon,
   ChatBubbleOvalLeftIcon,
   ShareIcon,
   EllipsisHorizontalIcon,
   PlusIcon
 } from '@heroicons/react/24/outline';
-import { 
-  HeartIcon as HeartSolidIcon 
+import {
+  HeartIcon as HeartSolidIcon
 } from '@heroicons/react/24/solid';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import PostCreator from './PostCreator';
@@ -163,12 +164,18 @@ const SocialFeed: React.FC<SocialFeedProps> = ({ className = '' }) => {
     hashtags.forEach(tag => {
       const regex = new RegExp(`#${tag}`, 'gi');
       processedContent = processedContent.replace(
-        regex, 
+        regex,
         `<span class="text-blue-600 font-medium cursor-pointer hover:underline">#${tag}</span>`
       );
     });
 
-    return <div dangerouslySetInnerHTML={{ __html: processedContent }} />;
+    // Sanitizar o HTML para prevenir XSS
+    const sanitizedContent = DOMPurify.sanitize(processedContent, {
+      ALLOWED_TAGS: ['span'],
+      ALLOWED_ATTR: ['class']
+    });
+
+    return <div dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
   };
 
   if (loading) {
