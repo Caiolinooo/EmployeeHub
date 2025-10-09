@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { supabaseWithRetry, logError, logPerformance } from '@/lib/apiRetry';
 
 // GET - Listar notificações do usuário
 export async function GET(request: NextRequest) {
+  const startTime = Date.now();
+
   try {
     const { searchParams } = new URL(request.url);
     const user_id = searchParams.get('user_id');
@@ -20,7 +23,16 @@ export async function GET(request: NextRequest) {
 
     console.log(`🔄 API Notifications - Listando notificações do usuário ${user_id}`);
 
-    // Construir query
+    // Verificar se o Supabase está configurado
+    if (!supabaseAdmin) {
+      logError('Supabase Configuration', new Error('Supabase admin não configurado'));
+      return NextResponse.json(
+        { error: 'Configuração do banco de dados não encontrada' },
+        { status: 500 }
+      );
+    }
+
+    // Construir query com timeout e retry
     let query = supabaseAdmin
       .from('notifications')
       .select('*')
@@ -36,38 +48,123 @@ export async function GET(request: NextRequest) {
       query = query.is('read_at', null);
     }
 
-    // Filtrar notificações não expiradas
-    query = query.or('expires_at.is.null,expires_at.gt.' + new Date().toISOString());
+    // Filtrar notificações não expiradas (com tratamento de erro)
+    try {
+      const currentDate = new Date().toISOString();
+      query = query.or(`expires_at.is.null,expires_at.gt.${currentDate}`);
+    } catch (dateError) {
+      console.warn('⚠️ Erro ao aplicar filtro de data, continuando sem filtro:', dateError);
+    }
 
     // Aplicar paginação
     const offset = (page - 1) * limit;
     query = query.range(offset, offset + limit - 1);
 
-    const { data: notifications, error } = await query;
+    // Executar query com retry
+    const { data: notifications, error, attempts } = await supabaseWithRetry(
+      () => query,
+      {
+        maxRetries: 2,
+        delay: 1000,
+        timeout: 8000
+      }
+    );
+
+    console.log(`📊 Query executada em ${attempts} tentativa(s)`);
 
     if (error) {
-      console.error('Erro ao buscar notificações:', error);
-      return NextResponse.json(
-        { error: 'Erro ao buscar notificações' },
-        { status: 500 }
-      );
+      logError('Notifications Query', error, { user_id, page, limit, attempts });
     }
 
-    // Buscar contagem total e não lidas
-    const { count: totalCount } = await supabaseAdmin
-      .from('notifications')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user_id)
-      .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString());
+    if (error) {
+      console.error('❌ Erro ao buscar notificações:', {
+        message: error.message,
+        details: error.details || error.hint || 'Sem detalhes adicionais',
+        code: error.code || 'Sem código'
+      });
 
-    const { count: unreadCount } = await supabaseAdmin
-      .from('notifications')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user_id)
-      .is('read_at', null)
-      .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString());
+      // Retornar resposta vazia em caso de erro para não quebrar a UI
+      return NextResponse.json({
+        notifications: [],
+        pagination: {
+          page,
+          limit,
+          total: 0,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false
+        },
+        unreadCount: 0,
+        error: 'Erro ao carregar notificações'
+      });
+    }
+
+    // Buscar contagem total e não lidas com tratamento de erro
+    let totalCount = 0;
+    let unreadCount = 0;
+
+    try {
+      const currentDate = new Date().toISOString();
+
+      // Buscar contagem total com retry
+      const { data: totalResult, error: totalError } = await supabaseWithRetry(
+        () => supabaseAdmin
+          .from('notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user_id)
+          .or(`expires_at.is.null,expires_at.gt.${currentDate}`),
+        {
+          maxRetries: 1,
+          delay: 500,
+          timeout: 5000
+        }
+      );
+
+      if (!totalError && totalResult) {
+        totalCount = (totalResult as any).count || 0;
+      }
+
+      // Buscar contagem não lidas com retry
+      const { data: unreadResult, error: unreadError } = await supabaseWithRetry(
+        () => supabaseAdmin
+          .from('notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user_id)
+          .is('read_at', null)
+          .or(`expires_at.is.null,expires_at.gt.${currentDate}`),
+        {
+          maxRetries: 1,
+          delay: 500,
+          timeout: 5000
+        }
+      );
+
+      if (!unreadError && unreadResult) {
+        unreadCount = (unreadResult as any).count || 0;
+      }
+
+      // Se houve erro nas contagens, usar fallback
+      if (totalError || unreadError) {
+        console.warn('⚠️ Erro ao buscar contagens, usando valores calculados');
+        totalCount = notifications?.length || 0;
+        unreadCount = notifications?.filter(n => !n.read_at).length || 0;
+      }
+
+    } catch (countError) {
+      logError('Notifications Count', countError, { user_id });
+      totalCount = notifications?.length || 0;
+      unreadCount = notifications?.filter(n => !n.read_at).length || 0;
+    }
 
     console.log(`✅ ${notifications?.length || 0} notificações carregadas (${unreadCount} não lidas)`);
+
+    // Log de performance
+    logPerformance('GET /api/notifications', startTime, {
+      user_id,
+      count: notifications?.length || 0,
+      unreadCount,
+      attempts
+    });
 
     return NextResponse.json({
       notifications: notifications || [],
@@ -83,11 +180,25 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Erro ao listar notificações:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
+    logError('GET /api/notifications - Critical Error', error, {
+      user_id: new URL(request.url).searchParams.get('user_id'),
+      duration: Date.now() - startTime
+    });
+
+    // Retornar resposta vazia para não quebrar a UI
+    return NextResponse.json({
+      notifications: [],
+      pagination: {
+        page: 1,
+        limit: 20,
+        total: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrev: false
+      },
+      unreadCount: 0,
+      error: 'Erro interno do servidor'
+    }, { status: 500 });
   }
 }
 

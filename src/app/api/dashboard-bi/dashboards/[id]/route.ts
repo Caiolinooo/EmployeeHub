@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyToken } from '@/lib/auth';
+import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
@@ -10,8 +10,16 @@ export async function GET(
 ) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
-    if (!authResult.valid || !authResult.payload) {
+    const token = extractTokenFromHeader(request.headers.get('authorization') || undefined);
+    if (!token) {
+      return NextResponse.json({
+        success: false,
+        error: 'Token não fornecido'
+      }, { status: 401 });
+    }
+
+    const authResult = verifyToken(token);
+    if (!authResult) {
       return NextResponse.json({
         success: false,
         error: 'Token inválido'
@@ -55,17 +63,17 @@ export async function GET(
     }
 
     // Verificar permissões de acesso
-    const hasAccess = dashboard.is_public || 
-                     dashboard.created_by === authResult.payload.userId ||
-                     dashboard.permissions?.viewers?.includes(authResult.payload.userId) ||
-                     dashboard.permissions?.editors?.includes(authResult.payload.userId);
+    const hasAccess = dashboard.is_public ||
+                     dashboard.created_by === authResult.userId ||
+                     dashboard.permissions?.viewers?.includes(authResult.userId) ||
+                     dashboard.permissions?.editors?.includes(authResult.userId);
 
     if (!hasAccess) {
       // Verificar se usuário é admin
       const { data: user } = await supabase
         .from('users_unified')
         .select('role')
-        .eq('id', authResult.payload.userId)
+        .eq('id', authResult.userId)
         .single();
 
       if (user?.role !== 'ADMIN') {
@@ -90,7 +98,7 @@ export async function GET(
       .from('bi_dashboard_views')
       .insert({
         dashboard_id: dashboardId,
-        user_id: authResult.payload.userId,
+        user_id: authResult.userId,
         viewed_at: new Date().toISOString(),
         session_id: request.headers.get('x-session-id') || 'unknown',
         ip_address: request.headers.get('x-forwarded-for') || 'unknown',
@@ -117,8 +125,16 @@ export async function POST(
 ) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
-    if (!authResult.valid || !authResult.payload) {
+    const token = extractTokenFromHeader(request.headers.get('authorization') || undefined);
+    if (!token) {
+      return NextResponse.json({
+        success: false,
+        error: 'Token não fornecido'
+      }, { status: 401 });
+    }
+
+    const authResult = verifyToken(token);
+    if (!authResult) {
       return NextResponse.json({
         success: false,
         error: 'Token inválido'
@@ -145,7 +161,7 @@ export async function POST(
 
     switch (action) {
       case 'duplicate':
-        return await duplicateDashboard(request, dashboard, authResult.payload.userId);
+        return await duplicateDashboard(request, dashboard, authResult.userId);
       
       case 'export':
         return await exportDashboard(request, dashboard, body.options);

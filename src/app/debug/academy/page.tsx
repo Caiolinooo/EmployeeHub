@@ -247,3 +247,4 @@ const AcademyDebugPage: React.FC = () => {
 };
 
 export default AcademyDebugPage;
+

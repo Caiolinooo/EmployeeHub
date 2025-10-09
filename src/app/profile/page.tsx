@@ -199,20 +199,34 @@ export default function ProfilePage() {
     try {
       setUploading(true);
 
-      // Remover a imagem do bucket
-      const { error } = await supabase
-        .storage
-        .from('profile-images')
-        .remove([`${profile.id}/profile.jpg`]);
+      // Remover imagens do bucket correto (profile-photos) dentro da pasta do usuário
+      const folder = `${profile.id}`;
+      const { data: files, error: listError } = await supabase.storage.from('profile-photos').list(folder, { limit: 100 });
+      if (listError) {
+        console.warn('Falha ao listar arquivos do bucket profile-photos:', listError);
+      } else if (files && files.length > 0) {
+        const paths = files.map((f: any) => `${folder}/${f.name}`);
+        const { error: removeError } = await supabase.storage.from('profile-photos').remove(paths);
+        if (removeError) {
+          console.warn('Falha ao remover arquivos do bucket profile-photos:', removeError);
+        }
+      }
 
-      if (error) {
-        toast.error('Erro ao remover a imagem');
-        console.error('Erro ao remover imagem:', error);
-        return;
+      // Limpar referências no banco de dados (avatar e drive_photo_url)
+      const { error: dbErr } = await supabase
+        .from('users_unified')
+        .update({ avatar: null, drive_photo_url: null, updated_at: new Date().toISOString() })
+        .eq('id', profile.id);
+      if (dbErr) {
+        console.warn('Falha ao limpar avatar/drive_photo_url no banco:', dbErr);
       }
 
       setProfileImage(null);
       toast.success('Imagem de perfil removida com sucesso');
+
+      // Atualizar perfil no contexto e recarregar a url
+      await refreshProfile();
+      await loadProfileImage();
     } catch (error) {
       console.error('Erro ao remover imagem:', error);
       toast.error('Erro ao remover a imagem');
@@ -761,3 +775,4 @@ export default function ProfilePage() {
     </MainLayout>
   );
 }
+

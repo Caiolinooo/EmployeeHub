@@ -193,7 +193,7 @@ export class ChatSystem {
     if (error) throw new Error(`Erro ao criar canal: ${error.message}`);
 
     // Adicionar criador como admin
-    await supabase.from('chat_members').insert([{
+    await supabase.from('chat_channel_members').insert([{
       channel_id: channel.id,
       user_id: data.created_by,
       role: 'admin'
@@ -251,9 +251,9 @@ export class ChatSystem {
       .from('chat_channels')
       .select(`
         *,
-        chat_members!inner(user_id)
+        chat_channel_members!inner(user_id)
       `)
-      .eq('chat_members.user_id', userId)
+      .eq('chat_channel_members.user_id', userId)
       .order('updated_at', { ascending: false });
 
     if (error) throw new Error(`Erro ao buscar canais: ${error.message}`);
@@ -263,7 +263,7 @@ export class ChatSystem {
   // Adicionar membro ao canal
   async addChannelMember(channelId: string, userId: string, role: ChatMember['role'] = 'member'): Promise<void> {
     const { error } = await supabase
-      .from('chat_members')
+      .from('chat_channel_members')
       .insert([{
         channel_id: channelId,
         user_id: userId,
@@ -279,7 +279,7 @@ export class ChatSystem {
   // Remover membro do canal
   async removeChannelMember(channelId: string, userId: string): Promise<void> {
     const { error } = await supabase
-      .from('chat_members')
+      .from('chat_channel_members')
       .delete()
       .eq('channel_id', channelId)
       .eq('user_id', userId);
@@ -293,7 +293,7 @@ export class ChatSystem {
   // Verificar se é membro do canal
   async isChannelMember(channelId: string, userId: string): Promise<boolean> {
     const { data, error } = await supabase
-      .from('chat_members')
+      .from('chat_channel_members')
       .select('id')
       .eq('channel_id', channelId)
       .eq('user_id', userId)
@@ -305,7 +305,7 @@ export class ChatSystem {
   // Marcar mensagens como lidas
   async markAsRead(channelId: string, userId: string): Promise<void> {
     const { error } = await supabase
-      .from('chat_members')
+      .from('chat_channel_members')
       .update({ last_read_at: new Date().toISOString() })
       .eq('channel_id', channelId)
       .eq('user_id', userId);
@@ -316,7 +316,7 @@ export class ChatSystem {
   // Obter membros do canal
   async getChannelMembers(channelId: string): Promise<ChatMember[]> {
     const { data, error } = await supabase
-      .from('chat_members')
+      .from('chat_channel_members')
       .select(`
         *,
         user:users_unified(name, email, avatar)

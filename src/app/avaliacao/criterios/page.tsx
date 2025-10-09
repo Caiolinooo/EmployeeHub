@@ -375,3 +375,4 @@ export default function CriteriosPage() {
     </MainLayout>
   );
 }
+

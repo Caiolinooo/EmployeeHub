@@ -226,3 +226,4 @@ const SocialPage: React.FC = () => {
 };
 
 export default SocialPage;
+

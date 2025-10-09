@@ -249,6 +249,9 @@ export interface ChatUser {
   name: string;
   email: string;
   avatar?: string;
+  role?: string;
+  position?: string;
+  department?: string;
   status: 'online' | 'away' | 'busy' | 'offline' | 'invisible';
   statusMessage?: string;
   lastSeen: string;

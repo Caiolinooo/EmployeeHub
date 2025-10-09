@@ -18,56 +18,56 @@ export async function GET(request: NextRequest) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Verificar se as tabelas existem
-    const tables = ['avaliacoes', 'funcionarios'];
-    const results: Record<string, any> = {};
+    const tables = [
+      'users_unified',
+      'criterios',
+      'avaliacoes',
+      'periodos_avaliacao',
+      'autoavaliacoes',
+      'lideres',
+      'historico_avaliacao'
+    ];
+    const results: Record<string, boolean> = {};
 
     for (const table of tables) {
       try {
         // Tentar buscar um registro da tabela
         const { data, error } = await supabase
           .from(table)
-          .select('id')
+          .select('*')
           .limit(1);
 
         if (error) {
           console.error(`Erro ao verificar tabela ${table}:`, error);
-          results[table] = {
-            exists: false,
-            error: error.message
-          };
+          results[table] = false;
         } else {
-          results[table] = {
-            exists: true,
-            count: data ? data.length : 0
-          };
+          results[table] = true;
         }
       } catch (err) {
         console.error(`Erro ao verificar tabela ${table}:`, err);
-        results[table] = {
-          exists: false,
-          error: err instanceof Error ? err.message : 'Erro desconhecido'
-        };
+        results[table] = false;
       }
     }
 
-    // Verificar se há registros na tabela avaliacoes
-    let avaliacoesCount = 0;
+    // Verificar se há critérios configurados
+    let criteriosCount = 0;
     try {
       const { count, error } = await supabase
-        .from('avaliacoes')
+        .from('criterios')
         .select('id', { count: 'exact', head: true });
 
       if (!error) {
-        avaliacoesCount = count || 0;
+        criteriosCount = count || 0;
       }
     } catch (err) {
-      console.error('Erro ao contar avaliações:', err);
+      console.error('Erro ao contar critérios:', err);
     }
 
     return NextResponse.json({
       success: true,
       tables: results,
-      avaliacoesCount
+      criteriosCount,
+      message: 'Verificação de tabelas concluída'
     });
   } catch (err) {
     console.error('Erro ao verificar tabelas:', err);

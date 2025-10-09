@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAllUsers } from '@/hooks/useAllUsers';
+import { useI18n } from '@/contexts/I18nContext';
 import { FiShield, FiUsers, FiKey, FiPlus, FiEdit, FiTrash2, FiCheck, FiX, FiInfo } from 'react-icons/fi';
 
 interface ACLPermission {
@@ -33,6 +34,7 @@ interface UserPermission {
 }
 
 const ACLManagementPanel: React.FC = () => {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<'permissions' | 'roles' | 'users'>('permissions');
   const [permissions, setPermissions] = useState<ACLPermission[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -103,21 +105,21 @@ const ACLManagementPanel: React.FC = () => {
   const tabs = [
     {
       id: 'permissions',
-      label: 'Permissões',
+      label: t('acl.permissions', 'Permissões'),
       icon: FiKey,
-      description: 'Gerenciar permissões ACL'
+      description: t('acl.managePermissions', 'Gerenciar permissões ACL')
     },
     {
       id: 'roles',
-      label: 'Roles',
+      label: t('acl.roles', 'Roles'),
       icon: FiUsers,
-      description: 'Configurar permissões por role'
+      description: t('acl.configureRoles', 'Configurar permissões por role')
     },
     {
       id: 'users',
-      label: 'Usuários',
+      label: t('acl.users', 'Usuários'),
       icon: FiShield,
-      description: 'Permissões individuais'
+      description: t('acl.individualPermissions', 'Permissões individuais')
     }
   ];
 
@@ -128,7 +130,7 @@ const ACLManagementPanel: React.FC = () => {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-        <span className="ml-2 text-gray-600">Carregando...</span>
+        <span className="ml-2 text-gray-600">{t('common.loading', 'Carregando...')}</span>
       </div>
     );
   }

@@ -5,9 +5,9 @@ import jwt from 'jsonwebtoken';
 export const dynamic = 'force-dynamic';
 
 /**
- * Rota para verificar se um token é válido
+ * Função principal para verificar token (compartilhada entre GET e POST)
  */
-export async function GET(request: NextRequest) {
+async function verifyTokenHandler(request: NextRequest) {
   try {
     // Verificar autenticação - tentar obter o token de várias fontes
     const authHeader = request.headers.get('authorization');
@@ -146,4 +146,18 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString()
     }, { status: 500 });
   }
+}
+
+/**
+ * Rota GET para verificar se um token é válido
+ */
+export async function GET(request: NextRequest) {
+  return verifyTokenHandler(request);
+}
+
+/**
+ * Rota POST para verificar se um token é válido
+ */
+export async function POST(request: NextRequest) {
+  return verifyTokenHandler(request);
 }

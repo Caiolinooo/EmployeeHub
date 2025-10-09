@@ -10,8 +10,11 @@ export async function GET(
 ) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
-    if (!authResult.valid || !authResult.payload) {
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    const payload = verifyToken(token);
+
+    if (!payload) {
       return NextResponse.json({
         success: false,
         error: 'Token inválido'
@@ -40,8 +43,8 @@ export async function GET(
     }
 
     const hasAccess = channel.permissions?.isPublic ||
-                     channel.permissions?.members?.includes(authResult.payload.userId) ||
-                     channel.permissions?.viewers?.includes(authResult.payload.userId);
+                     channel.permissions?.members?.includes(payload.userId) ||
+                     channel.permissions?.viewers?.includes(payload.userId);
 
     if (!hasAccess) {
       return NextResponse.json({
@@ -104,18 +107,7 @@ export async function GET(
     const orderedMessages = (messages || []).reverse();
 
     // Marcar mensagens como lidas
-    if (orderedMessages.length > 0) {
-      const messageIds = orderedMessages.map(m => m.id);
-      
-      // Atualizar read_by para incluir o usuário atual
-      await supabase
-        .from('chat_messages')
-        .update({
-          read_by: supabase.raw(`array_append(read_by, '${authResult.payload.userId}')`)
-        })
-        .in('id', messageIds)
-        .not('read_by', 'cs', `["${authResult.payload.userId}"]`);
-    }
+    // TODO: Implementar funcionalidade de read_by
 
     return NextResponse.json({
       success: true,

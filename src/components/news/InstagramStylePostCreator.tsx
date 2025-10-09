@@ -144,11 +144,11 @@ const InstagramStylePostCreator: React.FC<InstagramStylePostCreatorProps> = ({
         onPostCreated(createdPost);
         handleClose();
       } else {
-        throw new Error('Erro ao criar post');
+        throw new Error(t('newsSystem.errorCreatingPost', 'Erro ao criar post'));
       }
     } catch (error) {
       console.error('Erro ao compartilhar:', error);
-      alert('Erro ao compartilhar post. Tente novamente.');
+      alert(t('newsSystem.errorSharingPost', 'Erro ao compartilhar post. Tente novamente.'));
     } finally {
       setIsUploading(false);
     }
@@ -300,7 +300,7 @@ const InstagramStylePostCreator: React.FC<InstagramStylePostCreatorProps> = ({
                   <textarea
                     value={postData.content}
                     onChange={(e) => setPostData({ ...postData, content: e.target.value })}
-                    placeholder="Escreva uma legenda..."
+                    placeholder={t('newsSystem.writeCaption', 'Escreva uma legenda...')}
                     className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                   <div className="text-right text-sm text-gray-500 mt-1">

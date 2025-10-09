@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyToken } from '@/lib/auth';
+import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { WorkflowExecution, ExecutionLog, StepExecution } from '@/types/workflows';
 
 export const runtime = 'nodejs';
@@ -11,8 +11,16 @@ export async function POST(
 ) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
-    if (!authResult.valid || !authResult.payload) {
+    const token = extractTokenFromHeader(request.headers.get('authorization') || undefined);
+    if (!token) {
+      return NextResponse.json({
+        success: false,
+        error: 'Token não fornecido'
+      }, { status: 401 });
+    }
+
+    const authResult = verifyToken(token);
+    if (!authResult) {
       return NextResponse.json({
         success: false,
         error: 'Token inválido'
@@ -46,8 +54,8 @@ export async function POST(
     }
 
     // Verificar permissões de execução
-    const hasExecutePermission = workflow.created_by === authResult.payload.userId ||
-                                workflow.permissions?.executors?.includes(authResult.payload.userId) ||
+    const hasExecutePermission = workflow.created_by === authResult.userId ||
+                                workflow.permissions?.executors?.includes(authResult.userId) ||
                                 workflow.permissions?.isPublic;
 
     if (!hasExecutePermission) {
@@ -55,7 +63,7 @@ export async function POST(
       const { data: user } = await supabase
         .from('users_unified')
         .select('role')
-        .eq('id', authResult.payload.userId)
+        .eq('id', authResult.userId)
         .single();
 
       if (user?.role !== 'ADMIN') {
@@ -89,7 +97,7 @@ export async function POST(
       workflowVersion: workflow.version,
       status: 'queued',
       startTime: new Date().toISOString(),
-      triggeredBy: authResult.payload.userId,
+      triggeredBy: authResult.userId,
       triggerData,
       variables: { ...workflow.variables.reduce((acc: any, v: any) => ({ ...acc, [v.name]: v.defaultValue }), {}), ...variables },
       steps: [],
@@ -145,7 +153,7 @@ export async function POST(
         entity_type: 'execution',
         entity_id: execution.id,
         new_values: { executionId: execution.id, triggeredBy: execution.triggeredBy },
-        user_id: authResult.payload.userId,
+        user_id: authResult.userId,
         ip_address: request.headers.get('x-forwarded-for') || 'unknown',
         user_agent: request.headers.get('user-agent'),
         timestamp: new Date().toISOString(),

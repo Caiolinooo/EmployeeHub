@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { resilientApiCall, logError } from '@/lib/apiRetry';
 
 interface Notification {
   id: string;
@@ -35,6 +36,8 @@ interface UseNotificationsReturn {
   markAsRead: (notificationId: string) => Promise<boolean>;
   markAllAsRead: (type?: string) => Promise<boolean>;
   refreshNotifications: () => Promise<void>;
+  retryCount: number;
+  lastUpdated: Date | null;
 }
 
 export function useNotifications(userId?: string): UseNotificationsReturn {
@@ -43,43 +46,72 @@ export function useNotifications(userId?: string): UseNotificationsReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<NotificationsPagination | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Carregar notificações
+  const mountedRef = useRef(true);
+
+  // Carregar notificações com retry
   const loadNotifications = useCallback(async (page: number = 1, reset: boolean = false) => {
     if (!userId) return;
 
-    try {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
-      const params = new URLSearchParams({
-        user_id: userId,
-        page: page.toString(),
-        limit: '20'
-      });
+    const params = new URLSearchParams({
+      user_id: userId,
+      page: page.toString(),
+      limit: '20'
+    });
 
-      const response = await fetch(`/api/notifications?${params}`);
-      
-      if (!response.ok) {
-        throw new Error('Erro ao carregar notificações');
+    const result = await resilientApiCall(
+      async () => {
+        const response = await fetch(`/api/notifications?${params}`);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        return response.json();
+      },
+      {
+        maxRetries: 3,
+        delay: 1000,
+        timeout: 15000,
+        useCircuitBreaker: true
       }
+    );
 
-      const data = await response.json();
-      
+    if (!mountedRef.current) return;
+
+    if (result.success && result.data) {
+      const data = result.data;
+
       if (reset) {
-        setNotifications(data.notifications);
+        setNotifications(data.notifications || []);
       } else {
-        setNotifications(prev => [...prev, ...data.notifications]);
+        setNotifications(prev => [...prev, ...(data.notifications || [])]);
       }
-      
-      setUnreadCount(data.unreadCount);
-      setPagination(data.pagination);
 
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro desconhecido');
-    } finally {
-      setLoading(false);
+      setUnreadCount(data.unreadCount || 0);
+      setPagination(data.pagination || null);
+      setLastUpdated(new Date());
+      setRetryCount(result.attempts - 1);
+
+      console.log(`📱 ${data.notifications?.length || 0} notificações carregadas (tentativa ${result.attempts})`);
+    } else {
+      const errorMessage = result.error?.message || 'Erro ao carregar notificações';
+      setError(errorMessage);
+      setRetryCount(result.attempts - 1);
+
+      logError('useNotifications - loadNotifications', result.error, {
+        userId,
+        page,
+        attempts: result.attempts
+      });
     }
+
+    setLoading(false);
   }, [userId]);
 
   // Criar nova notificação
@@ -213,6 +245,13 @@ export function useNotifications(userId?: string): UseNotificationsReturn {
     return () => clearInterval(interval);
   }, [userId, refreshNotifications]);
 
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   return {
     notifications,
     unreadCount,
@@ -223,6 +262,8 @@ export function useNotifications(userId?: string): UseNotificationsReturn {
     createNotification,
     markAsRead,
     markAllAsRead,
-    refreshNotifications
+    refreshNotifications,
+    retryCount,
+    lastUpdated
   };
 }

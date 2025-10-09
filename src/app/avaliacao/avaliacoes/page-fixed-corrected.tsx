@@ -482,3 +482,4 @@ export default function AvaliacoesPageFixed() {
 }
 
 // This section was removed to fix duplicate declarations
+

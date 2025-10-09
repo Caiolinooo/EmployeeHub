@@ -612,3 +612,4 @@ const AcademyEditor: React.FC = () => {
 };
 
 export default AcademyEditor;
+

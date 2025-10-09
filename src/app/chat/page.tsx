@@ -25,8 +25,7 @@ import {
   FiUserPlus,
   FiEdit,
   FiTrash2,
-  FiPin,
-  FiReply,
+
   FiCopy,
   FiDownload,
   FiEye,
@@ -38,14 +37,55 @@ import {
   FiClock,
   FiStar,
   FiArchive,
-  FiRefreshCw
+  FiRefreshCw,
+  FiArrowLeft
 } from 'react-icons/fi';
 import { ChatChannel, ChatMessage, ChatUser, UserPresence } from '@/types/chat';
+import { supabase } from '@/lib/supabase';
+import Link from 'next/link';
+
+
+// Helper to map DB (snake_case) to client ChatMessage (camelCase)
+function mapDbMessageToClient(m: any): ChatMessage {
+  return {
+    id: m.id,
+    channelId: m.channel_id,
+    threadId: m.thread_id ?? undefined,
+    parentMessageId: m.parent_message_id ?? undefined,
+    senderId: m.sender_id,
+    senderName: m.sender_name,
+    senderAvatar: m.sender_avatar || undefined,
+    content: m.content,
+    type: m.type,
+    status: m.status,
+    timestamp: m.timestamp,
+    editedAt: m.edited_at ?? undefined,
+    deletedAt: m.deleted_at ?? undefined,
+    reactions: m.reactions || [],
+
+    mentions: m.mentions || [],
+    attachments: m.attachments || [],
+    metadata: m.metadata || { editHistory: [], deliveryStatus: [], priority: 'normal', tags: [], customFields: {}, aiGenerated: false },
+    isSystem: m.is_system || false,
+    isPinned: m.is_pinned || false,
+    isImportant: m.is_important || false,
+    replyCount: m.reply_count || 0,
+    readBy: m.read_by || []
+  };
+}
 
 export default function ChatPage() {
-  const { user, isAdmin, isManager } = useSupabaseAuth();
+  const { user, profile, isAdmin, isManager } = useSupabaseAuth();
   const { t } = useI18n();
-  
+
+
+  const displayName = (() => {
+    const p = profile as any;
+    const name = `${p?.first_name || ''} ${p?.last_name || ''}`.trim();
+    return name || (user as any)?.name || (user as any)?.email || 'Usuário';
+  })();
+  const avatarUrl = (profile as any)?.drive_photo_url || (profile as any)?.avatar || null;
+
   const [channels, setChannels] = useState<ChatChannel[]>([]);
   const [selectedChannel, setSelectedChannel] = useState<ChatChannel | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -59,27 +99,213 @@ export default function ChatPage() {
   const [showChannelInfo, setShowChannelInfo] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showCallModal, setShowCallModal] = useState(false);
+  const [callType, setCallType] = useState<'audio' | 'video'>('video');
+  const [prefTyping, setPrefTyping] = useState<boolean>(true);
+  const [prefSound, setPrefSound] = useState<boolean>(false);
+
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Typing indicator control
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastTypingSentRef = useRef<number>(0);
+
+  const notifyTyping = async (typing: boolean) => {
+    try {
+      if (!selectedChannel || !prefTyping) return;
+      await fetch('/api/chat/presence', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ action: 'typing', channelId: selectedChannel.id, isTyping: typing })
+      });
+    } catch (e) {
+      // silencioso
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setCurrentMessage(value);
+
+    // auto-resize
+    if (messageInputRef.current) {
+      messageInputRef.current.style.height = 'auto';
+      const newHeight = Math.min(messageInputRef.current.scrollHeight, 128);
+      messageInputRef.current.style.height = `${newHeight}px`;
+    }
+
+    // typing indicator with debounce
+    setIsTyping(true);
+    const now = Date.now();
+    if (now - lastTypingSentRef.current > 4000) {
+      lastTypingSentRef.current = now;
+      notifyTyping(true);
+    }
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+      notifyTyping(false);
+    }, 1200);
+
+  };
+
+  // Realtime subscriptions: messages and presence
+  useEffect(() => {
+    if (!selectedChannel?.id) return;
+
+    const channelSub = supabase
+      .channel(`realtime:chat_messages:${selectedChannel.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'chat_messages',
+        filter: `channel_id=eq.${selectedChannel.id}`
+      }, (payload: any) => {
+        const m = payload.new;
+        if (!m) return;
+        const newMsg: ChatMessage = {
+          id: m.id,
+          channelId: m.channel_id,
+          threadId: m.thread_id ?? undefined,
+          parentMessageId: m.parent_message_id ?? undefined,
+          senderId: m.sender_id,
+          senderName: m.sender_name,
+          senderAvatar: m.sender_avatar || undefined,
+          content: m.content,
+          type: m.type,
+          status: m.status,
+          timestamp: m.timestamp,
+          editedAt: m.edited_at ?? undefined,
+          deletedAt: m.deleted_at ?? undefined,
+          reactions: m.reactions || [],
+          mentions: m.mentions || [],
+          attachments: m.attachments || [],
+          metadata: m.metadata || { editHistory: [], deliveryStatus: [], priority: 'normal', tags: [], customFields: {}, aiGenerated: false },
+          isSystem: m.is_system || false,
+          isPinned: m.is_pinned || false,
+          isImportant: m.is_important || false,
+          replyCount: m.reply_count || 0,
+          readBy: m.read_by || []
+        };
+        setMessages(prev => [...prev, newMsg]);
+      })
+      .subscribe();
+
+    const presenceSub = supabase
+      .channel('realtime:chat_user_presence')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'chat_user_presence'
+      }, () => {
+        loadOnlineUsers();
+      })
+      .subscribe();
+
+    return () => {
+      try { supabase.removeChannel(channelSub); } catch {}
+      try { supabase.removeChannel(presenceSub); } catch {}
+    };
+  }, [selectedChannel?.id]);
+
+
+  // Fallback polling (garante updates mesmo se Realtime nao estiver ativo nas tabelas)
+  useEffect(() => {
+    if (!selectedChannel?.id) return;
+    const id = setInterval(() => {
+      loadOnlineUsers();
+      loadMessages(selectedChannel.id!);
+    }, 5000);
+    return () => clearInterval(id);
+  }, [selectedChannel?.id]);
+
+  // Derive typing users display from presence + users
+  useEffect(() => {
+    if (!selectedChannel) { setTypingUsers([]); return; }
+    const names = onlineUsers
+      .filter(p => p.isTyping && (!p.currentChannel || p.currentChannel === selectedChannel.id))
+      .map(p => {
+        const u = users.find(u => u.id === p.userId);
+        return u?.name || 'Usuário';
+      });
+    setTypingUsers(names);
+  }, [onlineUsers, users, selectedChannel?.id]);
+
 
   // Verificar permissões (simplificado para funcionar)
   const canUseChat = isAdmin || isManager || true; // Chat disponível para todos
-  const canCreateChannels = isAdmin || isManager;
+  const canCreateChannels = true; // permitir a criação de canais por qualquer usuário autenticado
   const canManageChannels = isAdmin;
 
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem('chat_prefs');
+      if (raw) {
+        const p = JSON.parse(raw);
+        setPrefTyping(p?.typing ?? true);
+        setPrefSound(p?.sound ?? false);
+      }
+    } catch {}
+  }, []);
+
+  const savePrefs = () => {
+    try {
+      localStorage.setItem('chat_prefs', JSON.stringify({ typing: prefTyping, sound: prefSound }));
+      toast.success('Preferncias salvas');
+      setShowSettings(false);
+    } catch {
+      setShowSettings(false);
+    }
+  };
+
+
+  useEffect(() => {
+
     if (canUseChat) {
       loadData();
-      // Simular WebSocket connection
-      setupWebSocket();
+      // Conexão em tempo real via Supabase Realtime ativa
     }
   }, [canUseChat]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    if (!canUseChat) return;
+    const token = localStorage.getItem('token');
+
+    const sendHeartbeat = async () => {
+      try {
+        await fetch('/api/chat/presence', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            action: 'heartbeat',
+            channelId: selectedChannel?.id
+          })
+        });
+      } catch (e) {
+        // silencioso
+      }
+    };
+
+    // envia um imediatamente e depois a cada 30s
+    sendHeartbeat();
+    const id = setInterval(sendHeartbeat, 30000);
+    return () => clearInterval(id);
+  }, [canUseChat, selectedChannel?.id]);
 
   const loadData = async () => {
     try {
@@ -108,7 +334,7 @@ export default function ChatPage() {
       if (response.ok) {
         const data = await response.json();
         setChannels(data.channels || []);
-        
+
         // Selecionar primeiro canal se não houver seleção
         if (!selectedChannel && data.channels?.length > 0) {
           setSelectedChannel(data.channels[0]);
@@ -130,7 +356,8 @@ export default function ChatPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setMessages(data.messages || []);
+        const mapped = (data.messages || []).map((m: any) => mapDbMessageToClient(m));
+        setMessages(mapped);
       }
     } catch (error) {
       console.error('Erro ao carregar mensagens:', error);
@@ -174,7 +401,7 @@ export default function ChatPage() {
   const setupWebSocket = () => {
     // Simular conexão WebSocket para demonstração
     console.log('WebSocket connection established');
-    
+
     // Simular recebimento de mensagens
     const interval = setInterval(() => {
       if (Math.random() > 0.95) { // 5% de chance a cada segundo
@@ -243,9 +470,10 @@ export default function ChatPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setMessages(prev => [...prev, data.message]);
+        const mapped = mapDbMessageToClient(data.message);
+        setMessages(prev => [...prev, mapped]);
         setCurrentMessage('');
-        
+
         // Reset textarea height
         if (messageInputRef.current) {
           messageInputRef.current.style.height = 'auto';
@@ -258,6 +486,28 @@ export default function ChatPage() {
       toast.error('Erro ao enviar mensagem');
     }
   };
+
+  const deleteMessage = async (messageId: string) => {
+    try {
+      const res = await fetch(`/api/chat/messages?id=${encodeURIComponent(messageId)}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (res.ok) {
+        setMessages(prev => prev.filter(m => m.id !== messageId));
+        toast.success('Mensagem apagada');
+      } else {
+        const j = await res.json().catch(() => ({}));
+        toast.error(j?.error || 'Falha ao apagar mensagem');
+      }
+    } catch (e) {
+      toast.error('Erro ao apagar mensagem');
+      console.error(e);
+    }
+  };
+
 
   const createChannel = async () => {
     const channelName = prompt('Nome do canal:');
@@ -305,56 +555,68 @@ export default function ChatPage() {
     const file = e.target.files?.[0];
     if (!file || !selectedChannel) return;
 
-    // Simular upload de arquivo
-    toast.success(`Arquivo ${file.name} enviado com sucesso!`);
-    
-    const fileMessage: ChatMessage = {
-      id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      channelId: selectedChannel.id,
-      senderId: user?.id || '',
-      senderName: user?.name || 'Usuário',
-      content: {
-        text: `Arquivo enviado: ${file.name}`
-      },
-      type: 'file',
-      status: 'sent',
-      timestamp: new Date().toISOString(),
-      reactions: [],
-      mentions: [],
-      attachments: [{
+    try {
+      const bucket = 'chat-attachments';
+      const path = `${selectedChannel.id}/${Date.now()}_${file.name}`;
+      const { data: up, error: upErr } = await supabase.storage.from(bucket).upload(path, file, { upsert: false });
+      if (upErr) throw upErr;
+
+      const { data: pub } = supabase.storage.from(bucket).getPublicUrl(up!.path);
+      const publicUrl = pub.publicUrl;
+
+      const mime = file.type || '';
+      let attType: 'image' | 'video' | 'audio' | 'document' | 'other' = 'other';
+      if (mime.startsWith('image/')) attType = 'image';
+      else if (mime.startsWith('video/')) attType = 'video';
+      else if (mime.startsWith('audio/')) attType = 'audio';
+      else if (mime === 'application/pdf' || mime.startsWith('application/') || mime.startsWith('text/')) attType = 'document';
+
+      const attachment = {
         id: `att_${Date.now()}`,
         name: file.name,
-        type: file.type.startsWith('image/') ? 'image' : 'document',
-        url: URL.createObjectURL(file),
+        type: attType,
+        url: publicUrl,
         size: file.size,
-        mimeType: file.type,
+        mimeType: mime,
         uploadedAt: new Date().toISOString(),
         metadata: {
           originalName: file.name,
           uploadedBy: user?.id || '',
-          isPublic: false,
+          isPublic: true,
           downloadCount: 0,
           virusScanStatus: 'clean',
           compressionApplied: false,
           customFields: {}
         }
-      }],
-      metadata: {
-        editHistory: [],
-        deliveryStatus: [],
-        priority: 'normal',
-        tags: [],
-        customFields: {},
-        aiGenerated: false
-      },
-      isSystem: false,
-      isPinned: false,
-      isImportant: false,
-      replyCount: 0,
-      readBy: []
-    };
+      };
 
-    setMessages(prev => [...prev, fileMessage]);
+      const messageData = {
+        channelId: selectedChannel.id,
+        content: { text: file.name },
+        type: attType === 'image' || attType === 'video' || attType === 'audio' ? attType : 'file',
+        attachments: [attachment]
+      };
+
+      const response = await fetch('/api/chat/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(messageData)
+      });
+
+      if (!response.ok) throw new Error('Falha ao salvar mensagem');
+      const data = await response.json();
+      const mapped = mapDbMessageToClient(data.message);
+      setMessages(prev => [...prev, mapped]);
+      toast.success('Arquivo enviado!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao enviar arquivo');
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const scrollToBottom = () => {
@@ -426,6 +688,10 @@ export default function ChatPage() {
         {/* Header */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
+            <Link href="/dashboard" className="flex items-center gap-1 text-gray-500 hover:text-gray-700">
+              <FiArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline text-sm">Voltar</span>
+            </Link>
             <h1 className="text-lg font-semibold text-gray-900">Chat Interno</h1>
             {canCreateChannels && (
               <button
@@ -436,7 +702,7 @@ export default function ChatPage() {
               </button>
             )}
           </div>
-          
+
           {/* Search */}
           <div className="mt-3 relative">
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -457,7 +723,7 @@ export default function ChatPage() {
               Canais
             </div>
             {channels
-              .filter(channel => 
+              .filter(channel =>
                 channel.name.toLowerCase().includes(searchQuery.toLowerCase())
               )
               .map((channel) => (
@@ -494,16 +760,20 @@ export default function ChatPage() {
         <div className="p-4 border-t border-gray-200">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
-                {user?.name?.charAt(0) || 'U'}
-              </div>
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={displayName || 'Usuário'} className="w-8 h-8 rounded-full object-cover" />
+              ) : (
+                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
+                  {displayName.charAt(0) || 'U'}
+                </div>
+              )}
               <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-medium text-gray-900 truncate">{user?.name || 'Usuário'}</div>
+              <div className="font-medium text-gray-900 truncate">{displayName || 'Usuário'}</div>
               <div className="text-xs text-gray-500">Online</div>
             </div>
-            <button className="p-1 text-gray-500 hover:text-gray-700 rounded">
+            <button onClick={() => setShowSettings(true)} className="p-1 text-gray-500 hover:text-gray-700 rounded">
               <FiSettings className="h-4 w-4" />
             </button>
           </div>
@@ -515,6 +785,10 @@ export default function ChatPage() {
         {selectedChannel ? (
           <>
             {/* Chat Header */}
+                  <Link href="/dashboard" className="flex items-center gap-1 text-gray-500 hover:text-gray-700 mr-2">
+                    <FiArrowLeft className="h-5 w-5" />
+                    <span className="hidden sm:inline">Voltar</span>
+                  </Link>
             <div className="bg-white border-b border-gray-200 px-6 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -532,10 +806,16 @@ export default function ChatPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                  <button
+                    onClick={() => { setCallType('audio'); setShowCallModal(true); }}
+                    className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
+                  >
                     <FiPhone className="h-5 w-5" />
                   </button>
-                  <button className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                  <button
+                    onClick={() => { setCallType('video'); setShowCallModal(true); }}
+                    className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
+                  >
                     <FiVideo className="h-5 w-5" />
                   </button>
                   <button
@@ -555,12 +835,20 @@ export default function ChatPage() {
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {messages.map((message) => (
                 <div key={message.id} className="flex gap-3">
-                  <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-white font-medium flex-shrink-0">
-                    {message.senderName.charAt(0)}
-                  </div>
+                  {message.senderAvatar ? (
+                    <img
+                      src={message.senderAvatar}
+                      alt={message.senderName || 'Usuário'}
+                      className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-white font-medium flex-shrink-0">
+                      {message.senderName?.charAt(0) || 'U'}
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-gray-900">{message.senderName}</span>
+                      <span className="font-medium text-gray-900">{message.senderName || 'Usuário'}</span>
                       <span className="text-xs text-gray-500">
                         {formatMessageTime(message.timestamp)}
                       </span>
@@ -569,19 +857,39 @@ export default function ChatPage() {
                           Sistema
                         </span>
                       )}
+                      {(isAdmin || isManager || message.senderId === (user?.id || '')) && (
+                        <button
+                          onClick={() => deleteMessage(message.id)}
+                          title="Apagar mensagem"
+                          className="ml-auto p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                        >
+                          <FiTrash2 className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                     <div className="text-gray-700">
                       {message.content.text}
                     </div>
                     {message.attachments.length > 0 && (
                       <div className="mt-2 space-y-2">
-                        {message.attachments.map((attachment) => (
-                          <div key={attachment.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                            <FiFile className="h-4 w-4 text-gray-500" />
-                            <span className="text-sm text-gray-700">{attachment.name}</span>
-                            <button className="ml-auto p-1 text-gray-500 hover:text-gray-700">
-                              <FiDownload className="h-4 w-4" />
-                            </button>
+                        {message.attachments.map((att) => (
+                          <div key={att.id} className="p-2 bg-gray-50 rounded-lg">
+                            {att.type === 'image' && (
+                              <img src={att.url} alt={att.name} className="max-h-64 rounded" />
+                            )}
+                            {att.type === 'video' && (
+                              <video src={att.url} controls className="max-h-72 rounded" />
+                            )}
+                            {att.type === 'audio' && (
+                              <audio src={att.url} controls className="w-full" />
+                            )}
+                            {att.type !== 'image' && att.type !== 'video' && att.type !== 'audio' && (
+                              <div className="flex items-center gap-2">
+                                <FiFile className="h-4 w-4 text-gray-500" />
+                                <a href={att.url} target="_blank" className="text-sm text-blue-600 hover:underline">{att.name}</a>
+                                <a href={att.url} download className="ml-auto p-1 text-gray-500 hover:text-gray-700"><FiDownload className="h-4 w-4" /></a>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -618,7 +926,7 @@ export default function ChatPage() {
                   <textarea
                     ref={messageInputRef}
                     value={currentMessage}
-                    onChange={(e) => setCurrentMessage(e.target.value)}
+                    onChange={handleInputChange}
                     onKeyPress={handleKeyPress}
                     placeholder="Digite sua mensagem..."
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-32"
@@ -641,6 +949,19 @@ export default function ChatPage() {
                 </button>
               </div>
             </div>
+            {showEmojiPicker && (
+              <div className="px-6 pb-4">
+                <div className="p-2 bg-white border border-gray-200 rounded-lg shadow-sm inline-block">
+                  <div className="grid grid-cols-8 gap-1 text-xl">
+                    {['😀','😃','😄','😁','😆','😅','😂','😊','😍','😘','😜','🤩','🤔','👍','👏','🙏','💯','🔥','🎉','📷','🎵'].map(e => (
+                      <button key={e} type="button" className="hover:bg-gray-100 rounded" onClick={() => { setCurrentMessage(prev => prev + e); setShowEmojiPicker(false); messageInputRef.current?.focus(); }}>
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center">
@@ -650,6 +971,7 @@ export default function ChatPage() {
               <p className="text-gray-600">Escolha um canal da lista para começar a conversar</p>
             </div>
           </div>
+
         )}
       </div>
 
@@ -666,13 +988,22 @@ export default function ChatPage() {
               return (
                 <div key={presence.userId} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50">
                   <div className="relative">
-                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-white font-medium">
-                      {user?.name?.charAt(0) || 'U'}
-                    </div>
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt={displayName || 'Usuário'}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-white font-medium">
+                        {displayName.charAt(0) || 'U'}
+                      </div>
+                    )}
                     <div className={`absolute -bottom-1 -right-1 w-3 h-3 border-2 border-white rounded-full ${getStatusColor(presence.status)}`}></div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-gray-900 truncate">{user?.name || 'Usuário'}</div>
+                    <div className="font-medium text-gray-900 truncate">{displayName || 'Usuário'}</div>
+                    {user?.role && <div className="text-xs text-gray-500">{user.role}</div>}
                     <div className="text-xs text-gray-500 capitalize">{presence.status}</div>
                   </div>
                 </div>
@@ -690,6 +1021,60 @@ export default function ChatPage() {
         onChange={handleFileSelect}
         accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
       />
+
+      {showCallModal && selectedChannel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+
+
+
+          <div className="bg-white w-full max-w-5xl h-[70vh] rounded-lg shadow-lg overflow-hidden flex flex-col">
+            <div className="px-4 py-2 border-b flex items-center justify-between">
+              <div className="font-medium text-gray-900">
+                {callType === 'audio' ? 'Chamada de voz' : 'Chamada de vídeo'} • {selectedChannel.name}
+              </div>
+              <button
+                onClick={() => setShowCallModal(false)}
+                className="text-gray-500 hover:text-gray-700 px-2 py-1 rounded"
+              >
+                Fechar
+              </button>
+            </div>
+            <div className="flex-1 bg-black">
+              <iframe
+                title="ABZ Meet"
+                src={`https://meet.jit.si/abz-${selectedChannel.id}#config.startWithVideoMuted=${callType==='audio'}&config.prejoinConfig.enabled=false&userInfo.displayName=${encodeURIComponent(displayName || 'Usuario')}`}
+                className="w-full h-full border-0"
+                allow="camera; microphone; fullscreen; display-capture"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white w-full max-w-md rounded-lg shadow-lg">
+            <div className="px-4 py-3 border-b font-medium text-gray-900">Configurações do Chat</div>
+            <div className="p-4 space-y-4">
+              <label className="flex items-center gap-3">
+                <input type="checkbox" className="h-4 w-4" checked={prefTyping} onChange={e => setPrefTyping(e.target.checked)} />
+                <span>Mostrar indicador de digitação</span>
+              </label>
+              <label className="flex items-center gap-3">
+                <input type="checkbox" className="h-4 w-4" checked={prefSound} onChange={e => setPrefSound(e.target.checked)} />
+                <span>Som de novas mensagens</span>
+              </label>
+            </div>
+            <div className="px-4 py-3 border-t flex justify-end gap-2">
+              <button onClick={() => setShowSettings(false)} className="px-3 py-2 text-gray-700 hover:bg-gray-100 rounded">Cancelar</button>
+              <button onClick={savePrefs} className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Salvar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
     </div>
   );
 }

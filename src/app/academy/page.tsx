@@ -618,3 +618,4 @@ const AcademyPage: React.FC = () => {
 };
 
 export default AcademyPage;
+

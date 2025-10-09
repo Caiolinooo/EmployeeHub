@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface Props {
   canEdit: boolean;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 const CommentActions: React.FC<Props> = ({ canEdit, canDelete, onEdit, onDelete, content }) => {
+  const { t } = useI18n();
   const [isEditing, setIsEditing] = useState(false);
   const [text, setText] = useState(content);
   const [saving, setSaving] = useState(false);
@@ -27,8 +29,8 @@ const CommentActions: React.FC<Props> = ({ canEdit, canDelete, onEdit, onDelete,
           disabled={saving}
           onClick={async () => { setSaving(true); await onEdit(text); setSaving(false); setIsEditing(false); }}
           className="text-sm text-blue-600"
-        >Salvar</button>
-        <button onClick={() => setIsEditing(false)} className="text-sm text-gray-500">Cancelar</button>
+        >{t('common.save', 'Salvar')}</button>
+        <button onClick={() => setIsEditing(false)} className="text-sm text-gray-500">{t('common.cancel', 'Cancelar')}</button>
       </div>
     );
   }
@@ -36,10 +38,10 @@ const CommentActions: React.FC<Props> = ({ canEdit, canDelete, onEdit, onDelete,
   return (
     <div className="mt-1 flex items-center space-x-3 text-xs">
       {canEdit && (
-        <button onClick={() => setIsEditing(true)} className="text-gray-500 hover:text-blue-600">Editar</button>
+        <button onClick={() => setIsEditing(true)} className="text-gray-500 hover:text-blue-600">{t('common.edit', 'Editar')}</button>
       )}
       {canDelete && (
-        <button onClick={onDelete} className="text-gray-500 hover:text-red-600">Excluir</button>
+        <button onClick={onDelete} className="text-gray-500 hover:text-red-600">{t('common.delete', 'Excluir')}</button>
       )}
     </div>
   );

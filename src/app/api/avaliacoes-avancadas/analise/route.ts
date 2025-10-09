@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     // 3. Análise Comparativa por Departamentos
     const { data: departamentosData } = await supabase
       .from('vw_avaliacoes_desempenho')
-      .select('funcionario_departamento, pontuacao_total, status')
+      .select('funcionario_id, funcionario_departamento, pontuacao_total, status')
       .gte('data_inicio', filtros.periodo_inicio)
       .lte('data_fim', filtros.periodo_fim)
       .not('funcionario_departamento', 'is', null);
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
     // 4. Análise Comparativa por Cargos
     const { data: cargosData } = await supabase
       .from('vw_avaliacoes_desempenho')
-      .select('funcionario_cargo, pontuacao_total, status')
+      .select('funcionario_id, funcionario_cargo, pontuacao_total, status')
       .gte('data_inicio', filtros.periodo_inicio)
       .lte('data_fim', filtros.periodo_fim)
       .not('funcionario_cargo', 'is', null);

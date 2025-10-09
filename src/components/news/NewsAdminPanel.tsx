@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { FiPlus, FiEdit, FiTrash2, FiEye, FiCalendar, FiHeart, FiMessageCircle, FiStar, FiBookmark, FiFilter, FiSearch, FiRefreshCw } from 'react-icons/fi';
+import { useI18n } from '@/contexts/I18nContext';
 import { useACLPermissions } from '@/hooks/useACLPermissions';
 import NewsPostEditor from './NewsPostEditor';
 import { fetchWithToken } from '@/lib/tokenStorage';
@@ -45,6 +46,7 @@ interface NewsAdminPanelProps {
 }
 
 const NewsAdminPanel: React.FC<NewsAdminPanelProps> = ({ userId }) => {
+  const { t } = useI18n();
   const [posts, setPosts] = useState<NewsPost[]>([]);
   const [categories, setCategories] = useState<NewsCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -203,8 +205,8 @@ const NewsAdminPanel: React.FC<NewsAdminPanelProps> = ({ userId }) => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gerenciar Notícias</h1>
-          <p className="text-gray-600">Crie e gerencie posts de notícias estilo Instagram</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('newsSystem.admin', 'Gerenciar Notícias')}</h1>
+          <p className="text-gray-600">{t('newsSystem.adminDesc', 'Crie e gerencie posts de notícias estilo Instagram')}</p>
         </div>
         {canCreateNews && (
           <button
@@ -212,7 +214,7 @@ const NewsAdminPanel: React.FC<NewsAdminPanelProps> = ({ userId }) => {
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <FiPlus className="w-4 h-4" />
-            <span>Novo Post</span>
+            <span>{t('newsSystem.newPost', 'Novo Post')}</span>
           </button>
         )}
       </div>

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { FiSend } from 'react-icons/fi';
 import { useToast } from '@/hooks/useToast';
+import { useI18n } from '@/contexts/I18nContext';
 import CommentActions from './CommentActions';
 import { useACLPermissions } from '@/hooks/useACLPermissions';
 
@@ -29,7 +30,9 @@ interface Props {
 }
 
 const NewsCommentSection: React.FC<Props> = ({ postId, userId }) => {
+  const { t } = useI18n();
   const { toast } = useToast();
+  const { hasPermission } = useACLPermissions(userId);
   const [comments, setComments] = useState<NewsComment[]>([]);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
@@ -40,7 +43,7 @@ const NewsCommentSection: React.FC<Props> = ({ postId, userId }) => {
       setLoading(true);
       const res = await fetch(`/api/news/posts/${postId}/comments?limit=50`);
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao carregar comentários');
+      if (!res.ok) throw new Error(data.error || t('newsSystem.errorLoadingComments', 'Erro ao carregar comentários'));
       setComments(data.comments || []);
     } catch (err) {
       console.error(err);
@@ -66,13 +69,13 @@ const NewsCommentSection: React.FC<Props> = ({ postId, userId }) => {
         body: JSON.stringify({ userId, content: text })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao enviar comentário');
+      if (!res.ok) throw new Error(data.error || t('newsSystem.errorSendingComment', 'Erro ao enviar comentário'));
       setComments(prev => [...prev, data]);
       setNewComment('');
-      toast.success('Comentário enviado');
+      toast.success(t('newsSystem.commentSent', 'Comentário enviado'));
     } catch (err) {
       console.error(err);
-      toast.error('Não foi possível enviar o comentário');
+      toast.error(t('newsSystem.couldNotSendComment', 'Não foi possível enviar o comentário'));
     } finally {
       setSending(false);
     }
@@ -81,8 +84,13 @@ const NewsCommentSection: React.FC<Props> = ({ postId, userId }) => {
   const formatTime = (d: string) => new Date(d).toLocaleString('pt-BR');
 
   // Autor OU moderadores (admins/gerentes via permissão comments.moderate)
-  const canEditComment = (c: NewsComment) => c.user?.id === userId;
-  const canDeleteComment = (c: NewsComment) => c.user?.id === userId;
+  const canEditComment = (c: NewsComment) => {
+    return c.user?.id === userId || hasPermission('comments', 'moderate');
+  };
+
+  const canDeleteComment = (c: NewsComment) => {
+    return c.user?.id === userId || hasPermission('comments', 'moderate');
+  };
 
   const handleEdit = async (commentId: string, newContent: string) => {
     const res = await fetch(`/api/news/posts/${postId}/comments/${commentId}`, {
@@ -107,9 +115,9 @@ const NewsCommentSection: React.FC<Props> = ({ postId, userId }) => {
     <div className="border-t border-gray-100">
       <div className="p-4 space-y-3 max-h-80 overflow-y-auto">
         {loading ? (
-          <div className="text-sm text-gray-500">Carregando comentários...</div>
+          <div className="text-sm text-gray-500">{t('newsSystem.loadingComments', 'Carregando comentários...')}</div>
         ) : comments.length === 0 ? (
-          <div className="text-sm text-gray-500">Seja o primeiro a comentar</div>
+          <div className="text-sm text-gray-500">{t('newsSystem.beFirstToComment', 'Seja o primeiro a comentar')}</div>
         ) : (
           comments.map((c) => (
             <div key={c.id} className="text-sm">
@@ -149,7 +157,7 @@ const NewsCommentSection: React.FC<Props> = ({ postId, userId }) => {
         <input
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
-          placeholder="Escreva um comentário..."
+          placeholder={t('newsSystem.writeComment', 'Escreva um comentário...')}
           className="flex-1 px-3 py-2 border rounded-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           maxLength={500}
         />

@@ -479,3 +479,4 @@ const MyCoursesPage: React.FC = () => {
 };
 
 export default MyCoursesPage;
+

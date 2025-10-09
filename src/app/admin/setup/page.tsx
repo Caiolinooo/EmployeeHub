@@ -382,3 +382,4 @@ CREATE POLICY IF NOT EXISTS "cards_admin_policy" ON public.cards
     </MainLayout>
   );
 }
+

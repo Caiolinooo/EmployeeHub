@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyToken } from '@/lib/auth';
+import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { WorkflowTemplate } from '@/types/workflows';
 
 export const runtime = 'nodejs';
@@ -8,8 +8,16 @@ export const runtime = 'nodejs';
 export async function GET(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
-    if (!authResult.valid || !authResult.payload) {
+    const token = extractTokenFromHeader(request.headers.get('authorization') || undefined);
+    if (!token) {
+      return NextResponse.json({
+        success: false,
+        error: 'Token não fornecido'
+      }, { status: 401 });
+    }
+
+    const authResult = verifyToken(token);
+    if (!authResult) {
       return NextResponse.json({
         success: false,
         error: 'Token inválido'

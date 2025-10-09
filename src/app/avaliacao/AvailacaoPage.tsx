@@ -795,3 +795,4 @@ export default function AvailacaoPage() {
     </MainLayout>
   );
 }
+

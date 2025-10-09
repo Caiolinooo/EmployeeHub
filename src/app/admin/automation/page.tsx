@@ -2,21 +2,27 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import MainLayout from '@/components/Layout/MainLayout';
-import AutomationSettings from '@/components/AutomationSettings';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useI18n } from '@/contexts/I18nContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  FiArrowLeft, 
-  FiSettings, 
-  FiGlobe, 
+import {
+  FiArrowLeft,
+  FiSettings,
+  FiGlobe,
   FiLayers,
   FiCheckCircle,
   FiAlertTriangle
 } from 'react-icons/fi';
+
+// Importação dinâmica do componente AutomationSettings
+const AutomationSettings = dynamic(
+  () => import('@/components/AutomationSettings'),
+  { ssr: false }
+);
 
 export default function AutomationPage() {
   const router = useRouter();

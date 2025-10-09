@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
     const userIds = presenceData?.map(p => p.user_id) || [];
     const { data: users } = await supabase
       .from('users_unified')
-      .select('id, name, email, avatar')
+      .select('id, first_name, last_name, email, avatar')
       .in('id', userIds);
 
     const userMap = users?.reduce((acc: any, u: any) => {
@@ -88,40 +88,9 @@ export async function GET(request: NextRequest) {
       device: p.device || 'web'
     }));
 
-    // Simular alguns usuários online para demonstração
-    const simulatedPresence: UserPresence[] = [
-      {
-        userId: 'user_1',
-        status: 'online',
-        statusMessage: 'Trabalhando no projeto',
-        lastSeen: new Date().toISOString(),
-        isTyping: false,
-        device: 'desktop'
-      },
-      {
-        userId: 'user_2',
-        status: 'away',
-        statusMessage: 'Em reunião',
-        lastSeen: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 minutos atrás
-        isTyping: false,
-        device: 'mobile'
-      },
-      {
-        userId: 'user_3',
-        status: 'busy',
-        statusMessage: 'Não perturbe',
-        lastSeen: new Date(Date.now() - 2 * 60 * 1000).toISOString(), // 2 minutos atrás
-        isTyping: false,
-        device: 'web'
-      }
-    ];
-
-    // Combinar presença real com simulada
-    const allPresence = [...presence, ...simulatedPresence];
-
     return NextResponse.json({
       success: true,
-      presence: allPresence
+      presence
     });
 
   } catch (error) {
@@ -176,7 +145,7 @@ export async function POST(request: NextRequest) {
         current_channel: currentChannel,
         is_typing: isTyping,
         device
-      })
+      }, { onConflict: 'user_id' })
       .select()
       .single();
 
@@ -229,7 +198,7 @@ export async function PUT(request: NextRequest) {
             current_channel: channelId,
             is_typing: isTyping,
             last_seen: new Date().toISOString()
-          });
+          }, { onConflict: 'user_id' });
 
         // Simular broadcast para outros usuários do canal
         // Em produção, isso seria feito via WebSocket
@@ -247,7 +216,7 @@ export async function PUT(request: NextRequest) {
             user_id: payload.userId,
             last_seen: new Date().toISOString(),
             current_channel: channelId
-          });
+          }, { onConflict: 'user_id' });
 
         return NextResponse.json({
           success: true,
