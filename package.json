@@ -129,7 +129,7 @@
     "socket.io": "^4.8.1",
     "speakeasy": "^2.0.0",
     "tailwind-merge": "^3.3.0",
-    "task-master-ai": "^0.13.2",
+    "task-master-ai": "^0.28.0",
     "twilio": "^5.5.1",
     "uuid": "^11.1.0",
     "web-push": "^3.6.7",
