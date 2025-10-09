@@ -43,7 +43,7 @@ interface Avaliacao {
   [key: string]: any;
 }
 
-export default function EditarAvaliacaoPage({ params }: { params: { id: string } }) {
+export default function EditarAvaliacaoPage({ params }: { params: Promise<{ id: string }> }) {
   // Usar React.use para evitar o aviso de acesso direto a params
   const id = React.use(Promise.resolve(params.id));
   const { t } = useI18n();

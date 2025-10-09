@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect , use} from 'react';
 import { supabase } from '@/lib/supabase';
 import MainLayout from '@/components/Layout/MainLayout';
 import { FiArrowLeft, FiEdit, FiTrash2, FiCheck, FiX, FiAlertTriangle } from 'react-icons/fi';
@@ -31,7 +31,7 @@ interface Avaliacao {
   };
 }
 
-export default function VerAvaliacaoPage({ params }: { params: { id: string } }) {
+export default function VerAvaliacaoPage({ params }: { params: Promise<{ id: string }> }) {
   // Obter o ID da avaliação de forma segura
   const [avaliacaoId, setAvaliacaoId] = useState<string>('');
 

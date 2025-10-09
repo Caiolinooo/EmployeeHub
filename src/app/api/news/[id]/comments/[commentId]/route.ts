@@ -3,10 +3,10 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string; commentId: string } }
+  { params }: { params: Promise<{ id: string; commentId: string }> }
 ) {
   try {
-    const { id: newsId, commentId } = params;
+    const { id: newsId, commentId } = await params;
     const body = await request.json();
     const { content } = body;
 
@@ -35,10 +35,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; commentId: string } }
+  { params }: { params: Promise<{ id: string; commentId: string }> }
 ) {
   try {
-    const { id: newsId, commentId } = params;
+    const { id: newsId, commentId } = await params;
 
     const { error } = await supabaseAdmin
       .from('news_comments')

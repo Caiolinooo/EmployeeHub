@@ -5,7 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 // POST - Atualizar o papel (role) de um usuário
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verificar autenticação e autorização (apenas administradores)

@@ -7,7 +7,7 @@ import { supabase, supabaseAdmin } from '@/lib/supabase';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verificar autenticação - tentar obter o token de várias fontes
@@ -41,7 +41,7 @@ export async function GET(
 
     // Garantir que params seja await antes de acessar suas propriedades
     // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
     console.log(`API avaliacao GET: Buscando avaliação com ID: ${id}`);
 
     // Validar se o ID é um UUID válido
@@ -189,7 +189,7 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verificar autenticação
@@ -223,7 +223,7 @@ export async function PUT(
 
     // Garantir que params seja await antes de acessar suas propriedades
     // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
     console.log(`API avaliacao PUT: Atualizando avaliação com ID: ${id}`);
 
     // Validar se o ID é um UUID válido
@@ -384,7 +384,7 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verificar autenticação
@@ -418,7 +418,7 @@ export async function DELETE(
 
     // Garantir que params seja await antes de acessar suas propriedades
     // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
     console.log(`API avaliacao DELETE: Excluindo avaliação com ID: ${id}`);
 
     // Validar se o ID é um UUID válido

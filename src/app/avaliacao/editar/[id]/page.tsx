@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect , use} from 'react';
 import { supabase } from '@/lib/supabase';
 import MainLayout from '@/components/Layout/MainLayout';
 import { FiSave, FiX, FiArrowLeft, FiAlertTriangle } from 'react-icons/fi';
@@ -28,7 +28,7 @@ interface Avaliacao {
   avaliador?: Funcionario;
 }
 
-export default function EditarAvaliacaoPage({ params }: { params: { id: string } }) {
+export default function EditarAvaliacaoPage({ params }: { params: Promise<{ id: string }> }) {
   // Obter o ID da avaliação diretamente dos params
   // Não usamos React.use() aqui porque está causando erros
   const avaliacaoId = params.id;

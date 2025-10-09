@@ -3,10 +3,10 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: newsId } = params;
+    const { id: newsId } = await params;
     const body = await request.json();
     const { userId } = body;
 
@@ -111,10 +111,10 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: newsId } = params;
+    const { id: newsId } = await params;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
@@ -190,10 +190,10 @@ export async function DELETE(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: newsId } = params;
+    const { id: newsId } = await params;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 

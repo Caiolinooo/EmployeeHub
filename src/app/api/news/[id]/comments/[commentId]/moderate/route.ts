@@ -4,7 +4,7 @@ import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; commentId: string } }
+  { params }: { params: Promise<{ id: string; commentId: string }> }
 ) {
   try {
     const tokenHeader = request.headers.get('authorization') ?? undefined;
@@ -19,7 +19,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { id: newsId, commentId } = params;
+    const { id: newsId, commentId } = await params;
     const { error } = await supabaseAdmin
       .from('news_comments')
       .delete()

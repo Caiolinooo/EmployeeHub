@@ -67,10 +67,13 @@ function decodeText(val: string): string {
     .replace(/\\;/g, ';');
 }
 
-export function parseIcs(ics: string): IcsEvent[] {
+export async function parseIcs(ics: string): Promise<IcsEvent[]> {
   const text = unfoldLines(ics);
   const blocks = text.split(/BEGIN:VEVENT/).slice(1).map(b => b.split(/END:VEVENT/)[0]);
   const events: IcsEvent[] = [];
+
+  // Import crypto once for all events
+  const { randomUUID } = await import('crypto');
 
   for (const block of blocks) {
     const lines = block.split(/\r?\n/);
@@ -96,7 +99,6 @@ export function parseIcs(ics: string): IcsEvent[] {
       fields[name] = value;
     }
 
-    const { randomUUID } = await import('crypto');
     const uid = String(fields['UID'] || '').trim() || `evt-${randomUUID()}`;
     const summary = decodeText(String(fields['SUMMARY'] || '').trim());
     const description = decodeText(String(fields['DESCRIPTION'] || '').trim());

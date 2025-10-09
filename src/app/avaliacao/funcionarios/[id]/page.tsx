@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect , use} from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { FiUser, FiArrowLeft, FiEdit, FiBarChart2, FiFileText } from 'react-icons/fi';
 import PageHeader from '@/components/PageHeader';
@@ -36,7 +36,7 @@ interface Avaliacao {
   };
 }
 
-export default function FuncionarioDetalhesPage({ params }: { params: { id: string } }) {
+export default function FuncionarioDetalhesPage({ params }: { params: Promise<{ id: string }> }) {
   const { t } = useI18n();
   const { user } = useSupabaseAuth();
   const router = useRouter();

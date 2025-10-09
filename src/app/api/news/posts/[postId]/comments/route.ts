@@ -4,10 +4,10 @@ import { supabaseAdmin } from '@/lib/supabase';
 // GET - Listar comentários do post
 export async function GET(
   request: NextRequest,
-  { params }: { params: { postId: string } }
+  { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
-    const postId = params.postId;
+    const { postId } = await params;
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -98,10 +98,10 @@ export async function GET(
 // POST - Criar novo comentário
 export async function POST(
   request: NextRequest,
-  { params }: { params: { postId: string } }
+  { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
-    const postId = params.postId;
+    const { postId } = await params;
     const body = await request.json();
     const { user_id, content, parent_id } = body;
 

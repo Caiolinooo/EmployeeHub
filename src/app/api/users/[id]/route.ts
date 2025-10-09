@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs';
 // GET - Obter um usuário específico
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verificar autenticação
@@ -91,7 +91,7 @@ export async function GET(
 // PUT - Atualizar um usuário
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verificar autenticação
@@ -282,7 +282,7 @@ export async function PUT(
 // DELETE - Excluir um usuário
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verificar autenticação

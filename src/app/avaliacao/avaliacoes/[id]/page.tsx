@@ -1,17 +1,17 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, use } from 'react';
 
 /**
  * Componente de redirecionamento para manter a compatibilidade com links existentes
  * Usando window.location.href para garantir um redirecionamento completo
  */
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default function AvaliacaoDetailRedirectPage({ params }: PageProps) {
-  const id = params.id;
+  const { id } = use(params);
 
   useEffect(() => {
     // Adicionar timestamp para evitar cache

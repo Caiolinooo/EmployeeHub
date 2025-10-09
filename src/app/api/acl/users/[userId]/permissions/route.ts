@@ -4,10 +4,10 @@ import { supabaseAdmin } from '@/lib/supabase';
 // GET - Obter permissões ACL de um usuário específico
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const userId = params.userId;
+    const { userId } = await params;
     console.log(`🔄 API ACL User Permissions - Buscando permissões do usuário: ${userId}`);
 
     // Buscar dados do usuário
@@ -111,10 +111,10 @@ export async function GET(
 // POST - Atribuir permissão ACL a um usuário
 export async function POST(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const userId = params.userId;
+    const { userId } = await params;
     const body = await request.json();
     const { permission_id, expires_at, granted_by } = body;
 
@@ -200,10 +200,10 @@ export async function POST(
 // DELETE - Remover permissão ACL de um usuário
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const userId = params.userId;
+    const { userId } = await params;
     const { searchParams } = new URL(request.url);
     const permissionId = searchParams.get('permission_id');
 

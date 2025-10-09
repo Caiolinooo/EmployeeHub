@@ -4,13 +4,13 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 // GET - Obter um card pelo ID
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const { params } = context;
   try {
     // Garantir que params seja await antes de acessar suas propriedades
     // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
 
     const { data: card, error } = await supabaseAdmin
       .from('cards')
@@ -38,13 +38,13 @@ export async function GET(
 // PUT - Atualizar um card
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const { params } = context;
   try {
     // Garantir que params seja await antes de acessar suas propriedades
     // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
     const body = await request.json();
     const {
       title, description, href, icon, color, hoverColor, external, enabled, order,
@@ -131,7 +131,7 @@ export async function PUT(
 // DELETE - Excluir um card
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Garantir que params seja await antes de acessar suas propriedades

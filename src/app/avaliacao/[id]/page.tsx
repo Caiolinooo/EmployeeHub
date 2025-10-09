@@ -9,9 +9,9 @@ import MainLayout from '@/components/Layout/MainLayout';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import { useRouter } from 'next/navigation';
 
-export default function AvaliacaoDetailPage({ params }: { params: { id: string } }) {
-  // Usar o ID diretamente dos params para evitar problemas com React.use
-  const id = params.id;
+export default function AvaliacaoDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  // Unwrap params usando React.use()
+  const { id } = use(params);
   const { t } = useI18n();
   const { user } = useSupabaseAuth();
   const router = useRouter();

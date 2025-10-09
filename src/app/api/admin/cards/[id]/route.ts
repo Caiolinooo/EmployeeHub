@@ -44,7 +44,7 @@ function convertDatabaseCard(card: any) {
 // GET - Obter um card específico
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verificar se o usuário é administrador
@@ -93,7 +93,7 @@ export async function GET(
 // PUT - Atualizar um card existente
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verificar se o usuário é administrador
@@ -186,7 +186,7 @@ export async function PUT(
 // DELETE - Excluir um card
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verificar se o usuário é administrador

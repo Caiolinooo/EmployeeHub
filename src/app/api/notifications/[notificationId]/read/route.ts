@@ -4,10 +4,10 @@ import { supabaseAdmin } from '@/lib/supabase';
 // PUT - Marcar notificação como lida
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { notificationId: string } }
+  { params }: { params: Promise<{ notificationId: string }> }
 ) {
   try {
-    const notificationId = params.notificationId;
+    const { notificationId } = await params;
     const body = await request.json();
     const { user_id } = body;
 
@@ -81,10 +81,10 @@ export async function PUT(
 // DELETE - Marcar notificação como não lida
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { notificationId: string } }
+  { params }: { params: Promise<{ notificationId: string }> }
 ) {
   try {
-    const notificationId = params.notificationId;
+    const { notificationId } = await params;
     const { searchParams } = new URL(request.url);
     const user_id = searchParams.get('user_id');
 
