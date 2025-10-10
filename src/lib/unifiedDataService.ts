@@ -294,22 +294,6 @@ class UnifiedDataService {
         showInAdminMenu: false
       },
       {
-        id: 'profile',
-        title: 'Perfil',
-        description: 'Gerenciar perfil do usuário',
-        href: '/profile',
-        icon: FiUser,
-        iconName: 'FiUser',
-        color: 'bg-abz-blue',
-        hoverColor: 'hover:bg-abz-blue-dark',
-        external: false,
-        enabled: true,
-        order: 12,
-        showInDashboard: false,
-        showInMenu: true,
-        showInAdminMenu: false
-      },
-      {
         id: 'admin',
         title: 'Administração',
         description: 'Painel de administração do sistema',
