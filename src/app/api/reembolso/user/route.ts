@@ -90,46 +90,20 @@ export async function GET(request: NextRequest) {
     const isManager = userRole === 'MANAGER';
 
     // Verificar se a coluna user_id existe na tabela Reimbursement
-    const { data: columns, error: columnsError } = await supabaseAdmin
-      .from('information_schema.columns')
-      .select('column_name')
-      .eq('table_schema', 'public')
-      .eq('table_name', 'Reimbursement')
-      .eq('column_name', 'user_id');
+    // Usar uma query simples para testar se a coluna existe
+    let hasUserIdColumn = false;
+    try {
+      const { error: testError } = await supabaseAdmin
+        .from('Reimbursement')
+        .select('user_id')
+        .limit(1);
 
-    if (columnsError) {
-      console.error('Erro ao verificar coluna user_id:', columnsError);
-    }
-
-    const hasUserIdColumn = columns && columns.length > 0;
-    console.log(`Coluna user_id ${hasUserIdColumn ? 'existe' : 'não existe'} na tabela Reimbursement`);
-
-    // Se a coluna user_id não existir, tentar adicioná-la diretamente
-    if (!hasUserIdColumn) {
-      console.log('Tentando adicionar coluna user_id...');
-      try {
-        // Adicionar coluna diretamente via SQL ao invés de fetch
-        const { error: addColumnError } = await supabaseAdmin.rpc('exec_sql', {
-          sql: 'ALTER TABLE "Reimbursement" ADD COLUMN IF NOT EXISTS "user_id" UUID REFERENCES "users_unified"("id") ON DELETE SET NULL;'
-        });
-
-        if (addColumnError) {
-          console.error('Erro ao adicionar coluna user_id:', addColumnError);
-          // Tentar método alternativo
-          const { error: altError } = await supabaseAdmin
-            .from('Reimbursement')
-            .select('user_id')
-            .limit(1);
-
-          if (altError && altError.message.includes('does not exist')) {
-            console.log('Coluna user_id realmente não existe, mas não foi possível adicionar automaticamente');
-          }
-        } else {
-          console.log('Coluna user_id adicionada com sucesso');
-        }
-      } catch (error) {
-        console.error('Erro ao adicionar coluna user_id:', error);
-      }
+      // Se não houver erro, a coluna existe
+      hasUserIdColumn = !testError || !testError.message.includes('does not exist');
+      console.log(`✅ Coluna user_id ${hasUserIdColumn ? 'existe' : 'não existe'} na tabela Reimbursement`);
+    } catch (error) {
+      console.log('⚠️ Assumindo que coluna user_id não existe');
+      hasUserIdColumn = false;
     }
 
     // Determinar se devemos usar email ou user_id para filtrar

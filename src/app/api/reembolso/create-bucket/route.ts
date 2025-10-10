@@ -7,26 +7,17 @@ import { supabaseAdmin } from '@/lib/db';
  */
 export async function POST(request: NextRequest) {
   try {
-    console.log('Creating comprovantes bucket in Supabase storage...');
-
-    // Log Supabase URL for debugging
-    console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-    console.log('Using service role:', !!process.env.SUPABASE_SERVICE_KEY);
+    console.log('✅ Verificando bucket comprovantes...');
 
     // Check if the bucket already exists
     try {
       const { data: buckets, error: listError } = await supabaseAdmin.storage.listBuckets();
 
-      if (listError) {
-        console.error('Error listing buckets:', listError);
-        // Continue with bucket creation attempt even if listing fails
-        console.log('Continuing with bucket creation despite listing error');
-      } else {
+      if (!listError && buckets) {
         // Check if the comprovantes bucket already exists
         const comprovantesBucket = buckets?.find(bucket => bucket.name === 'comprovantes');
 
         if (comprovantesBucket) {
-          console.log('Comprovantes bucket already exists:', comprovantesBucket);
           return NextResponse.json({
             success: true,
             message: 'Bucket already exists',
@@ -35,9 +26,7 @@ export async function POST(request: NextRequest) {
         }
       }
     } catch (listError) {
-      console.error('Exception listing buckets:', listError);
       // Continue with bucket creation attempt even if listing fails
-      console.log('Continuing with bucket creation despite listing exception');
     }
 
     // Create the bucket with simplified options
