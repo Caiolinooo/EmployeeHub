@@ -10,6 +10,7 @@ import PostTypeSelector from './PostTypeSelector';
 import MediaUploadWithFilters from './MediaUploadWithFilters';
 import EventCreator from './EventCreator';
 import HighlightCreator from './HighlightCreator';
+import TextPostCreator from './TextPostCreator';
 import NewsCommentSection from './NewsCommentSection';
 import NewsPostEditor from './NewsPostEditor';
 import NewsPostEditorFullScreen from './NewsPostEditorFullScreen';
@@ -72,6 +73,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
   const [editingPost, setEditingPost] = useState<NewsPost | null>(null);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showTextPostCreator, setShowTextPostCreator] = useState(false);
   const [showTypeSelector, setShowTypeSelector] = useState(false);
   const [showMediaUpload, setShowMediaUpload] = useState(false);
   const [showEventCreator, setShowEventCreator] = useState(false);
@@ -102,7 +104,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
         setShowHighlightCreator(true);
         break;
       case 'text':
-        setShowCreateModal(true);
+        setShowTextPostCreator(true);
         break;
     }
   };
@@ -698,14 +700,14 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
         }}
       />
 
-      {/* Instagram Style Post Creator Modal (for text posts) */}
-      <InstagramStylePostCreator
+      {/* Text Post Creator Modal */}
+      <TextPostCreator
+        isOpen={showTextPostCreator}
+        onClose={() => setShowTextPostCreator(false)}
         userId={userId || ''}
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
         onPostCreated={(newPost) => {
           setPosts(prev => [newPost, ...prev]);
-          setShowCreateModal(false);
+          setShowTextPostCreator(false);
         }}
       />
 
