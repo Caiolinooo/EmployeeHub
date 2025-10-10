@@ -247,8 +247,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* Rodapé com informações do usuário e botão de logout */}
           <div className="p-4 border-t">
-            <div className="flex items-center mb-4">
-              <div className="w-10 h-10 rounded-full bg-abz-light-blue flex items-center justify-center mr-3 overflow-hidden">
+            <Link
+              href="/profile"
+              className="flex items-center mb-4 hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors cursor-pointer group"
+              title={t('common.viewProfile', 'Ver perfil') as string}
+            >
+              <div className="w-10 h-10 rounded-full bg-abz-light-blue flex items-center justify-center mr-3 overflow-hidden group-hover:ring-2 group-hover:ring-abz-blue transition-all">
                 {(profile as any)?.drive_photo_url || (profile as any)?.avatar ? (
                   <img
                     src={(profile as any)?.drive_photo_url || (profile as any)?.avatar}
@@ -260,12 +264,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 )}
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-700">{user?.email}</p>
+                <p className="text-sm font-medium text-gray-700 group-hover:text-abz-blue transition-colors">{user?.email}</p>
                 <p className="text-xs text-gray-500">
                   {profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : 'Usuário'}
                 </p>
               </div>
-            </div>
+            </Link>
             <div className="mb-3">
               <LanguageSelector variant="inline" className="justify-center" />
             </div>

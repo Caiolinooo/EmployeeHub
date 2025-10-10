@@ -46,7 +46,6 @@ const mainMenuItems = [
   { id: 'contracheque', href: '/contracheque', label: 'common.payroll', icon: FiFileText },
   { id: 'academy', href: '/academy', label: 'common.academy', icon: FiBook },
   { id: 'noticias', href: '/noticias', label: 'common.news', icon: FiMessageSquare },
-  { id: 'profile', href: '/profile', label: 'common.profile', icon: FiUser },
 ];
 
 export default function MainLayout({ children }: MainLayoutProps) {
@@ -221,8 +220,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
           {/* Rodapé com informações do usuário */}
           <div className="p-4 border-t">
             {!isCollapsed && (
-              <div className="flex items-center mb-4">
-                <div className="w-10 h-10 rounded-full bg-abz-light-blue flex items-center justify-center mr-3 overflow-hidden">
+              <Link
+                href="/profile"
+                className="flex items-center mb-4 hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors cursor-pointer group"
+                title="Ver perfil"
+              >
+                <div className="w-10 h-10 rounded-full bg-abz-light-blue flex items-center justify-center mr-3 overflow-hidden group-hover:ring-2 group-hover:ring-abz-blue transition-all">
                   {(profile as any)?.drive_photo_url || (profile as any)?.avatar ? (
                     <img
                       src={(profile as any)?.drive_photo_url || (profile as any)?.avatar}
@@ -234,12 +237,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-700 truncate">
+                  <p className="text-sm font-medium text-gray-700 truncate group-hover:text-abz-blue transition-colors">
                     {profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : user?.email}
                   </p>
                   <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                 </div>
-              </div>
+              </Link>
             )}
             
             <div className={`flex ${isCollapsed ? 'flex-col space-y-2' : 'space-x-2'}`}>
