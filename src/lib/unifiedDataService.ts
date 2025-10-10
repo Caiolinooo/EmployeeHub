@@ -445,7 +445,12 @@ class UnifiedDataService {
         .order('order', { ascending: true });
 
       if (error) {
-        console.error('🔄 Error loading from Supabase:', error);
+        // Silenciar erro se a tabela não existir (código PGRST116)
+        if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
+          console.log('🔄 Table menu_items does not exist, using fallback');
+        } else {
+          console.error('🔄 Error loading from Supabase:', error);
+        }
         return [];
       }
 
