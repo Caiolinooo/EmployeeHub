@@ -60,7 +60,7 @@ const PostCreator: React.FC<PostCreatorProps> = ({ onClose, onPostCreated }) => 
     try {
       const token = await getToken();
       if (!token) {
-        setError({t('components.erroDeAutenticacao')});
+        setError(t('components.erroDeAutenticacao'));
         return;
       }
 

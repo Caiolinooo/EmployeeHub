@@ -183,7 +183,7 @@ export default function UsersPage() {
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error || {t('admin.erroAoCriarUsuario')});
+          throw new Error(errorData.error || t('admin.erroAoCriarUsuario'));
         }
       } else if (selectedUser) {
         // Atualizar usuário existente
@@ -201,7 +201,7 @@ export default function UsersPage() {
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error || {t('admin.erroAoAtualizarUsuario')});
+          throw new Error(errorData.error || t('admin.erroAoAtualizarUsuario'));
         }
       }
 
@@ -209,7 +209,7 @@ export default function UsersPage() {
       setShowEditor(false);
       fetchUsers();
     } catch (error) {
-      console.error({t('admin.erroAoSalvarUsuario')}, error);
+      console.error(t('admin.erroAoSalvarUsuario'), error);
       alert(error instanceof Error ? error.message : 'Erro desconhecido');
     }
   };
@@ -234,14 +234,14 @@ export default function UsersPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || {t('admin.erroAoExcluirUsuario')});
+        throw new Error(errorData.error || t('admin.erroAoExcluirUsuario'));
       }
 
       // Fechar o modal e recarregar a lista
       setShowDeleteConfirm(false);
       fetchUsers();
     } catch (error) {
-      console.error({t('admin.erroAoExcluirUsuario')}, error);
+      console.error(t('admin.erroAoExcluirUsuario'), error);
       alert(error instanceof Error ? error.message : 'Erro desconhecido');
     }
   };

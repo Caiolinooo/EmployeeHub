@@ -112,7 +112,7 @@ const CoursePage: React.FC = () => {
       if (data.success && data.courses.length > 0) {
         setCourse(data.courses[0]);
       } else {
-        setError({t('academy.cursoNaoEncontrado')});
+        setError(t('academy.cursoNaoEncontrado'));
       }
     } catch (error) {
       console.error('Erro ao carregar curso:', error);
@@ -139,7 +139,7 @@ const CoursePage: React.FC = () => {
         setEnrollment(data.enrollments[0]);
       }
     } catch (error) {
-      console.error({t('academy.erroAoCarregarMatricula')}, error);
+      console.error(t('academy.erroAoCarregarMatricula'), error);
     }
   };
 
@@ -150,7 +150,7 @@ const CoursePage: React.FC = () => {
     try {
       const token = await getToken();
       if (!token) {
-        setError({t('academy.tokenDeAutenticacaoNaoEncontrado')});
+        setError(t('academy.tokenDeAutenticacaoNaoEncontrado'));
         return;
       }
 
@@ -170,11 +170,11 @@ const CoursePage: React.FC = () => {
       if (data.success) {
         await loadEnrollment();
       } else {
-        setError(data.error || {t('academy.erroAoRealizarMatricula')});
+        setError(data.error || t('academy.erroAoRealizarMatricula'));
       }
     } catch (error) {
-      console.error({t('academy.erroAoRealizarMatricula')}, error);
-      setError({t('academy.erroAoRealizarMatricula')});
+      console.error(t('academy.erroAoRealizarMatricula'), error);
+      setError(t('academy.erroAoRealizarMatricula'));
     } finally {
       setEnrolling(false);
     }
@@ -272,7 +272,7 @@ const CoursePage: React.FC = () => {
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-red-800">Erro</h3>
                 <div className="mt-2 text-sm text-red-700">
-                  <p>{error || {t('academy.cursoNaoEncontrado')}}</p>
+                  <p>{error || t('academy.cursoNaoEncontrado')}</p>
                 </div>
                 <div className="mt-4 space-x-3">
                   <button

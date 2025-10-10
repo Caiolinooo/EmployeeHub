@@ -46,7 +46,7 @@ export function MigrateCards() {
 
       setMessage(data.message || t('admin.migrationStatusCheckedSuccess'));
     } catch (err) {
-      console.error({t('components.erroAoVerificarStatusDaMigracao')}, err);
+      console.error(t('components.erroAoVerificarStatusDaMigracao'), err);
       setError(err instanceof Error ? err.message : t('common.unknownError'));
       setMessage(null);
     } finally {

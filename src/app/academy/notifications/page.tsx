@@ -70,7 +70,7 @@ const NotificationsPage: React.FC = () => {
         setUnreadCount(data.unread_count);
       }
     } catch (error) {
-      console.error({t('academy.erroAoCarregarNotificacoes')}, error);
+      console.error(t('academy.erroAoCarregarNotificacoes'), error);
     } finally {
       setLoading(false);
     }
@@ -99,7 +99,7 @@ const NotificationsPage: React.FC = () => {
         setSelectedNotifications([]);
       }
     } catch (error) {
-      console.error({t('academy.erroAoMarcarNotificacaoComoLida')}, error);
+      console.error(t('academy.erroAoMarcarNotificacaoComoLida'), error);
     }
   };
 
@@ -125,7 +125,7 @@ const NotificationsPage: React.FC = () => {
         await loadNotifications();
       }
     } catch (error) {
-      console.error({t('academy.erroAoMarcarTodasAsNotificacoesComoLidas')}, error);
+      console.error(t('academy.erroAoMarcarTodasAsNotificacoesComoLidas'), error);
     }
   };
 
@@ -148,7 +148,7 @@ const NotificationsPage: React.FC = () => {
         setSelectedNotifications([]);
       }
     } catch (error) {
-      console.error({t('academy.erroAoExcluirNotificacoes')}, error);
+      console.error(t('academy.erroAoExcluirNotificacoes'), error);
     }
   };
 

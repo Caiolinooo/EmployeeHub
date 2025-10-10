@@ -64,7 +64,7 @@ const PdfImageViewer: React.FC<PdfImageViewerProps> = ({ filePath }) => {
             }
           }
         } catch (err) {
-          console.log({t('components.erroAoVerificarImagensPrerenderizadas')}, err);
+          console.log(t('components.erroAoVerificarImagensPrerenderizadas'), err);
         }
         
         // Se não encontrou imagens pré-renderizadas, usar o PDF original

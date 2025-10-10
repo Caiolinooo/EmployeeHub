@@ -37,7 +37,7 @@ const RolePermissionsInitializer: React.FC = () => {
       setStatus(data);
       
       if (!data.exists) {
-        setError(data.message || {t('components.tabelaRolepermissionsNaoExiste')});
+        setError(data.message || t('components.tabelaRolepermissionsNaoExiste'));
       }
     } catch (err) {
       setError('Erro ao conectar com a API');

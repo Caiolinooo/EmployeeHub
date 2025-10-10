@@ -29,17 +29,17 @@ export default function ReimbursementSettingsPage() {
 
       // Tentar usar a API principal do Supabase
       try {
-        console.log({t('admin.tentandoCarregarConfiguracoesDaApiPrincipal')});
+        console.log(t('admin.tentandoCarregarConfiguracoesDaApiPrincipal'));
         const response = await fetch('/api/reimbursement-settings');
 
         if (response.ok) {
           const data = await response.json();
-          console.log({t('admin.configuracoesDeEmailDeReembolsoCarregadasDaApiPrin')}, data);
+          console.log(t('admin.configuracoesDeEmailDeReembolsoCarregadasDaApiPrin'), data);
           setEmailSettings(data);
           setIsLoading(false);
           return;
         } else {
-          console.error({t('admin.erroAoCarregarConfiguracoesDaApiPrincipal')}, response.status);
+          console.error(t('admin.erroAoCarregarConfiguracoesDaApiPrincipal'), response.status);
           // Continuar para o fallback
         }
       } catch (mainApiError) {
@@ -49,17 +49,17 @@ export default function ReimbursementSettingsPage() {
 
       // Tentar usar a API de fallback
       try {
-        console.log({t('admin.tentandoCarregarConfiguracoesDaApiDeFallback')});
+        console.log(t('admin.tentandoCarregarConfiguracoesDaApiDeFallback'));
         const fallbackResponse = await fetch('/api/reimbursement-settings-fallback');
 
         if (fallbackResponse.ok) {
           const fallbackData = await fallbackResponse.json();
-          console.log({t('admin.configuracoesDeEmailDeReembolsoCarregadasDaApiDeFa')}, fallbackData);
+          console.log(t('admin.configuracoesDeEmailDeReembolsoCarregadasDaApiDeFa'), fallbackData);
           setEmailSettings(fallbackData);
           setIsLoading(false);
           return;
         } else {
-          console.error({t('admin.erroAoCarregarConfiguracoesDaApiDeFallback')}, fallbackResponse.status);
+          console.error(t('admin.erroAoCarregarConfiguracoesDaApiDeFallback'), fallbackResponse.status);
           // Continuar para os valores padrão
         }
       } catch (fallbackApiError) {
@@ -68,14 +68,14 @@ export default function ReimbursementSettingsPage() {
       }
 
       // Usar valores padrão como último recurso
-      console.log({t('admin.usandoValoresPadraoParaAsConfiguracoes')});
+      console.log(t('admin.usandoValoresPadraoParaAsConfiguracoes'));
       setEmailSettings({
         enableDomainRule: true,
         recipients: ['andresa.oliveira@groupabz.com', 'fiscal@groupabz.com']
       });
     } catch (err) {
-      console.error({t('admin.erroAoCarregarConfiguracoes')}, err);
-      setError({t('admin.erroAoCarregarConfiguracoesUsandoValoresPadrao')});
+      console.error(t('admin.erroAoCarregarConfiguracoes'), err);
+      setError(t('admin.erroAoCarregarConfiguracoesUsandoValoresPadrao'));
 
       // Usar valores padrão em caso de erro
       setEmailSettings({
@@ -92,11 +92,11 @@ export default function ReimbursementSettingsPage() {
     recipients: string[];
   }): Promise<boolean> => {
     try {
-      console.log({t('admin.salvandoConfiguracoesDeEmailDeReembolso')}, settings);
+      console.log(t('admin.salvandoConfiguracoesDeEmailDeReembolso'), settings);
 
       // Tentar usar a API principal do Supabase
       try {
-        console.log({t('admin.tentandoSalvarConfiguracoesNaApiPrincipal')});
+        console.log(t('admin.tentandoSalvarConfiguracoesNaApiPrincipal'));
 
         // Usar a API do Supabase para salvar as configurações
         const response = await fetch('/api/reimbursement-settings', {
@@ -117,14 +117,14 @@ export default function ReimbursementSettingsPage() {
         }
 
         if (response.ok) {
-          console.log({t('admin.configuracoesSalvasComSucessoNaApiPrincipal')}, responseData);
+          console.log(t('admin.configuracoesSalvasComSucessoNaApiPrincipal'), responseData);
 
           // Atualizar estado local
           setEmailSettings(settings);
           return true;
         }
 
-        console.error({t('admin.erroAoSalvarConfiguracoesNaApiPrincipal')}, responseData.error || 'Status: ' + response.status);
+        console.error(t('admin.erroAoSalvarConfiguracoesNaApiPrincipal'), responseData.error || 'Status: ' + response.status);
 
         // Se o erro for relacionado à tabela não existente, tentar criar a tabela
         if (responseData.error && responseData.error.includes('relation "public.settings" does not exist')) {
@@ -151,7 +151,7 @@ export default function ReimbursementSettingsPage() {
             });
 
             if (retryResponse.ok) {
-              console.log({t('admin.configuracoesSalvasComSucessoAposCriarTabela')});
+              console.log(t('admin.configuracoesSalvasComSucessoAposCriarTabela'));
               setEmailSettings(settings);
               return true;
             } else {
@@ -170,7 +170,7 @@ export default function ReimbursementSettingsPage() {
 
       // Tentar usar a API de fallback
       try {
-        console.log({t('admin.tentandoSalvarConfiguracoesNaApiDeFallback')});
+        console.log(t('admin.tentandoSalvarConfiguracoesNaApiDeFallback'));
 
         const fallbackResponse = await fetch('/api/reimbursement-settings-fallback', {
           method: 'POST',
@@ -182,7 +182,7 @@ export default function ReimbursementSettingsPage() {
 
         if (fallbackResponse.ok) {
           const fallbackData = await fallbackResponse.json();
-          console.log({t('admin.configuracoesSalvasComSucessoNaApiDeFallback')}, fallbackData);
+          console.log(t('admin.configuracoesSalvasComSucessoNaApiDeFallback'), fallbackData);
 
           // Atualizar estado local
           setEmailSettings(settings);
@@ -195,10 +195,10 @@ export default function ReimbursementSettingsPage() {
       }
 
       // Se chegamos aqui, todas as tentativas falharam
-      console.error({t('admin.todasAsTentativasDeSalvarConfiguracoesFalharam')});
+      console.error(t('admin.todasAsTentativasDeSalvarConfiguracoesFalharam'));
       return false;
     } catch (err) {
-      console.error({t('admin.erroAoSalvarConfiguracoes')}, err);
+      console.error(t('admin.erroAoSalvarConfiguracoes'), err);
       return false;
     }
   };

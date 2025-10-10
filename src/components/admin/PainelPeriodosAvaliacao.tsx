@@ -36,13 +36,13 @@ export default function PainelPeriodosAvaliacao() {
         .order('data_inicio', { ascending: false });
 
       if (error) {
-        console.error({t('components.erroAoCarregarPeriodos')}, error);
+        console.error(t('components.erroAoCarregarPeriodos'), error);
         return;
       }
 
       setPeriodos(data || []);
     } catch (error) {
-      console.error({t('components.erroAoCarregarPeriodos')}, error);
+      console.error(t('components.erroAoCarregarPeriodos'), error);
     } finally {
       setLoading(false);
     }
@@ -61,7 +61,7 @@ export default function PainelPeriodosAvaliacao() {
           .eq('id', editingPeriodo.id);
 
         if (error) {
-          console.error({t('components.erroAoAtualizarPeriodo')}, error);
+          console.error(t('components.erroAoAtualizarPeriodo'), error);
           alert('Erro ao atualizar período');
           return;
         }
@@ -74,7 +74,7 @@ export default function PainelPeriodosAvaliacao() {
           .single();
 
         if (error) {
-          console.error({t('components.erroAoCriarPeriodo')}, error);
+          console.error(t('components.erroAoCriarPeriodo'), error);
           alert('Erro ao criar período');
           return;
         }
@@ -92,7 +92,7 @@ export default function PainelPeriodosAvaliacao() {
       await carregarPeriodos();
       fecharModal();
     } catch (error) {
-      console.error({t('components.erroAoSalvarPeriodo')}, error);
+      console.error(t('components.erroAoSalvarPeriodo'), error);
       alert('Erro ao salvar período');
     } finally {
       setLoading(false);
@@ -125,14 +125,14 @@ export default function PainelPeriodosAvaliacao() {
         .eq('id', id);
 
       if (error) {
-        console.error({t('components.erroAoExcluirPeriodo')}, error);
+        console.error(t('components.erroAoExcluirPeriodo'), error);
         alert('Erro ao excluir período');
         return;
       }
 
       await carregarPeriodos();
     } catch (error) {
-      console.error({t('components.erroAoExcluirPeriodo')}, error);
+      console.error(t('components.erroAoExcluirPeriodo'), error);
       alert('Erro ao excluir período');
     }
   };

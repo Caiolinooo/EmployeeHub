@@ -65,10 +65,10 @@ export default function EmployeeList({
       if (data.success) {
         setEmployees(data.data);
       } else {
-        console.error({t('components.erroAoCarregarFuncionarios')}, data.error);
+        console.error(t('components.erroAoCarregarFuncionarios'), data.error);
       }
     } catch (error) {
-      console.error({t('components.erroAoCarregarFuncionarios')}, error);
+      console.error(t('components.erroAoCarregarFuncionarios'), error);
     } finally {
       setLoading(false);
     }
@@ -237,7 +237,7 @@ export default function EmployeeList({
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600">
                         <div className="flex items-center space-x-2">
                           <Building2 className="h-4 w-4" />
-                          <span>{employee.position || {t('components.cargoNaoInformado')}}</span>
+                          <span>{employee.position || t('components.cargoNaoInformado')}</span>
                         </div>
                         <div className="flex items-center space-x-2">
                           <span className="font-medium">Matrícula:</span>

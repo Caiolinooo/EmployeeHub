@@ -95,7 +95,7 @@ export function SetPasswordModal({ isOpen, onClose, onSuccess, isNewUser = false
         })
       };
 
-      console.log({t('components.enviandoDadosParaDefinicaoDeSenha')}, {
+      console.log(t('components.enviandoDadosParaDefinicaoDeSenha'), {
         ...requestData,
         password: '********' // Não logar a senha real
       });

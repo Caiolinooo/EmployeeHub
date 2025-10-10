@@ -57,7 +57,7 @@ export default function AddUserPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || {t('admin.erroAoCriarUsuario')});
+        throw new Error(errorData.error || t('admin.erroAoCriarUsuario'));
       }
 
       setSuccess({t('admin.usuarioCriadoComSucesso')});
@@ -67,7 +67,7 @@ export default function AddUserPage() {
         router.push('/admin/user-management');
       }, 2000);
     } catch (error) {
-      console.error({t('admin.erroAoSalvarUsuario')}, error);
+      console.error(t('admin.erroAoSalvarUsuario'), error);
       setError({t('admin.erroAoSalvarUsuarioErrorInstanceofErrorErrormessag')}Erro desconhecido'}`);
     }
   };

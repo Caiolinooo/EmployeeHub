@@ -66,7 +66,7 @@ export default function ReimbursementDetailPage() {
   useEffect(() => {
     const fetchReimbursementDetails = async () => {
       if (!protocolo) {
-        setError({t('reimbursement.protocoloNaoFornecido')});
+        setError(t('reimbursement.protocoloNaoFornecido'));
         setLoading(false);
         return;
       }

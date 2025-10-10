@@ -30,7 +30,7 @@ const MultiPdfViewer: React.FC<MultiPdfViewerProps> = ({
   const getNormalizedPath = () => {
     // Verificar se o caminho está vazio ou é inválido
     if (!filePath || typeof filePath !== 'string') {
-      console.error({t('components.caminhoDeArquivoInvalido')}, filePath);
+      console.error(t('components.caminhoDeArquivoInvalido'), filePath);
       return '';
     }
 
@@ -56,7 +56,7 @@ const MultiPdfViewer: React.FC<MultiPdfViewerProps> = ({
       return normalizedPath;
     }
 
-    console.log({t('components.caminhoJaEUmaUrlCompleta')}, filePath);
+    console.log(t('components.caminhoJaEUmaUrlCompleta'), filePath);
     return filePath;
   };
 
@@ -117,7 +117,7 @@ const MultiPdfViewer: React.FC<MultiPdfViewerProps> = ({
     const isChrome = /chrome/i.test(navigator.userAgent) && !/edge/i.test(navigator.userAgent);
     const isEdge = /edge/i.test(navigator.userAgent);
 
-    console.log({t('components.informacoesDoNavegador')}, { isMobile, isSafari, isChrome, isEdge });
+    console.log(t('components.informacoesDoNavegador'), { isMobile, isSafari, isChrome, isEdge });
 
     // Verificar se o arquivo é um PDF ou texto convertido
     const isPdfPath = normalizedPath.toLowerCase().endsWith('.pdf');
@@ -166,7 +166,7 @@ const MultiPdfViewer: React.FC<MultiPdfViewerProps> = ({
 
   // Função para lidar com erros de visualização
   const handleViewerError = () => {
-    console.log({t('components.visualizadorViewertypeFalhouTentandoProximo')});
+    console.log(t('components.visualizadorViewertypeFalhouTentandoProximo'));
 
     // Tentar o próximo visualizador
     if (viewerType === 'direct') {

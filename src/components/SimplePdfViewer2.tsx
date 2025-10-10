@@ -23,7 +23,7 @@ const SimplePdfViewer2: React.FC<SimplePdfViewer2Props> = ({
   const getNormalizedPath = () => {
     // Verificar se o caminho está vazio ou é inválido
     if (!filePath || typeof filePath !== 'string') {
-      console.error({t('components.caminhoDeArquivoInvalido')}, filePath);
+      console.error(t('components.caminhoDeArquivoInvalido'), filePath);
       return '';
     }
 
@@ -49,7 +49,7 @@ const SimplePdfViewer2: React.FC<SimplePdfViewer2Props> = ({
       return normalizedPath;
     }
     
-    console.log({t('components.caminhoJaEUmaUrlCompleta')}, filePath);
+    console.log(t('components.caminhoJaEUmaUrlCompleta'), filePath);
     return filePath;
   };
 

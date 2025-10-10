@@ -33,7 +33,7 @@ export function PasswordRequiredGuard({ children }: PasswordRequiredGuardProps) 
         const token = localStorage.getItem('token');
 
         if (!token) {
-          console.error({t('components.tokenNaoEncontradoNoLocalstorage')});
+          console.error(t('components.tokenNaoEncontradoNoLocalstorage'));
           setIsCheckingPassword(false);
           return;
         }
@@ -47,7 +47,7 @@ export function PasswordRequiredGuard({ children }: PasswordRequiredGuardProps) 
 
         if (response.ok) {
           const data = await response.json();
-          console.log({t('components.respostaDaVerificacaoDeSenha')}, data);
+          console.log(t('components.respostaDaVerificacaoDeSenha'), data);
 
           if (data.hasPassword || data.isAdmin) {
             // Se o usuário tem senha ou é admin, permitir acesso
@@ -57,13 +57,13 @@ export function PasswordRequiredGuard({ children }: PasswordRequiredGuardProps) 
             setShowSetPasswordModal(true);
           }
         } else {
-          console.error({t('components.erroAoVerificarSenhaDoUsuario')}, response.status);
+          console.error(t('components.erroAoVerificarSenhaDoUsuario'), response.status);
           // Se houver erro, assumir que o usuário não tem senha definida
           setHasPassword(false);
           setShowSetPasswordModal(true);
         }
       } catch (error) {
-        console.error({t('components.erroAoVerificarSenhaDoUsuario')}, error);
+        console.error(t('components.erroAoVerificarSenhaDoUsuario'), error);
       } finally {
         setIsCheckingPassword(false);
       }

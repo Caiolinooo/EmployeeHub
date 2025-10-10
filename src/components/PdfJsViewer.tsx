@@ -20,7 +20,7 @@ const PdfJsViewer: React.FC<PdfJsViewerProps> = ({ filePath }) => {
   const getNormalizedPath = () => {
     // Verificar se o caminho está vazio ou é inválido
     if (!filePath || typeof filePath !== 'string') {
-      console.error({t('components.caminhoDeArquivoInvalido')}, filePath);
+      console.error(t('components.caminhoDeArquivoInvalido'), filePath);
       return '';
     }
 
@@ -46,7 +46,7 @@ const PdfJsViewer: React.FC<PdfJsViewerProps> = ({ filePath }) => {
       return normalizedPath;
     }
 
-    console.log({t('components.caminhoJaEUmaUrlCompleta')}, filePath);
+    console.log(t('components.caminhoJaEUmaUrlCompleta'), filePath);
     return filePath;
   };
 
@@ -133,7 +133,7 @@ const PdfJsViewer: React.FC<PdfJsViewerProps> = ({ filePath }) => {
     const isFirefox = /firefox/i.test(navigator.userAgent);
 
     // Registrar informações para debug
-    console.log({t('components.informacoesDoNavegador')}, {
+    console.log(t('components.informacoesDoNavegador'), {
       isSafari,
       isMobile,
       isChrome,
@@ -145,11 +145,11 @@ const PdfJsViewer: React.FC<PdfJsViewerProps> = ({ filePath }) => {
     // Escolher o visualizador mais adequado com base no navegador
     if (isMobile || isSafari) {
       // Usar Google Docs Viewer para dispositivos móveis e Safari
-      console.log({t('components.usandoGoogleDocsViewerParaDispositivoMovelOuSafari')});
+      console.log(t('components.usandoGoogleDocsViewerParaDispositivoMovelOuSafari'));
       setViewerType('google');
     } else if (isChrome || isEdge) {
       // Usar visualização direta para Chrome e Edge
-      console.log({t('components.usandoVisualizacaoDiretaParaChromeOuEdge')});
+      console.log(t('components.usandoVisualizacaoDiretaParaChromeOuEdge'));
       setViewerType('direct');
     } else if (isFirefox) {
       // Usar object para Firefox

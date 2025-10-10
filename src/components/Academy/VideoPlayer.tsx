@@ -88,7 +88,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     };
 
     const handleError = () => {
-      setError({t('components.erroAoCarregarOVideo')});
+      setError(t('components.erroAoCarregarOVideo'));
       setIsLoading(false);
     };
 

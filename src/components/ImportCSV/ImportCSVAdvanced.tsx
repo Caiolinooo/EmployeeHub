@@ -120,7 +120,7 @@ export default function ImportCSVAdvanced({
       // Obter cabeçalhos
       const headerLine = lines[0];
       const headerValues = headerLine.split(sep).map(h => h.trim());
-      console.log({t('components.cabecalhosDetectados')}, headerValues);
+      console.log(t('components.cabecalhosDetectados'), headerValues);
       setHeaders(headerValues);
 
       // Verificar se é formato Office 365
@@ -220,7 +220,7 @@ export default function ImportCSVAdvanced({
     const allFields = [...required, ...optional];
 
     console.log('Mapeando campos automaticamente. Headers:', headers);
-    console.log({t('components.camposNecessarios')}, required);
+    console.log(t('components.camposNecessarios'), required);
     console.log('Campos opcionais:', optional);
 
     // Verificar se estamos lidando com formato Office 365
@@ -268,7 +268,7 @@ export default function ImportCSVAdvanced({
       }
     });
 
-    console.log({t('components.mapeamentoAutomatico')}, mapping);
+    console.log(t('components.mapeamentoAutomatico'), mapping);
     setFieldMapping(mapping);
   };
 
@@ -289,7 +289,7 @@ export default function ImportCSVAdvanced({
         }
       }
     } catch (error) {
-      console.error({t('components.erroAoCarregarUltimoMapeamento')}, error);
+      console.error(t('components.erroAoCarregarUltimoMapeamento'), error);
     }
   };
 
@@ -298,7 +298,7 @@ export default function ImportCSVAdvanced({
     try {
       localStorage.setItem(`lastFieldMapping_${importType}`, JSON.stringify(mapping));
     } catch (error) {
-      console.error({t('components.erroAoSalvarUltimoMapeamento')}, error);
+      console.error(t('components.erroAoSalvarUltimoMapeamento'), error);
     }
   };
 
@@ -310,11 +310,11 @@ export default function ImportCSVAdvanced({
     }
 
     if (selectedRows.length === 0) {
-      setError({t('components.nenhumaLinhaSelecionadaParaImportacao')});
+      setError(t('components.nenhumaLinhaSelecionadaParaImportacao'));
       return;
     }
 
-    console.log({t('components.iniciandoImportacaoComTipo')}, importType, 'e endpoint:', apiEndpoint);
+    console.log(t('components.iniciandoImportacaoComTipo'), importType, 'e endpoint:', apiEndpoint);
 
     setIsLoading(true);
     setError(null);
@@ -346,7 +346,7 @@ export default function ImportCSVAdvanced({
       if (apiEndpoint.includes('/api/admin/users/import')) {
         // Processar dados para o formato esperado pela API de usuários
         const processedUsers = dataToImport.map(user => {
-          console.log({t('components.processandoUsuario')}, JSON.stringify(user));
+          console.log(t('components.processandoUsuario'), JSON.stringify(user));
 
           // Verificar se estamos lidando com formato Office 365
           const isOffice365Format = Object.keys(user).some(key =>
@@ -355,7 +355,7 @@ export default function ImportCSVAdvanced({
             key === 'Nome' && 'Sobrenome' in user
           );
 
-          console.log({t('components.eFormatoOffice365')}, isOffice365Format);
+          console.log(t('components.eFormatoOffice365'), isOffice365Format);
 
           if (isOffice365Format) {
             // Mapear campos do Office 365 para o formato esperado
@@ -369,7 +369,7 @@ export default function ImportCSVAdvanced({
               role: 'USER' // Papel padrão
             };
 
-            console.log({t('components.usuarioMapeado')}, JSON.stringify(mappedUser));
+            console.log(t('components.usuarioMapeado'), JSON.stringify(mappedUser));
             return mappedUser;
           }
 

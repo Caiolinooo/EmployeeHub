@@ -82,12 +82,12 @@ export default function PasswordChange() {
 
     // Validar senhas
     if (newPassword !== confirmPassword) {
-      setError({t('components.asSenhasNaoCoincidem')});
+      setError(t('components.asSenhasNaoCoincidem'));
       return;
     }
 
     if (passwordStrength < 3) {
-      setError({t('components.aSenhaNaoEForteOSuficiente')});
+      setError(t('components.aSenhaNaoEForteOSuficiente'));
       return;
     }
 

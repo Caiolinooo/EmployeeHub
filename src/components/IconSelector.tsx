@@ -58,7 +58,7 @@ export default function IconSelector({
         return IconComponent;
       }
     } catch (error) {
-      console.warn({t('components.erroAoCarregarIconeIconname')}, error);
+      console.warn(t('components.erroAoCarregarIconeIconname'), error);
     }
     
     return null;
@@ -132,7 +132,7 @@ export default function IconSelector({
               onClick={() => setShowIconGrid(!showIconGrid)}
               className="px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 flex-1"
             >
-              {selectedIcon || {t('components.selecionarIcone')}}
+              {selectedIcon || t('components.selecionarIcone')}
             </button>
 
             {allowCustomUpload && (

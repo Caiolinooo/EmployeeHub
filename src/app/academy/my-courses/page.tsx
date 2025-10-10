@@ -79,7 +79,7 @@ const MyCoursesPage: React.FC = () => {
     try {
       const token = await getToken();
       if (!token) {
-        setError({t('academy.tokenDeAutenticacaoNaoEncontrado')});
+        setError(t('academy.tokenDeAutenticacaoNaoEncontrado'));
         return;
       }
 
@@ -97,7 +97,7 @@ const MyCoursesPage: React.FC = () => {
         setError(data.error || 'Erro ao carregar cursos');
       }
     } catch (error) {
-      console.error({t('academy.erroAoCarregarMatriculas')}, error);
+      console.error(t('academy.erroAoCarregarMatriculas'), error);
       setError('Erro ao carregar cursos');
     } finally {
       setLoading(false);

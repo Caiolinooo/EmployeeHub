@@ -68,14 +68,14 @@ export default function EditorPermissionsManager() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || {t('components.erroAoCarregarUsuarios')});
+        throw new Error(errorData.error || t('components.erroAoCarregarUsuarios'));
       }
 
       const data = await response.json();
       setUsers(data.users);
       setStats(data.stats);
     } catch (error) {
-      console.error({t('components.erroAoCarregarUsuarios')}, error);
+      console.error(t('components.erroAoCarregarUsuarios'), error);
       setError(error.message);
     } finally {
       setIsLoading(false);
@@ -108,7 +108,7 @@ export default function EditorPermissionsManager() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || {t('components.erroAoAtualizarPermissoes')});
+        throw new Error(errorData.error || t('components.erroAoAtualizarPermissoes'));
       }
 
       const data = await response.json();
@@ -117,7 +117,7 @@ export default function EditorPermissionsManager() {
       // Recarregar lista de usuários
       await fetchUsers();
     } catch (error) {
-      console.error({t('components.erroAoAtualizarPermissoes')}, error);
+      console.error(t('components.erroAoAtualizarPermissoes'), error);
       setError(error.message);
     } finally {
       setIsSaving(false);

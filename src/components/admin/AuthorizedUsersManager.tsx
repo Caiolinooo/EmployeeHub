@@ -93,14 +93,14 @@ export default function AuthorizedUsersManager() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || {t('components.erroAoCarregarUsuariosAutorizados')});
+        throw new Error(errorData.error || t('components.erroAoCarregarUsuariosAutorizados'));
       }
 
       const data = await response.json();
       setAuthorizedUsers(data);
     } catch (error) {
-      console.error({t('components.erroAoCarregarUsuariosAutorizados')}, error);
-      setError({t('components.erroAoCarregarUsuariosAutorizadosTenteNovamente')});
+      console.error(t('components.erroAoCarregarUsuariosAutorizados'), error);
+      setError(t('components.erroAoCarregarUsuariosAutorizadosTenteNovamente'));
     } finally {
       setLoading(false);
     }
@@ -123,13 +123,13 @@ export default function AuthorizedUsersManager() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || {t('components.erroAoCarregarEstatisticas')});
+        throw new Error(errorData.error || t('components.erroAoCarregarEstatisticas'));
       }
 
       const data = await response.json();
       setStats(data);
     } catch (error) {
-      console.error({t('components.erroAoCarregarEstatisticas')}, error);
+      console.error(t('components.erroAoCarregarEstatisticas'), error);
     }
   };
 
@@ -167,7 +167,7 @@ export default function AuthorizedUsersManager() {
 
       payload.action = action;
 
-      console.log({t('components.enviandoSolicitacaoParaApi')}, payload);
+      console.log(t('components.enviandoSolicitacaoParaApi'), payload);
 
       // Obter o token do localStorage
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
@@ -190,7 +190,7 @@ export default function AuthorizedUsersManager() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
         console.error('Resposta de erro da API:', errorData);
-        throw new Error(errorData.error || {t('components.erroAoAdicionarUsuarioAutorizado')});
+        throw new Error(errorData.error || t('components.erroAoAdicionarUsuarioAutorizado'));
       }
 
       const result = await response.json();
@@ -248,11 +248,11 @@ export default function AuthorizedUsersManager() {
         fetchAuthorizedUsers();
         fetchStats();
       } else {
-        setError(result.message || {t('components.erroAoAdicionarUsuarioAutorizado')});
+        setError(result.message || t('components.erroAoAdicionarUsuarioAutorizado'));
       }
     } catch (error) {
-      console.error({t('components.erroAoAdicionarUsuarioAutorizado')}, error);
-      setError({t('components.erroAoAdicionarUsuarioAutorizadoTenteNovamente')});
+      console.error(t('components.erroAoAdicionarUsuarioAutorizado'), error);
+      setError(t('components.erroAoAdicionarUsuarioAutorizadoTenteNovamente'));
     }
   };
 
@@ -279,7 +279,7 @@ export default function AuthorizedUsersManager() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
-        throw new Error(errorData.error || {t('components.erroAoAprovarUsuario')});
+        throw new Error(errorData.error || t('components.erroAoAprovarUsuario'));
       }
 
       const result = await response.json();
@@ -289,11 +289,11 @@ export default function AuthorizedUsersManager() {
         fetchAuthorizedUsers();
         fetchStats();
       } else {
-        setError(result.message || {t('components.erroAoAprovarUsuario')});
+        setError(result.message || t('components.erroAoAprovarUsuario'));
       }
     } catch (error) {
-      console.error({t('components.erroAoAprovarUsuario')}, error);
-      setError({t('components.erroAoAprovarUsuarioTenteNovamente')});
+      console.error(t('components.erroAoAprovarUsuario'), error);
+      setError(t('components.erroAoAprovarUsuarioTenteNovamente'));
     }
   };
 
@@ -327,7 +327,7 @@ export default function AuthorizedUsersManager() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
-        throw new Error(errorData.error || {t('components.erroAoRejeitarUsuario')});
+        throw new Error(errorData.error || t('components.erroAoRejeitarUsuario'));
       }
 
       const result = await response.json();
@@ -338,11 +338,11 @@ export default function AuthorizedUsersManager() {
         fetchAuthorizedUsers();
         fetchStats();
       } else {
-        setError(result.message || {t('components.erroAoRejeitarUsuario')});
+        setError(result.message || t('components.erroAoRejeitarUsuario'));
       }
     } catch (error) {
-      console.error({t('components.erroAoRejeitarUsuario')}, error);
-      setError({t('components.erroAoRejeitarUsuarioTenteNovamente')});
+      console.error(t('components.erroAoRejeitarUsuario'), error);
+      setError(t('components.erroAoRejeitarUsuarioTenteNovamente'));
     }
   };
 
@@ -352,7 +352,7 @@ export default function AuthorizedUsersManager() {
     }
 
     try {
-      console.log({t('components.excluindoUsuarioAutorizadoComIdId')});
+      console.log(t('components.excluindoUsuarioAutorizadoComIdId'));
       // Obter o token do localStorage
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
@@ -372,7 +372,7 @@ export default function AuthorizedUsersManager() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
         console.error('Resposta de erro da API:', errorData);
-        throw new Error(errorData.error || {t('components.erroAoExcluirUsuarioAutorizado')});
+        throw new Error(errorData.error || t('components.erroAoExcluirUsuarioAutorizado'));
       }
 
       const result = await response.json();
@@ -383,11 +383,11 @@ export default function AuthorizedUsersManager() {
         fetchAuthorizedUsers();
         fetchStats();
       } else {
-        setError(result.message || {t('components.erroAoExcluirUsuarioAutorizado')});
+        setError(result.message || t('components.erroAoExcluirUsuarioAutorizado'));
       }
     } catch (error) {
-      console.error({t('components.erroAoExcluirUsuarioAutorizado')}, error);
-      setError({t('components.erroAoExcluirUsuarioAutorizadoTenteNovamente')});
+      console.error(t('components.erroAoExcluirUsuarioAutorizado'), error);
+      setError(t('components.erroAoExcluirUsuarioAutorizadoTenteNovamente'));
     }
   };
 

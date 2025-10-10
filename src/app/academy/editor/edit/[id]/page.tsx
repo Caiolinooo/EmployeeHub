@@ -95,13 +95,13 @@ const EditCoursePage: React.FC = () => {
         // Verificar se o usuário pode editar este curso
         const canEdit = !!user && (hasFeature('academy_editor') || user.role === 'ADMIN');
         if (!canEdit) {
-          setError({t('academy.voceNaoTemPermissaoParaEditarEsteCurso')});
+          setError(t('academy.voceNaoTemPermissaoParaEditarEsteCurso'));
           return;
         }
 
         setCourse(courseInfo);
       } else {
-        setError({t('academy.cursoNaoEncontrado')});
+        setError(t('academy.cursoNaoEncontrado'));
       }
     } catch (error) {
       console.error('Erro ao carregar dados:', error);

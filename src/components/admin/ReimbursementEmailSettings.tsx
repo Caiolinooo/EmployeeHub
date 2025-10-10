@@ -41,17 +41,17 @@ const ReimbursementEmailSettings: React.FC<ReimbursementEmailSettingsProps> = ({
 
   const handleAddRecipient = () => {
     if (!newRecipient.trim()) {
-      setError({t('components.oEmailNaoPodeEstarVazio')});
+      setError(t('components.oEmailNaoPodeEstarVazio'));
       return;
     }
 
     if (!validateEmail(newRecipient)) {
-      setError({t('components.emailInvalido')});
+      setError(t('components.emailInvalido'));
       return;
     }
 
     if (recipients.includes(newRecipient)) {
-      setError({t('components.esteEmailJaEstaNaLista')});
+      setError(t('components.esteEmailJaEstaNaLista'));
       return;
     }
 
@@ -85,11 +85,11 @@ const ReimbursementEmailSettings: React.FC<ReimbursementEmailSettingsProps> = ({
       while (!success && attempts < 3) {
         attempts++;
         try {
-          console.log({t('components.tentativaAttemptsDeSalvarConfiguracoes')});
+          console.log(t('components.tentativaAttemptsDeSalvarConfiguracoes'));
           success = await onSave(settings);
 
           if (success) {
-            console.log({t('components.configuracoesSalvasComSucesso')});
+            console.log(t('components.configuracoesSalvasComSucesso'));
             break;
           } else {
             console.error(`Falha na tentativa ${attempts}`);
@@ -105,16 +105,16 @@ const ReimbursementEmailSettings: React.FC<ReimbursementEmailSettingsProps> = ({
       }
 
       if (success) {
-        toast.success({t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso')});
+        toast.success(t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso'));
       } else {
         console.error('Todas as tentativas falharam');
-        toast.error({t('components.erroAoSalvarConfiguracoes')});
+        toast.error(t('components.erroAoSalvarConfiguracoes'));
 
         if (lastError) {
           const errorMessage = lastError instanceof Error ? lastError.message : String(lastError);
-          setError({t('components.erroAoSalvarConfiguracoesErrormessageTenteNovament')});
+          setError(t('components.erroAoSalvarConfiguracoesErrormessageTenteNovament'));
         } else {
-          setError({t('components.erroAoSalvarConfiguracoesTenteNovamente')});
+          setError(t('components.erroAoSalvarConfiguracoesTenteNovamente'));
         }
 
         // Mostrar mensagem com instruções para correção manual
@@ -124,10 +124,10 @@ const ReimbursementEmailSettings: React.FC<ReimbursementEmailSettingsProps> = ({
         );
       }
     } catch (error) {
-      console.error({t('components.erroAoSalvarConfiguracoes')}, error);
-      toast.error({t('components.erroAoSalvarConfiguracoes')});
+      console.error(t('components.erroAoSalvarConfiguracoes'), error);
+      toast.error(t('components.erroAoSalvarConfiguracoes'));
       const errorMessage = error instanceof Error ? error.message : String(error);
-      setError({t('components.erroAoSalvarConfiguracoesErrormessageTenteNovament')});
+      setError(t('components.erroAoSalvarConfiguracoesErrormessageTenteNovament'));
     } finally {
       setIsSaving(false);
     }

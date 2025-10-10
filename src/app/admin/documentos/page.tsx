@@ -72,7 +72,7 @@ export default function DocumentsAdminPage() {
       const data = await response.json();
       toast.dismiss();
       toast.success(t('admin.documents.convertSuccess', 'PDFs convertidos com sucesso!'));
-      console.log({t('admin.resultadoDaConversao')}, data);
+      console.log(t('admin.resultadoDaConversao'), data);
     } catch (error) {
       console.error('Erro ao converter PDFs:', error);
       toast.dismiss();

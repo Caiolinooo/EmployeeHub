@@ -72,7 +72,7 @@ const GoogleCalendarIntegration: React.FC = () => {
       const data = await response.json();
       setAuthenticated(data.authenticated);
     } catch (error) {
-      console.error({t('components.erroAoVerificarStatusDeAutenticacao')}, error);
+      console.error(t('components.erroAoVerificarStatusDeAutenticacao'), error);
     }
   };
 
@@ -122,7 +122,7 @@ const GoogleCalendarIntegration: React.FC = () => {
         window.open(data.authUrl, 'google-auth', 'width=500,height=600');
       }
     } catch (error) {
-      console.error({t('components.erroAoObterUrlDeAutenticacao')}, error);
+      console.error(t('components.erroAoObterUrlDeAutenticacao'), error);
     }
   };
 

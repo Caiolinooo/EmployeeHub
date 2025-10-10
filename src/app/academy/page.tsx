@@ -169,10 +169,10 @@ const AcademyPage: React.FC = () => {
       if (data.success) {
         setEnrollments(data.enrollments);
       } else {
-        console.error({t('academy.erroAoCarregarMatriculas')}, data.error);
+        console.error(t('academy.erroAoCarregarMatriculas'), data.error);
       }
     } catch (error) {
-      console.error({t('academy.erroAoCarregarMatriculas')}, error);
+      console.error(t('academy.erroAoCarregarMatriculas'), error);
     }
   };
 
@@ -182,7 +182,7 @@ const AcademyPage: React.FC = () => {
     try {
       const token = await getToken();
       if (!token) {
-        setError({t('academy.tokenDeAutenticacaoNaoEncontrado')});
+        setError(t('academy.tokenDeAutenticacaoNaoEncontrado'));
         return;
       }
 
@@ -206,7 +206,7 @@ const AcademyPage: React.FC = () => {
         alert(data.error || 'Erro ao realizar matrícula');
       }
     } catch (error) {
-      console.error({t('academy.erroAoRealizarMatricula')}, error);
+      console.error(t('academy.erroAoRealizarMatricula'), error);
       alert('Erro ao realizar matrícula');
     }
   };

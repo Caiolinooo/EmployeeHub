@@ -467,7 +467,7 @@ export default function NewsPage() {
     setError(null); // Limpar erros anteriores
 
     try {
-      console.log({t('admin.iniciandoBuscaDeNoticias')});
+      console.log(t('admin.iniciandoBuscaDeNoticias'));
 
       // Tentar primeiro a API real
       let url = '/api/news';
@@ -546,9 +546,9 @@ export default function NewsPage() {
 
       // Verificar se data é um array
       if (!Array.isArray(data)) {
-        console.error({t('admin.respostaNaoEUmArray')}, data);
+        console.error(t('admin.respostaNaoEUmArray'), data);
         setNewsItems([]);
-        setError({t('admin.formatoDeRespostaInvalidoPorFavorTenteNovamente')});
+        setError(t('admin.formatoDeRespostaInvalidoPorFavorTenteNovamente'));
       } else {
         setNewsItems(data);
 
@@ -558,8 +558,8 @@ export default function NewsPage() {
         console.log('Categorias encontradas:', uniqueCategories);
       }
     } catch (error) {
-      console.error({t('admin.erroAoCarregarNoticias')}, error);
-      setError({t('admin.erroAoCarregarNoticiasPorFavorTenteNovamente')});
+      console.error(t('admin.erroAoCarregarNoticias'), error);
+      setError(t('admin.erroAoCarregarNoticiasPorFavorTenteNovamente'));
       setNewsItems([]); // Definir como array vazio para evitar erros de renderização
     } finally {
       setIsLoading(false);
@@ -586,7 +586,7 @@ export default function NewsPage() {
       file: '',
       enabled: true,
       featured: false,
-      category: selectedCategory || {t('admin.noticias')},
+      category: selectedCategory || t('admin.noticias'),
       author: 'Equipe ABZ',
       thumbnail: null,
       createdAt: new Date().toISOString(),
@@ -631,8 +631,8 @@ export default function NewsPage() {
       setEditingNews(null);
       setIsAdding(false);
     } catch (error) {
-      console.error({t('admin.erroAoSalvarNoticia')}, error);
-      setError({t('admin.erroAoSalvarNoticiaPorFavorTenteNovamente')});
+      console.error(t('admin.erroAoSalvarNoticia'), error);
+      setError(t('admin.erroAoSalvarNoticiaPorFavorTenteNovamente'));
     }
   };
 
@@ -655,8 +655,8 @@ export default function NewsPage() {
         // Recarregar notícias
         fetchNews();
       } catch (error) {
-        console.error({t('admin.erroAoExcluirNoticia')}, error);
-        setError({t('admin.erroAoExcluirNoticiaPorFavorTenteNovamente')});
+        console.error(t('admin.erroAoExcluirNoticia'), error);
+        setError(t('admin.erroAoExcluirNoticiaPorFavorTenteNovamente'));
       }
     }
   };
@@ -684,8 +684,8 @@ export default function NewsPage() {
       // Recarregar notícias
       fetchNews();
     } catch (error) {
-      console.error({t('admin.erroAoAtualizarNoticia')}, error);
-      setError({t('admin.erroAoAtualizarNoticiaPorFavorTenteNovamente')});
+      console.error(t('admin.erroAoAtualizarNoticia'), error);
+      setError(t('admin.erroAoAtualizarNoticiaPorFavorTenteNovamente'));
     }
   };
 
@@ -712,8 +712,8 @@ export default function NewsPage() {
       // Recarregar notícias
       fetchNews();
     } catch (error) {
-      console.error({t('admin.erroAoAtualizarNoticia')}, error);
-      setError({t('admin.erroAoAtualizarNoticiaPorFavorTenteNovamente')});
+      console.error(t('admin.erroAoAtualizarNoticia'), error);
+      setError(t('admin.erroAoAtualizarNoticiaPorFavorTenteNovamente'));
     }
   };
 

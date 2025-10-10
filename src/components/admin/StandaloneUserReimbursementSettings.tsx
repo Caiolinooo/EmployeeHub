@@ -29,17 +29,17 @@ const StandaloneUserReimbursementSettings: React.FC<StandaloneUserReimbursementS
 
   const handleAddRecipient = () => {
     if (!newRecipient.trim()) {
-      setError({t('components.oEmailNaoPodeEstarVazio')});
+      setError(t('components.oEmailNaoPodeEstarVazio'));
       return;
     }
 
     if (!validateEmail(newRecipient)) {
-      setError({t('components.emailInvalido')});
+      setError(t('components.emailInvalido'));
       return;
     }
 
     if (recipients.includes(newRecipient)) {
-      setError({t('components.esteEmailJaEstaNaLista')});
+      setError(t('components.esteEmailJaEstaNaLista'));
       return;
     }
 
@@ -81,14 +81,14 @@ const StandaloneUserReimbursementSettings: React.FC<StandaloneUserReimbursementS
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error({t('components.erroAoSalvarConfiguracoes')}, errorData.error);
+        console.error(t('components.erroAoSalvarConfiguracoes'), errorData.error);
         throw new Error(errorData.error || t('common.errorSavingSettings'));
       }
 
       setSuccess(t('common.settingsSavedSuccess'));
       toast.success(t('common.settingsSavedSuccess'));
     } catch (error) {
-      console.error({t('components.erroAoSalvarConfiguracoes')}, error);
+      console.error(t('components.erroAoSalvarConfiguracoes'), error);
       toast.error(t('common.errorSavingSettings'));
       setError(t('common.errorSavingSettings') + '. ' + t('common.tryAgain'));
     } finally {

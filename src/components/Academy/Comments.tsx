@@ -64,10 +64,10 @@ const Comments: React.FC<CommentsProps> = ({ courseId, className = '' }) => {
       if (data.success) {
         setComments(data.comments);
       } else {
-        console.error({t('components.erroAoCarregarComentarios')}, data.error);
+        console.error(t('components.erroAoCarregarComentarios'), data.error);
       }
     } catch (error) {
-      console.error({t('components.erroAoCarregarComentarios')}, error);
+      console.error(t('components.erroAoCarregarComentarios'), error);
     } finally {
       setLoading(false);
     }
@@ -104,7 +104,7 @@ const Comments: React.FC<CommentsProps> = ({ courseId, className = '' }) => {
         alert(data.error || 'Erro ao enviar comentário');
       }
     } catch (error) {
-      console.error({t('components.erroAoEnviarComentario')}, error);
+      console.error(t('components.erroAoEnviarComentario'), error);
       alert('Erro ao enviar comentário');
     } finally {
       setSubmitting(false);
@@ -179,7 +179,7 @@ const Comments: React.FC<CommentsProps> = ({ courseId, className = '' }) => {
         alert(data.error || 'Erro ao editar comentário');
       }
     } catch (error) {
-      console.error({t('components.erroAoEditarComentario')}, error);
+      console.error(t('components.erroAoEditarComentario'), error);
       alert('Erro ao editar comentário');
     } finally {
       setSubmitting(false);
@@ -208,7 +208,7 @@ const Comments: React.FC<CommentsProps> = ({ courseId, className = '' }) => {
         alert(data.error || 'Erro ao excluir comentário');
       }
     } catch (error) {
-      console.error({t('components.erroAoExcluirComentario')}, error);
+      console.error(t('components.erroAoExcluirComentario'), error);
       alert('Erro ao excluir comentário');
     }
   };

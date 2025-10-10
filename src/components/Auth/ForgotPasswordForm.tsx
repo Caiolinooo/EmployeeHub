@@ -46,7 +46,7 @@ export default function ForgotPasswordForm({ onCancel, initialEmail = '' }: Forg
     try {
         // Usar nossa nova API de reset de senha
         if (useEmail) {
-          console.log({t('components.enviandoEmailDeRecuperacaoPara')}, identifier);
+          console.log(t('components.enviandoEmailDeRecuperacaoPara'), identifier);
 
           const response = await fetch('/api/auth/request-password-reset', {
             method: 'POST',
@@ -61,12 +61,12 @@ export default function ForgotPasswordForm({ onCancel, initialEmail = '' }: Forg
           const data = await response.json();
 
           if (!response.ok || !data.success) {
-            console.error({t('components.erroAoSolicitarRecuperacaoDeSenha')}, data);
+            console.error(t('components.erroAoSolicitarRecuperacaoDeSenha'), data);
             setError(data.message || t('auth.requestError'));
             return;
           }
 
-          console.log({t('components.emailDeRecuperacaoEnviadoComSucesso')});
+          console.log(t('components.emailDeRecuperacaoEnviadoComSucesso'));
         } else {
           // Para telefone, precisamos usar a API personalizada
           const response = await fetch('/api/auth/forgot-password', {
@@ -90,7 +90,7 @@ export default function ForgotPasswordForm({ onCancel, initialEmail = '' }: Forg
         // Se chegou aqui, foi bem-sucedido
         setSuccess(true);
     } catch (error) {
-      console.error({t('components.erroAoSolicitarRecuperacaoDeSenha')}, error);
+      console.error(t('components.erroAoSolicitarRecuperacaoDeSenha'), error);
       setError(t('auth.requestError'));
     } finally {
       setIsLoading(false);

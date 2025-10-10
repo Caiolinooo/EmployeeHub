@@ -64,7 +64,7 @@ export default function ReimbursementMigrationPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || {t('admin.erroAoExecutarMigracao')});
+        throw new Error(data.error || t('admin.erroAoExecutarMigracao'));
       }
 
       setResult(data);
@@ -74,7 +74,7 @@ export default function ReimbursementMigrationPage() {
         variant: 'default',
       });
     } catch (err) {
-      console.error({t('admin.erroAoExecutarMigracao')}, err);
+      console.error(t('admin.erroAoExecutarMigracao'), err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
       toast({
         title: 'Erro',
@@ -110,7 +110,7 @@ export default function ReimbursementMigrationPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || {t('admin.erroAoVerificarStatusDaMigracao')});
+        throw new Error(data.error || t('admin.erroAoVerificarStatusDaMigracao'));
       }
 
       setResult(data);
@@ -120,7 +120,7 @@ export default function ReimbursementMigrationPage() {
         variant: 'default',
       });
     } catch (err) {
-      console.error({t('admin.erroAoVerificarStatusDaMigracao')}, err);
+      console.error(t('admin.erroAoVerificarStatusDaMigracao'), err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
       toast({
         title: 'Erro',

@@ -64,7 +64,7 @@ export default function LanguageSelector({
         setIsChanging(false);
       }, 500);
     } else {
-      console.log({t('components.languageselectorIdiomaJaEOAtualNaoAlterando')});
+      console.log(t('components.languageselectorIdiomaJaEOAtualNaoAlterando'));
     }
 
     setIsOpen(false);

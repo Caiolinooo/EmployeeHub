@@ -120,7 +120,7 @@ export default function AdminCardsPage() {
         setMigrationStatus(data);
       }
     } catch (error) {
-      console.error({t('admin.erroAoVerificarStatusDaMigracao')}, error);
+      console.error(t('admin.erroAoVerificarStatusDaMigracao'), error);
     }
   };
 
@@ -150,7 +150,7 @@ export default function AdminCardsPage() {
         });
       }
     } catch (error) {
-      console.error({t('admin.erroNaMigracao')}, error);
+      console.error(t('admin.erroNaMigracao'), error);
       toast({
         title: {t('admin.erroNaMigracao')},
         description: {t('admin.falhaAoExecutarAMigracao')},

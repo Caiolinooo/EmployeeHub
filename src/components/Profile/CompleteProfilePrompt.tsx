@@ -134,12 +134,12 @@ export default function CompleteProfilePrompt({ reminderMinutes = 2 }: Props) {
       const lastValidation = validateName(formattedLastName);
 
       if (!firstValidation.isValid) {
-        toast.warning(firstValidation.message || {t('components.nomeInvalido')});
+        toast.warning(firstValidation.message || t('components.nomeInvalido'));
         return;
       }
 
       if (!lastValidation.isValid) {
-        toast.warning(lastValidation.message || {t('components.sobrenomeInvalido')});
+        toast.warning(lastValidation.message || t('components.sobrenomeInvalido'));
         return;
       }
 

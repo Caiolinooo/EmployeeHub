@@ -39,7 +39,7 @@ const HighlightCreator: React.FC<HighlightCreatorProps> = ({
 
   const handleSubmit = async () => {
     if (!title || !selectedFile) {
-      toast.error({t('components.preenchaTodosOsCamposObrigatorios')});
+      toast.error(t('components.preenchaTodosOsCamposObrigatorios'));
       return;
     }
 

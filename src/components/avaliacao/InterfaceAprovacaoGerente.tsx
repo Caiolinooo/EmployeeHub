@@ -72,18 +72,18 @@ export default function InterfaceAprovacaoGerente({
         .order('data_autoavaliacao', { ascending: true });
 
       if (error) {
-        console.error({t('components.erroAoCarregarAvaliacoes')}, error);
+        console.error(t('components.erroAoCarregarAvaliacoes'), error);
         return;
       }
 
       const avaliacoesFormatadas = avaliacoes?.map(avaliacao => ({
         id: avaliacao.id,
         funcionario_id: avaliacao.funcionario_id,
-        funcionario_nome: (avaliacao.users_unified as any)?.name || {t('components.nomeNaoEncontrado')},
-        funcionario_email: (avaliacao.users_unified as any)?.email || {t('components.emailNaoEncontrado')},
+        funcionario_nome: (avaliacao.users_unified as any)?.name || t('components.nomeNaoEncontrado'),
+        funcionario_email: (avaliacao.users_unified as any)?.email || t('components.emailNaoEncontrado'),
         etapa_atual: avaliacao.etapa_atual,
         data_autoavaliacao: avaliacao.data_autoavaliacao,
-        periodo_nome: (avaliacao.periodos_avaliacao as any)?.nome || {t('components.periodoNaoEncontrado')},
+        periodo_nome: (avaliacao.periodos_avaliacao as any)?.nome || t('components.periodoNaoEncontrado'),
         autoavaliacao: avaliacao.autoavaliacoes?.[0] || {
           questao_11_pontos_fortes: '',
           questao_12_areas_melhoria: '',
@@ -95,7 +95,7 @@ export default function InterfaceAprovacaoGerente({
 
       setAvaliacoesPendentes(avaliacoesFormatadas);
     } catch (error) {
-      console.error({t('components.erroAoCarregarAvaliacoesPendentes')}, error);
+      console.error(t('components.erroAoCarregarAvaliacoesPendentes'), error);
     } finally {
       setLoading(false);
     }
@@ -148,7 +148,7 @@ export default function InterfaceAprovacaoGerente({
         alert('Erro ao processar avaliação');
       }
     } catch (error) {
-      console.error({t('components.erroAoProcessarAvaliacao')}, error);
+      console.error(t('components.erroAoProcessarAvaliacao'), error);
       alert('Erro ao processar avaliação');
     } finally {
       setLoading(false);
@@ -235,7 +235,7 @@ export default function InterfaceAprovacaoGerente({
                   <div className="bg-gray-50 rounded-lg p-4 mb-4">
                     <h4 className="font-medium text-gray-900 mb-2">Principais Pontos Fortes:</h4>
                     <p className="text-sm text-gray-700 line-clamp-2">
-                      {avaliacao.autoavaliacao.questao_11_pontos_fortes || {t('components.naoInformado')}}
+                      {avaliacao.autoavaliacao.questao_11_pontos_fortes || t('components.naoInformado')}
                     </p>
                   </div>
                 </div>

@@ -90,7 +90,7 @@ const UserRoleManager: React.FC<UserRoleManagerProps> = ({
     e.preventDefault();
 
     if (selectedRole === currentRole) {
-      setError({t('components.oPapelSelecionadoEOMesmoQueOAtual')});
+      setError(t('components.oPapelSelecionadoEOMesmoQueOAtual'));
       return;
     }
 
@@ -118,7 +118,7 @@ const UserRoleManager: React.FC<UserRoleManagerProps> = ({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || {t('components.erroAoAtualizarPapelDoUsuario')});
+        throw new Error(errorData.error || t('components.erroAoAtualizarPapelDoUsuario'));
       }
 
       setSuccess(true);
@@ -127,7 +127,7 @@ const UserRoleManager: React.FC<UserRoleManagerProps> = ({
         onClose();
       }, 1500);
     } catch (error) {
-      console.error({t('components.erroAoAtualizarPapelDoUsuario')}, error);
+      console.error(t('components.erroAoAtualizarPapelDoUsuario'), error);
       setError(error instanceof Error ? error.message : 'Erro desconhecido');
     } finally {
       setLoading(false);

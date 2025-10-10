@@ -33,7 +33,7 @@ export default function BannedUsersManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
       
       if (!token) {
-        toast.error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
+        toast.error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
         return;
       }
 
@@ -51,8 +51,8 @@ export default function BannedUsersManager() {
       const data = await response.json();
       setBannedUsers(data.data || []);
     } catch (error) {
-      console.error({t('components.erroAoBuscarUsuariosBanidos')}, error);
-      toast.error({t('components.erroAoCarregarUsuariosBanidos')});
+      console.error(t('components.erroAoBuscarUsuariosBanidos'), error);
+      toast.error(t('components.erroAoCarregarUsuariosBanidos'));
     } finally {
       setLoading(false);
     }
@@ -68,7 +68,7 @@ export default function BannedUsersManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
       
       if (!token) {
-        toast.error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
+        toast.error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
         return;
       }
 
@@ -89,11 +89,11 @@ export default function BannedUsersManager() {
         throw new Error({t('components.erroAoDesbanirUsuario')});
       }
 
-      toast.success({t('components.usuarioDesbandidoComSucesso')});
+      toast.success(t('components.usuarioDesbandidoComSucesso'));
       fetchBannedUsers(); // Recarregar lista
     } catch (error) {
-      console.error({t('components.erroAoDesbanirUsuario')}, error);
-      toast.error({t('components.erroAoDesbanirUsuario')});
+      console.error(t('components.erroAoDesbanirUsuario'), error);
+      toast.error(t('components.erroAoDesbanirUsuario'));
     } finally {
       setUnbanningUser(null);
     }
@@ -214,7 +214,7 @@ export default function BannedUsersManager() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900 max-w-xs truncate">
-                        {user.ban_reason || {t('components.naoEspecificado')}}
+                        {user.ban_reason || t('components.naoEspecificado')}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

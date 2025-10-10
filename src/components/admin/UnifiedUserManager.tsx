@@ -163,7 +163,7 @@ export default function UnifiedUserManager() {
                 localStorage.removeItem('abzToken');
               }
             } else {
-              console.log({t('components.falhaNaRenovacaoDoTokenTentandoFixtoken')});
+              console.log(t('components.falhaNaRenovacaoDoTokenTentandoFixtoken'));
 
               // Tentar corrigir o token
               try {
@@ -206,7 +206,7 @@ export default function UnifiedUserManager() {
   useEffect(() => {
     console.log('UnifiedUserManager - Tab changed to:', activeTab);
     if (activeTab === 'users') {
-      console.log({t('components.iniciandoBuscaDeUsuariosDevidoAMudancaDeAba')});
+      console.log(t('components.iniciandoBuscaDeUsuariosDevidoAMudancaDeAba'));
       // Adicionar um pequeno delay para garantir que o componente esteja totalmente montado
       setTimeout(() => {
         fetchUsers();
@@ -344,7 +344,7 @@ export default function UnifiedUserManager() {
 
   // Buscar usuários regulares
   const fetchUsers = async () => {
-    console.log({t('components.iniciandoBuscaDeUsuariosUseallusers')});
+    console.log(t('components.iniciandoBuscaDeUsuariosUseallusers'));
     setLoading(true);
     setError(null);
     try {
@@ -374,7 +374,7 @@ export default function UnifiedUserManager() {
         throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
       }
 
-      console.log({t('components.buscandoUsuariosAutorizadosComToken')}, token.substring(0, 10) + '...');
+      console.log(t('components.buscandoUsuariosAutorizadosComToken'), token.substring(0, 10) + '...');
 
       const response = await fetch(url, {
         headers: {
@@ -386,17 +386,17 @@ export default function UnifiedUserManager() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error({t('components.erroAoBuscarUsuariosAutorizados')}, errorData);
+        console.error(t('components.erroAoBuscarUsuariosAutorizados'), errorData);
 
         // Se o erro for de acesso negado e o usuário for o administrador principal, redirecionar para a página de correção
         if (response.status === 403 &&
             (user?.email === 'caio.correia@groupabz.com' || (user as any)?.phone_number === '+5522997847289')) {
-          console.log({t('components.usuarioEOAdministradorPrincipalMasNaoTemAcessoRedi')});
+          console.log(t('components.usuarioEOAdministradorPrincipalMasNaoTemAcessoRedi'));
           router.push('/admin-fix');
           return;
         }
 
-        throw new Error(errorData.error || {t('components.erroAoCarregarUsuariosAutorizados')});
+        throw new Error(errorData.error || t('components.erroAoCarregarUsuariosAutorizados'));
       }
 
       const responseText = await response.text();
@@ -404,15 +404,15 @@ export default function UnifiedUserManager() {
 
       // Verificar se a resposta está vazia
       if (!responseText || responseText.trim() === '') {
-        console.error({t('components.respostaVaziaRecebidaDaApiDeUsuariosAutorizados')});
+        console.error(t('components.respostaVaziaRecebidaDaApiDeUsuariosAutorizados'));
         setAuthorizedUsers([]);
-        setError({t('components.nenhumUsuarioAutorizadoEncontradoARespostaDaApiEst')});
+        setError(t('components.nenhumUsuarioAutorizadoEncontradoARespostaDaApiEst'));
         return;
       }
 
       try {
         const data = JSON.parse(responseText);
-        console.log({t('components.usuariosAutorizadosRecebidos')}, data.length);
+        console.log(t('components.usuariosAutorizadosRecebidos'), data.length);
 
         // Verificar se os dados estão no formato esperado
         if (Array.isArray(data)) {
@@ -421,7 +421,7 @@ export default function UnifiedUserManager() {
             const firstUser = data[0];
             // Verificar se os campos necessários estão presentes
             if (!firstUser._id) {
-              console.warn({t('components.dadosDeUsuarioAutorizadoPodemEstarEmFormatoIncorre')}, firstUser);
+              console.warn(t('components.dadosDeUsuarioAutorizadoPodemEstarEmFormatoIncorre'), firstUser);
               console.log('Tentando mapear para o formato correto...');
 
               // Tentar mapear para o formato correto
@@ -455,19 +455,19 @@ export default function UnifiedUserManager() {
             setAuthorizedUsers(data);
           }
         } else {
-          console.error({t('components.formatoDeRespostaInesperadoParaUsuariosAutorizados')}, typeof data);
-          setError({t('components.formatoDeRespostaInesperadoEsperavaUmArrayDeUsuari')});
+          console.error(t('components.formatoDeRespostaInesperadoParaUsuariosAutorizados'), typeof data);
+          setError(t('components.formatoDeRespostaInesperadoEsperavaUmArrayDeUsuari'));
           setAuthorizedUsers([]);
         }
       } catch (parseError) {
-        console.error({t('components.erroAoAnalisarRespostaJsonDeUsuariosAutorizados')}, parseError);
+        console.error(t('components.erroAoAnalisarRespostaJsonDeUsuariosAutorizados'), parseError);
         console.log('Primeiros 100 caracteres da resposta:', responseText.substring(0, 100));
-        setError({t('components.erroAoProcessarDadosDeUsuariosAutorizadosFormatoIn')});
+        setError(t('components.erroAoProcessarDadosDeUsuariosAutorizadosFormatoIn'));
         setAuthorizedUsers([]);
       }
     } catch (error) {
-      console.error({t('components.erroAoCarregarUsuariosAutorizados')}, error);
-      setError({t('components.erroAoCarregarUsuariosAutorizadosTenteNovamente')});
+      console.error(t('components.erroAoCarregarUsuariosAutorizados'), error);
+      setError(t('components.erroAoCarregarUsuariosAutorizadosTenteNovamente'));
     } finally {
       setLoading(false);
     }
@@ -484,7 +484,7 @@ export default function UnifiedUserManager() {
 
       // Tentar renovar o token antes de fazer a requisição
       try {
-        console.log({t('components.tentandoRenovarTokenAntesDeBuscarEstatisticas')});
+        console.log(t('components.tentandoRenovarTokenAntesDeBuscarEstatisticas'));
         const refreshResponse = await fetch('/api/auth/token-refresh', {
           method: 'POST',
           headers: {
@@ -494,7 +494,7 @@ export default function UnifiedUserManager() {
 
         if (refreshResponse.ok) {
           const refreshData = await refreshResponse.json();
-          console.log({t('components.tokenRenovadoComSucessoAntesDeBuscarEstatisticas')});
+          console.log(t('components.tokenRenovadoComSucessoAntesDeBuscarEstatisticas'));
 
           if (refreshData.token && refreshData.token !== token) {
             console.log('Atualizando token renovado no localStorage');
@@ -507,10 +507,10 @@ export default function UnifiedUserManager() {
           }
         }
       } catch (refreshError) {
-        console.error({t('components.erroAoRenovarTokenAntesDeBuscarEstatisticas')}, refreshError);
+        console.error(t('components.erroAoRenovarTokenAntesDeBuscarEstatisticas'), refreshError);
       }
 
-      console.log({t('components.buscandoEstatisticasComToken')}, token?.substring(0, 10) + '...');
+      console.log(t('components.buscandoEstatisticasComToken'), token?.substring(0, 10) + '...');
 
       const response = await fetch('/api/admin/access-stats', {
         headers: {
@@ -518,15 +518,15 @@ export default function UnifiedUserManager() {
         }
       });
 
-      console.log({t('components.respostaDaApiDeEstatisticas')}, response.status, response.statusText);
+      console.log(t('components.respostaDaApiDeEstatisticas'), response.status, response.statusText);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error({t('components.erroAoBuscarEstatisticas')}, errorData);
+        console.error(t('components.erroAoBuscarEstatisticas'), errorData);
 
         // Se o erro for de token inválido, tentar corrigir o token
         if (response.status === 401) {
-          console.log({t('components.tokenInvalidoOuExpiradoTentandoCorrigir')});
+          console.log(t('components.tokenInvalidoOuExpiradoTentandoCorrigir'));
           try {
             // Tentar corrigir o token
             const fixResponse = await fetch('/api/auth/fix-token', {
@@ -557,7 +557,7 @@ export default function UnifiedUserManager() {
 
                 if (retryResponse.ok) {
                   const data = await retryResponse.json();
-                  console.log({t('components.estatisticasRecebidasAposCorrecaoDeToken')}, data);
+                  console.log(t('components.estatisticasRecebidasAposCorrecaoDeToken'), data);
                   setStats(data);
                   return;
                 }
@@ -571,19 +571,19 @@ export default function UnifiedUserManager() {
         // Se o erro for de acesso negado e o usuário for o administrador principal, redirecionar para a página de correção
         if (response.status === 403 &&
             (user?.email === 'caio.correia@groupabz.com' || (user as any)?.phone_number === '+5522997847289')) {
-          console.log({t('components.usuarioEOAdministradorPrincipalMasNaoTemAcessoAsEs')});
+          console.log(t('components.usuarioEOAdministradorPrincipalMasNaoTemAcessoAsEs'));
           router.push('/admin-fix');
           return;
         }
 
-        throw new Error(errorData.error || {t('components.erroAoCarregarEstatisticas')});
+        throw new Error(errorData.error || t('components.erroAoCarregarEstatisticas'));
       }
 
       const data = await response.json();
-      console.log({t('components.estatisticasRecebidas')}, data);
+      console.log(t('components.estatisticasRecebidas'), data);
       setStats(data);
     } catch (error) {
-      console.error({t('components.erroAoCarregarEstatisticas')}, error);
+      console.error(t('components.erroAoCarregarEstatisticas'), error);
       // Não mostrar o erro na interface para não confundir o usuário
       // Apenas registrar no console para depuração
     }
@@ -653,7 +653,7 @@ export default function UnifiedUserManager() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || {t('components.erroAoSalvarUsuario')});
+        throw new Error(errorData.error || t('components.erroAoSalvarUsuario'));
       }
 
       setSuccessMessage({t('components.usuarioIsnewuser')}criado' : 'atualizado'} com sucesso!`);
@@ -665,7 +665,7 @@ export default function UnifiedUserManager() {
         setSuccessMessage('');
       }, 3000);
     } catch (error) {
-      console.error({t('components.erroAoSalvarUsuario')}, error);
+      console.error(t('components.erroAoSalvarUsuario'), error);
       setError({t('components.erroAoSalvarUsuarioErrorInstanceofErrorErrormessag')}Erro desconhecido'}`);
     }
   };
@@ -690,7 +690,7 @@ export default function UnifiedUserManager() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || {t('components.erroAoExcluirUsuario')});
+        throw new Error(errorData.error || t('components.erroAoExcluirUsuario'));
       }
 
       setSuccessMessage({t('components.usuarioExcluidoComSucesso')});
@@ -702,7 +702,7 @@ export default function UnifiedUserManager() {
         setSuccessMessage('');
       }, 3000);
     } catch (error) {
-      console.error({t('components.erroAoExcluirUsuario')}, error);
+      console.error(t('components.erroAoExcluirUsuario'), error);
       setError({t('components.erroAoExcluirUsuarioErrorInstanceofErrorErrormessa')}Erro desconhecido'}`);
     }
   };
@@ -757,7 +757,7 @@ export default function UnifiedUserManager() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
-        throw new Error(errorData.error || {t('components.erroAoAdicionarUsuarioAutorizado')});
+        throw new Error(errorData.error || t('components.erroAoAdicionarUsuarioAutorizado'));
       }
 
       const result = await response.json();
@@ -813,11 +813,11 @@ export default function UnifiedUserManager() {
         fetchAuthorizedUsers();
         fetchStats();
       } else {
-        setError(result.message || {t('components.erroAoAdicionarUsuarioAutorizado')});
+        setError(result.message || t('components.erroAoAdicionarUsuarioAutorizado'));
       }
     } catch (error) {
-      console.error({t('components.erroAoAdicionarUsuarioAutorizado')}, error);
-      setError({t('components.erroAoAdicionarUsuarioAutorizadoTenteNovamente')});
+      console.error(t('components.erroAoAdicionarUsuarioAutorizado'), error);
+      setError(t('components.erroAoAdicionarUsuarioAutorizadoTenteNovamente'));
     }
   };
 
@@ -843,7 +843,7 @@ export default function UnifiedUserManager() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
-        throw new Error(errorData.error || {t('components.erroAoAprovarUsuario')});
+        throw new Error(errorData.error || t('components.erroAoAprovarUsuario'));
       }
 
       const result = await response.json();
@@ -853,11 +853,11 @@ export default function UnifiedUserManager() {
         fetchAuthorizedUsers();
         fetchStats();
       } else {
-        setError(result.message || {t('components.erroAoAprovarUsuario')});
+        setError(result.message || t('components.erroAoAprovarUsuario'));
       }
     } catch (error) {
-      console.error({t('components.erroAoAprovarUsuario')}, error);
-      setError({t('components.erroAoAprovarUsuarioTenteNovamente')});
+      console.error(t('components.erroAoAprovarUsuario'), error);
+      setError(t('components.erroAoAprovarUsuarioTenteNovamente'));
     }
   };
 
@@ -890,7 +890,7 @@ export default function UnifiedUserManager() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
-        throw new Error(errorData.error || {t('components.erroAoRejeitarUsuario')});
+        throw new Error(errorData.error || t('components.erroAoRejeitarUsuario'));
       }
 
       const result = await response.json();
@@ -901,11 +901,11 @@ export default function UnifiedUserManager() {
         fetchAuthorizedUsers();
         fetchStats();
       } else {
-        setError(result.message || {t('components.erroAoRejeitarUsuario')});
+        setError(result.message || t('components.erroAoRejeitarUsuario'));
       }
     } catch (error) {
-      console.error({t('components.erroAoRejeitarUsuario')}, error);
-      setError({t('components.erroAoRejeitarUsuarioTenteNovamente')});
+      console.error(t('components.erroAoRejeitarUsuario'), error);
+      setError(t('components.erroAoRejeitarUsuarioTenteNovamente'));
     }
   };
 
@@ -930,7 +930,7 @@ export default function UnifiedUserManager() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
-        throw new Error(errorData.error || {t('components.erroAoExcluirUsuarioAutorizado')});
+        throw new Error(errorData.error || t('components.erroAoExcluirUsuarioAutorizado'));
       }
 
       const result = await response.json();
@@ -940,18 +940,18 @@ export default function UnifiedUserManager() {
         fetchAuthorizedUsers();
         fetchStats();
       } else {
-        setError(result.message || {t('components.erroAoExcluirUsuarioAutorizado')});
+        setError(result.message || t('components.erroAoExcluirUsuarioAutorizado'));
       }
     } catch (error) {
-      console.error({t('components.erroAoExcluirUsuarioAutorizado')}, error);
-      setError({t('components.erroAoExcluirUsuarioAutorizadoTenteNovamente')});
+      console.error(t('components.erroAoExcluirUsuarioAutorizado'), error);
+      setError(t('components.erroAoExcluirUsuarioAutorizadoTenteNovamente'));
     }
   };
 
   const handleApproveUser = async (userId: string) => {
     const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
     if (!token) {
-      setError({t('components.tokenDeAutenticacaoNaoEncontrado')});
+      setError(t('components.tokenDeAutenticacaoNaoEncontrado'));
       return;
     }
 
@@ -972,7 +972,7 @@ export default function UnifiedUserManager() {
       await fetchUsers();
       await fetchStats();
     } catch (err) {
-      console.error({t('components.erroAoAprovarUsuario')}, err);
+      console.error(t('components.erroAoAprovarUsuario'), err);
       setError(err instanceof Error ? err.message : {t('components.erroAoAprovarUsuario')});
     }
   };
@@ -980,7 +980,7 @@ export default function UnifiedUserManager() {
   const handleRejectUser = async (userId: string) => {
     const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
     if (!token) {
-      setError({t('components.tokenDeAutenticacaoNaoEncontrado')});
+      setError(t('components.tokenDeAutenticacaoNaoEncontrado'));
       return;
     }
 
@@ -1001,7 +1001,7 @@ export default function UnifiedUserManager() {
       await fetchUsers();
       await fetchStats();
     } catch (err) {
-      console.error({t('components.erroAoRejeitarUsuario')}, err);
+      console.error(t('components.erroAoRejeitarUsuario'), err);
       setError(err instanceof Error ? err.message : {t('components.erroAoRejeitarUsuario')});
     }
   };
@@ -1120,7 +1120,7 @@ export default function UnifiedUserManager() {
               </div>
               <button
                 onClick={() => {
-                  console.log({t('components.atualizandoListaDeUsuariosManualmente')});
+                  console.log(t('components.atualizandoListaDeUsuariosManualmente'));
                   fetchUsers();
                 }}
                 className="flex items-center px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
@@ -1182,7 +1182,7 @@ export default function UnifiedUserManager() {
                   </tr>
                 ) : (
                   filteredUsers.map((user) => {
-                    console.log({t('components.renderizandoUsuarioUserfirstnameUserlastnameUserid')});
+                    console.log(t('components.renderizandoUsuarioUserfirstnameUserlastnameUserid'));
                     return (
                     <tr key={user._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">

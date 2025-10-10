@@ -117,7 +117,7 @@ const InstagramStylePostCreator: React.FC<InstagramStylePostCreatorProps> = ({
       }
 
       const newPost = {
-        title: postData.title || {t('components.novaPublicacao')},
+        title: postData.title || t('components.novaPublicacao'),
         content: postData.content,
         excerpt: postData.content.substring(0, 200),
         media_urls: mediaUrls,

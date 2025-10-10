@@ -65,7 +65,7 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
         setPage(pageNum);
       }
     } catch (error) {
-      console.error({t('components.erroAoCarregarNotificacoes')}, error);
+      console.error(t('components.erroAoCarregarNotificacoes'), error);
     } finally {
       setLoading(false);
     }
@@ -91,7 +91,7 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
     } catch (error) {
-      console.error({t('components.erroAoMarcarNotificacaoComoLida')}, error);
+      console.error(t('components.erroAoMarcarNotificacaoComoLida'), error);
     }
   };
 

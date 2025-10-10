@@ -40,12 +40,12 @@ export default function UserApprovalSettingsPage() {
         if (data.success) {
           setSettings(data.data);
         } else {
-          console.error({t('admin.erroAoCarregarConfiguracoes')}, data.error);
-          toast.error({t('admin.erroAoCarregarConfiguracoes')});
+          console.error(t('admin.erroAoCarregarConfiguracoes'), data.error);
+          toast.error(t('admin.erroAoCarregarConfiguracoes'));
         }
       } catch (error) {
-        console.error({t('admin.erroAoCarregarConfiguracoes')}, error);
-        toast.error({t('admin.erroAoCarregarConfiguracoes')});
+        console.error(t('admin.erroAoCarregarConfiguracoes'), error);
+        toast.error(t('admin.erroAoCarregarConfiguracoes'));
       } finally {
         setLoading(false);
       }
@@ -71,14 +71,14 @@ export default function UserApprovalSettingsPage() {
       const data = await response.json();
       
       if (data.success) {
-        toast.success({t('admin.configuracoesSalvasComSucesso')});
+        toast.success(t('admin.configuracoesSalvasComSucesso'));
       } else {
-        console.error({t('admin.erroAoSalvarConfiguracoes')}, data.error);
-        toast.error({t('admin.erroAoSalvarConfiguracoes')});
+        console.error(t('admin.erroAoSalvarConfiguracoes'), data.error);
+        toast.error(t('admin.erroAoSalvarConfiguracoes'));
       }
     } catch (error) {
-      console.error({t('admin.erroAoSalvarConfiguracoes')}, error);
-      toast.error({t('admin.erroAoSalvarConfiguracoes')});
+      console.error(t('admin.erroAoSalvarConfiguracoes'), error);
+      toast.error(t('admin.erroAoSalvarConfiguracoes'));
     } finally {
       setSaving(false);
     }

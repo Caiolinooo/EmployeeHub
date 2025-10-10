@@ -65,7 +65,7 @@ export default function CardAccessControl({
           setUsers(data.users || []);
         }
       } catch (error) {
-        console.error({t('components.erroAoCarregarUsuarios')}, error);
+        console.error(t('components.erroAoCarregarUsuarios'), error);
       }
     };
 
@@ -158,7 +158,7 @@ export default function CardAccessControl({
     if (user.firstName || user.lastName) {
       return [user.firstName, user.lastName].filter(Boolean).join(' ');
     }
-    return user.email || user.phoneNumber || {t('components.usuarioSemNome')};
+    return user.email || user.phoneNumber || t('components.usuarioSemNome');
   };
 
   return (

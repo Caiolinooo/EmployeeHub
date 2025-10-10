@@ -58,11 +58,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, onCommentAdded 
         setComments(data.comments);
         setError(null);
       } else {
-        setError({t('components.erroAoCarregarComentarios')});
+        setError(t('components.erroAoCarregarComentarios'));
       }
     } catch (err) {
-      console.error({t('components.erroAoCarregarComentarios')}, err);
-      setError({t('components.erroAoCarregarComentarios')});
+      console.error(t('components.erroAoCarregarComentarios'), err);
+      setError(t('components.erroAoCarregarComentarios'));
     } finally {
       setLoading(false);
     }
@@ -100,11 +100,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, onCommentAdded 
         setNewComment('');
         onCommentAdded?.();
       } else {
-        setError({t('components.erroAoEnviarComentario')});
+        setError(t('components.erroAoEnviarComentario'));
       }
     } catch (err) {
-      console.error({t('components.erroAoEnviarComentario')}, err);
-      setError({t('components.erroAoEnviarComentario')});
+      console.error(t('components.erroAoEnviarComentario'), err);
+      setError(t('components.erroAoEnviarComentario'));
     } finally {
       setSubmitting(false);
     }

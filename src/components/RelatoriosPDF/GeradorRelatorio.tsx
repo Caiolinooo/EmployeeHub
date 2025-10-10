@@ -70,7 +70,7 @@ export default function GeradorRelatorio({
         setCargos(cargosData.cargos || []);
       }
     } catch (error) {
-      console.error({t('components.erroAoCarregarOpcoesDeFiltros')}, error);
+      console.error(t('components.erroAoCarregarOpcoesDeFiltros'), error);
     }
   };
 
@@ -123,7 +123,7 @@ export default function GeradorRelatorio({
       }
 
     } catch (error) {
-      console.error({t('components.erroAoGerarRelatorio')}, error);
+      console.error(t('components.erroAoGerarRelatorio'), error);
     } finally {
       setGerando(false);
       setTimeout(() => setProgresso(0), 2000);

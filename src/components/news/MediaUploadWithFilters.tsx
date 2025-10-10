@@ -93,7 +93,7 @@ const MediaUploadWithFilters: React.FC<MediaUploadWithFiltersProps> = ({
 
       // Criar post
       const newPost = {
-        title: caption || {t('components.novaPublicacao')},
+        title: caption || t('components.novaPublicacao'),
         content: caption,
         excerpt: caption.substring(0, 200),
         media_urls: mediaUrls,
@@ -122,7 +122,7 @@ const MediaUploadWithFilters: React.FC<MediaUploadWithFiltersProps> = ({
 
       if (response.ok) {
         const createdPost = await response.json();
-        toast.success({t('components.publicacaoCriadaComSucesso')});
+        toast.success(t('components.publicacaoCriadaComSucesso'));
         onPostCreated(createdPost);
         onClose();
       } else {
@@ -130,7 +130,7 @@ const MediaUploadWithFilters: React.FC<MediaUploadWithFiltersProps> = ({
       }
     } catch (error) {
       console.error('Erro ao criar post:', error);
-      toast.error({t('components.erroAoCriarPublicacao')});
+      toast.error(t('components.erroAoCriarPublicacao'));
     } finally {
       setIsSubmitting(false);
     }

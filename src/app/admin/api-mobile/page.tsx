@@ -111,12 +111,12 @@ export default function APIMobilePage() {
 
   const handleCreateKey = async () => {
     if (!newKeyName.trim()) {
-      toast.error({t('admin.nomeDaChaveEObrigatorio')});
+      toast.error(t('admin.nomeDaChaveEObrigatorio'));
       return;
     }
 
     if (selectedPermissions.length === 0) {
-      toast.error({t('admin.selecionePeloMenosUmaPermissao')});
+      toast.error(t('admin.selecionePeloMenosUmaPermissao'));
       return;
     }
 
@@ -156,7 +156,7 @@ export default function APIMobilePage() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success({t('admin.chaveCopiadaParaAAreaDeTransferencia')});
+    toast.success(t('admin.chaveCopiadaParaAAreaDeTransferencia'));
   };
 
   const toggleShowKey = (keyId: string) => {

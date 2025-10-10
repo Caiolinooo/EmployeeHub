@@ -37,14 +37,14 @@ export default function EmailVerificationPrompt({
 
       if (response.ok && data.success) {
         setVerificationSent(true);
-        toast.success({t('components.emailDeVerificacaoEnviadoComSucesso')});
+        toast.success(t('components.emailDeVerificacaoEnviadoComSucesso'));
         onVerificationSent?.();
       } else {
-        toast.error(data.error || {t('components.erroAoEnviarEmailDeVerificacao')});
+        toast.error(data.error || t('components.erroAoEnviarEmailDeVerificacao'));
       }
     } catch (error) {
-      console.error({t('components.erroAoReenviarVerificacao')}, error);
-      toast.error({t('components.erroAoEnviarEmailDeVerificacao')});
+      console.error(t('components.erroAoReenviarVerificacao'), error);
+      toast.error(t('components.erroAoEnviarEmailDeVerificacao'));
     } finally {
       setIsLoading(false);
     }

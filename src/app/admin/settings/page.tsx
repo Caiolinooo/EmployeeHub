@@ -100,10 +100,10 @@ export default function SettingsPage() {
             });
 
             if (createResponse.ok) {
-              console.log({t('admin.configuracaoPadraoCriadaComSucesso')});
+              console.log(t('admin.configuracaoPadraoCriadaComSucesso'));
             }
           } catch (createError) {
-            console.error({t('admin.erroAoCriarConfiguracaoPadrao')}, createError);
+            console.error(t('admin.erroAoCriarConfiguracaoPadrao'), createError);
           }
         } else {
           throw new Error({t('admin.erroAoCarregarConfiguracoes')});
@@ -113,8 +113,8 @@ export default function SettingsPage() {
         setConfig(data);
       }
     } catch (error) {
-      console.error({t('admin.erroAoCarregarConfiguracoes')}, error);
-      setError({t('admin.erroAoCarregarConfiguracoesPorFavorTenteNovamente')});
+      console.error(t('admin.erroAoCarregarConfiguracoes'), error);
+      setError(t('admin.erroAoCarregarConfiguracoesPorFavorTenteNovamente'));
 
       // Definir configuração padrão mesmo em caso de erro
       setConfig({
@@ -216,7 +216,7 @@ export default function SettingsPage() {
       }
 
       // Salvar configurações
-      console.log({t('admin.enviandoConfiguracoesParaOServidor')}, updatedConfig);
+      console.log(t('admin.enviandoConfiguracoesParaOServidor'), updatedConfig);
 
       try {
         const response = await fetch('/api/config', {
@@ -236,13 +236,13 @@ export default function SettingsPage() {
         console.log('Resposta da API:', response.status);
 
         const savedConfig = await response.json();
-        console.log({t('admin.configuracaoSalvaComSucesso')}, savedConfig);
+        console.log(t('admin.configuracaoSalvaComSucesso'), savedConfig);
         setConfig(savedConfig);
         setSuccess({t('admin.configuracoesSalvasComSucesso')});
 
         // Atualizar o contexto global para aplicar as mudanças imediatamente
         if (siteConfig?.refreshConfig) {
-          console.log({t('admin.atualizandoContextoGlobalDeConfiguracoes')});
+          console.log(t('admin.atualizandoContextoGlobalDeConfiguracoes'));
           await siteConfig.refreshConfig();
         }
 
@@ -255,8 +255,8 @@ export default function SettingsPage() {
           window.location.reload();
         }, 2000);
       } catch (error) {
-        console.error({t('admin.erroAoSalvarConfiguracoes')}, error);
-        setError({t('admin.erroAoSalvarConfiguracoesPorFavorTenteNovamente')});
+        console.error(t('admin.erroAoSalvarConfiguracoes'), error);
+        setError(t('admin.erroAoSalvarConfiguracoesPorFavorTenteNovamente'));
       }
     } finally {
       setIsSaving(false);

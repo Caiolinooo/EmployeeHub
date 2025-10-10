@@ -70,7 +70,7 @@ export default function CSVFieldMapping({
       try {
         localStorage.setItem('lastFieldMapping_csv', JSON.stringify(mapping));
       } catch (error) {
-        console.error({t('components.erroAoSalvarUltimoMapeamento')}, error);
+        console.error(t('components.erroAoSalvarUltimoMapeamento'), error);
       }
 
       onApply();

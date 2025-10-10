@@ -22,7 +22,7 @@ export default function AvaliacaoAdminContent() {
   // Verificar se o usuário é administrador
   useEffect(() => {
     if (!isLoading && !isAdmin) {
-      console.log({t('components.usuarioNaoEAdministradorRedirecionando')});
+      console.log(t('components.usuarioNaoEAdministradorRedirecionando'));
       router.push('/dashboard');
     }
   }, [isLoading, isAdmin, router]);

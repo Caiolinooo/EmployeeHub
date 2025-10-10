@@ -35,7 +35,7 @@ const CriterioAvaliacao: React.FC<CriterioAvaliacaoProps> = ({
   const [showComentario, setShowComentario] = useState<boolean>(!!initialComentario);
 
   const handleNotaChange = (newNota: number) => {
-    console.log({t('components.criterioIdNomeNotaAlteradaParaNewnota')});
+    console.log(t('components.criterioIdNomeNotaAlteradaParaNewnota'));
     setNota(newNota);
     onChange(id, newNota, comentario);
   };

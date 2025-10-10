@@ -19,7 +19,7 @@ export default function ThemeEnforcer() {
 
     // Função para aplicar as configurações
     const applyConfig = () => {
-      console.log({t('components.themeenforcerAplicandoConfiguracoesDeTemaComPriori')});
+      console.log(t('components.themeenforcerAplicandoConfiguracoesDeTemaComPriori'));
       
       // Atualizar título da página
       if (document.title !== config.title) {

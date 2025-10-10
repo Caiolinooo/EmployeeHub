@@ -58,7 +58,7 @@ export default function NewsAdminPage() {
       const data = await response.json();
       setNews(data);
     } catch (err) {
-      console.error({t('admin.erroAoCarregarNoticias')}, err);
+      console.error(t('admin.erroAoCarregarNoticias'), err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
     } finally {
       setLoading(false);
@@ -144,7 +144,7 @@ export default function NewsAdminPage() {
       
       setEditingNews(null);
     } catch (err) {
-      console.error({t('admin.erroAoCriarNoticia')}, err);
+      console.error(t('admin.erroAoCriarNoticia'), err);
       alert(err instanceof Error ? err.message : 'Erro desconhecido ao criar notícia');
     }
   };
@@ -200,7 +200,7 @@ export default function NewsAdminPage() {
       
       setEditingNews(null);
     } catch (err) {
-      console.error({t('admin.erroAoAtualizarNoticia')}, err);
+      console.error(t('admin.erroAoAtualizarNoticia'), err);
       alert(err instanceof Error ? err.message : 'Erro desconhecido ao atualizar notícia');
     }
   };
@@ -221,7 +221,7 @@ export default function NewsAdminPage() {
       // Recarregar notícias
       loadNews();
     } catch (err) {
-      console.error({t('admin.erroAoExcluirNoticia')}, err);
+      console.error(t('admin.erroAoExcluirNoticia'), err);
       alert(err instanceof Error ? err.message : 'Erro desconhecido ao excluir notícia');
     }
   };

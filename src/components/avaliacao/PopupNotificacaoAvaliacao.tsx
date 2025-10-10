@@ -155,7 +155,7 @@ export default function PopupNotificacaoAvaliacao({
       case 'autoavaliacao_prazo':
         return {t('components.oPrazoParaSuaAutoavaliacaoEstaProximoCompleteHoje')};
       case 'autoavaliacao_recebida':
-        return `${dados.funcionario_nome || {t('components.umFuncionario')}} completou sua autoavaliação e aguarda sua aprovação.`;
+        return `${dados.funcionario_nome || t('components.umFuncionario')} completou sua autoavaliação e aguarda sua aprovação.`;
       case 'aprovacao_pendente':
         return {t('components.voceTemAvaliacoesPendentesDeAprovacao')};
       case 'aprovacao_prazo':

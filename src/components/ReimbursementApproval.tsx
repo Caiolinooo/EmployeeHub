@@ -79,8 +79,8 @@ export default function ReimbursementApproval() {
   // Verificar permissões do usuário
   useEffect(() => {
     // Forçar a verificação de permissões para garantir que o componente seja exibido corretamente
-    console.log({t('components.verificandoPermissoesDeAprovacaoParaOComponente')});
-    console.log({t('components.dadosDoUsuario')}, {
+    console.log(t('components.verificandoPermissoesDeAprovacaoParaOComponente'));
+    console.log(t('components.dadosDoUsuario'), {
       id: user?.id,
       email: user?.email,
       isAdmin,
@@ -94,13 +94,13 @@ export default function ReimbursementApproval() {
 
     // Administradores sempre têm permissão
     if (isAdmin) {
-      console.log({t('components.usuarioEAdministradorConcedendoPermissaoDeAprovaca')});
+      console.log(t('components.usuarioEAdministradorConcedendoPermissaoDeAprovaca'));
       return;
     }
 
     // Verificar se o usuário é gerente
     if (isManager) {
-      console.log({t('components.usuarioEGerenteConcedendoPermissaoDeAprovacao')});
+      console.log(t('components.usuarioEGerenteConcedendoPermissaoDeAprovacao'));
       return;
     }
 
@@ -110,7 +110,7 @@ export default function ReimbursementApproval() {
       (user as any)?.access_permissions?.features?.reimbursement_approval
     );
 
-    console.log({t('components.verificandoPermissoesDeAprovacao')}, {
+    console.log(t('components.verificandoPermissoesDeAprovacao'), {
       isAdmin,
       isManager,
       hasFeaturePermission,
@@ -145,7 +145,7 @@ export default function ReimbursementApproval() {
     );
 
     if (isGroupAbzDomain) {
-      console.log({t('components.emailDoUsuarioPertenceAoDominioDaEmpresaConcedendo')});
+      console.log(t('components.emailDoUsuarioPertenceAoDominioDaEmpresaConcedendo'));
       return;
     }
 
@@ -183,7 +183,7 @@ export default function ReimbursementApproval() {
       setReimbursements(data.data || []);
       setTotalCount(data.pagination?.total || 0);
     } catch (err) {
-      console.error({t('components.erroAoCarregarSolicitacoesDeReembolso')}, err);
+      console.error(t('components.erroAoCarregarSolicitacoesDeReembolso'), err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
     } finally {
       setLoading(false);
@@ -198,7 +198,7 @@ export default function ReimbursementApproval() {
 
     // Permitir que administradores e gerentes também carreguem os reembolsos
     if (hasApprovalPermission || isAdmin || isManager || isAdminEmail) {
-      console.log({t('components.carregandoReembolsosParaAprovacao')}, {
+      console.log(t('components.carregandoReembolsosParaAprovacao'), {
         hasApprovalPermission,
         isAdmin,
         role: user?.role,
@@ -222,7 +222,7 @@ export default function ReimbursementApproval() {
         .single();
 
       if (fetchError || !reimbursements) {
-        console.log({t('components.tabelaReimbursementNaoEncontradaTentandoTabelaAlte')});
+        console.log(t('components.tabelaReimbursementNaoEncontradaTentandoTabelaAlte'));
         // Tentar com o nome alternativo da tabela
         const { data: altReimbursements, error: altFetchError } = await supabaseAdmin
           .from('reimbursements')
@@ -236,7 +236,7 @@ export default function ReimbursementApproval() {
         }
 
         if (!altReimbursements) {
-          console.error({t('components.reembolsoNaoEncontradoEmNenhumaTabela')});
+          console.error(t('components.reembolsoNaoEncontradoEmNenhumaTabela'));
           throw new Error({t('components.reembolsoNaoEncontrado')});
         }
 
@@ -259,7 +259,7 @@ export default function ReimbursementApproval() {
           throw new Error({t('components.erroAoAprovarSolicitacaoResponsestatus')});
         }
 
-        toast.success({t('components.solicitacaoAprovadaComSucesso')});
+        toast.success(t('components.solicitacaoAprovadaComSucesso'));
         fetchReimbursements();
         return;
       }
@@ -283,17 +283,17 @@ export default function ReimbursementApproval() {
         throw new Error({t('components.erroAoAprovarSolicitacaoResponsestatus')});
       }
 
-      toast.success({t('components.solicitacaoAprovadaComSucesso')});
+      toast.success(t('components.solicitacaoAprovadaComSucesso'));
       fetchReimbursements();
     } catch (err) {
-      console.error({t('components.erroAoAprovarSolicitacao')}, err);
+      console.error(t('components.erroAoAprovarSolicitacao'), err);
       toast.error(err instanceof Error ? err.message : {t('components.erroAoAprovarSolicitacao')});
     }
   };
 
   // Função para abrir o modal de rejeição
   const handleReject = (id: string) => {
-    console.log({t('components.abrindoModalDeRejeicaoParaOReembolsoComIdId')});
+    console.log(t('components.abrindoModalDeRejeicaoParaOReembolsoComIdId'));
     setRejectingId(id);
     setRejectReason('');
     setShowRejectModal(true);
@@ -319,12 +319,12 @@ export default function ReimbursementApproval() {
   const confirmReject = async () => {
     // Verificar se temos um ID e um motivo
     if (!rejectingId) {
-      toast.error({t('components.idDoReembolsoNaoEncontrado')});
+      toast.error(t('components.idDoReembolsoNaoEncontrado'));
       return;
     }
 
     if (!rejectReason.trim()) {
-      toast.error({t('components.porFavorInformeOMotivoDaRejeicao')});
+      toast.error(t('components.porFavorInformeOMotivoDaRejeicao'));
       return;
     }
 
@@ -341,7 +341,7 @@ export default function ReimbursementApproval() {
         .single();
 
       if (fetchError || !reimbursements) {
-        console.log({t('components.tabelaReimbursementNaoEncontradaTentandoTabelaAlte')});
+        console.log(t('components.tabelaReimbursementNaoEncontradaTentandoTabelaAlte'));
         // Tentar com o nome alternativo da tabela
         const { data: altReimbursements, error: altFetchError } = await supabaseAdmin
           .from('reimbursements')
@@ -355,7 +355,7 @@ export default function ReimbursementApproval() {
         }
 
         if (!altReimbursements) {
-          console.error({t('components.reembolsoNaoEncontradoEmNenhumaTabela')});
+          console.error(t('components.reembolsoNaoEncontradoEmNenhumaTabela'));
           throw new Error({t('components.reembolsoNaoEncontrado')});
         }
 
@@ -378,7 +378,7 @@ export default function ReimbursementApproval() {
           throw new Error({t('components.erroAoRejeitarSolicitacaoResponsestatus')});
         }
 
-        toast.success({t('components.solicitacaoRejeitadaComSucesso')});
+        toast.success(t('components.solicitacaoRejeitadaComSucesso'));
         closeRejectModal();
         fetchReimbursements();
         return;
@@ -403,11 +403,11 @@ export default function ReimbursementApproval() {
         throw new Error({t('components.erroAoRejeitarSolicitacaoResponsestatus')});
       }
 
-      toast.success({t('components.solicitacaoRejeitadaComSucesso')});
+      toast.success(t('components.solicitacaoRejeitadaComSucesso'));
       closeRejectModal();
       fetchReimbursements();
     } catch (err) {
-      console.error({t('components.erroAoRejeitarSolicitacao')}, err);
+      console.error(t('components.erroAoRejeitarSolicitacao'), err);
       toast.error(err instanceof Error ? err.message : {t('components.erroAoRejeitarSolicitacao')});
     } finally {
       setRejectLoading(false);
@@ -469,7 +469,7 @@ export default function ReimbursementApproval() {
 
   // Forçar permissão para todos os usuários
   if (!hasApprovalPermission && !isAdmin && !isManager && !isAdminEmail && !isAdminOrManagerEmail && !isGroupAbzDomain) {
-    console.log({t('components.acessoNegadoAoComponenteDeAprovacaoMasPermitindoAc')}, {
+    console.log(t('components.acessoNegadoAoComponenteDeAprovacaoMasPermitindoAc'), {
       hasApprovalPermission,
       isAdmin,
       role: user?.role,
@@ -493,9 +493,9 @@ export default function ReimbursementApproval() {
         <div className="bg-white p-4 rounded-lg shadow-sm mb-4 text-sm">
           <h3 className="font-medium mb-2">Informações do Usuário:</h3>
           <ul className="space-y-1 text-gray-700">
-            <li><strong>ID:</strong> {user?.id || {t('components.naoDisponivel')}}</li>
-            <li><strong>Email:</strong> {user?.email || {t('components.naoDisponivel')}}</li>
-            <li><strong>Função:</strong> {user?.role || {t('components.naoDisponivel')}}</li>
+            <li><strong>ID:</strong> {user?.id || t('components.naoDisponivel')}</li>
+            <li><strong>Email:</strong> {user?.email || t('components.naoDisponivel')}</li>
+            <li><strong>Função:</strong> {user?.role || t('components.naoDisponivel')}</li>
             <li><strong>Admin:</strong> {isAdmin ? 'Sim' : {t('components.nao')}}</li>
             <li><strong>Gerente:</strong> {isManager ? 'Sim' : {t('components.nao')}}</li>
             <li><strong>Permissão específica:</strong> {hasApprovalPermission ? 'Sim' : {t('components.nao')}}</li>

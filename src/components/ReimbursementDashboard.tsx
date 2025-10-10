@@ -77,12 +77,12 @@ export default function ReimbursementDashboard() {
   // Carregar solicitações de reembolso do usuário atual
   const fetchReimbursements = async () => {
     if (!user?.email) {
-      setError({t('components.usuarioNaoAutenticado')});
+      setError(t('components.usuarioNaoAutenticado'));
       setLoading(false);
       return;
     }
 
-    console.log({t('components.emailDoUsuarioLogadoParaBuscaDeReembolsos')}, user.email);
+    console.log(t('components.emailDoUsuarioLogadoParaBuscaDeReembolsos'), user.email);
 
     try {
       setLoading(true);
@@ -90,7 +90,7 @@ export default function ReimbursementDashboard() {
 
       // Normalizar o email para evitar problemas de case sensitivity
       const normalizedEmail = user.email.toLowerCase().trim();
-      console.log({t('components.emailDoUsuarioNormalizadoNormalizedemail')});
+      console.log(t('components.emailDoUsuarioNormalizadoNormalizedemail'));
 
       // Construir parâmetros de consulta
       const queryParams = new URLSearchParams();
@@ -109,7 +109,7 @@ export default function ReimbursementDashboard() {
       queryParams.append('limit', limit.toString());
 
       // Fazer a requisição para a API
-      console.log({t('components.buscandoReembolsosDoUsuarioViaApi')});
+      console.log(t('components.buscandoReembolsosDoUsuarioViaApi'));
       console.log('URL:', `/api/reembolso/user?${queryParams.toString()}`);
 
       const response = await fetchWithAuth(`/api/reembolso/user?${queryParams.toString()}`);
@@ -208,7 +208,7 @@ export default function ReimbursementDashboard() {
         }
       }
     } catch (err) {
-      console.error({t('components.erroAoCarregarSolicitacoesDeReembolso')}, err);
+      console.error(t('components.erroAoCarregarSolicitacoesDeReembolso'), err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
       setReimbursements([]);
       setTotalCount(0);
@@ -222,8 +222,8 @@ export default function ReimbursementDashboard() {
     if (user?.email) {
       // Adicionar um pequeno atraso para garantir que o console.log anterior seja concluído
       const timer = setTimeout(() => {
-        console.log({t('components.iniciandoBuscaDeReembolsosAposMontagemDoComponente')});
-        console.log({t('components.informacoesDoUsuario')}, {
+        console.log(t('components.iniciandoBuscaDeReembolsosAposMontagemDoComponente'));
+        console.log(t('components.informacoesDoUsuario'), {
           email: user?.email,
           id: user?.id,
           role: profile?.role,
@@ -248,7 +248,7 @@ export default function ReimbursementDashboard() {
         .limit(1);
 
       if (error) {
-        console.error({t('components.tabelaReimbursementNaoEncontrada')}, error);
+        console.error(t('components.tabelaReimbursementNaoEncontrada'), error);
 
         // Tentar com o nome alternativo
         const { data: altTableExists, error: altError } = await supabaseAdmin
@@ -257,7 +257,7 @@ export default function ReimbursementDashboard() {
           .limit(1);
 
         if (altError) {
-          console.error({t('components.tabelaReimbursementsTambemNaoEncontrada')}, altError);
+          console.error(t('components.tabelaReimbursementsTambemNaoEncontrada'), altError);
           setTableExists(false);
           setTableName(null);
           return false;
@@ -371,7 +371,7 @@ export default function ReimbursementDashboard() {
         return true;
       } catch (supabaseErr) {
         console.error('Erro ao criar tabela via Supabase:', supabaseErr);
-        toast.error({t('components.naoFoiPossivelCriarATabelaDeReembolsosEntreEmConta')});
+        toast.error(t('components.naoFoiPossivelCriarATabelaDeReembolsosEntreEmConta'));
         return false;
       }
     } finally {
@@ -574,7 +574,7 @@ export default function ReimbursementDashboard() {
   // Efeito adicional para verificar se há reembolsos para o usuário quando o componente montar
   useEffect(() => {
     if (user?.email && tableExists) {
-      console.log({t('components.verificandoReembolsosExistentesParaOUsuarioUserema')});
+      console.log(t('components.verificandoReembolsosExistentesParaOUsuarioUserema'));
       // Não fazemos nada aqui para evitar chamadas de API que podem falhar
       // Os dados de exemplo já são carregados pela função fetchReimbursements
     }

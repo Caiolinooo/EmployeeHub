@@ -123,13 +123,13 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
   const handleRejectWithReason = async () => {
     // Validar se o motivo foi informado
     if (!rejectReason.trim()) {
-      console.log({t('components.tentativaDeRejeicaoSemMotivo')});
-      toast.error({t('components.porFavorInformeOMotivoDaRejeicao')});
+      console.log(t('components.tentativaDeRejeicaoSemMotivo'));
+      toast.error(t('components.porFavorInformeOMotivoDaRejeicao'));
       return;
     }
 
-    console.log({t('components.iniciandoRejeicaoDoReembolsoReimbursementprotocolo')});
-    console.log({t('components.motivoDaRejeicaoRejectreason')});
+    console.log(t('components.iniciandoRejeicaoDoReembolsoReimbursementprotocolo'));
+    console.log(t('components.motivoDaRejeicaoRejectreason'));
 
     setLoading(true);
 
@@ -169,9 +169,9 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
       if (typeof onStatusChange === 'function') {
         try {
           await Promise.resolve(onStatusChange());
-          console.log({t('components.funcaoOnstatuschangeExecutadaComSucesso')});
+          console.log(t('components.funcaoOnstatuschangeExecutadaComSucesso'));
         } catch (statusError) {
-          console.error({t('components.erroNaFuncaoOnstatuschange')}, statusError);
+          console.error(t('components.erroNaFuncaoOnstatuschange'), statusError);
           // Não propagar este erro, pois a rejeição já foi realizada
         }
       }
@@ -409,7 +409,7 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
               <>
                 <button
                   onClick={() => {
-                    console.log({t('components.abrindoFormularioDeRejeicao')});
+                    console.log(t('components.abrindoFormularioDeRejeicao'));
                     setShowRejectForm(true);
                     // Pequeno atraso para garantir que o DOM seja atualizado
                     setTimeout(() => {

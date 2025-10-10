@@ -265,7 +265,7 @@ export default function ImportUsers() {
       proceedWithImport(allData);
     } catch (err: any) {
       setIsLoading(false);
-      setError(err.message || {t('components.erroDuranteAImportacao')});
+      setError(err.message || t('components.erroDuranteAImportacao'));
     }
   };
 
@@ -550,7 +550,7 @@ export default function ImportUsers() {
         skipped: 0
       });
 
-      console.log({t('components.iniciandoImportacaoDe')}, data.length, {t('components.usuarios')});
+      console.log(t('components.iniciandoImportacaoDe'), data.length, {t('components.usuarios')});
       console.log('Dados de exemplo:', JSON.stringify(data[0]));
 
       // Enviar dados para a API
@@ -572,11 +572,11 @@ export default function ImportUsers() {
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Erro na resposta da API:', errorData);
-        throw new Error(errorData.error || {t('components.erroAoImportarUsuarios')});
+        throw new Error(errorData.error || t('components.erroAoImportarUsuarios'));
       }
 
       const result = await response.json();
-      console.log({t('components.resultadoDaImportacao')}, result);
+      console.log(t('components.resultadoDaImportacao'), result);
 
       // Atualizar progresso final
       setProgress({
@@ -594,14 +594,14 @@ export default function ImportUsers() {
 
       setIsLoading(false);
     } catch (err: any) {
-      console.error({t('components.erroDuranteAImportacao')}, err);
+      console.error(t('components.erroDuranteAImportacao'), err);
 
       // Registrar erro
       if (importLogId) {
         await logImportError(importLogId, err.message || 'Erro desconhecido');
       }
 
-      setError(err.message || {t('components.erroDuranteAImportacao')});
+      setError(err.message || t('components.erroDuranteAImportacao'));
       setIsLoading(false);
 
       // Manter a tela de progresso para mostrar o erro

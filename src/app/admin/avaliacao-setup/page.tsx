@@ -48,7 +48,7 @@ export default function AvaliacaoSetupPage() {
           }
         }
       } catch (error) {
-        console.error({t('admin.erroAoVerificarAutenticacao')}, error);
+        console.error(t('admin.erroAoVerificarAutenticacao'), error);
       } finally {
         setAuthLoading(false);
       }
@@ -83,7 +83,7 @@ export default function AvaliacaoSetupPage() {
         alert(`Erro ao aplicar migrações: ${data.error}`);
       }
     } catch (error) {
-      console.error({t('admin.erroAoAplicarMigracoes')}, error);
+      console.error(t('admin.erroAoAplicarMigracoes'), error);
       setResults([{t('admin.erroDeConexaoErrorInstanceofErrorErrormessage')}Erro desconhecido'}`]);
       alert('Erro de conexão ao aplicar migrações');
     } finally {

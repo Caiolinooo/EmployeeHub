@@ -70,14 +70,14 @@ const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({
 
   // Se não estiver autenticado, redirecionar para login
   if (!user) {
-    console.log({t('components.adminprotectedrouteUsuarioNaoAutenticadoRedirecion')});
+    console.log(t('components.adminprotectedrouteUsuarioNaoAutenticadoRedirecion'));
     router.push('/login');
     return <LoadingIndicator />;
   }
 
   // Se não for administrador e não for o usuário principal, negar acesso
   if (!isAdmin && !forceAdmin) {
-    console.log({t('components.adminprotectedrouteAcessoNegadoUsuarioNaoEAdminist')});
+    console.log(t('components.adminprotectedrouteAcessoNegadoUsuarioNaoEAdminist'));
     return <AccessDenied />;
   }
 

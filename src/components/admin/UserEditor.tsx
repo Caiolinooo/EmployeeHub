@@ -125,7 +125,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
         setRolePermissions(permissions);
 
       } catch (error) {
-        console.error({t('components.erroAoCarregarModulosEPermissoes')}, error);
+        console.error(t('components.erroAoCarregarModulosEPermissoes'), error);
       } finally {
         setLoadingModules(false);
       }
@@ -174,9 +174,9 @@ const UserEditor: React.FC<UserEditorProps> = ({
       //   await revokePermission(editedUser._id, permissionId);
       // }
 
-      console.log({t('components.permissoesAclAtualizadasComSucesso')});
+      console.log(t('components.permissoesAclAtualizadasComSucesso'));
     } catch (error) {
-      console.error({t('components.erroAoAtualizarPermissoesAcl')}, error);
+      console.error(t('components.erroAoAtualizarPermissoesAcl'), error);
     }
   };
 

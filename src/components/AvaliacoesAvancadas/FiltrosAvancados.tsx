@@ -49,7 +49,7 @@ export default function FiltrosAvancados({ filtros, onChange, onApply }: Filtros
       }
 
     } catch (error) {
-      console.error({t('components.erroAoCarregarOpcoesDeFiltro')}, error);
+      console.error(t('components.erroAoCarregarOpcoesDeFiltro'), error);
     } finally {
       setLoading(false);
     }

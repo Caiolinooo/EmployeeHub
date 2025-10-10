@@ -40,7 +40,7 @@ export default function SetupAvaliacaoPage() {
         alert(`Erro ao aplicar configuração: ${data.error}`);
       }
     } catch (error) {
-      console.error({t('admin.erroAoAplicarConfiguracao')}, error);
+      console.error(t('admin.erroAoAplicarConfiguracao'), error);
       setResults([{t('admin.erroDeConexaoErrorInstanceofErrorErrormessage')}Erro desconhecido'}`]);
       alert('Erro de conexão ao aplicar configuração');
     } finally {

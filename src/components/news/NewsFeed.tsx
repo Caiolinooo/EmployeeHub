@@ -154,7 +154,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
       cancelInlineEdit();
     } catch (e) {
       console.error(e);
-      toast.error({t('components.falhaAoSalvarAlteracoes')});
+      toast.error(t('components.falhaAoSalvarAlteracoes'));
     } finally {
       setSavingEdit(false);
     }

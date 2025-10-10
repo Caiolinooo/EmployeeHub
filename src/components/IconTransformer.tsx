@@ -72,7 +72,7 @@ const IconTransformer: React.FC = () => {
     const replaceIconTags = () => {
       // Em vez de manipular o DOM diretamente, vamos apenas registrar os ícones que precisam ser substituídos
       // e deixar que o React cuide da renderização
-      console.log({t('components.registrandoIconesParaSubstituicao')}, materialIconNames);
+      console.log(t('components.registrandoIconesParaSubstituicao'), materialIconNames);
       
       // Essa abordagem é mais segura e evita conflitos com o React
       // Não vamos mais tentar substituir tags HTML diretamente
@@ -118,7 +118,7 @@ const IconTransformer: React.FC = () => {
           }
         }, 500);
       } catch (error) {
-        console.error({t('components.erroAoSubstituirIcones')}, error);
+        console.error(t('components.erroAoSubstituirIcones'), error);
       }
     };
 

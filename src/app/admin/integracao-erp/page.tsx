@@ -130,7 +130,7 @@ export default function IntegracaoERPPage() {
 
     } catch (error) {
       console.error('Erro ao carregar dados ERP:', error);
-      toast.error({t('admin.erroAoCarregarDadosDeIntegracao')});
+      toast.error(t('admin.erroAoCarregarDadosDeIntegracao'));
     } finally {
       setLoading(false);
     }
@@ -138,12 +138,12 @@ export default function IntegracaoERPPage() {
 
   const handleCreateConnection = async () => {
     if (!newConnection.name.trim() || !newConnection.endpoint.trim()) {
-      toast.error({t('admin.nomeEEndpointSaoObrigatorios')});
+      toast.error(t('admin.nomeEEndpointSaoObrigatorios'));
       return;
     }
 
     if (newConnection.modules.length === 0) {
-      toast.error({t('admin.selecionePeloMenosUmModulo')});
+      toast.error(t('admin.selecionePeloMenosUmModulo'));
       return;
     }
 
@@ -169,10 +169,10 @@ export default function IntegracaoERPPage() {
         modules: []
       });
       setShowConnectionForm(false);
-      toast.success({t('admin.conexaoErpCriadaComSucesso')});
+      toast.success(t('admin.conexaoErpCriadaComSucesso'));
     } catch (error) {
-      console.error({t('admin.erroAoCriarConexao')}, error);
-      toast.error({t('admin.erroAoCriarConexaoErp')});
+      console.error(t('admin.erroAoCriarConexao'), error);
+      toast.error(t('admin.erroAoCriarConexaoErp'));
     }
   };
 
@@ -187,10 +187,10 @@ export default function IntegracaoERPPage() {
             } 
           : conn
       ));
-      toast.success({t('admin.statusDaConexaoAtualizado')});
+      toast.success(t('admin.statusDaConexaoAtualizado'));
     } catch (error) {
-      console.error({t('admin.erroAoAtualizarConexao')}, error);
-      toast.error({t('admin.erroAoAtualizarStatusDaConexao')});
+      console.error(t('admin.erroAoAtualizarConexao'), error);
+      toast.error(t('admin.erroAoAtualizarStatusDaConexao'));
     }
   };
 
@@ -201,7 +201,7 @@ export default function IntegracaoERPPage() {
           ? { ...status, status: 'running' as const }
           : status
       ));
-      toast.success({t('admin.sincronizacaoDeModuleIniciada')});
+      toast.success(t('admin.sincronizacaoDeModuleIniciada'));
       
       // Simular sincronização
       setTimeout(() => {
@@ -215,11 +215,11 @@ export default function IntegracaoERPPage() {
               }
             : status
         ));
-        toast.success({t('admin.sincronizacaoDeModuleConcluida')});
+        toast.success(t('admin.sincronizacaoDeModuleConcluida'));
       }, 3000);
     } catch (error) {
-      console.error({t('admin.erroAoIniciarSincronizacao')}, error);
-      toast.error({t('admin.erroAoIniciarSincronizacao')});
+      console.error(t('admin.erroAoIniciarSincronizacao'), error);
+      toast.error(t('admin.erroAoIniciarSincronizacao'));
     }
   };
 

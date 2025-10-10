@@ -58,7 +58,7 @@ const Certificates: React.FC<CertificatesProps> = ({ className = '' }) => {
     try {
       const token = await getToken();
       if (!token) {
-        setError({t('components.tokenDeAutenticacaoNaoEncontrado')});
+        setError(t('components.tokenDeAutenticacaoNaoEncontrado'));
         return;
       }
 

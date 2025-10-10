@@ -53,7 +53,7 @@ export default function PayrollCalculator({
         setCodes(data.data);
       }
     } catch (error) {
-      console.error({t('components.erroAoCarregarCodigos')}, error);
+      console.error(t('components.erroAoCarregarCodigos'), error);
     }
   };
 

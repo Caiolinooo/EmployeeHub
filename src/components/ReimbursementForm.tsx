@@ -68,7 +68,7 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
   useEffect(() => {
     const checkAuthentication = async () => {
       try {
-        console.log({t('components.reimbursementformVerificandoStatusDeAutenticacao')});
+        console.log(t('components.reimbursementformVerificandoStatusDeAutenticacao'));
 
         // Verificar múltiplas fontes de token
         let token = null;
@@ -106,11 +106,11 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
               const sessionData = await response.json();
               if (sessionData.data?.session?.access_token) {
                 token = sessionData.data.session.access_token;
-                console.log({t('components.tokenEncontradoNaSessao')});
+                console.log(t('components.tokenEncontradoNaSessao'));
               }
             }
           } catch (sessionError) {
-            console.warn({t('components.erroAoVerificarSessao')}, sessionError);
+            console.warn(t('components.erroAoVerificarSessao'), sessionError);
           }
         }
 
@@ -128,7 +128,7 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
 
             if (profileResponse.ok) {
               const profileData = await profileResponse.json();
-              console.log({t('components.dadosDoPerfilCarregadosParaOFormulario')});
+              console.log(t('components.dadosDoPerfilCarregadosParaOFormulario'));
               // Aqui você pode usar os dados do perfil se necessário
             }
           } catch (profileError) {
@@ -137,7 +137,7 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
         }
 
       } catch (error) {
-        console.error({t('components.erroAoVerificarAutenticacao')}, error);
+        console.error(t('components.erroAoVerificarAutenticacao'), error);
         setIsAuthenticated(false);
       }
     };
@@ -276,14 +276,14 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
       console.log('🚀 onSubmit CHAMADO!');
       console.log('📋 Dados recebidos:', data);
       setSubmitting(true);
-      console.log({t('components.iniciandoEnvioDoFormularioDeReembolso')});
+      console.log(t('components.iniciandoEnvioDoFormularioDeReembolso'));
 
       // Verificar se o usuário está autenticado antes de enviar
-      console.log({t('components.verificandoAutenticacao')});
+      console.log(t('components.verificandoAutenticacao'));
       const token = await getAuthToken();
 
       if (!token) {
-        console.error({t('components.usuarioNaoAutenticado')});
+        console.error(t('components.usuarioNaoAutenticado'));
         toast.error(t('reimbursement.form.authStatus.redirectingToLogin', 'Você precisa estar logado para enviar um reembolso. Redirecionando para login...'));
 
         // Redirecionar para login após 2 segundos
@@ -295,11 +295,11 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
         return;
       }
 
-      console.log({t('components.usuarioAutenticadoProsseguindoComEnvio')});
+      console.log(t('components.usuarioAutenticadoProsseguindoComEnvio'));
 
       // Validar se há pelo menos uma despesa
       if (!data.expenses || data.expenses.length === 0) {
-        toast.error({t('components.eNecessarioAdicionarPeloMenosUmaDespesa')});
+        toast.error(t('components.eNecessarioAdicionarPeloMenosUmaDespesa'));
         setSubmitting(false);
         return;
       }
@@ -324,7 +324,7 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
       }
 
       if (!data.centroCusto || data.centroCusto.trim() === '') {
-        console.error({t('components.centroDeCustoNaoInformado')}, data.centroCusto);
+        console.error(t('components.centroDeCustoNaoInformado'), data.centroCusto);
         setError('centroCusto', { type: 'manual', message: t('reimbursement.form.costCenterRequired') });
         toast.error('Por favor, selecione um centro de custo.');
         setSubmitting(false);
@@ -343,7 +343,7 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
             try {
               if (typeof file.buffer === 'string' && file.buffer.startsWith('data:')) {
                 base64Buffer = file.buffer;
-                console.log({t('components.arquivoFilenameJaTemDataurlBase64bufferlengthCarac')});
+                console.log(t('components.arquivoFilenameJaTemDataurlBase64bufferlengthCarac'));
               } else if (file.buffer instanceof ArrayBuffer) {
                 const bytes = new Uint8Array(file.buffer);
                 const len = bytes.byteLength;
@@ -354,7 +354,7 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
                 base64Buffer = btoa(binary);
                 console.log(`Buffer do arquivo ${file.name} convertido para base64 (${base64Buffer.length} caracteres)`);
               } else {
-                console.log({t('components.tipoDeBufferNaoReconhecidoParaFilenameTypeofFilebu')});
+                console.log(t('components.tipoDeBufferNaoReconhecidoParaFilenameTypeofFilebu'));
               }
             } catch (bufferError) {
               console.error(`Erro ao processar buffer: ${file.name}`, bufferError);
@@ -396,7 +396,7 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
       console.log('Valor total:', totalValue);
       console.log('FormData moeda:', formData.moeda);
 
-      console.log({t('components.enviandoDadosParaAApiDeCriacaoDeReembolso')});
+      console.log(t('components.enviandoDadosParaAApiDeCriacaoDeReembolso'));
       console.log('Centro de custo no formData:', formData.centroCusto);
       console.log('FormData completo:', formData);
 
@@ -410,7 +410,7 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Erro retornado pela API:', errorData);
-        throw new Error(errorData.error || {t('components.erroAoEnviarFormulario')});
+        throw new Error(errorData.error || t('components.erroAoEnviarFormulario'));
       }
 
       const result = await response.json();
@@ -419,7 +419,7 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
       setProtocol(result.protocolo);
       console.log(`Protocolo gerado: ${result.protocolo}`);
 
-      toast.success({t('components.formularioEnviadoComSucesso')});
+      toast.success(t('components.formularioEnviadoComSucesso'));
       setSubmitSuccess(true);
       setShowThankYou(true);
 

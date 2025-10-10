@@ -40,7 +40,7 @@ export function ImportCriteriosButton() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || {t('components.erroAoImportarCriterios')});
+        throw new Error(data.error || t('components.erroAoImportarCriterios'));
       }
 
       setSuccess(true);
@@ -53,7 +53,7 @@ export function ImportCriteriosButton() {
         setMessage({t('components.dataimportedCriteriosImportadosComSucessoDeUmTotal')});
       }
     } catch (err) {
-      console.error({t('components.erroAoImportarCriterios')}, err);
+      console.error(t('components.erroAoImportarCriterios'), err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
       setMessage(null);
     } finally {

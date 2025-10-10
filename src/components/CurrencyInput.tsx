@@ -250,7 +250,7 @@ export default function CurrencyInput({
 
     // Forçar re-render usando um timeout
     setTimeout(() => {
-      console.log({t('components.estadoAposMudanca')}, currency);
+      console.log(t('components.estadoAposMudanca'), currency);
       if (onCurrencyChange) {
         try {
           onCurrencyChange(currency);

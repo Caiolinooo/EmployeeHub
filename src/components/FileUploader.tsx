@@ -125,7 +125,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
             isLocalFile: true // Marcar como arquivo local
           };
 
-          console.log({t('components.dadosBinariosCapturadosParaFilenameDataurllengthCa')});
+          console.log(t('components.dadosBinariosCapturadosParaFilenameDataurllengthCa'));
 
           // Atualizar o estado com os dados binários
           onFilesChange([...files, ...newFiles]);

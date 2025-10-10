@@ -69,7 +69,7 @@ export function PreferencesTab({
         preferences: preferences // Aninhar as preferências em um campo específico
       };
 
-      console.log({t('components.enviandoDadosParaAtualizacao')}, updateData);
+      console.log(t('components.enviandoDadosParaAtualizacao'), updateData);
 
       const response = await fetch('/api/users-unified/profile', {
         method: 'PUT',
@@ -91,7 +91,7 @@ export function PreferencesTab({
         toast.error(responseData.error || t('profile.preferencesUpdateError', 'Erro ao atualizar preferências'));
       }
     } catch (error) {
-      console.error({t('components.erroAoAtualizarPreferencias')}, error);
+      console.error(t('components.erroAoAtualizarPreferencias'), error);
       toast.error(t('profile.preferencesUpdateError', 'Erro ao atualizar preferências'));
     } finally {
       setIsLoading(false);

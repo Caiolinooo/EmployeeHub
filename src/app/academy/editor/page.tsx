@@ -88,7 +88,7 @@ const AcademyEditor: React.FC = () => {
     try {
       const token = await getToken();
       if (!token) {
-        setError({t('academy.tokenDeAutenticacaoNaoEncontrado')});
+        setError(t('academy.tokenDeAutenticacaoNaoEncontrado'));
         return;
       }
 

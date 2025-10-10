@@ -52,7 +52,7 @@ export default function PainelGerenciamentoLideres() {
         .order('name');
 
       if (error) {
-        console.error({t('components.erroAoCarregarUsuarios')}, error);
+        console.error(t('components.erroAoCarregarUsuarios'), error);
         return;
       }
 
@@ -83,7 +83,7 @@ export default function PainelGerenciamentoLideres() {
         alert('Erro ao adicionar líder');
       }
     } catch (error) {
-      console.error({t('components.erroAoAdicionarLider')}, error);
+      console.error(t('components.erroAoAdicionarLider'), error);
       alert('Erro ao adicionar líder');
     } finally {
       setLoading(false);
@@ -105,7 +105,7 @@ export default function PainelGerenciamentoLideres() {
         alert('Erro ao remover líder');
       }
     } catch (error) {
-      console.error({t('components.erroAoRemoverLider')}, error);
+      console.error(t('components.erroAoRemoverLider'), error);
       alert('Erro ao remover líder');
     }
   };
@@ -253,10 +253,10 @@ export default function PainelGerenciamentoLideres() {
                         </div>
                         <div className="ml-3">
                           <div className="text-sm font-medium text-gray-900">
-                            {(lider as any).users_unified?.name || {t('components.nomeNaoEncontrado')}}
+                            {(lider as any).users_unified?.name || t('components.nomeNaoEncontrado')}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {(lider as any).users_unified?.email || {t('components.emailNaoEncontrado')}}
+                            {(lider as any).users_unified?.email || t('components.emailNaoEncontrado')}
                           </div>
                         </div>
                       </div>
@@ -276,7 +276,7 @@ export default function PainelGerenciamentoLideres() {
                       <button
                         onClick={() => handleRemover(
                           lider.user_id, 
-                          (lider as any).users_unified?.name || {t('components.usuario')}
+                          (lider as any).users_unified?.name || t('components.usuario')
                         )}
                         className="text-red-600 hover:text-red-900 transition-colors"
                         title={t('components.removerLideranca')}

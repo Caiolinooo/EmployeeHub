@@ -44,7 +44,7 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
     setReadOnly(!isAdmin);
 
     if (!isAdmin) {
-      console.log({t('components.usuarioNaoEAdministradorModoSomenteLeituraAtivado')});
+      console.log(t('components.usuarioNaoEAdministradorModoSomenteLeituraAtivado'));
     }
   }, [isAdmin]);
 
@@ -64,14 +64,14 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
 
       // Tentar usar a API principal
       try {
-        console.log({t('components.tentandoCarregarConfiguracoesDaApiPrincipal')});
+        console.log(t('components.tentandoCarregarConfiguracoesDaApiPrincipal'));
 
         // Construir URL com parâmetros
         let url = '/api/users/reimbursement-settings-server?';
         if (userId) url += `userId=${encodeURIComponent(userId)}`;
         else if (email) url += `email=${encodeURIComponent(email)}`;
 
-        console.log({t('components.buscandoConfiguracoesParaUserid')}userId: ' + userId : 'email: ' + email}`);
+        console.log(t('components.buscandoConfiguracoesParaUserid')userId: ' + userId : 'email: ' + email}`);
 
         // Adicionar timestamp para evitar cache
         url += `&_t=${Date.now()}`;
@@ -87,7 +87,7 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
         const data = await response.json();
 
         if (response.ok) {
-          console.log({t('components.configuracoesDeEmailDeReembolsoDoUsuarioCarregadas')}, data);
+          console.log(t('components.configuracoesDeEmailDeReembolsoDoUsuarioCarregadas'), data);
 
           if (data.reimbursement_email_settings) {
             setEnabled(data.reimbursement_email_settings.enabled || false);
@@ -96,11 +96,11 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
             return;
           }
         } else {
-          console.error({t('components.erroAoCarregarConfiguracoesDaApiPrincipal')}, data.error);
+          console.error(t('components.erroAoCarregarConfiguracoesDaApiPrincipal'), data.error);
 
           // Se o erro for relacionado à coluna não existente, tentar adicionar a coluna
           if (data.error && data.error.includes('column') && data.error.includes('reimbursement_email_settings') && data.error.includes('does not exist')) {
-            console.log({t('components.colunaReimbursementemailsettingsNaoExisteTentandoA')});
+            console.log(t('components.colunaReimbursementemailsettingsNaoExisteTentandoA'));
 
             // Tentar adicionar a coluna usando a API de setup
             try {
@@ -112,14 +112,14 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
               });
 
               if (setupResponse.ok) {
-                console.log({t('components.colunaAdicionadaComSucessoTentandoCarregarConfigur')});
+                console.log(t('components.colunaAdicionadaComSucessoTentandoCarregarConfigur'));
 
                 // Tentar carregar configurações novamente
                 const retryResponse = await fetch(url);
 
                 if (retryResponse.ok) {
                   const retryData = await retryResponse.json();
-                  console.log({t('components.configuracoesCarregadasComSucessoAposAdicionarColu')}, retryData);
+                  console.log(t('components.configuracoesCarregadasComSucessoAposAdicionarColu'), retryData);
 
                   if (retryData.reimbursement_email_settings) {
                     setEnabled(retryData.reimbursement_email_settings.enabled || false);
@@ -144,7 +144,7 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
 
       // Tentar usar a API de fallback
       try {
-        console.log({t('components.tentandoCarregarConfiguracoesDaApiDeFallback')});
+        console.log(t('components.tentandoCarregarConfiguracoesDaApiDeFallback'));
 
         // Construir URL com parâmetros
         let fallbackUrl = '/api/users/reimbursement-settings-local?';
@@ -155,7 +155,7 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
 
         if (fallbackResponse.ok) {
           const fallbackData = await fallbackResponse.json();
-          console.log({t('components.configuracoesCarregadasDaApiDeFallback')}, fallbackData);
+          console.log(t('components.configuracoesCarregadasDaApiDeFallback'), fallbackData);
 
           if (fallbackData.reimbursement_email_settings) {
             setEnabled(fallbackData.reimbursement_email_settings.enabled || false);
@@ -171,13 +171,13 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
       }
 
       // Se chegamos aqui, usar valores padrão
-      console.log({t('components.usandoValoresPadraoParaAsConfiguracoes')});
+      console.log(t('components.usandoValoresPadraoParaAsConfiguracoes'));
       setEnabled(false);
       setRecipients([]);
-      setError({t('components.naoFoiPossivelCarregarAsConfiguracoesUsandoValores')});
+      setError(t('components.naoFoiPossivelCarregarAsConfiguracoesUsandoValores'));
     } catch (err) {
-      console.error({t('components.erroAoCarregarConfiguracoes')}, err);
-      setError({t('components.erroAoCarregarConfiguracoesPorFavorTenteNovamente')});
+      console.error(t('components.erroAoCarregarConfiguracoes'), err);
+      setError(t('components.erroAoCarregarConfiguracoesPorFavorTenteNovamente'));
 
       // Usar valores padrão em caso de erro
       setEnabled(false);
@@ -194,17 +194,17 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
 
   const handleAddRecipient = () => {
     if (!newRecipient.trim()) {
-      setError({t('components.oEmailNaoPodeEstarVazio')});
+      setError(t('components.oEmailNaoPodeEstarVazio'));
       return;
     }
 
     if (!validateEmail(newRecipient)) {
-      setError({t('components.emailInvalido')});
+      setError(t('components.emailInvalido'));
       return;
     }
 
     if (recipients.includes(newRecipient)) {
-      setError({t('components.esteEmailJaEstaNaLista')});
+      setError(t('components.esteEmailJaEstaNaLista'));
       return;
     }
 
@@ -227,8 +227,8 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
 
     // Verificar se o usuário tem permissão para salvar
     if (readOnly) {
-      setError({t('components.voceNaoTemPermissaoParaEditarAsConfiguracoesDeEmai')});
-      toast.error({t('components.acessoNegadoApenasAdministradoresPodemEditarEstasC')});
+      setError(t('components.voceNaoTemPermissaoParaEditarAsConfiguracoesDeEmai'));
+      toast.error(t('components.acessoNegadoApenasAdministradoresPodemEditarEstasC'));
       setIsSaving(false);
       return;
     }
@@ -243,14 +243,14 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
       if (onSave) {
         onSave(settings);
         setSuccess({t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso')});
-        toast.success({t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso')});
+        toast.success(t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso'));
         if (onClose) onClose();
         return;
       }
 
       // Tentar salvar via API principal
       try {
-        console.log({t('components.tentandoSalvarConfiguracoesNaApiPrincipal')});
+        console.log(t('components.tentandoSalvarConfiguracoesNaApiPrincipal'));
 
         const response = await fetch('/api/users/reimbursement-settings-server', {
           method: 'POST',
@@ -275,19 +275,19 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
         }
 
         if (response.ok) {
-          console.log({t('components.configuracoesSalvasComSucessoNaApiPrincipal')}, responseData);
+          console.log(t('components.configuracoesSalvasComSucessoNaApiPrincipal'), responseData);
           setSuccess({t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso')});
-          toast.success({t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso')});
+          toast.success(t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso'));
 
           if (onClose) onClose();
           setIsSaving(false);
           return;
         } else {
-          console.error({t('components.erroAoSalvarConfiguracoesNaApiPrincipal')}, responseData.error);
+          console.error(t('components.erroAoSalvarConfiguracoesNaApiPrincipal'), responseData.error);
 
           // Se o erro for relacionado à coluna não existente, tentar adicionar a coluna
           if (responseData.error && responseData.error.includes('column') && responseData.error.includes('reimbursement_email_settings') && responseData.error.includes('does not exist')) {
-            console.log({t('components.colunaReimbursementemailsettingsNaoExisteTentandoA')});
+            console.log(t('components.colunaReimbursementemailsettingsNaoExisteTentandoA'));
 
             // Tentar adicionar a coluna usando a API de setup
             try {
@@ -299,7 +299,7 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
               });
 
               if (setupResponse.ok) {
-                console.log({t('components.colunaAdicionadaComSucessoTentandoSalvarConfigurac')});
+                console.log(t('components.colunaAdicionadaComSucessoTentandoSalvarConfigurac'));
 
                 // Tentar salvar configurações novamente
                 const retryResponse = await fetch('/api/users/reimbursement-settings-server', {
@@ -317,10 +317,10 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
 
                 if (retryResponse.ok) {
                   const retryData = await retryResponse.json();
-                  console.log({t('components.configuracoesSalvasComSucessoAposAdicionarColuna')}, retryData);
+                  console.log(t('components.configuracoesSalvasComSucessoAposAdicionarColuna'), retryData);
 
                   setSuccess({t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso')});
-                  toast.success({t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso')});
+                  toast.success(t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso'));
 
                   if (onClose) onClose();
                   setIsSaving(false);
@@ -342,7 +342,7 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
 
       // Tentar salvar via API de fallback
       try {
-        console.log({t('components.tentandoSalvarConfiguracoesNaApiDeFallback')});
+        console.log(t('components.tentandoSalvarConfiguracoesNaApiDeFallback'));
 
         const fallbackResponse = await fetch('/api/users/reimbursement-settings-local', {
           method: 'POST',
@@ -359,10 +359,10 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
 
         if (fallbackResponse.ok) {
           const fallbackData = await fallbackResponse.json();
-          console.log({t('components.configuracoesSalvasComSucessoNaApiDeFallback')}, fallbackData);
+          console.log(t('components.configuracoesSalvasComSucessoNaApiDeFallback'), fallbackData);
 
           setSuccess({t('components.configuracoesDeEmailDeReembolsoSalvasComSucessoMod')});
-          toast.success({t('components.configuracoesDeEmailDeReembolsoSalvasComSucessoMod')});
+          toast.success(t('components.configuracoesDeEmailDeReembolsoSalvasComSucessoMod'));
 
           if (onClose) onClose();
           setIsSaving(false);
@@ -377,9 +377,9 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
       // Se chegamos aqui, todas as tentativas falharam
       throw new Error({t('components.todasAsTentativasDeSalvarConfiguracoesFalharam')});
     } catch (error) {
-      console.error({t('components.erroAoSalvarConfiguracoes')}, error);
-      toast.error({t('components.erroAoSalvarConfiguracoes')});
-      setError({t('components.erroAoSalvarConfiguracoesTenteNovamente')});
+      console.error(t('components.erroAoSalvarConfiguracoes'), error);
+      toast.error(t('components.erroAoSalvarConfiguracoes'));
+      setError(t('components.erroAoSalvarConfiguracoesTenteNovamente'));
     } finally {
       setIsSaving(false);
     }

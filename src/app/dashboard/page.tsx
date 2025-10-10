@@ -84,7 +84,7 @@ export default function Dashboard() {
               setLoadingCards(false);
               return;
             } catch (e) {
-              console.warn({t('dashboard.cacheLocalInvalidoRemovendo')});
+              console.warn(t('dashboard.cacheLocalInvalidoRemovendo'));
               localStorage.removeItem('dashboard-cards-cache');
             }
           }
@@ -192,7 +192,7 @@ export default function Dashboard() {
             localStorage.setItem('dashboard-cards-cache', JSON.stringify(dbCards));
             console.log('💾 Cards salvos no cache local');
           } catch (e) {
-            console.warn({t('dashboard.naoFoiPossivelSalvarNoCacheLocal')}, e);
+            console.warn(t('dashboard.naoFoiPossivelSalvarNoCacheLocal'), e);
           }
 
           setCards(dbCards);
@@ -218,21 +218,21 @@ export default function Dashboard() {
         if (cachedCards) {
           try {
             const parsedCards = JSON.parse(cachedCards);
-            console.log({t('dashboard.usandoCardsDoCacheLocalAposErro')});
+            console.log(t('dashboard.usandoCardsDoCacheLocalAposErro'));
             setCards(parsedCards);
             setError('Usando dados em cache. Alguns cards podem estar desatualizados.');
             setLoadingCards(false);
             return;
           } catch (e) {
-            console.warn({t('dashboard.cacheLocalInvalido')});
+            console.warn(t('dashboard.cacheLocalInvalido'));
             localStorage.removeItem('dashboard-cards-cache');
           }
         }
 
         // Fallback final para cards estáticos
-        console.log({t('dashboard.erroCriticoUsandoCardsHardcoded')});
+        console.log(t('dashboard.erroCriticoUsandoCardsHardcoded'));
         setCards(getTranslatedCards((key: string) => t(key)));
-        setError({t('dashboard.naoFoiPossivelCarregarOsCardsPersonalizadosUsandoC')});
+        setError(t('dashboard.naoFoiPossivelCarregarOsCardsPersonalizadosUsandoC'));
       } finally {
         setLoadingCards(false);
       }
@@ -264,7 +264,7 @@ export default function Dashboard() {
 
       if (!hasDbCards) {
         // Se são cards estáticos, atualizar as traduções
-        console.log({t('dashboard.atualizandoTraducoesDosCardsEstaticosParaIdioma')}, locale);
+        console.log(t('dashboard.atualizandoTraducoesDosCardsEstaticosParaIdioma'), locale);
         setCards(getTranslatedCards((key: string) => t(key)));
       }
     }
@@ -298,8 +298,7 @@ export default function Dashboard() {
                       profile?.first_name?.split(' ')[0] ||
                       (user as any).first_name?.split(' ')[0] ||
                       (user as any).firstName?.split(' ')[0] ||
-                      user.email?.split('@')[0]?.split('.')[0] ||
-                      {t('dashboard.usuario')}
+                      user.email?.split('@')[0]?.split('.')[0] || t('dashboard.usuario')
                     }! 👋
                   </h1>
                 </div>

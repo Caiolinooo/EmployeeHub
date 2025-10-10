@@ -31,7 +31,7 @@ const UserPasswordReset: React.FC<UserPasswordResetProps> = ({ userId, userName,
 
     // Validar confirmação de senha
     if (password !== confirmPassword) {
-      setError({t('components.asSenhasNaoCoincidem')});
+      setError(t('components.asSenhasNaoCoincidem'));
       return;
     }
 
@@ -48,11 +48,11 @@ const UserPasswordReset: React.FC<UserPasswordResetProps> = ({ userId, userName,
                    document.cookie.split('; ').find(row => row.startsWith('abzToken='))?.split('=')[1];
 
       if (!token) {
-        console.error({t('components.tokenNaoEncontradoEmNenhumLocalDeArmazenamento')});
+        console.error(t('components.tokenNaoEncontradoEmNenhumLocalDeArmazenamento'));
         throw new Error({t('components.naoAutorizadoTokenNaoEncontrado')});
       }
 
-      console.log({t('components.enviandoSolicitacaoDeRedefinicaoDeSenhaParaUsuario')}, userId);
+      console.log(t('components.enviandoSolicitacaoDeRedefinicaoDeSenhaParaUsuario'), userId);
 
       const response = await fetch(`/api/users-unified/${userId}/reset-password`, {
         method: 'POST',

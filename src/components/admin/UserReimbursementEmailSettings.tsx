@@ -56,19 +56,19 @@ const UserReimbursementEmailSettings: React.FC<UserReimbursementEmailSettingsPro
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || {t('components.erroAoCarregarConfiguracoes')});
+        throw new Error(errorData.error || t('components.erroAoCarregarConfiguracoes'));
       }
 
       const data = await response.json();
-      console.log({t('components.configuracoesDeEmailDeReembolsoDoUsuarioCarregadas')}, data);
+      console.log(t('components.configuracoesDeEmailDeReembolsoDoUsuarioCarregadas'), data);
 
       if (data.reimbursement_email_settings) {
         setEnabled(data.reimbursement_email_settings.enabled || false);
         setRecipients(data.reimbursement_email_settings.recipients || []);
       }
     } catch (err) {
-      console.error({t('components.erroAoCarregarConfiguracoes')}, err);
-      setError({t('components.erroAoCarregarConfiguracoesPorFavorTenteNovamente')});
+      console.error(t('components.erroAoCarregarConfiguracoes'), err);
+      setError(t('components.erroAoCarregarConfiguracoesPorFavorTenteNovamente'));
     } finally {
       setIsSaving(false);
     }
@@ -81,17 +81,17 @@ const UserReimbursementEmailSettings: React.FC<UserReimbursementEmailSettingsPro
 
   const handleAddRecipient = () => {
     if (!newRecipient.trim()) {
-      setError({t('components.oEmailNaoPodeEstarVazio')});
+      setError(t('components.oEmailNaoPodeEstarVazio'));
       return;
     }
 
     if (!validateEmail(newRecipient)) {
-      setError({t('components.emailInvalido')});
+      setError(t('components.emailInvalido'));
       return;
     }
 
     if (recipients.includes(newRecipient)) {
-      setError({t('components.esteEmailJaEstaNaLista')});
+      setError(t('components.esteEmailJaEstaNaLista'));
       return;
     }
 
@@ -120,7 +120,7 @@ const UserReimbursementEmailSettings: React.FC<UserReimbursementEmailSettingsPro
       // Se onSave for fornecido, use-o
       if (onSave) {
         onSave(settings);
-        toast.success({t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso')});
+        toast.success(t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso'));
         if (onClose) onClose();
         return;
       }
@@ -141,14 +141,14 @@ const UserReimbursementEmailSettings: React.FC<UserReimbursementEmailSettingsPro
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error({t('components.erroAoSalvarConfiguracoes')}, errorData.error);
+        console.error(t('components.erroAoSalvarConfiguracoes'), errorData.error);
         throw new Error(errorData.error || t('common.errorSavingSettings'));
       }
 
       toast.success(t('common.settingsSavedSuccess'));
       if (onClose) onClose();
     } catch (error) {
-      console.error({t('components.erroAoSalvarConfiguracoes')}, error);
+      console.error(t('components.erroAoSalvarConfiguracoes'), error);
       toast.error(t('common.errorSavingSettings'));
       setError(t('common.errorSavingSettings') + '. ' + t('common.tryAgain'));
     } finally {

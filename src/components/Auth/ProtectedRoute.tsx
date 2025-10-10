@@ -33,7 +33,7 @@ export default function ProtectedRoute({
     if (typeof window !== 'undefined') {
       const isAvaliacao = window.location.pathname.includes('/avaliacao');
       setIsAvaliacaoRoute(isAvaliacao);
-      console.log({t('components.protectedrouteRotaDeAvaliacaoDetectada')}, isAvaliacao);
+      console.log(t('components.protectedrouteRotaDeAvaliacaoDetectada'), isAvaliacao);
     }
   }, []);
 
@@ -93,7 +93,7 @@ export default function ProtectedRoute({
     });
 
     // Log detalhado para depuração de permissões
-    console.log({t('components.protectedrouteDetalhesDoUsuario')}, {
+    console.log(t('components.protectedrouteDetalhesDoUsuario'), {
       id: user?.id,
       email: user?.email,
       phone: (user as any)?.phone_number,
@@ -107,13 +107,13 @@ export default function ProtectedRoute({
 
     // Verificar se o usuário deveria ser administrador mas não está marcado como tal
     if (isAuthenticated && shouldBeAdmin && !isAdmin && !checkingAdmin) {
-      console.log({t('components.usuarioDeveriaSerAdministradorMasNaoEstaMarcadoCom')});
+      console.log(t('components.usuarioDeveriaSerAdministradorMasNaoEstaMarcadoCom'));
       setShowAdminFix(true);
     }
 
     // Em ambiente de desenvolvimento, ser mais permissivo com redirecionamentos
     if (isDevelopment) {
-      console.log({t('components.ambienteDeDesenvolvimentoRedirecionamentosSeraoMai')});
+      console.log(t('components.ambienteDeDesenvolvimentoRedirecionamentosSeraoMai'));
 
       // Mesmo em desenvolvimento, se for uma rota de admin e o usuário não for admin,
       // mostrar a opção de corrigir as permissões
@@ -132,7 +132,7 @@ export default function ProtectedRoute({
     // Adicionar um atraso maior para evitar redirecionamentos rápidos que podem causar loops
     const redirectTimer = setTimeout(() => {
       if (!isLoading) {
-        console.log({t('components.protectedrouteVerificandoPermissoesAposAtraso')}, {
+        console.log(t('components.protectedrouteVerificandoPermissoesAposAtraso'), {
           isAuthenticated,
           isAdmin,
           isManager,
@@ -144,7 +144,7 @@ export default function ProtectedRoute({
 
         // Verificar acesso à rota de avaliação
         if (isAvaliacaoRoute) {
-          console.log({t('components.verificandoAcessoARotaDeAvaliacao')}, {
+          console.log(t('components.verificandoAcessoARotaDeAvaliacao'), {
             isAdmin,
             isManager,
             hasEvaluationAccess,
@@ -152,10 +152,10 @@ export default function ProtectedRoute({
           });
 
           if (hasAccessToAvaliacaoRoute) {
-            console.log({t('components.acessoPermitidoARotaDeAvaliacao')});
+            console.log(t('components.acessoPermitidoARotaDeAvaliacao'));
             return;
           } else {
-            console.log({t('components.acessoNegadoARotaDeAvaliacao')});
+            console.log(t('components.acessoNegadoARotaDeAvaliacao'));
             router.replace('/dashboard');
             return;
           }
@@ -163,21 +163,21 @@ export default function ProtectedRoute({
 
         // BYPASS TEMPORÁRIO: Permitir acesso à rota de administração para depuração
         if (typeof window !== 'undefined' && window.location.pathname.includes('/admin')) {
-          console.log({t('components.bypassPermitindoAcessoARotaDeAdministracaoParaDepu')});
+          console.log(t('components.bypassPermitindoAcessoARotaDeAdministracaoParaDepu'));
           return;
         }
 
         if (!isAuthenticated) {
           // Redirecionar para login se não estiver autenticado
-          console.log({t('components.redirecionandoParaLoginUsuarioNaoAutenticado')});
+          console.log(t('components.redirecionandoParaLoginUsuarioNaoAutenticado'));
           router.replace('/login');
         } else if (adminOnly && !isAdmin) {
           // Se o usuário deveria ser admin mas não está marcado como tal, mostrar opção de correção
           if (shouldBeAdmin) {
-            console.log({t('components.usuarioDeveriaSerAdministradorMasNaoEstaMarcadoCom')});
+            console.log(t('components.usuarioDeveriaSerAdministradorMasNaoEstaMarcadoCom'));
             // Em produção, permitir acesso mesmo sem a marcação de admin para o usuário principal
             if (!isDevelopment && forceAdmin) {
-              console.log({t('components.bypassProducaoPermitindoAcessoARotaDeAdministracao')});
+              console.log(t('components.bypassProducaoPermitindoAcessoARotaDeAdministracao'));
               return; // Permitir acesso
             }
             setShowAdminFix(true);
@@ -189,10 +189,10 @@ export default function ProtectedRoute({
         } else if (managerOnly && !isAdmin && !isManager) {
           // Verificar se o usuário é o administrador principal
           if (shouldBeAdmin) {
-            console.log({t('components.usuarioEOAdministradorPrincipalMasNaoEstaMarcadoCo')});
+            console.log(t('components.usuarioEOAdministradorPrincipalMasNaoEstaMarcadoCo'));
             // Em produção, permitir acesso mesmo sem a marcação de admin para o usuário principal
             if (!isDevelopment && forceAdmin) {
-              console.log({t('components.bypassProducaoPermitindoAcessoARotaDeGerenteParaOU')});
+              console.log(t('components.bypassProducaoPermitindoAcessoARotaDeGerenteParaOU'));
               return; // Permitir acesso
             }
             setShowAdminFix(true);
@@ -201,7 +201,7 @@ export default function ProtectedRoute({
 
           // Redirecionar para dashboard se a rota for apenas para gerentes ou administradores
           console.log('Redirecionando para dashboard: rota apenas para gerentes ou administradores');
-          console.log({t('components.detalhesDoUsuario')}, {
+          console.log(t('components.detalhesDoUsuario'), {
             isAdmin,
             isManager,
             role: user?.role,
@@ -214,14 +214,14 @@ export default function ProtectedRoute({
           // Verificação especial para o módulo de avaliação
           if (moduleName === 'avaliacao') {
             if (!hasAccessToAvaliacaoRoute) {
-              console.log({t('components.redirecionandoParaDashboardSemAcessoAoModuloDeAval')});
+              console.log(t('components.redirecionandoParaDashboardSemAcessoAoModuloDeAval'));
               router.replace('/dashboard');
             } else {
-              console.log({t('components.acessoPermitidoAoModuloDeAvaliacao')});
+              console.log(t('components.acessoPermitidoAoModuloDeAvaliacao'));
             }
           } else {
             // Redirecionar para dashboard se o usuário não tiver acesso ao módulo
-            console.log({t('components.redirecionandoParaDashboardSemAcessoAoModuloModule')});
+            console.log(t('components.redirecionandoParaDashboardSemAcessoAoModuloModule'));
             router.replace('/dashboard');
           }
         } else {
@@ -240,7 +240,7 @@ export default function ProtectedRoute({
     setCheckingAdmin(true);
 
     try {
-      console.log({t('components.tentandoCorrigirPermissoesDeAdministrador')});
+      console.log(t('components.tentandoCorrigirPermissoesDeAdministrador'));
 
       // Chamar a API para corrigir as permissões
       const response = await fetch('/api/auth/fix-admin', {
@@ -258,16 +258,16 @@ export default function ProtectedRoute({
       const data = await response.json();
 
       if (data.success) {
-        console.log({t('components.permissoesDeAdministradorCorrigidasComSucesso')});
+        console.log(t('components.permissoesDeAdministradorCorrigidasComSucesso'));
         // Recarregar a página para aplicar as alterações
         window.location.reload();
       } else {
-        console.error({t('components.erroAoCorrigirPermissoesDeAdministrador')}, data.error);
+        console.error(t('components.erroAoCorrigirPermissoesDeAdministrador'), data.error);
         // Redirecionar para a página de correção de administrador
         router.push('/admin-fix');
       }
     } catch (error) {
-      console.error({t('components.erroAoCorrigirPermissoesDeAdministrador')}, error);
+      console.error(t('components.erroAoCorrigirPermissoesDeAdministrador'), error);
       // Redirecionar para a página de correção de administrador
       router.push('/admin-fix');
     } finally {

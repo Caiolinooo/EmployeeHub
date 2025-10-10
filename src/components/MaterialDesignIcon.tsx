@@ -11,7 +11,7 @@ const loadIcon = async (iconName: string): Promise<IconType | null> => {
     const IconComponent = iconModule[iconName as keyof typeof iconModule] as IconType;
     return IconComponent || null;
   } catch (error) {
-    console.warn({t('components.erroAoCarregarIconeIconname')}, error);
+    console.warn(t('components.erroAoCarregarIconeIconname'), error);
     return null;
   }
 };

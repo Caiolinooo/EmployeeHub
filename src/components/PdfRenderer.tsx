@@ -89,7 +89,7 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ filePath, viewMode = 'fitH' }
                 iframe.contentDocument.body.style.transform = transform;
               }
             } catch (innerErr) {
-              console.log({t('components.naoFoiPossivelAplicarZoomAoConteudoDoIframe')}, innerErr);
+              console.log(t('components.naoFoiPossivelAplicarZoomAoConteudoDoIframe'), innerErr);
             }
           }
         } catch (err) {

@@ -71,7 +71,7 @@ export default function TokenExpirationNotifier({
           setShowCritical(false);
         }
       } catch (error) {
-        console.error({t('components.erroAoVerificarExpiracaoDoToken')}, error);
+        console.error(t('components.erroAoVerificarExpiracaoDoToken'), error);
       }
     };
 
@@ -86,7 +86,7 @@ export default function TokenExpirationNotifier({
       setShowWarning(false);
       setShowCritical(false);
       setIsRefreshing(false);
-      toast.success({t('components.sessaoRenovadaComSucesso')});
+      toast.success(t('components.sessaoRenovadaComSucesso'));
     };
 
     window.addEventListener('tokenRefreshed', handleTokenRefreshed);
@@ -104,14 +104,14 @@ export default function TokenExpirationNotifier({
       if (success) {
         setShowWarning(false);
         setShowCritical(false);
-        toast.success({t('components.sessaoRenovadaComSucesso')});
+        toast.success(t('components.sessaoRenovadaComSucesso'));
       } else {
-        toast.error({t('components.erroAoRenovarSessaoFacaLoginNovamente')});
+        toast.error(t('components.erroAoRenovarSessaoFacaLoginNovamente'));
         onSessionExpired?.();
       }
     } catch (error) {
       console.error('Erro ao renovar token:', error);
-      toast.error({t('components.erroAoRenovarSessaoFacaLoginNovamente')});
+      toast.error(t('components.erroAoRenovarSessaoFacaLoginNovamente'));
       onSessionExpired?.();
     } finally {
       setIsRefreshing(false);

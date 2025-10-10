@@ -61,7 +61,7 @@ const ACLManagementPanel: React.FC = () => {
         setPermissions(data);
       }
     } catch (error) {
-      console.error({t('components.erroAoCarregarPermissoes')}, error);
+      console.error(t('components.erroAoCarregarPermissoes'), error);
     }
   };
 
@@ -93,7 +93,7 @@ const ACLManagementPanel: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error({t('components.erroAoCriarPermissao')}, error);
+      console.error(t('components.erroAoCriarPermissao'), error);
     }
   };
 

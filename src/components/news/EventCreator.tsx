@@ -48,7 +48,7 @@ const EventCreator: React.FC<EventCreatorProps> = ({
     e.preventDefault();
     
     if (!formData.title || !formData.startDate || !formData.startTime) {
-      toast.error({t('components.preenchaOsCamposObrigatorios')});
+      toast.error(t('components.preenchaOsCamposObrigatorios'));
       return;
     }
 

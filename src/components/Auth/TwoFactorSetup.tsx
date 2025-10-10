@@ -123,7 +123,7 @@ export default function TwoFactorSetup() {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || {t('components.erroAoVerificarCodigo')});
+        throw new Error(errorData.error || t('components.erroAoVerificarCodigo'));
       }
       
       const data = await response.json();
@@ -133,7 +133,7 @@ export default function TwoFactorSetup() {
       setShowSetup(false);
       setVerificationCode('');
     } catch (error) {
-      console.error({t('components.erroAoVerificarCodigo2fa')}, error);
+      console.error(t('components.erroAoVerificarCodigo2fa'), error);
       setError(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
       setLoading(false);

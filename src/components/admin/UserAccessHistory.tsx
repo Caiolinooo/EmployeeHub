@@ -42,7 +42,7 @@ const UserAccessHistory: React.FC<UserAccessHistoryProps> = ({ userId, userName,
 
       // Adicionar timestamp para evitar cache
       const timestamp = new Date().getTime();
-      console.log({t('components.buscandoHistoricoParaUsuarioUseridComTimestampTime')});
+      console.log(t('components.buscandoHistoricoParaUsuarioUseridComTimestampTime'));
 
       // Fazer até 3 tentativas em caso de falha
       let attempts = 0;
@@ -73,30 +73,30 @@ const UserAccessHistory: React.FC<UserAccessHistoryProps> = ({ userId, userName,
 
       if (!response || !response.ok) {
         const errorData = await response?.json().catch(() => ({}));
-        throw new Error(errorData.error || {t('components.falhaAoBuscarHistoricoAposMaxattemptsTentativas')});
+        throw new Error(errorData.error || t('components.falhaAoBuscarHistoricoAposMaxattemptsTentativas'));
       }
 
       const responseText = await response.text();
 
       // Verificar se a resposta está vazia
       if (!responseText || responseText.trim() === '') {
-        console.error({t('components.respostaVaziaRecebidaDaApiDeHistorico')});
+        console.error(t('components.respostaVaziaRecebidaDaApiDeHistorico'));
         setHistory([]);
-        setError({t('components.nenhumHistoricoEncontradoARespostaDaApiEstaVazia')});
+        setError(t('components.nenhumHistoricoEncontradoARespostaDaApiEstaVazia'));
         setLoading(false);
         return;
       }
 
       try {
         const data = JSON.parse(responseText);
-        console.log({t('components.historicoRecebido')}, data);
+        console.log(t('components.historicoRecebido'), data);
 
         // Verificar se o histórico existe e está no formato correto
         let accessHistory = data.accessHistory || [];
 
         // Garantir que o histórico seja um array
         if (!Array.isArray(accessHistory)) {
-          console.log({t('components.historicoNaoEUmArrayConvertendo')});
+          console.log(t('components.historicoNaoEUmArrayConvertendo'));
           try {
             // Tentar converter de string JSON para array
             if (typeof accessHistory === 'string') {
@@ -107,7 +107,7 @@ const UserAccessHistory: React.FC<UserAccessHistoryProps> = ({ userId, userName,
               accessHistory = [];
             }
           } catch (error) {
-            console.error({t('components.erroAoConverterHistorico')}, error);
+            console.error(t('components.erroAoConverterHistorico'), error);
             accessHistory = [];
           }
         }
@@ -116,11 +116,11 @@ const UserAccessHistory: React.FC<UserAccessHistoryProps> = ({ userId, userName,
       } catch (parseError) {
         console.error('Erro ao analisar resposta JSON:', parseError);
         console.log('Texto da resposta:', responseText);
-        setError({t('components.erroAoProcessarDadosDeHistoricoFormatoInvalido')});
+        setError(t('components.erroAoProcessarDadosDeHistoricoFormatoInvalido'));
         setHistory([]);
       }
     } catch (error) {
-      console.error({t('components.erroAoObterHistoricoDeAcesso')}, error);
+      console.error(t('components.erroAoObterHistoricoDeAcesso'), error);
       setError(error instanceof Error ? error.message : 'Erro desconhecido');
     } finally {
       setLoading(false);

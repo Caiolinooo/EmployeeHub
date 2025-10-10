@@ -44,14 +44,14 @@ export default function ProfilePage() {
   useEffect(() => {
     // Aguardar o carregamento completo da autenticação
     if (isLoading) {
-      console.log({t('profile.aguardandoCarregamentoDaAutenticacao')});
+      console.log(t('profile.aguardandoCarregamentoDaAutenticacao'));
       return;
     }
 
     // Verificar se o usuário está autenticado
     if (!user) {
-      console.log({t('profile.usuarioNaoAutenticadoRedirecionandoParaLogin')});
-      toast.error({t('profile.vocePrecisaEstarLogadoParaAcessarEstaPagina')});
+      console.log(t('profile.usuarioNaoAutenticadoRedirecionandoParaLogin'));
+      toast.error(t('profile.vocePrecisaEstarLogadoParaAcessarEstaPagina'));
       router.replace('/login');
       return;
     }
@@ -67,7 +67,7 @@ export default function ProfilePage() {
       return;
     }
 
-    console.log({t('profile.usuarioEPerfilCarregadosInicializandoPaginaDePerfi')});
+    console.log(t('profile.usuarioEPerfilCarregadosInicializandoPaginaDePerfi'));
     console.log('👤 Dados do perfil:', {
       id: profile.id,
       email: profile.email,
@@ -109,7 +109,7 @@ export default function ProfilePage() {
         .single();
 
       if (error) {
-        console.error({t('profile.erroAoBuscarDadosDoUsuario')}, error);
+        console.error(t('profile.erroAoBuscarDadosDoUsuario'), error);
         setProfileImage(null);
         return;
       }
@@ -129,7 +129,7 @@ export default function ProfilePage() {
           setProfileImage(photoUrl);
         };
         checkImage.onerror = () => {
-          console.warn({t('profile.imagemDePerfilNaoEncontradaOuInacessivelNaUrl')}, photoUrl);
+          console.warn(t('profile.imagemDePerfilNaoEncontradaOuInacessivelNaUrl'), photoUrl);
           setProfileImage(null); // Fallback to icon
         };
         checkImage.src = photoUrl;
@@ -154,7 +154,7 @@ export default function ProfilePage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        toast.error({t('profile.naoAutorizado')});
+        toast.error(t('profile.naoAutorizado'));
         return;
       }
 
@@ -242,12 +242,12 @@ export default function ProfilePage() {
 
     // Verificar o tipo e tamanho do arquivo
     if (!file.type.startsWith('image/')) {
-      toast.error({t('profile.porFavorSelecioneUmaImagemValida')});
+      toast.error(t('profile.porFavorSelecioneUmaImagemValida'));
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) { // 5MB
-      toast.error({t('profile.aImagemDeveTerNoMaximo5mb')});
+      toast.error(t('profile.aImagemDeveTerNoMaximo5mb'));
       return;
     }
 
@@ -262,14 +262,14 @@ export default function ProfilePage() {
   // Função para atualizar os dados do perfil
   const updateProfile = async () => {
     if (!profile?.id) {
-      toast.error({t('profile.perfilNaoEncontradoFacaLoginNovamente')});
+      toast.error(t('profile.perfilNaoEncontradoFacaLoginNovamente'));
       return;
     }
 
     try {
       // Validar dados do formulário
       if (!formData.firstName || !formData.lastName) {
-        toast.error({t('profile.nomeESobrenomeSaoObrigatorios')});
+        toast.error(t('profile.nomeESobrenomeSaoObrigatorios'));
         return;
       }
 
@@ -600,7 +600,7 @@ export default function ProfilePage() {
                       <p className="text-sm text-gray-500">Telefone</p>
                       <p className="font-medium flex items-center">
                         <FiPhone className="mr-2 text-gray-400" />
-                        {profile.phone_number || {t('profile.naoInformado')}}
+                        {profile.phone_number || t('profile.naoInformado')}
                       </p>
                     </div>
                   </div>

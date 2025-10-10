@@ -81,10 +81,10 @@ const Ratings: React.FC<RatingsProps> = ({ courseId, isEnrolled = false, classNa
         setRatings(data.ratings);
         setStats(data.stats);
       } else {
-        console.error({t('components.erroAoCarregarAvaliacoes')}, data.error);
+        console.error(t('components.erroAoCarregarAvaliacoes'), data.error);
       }
     } catch (error) {
-      console.error({t('components.erroAoCarregarAvaliacoes')}, error);
+      console.error(t('components.erroAoCarregarAvaliacoes'), error);
     } finally {
       setLoading(false);
     }
@@ -124,7 +124,7 @@ const Ratings: React.FC<RatingsProps> = ({ courseId, isEnrolled = false, classNa
         alert(data.error || 'Erro ao enviar avaliação');
       }
     } catch (error) {
-      console.error({t('components.erroAoEnviarAvaliacao')}, error);
+      console.error(t('components.erroAoEnviarAvaliacao'), error);
       alert('Erro ao enviar avaliação');
     } finally {
       setSubmitting(false);
@@ -163,7 +163,7 @@ const Ratings: React.FC<RatingsProps> = ({ courseId, isEnrolled = false, classNa
         alert(data.error || 'Erro ao editar avaliação');
       }
     } catch (error) {
-      console.error({t('components.erroAoEditarAvaliacao')}, error);
+      console.error(t('components.erroAoEditarAvaliacao'), error);
       alert('Erro ao editar avaliação');
     } finally {
       setSubmitting(false);
@@ -192,7 +192,7 @@ const Ratings: React.FC<RatingsProps> = ({ courseId, isEnrolled = false, classNa
         alert(data.error || 'Erro ao excluir avaliação');
       }
     } catch (error) {
-      console.error({t('components.erroAoExcluirAvaliacao')}, error);
+      console.error(t('components.erroAoExcluirAvaliacao'), error);
       alert('Erro ao excluir avaliação');
     }
   };

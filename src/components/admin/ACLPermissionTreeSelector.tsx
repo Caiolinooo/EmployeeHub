@@ -57,7 +57,7 @@ const ACLPermissionTreeSelector: React.FC<ACLPermissionTreeSelectorProps> = ({
       // Expandir todos os recursos por padrão
       setExpandedResources(new Set(Object.keys(tree)));
     } catch (error) {
-      console.error({t('components.erroAoCarregarArvoreDePermissoes')}, error);
+      console.error(t('components.erroAoCarregarArvoreDePermissoes'), error);
     } finally {
       setLoading(false);
     }

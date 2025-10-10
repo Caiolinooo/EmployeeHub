@@ -134,7 +134,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     // FORÇAR SIDEBAR SEMPRE EXPANDIDA
     localStorage.removeItem('admin-sidebar-collapsed');
     setIsCollapsed(false);
-    console.log({t('admin.adminSidebarForcadaParaExpandida')});
+    console.log(t('admin.adminSidebarForcadaParaExpandida'));
   }, []);
 
   const toggleSidebar = () => {
@@ -256,7 +256,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {(profile as any)?.drive_photo_url || (profile as any)?.avatar ? (
                   <img
                     src={(profile as any)?.drive_photo_url || (profile as any)?.avatar}
-                    alt={profile?.first_name || {t('admin.usuario')}}
+                    alt={profile?.first_name || t('admin.usuario')}
                     className="w-full h-full object-cover"
                   />
                 ) : (

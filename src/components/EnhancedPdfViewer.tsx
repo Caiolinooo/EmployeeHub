@@ -72,7 +72,7 @@ const EnhancedPdfViewer: React.FC<EnhancedPdfViewerProps> = ({
 
         // Verificar se o caminho do arquivo é válido
         if (!filePath) {
-          setError({t('components.caminhoDoDocumentoNaoEspecificado')});
+          setError(t('components.caminhoDoDocumentoNaoEspecificado'));
           return;
         }
 
