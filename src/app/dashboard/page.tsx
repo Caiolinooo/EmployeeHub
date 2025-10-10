@@ -383,6 +383,15 @@ export default function Dashboard() {
                     const Icon = card.iconName && iconMap[card.iconName]
                       ? iconMap[card.iconName]
                       : card.icon || iconMap.FiGrid;
+
+                    // Aplicar tradução se disponível
+                    const cardTitle = locale === 'en-US' && (card as any).titleEn
+                      ? (card as any).titleEn
+                      : card.title;
+                    const cardDescription = locale === 'en-US' && (card as any).descriptionEn
+                      ? (card as any).descriptionEn
+                      : card.description;
+
                     return (
                       <div
                         key={card.id}
@@ -392,11 +401,11 @@ export default function Dashboard() {
                           <div className="bg-abz-light-blue p-3 rounded-full mr-3 flex-shrink-0">
                             <Icon className="text-abz-blue w-5 h-5" />
                           </div>
-                          <h3 className="font-semibold text-abz-text-black flex-1">{card.title}</h3>
+                          <h3 className="font-semibold text-abz-text-black flex-1">{cardTitle}</h3>
                         </div>
 
                         <p className="text-sm text-abz-text-dark mb-4 flex-grow">
-                          {card.description}
+                          {cardDescription}
                         </p>
 
                         <div className="mt-auto pt-4 border-t border-gray-100">
