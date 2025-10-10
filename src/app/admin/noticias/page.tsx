@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 
@@ -50,9 +50,9 @@ export default function NewsAdminPage() {
 
     try {
       const response = await fetch('/api/news');
-      
+
       if (!response.ok) {
-        throw new Error({t('admin.erroAoCarregarNoticiasResponsestatusResponsestatus')});
+        throw new Error(t('admin.erroAoCarregarNoticiasResponsestatusResponsestatus'));
       }
       
       const data = await response.json();
@@ -123,7 +123,7 @@ export default function NewsAdminPage() {
       });
 
       if (!response.ok) {
-        throw new Error({t('admin.erroAoCriarNoticiaResponsestatusResponsestatustext')});
+        throw new Error(t('admin.erroAoCriarNoticiaResponsestatusResponsestatustext'));
       }
 
       // Recarregar notícias
@@ -179,7 +179,7 @@ export default function NewsAdminPage() {
       });
 
       if (!response.ok) {
-        throw new Error({t('admin.erroAoAtualizarNoticiaResponsestatusResponsestatus')});
+        throw new Error(t('admin.erroAoAtualizarNoticiaResponsestatusResponsestatus'));
       }
 
       // Recarregar notícias
@@ -207,7 +207,7 @@ export default function NewsAdminPage() {
 
   // Função para excluir uma notícia
   const deleteNews = async (id: string) => {
-    if (!confirm({t('admin.temCertezaQueDesejaExcluirEstaNoticia')})) return;
+    if (!confirm(t('admin.temCertezaQueDesejaExcluirEstaNoticia'))) return;
 
     try {
       const response = await fetchWithToken(`/api/news/${id}`, {
@@ -215,7 +215,7 @@ export default function NewsAdminPage() {
       });
 
       if (!response.ok) {
-        throw new Error({t('admin.erroAoExcluirNoticiaResponsestatusResponsestatuste')});
+        throw new Error(t('admin.erroAoExcluirNoticiaResponsestatusResponsestatuste'));
       }
 
       // Recarregar notícias

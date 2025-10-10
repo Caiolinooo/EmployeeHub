@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import MainLayout from '@/components/Layout/MainLayout';
@@ -54,7 +54,7 @@ export default function DocumentsAdminPage() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error({t('admin.naoAutorizado')});
+        throw new Error(t('admin.naoAutorizado'));
       }
 
       const response = await fetch('/api/documents/convert', {

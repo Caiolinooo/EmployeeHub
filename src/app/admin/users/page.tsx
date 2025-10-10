@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -164,7 +164,7 @@ export default function UsersPage() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error({t('admin.naoAutorizado')});
+        throw new Error(t('admin.naoAutorizado'));
       }
 
       if (isNewUser) {
@@ -222,7 +222,7 @@ export default function UsersPage() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error({t('admin.naoAutorizado')});
+        throw new Error(t('admin.naoAutorizado'));
       }
 
       const response = await fetch(`/api/users/${selectedUser._id}`, {
@@ -254,7 +254,7 @@ export default function UsersPage() {
       case 'MANAGER':
         return 'Gerente';
       case 'USER':
-        return {t('admin.usuario')};
+        return t('admin.usuario');
       default:
         return role;
     }
@@ -505,8 +505,7 @@ export default function UsersPage() {
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('common.confirmDelete', 'Confirmar Exclusão')}</h2>
             <p className="text-gray-700 mb-6">
-              {t('admin.users.confirmDeleteMessage', 'Tem certeza que deseja excluir o usuário')} <strong>{selectedUser.firstName} {selectedUser.lastName}</strong>?
-              {t('admin.users.actionCannotBeUndone', 'Esta ação não pode ser desfeita.')}
+              {t('admin.users.confirmDeleteMessage', 'Tem certeza que deseja excluir o usuário')} <strong>{selectedUser.firstName} {selectedUser.lastName}</strong>? t('admin.users.actionCannotBeUndone', 'Esta ação não pode ser desfeita.')
             </p>
             <div className="flex justify-end space-x-3">
               <button

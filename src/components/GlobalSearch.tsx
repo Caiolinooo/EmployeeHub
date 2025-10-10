@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
@@ -125,9 +125,9 @@ const GlobalSearch: React.FC = () => {
       case 'document':
         return 'Documento';
       case 'news':
-        return {t('components.noticia')};
+        return t('components.noticia');
       case 'user':
-        return {t('components.usuario')};
+        return t('components.usuario');
       case 'card':
         return 'Card';
       case 'reimbursement':
@@ -135,9 +135,9 @@ const GlobalSearch: React.FC = () => {
       case 'paystub':
         return 'Contracheque';
       case 'evaluation':
-        return {t('components.avaliacao')};
+        return t('components.avaliacao');
       case 'policy':
-        return {t('components.politica')};
+        return t('components.politica');
       case 'procedure':
         return 'Procedimento';
       case 'academy':
@@ -204,13 +204,13 @@ const GlobalSearch: React.FC = () => {
                   {[
                     { value: 'all', label: 'Todos' },
                     { value: 'document', label: 'Documentos' },
-                    { value: 'news', label: {t('components.noticias')} },
-                    { value: 'user', label: {t('components.usuarios')} },
+                    { value: 'news', label: t('components.noticias') },
+                    { value: 'user', label: t('components.usuarios') },
                     { value: 'card', label: 'Cards' },
                     { value: 'reimbursement', label: 'Reembolsos' },
                     { value: 'paystub', label: 'Contracheques' },
-                    { value: 'evaluation', label: {t('components.avaliacoes')} },
-                    { value: 'policy', label: {t('components.politicas')} },
+                    { value: 'evaluation', label: t('components.avaliacoes') },
+                    { value: 'policy', label: t('components.politicas') },
                     { value: 'procedure', label: 'Procedimentos' },
                     { value: 'academy', label: 'Cursos' }
                   ].map((type) => (

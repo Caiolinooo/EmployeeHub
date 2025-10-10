@@ -22,8 +22,6 @@ interface CurrencyInputProps {
 }
 
 export default function CurrencyInput({
-  const { t } = useI18n();
-
   id,
   label,
   value,
@@ -34,6 +32,7 @@ export default function CurrencyInput({
   required = false,
   className = ''
 }: CurrencyInputProps) {
+  const { t } = useI18n();
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(currency || 'BRL');
   const [showCurrencySelector, setShowCurrencySelector] = useState(false);
   const [convertedValues, setConvertedValues] = useState<Record<Currency, string>>({

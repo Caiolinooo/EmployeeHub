@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiSave, FiEye, FiCalendar, FiImage, FiLink, FiTag, FiUsers, FiStar, FiX, FiPlus } from 'react-icons/fi';
@@ -280,9 +280,9 @@ const NewsPostEditor: React.FC<NewsPostEditorProps> = ({
       {/* Tabs */}
       <div className="flex border-b border-gray-200">
         {[
-          { id: 'content', label: {t('components.conteudo')}, icon: FiEye },
-          { id: 'media', label: {t('components.midiaLinks')}, icon: FiImage },
-          { id: 'settings', label: {t('components.configuracoes')}, icon: FiUsers },
+          { id: 'content', label: t('components.conteudo'), icon: FiEye },
+          { id: 'media', label: t('components.midiaLinks'), icon: FiImage },
+          { id: 'settings', label: t('components.configuracoes'), icon: FiUsers },
           { id: 'reminders', label: 'Lembretes', icon: FiCalendar }
         ].map(tab => {
           const Icon = tab.icon;

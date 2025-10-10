@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -27,9 +27,8 @@ interface ConnectionStatus {
   failures: number;
 }
 
-export default function NetworkStatus({
+export default function NetworkStatus({ className = '', showDetails = false }: NetworkStatusProps) {
   const { t } = useI18n();
- className = '', showDetails = false }: NetworkStatusProps) {
   const [status, setStatus] = useState<ConnectionStatus>({
     online: true,
     apiHealthy: true,
@@ -136,13 +135,13 @@ export default function NetworkStatus({
   const getStatusMessage = () => {
     switch (overallStatus) {
       case 'offline':
-        return {t('components.semConexaoComAInternet')};
+        return t('components.semConexaoComAInternet');
       case 'degraded':
         return 'Problemas de conectividade detectados';
       case 'recovering':
         return 'Reconectando...';
       case 'healthy':
-        return {t('components.conexaoEstavel')};
+        return t('components.conexaoEstavel');
       default:
         return 'Status desconhecido';
     }
@@ -208,7 +207,7 @@ export default function NetworkStatus({
             <div className="flex justify-between">
               <span>API Status:</span>
               <span className={status.apiHealthy ? 'text-green-600' : 'text-red-600'}>
-                {status.apiHealthy ? {t('components.saudavel')} : 'Com problemas'}
+                {status.apiHealthy ? t('components.saudavel') : 'Com problemas'}
               </span>
             </div>
             

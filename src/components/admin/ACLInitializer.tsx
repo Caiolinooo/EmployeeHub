@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { FiSettings, FiCheck, FiAlertTriangle, FiRefreshCw } from 'react-icons/fi';
@@ -131,7 +131,7 @@ const ACLInitializer: React.FC = () => {
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className={`text-2xl font-bold ${status.initialized ? 'text-green-600' : 'text-red-600'}`}>
-                {status.initialized ? 'SIM' : {t('components.nao')}}
+                {status.initialized ? 'SIM' : t('components.nao')}
               </div>
               <div className="text-sm text-gray-600">Sistema Inicializado</div>
             </div>

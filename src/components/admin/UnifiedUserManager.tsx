@@ -31,7 +31,7 @@ import UserPasswordReset from '@/components/admin/UserPasswordReset';
 import UserRoleManager from '@/components/admin/UserRoleManager';
 import { useAllUsers } from '@/hooks/useAllUsers';
 
-// Interface para o usu√°rio na lista
+// Interface para o usu·rio na lista
 interface User {
   _id: string;
   phoneNumber: string;
@@ -49,7 +49,7 @@ interface User {
   accessPermissions?: any;
 }
 
-// Interface para usu√°rio autorizado
+// Interface para usu·rio autorizado
 type AuthorizedUser = {
   _id: string;
   email?: string;
@@ -65,7 +65,7 @@ type AuthorizedUser = {
   notes?: string;
 };
 
-// Estat√≠sticas de acesso
+// EstatÌsticas de acesso
 type AuthStats = {
   users: {
     total: number;
@@ -91,15 +91,15 @@ export default function UnifiedUserManager() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'users' | 'authorized'>('users');
 
-  // Lista unificada de usu√°rios do projeto
+  // Lista unificada de usu·rios do projeto
   const { users: hookUsers, loading: hookLoading, error: hookError, refresh: refreshAllUsers } = useAllUsers();
 
-  // Estados para usu√°rios regulares
+  // Estados para usu·rios regulares
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Estados para usu√°rios autorizados
+  // Estados para usu·rios autorizados
   const [authorizedUsers, setAuthorizedUsers] = useState<AuthorizedUser[]>([]);
   const [stats, setStats] = useState<AuthStats | null>(null);
   const [filter, setFilter] = useState('all');
@@ -113,7 +113,7 @@ export default function UnifiedUserManager() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isNewUser, setIsNewUser] = useState(false);
 
-  // Estados para formul√°rio de autoriza√ß√£o
+  // Estados para formul·rio de autorizaÁ„o
   const [showAddForm, setShowAddForm] = useState(false);
   const [formType, setFormType] = useState<'email' | 'phone' | 'domain' | 'invite'>('email');
   const [email, setEmail] = useState('');
@@ -131,7 +131,7 @@ export default function UnifiedUserManager() {
   const [successMessage, setSuccessMessage] = useState('');
   const [isFixingToken, setIsFixingToken] = useState(false);
 
-  // Estados para rejei√ß√£o
+  // Estados para rejeiÁ„o
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState('');
@@ -192,7 +192,7 @@ export default function UnifiedUserManager() {
           console.error('Erro ao renovar token antes de carregar dados:', refreshError);
         }
 
-        // Carregar dados ap√≥s tentativa de renova√ß√£o/corre√ß√£o do token
+        // Carregar dados apÛs tentativa de renovaÁ„o/correÁ„o do token
         fetchUsers();
         fetchAuthorizedUsers();
         fetchStats();
@@ -220,7 +220,7 @@ export default function UnifiedUserManager() {
 
 
 
-  // Fun√ß√£o para corrigir o token manualmente
+  // FunÁ„o para corrigir o token manualmente
   const fixToken = async () => {
     setIsFixingToken(true);
     setError(null);
@@ -230,7 +230,7 @@ export default function UnifiedUserManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error({t('components.naoHaTokenParaCorrigirFacaLoginNovamente')});
+        throw new Error(t('components.naoHaTokenParaCorrigirFacaLoginNovamente'));
       }
 
       // Primeiro tentar renovar o token
@@ -262,7 +262,7 @@ export default function UnifiedUserManager() {
         }
       }
 
-      // Se a renova√ß√£o falhar, tentar corrigir o token
+      // Se a renovaÁ„o falhar, tentar corrigir o token
       console.log('Tentando corrigir token manualmente...');
       const fixResponse = await fetch('/api/auth/fix-token', {
         method: 'POST',
@@ -302,7 +302,7 @@ export default function UnifiedUserManager() {
         try {
           console.log('Tentando criar novo token para o administrador...');
 
-          // Redirecionar para a p√°gina de corre√ß√£o de admin
+          // Redirecionar para a p·gina de correÁ„o de admin
           router.push('/admin-fix');
         } catch (adminFixError) {
           console.error('Erro ao tentar corrigir token de administrador:', adminFixError);
@@ -313,7 +313,7 @@ export default function UnifiedUserManager() {
     }
   };
 
-  // Filtrar usu√°rios quando o termo de busca mudar
+  // Filtrar usu·rios quando o termo de busca mudar
   useEffect(() => {
     if (searchTerm.trim() === '') {
       setFilteredUsers(users);
@@ -342,7 +342,7 @@ export default function UnifiedUserManager() {
     if (hookError) setError(hookError);
   }, [hookUsers, hookError]);
 
-  // Buscar usu√°rios regulares
+  // Buscar usu·rios regulares
   const fetchUsers = async () => {
     console.log(t('components.iniciandoBuscaDeUsuariosUseallusers'));
     setLoading(true);
@@ -359,7 +359,7 @@ export default function UnifiedUserManager() {
 
 
 
-  // Buscar usu√°rios autorizados
+  // Buscar usu·rios autorizados
   const fetchAuthorizedUsers = async () => {
     setLoading(true);
     try {
@@ -371,7 +371,7 @@ export default function UnifiedUserManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
+        throw new Error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
       }
 
       console.log(t('components.buscandoUsuariosAutorizadosComToken'), token.substring(0, 10) + '...');
@@ -388,7 +388,7 @@ export default function UnifiedUserManager() {
         const errorData = await response.json().catch(() => ({}));
         console.error(t('components.erroAoBuscarUsuariosAutorizados'), errorData);
 
-        // Se o erro for de acesso negado e o usu√°rio for o administrador principal, redirecionar para a p√°gina de corre√ß√£o
+        // Se o erro for de acesso negado e o usu·rio for o administrador principal, redirecionar para a p·gina de correÁ„o
         if (response.status === 403 &&
             (user?.email === 'caio.correia@groupabz.com' || (user as any)?.phone_number === '+5522997847289')) {
           console.log(t('components.usuarioEOAdministradorPrincipalMasNaoTemAcessoRedi'));
@@ -402,7 +402,7 @@ export default function UnifiedUserManager() {
       const responseText = await response.text();
       console.log('Resposta recebida, tamanho:', responseText.length);
 
-      // Verificar se a resposta est√° vazia
+      // Verificar se a resposta est· vazia
       if (!responseText || responseText.trim() === '') {
         console.error(t('components.respostaVaziaRecebidaDaApiDeUsuariosAutorizados'));
         setAuthorizedUsers([]);
@@ -414,12 +414,12 @@ export default function UnifiedUserManager() {
         const data = JSON.parse(responseText);
         console.log(t('components.usuariosAutorizadosRecebidos'), data.length);
 
-        // Verificar se os dados est√£o no formato esperado
+        // Verificar se os dados est„o no formato esperado
         if (Array.isArray(data)) {
-          // Verificar se os dados t√™m a estrutura esperada
+          // Verificar se os dados tÍm a estrutura esperada
           if (data.length > 0) {
             const firstUser = data[0];
-            // Verificar se os campos necess√°rios est√£o presentes
+            // Verificar se os campos necess·rios est„o presentes
             if (!firstUser._id) {
               console.warn(t('components.dadosDeUsuarioAutorizadoPodemEstarEmFormatoIncorre'), firstUser);
               console.log('Tentando mapear para o formato correto...');
@@ -447,11 +447,11 @@ export default function UnifiedUserManager() {
               console.log('Dados mapeados:', mappedData.length);
               setAuthorizedUsers(mappedData);
             } else {
-              // Dados j√° est√£o no formato correto
+              // Dados j· est„o no formato correto
               setAuthorizedUsers(data);
             }
           } else {
-            // Array vazio, definir como est√°
+            // Array vazio, definir como est·
             setAuthorizedUsers(data);
           }
         } else {
@@ -473,16 +473,16 @@ export default function UnifiedUserManager() {
     }
   };
 
-  // Buscar estat√≠sticas
+  // Buscar estatÌsticas
   const fetchStats = async () => {
     try {
       let token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
+        throw new Error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
       }
 
-      // Tentar renovar o token antes de fazer a requisi√ß√£o
+      // Tentar renovar o token antes de fazer a requisiÁ„o
       try {
         console.log(t('components.tentandoRenovarTokenAntesDeBuscarEstatisticas'));
         const refreshResponse = await fetch('/api/auth/token-refresh', {
@@ -524,7 +524,7 @@ export default function UnifiedUserManager() {
         const errorData = await response.json().catch(() => ({}));
         console.error(t('components.erroAoBuscarEstatisticas'), errorData);
 
-        // Se o erro for de token inv√°lido, tentar corrigir o token
+        // Se o erro for de token inv·lido, tentar corrigir o token
         if (response.status === 401) {
           console.log(t('components.tokenInvalidoOuExpiradoTentandoCorrigir'));
           try {
@@ -568,7 +568,7 @@ export default function UnifiedUserManager() {
           }
         }
 
-        // Se o erro for de acesso negado e o usu√°rio for o administrador principal, redirecionar para a p√°gina de corre√ß√£o
+        // Se o erro for de acesso negado e o usu·rio for o administrador principal, redirecionar para a p·gina de correÁ„o
         if (response.status === 403 &&
             (user?.email === 'caio.correia@groupabz.com' || (user as any)?.phone_number === '+5522997847289')) {
           console.log(t('components.usuarioEOAdministradorPrincipalMasNaoTemAcessoAsEs'));
@@ -584,12 +584,12 @@ export default function UnifiedUserManager() {
       setStats(data);
     } catch (error) {
       console.error(t('components.erroAoCarregarEstatisticas'), error);
-      // N√£o mostrar o erro na interface para n√£o confundir o usu√°rio
-      // Apenas registrar no console para depura√ß√£o
+      // N„o mostrar o erro na interface para n„o confundir o usu·rio
+      // Apenas registrar no console para depuraÁ„o
     }
   };
 
-  // Fun√ß√µes para gerenciar usu√°rios regulares
+  // FunÁıes para gerenciar usu·rios regulares
   const handleAddUser = () => {
     setSelectedUser(null);
     setIsNewUser(true);
@@ -628,7 +628,7 @@ export default function UnifiedUserManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error({t('components.naoAutorizado')});
+        throw new Error(t('components.naoAutorizado'));
       }
 
       const method = isNewUser ? 'POST' : 'PUT';
@@ -660,13 +660,13 @@ export default function UnifiedUserManager() {
       setShowEditor(false);
       fetchUsers();
 
-      // Limpar a mensagem ap√≥s 3 segundos
+      // Limpar a mensagem apÛs 3 segundos
       setTimeout(() => {
         setSuccessMessage('');
       }, 3000);
     } catch (error) {
       console.error(t('components.erroAoSalvarUsuario'), error);
-      setError({t('components.erroAoSalvarUsuarioErrorInstanceofErrorErrormessag')}Erro desconhecido'}`);
+      setError(t('components.erroAoSalvarUsuarioErrorInstanceofErrorErrormessag')}Erro desconhecido'}`);
     }
   };
 
@@ -678,7 +678,7 @@ export default function UnifiedUserManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error({t('components.naoAutorizado')});
+        throw new Error(t('components.naoAutorizado'));
       }
 
       const response = await fetch(`/api/users/${selectedUser._id}`, {
@@ -697,17 +697,17 @@ export default function UnifiedUserManager() {
       setShowDeleteConfirm(false);
       fetchUsers();
 
-      // Limpar a mensagem ap√≥s 3 segundos
+      // Limpar a mensagem apÛs 3 segundos
       setTimeout(() => {
         setSuccessMessage('');
       }, 3000);
     } catch (error) {
       console.error(t('components.erroAoExcluirUsuario'), error);
-      setError({t('components.erroAoExcluirUsuarioErrorInstanceofErrorErrormessa')}Erro desconhecido'}`);
+      setError(t('components.erroAoExcluirUsuarioErrorInstanceofErrorErrormessa')}Erro desconhecido'}`);
     }
   };
 
-  // Fun√ß√µes para gerenciar usu√°rios autorizados
+  // FunÁıes para gerenciar usu·rios autorizados
   const handleAddAuthorizedUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -732,7 +732,7 @@ export default function UnifiedUserManager() {
           break;
         case 'invite':
           action = 'generate_invite';
-          // Adicionar configura√ß√µes de expira√ß√£o se fornecidas
+          // Adicionar configuraÁıes de expiraÁ„o se fornecidas
           if (expiryDays) payload.expiryDays = expiryDays;
           if (maxUses) payload.maxUses = maxUses;
           break;
@@ -743,7 +743,7 @@ export default function UnifiedUserManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
+        throw new Error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
       }
 
       const response = await fetch('/api/admin/authorized-users', {
@@ -765,17 +765,17 @@ export default function UnifiedUserManager() {
       if (result.success) {
         setSuccessMessage(result.message);
 
-        // Se for c√≥digo de convite, mostrar o c√≥digo gerado
+        // Se for cÛdigo de convite, mostrar o cÛdigo gerado
         if (formType === 'invite' && result.inviteCode) {
           setGeneratedInviteCode(result.inviteCode);
 
           // Se tiver email para enviar o convite
           if (inviteEmail && result.inviteCode && result.expiresAt) {
-            // Enviar email com o c√≥digo de convite
+            // Enviar email com o cÛdigo de convite
             const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
             if (!token) {
-              throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
+              throw new Error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
             }
 
             const emailResponse = await fetch('/api/admin/send-invite', {
@@ -800,7 +800,7 @@ export default function UnifiedUserManager() {
           }
         }
 
-        // Limpar formul√°rio
+        // Limpar formul·rio
         setEmail('');
         setPhoneNumber('');
         setDomain('');
@@ -826,7 +826,7 @@ export default function UnifiedUserManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
+        throw new Error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
       }
 
       const response = await fetch('/api/admin/authorized-users', {
@@ -872,7 +872,7 @@ export default function UnifiedUserManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
+        throw new Error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
       }
 
       const response = await fetch('/api/admin/authorized-users', {
@@ -910,7 +910,7 @@ export default function UnifiedUserManager() {
   };
 
   const handleDeleteAuthorizedUser = async (id: string) => {
-    if (!confirm({t('components.temCertezaQueDesejaExcluirEsteUsuarioAutorizado')})) {
+    if (!confirm(t('components.temCertezaQueDesejaExcluirEsteUsuarioAutorizado'))) {
       return;
     }
 
@@ -918,7 +918,7 @@ export default function UnifiedUserManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
+        throw new Error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
       }
 
       const response = await fetch(`/api/admin/authorized-users/${id}`, {
@@ -973,7 +973,7 @@ export default function UnifiedUserManager() {
       await fetchStats();
     } catch (err) {
       console.error(t('components.erroAoAprovarUsuario'), err);
-      setError(err instanceof Error ? err.message : {t('components.erroAoAprovarUsuario')});
+      setError(err instanceof Error ? err.message : t('components.erroAoAprovarUsuario'));
     }
   };
 
@@ -1002,11 +1002,11 @@ export default function UnifiedUserManager() {
       await fetchStats();
     } catch (err) {
       console.error(t('components.erroAoRejeitarUsuario'), err);
-      setError(err instanceof Error ? err.message : {t('components.erroAoRejeitarUsuario')});
+      setError(err instanceof Error ? err.message : t('components.erroAoRejeitarUsuario'));
     }
   };
 
-  // Fun√ß√µes auxiliares
+  // FunÁıes auxiliares
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('pt-BR', {
@@ -1029,8 +1029,8 @@ export default function UnifiedUserManager() {
   const getAuthorizationTypeText = (user: AuthorizedUser) => {
     if (user.email) return `Email: ${user.email}`;
     if (user.phoneNumber) return `Telefone: ${user.phoneNumber}`;
-    if (user.domain) return {t('components.dominioUserdomain')};
-    if (user.inviteCode) return {t('components.codigoDeConviteUserinvitecode')};
+    if (user.domain) return t('components.dominioUserdomain');
+    if (user.inviteCode) return t('components.codigoDeConviteUserinvitecode');
     return 'Desconhecido';
   };
 
@@ -1049,7 +1049,7 @@ export default function UnifiedUserManager() {
     }
   };
 
-  // Renderiza√ß√£o do componente
+  // RenderizaÁ„o do componente
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Abas */}
@@ -1070,14 +1070,14 @@ export default function UnifiedUserManager() {
             className={`flex items-center px-4 py-2 rounded-md ${activeTab === 'users' ? 'bg-abz-blue text-white' : 'bg-gray-200 text-gray-700'}`}
           >
             <FiUser className="mr-2" />
-            Usu√°rios
+            Usu·rios
           </button>
           <button
             onClick={() => setActiveTab('authorized')}
             className={`flex items-center px-4 py-2 rounded-md ${activeTab === 'authorized' ? 'bg-abz-blue text-white' : 'bg-gray-200 text-gray-700'}`}
           >
             <FiUserCheck className="mr-2" />
-            Autoriza√ß√µes
+            AutorizaÁıes
           </button>
         </div>
       </div>
@@ -1103,7 +1103,7 @@ export default function UnifiedUserManager() {
         </div>
       )}
 
-      {/* Conte√∫do da aba de usu√°rios */}
+      {/* Conte˙do da aba de usu·rios */}
       {activeTab === 'users' && (
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex flex-wrap justify-between items-center mb-6">
@@ -1124,7 +1124,7 @@ export default function UnifiedUserManager() {
                   fetchUsers();
                 }}
                 className="flex items-center px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-                title={t('admin.refreshUserList', 'Atualizar lista de usu√°rios')}
+                title={t('admin.refreshUserList', 'Atualizar lista de usu·rios')}
               >
                 <FiRefreshCw className="mr-1" />
                 {t('common.refresh', 'Atualizar')}
@@ -1136,7 +1136,7 @@ export default function UnifiedUserManager() {
               className="flex items-center px-4 py-2 bg-abz-blue text-white rounded-md hover:bg-abz-blue-dark transition-colors"
             >
               <FiPlus className="mr-2" />
-              {t('userEditor.newUser', 'Novo Usu√°rio')}
+              {t('userEditor.newUser', 'Novo Usu·rio')}
             </button>
           </div>
 
@@ -1151,19 +1151,19 @@ export default function UnifiedUserManager() {
                     Contato
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Fun√ß√£o
+                    FunÁ„o
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Autoriza√ß√£o
+                    AutorizaÁ„o
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Criado em
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    A√ß√µes
+                    AÁıes
                   </th>
                 </tr>
               </thead>
@@ -1177,7 +1177,7 @@ export default function UnifiedUserManager() {
                 ) : filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
-                      Nenhum usu√°rio encontrado.
+                      Nenhum usu·rio encontrado.
                     </td>
                   </tr>
                 ) : (
@@ -1206,9 +1206,9 @@ export default function UnifiedUserManager() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {user.role === 'ADMIN' ? 'Administrador' : user.role === 'MANAGER' ? 'Gerente' : {t('components.usuario')}}
+                          {user.role === 'ADMIN' ? 'Administrador' : user.role === 'MANAGER' ? 'Gerente' : t('components.usuario')}
                         </div>
-                        <div className="text-sm text-gray-500">{user.position || 'N√£o definido'}</div>
+                        <div className="text-sm text-gray-500">{user.position || 'N„o definido'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${user.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
@@ -1274,7 +1274,7 @@ export default function UnifiedUserManager() {
                           <button
                             onClick={() => handleManageRole(user)}
                             className="text-gray-600 hover:text-abz-blue"
-                            title="Gerenciar papel/fun√ß√£o"
+                            title="Gerenciar papel/funÁ„o"
                           >
                             <FiShield />
                           </button>
@@ -1304,14 +1304,14 @@ export default function UnifiedUserManager() {
         </div>
       )}
 
-      {/* Conte√∫do da aba de usu√°rios autorizados */}
+      {/* Conte˙do da aba de usu·rios autorizados */}
       {activeTab === 'authorized' && (
         <div className="bg-white rounded-lg shadow-md p-6">
-          {/* Estat√≠sticas */}
+          {/* EstatÌsticas */}
           {stats && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-blue-700">Usu√°rios</h3>
+                <h3 className="text-lg font-semibold text-blue-700">Usu·rios</h3>
                 <div className="mt-2 space-y-1">
                   <p className="text-sm">Total: <span className="font-bold">{stats.users.total}</span></p>
                   <p className="text-sm">Ativos: <span className="font-bold">{stats.users.active}</span></p>
@@ -1320,17 +1320,17 @@ export default function UnifiedUserManager() {
               </div>
 
               <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-green-700">Autoriza√ß√µes</h3>
+                <h3 className="text-lg font-semibold text-green-700">AutorizaÁıes</h3>
                 <div className="mt-2 space-y-1">
                   <p className="text-sm">Email: <span className="font-bold">{stats.authorizations.email}</span></p>
                   <p className="text-sm">Telefone: <span className="font-bold">{stats.authorizations.phone}</span></p>
-                  <p className="text-sm">Dom√≠nio: <span className="font-bold">{stats.authorizations.domain}</span></p>
+                  <p className="text-sm">DomÌnio: <span className="font-bold">{stats.authorizations.domain}</span></p>
                   <p className="text-sm">Convite: <span className="font-bold">{stats.authorizations.inviteCode}</span></p>
                 </div>
               </div>
 
               <div className="bg-yellow-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-yellow-700">Solicita√ß√µes</h3>
+                <h3 className="text-lg font-semibold text-yellow-700">SolicitaÁıes</h3>
                 <div className="mt-2 space-y-1">
                   <p className="text-sm">Pendentes: <span className="font-bold">{stats.authorizations.pending}</span></p>
                   <p className="text-sm">Rejeitadas: <span className="font-bold">{stats.authorizations.rejected}</span></p>
@@ -1348,7 +1348,7 @@ export default function UnifiedUserManager() {
             </div>
           )}
 
-          {/* Bot√µes de a√ß√£o */}
+          {/* Botıes de aÁ„o */}
           <div className="flex flex-wrap justify-between items-center mb-6">
             <div className="flex space-x-2 mb-2 sm:mb-0">
               <button
@@ -1391,10 +1391,10 @@ export default function UnifiedUserManager() {
             </div>
           </div>
 
-          {/* Formul√°rio de adi√ß√£o */}
+          {/* Formul·rio de adiÁ„o */}
           {showAddForm && (
             <div className="bg-gray-50 p-4 rounded-lg mb-6">
-              <h3 className="text-lg font-semibold mb-4">Adicionar Autoriza√ß√£o</h3>
+              <h3 className="text-lg font-semibold mb-4">Adicionar AutorizaÁ„o</h3>
 
               <div className="flex flex-wrap gap-2 mb-4">
                 <button
@@ -1418,7 +1418,7 @@ export default function UnifiedUserManager() {
                   className={`flex items-center px-3 py-2 rounded-md ${formType === 'domain' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
                 >
                   <FiGlobe className="mr-2" />
-                  Dom√≠nio
+                  DomÌnio
                 </button>
 
                 <button
@@ -1426,7 +1426,7 @@ export default function UnifiedUserManager() {
                   className={`flex items-center px-3 py-2 rounded-md ${formType === 'invite' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
                 >
                   <FiKey className="mr-2" />
-                  C√≥digo de Convite
+                  CÛdigo de Convite
                 </button>
               </div>
 
@@ -1451,7 +1451,7 @@ export default function UnifiedUserManager() {
                 {formType === 'phone' && (
                   <div>
                     <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                      N√∫mero de Telefone
+                      N˙mero de Telefone
                     </label>
                     <input
                       type="tel"
@@ -1468,7 +1468,7 @@ export default function UnifiedUserManager() {
                 {formType === 'domain' && (
                   <div>
                     <label htmlFor="domain" className="block text-sm font-medium text-gray-700 mb-1">
-                      Dom√≠nio
+                      DomÌnio
                     </label>
                     <input
                       type="text"
@@ -1487,7 +1487,7 @@ export default function UnifiedUserManager() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       <div>
                         <label htmlFor="expiryDays" className="block text-sm font-medium text-gray-700 mb-1">
-                          Dias at√© Expira√ß√£o (opcional)
+                          Dias atÈ ExpiraÁ„o (opcional)
                         </label>
                         <input
                           type="number"
@@ -1502,7 +1502,7 @@ export default function UnifiedUserManager() {
                       </div>
                       <div>
                         <label htmlFor="maxUses" className="block text-sm font-medium text-gray-700 mb-1">
-                          N√∫mero M√°ximo de Usos (opcional)
+                          N˙mero M·ximo de Usos (opcional)
                         </label>
                         <input
                           type="number"
@@ -1530,18 +1530,18 @@ export default function UnifiedUserManager() {
                         placeholder="usuario@exemplo.com"
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        Se preenchido, o c√≥digo de convite ser√° enviado para este email
+                        Se preenchido, o cÛdigo de convite ser· enviado para este email
                       </p>
                     </div>
 
                     {generatedInviteCode && (
                       <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md mt-4">
-                        <p className="font-semibold mb-2">C√≥digo de Convite Gerado:</p>
+                        <p className="font-semibold mb-2">CÛdigo de Convite Gerado:</p>
                         <div className="bg-white p-3 rounded border border-yellow-300 text-center">
                           <span className="text-xl font-mono font-bold tracking-wider">{generatedInviteCode}</span>
                         </div>
                         <p className="text-sm mt-2 text-yellow-700">
-                          Compartilhe este c√≥digo com o usu√°rio que voc√™ deseja convidar.
+                          Compartilhe este cÛdigo com o usu·rio que vocÍ deseja convidar.
                         </p>
                       </div>
                     )}
@@ -1552,7 +1552,7 @@ export default function UnifiedUserManager() {
                   <>
                     <div>
                       <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-                        Observa√ß√µes (opcional)
+                        ObservaÁıes (opcional)
                       </label>
                       <textarea
                         id="notes"
@@ -1569,7 +1569,7 @@ export default function UnifiedUserManager() {
                         type="submit"
                         className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                       >
-                        {formType === 'invite' ? {t('components.gerarCodigo')} : 'Adicionar'}
+                        {formType === 'invite' ? t('components.gerarCodigo') : 'Adicionar'}
                       </button>
                     </div>
                   </>
@@ -1583,7 +1583,7 @@ export default function UnifiedUserManager() {
                       }}
                       className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                     >
-                      Gerar Outro C√≥digo
+                      Gerar Outro CÛdigo
                     </button>
                   </div>
                 )}
@@ -1591,7 +1591,7 @@ export default function UnifiedUserManager() {
             </div>
           )}
 
-          {/* Lista de usu√°rios autorizados */}
+          {/* Lista de usu·rios autorizados */}
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -1600,19 +1600,19 @@ export default function UnifiedUserManager() {
                     Tipo
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Identifica√ß√£o
+                    IdentificaÁ„o
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Data de Cria√ß√£o
+                    Data de CriaÁ„o
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Expira√ß√£o / Usos
+                    ExpiraÁ„o / Usos
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    A√ß√µes
+                    AÁıes
                   </th>
                 </tr>
               </thead>
@@ -1626,7 +1626,7 @@ export default function UnifiedUserManager() {
                 ) : authorizedUsers.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
-                      Nenhum usu√°rio autorizado encontrado.
+                      Nenhum usu·rio autorizado encontrado.
                     </td>
                   </tr>
                 ) : (
@@ -1636,7 +1636,7 @@ export default function UnifiedUserManager() {
                         <div className="flex items-center">
                           {getAuthorizationTypeIcon(user)}
                           <span className="ml-2 text-sm text-gray-900">
-                            {user.email ? 'Email' : user.phoneNumber ? 'Telefone' : user.domain ? {t('components.dominio')} : 'Convite'}
+                            {user.email ? 'Email' : user.phoneNumber ? 'Telefone' : user.domain ? t('components.dominio') : 'Convite'}
                           </span>
                         </div>
                       </td>
@@ -1742,10 +1742,9 @@ export default function UnifiedUserManager() {
       {showDeleteConfirm && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-4">{t('common.confirmDelete', 'Confirmar Exclus√£o')}</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('common.confirmDelete', 'Confirmar Exclus„o')}</h3>
             <p className="mb-4">
-              {t('admin.users.confirmDeleteMessage', 'Tem certeza que deseja excluir o usu√°rio')} <strong>{selectedUser.firstName} {selectedUser.lastName}</strong>?
-              {t('admin.users.actionCannotBeUndone', 'Esta a√ß√£o n√£o pode ser desfeita.')}
+              {t('admin.users.confirmDeleteMessage', 'Tem certeza que deseja excluir o usu·rio')} <strong>{selectedUser.firstName} {selectedUser.lastName}</strong>? t('admin.users.actionCannotBeUndone', 'Esta aÁ„o n„o pode ser desfeita.')
             </p>
             <div className="flex justify-end space-x-2">
               <button
@@ -1780,7 +1779,7 @@ export default function UnifiedUserManager() {
           onClose={() => setShowPasswordReset(false)}
           onSuccess={() => {
             setShowPasswordReset(false);
-            // Opcional: recarregar dados do usu√°rio
+            // Opcional: recarregar dados do usu·rio
           }}
         />
       )}
@@ -1798,15 +1797,15 @@ export default function UnifiedUserManager() {
         />
       )}
 
-      {/* Modal de rejei√ß√£o */}
+      {/* Modal de rejeiÁ„o */}
       {showRejectModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-4">Rejeitar Solicita√ß√£o</h3>
+            <h3 className="text-lg font-semibold mb-4">Rejeitar SolicitaÁ„o</h3>
 
             <div className="mb-4">
               <label htmlFor="rejectReason" className="block text-sm font-medium text-gray-700 mb-1">
-                Motivo da Rejei√ß√£o
+                Motivo da RejeiÁ„o
               </label>
               <textarea
                 id="rejectReason"

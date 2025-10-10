@@ -388,8 +388,8 @@ export default {
       password: 'Senha',
       emails: 'Emails',
       phones: 'Telefones'
-    }
-  
+    },
+
     aguardandoCarregamentoDaAutenticacao: '🔄 Aguardando carregamento da autenticação...',
     usuarioNaoAutenticadoRedirecionandoParaLogin: '❌ Usuário não autenticado, redirecionando para login',
     vocePrecisaEstarLogadoParaAcessarEstaPagina: 'Você precisa estar logado para acessar esta página.',
@@ -823,8 +823,8 @@ export default {
       reject: 'Rejeitar',
       cancel: 'Cancelar',
       close: 'Fechar'
-    }
-  
+    },
+
     verificandoPermissoesDeAprovacaoParaExibirAba: 'Verificando permissões de aprovação para exibir aba...',
     usuarioEAdministradorConcedendoPermissaoDeAprovaca: 'Usuário é administrador, concedendo permissão de aprovação',
     usuarioEGerenteConcedendoPermissaoDeAprovacao: 'Usuário é gerente, concedendo permissão de aprovação',
@@ -898,6 +898,19 @@ export default {
     apiMobile: 'API Mobile',
     erpIntegration: 'Integração ERP',
     systemInfo: 'Informações do Sistema',
+    falhaAoCarregarCompanyCalendar: 'Falha ao carregar company_calendar',
+    erroAoFazerUploadDo: 'Erro ao fazer upload do {type}',
+    erroNaRespostaDaAPI: 'Erro na resposta da API',
+    respostaDaAPI: 'Resposta da API',
+    configuracoesDoSistema: 'Configurações do Sistema',
+    personalizeAsConfiguracoesGeraisDoSistema: 'Personalize as configurações gerais do sistema.',
+    configuracoesBasicas: 'Configurações Básicas',
+    carregandoConfiguracoes: 'Carregando configurações...',
+    erroAoCarregarConfiguracoesPorFavorRecarregueAPagina: 'Erro ao carregar configurações. Por favor, recarregue a página.',
+    tituloDoSite: 'Título do Site',
+    nomeDaEmpresa: 'Nome da Empresa',
+    recarregar: 'Recarregar',
+    salvando: 'Salvando...',
     version: 'Versão',
     lastLogin: 'Último Login',
     status: 'Status',
@@ -1405,7 +1418,6 @@ export default {
     payroll: 'Contracheque',
     academy: 'Academia',
     news: 'Notícias',
-    profile: 'Perfil',
 
   },
   payroll: {
@@ -1499,9 +1511,6 @@ export default {
       aclPermissions: 'Permissões ACL',
       notifications: 'Notificações'
     },
-
-    // Traduções para comentários e posts
-    errorCreatingPost: 'Erro ao criar post',
     errorSharingPost: 'Erro ao compartilhar post. Tente novamente.',
     errorLoadingComments: 'Erro ao carregar comentários',
     errorSendingComment: 'Erro ao enviar comentário',
@@ -1509,11 +1518,7 @@ export default {
     couldNotSendComment: 'Não foi possível enviar o comentário',
     loadingComments: 'Carregando comentários...',
     beFirstToComment: 'Seja o primeiro a comentar',
-    writeComment: 'Escreva um comentário...',
-
-    // Admin panel
-    admin: 'Gerenciar Notícias',
-    adminDesc: 'Crie e gerencie posts de notícias estilo Instagram',
+    writeComment: 'Escreva um comentário...'
   },
 
   // Sistema ACL
@@ -1883,7 +1888,7 @@ export default {
     },
     sem_permissao: 'Sem permissão para acessar o chat',
     sem_permissao_desc: 'Você não tem permissão para usar o sistema de chat.'
-  }
+  },
   academy: {
     cursoNaoEncontrado: 'Curso não encontrado',
     erroAoCarregarMatricula: 'Erro ao carregar matrícula:',

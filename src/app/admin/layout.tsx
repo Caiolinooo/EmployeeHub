@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import Link from 'next/link';
@@ -28,7 +28,7 @@ const adminMenuItems = [
   { id: 'role-permissions', href: '/admin/role-permissions', label: 'admin.rolePermissions', icon: FiKey },
   { id: 'user-approval-settings', href: '/admin/user-approval-settings', label: 'admin.userApprovalSettings', icon: FiUserCheck },
   { id: 'banned-users', href: '/admin/banned-users', label: 'admin.bannedUsers', icon: FiUserX },
-  { id: 'notifications', href: '/admin/notifications', label: {t('admin.notificacoes')}, icon: FiBell },
+  { id: 'notifications', href: '/admin/notifications', label: t('admin.notificacoes'), icon: FiBell },
   { id: 'academy-certificates', href: '/admin/academy/certificates', label: 'Academy - Certificados', icon: FiAward },
   // Seção de Reembolsos
   { id: 'reimbursement-dashboard', href: '/reembolso?tab=dashboard', label: 'admin.myReimbursements', icon: FiDollarSign },
@@ -83,7 +83,7 @@ const adminMenuGroups = [
     id: 'communications',
     label: 'admin.communications',
     items: [
-      { id: 'notifications', href: '/admin/notifications', label: {t('admin.notificacoes')}, icon: FiBell },
+      { id: 'notifications', href: '/admin/notifications', label: t('admin.notificacoes'), icon: FiBell },
     ]
   },
   {
@@ -266,7 +266,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <div>
                 <p className="text-sm font-medium text-gray-700 group-hover:text-abz-blue transition-colors">{user?.email}</p>
                 <p className="text-xs text-gray-500">
-                  {profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : {t('admin.usuario')}}
+                  {profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : t('admin.usuario')}
                 </p>
               </div>
             </Link>

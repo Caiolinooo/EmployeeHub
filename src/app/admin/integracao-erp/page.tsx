@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { 
@@ -58,9 +58,9 @@ export default function IntegracaoERPPage() {
   });
 
   const availableModules = [
-    { id: 'usuarios', name: {t('admin.usuarios')}, icon: FiUsers },
+    { id: 'usuarios', name: t('admin.usuarios'), icon: FiUsers },
     { id: 'folha_pagamento', name: 'Folha de Pagamento', icon: FiDollarSign },
-    { id: 'avaliacoes', name: {t('admin.avaliacoes')}, icon: FiFileText },
+    { id: 'avaliacoes', name: t('admin.avaliacoes'), icon: FiFileText },
     { id: 'departamentos', name: 'Departamentos', icon: FiUsers },
     { id: 'cargos', name: 'Cargos', icon: FiFileText },
   ];
@@ -84,7 +84,7 @@ export default function IntegracaoERPPage() {
       setConnections([
         {
           id: '1',
-          name: {t('admin.sapProducao')},
+          name: t('admin.sapProducao'),
           type: 'SAP',
           status: 'connected',
           last_sync: '2024-01-20T14:30:00Z',

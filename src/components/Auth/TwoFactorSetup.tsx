@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -36,7 +36,7 @@ export default function TwoFactorSetup() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
       
       if (!token) {
-        throw new Error({t('components.naoAutorizado')});
+        throw new Error(t('components.naoAutorizado'));
       }
       
       const response = await fetch('/api/auth/2fa', {
@@ -70,7 +70,7 @@ export default function TwoFactorSetup() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
       
       if (!token) {
-        throw new Error({t('components.naoAutorizado')});
+        throw new Error(t('components.naoAutorizado'));
       }
       
       const response = await fetch('/api/auth/2fa', {
@@ -106,7 +106,7 @@ export default function TwoFactorSetup() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
       
       if (!token) {
-        throw new Error({t('components.naoAutorizado')});
+        throw new Error(t('components.naoAutorizado'));
       }
       
       const response = await fetch('/api/auth/2fa', {
@@ -142,7 +142,7 @@ export default function TwoFactorSetup() {
 
   // Função para desativar 2FA
   const disable2fa = async () => {
-    if (!confirm({t('components.temCertezaQueDesejaDesativarAAutenticacaoDeDoisFat')})) {
+    if (!confirm(t('components.temCertezaQueDesejaDesativarAAutenticacaoDeDoisFat'))) {
       return;
     }
     
@@ -154,7 +154,7 @@ export default function TwoFactorSetup() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
       
       if (!token) {
-        throw new Error({t('components.naoAutorizado')});
+        throw new Error(t('components.naoAutorizado'));
       }
       
       const response = await fetch('/api/auth/2fa', {
@@ -227,8 +227,8 @@ export default function TwoFactorSetup() {
                 <p className="font-semibold">Status: {is2faEnabled ? 'Ativado' : 'Desativado'}</p>
                 <p className="text-sm text-gray-600">
                   {is2faEnabled 
-                    ? {t('components.suaContaEstaProtegidaComAutenticacaoDeDoisFatores')} 
-                    : {t('components.recomendamosAtivarAAutenticacaoDeDoisFatoresParaAu')}}
+                    ? t('components.suaContaEstaProtegidaComAutenticacaoDeDoisFatores') 
+                    : t('components.recomendamosAtivarAAutenticacaoDeDoisFatoresParaAu')}
                 </p>
               </div>
             </div>
@@ -248,7 +248,7 @@ export default function TwoFactorSetup() {
               className="px-4 py-2 bg-abz-blue text-white rounded-md hover:bg-abz-blue-dark transition-colors"
               disabled={loading}
             >
-              {loading ? 'Processando...' : {t('components.configurarAutenticacaoDeDoisFatores')}}
+              {loading ? 'Processando...' : t('components.configurarAutenticacaoDeDoisFatores')}
             </button>
           )}
         </div>

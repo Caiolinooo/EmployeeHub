@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -156,13 +156,13 @@ const CreateCoursePage: React.FC = () => {
   };
 
   const validateForm = (): string | null => {
-    if (!formData.title.trim()) return {t('academy.tituloEObrigatorio')};
-    if (!formData.description.trim()) return {t('academy.descricaoEObrigatoria')};
+    if (!formData.title.trim()) return t('academy.tituloEObrigatorio');
+    if (!formData.description.trim()) return t('academy.descricaoEObrigatoria');
     // Categoria é opcional no primeiro momento (pode ser atribuída depois)
     // if (!formData.category_id) return 'Categoria é obrigatória';
-    if (!formData.difficulty_level) return {t('academy.nivelDeDificuldadeEObrigatorio')};
-    if (formData.duration <= 0) return {t('academy.duracaoDeveSerMaiorQueZero')};
-    if (!formData.video_url.trim()) return {t('academy.urlDoVideoEObrigatoria')};
+    if (!formData.difficulty_level) return t('academy.nivelDeDificuldadeEObrigatorio');
+    if (formData.duration <= 0) return t('academy.duracaoDeveSerMaiorQueZero');
+    if (!formData.video_url.trim()) return t('academy.urlDoVideoEObrigatoria');
     
     return null;
   };

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { FiBell, FiX, FiCheck, FiCheckCircle, FiClock, FiHeart, FiMessageCircle, FiAlertCircle, FiInfo } from 'react-icons/fi';
@@ -28,6 +28,7 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
   position = 'top-right',
   maxVisible = 5
 }) => {
+  const { t } = useI18n();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -297,7 +298,7 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
         aria-label={t('components.notificacoes')}
-        title={unreadCount > 0 ? {t('components.unreadcountNaoLidas')} : {t('components.notificacoes')}}
+        title={unreadCount > 0 ? t('components.unreadcountNaoLidas') : t('components.notificacoes')}
       >
         <FiBell className="w-6 h-6" />
         {unreadCount > 0 && !isOpen && (
@@ -401,7 +402,7 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
                       disabled={loading}
                       className="text-sm text-blue-600 hover:text-blue-700 disabled:opacity-50"
                     >
-                      {loading ? 'Carregando...' : {t('components.verMaisNotificacoes')}}
+                      {loading ? 'Carregando...' : t('components.verMaisNotificacoes')}
                     </button>
                   </div>
                 )}

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
 import { FiX, FiArrowLeft, FiCheck, FiUpload } from 'react-icons/fi';
@@ -85,7 +85,7 @@ const MediaUploadWithFilters: React.FC<MediaUploadWithFiltersProps> = ({
       });
 
       if (!uploadResp.ok) {
-        throw new Error({t('components.erroAoFazerUploadDaMidia')});
+        throw new Error(t('components.erroAoFazerUploadDaMidia'));
       }
 
       const uploadData = await uploadResp.json();
@@ -126,7 +126,7 @@ const MediaUploadWithFilters: React.FC<MediaUploadWithFiltersProps> = ({
         onPostCreated(createdPost);
         onClose();
       } else {
-        throw new Error({t('components.erroAoCriarPublicacao')});
+        throw new Error(t('components.erroAoCriarPublicacao'));
       }
     } catch (error) {
       console.error('Erro ao criar post:', error);
@@ -162,7 +162,7 @@ const MediaUploadWithFilters: React.FC<MediaUploadWithFiltersProps> = ({
             </button>
           )}
           <h2 className="text-xl font-bold text-gray-800 flex-1 text-center">
-            {step === 'upload' && `Selecionar ${mediaType === 'photo' ? 'Foto' : {t('components.video')}}`}
+            {step === 'upload' && `Selecionar ${mediaType === 'photo' ? 'Foto' : t('components.video')}`}
             {step === 'filter' && 'Aplicar Filtro'}
             {step === 'caption' && {t('components.novaPublicacao')}}
           </h2>
@@ -198,7 +198,7 @@ const MediaUploadWithFilters: React.FC<MediaUploadWithFiltersProps> = ({
                   <FiUpload className="w-20 h-20 mx-auto text-gray-400" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                  Selecione {mediaType === 'photo' ? 'uma foto' : {t('components.umVideo')}}
+                  Selecione {mediaType === 'photo' ? 'uma foto' : t('components.umVideo')}
                 </h3>
                 <p className="text-gray-600 mb-6">
                   Arraste e solte ou clique para selecionar

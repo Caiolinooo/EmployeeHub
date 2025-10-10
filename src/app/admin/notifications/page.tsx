@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState } from "react";
 import { FiBell, FiSave, FiSend, FiRefreshCw } from "react-icons/fi";
@@ -173,7 +173,7 @@ export default function AdminNotificationsPage() {
           <h2 className="text-lg font-semibold mb-4">Web Push</h2>
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-700">
-              {vapidLoading ? 'Verificando chaves...' : vapidPublic ? {t('admin.chavePublicaConfigurada')} : 'Chaves VAPID ausentes'}
+              {vapidLoading ? 'Verificando chaves...' : vapidPublic ? t('admin.chavePublicaConfigurada') : 'Chaves VAPID ausentes'}
             </div>
             <button onClick={generateVapid} disabled={vapidLoading} className="px-3 py-2 bg-indigo-600 text-white rounded">
               {vapidLoading ? 'Processando...' : (vapidPublic ? 'Rotacionar chaves' : 'Gerar chaves')}
@@ -246,7 +246,7 @@ export default function AdminNotificationsPage() {
               <div className="pt-2">
                 <button onClick={saveSettings} disabled={saving} className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                   <FiSave className="w-4 h-4" />
-                  <span>{saving ? 'Salvando...' : {t('admin.salvarConfiguracoes')}}</span>
+                  <span>{saving ? 'Salvando...' : t('admin.salvarConfiguracoes')}</span>
                 </button>
               </div>
             </div>
@@ -333,7 +333,7 @@ export default function AdminNotificationsPage() {
             <div className="pt-2">
               <button onClick={sendBroadcast} disabled={sending} className="inline-flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
                 <FiSend className="w-4 h-4" />
-                <span>{sending ? 'Enviando...' : {t('admin.enviarNotificacao')}}</span>
+                <span>{sending ? 'Enviando...' : t('admin.enviarNotificacao')}</span>
               </button>
             </div>
           </div>

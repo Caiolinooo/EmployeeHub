@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
@@ -45,7 +45,7 @@ const UniversalPdfViewer: React.FC<UniversalPdfViewerProps> = ({
 
         const path = getNormalizedPath();
         if (!path) {
-          throw new Error({t('components.caminhoDoArquivoInvalido')});
+          throw new Error(t('components.caminhoDoArquivoInvalido'));
         }
 
         const response = await fetch(path, {
@@ -54,7 +54,7 @@ const UniversalPdfViewer: React.FC<UniversalPdfViewerProps> = ({
         });
 
         if (!response.ok) {
-          throw new Error({t('components.arquivoNaoEncontradoResponsestatus')});
+          throw new Error(t('components.arquivoNaoEncontradoResponsestatus'));
         }
 
         // Arquivo existe, continuar carregamento

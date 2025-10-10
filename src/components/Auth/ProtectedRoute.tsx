@@ -15,13 +15,12 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({
-  const { t } = useI18n();
-
   children,
   adminOnly = false,
   managerOnly = false,
   moduleName
 }: ProtectedRouteProps) {
+  const { t } = useI18n();
   const { user, profile, isLoading, isAdmin: contextIsAdmin, isManager: contextIsManager, hasAccess: contextHasAccess } = useSupabaseAuth();
   const isAuthenticated = !!user;
 
@@ -303,7 +302,7 @@ export default function ProtectedRoute({
                 Corrigindo...
               </span>
             ) : (
-              {t('components.corrigirPermissoes')}
+              t('components.corrigirPermissoes')
             )}
           </button>
           <Link

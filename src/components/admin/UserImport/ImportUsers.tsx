@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
@@ -82,12 +82,12 @@ export default function ImportUsers() {
 
       // Verificar se o arquivo é válido
       if (!selectedFile || typeof selectedFile !== 'object') {
-        throw new Error({t('components.arquivoInvalido')});
+        throw new Error(t('components.arquivoInvalido'));
       }
 
       // Verificar se o arquivo tem as propriedades necessárias
       if (!selectedFile.name || typeof selectedFile.size !== 'number') {
-        throw new Error({t('components.arquivoComFormatoInvalido')});
+        throw new Error(t('components.arquivoComFormatoInvalido'));
       }
 
       setFile(selectedFile);

@@ -15,7 +15,7 @@ export default function SupabaseStatus() {
   const checkConnection = async () => {
     setIsChecking(true);
     setStatus('loading');
-    setMessage({t('components.verificandoConexao')});
+    setMessage(t('components.verificandoConexao')});
     
     try {
       const response = await fetch('/api/test/supabase');
@@ -23,7 +23,7 @@ export default function SupabaseStatus() {
       
       if (data.status === 'ok') {
         setStatus('connected');
-        setMessage({t('components.conexaoEstabelecidaComSucesso')});
+        setMessage(t('components.conexaoEstabelecidaComSucesso')});
         setDetails(data);
       } else {
         setStatus('error');
@@ -32,7 +32,7 @@ export default function SupabaseStatus() {
       }
     } catch (error) {
       setStatus('error');
-      setMessage({t('components.erroAoVerificarConexao')});
+      setMessage(t('components.erroAoVerificarConexao')});
       setDetails({ error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsChecking(false);

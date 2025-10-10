@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -43,7 +43,7 @@ export default function AutomationPage() {
       if (!isAdmin) {
         toast({
           title: 'Acesso Negado',
-          description: {t('admin.voceNaoTemPermissaoParaAcessarEstaPagina')},
+          description: t('admin.voceNaoTemPermissaoParaAcessarEstaPagina'),
           variant: 'destructive',
           duration: 3000,
         });

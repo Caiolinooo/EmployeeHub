@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiX, FiClock, FiActivity, FiInfo, FiRefreshCw } from 'react-icons/fi';
@@ -37,7 +37,7 @@ const UserAccessHistory: React.FC<UserAccessHistoryProps> = ({ userId, userName,
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error({t('components.naoAutorizado')});
+        throw new Error(t('components.naoAutorizado'));
       }
 
       // Adicionar timestamp para evitar cache
@@ -160,9 +160,9 @@ const UserAccessHistory: React.FC<UserAccessHistoryProps> = ({ userId, userName,
       case 'PASSWORD_CHANGED':
         return 'Senha alterada';
       case 'CREATED':
-        return {t('components.usuarioCriado')};
+        return t('components.usuarioCriado');
       case 'PERMISSIONS_UPDATED':
-        return {t('components.permissoesAtualizadas')};
+        return t('components.permissoesAtualizadas');
       default:
         return action.replace(/_/g, ' ').toLowerCase();
     }

@@ -11,8 +11,7 @@ interface LanguageSelectorProps {
 }
 
 export default function LanguageSelector({
-  const { t } = useI18n();
- variant = 'dropdown', className = '' }: LanguageSelectorProps) {
+  variant = 'dropdown', className = '' }: LanguageSelectorProps) {
   const { locale, setLocale, t, availableLocales } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [isChanging, setIsChanging] = useState(false);

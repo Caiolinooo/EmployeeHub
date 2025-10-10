@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { 
@@ -187,7 +187,7 @@ const Comments: React.FC<CommentsProps> = ({ courseId, className = '' }) => {
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    if (!confirm({t('components.temCertezaQueDesejaExcluirEsteComentario')})) return;
+    if (!confirm(t('components.temCertezaQueDesejaExcluirEsteComentario'))) return;
 
     try {
       const token = await getToken();
@@ -221,7 +221,7 @@ const Comments: React.FC<CommentsProps> = ({ courseId, className = '' }) => {
 
     if (diffDays === 1) return 'Hoje';
     if (diffDays === 2) return 'Ontem';
-    if (diffDays <= 7) return {t('components.diffdaysDiasAtras')};
+    if (diffDays <= 7) return t('components.diffdaysDiasAtras');
     
     return date.toLocaleDateString('pt-BR', {
       day: '2-digit',

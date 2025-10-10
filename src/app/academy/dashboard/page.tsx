@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -221,7 +221,7 @@ const AcademyDashboard: React.FC = () => {
 
     if (diffDays === 1) return 'Hoje';
     if (diffDays === 2) return 'Ontem';
-    if (diffDays <= 7) return {t('academy.diffdaysDiasAtras')};
+    if (diffDays <= 7) return t('academy.diffdaysDiasAtras');
 
     return date.toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -246,9 +246,9 @@ const AcademyDashboard: React.FC = () => {
   const getActivityMessage = (activity: RecentActivity) => {
     switch (activity.type) {
       case 'enrollment':
-        return {t('academy.voceSeMatriculouEm')}${activity.courseTitle}"`;
+        return t('academy.voceSeMatriculouEm')${activity.courseTitle}"`;
       case 'completion':
-        return {t('academy.voceConcluiu')}${activity.courseTitle}"`;
+        return t('academy.voceConcluiu')${activity.courseTitle}"`;
       case 'progress':
         return `Progresso atualizado em "${activity.courseTitle}" (${activity.progress}%)`;
       default:

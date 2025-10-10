@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
@@ -23,6 +23,7 @@ interface SearchResponse {
 }
 
 const DashboardSearch: React.FC = () => {
+  const { t } = useI18n();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -118,9 +119,9 @@ const DashboardSearch: React.FC = () => {
       case 'document':
         return 'Documento';
       case 'news':
-        return {t('components.noticia')};
+        return t('components.noticia');
       case 'user':
-        return {t('components.usuario')};
+        return t('components.usuario');
       case 'card':
         return 'Card';
       case 'reimbursement':
@@ -128,9 +129,9 @@ const DashboardSearch: React.FC = () => {
       case 'paystub':
         return 'Contracheque';
       case 'evaluation':
-        return {t('components.avaliacao')};
+        return t('components.avaliacao');
       case 'policy':
-        return {t('components.politica')};
+        return t('components.politica');
       case 'procedure':
         return 'Procedimento';
       case 'academy':
@@ -189,11 +190,11 @@ const DashboardSearch: React.FC = () => {
         <div className="mt-2 flex flex-wrap gap-2">
           {[
             { value: 'all', label: 'Todos' },
-            { value: 'news', label: {t('components.noticias')} },
+            { value: 'news', label: t('components.noticias') },
             { value: 'reimbursement', label: 'Reembolsos' },
             { value: 'document', label: 'Documentos' },
             { value: 'academy', label: 'Cursos' },
-            { value: 'policy', label: {t('components.politicas')} }
+            { value: 'policy', label: t('components.politicas') }
           ].map((type) => (
             <button
               key={type.value}

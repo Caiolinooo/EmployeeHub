@@ -32,7 +32,7 @@ export function CreateCriteriosTable() {
     try {
       setChecking(true);
       setError(null);
-      setMessage({t('components.verificandoTabelasDoSistemaDeAvaliacao')});
+      setMessage(t('components.verificandoTabelasDoSistemaDeAvaliacao')});
 
       // Chamar a API para verificar todas as tabelas
       const response = await fetchWithToken('/api/avaliacao/setup-tables');
@@ -49,9 +49,9 @@ export function CreateCriteriosTable() {
 
       if (criteriosTable?.exists) {
         setSuccess(true);
-        setMessage({t('components.aTabelaDeCriteriosJaExisteNoBancoDeDadosComCriteri')});
+        setMessage(t('components.aTabelaDeCriteriosJaExisteNoBancoDeDadosComCriteri')});
       } else {
-        setMessage({t('components.umaOuMaisTabelasNecessariasNaoExistemCliqueNoBotao')});
+        setMessage(t('components.umaOuMaisTabelasNecessariasNaoExistemCliqueNoBotao')});
       }
     } catch (err) {
       console.error('Erro ao verificar tabelas:', err);
@@ -68,7 +68,7 @@ export function CreateCriteriosTable() {
       setLoading(true);
       setError(null);
       setSuccess(false);
-      setMessage({t('components.criandoTabelasDoSistemaDeAvaliacao')});
+      setMessage(t('components.criandoTabelasDoSistemaDeAvaliacao')});
 
       // Chamar a API para criar todas as tabelas
       const response = await fetchWithToken('/api/avaliacao/setup-tables', {

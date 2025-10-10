@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiUser, FiUsers, FiCheck, FiX, FiSearch } from 'react-icons/fi';
@@ -91,7 +91,7 @@ export default function PainelGerenciamentoLideres() {
   };
 
   const handleRemover = async (userId: string, nomeUsuario: string) => {
-    if (!confirm({t('components.temCertezaQueDesejaRemoverNomeusuarioDaFuncaoDeLid')})) {
+    if (!confirm(t('components.temCertezaQueDesejaRemoverNomeusuarioDaFuncaoDeLid'))) {
       return;
     }
 

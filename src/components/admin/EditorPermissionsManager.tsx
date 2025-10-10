@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiUsers, FiEdit3, FiShield, FiSave, FiRefreshCw, FiCheck, FiX, FiBookOpen, FiMessageSquare } from 'react-icons/fi';
@@ -57,7 +57,7 @@ export default function EditorPermissionsManager() {
     try {
       const token = await getToken();
       if (!token) {
-        throw new Error({t('components.tokenNaoEncontrado')});
+        throw new Error(t('components.tokenNaoEncontrado'));
       }
 
       const response = await fetch('/api/users/permissions/list', {
@@ -91,7 +91,7 @@ export default function EditorPermissionsManager() {
     try {
       const token = await getToken();
       if (!token) {
-        throw new Error({t('components.tokenNaoEncontrado')});
+        throw new Error(t('components.tokenNaoEncontrado'));
       }
 
       const response = await fetch('/api/users/permissions/update', {
@@ -112,7 +112,7 @@ export default function EditorPermissionsManager() {
       }
 
       const data = await response.json();
-      setSuccess({t('components.permissoesAtualizadasParaDatausername')});
+      setSuccess(t('components.permissoesAtualizadasParaDatausername'));
       
       // Recarregar lista de usuários
       await fetchUsers();

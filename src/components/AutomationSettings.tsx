@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,9 +22,7 @@ interface AutomationSettingsProps {
   className?: string;
 }
 
-export default function AutomationSettings({
-  const { t } = useI18n();
- className = '' }: AutomationSettingsProps) {
+export default function AutomationSettings({ className = '' }: AutomationSettingsProps) {
   const { t, autoTranslationEnabled, setAutoTranslationEnabled } = useI18n();
   const { toast } = useToast();
   
@@ -67,10 +65,10 @@ export default function AutomationSettings({
   const handleAutoTranslationToggle = (enabled: boolean) => {
     setAutoTranslationEnabled(enabled);
     toast({
-      title: enabled ? {t('components.traducaoAutomaticaAtivada')} : {t('components.traducaoAutomaticaDesativada')},
+      title: enabled ? t('components.traducaoAutomaticaAtivada') : t('components.traducaoAutomaticaDesativada'),
       description: enabled 
-        ? {t('components.oSistemaAgoraTraduziraAutomaticamenteTextosNaoEnco')}
-        : {t('components.aTraducaoAutomaticaFoiDesabilitada')},
+        ? t('components.oSistemaAgoraTraduziraAutomaticamenteTextosNaoEnco')
+        : t('components.aTraducaoAutomaticaFoiDesabilitada'),
       duration: 3000,
     });
   };
@@ -98,13 +96,13 @@ export default function AutomationSettings({
       loadStats();
       toast({
         title: 'Cache Limpo',
-        description: {t('components.cacheDeTraducoesFoiLimpoComSucesso')},
+        description: t('components.cacheDeTraducoesFoiLimpoComSucesso'),
         duration: 3000,
       });
     } catch (error) {
       toast({
         title: 'Erro',
-        description: {t('components.erroAoLimparCacheDeTraducoes')},
+        description: t('components.erroAoLimparCacheDeTraducoes'),
         variant: 'destructive',
         duration: 3000,
       });
@@ -141,13 +139,13 @@ export default function AutomationSettings({
       await unifiedDataService.syncHardcodedToSupabase();
       loadStats();
       toast({
-        title: {t('components.sincronizacaoConcluida')},
+        title: t('components.sincronizacaoConcluida'),
         description: 'Dados hardcoded foram sincronizados com o Supabase',
         duration: 3000,
       });
     } catch (error) {
       toast({
-        title: {t('components.erroNaSincronizacao')},
+        title: t('components.erroNaSincronizacao'),
         description: 'Erro ao sincronizar dados com o Supabase',
         variant: 'destructive',
         duration: 3000,
@@ -160,7 +158,7 @@ export default function AutomationSettings({
   const handleRefreshStats = () => {
     loadStats();
     toast({
-      title: {t('components.estatisticasAtualizadas')},
+      title: t('components.estatisticasAtualizadas'),
       description: 'Dados foram recarregados com sucesso',
       duration: 2000,
     });

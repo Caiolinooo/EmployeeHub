@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { 
@@ -49,14 +49,14 @@ export default function APIMobilePage() {
   const [showKeys, setShowKeys] = useState<{[key: string]: boolean}>({});
 
   const availablePermissions = [
-    { id: 'users.read', name: {t('admin.lerUsuarios')} },
-    { id: 'users.write', name: {t('admin.escreverUsuarios')} },
+    { id: 'users.read', name: t('admin.lerUsuarios') },
+    { id: 'users.write', name: t('admin.escreverUsuarios') },
     { id: 'reimbursements.read', name: 'Ler Reembolsos' },
     { id: 'reimbursements.write', name: 'Escrever Reembolsos' },
-    { id: 'evaluations.read', name: {t('admin.lerAvaliacoes')} },
-    { id: 'evaluations.write', name: {t('admin.escreverAvaliacoes')} },
-    { id: 'notifications.read', name: {t('admin.lerNotificacoes')} },
-    { id: 'notifications.write', name: {t('admin.escreverNotificacoes')} },
+    { id: 'evaluations.read', name: t('admin.lerAvaliacoes') },
+    { id: 'evaluations.write', name: t('admin.escreverAvaliacoes') },
+    { id: 'notifications.read', name: t('admin.lerNotificacoes') },
+    { id: 'notifications.write', name: t('admin.escreverNotificacoes') },
   ];
 
   useEffect(() => {

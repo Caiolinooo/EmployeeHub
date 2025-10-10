@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { getToken } from '@/lib/tokenStorage';
@@ -18,9 +18,8 @@ interface TokenExpirationNotifierProps {
   onSessionExpired?: () => void;
 }
 
-export default function TokenExpirationNotifier({
+export default function TokenExpirationNotifier({ onSessionExpired }: TokenExpirationNotifierProps) {
   const { t } = useI18n();
- onSessionExpired }: TokenExpirationNotifierProps) {
   const [showWarning, setShowWarning] = useState(false);
   const [showCritical, setShowCritical] = useState(false);
   const [timeUntilExpiry, setTimeUntilExpiry] = useState<number>(0);
@@ -145,7 +144,7 @@ export default function TokenExpirationNotifier({
         <FiClock className={`w-5 h-5 mt-0.5 ${iconColor}`} />
         <div className="flex-1">
           <h3 className={`font-medium ${textColor}`}>
-            {isCritical ? {t('components.sessaoExpirando')} : {t('components.sessaoExpiraEmBreve')}}
+            {isCritical ? t('components.sessaoExpirando') : t('components.sessaoExpiraEmBreve')}
           </h3>
           <p className={`text-sm mt-1 ${textColor}`}>
             {isCritical 

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiShield, FiUser, FiUsers, FiAlertTriangle, FiCheck, FiX, FiInfo } from 'react-icons/fi';
@@ -26,9 +26,9 @@ const UserRoleManager: React.FC<UserRoleManagerProps> = ({
 
   // Descrições dos papéis
   const roleDescriptions = {
-    ADMIN: {t('components.acessoTotalAoSistemaIncluindoTodasAsFuncionalidade')},
-    MANAGER: {t('components.acessoAFuncionalidadesDeGerenciamentoMasSemPermiss')},
-    USER: {t('components.acessoBasicoAoSistemaPodeVisualizarConteudoEUsarFu')}
+    ADMIN: t('components.acessoTotalAoSistemaIncluindoTodasAsFuncionalidade'),
+    MANAGER: t('components.acessoAFuncionalidadesDeGerenciamentoMasSemPermiss'),
+    USER: t('components.acessoBasicoAoSistemaPodeVisualizarConteudoEUsarFu')
   };
 
   // Permissões padrão para cada papel
@@ -101,7 +101,7 @@ const UserRoleManager: React.FC<UserRoleManagerProps> = ({
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error({t('components.naoAutorizado')});
+        throw new Error(t('components.naoAutorizado'));
       }
 
       const response = await fetch(`/api/users/${userId}/role`, {

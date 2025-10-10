@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiPlay, FiCheck, FiX, FiAlertCircle, FiDatabase, FiSettings } from 'react-icons/fi';
@@ -105,7 +105,7 @@ export default function AvaliacaoSetupPage() {
       
       if (data.success) {
         const tableResults = Object.entries(data.tables).map(([table, exists]) => 
-          `${exists ? '✅' : '❌'} Tabela ${table}: ${exists ? 'Existe' : {t('admin.naoEncontrada')}}`
+          `${exists ? '✅' : '❌'} Tabela ${table}: ${exists ? 'Existe' : t('admin.naoEncontrada')}`
         );
         setResults(tableResults);
       } else {
@@ -200,7 +200,7 @@ export default function AvaliacaoSetupPage() {
                 className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
               >
                 <FiPlay className="mr-2" size={16} />
-                {loading ? 'Aplicando...' : {t('admin.aplicarMigracoes')}}
+                {loading ? 'Aplicando...' : t('admin.aplicarMigracoes')}
               </button>
             </div>
           </div>

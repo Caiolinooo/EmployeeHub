@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -37,19 +37,19 @@ export default function PasswordChange() {
     if (/[A-Z]/.test(password)) {
       strength += 1;
     } else {
-      feedback.push({t('components.incluaPeloMenosUmaLetraMaiuscula')});
+      feedback.push(t('components.incluaPeloMenosUmaLetraMaiuscula'));
     }
 
     if (/[a-z]/.test(password)) {
       strength += 1;
     } else {
-      feedback.push({t('components.incluaPeloMenosUmaLetraMinuscula')});
+      feedback.push(t('components.incluaPeloMenosUmaLetraMinuscula'));
     }
 
     if (/[0-9]/.test(password)) {
       strength += 1;
     } else {
-      feedback.push({t('components.incluaPeloMenosUmNumero')});
+      feedback.push(t('components.incluaPeloMenosUmNumero'));
     }
 
     if (/[^A-Za-z0-9]/.test(password)) {
@@ -98,7 +98,7 @@ export default function PasswordChange() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
       
       if (!token) {
-        throw new Error({t('components.naoAutorizado')});
+        throw new Error(t('components.naoAutorizado'));
       }
       
       const verifyResponse = await fetch('/api/auth/verify-password', {
@@ -217,7 +217,7 @@ export default function PasswordChange() {
                 <span className="ml-2 text-xs text-gray-500">
                   {passwordStrength === 0 ? 'Muito fraca' :
                    passwordStrength === 1 ? 'Fraca' :
-                   passwordStrength === 2 ? {t('components.razoavel')} :
+                   passwordStrength === 2 ? t('components.razoavel') :
                    passwordStrength === 3 ? 'Boa' :
                    passwordStrength === 4 ? 'Forte' :
                    'Muito forte'}

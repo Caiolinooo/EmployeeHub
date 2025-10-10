@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiHeart, FiMessageCircle, FiShare2, FiBookmark, FiMoreHorizontal, FiEye, FiCalendar, FiUser, FiImage, FiStar, FiPlus } from 'react-icons/fi';
@@ -333,7 +333,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
 
-    if (diffInHours < 1) return {t('components.agoraHaPouco')};
+    if (diffInHours < 1) return t('components.agoraHaPouco');
     if (diffInHours < 24) return `${diffInHours}h`;
     if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d`;
     return date.toLocaleDateString('pt-BR');

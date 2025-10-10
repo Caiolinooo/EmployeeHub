@@ -10,7 +10,6 @@ import {
   formatName
 } from "@/lib/nameValidation";
 import { FiAlertTriangle, FiCheckCircle, FiInfo, FiX } from "react-icons/fi";
-import { useI18n } from '@/contexts/I18nContext';
 
 interface Props {
   reminderMinutes?: number; // default 2

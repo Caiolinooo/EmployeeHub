@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiDatabase, FiCheck, FiAlertTriangle, FiRefreshCw, FiCopy } from 'react-icons/fi';
@@ -64,7 +64,7 @@ const RolePermissionsInitializer: React.FC = () => {
 
       if (response.ok) {
         if (data.already_exists) {
-          setSuccess({t('components.tabelaRolepermissionsJaExisteEEstaFuncionando')});
+          setSuccess(t('components.tabelaRolepermissionsJaExisteEEstaFuncionando'));
         } else {
           setSuccess(data.message);
         }
@@ -91,7 +91,7 @@ const RolePermissionsInitializer: React.FC = () => {
     if (status?.sql_script) {
       try {
         await navigator.clipboard.writeText(status.sql_script);
-        setSuccess({t('components.sqlCopiadoParaAAreaDeTransferencia')});
+        setSuccess(t('components.sqlCopiadoParaAAreaDeTransferencia'));
       } catch (err) {
         setError('Erro ao copiar SQL');
       }
@@ -150,7 +150,7 @@ const RolePermissionsInitializer: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className={`text-2xl font-bold ${status.exists ? 'text-green-600' : 'text-red-600'}`}>
-                {status.exists ? 'EXISTE' : {t('components.naoExiste')}}
+                {status.exists ? 'EXISTE' : t('components.naoExiste')}
               </div>
               <div className="text-sm text-gray-600">Status da Tabela</div>
             </div>

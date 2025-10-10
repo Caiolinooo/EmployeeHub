@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { FiX, FiCalendar, FiClock, FiMapPin, FiUsers, FiMail } from 'react-icons/fi';
@@ -90,7 +90,7 @@ const EventCreator: React.FC<EventCreatorProps> = ({
       });
 
       if (!calendarResponse.ok) {
-        throw new Error({t('components.erroAoCriarEventoNoCalendario')});
+        throw new Error(t('components.erroAoCriarEventoNoCalendario'));
       }
 
       const calendarEvent = await calendarResponse.json();

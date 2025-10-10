@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff, FiStar, FiUpload, FiDownload, FiX } from 'react-icons/fi';
@@ -533,7 +533,7 @@ export default function NewsPage() {
         if (!response.ok) {
           const errorText = await response.text();
           console.error('Resposta de erro (API mock):', errorText);
-          throw new Error({t('admin.erroAoCarregarNoticiasResponsestatusResponsestatus')});
+          throw new Error(t('admin.erroAoCarregarNoticiasResponsestatusResponsestatus'));
         }
       }
 
@@ -621,7 +621,7 @@ export default function NewsPage() {
       }
 
       if (!response.ok) {
-        throw new Error({t('admin.erroAoSalvarNoticia')});
+        throw new Error(t('admin.erroAoSalvarNoticia'));
       }
 
       // Recarregar notícias
@@ -642,14 +642,14 @@ export default function NewsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm({t('admin.temCertezaQueDesejaExcluirEstaNoticia')})) {
+    if (window.confirm(t('admin.temCertezaQueDesejaExcluirEstaNoticia'))) {
       try {
         const response = await fetch(`/api/news/${id}`, {
           method: 'DELETE',
         });
 
         if (!response.ok) {
-          throw new Error({t('admin.erroAoExcluirNoticia')});
+          throw new Error(t('admin.erroAoExcluirNoticia'));
         }
 
         // Recarregar notícias
@@ -666,7 +666,7 @@ export default function NewsPage() {
       const news = newsItems.find(item => item.id === id);
 
       if (!news) {
-        throw new Error({t('admin.noticiaNaoEncontrada')});
+        throw new Error(t('admin.noticiaNaoEncontrada'));
       }
 
       const response = await fetch(`/api/news/${id}`, {
@@ -678,7 +678,7 @@ export default function NewsPage() {
       });
 
       if (!response.ok) {
-        throw new Error({t('admin.erroAoAtualizarNoticia')});
+        throw new Error(t('admin.erroAoAtualizarNoticia'));
       }
 
       // Recarregar notícias
@@ -694,7 +694,7 @@ export default function NewsPage() {
       const news = newsItems.find(item => item.id === id);
 
       if (!news) {
-        throw new Error({t('admin.noticiaNaoEncontrada')});
+        throw new Error(t('admin.noticiaNaoEncontrada'));
       }
 
       const response = await fetch(`/api/news/${id}`, {
@@ -706,7 +706,7 @@ export default function NewsPage() {
       });
 
       if (!response.ok) {
-        throw new Error({t('admin.erroAoAtualizarNoticia')});
+        throw new Error(t('admin.erroAoAtualizarNoticia'));
       }
 
       // Recarregar notícias

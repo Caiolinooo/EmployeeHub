@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
@@ -53,7 +53,7 @@ const PdfViewerComponent: React.FC<PdfViewerComponentProps> = ({
         
         const path = getNormalizedPath();
         if (!path) {
-          throw new Error({t('components.caminhoDoArquivoInvalido')});
+          throw new Error(t('components.caminhoDoArquivoInvalido'));
         }
         
         const response = await fetch(path, { 
@@ -62,7 +62,7 @@ const PdfViewerComponent: React.FC<PdfViewerComponentProps> = ({
         });
         
         if (!response.ok) {
-          throw new Error({t('components.arquivoNaoEncontradoResponsestatus')});
+          throw new Error(t('components.arquivoNaoEncontradoResponsestatus'));
         }
         
         // Arquivo existe, continuar carregamento

@@ -26,7 +26,7 @@ export function ImportCriteriosButton() {
       setLoading(true);
       setError(null);
       setSuccess(false);
-      setMessage({t('components.importandoCriteriosDeAvaliacaoDaPlanilha')});
+      setMessage(t('components.importandoCriteriosDeAvaliacaoDaPlanilha')});
 
       // Call the API to import criteria
       const response = await fetchWithToken('/api/avaliacao/import-criterios', {
@@ -48,9 +48,9 @@ export function ImportCriteriosButton() {
       setTotalCount(data.total || 0);
 
       if (data.imported === 0) {
-        setMessage({t('components.todosOsCriteriosJaExistemNoBancoDeDados')});
+        setMessage(t('components.todosOsCriteriosJaExistemNoBancoDeDados')});
       } else {
-        setMessage({t('components.dataimportedCriteriosImportadosComSucessoDeUmTotal')});
+        setMessage(t('components.dataimportedCriteriosImportadosComSucessoDeUmTotal')});
       }
     } catch (err) {
       console.error(t('components.erroAoImportarCriterios'), err);

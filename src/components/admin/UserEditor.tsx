@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { FiSave, FiX, FiUser, FiMail, FiPhone, FiBriefcase, FiUsers, FiPlus, FiTrash2, FiDollarSign, FiShield } from 'react-icons/fi';
@@ -470,7 +470,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
                       minLength={8}
                     />
                     <p className="mt-1 text-xs text-gray-500">
-                      {isNewUser ? {t('components.minimoDe8Caracteres')} : 'Deixe em branco para manter a senha atual'}
+                      {isNewUser ? t('components.minimoDe8Caracteres') : 'Deixe em branco para manter a senha atual'}
                     </p>
                   </div>
                 )}
@@ -504,7 +504,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
                 className="flex items-center text-abz-blue hover:text-abz-blue-dark font-medium"
               >
                 <FiUsers className="mr-2" />
-                {showPermissions ? {t('components.ocultarPermissoes')} : {t('components.configurarPermissoesDeAcesso')}}
+                {showPermissions ? t('components.ocultarPermissoes') : t('components.configurarPermissoesDeAcesso')}
               </button>
 
               {/* Temporariamente desabilitado
@@ -514,7 +514,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
                 className="flex items-center text-green-600 hover:text-green-700 font-medium"
               >
                 <FiShield className="mr-2" />
-                {showACLPermissions ? 'Ocultar ACL' : {t('components.permissoesAclAvancadas')}}
+                {showACLPermissions ? 'Ocultar ACL' : t('components.permissoesAclAvancadas')}
               </button>
               */}
             </div>
@@ -654,7 +654,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
                 className="flex items-center text-abz-blue hover:text-abz-blue-dark font-medium"
               >
                 <FiMail className="mr-2" />
-                {showReimbursementSettings ? {t('components.ocultarConfiguracoesDeEmail')} : 'Configurar Email de Reembolso'}
+                {showReimbursementSettings ? t('components.ocultarConfiguracoesDeEmail') : 'Configurar Email de Reembolso'}
               </button>
 
               {showReimbursementSettings && (

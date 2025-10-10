@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { FiPlus, FiCheck, FiX, FiMail, FiPhone, FiGlobe, FiKey, FiRefreshCw, FiFilter, FiTrash2, FiAlertCircle } from 'react-icons/fi';
@@ -82,7 +82,7 @@ export default function AuthorizedUsersManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
+        throw new Error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
       }
 
       const response = await fetch(url, {
@@ -112,7 +112,7 @@ export default function AuthorizedUsersManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
+        throw new Error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
       }
 
       const response = await fetch('/api/admin/access-stats', {
@@ -173,7 +173,7 @@ export default function AuthorizedUsersManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
+        throw new Error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
       }
 
       const response = await fetch('/api/admin/authorized-users', {
@@ -210,7 +210,7 @@ export default function AuthorizedUsersManager() {
             const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
             if (!token) {
-              throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
+              throw new Error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
             }
 
             const emailResponse = await fetch('/api/admin/send-invite', {
@@ -262,7 +262,7 @@ export default function AuthorizedUsersManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
+        throw new Error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
       }
 
       const response = await fetch('/api/admin/authorized-users', {
@@ -309,7 +309,7 @@ export default function AuthorizedUsersManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
+        throw new Error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
       }
 
       const response = await fetch('/api/admin/authorized-users', {
@@ -347,7 +347,7 @@ export default function AuthorizedUsersManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm({t('components.temCertezaQueDesejaExcluirEsteUsuarioAutorizado')})) {
+    if (!confirm(t('components.temCertezaQueDesejaExcluirEsteUsuarioAutorizado'))) {
       return;
     }
 
@@ -357,7 +357,7 @@ export default function AuthorizedUsersManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
+        throw new Error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
       }
 
       const response = await fetch(`/api/admin/authorized-users/${id}`, {
@@ -402,8 +402,8 @@ export default function AuthorizedUsersManager() {
   const getAuthorizationTypeText = (user: AuthorizedUser) => {
     if (user.email) return `Email: ${user.email}`;
     if (user.phoneNumber) return `Telefone: ${user.phoneNumber}`;
-    if (user.domain) return {t('components.dominioUserdomain')};
-    if (user.inviteCode) return {t('components.codigoDeConviteUserinvitecode')};
+    if (user.domain) return t('components.dominioUserdomain');
+    if (user.inviteCode) return t('components.codigoDeConviteUserinvitecode');
     return 'Desconhecido';
   };
 
@@ -787,7 +787,7 @@ export default function AuthorizedUsersManager() {
                     <div className="flex items-center">
                       {getAuthorizationTypeIcon(user)}
                       <span className="ml-2 text-sm text-gray-900">
-                        {user.email ? 'Email' : user.phoneNumber ? 'Telefone' : user.domain ? {t('components.dominio')} : 'Convite'}
+                        {user.email ? 'Email' : user.phoneNumber ? 'Telefone' : user.domain ? t('components.dominio') : 'Convite'}
                       </span>
                     </div>
                   </td>

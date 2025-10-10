@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -43,11 +43,11 @@ const iconOptions = [
   { value: 'FiClipboard', icon: FiClipboard, label: 'Prancheta' },
   { value: 'FiFileText', icon: FiFileText, label: 'Arquivo' },
   { value: 'FiBriefcase', icon: FiBriefcase, label: 'Maleta' },
-  { value: 'FiCalendar', icon: FiCalendar, label: {t('admin.calendario')} },
+  { value: 'FiCalendar', icon: FiCalendar, label: t('admin.calendario') },
   { value: 'FiRss', icon: FiRss, label: 'RSS' },
   { value: 'FiDollarSign', icon: FiDollarSign, label: 'Dinheiro' },
-  { value: 'FiSettings', icon: FiSettings, label: {t('admin.configuracoes')} },
-  { value: 'FiUsers', icon: FiUsers, label: {t('admin.usuarios')} },
+  { value: 'FiSettings', icon: FiSettings, label: t('admin.configuracoes') },
+  { value: 'FiUsers', icon: FiUsers, label: t('admin.usuarios') },
 ];
 
 export default function AdminCardsPage() {
@@ -74,7 +74,7 @@ export default function AdminCardsPage() {
     if (user.role !== 'ADMIN') {
       toast({
         title: "Acesso Negado",
-        description: {t('admin.apenasAdministradoresPodemAcessarEstaPagina')},
+        description: t('admin.apenasAdministradoresPodemAcessarEstaPagina'),
         variant: "destructive",
       });
       router.push('/dashboard');
@@ -137,23 +137,23 @@ export default function AdminCardsPage() {
       if (response.ok) {
         const result = await response.json();
         toast({
-          title: {t('admin.migracaoConcluida')},
+          title: t('admin.migracaoConcluida'),
           description: `${result.success} sucessos, ${result.errors} erros`,
         });
         loadCards();
         checkMigrationStatus();
       } else {
         toast({
-          title: {t('admin.erroNaMigracao')},
-          description: {t('admin.falhaAoExecutarAMigracao')},
+          title: t('admin.erroNaMigracao'),
+          description: t('admin.falhaAoExecutarAMigracao'),
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error(t('admin.erroNaMigracao'), error);
       toast({
-        title: {t('admin.erroNaMigracao')},
-        description: {t('admin.falhaAoExecutarAMigracao')},
+        title: t('admin.erroNaMigracao'),
+        description: t('admin.falhaAoExecutarAMigracao'),
         variant: "destructive",
       });
     }

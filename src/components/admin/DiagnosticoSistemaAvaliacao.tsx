@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { FiPlay, FiCheck, FiX, FiAlertCircle, FiRefreshCw } from 'react-icons/fi';
@@ -18,12 +18,12 @@ export default function DiagnosticoSistemaAvaliacao() {
   const { t } = useI18n();
 
   const [tests, setTests] = useState<TestResult[]>([
-    { name: {t('components.conexaoComBanco')}, status: 'pending', message: {t('components.aguardandoExecucao')} },
-    { name: 'Tabelas Essenciais', status: 'pending', message: {t('components.aguardandoExecucao')} },
-    { name: {t('components.sistemaDeCriterios')}, status: 'pending', message: {t('components.aguardandoExecucao')} },
-    { name: {t('components.periodosDeAvaliacao')}, status: 'pending', message: {t('components.aguardandoExecucao')} },
-    { name: {t('components.workflowDeAvaliacao')}, status: 'pending', message: {t('components.aguardandoExecucao')} },
-    { name: {t('components.sistemaDeNotificacoes')}, status: 'pending', message: {t('components.aguardandoExecucao')} }
+    { name: t('components.conexaoComBanco'), status: 'pending', message: t('components.aguardandoExecucao') },
+    { name: 'Tabelas Essenciais', status: 'pending', message: t('components.aguardandoExecucao') },
+    { name: t('components.sistemaDeCriterios'), status: 'pending', message: t('components.aguardandoExecucao') },
+    { name: t('components.periodosDeAvaliacao'), status: 'pending', message: t('components.aguardandoExecucao') },
+    { name: t('components.workflowDeAvaliacao'), status: 'pending', message: t('components.aguardandoExecucao') },
+    { name: t('components.sistemaDeNotificacoes'), status: 'pending', message: t('components.aguardandoExecucao') }
   ]);
   
   const [isRunning, setIsRunning] = useState(false);
@@ -46,7 +46,7 @@ export default function DiagnosticoSistemaAvaliacao() {
       if (error) {
         updateTest(index, { 
           status: 'error', 
-          message: {t('components.falhaNaConexao')}, 
+          message: t('components.falhaNaConexao'), 
           details: error.message 
         });
         return false;
@@ -54,13 +54,13 @@ export default function DiagnosticoSistemaAvaliacao() {
 
       updateTest(index, { 
         status: 'success', 
-        message: {t('components.conexaoEstabelecidaComSucesso')} 
+        message: t('components.conexaoEstabelecidaComSucesso') 
       });
       return true;
     } catch (error) {
       updateTest(index, { 
         status: 'error', 
-        message: {t('components.erroNaConexao')}, 
+        message: t('components.erroNaConexao'), 
         details: error instanceof Error ? error.message : 'Erro desconhecido'
       });
       return false;
@@ -104,7 +104,7 @@ export default function DiagnosticoSistemaAvaliacao() {
     if (erros.length === 0) {
       updateTest(index, { 
         status: 'success', 
-        message: {t('components.todasAsTabelaslengthTabelasEstaoAcessiveis')},
+        message: t('components.todasAsTabelaslengthTabelasEstaoAcessiveis'),
         details: resultados.join('\n')
       });
       return true;
@@ -137,14 +137,14 @@ export default function DiagnosticoSistemaAvaliacao() {
 
       updateTest(index, { 
         status: 'success', 
-        message: {t('components.sistemaDeCriteriosFuncionando')},
+        message: t('components.sistemaDeCriteriosFuncionando'),
         details: detalhes.join('\n')
       });
       return true;
     } catch (error) {
       updateTest(index, { 
         status: 'error', 
-        message: {t('components.erroNoSistemaDeCriterios')},
+        message: t('components.erroNoSistemaDeCriterios'),
         details: error instanceof Error ? error.message : 'Erro desconhecido'
       });
       return false;
@@ -163,7 +163,7 @@ export default function DiagnosticoSistemaAvaliacao() {
       if (error) {
         updateTest(index, { 
           status: 'error', 
-          message: {t('components.erroAoAcessarPeriodos')},
+          message: t('components.erroAoAcessarPeriodos'),
           details: error.message
         });
         return false;
@@ -183,14 +183,14 @@ export default function DiagnosticoSistemaAvaliacao() {
 
       updateTest(index, { 
         status: 'success', 
-        message: {t('components.periodoslength0PeriodosConfigurados')},
+        message: t('components.periodoslength0PeriodosConfigurados'),
         details: detalhes.join('\n')
       });
       return true;
     } catch (error) {
       updateTest(index, { 
         status: 'error', 
-        message: {t('components.erroAoVerificarPeriodos')},
+        message: t('components.erroAoVerificarPeriodos'),
         details: error instanceof Error ? error.message : 'Erro desconhecido'
       });
       return false;
@@ -210,7 +210,7 @@ export default function DiagnosticoSistemaAvaliacao() {
       if (avaliacoesError) {
         updateTest(index, { 
           status: 'error', 
-          message: {t('components.erroAoAcessarAvaliacoes')},
+          message: t('components.erroAoAcessarAvaliacoes'),
           details: avaliacoesError.message
         });
         return false;
@@ -225,7 +225,7 @@ export default function DiagnosticoSistemaAvaliacao() {
       if (autoavaliacoesError) {
         updateTest(index, { 
           status: 'error', 
-          message: {t('components.erroAoAcessarAutoavaliacoes')},
+          message: t('components.erroAoAcessarAutoavaliacoes'),
           details: autoavaliacoesError.message
         });
         return false;
@@ -273,7 +273,7 @@ export default function DiagnosticoSistemaAvaliacao() {
       if (error) {
         updateTest(index, { 
           status: 'error', 
-          message: {t('components.erroAoAcessarNotificacoes')},
+          message: t('components.erroAoAcessarNotificacoes'),
           details: error.message
         });
         return false;
@@ -293,14 +293,14 @@ export default function DiagnosticoSistemaAvaliacao() {
 
       updateTest(index, { 
         status: 'success', 
-        message: {t('components.sistemaDeNotificacoesAcessivel')},
+        message: t('components.sistemaDeNotificacoesAcessivel'),
         details: detalhes.join('\n')
       });
       return true;
     } catch (error) {
       updateTest(index, { 
         status: 'error', 
-        message: {t('components.erroNoSistemaDeNotificacoes')},
+        message: t('components.erroNoSistemaDeNotificacoes'),
         details: error instanceof Error ? error.message : 'Erro desconhecido'
       });
       return false;
@@ -332,7 +332,7 @@ export default function DiagnosticoSistemaAvaliacao() {
     setTests(prev => prev.map(test => ({
       ...test,
       status: 'pending' as const,
-      message: {t('components.aguardandoExecucao')},
+      message: t('components.aguardandoExecucao'),
       details: undefined
     })));
   };

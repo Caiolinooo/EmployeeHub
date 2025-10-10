@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { 
@@ -30,9 +30,8 @@ interface PayrollCalculatorProps {
  * Calculadora de folha de pagamento
  * Mantém o design system do Painel ABZ
  */
-export default function PayrollCalculator({
+export default function PayrollCalculator({ employee, onCalculationComplete }: PayrollCalculatorProps) {
   const { t } = useI18n();
- employee, onCalculationComplete }: PayrollCalculatorProps) {
   const [items, setItems] = useState<PayrollCalculationItem[]>([]);
   const [codes, setCodes] = useState<PayrollCode[]>([]);
   const [result, setResult] = useState<PayrollCalculationResult | null>(null);
@@ -64,7 +63,7 @@ export default function PayrollCalculator({
         codeId: 'base-salary',
         code: '001',
         type: 'provento',
-        name: {t('components.salarioBase')},
+        name: t('components.salarioBase'),
         calculationType: 'fixed',
         value: employee.baseSalary,
         quantity: 1,

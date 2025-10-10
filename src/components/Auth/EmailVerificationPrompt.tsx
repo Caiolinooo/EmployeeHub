@@ -90,7 +90,7 @@ export default function EmailVerificationPrompt({
                 Enviando...
               </>
             ) : (
-              {t('components.reenviarEmailDeVerificacao')}
+              t('components.reenviarEmailDeVerificacao')
             )}
           </button>
           

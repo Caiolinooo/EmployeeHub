@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
@@ -44,7 +44,7 @@ const SimplePdfIframeViewer: React.FC<SimplePdfIframeViewerProps> = ({
         
         const path = getNormalizedPath();
         if (!path) {
-          throw new Error({t('components.caminhoDoArquivoInvalido')});
+          throw new Error(t('components.caminhoDoArquivoInvalido'));
         }
         
         const response = await fetch(path, { 
@@ -53,7 +53,7 @@ const SimplePdfIframeViewer: React.FC<SimplePdfIframeViewerProps> = ({
         });
         
         if (!response.ok) {
-          throw new Error({t('components.arquivoNaoEncontradoResponsestatus')});
+          throw new Error(t('components.arquivoNaoEncontradoResponsestatus'));
         }
         
         // Arquivo existe, continuar carregamento

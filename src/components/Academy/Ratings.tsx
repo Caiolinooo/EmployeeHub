@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { 
@@ -171,7 +171,7 @@ const Ratings: React.FC<RatingsProps> = ({ courseId, isEnrolled = false, classNa
   };
 
   const handleDeleteRating = async (ratingId: string) => {
-    if (!confirm({t('components.temCertezaQueDesejaExcluirEstaAvaliacao')})) return;
+    if (!confirm(t('components.temCertezaQueDesejaExcluirEstaAvaliacao'))) return;
 
     try {
       const token = await getToken();
@@ -228,7 +228,7 @@ const Ratings: React.FC<RatingsProps> = ({ courseId, isEnrolled = false, classNa
 
     if (diffDays === 1) return 'Hoje';
     if (diffDays === 2) return 'Ontem';
-    if (diffDays <= 7) return {t('components.diffdaysDiasAtras')};
+    if (diffDays <= 7) return t('components.diffdaysDiasAtras');
     
     return date.toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -285,7 +285,7 @@ const Ratings: React.FC<RatingsProps> = ({ courseId, isEnrolled = false, classNa
                   {renderStars(Math.round(stats.average_rating))}
                 </div>
                 <p className="text-sm text-gray-600">
-                  Baseado em {stats.total_ratings} avaliação{stats.total_ratings > 1 ? {t('components.oes')} : ''}
+                  Baseado em {stats.total_ratings} avaliação{stats.total_ratings > 1 ? t('components.oes') : ''}
                 </p>
               </div>
 
@@ -374,7 +374,7 @@ const Ratings: React.FC<RatingsProps> = ({ courseId, isEnrolled = false, classNa
                     {submitting ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                     ) : null}
-                    {submitting ? 'Enviando...' : {t('components.enviarAvaliacao')}}
+                    {submitting ? 'Enviando...' : t('components.enviarAvaliacao')}
                   </button>
                 </div>
               </form>

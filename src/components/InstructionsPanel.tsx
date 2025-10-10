@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -77,7 +77,7 @@ const InstructionsPanel: React.FC = () => {
             onClick={onClose}
             disabled={!reachedBottom} // Enable only after scrolling down
           >
-            {reachedBottom ? {t('components.compreendiAsInstrucoes')} : {t('components.roleAteOFinalParaContinuar')}}
+            {reachedBottom ? t('components.compreendiAsInstrucoes') : t('components.roleAteOFinalParaContinuar')}
           </button>
         </div>
       </div>

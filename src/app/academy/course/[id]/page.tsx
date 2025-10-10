@@ -73,6 +73,7 @@ const CoursePage: React.FC = () => {
   const params = useParams();
   const router = useRouter();
   const { user, getToken } = useSupabaseAuth();
+  const { t } = useI18n();
   const [course, setCourse] = useState<Course | null>(null);
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [loading, setLoading] = useState(true);

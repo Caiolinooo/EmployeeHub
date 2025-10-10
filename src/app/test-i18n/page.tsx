@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import { useI18n } from '@/contexts/I18nContext';
@@ -18,18 +18,18 @@ export default function TestI18nPage() {
       <div className="mb-4">
         <h2 className="text-xl font-semibold mb-2">Common translations:</h2>
         <ul className="list-disc pl-5">
-          <li>common.loading: {t('common.loading')}</li>
-          <li>common.error: {t('common.error')}</li>
-          <li>common.success: {t('common.success')}</li>
+          <li>common.loading: t('common.loading')</li>
+          <li>common.error: t('common.error')</li>
+          <li>common.success: t('common.success')</li>
         </ul>
       </div>
       
       <div className="mb-4">
         <h2 className="text-xl font-semibold mb-2">Register translations:</h2>
         <ul className="list-disc pl-5">
-          <li>register.title: {t('register.title')}</li>
-          <li>register.subtitle: {t('register.subtitle')}</li>
-          <li>register.firstName: {t('register.firstName')}</li>
+          <li>register.title: t('register.title')</li>
+          <li>register.subtitle: t('register.subtitle')</li>
+          <li>register.firstName: t('register.firstName')</li>
         </ul>
       </div>
       

@@ -28,13 +28,12 @@ interface EmployeeListProps {
  * Mantém o design system do Painel ABZ
  */
 export default function EmployeeList({
-  const { t } = useI18n();
- 
-  companyId, 
-  departmentId, 
-  onEmployeeSelect, 
-  selectable = false 
+  companyId,
+  departmentId,
+  onEmployeeSelect,
+  selectable = false
 }: EmployeeListProps) {
+  const { t } = useI18n();
   const [employees, setEmployees] = useState<PayrollEmployee[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');

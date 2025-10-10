@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiCalendar, FiClock, FiUsers, FiCheck, FiX } from 'react-icons/fi';
@@ -114,7 +114,7 @@ export default function PainelPeriodosAvaliacao() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm({t('components.temCertezaQueDesejaExcluirEstePeriodoEstaAcaoNaoPo')})) {
+    if (!confirm(t('components.temCertezaQueDesejaExcluirEstePeriodoEstaAcaoNaoPo'))) {
       return;
     }
 
@@ -280,7 +280,7 @@ export default function PainelPeriodosAvaliacao() {
                       ? 'text-green-600 hover:bg-green-50' 
                       : 'text-gray-400 hover:bg-gray-50'
                   }`}
-                  title={periodo.ativo ? {t('components.desativarPeriodo')} : {t('components.ativarPeriodo')}}
+                  title={periodo.ativo ? t('components.desativarPeriodo') : t('components.ativarPeriodo')}
                 >
                   {periodo.ativo ? <FiCheck size={16} /> : <FiX size={16} />}
                 </button>
@@ -325,7 +325,7 @@ export default function PainelPeriodosAvaliacao() {
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900">
-                {editingPeriodo ? {t('components.editarPeriodo')} : {t('components.novoPeriodo')}}
+                {editingPeriodo ? t('components.editarPeriodo') : t('components.novoPeriodo')}
               </h3>
               <button
                 onClick={fecharModal}

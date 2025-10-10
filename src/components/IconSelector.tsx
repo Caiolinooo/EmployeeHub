@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useRef, useCallback } from 'react';
 import { FiUpload, FiX, FiSearch } from 'react-icons/fi';
@@ -26,13 +26,12 @@ const commonIcons = [
 ];
 
 export default function IconSelector({
-  const { t } = useI18n();
-
   selectedIcon,
   onIconChange,
   onCustomIconUpload,
   allowCustomUpload = true
 }: IconSelectorProps) {
+  const { t } = useI18n();
   const [searchTerm, setSearchTerm] = useState('');
   const [showIconGrid, setShowIconGrid] = useState(false);
   const [iconComponents, setIconComponents] = useState<Record<string, IconType>>({});
@@ -116,7 +115,7 @@ export default function IconSelector({
           onClick={() => setShowIconGrid(!showIconGrid)}
           className="text-xs text-blue-600 hover:text-blue-800"
         >
-          {showIconGrid ? 'Fechar seletor' : {t('components.mostrarIcones')}}
+          {showIconGrid ? 'Fechar seletor' : t('components.mostrarIcones')}
         </button>
       </div>
 

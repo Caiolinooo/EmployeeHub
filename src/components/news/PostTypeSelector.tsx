@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import { FiX, FiImage, FiVideo, FiCalendar, FiStar, FiFileText } from 'react-icons/fi';
@@ -30,8 +30,8 @@ const PostTypeSelector: React.FC<PostTypeSelectorProps> = ({
     {
       id: 'video' as const,
       icon: FiVideo,
-      title: {t('components.video')},
-      description: {t('components.compartilheVideos')},
+      title: t('components.video'),
+      description: t('components.compartilheVideos'),
       color: 'from-purple-500 to-purple-600',
       hoverColor: 'hover:from-purple-600 hover:to-purple-700'
     },
@@ -39,7 +39,7 @@ const PostTypeSelector: React.FC<PostTypeSelectorProps> = ({
       id: 'event' as const,
       icon: FiCalendar,
       title: 'Evento',
-      description: {t('components.crieUmEventoNoCalendario')},
+      description: t('components.crieUmEventoNoCalendario'),
       color: 'from-green-500 to-green-600',
       hoverColor: 'hover:from-green-600 hover:to-green-700'
     },
@@ -55,7 +55,7 @@ const PostTypeSelector: React.FC<PostTypeSelectorProps> = ({
       id: 'text' as const,
       icon: FiFileText,
       title: 'Texto',
-      description: {t('components.publicacaoApenasComTexto')},
+      description: t('components.publicacaoApenasComTexto'),
       color: 'from-gray-500 to-gray-600',
       hoverColor: 'hover:from-gray-600 hover:to-gray-700'
     }

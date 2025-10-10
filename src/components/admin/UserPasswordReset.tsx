@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { FiX, FiKey, FiSave, FiAlertTriangle } from 'react-icons/fi';
@@ -49,7 +49,7 @@ const UserPasswordReset: React.FC<UserPasswordResetProps> = ({ userId, userName,
 
       if (!token) {
         console.error(t('components.tokenNaoEncontradoEmNenhumLocalDeArmazenamento'));
-        throw new Error({t('components.naoAutorizadoTokenNaoEncontrado')});
+        throw new Error(t('components.naoAutorizadoTokenNaoEncontrado'));
       }
 
       console.log(t('components.enviandoSolicitacaoDeRedefinicaoDeSenhaParaUsuario'), userId);

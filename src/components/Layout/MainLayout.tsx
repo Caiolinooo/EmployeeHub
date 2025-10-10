@@ -48,9 +48,7 @@ const mainMenuItems = [
   { id: 'noticias', href: '/noticias', label: 'common.news', icon: FiMessageSquare },
 ];
 
-export default function MainLayout({
-  const { t } = useI18n();
- children }: MainLayoutProps) {
+export default function MainLayout({ children }: MainLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, profile, logout, isAdmin } = useSupabaseAuth();

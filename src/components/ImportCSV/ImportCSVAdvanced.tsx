@@ -1,4 +1,4 @@
-
+﻿
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -10,8 +10,8 @@ import CSVImportOptions from './CSVImportOptions';
 
 // Tipos de separadores suportados
 const SEPARATORS = [
-  { id: ',', label: {t('components.virgula')} },
-  { id: ';', label: {t('components.pontoEVirgula')} },
+  { id: ',', label: t('components.virgula') },
+  { id: ';', label: t('components.pontoEVirgula') },
   { id: '\t', label: 'Tab (\\t)' },
   { id: '|', label: 'Pipe (|)' },
 ];
@@ -125,7 +125,7 @@ export default function ImportCSVAdvanced({
 
       // Verificar se é formato Office 365
       const isOffice365Format = headerValues.some(h =>
-        h === {t('components.nomeParaExibicao')} ||
+        h === t('components.nomeParaExibicao') ||
         h === 'Nome UPN' ||
         (h === 'Nome' && headerValues.includes('Sobrenome'))
       );
@@ -225,7 +225,7 @@ export default function ImportCSVAdvanced({
 
     // Verificar se estamos lidando com formato Office 365
     const isOffice365Format = headers.some(h =>
-      h === {t('components.nomeParaExibicao')} ||
+      h === t('components.nomeParaExibicao') ||
       h === 'Nome UPN' ||
       (h === 'Nome' && headers.includes('Sobrenome'))
     );
@@ -237,7 +237,7 @@ export default function ImportCSVAdvanced({
       mapping['firstName'] = 'Nome';
       mapping['lastName'] = 'Sobrenome';
       mapping['email'] = 'Nome UPN';
-      mapping['phoneNumber'] = headers.includes('Telefone Celular') ? 'Telefone Celular' : {t('components.numeroDeTelefone')};
+      mapping['phoneNumber'] = headers.includes('Telefone Celular') ? 'Telefone Celular' : t('components.numeroDeTelefone');
       mapping['position'] = {t('components.titulo')};
       mapping['department'] = 'Departamento';
 
@@ -350,7 +350,7 @@ export default function ImportCSVAdvanced({
 
           // Verificar se estamos lidando com formato Office 365
           const isOffice365Format = Object.keys(user).some(key =>
-            key === {t('components.nomeParaExibicao')} ||
+            key === t('components.nomeParaExibicao') ||
             key === 'Nome UPN' ||
             key === 'Nome' && 'Sobrenome' in user
           );
@@ -483,7 +483,7 @@ export default function ImportCSVAdvanced({
           className="flex items-center text-sm text-gray-600 hover:text-gray-900"
         >
           <FiSettings className="mr-1" />
-          {showImportOptions ? {t('components.ocultarOpcoesAvancadas')} : {t('components.mostrarOpcoesAvancadas')}}
+          {showImportOptions ? t('components.ocultarOpcoesAvancadas') : t('components.mostrarOpcoesAvancadas')}
         </button>
 
         {showImportOptions && (

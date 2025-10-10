@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState } from 'react';
 import MainLayout from '@/components/Layout/MainLayout';
@@ -151,7 +151,7 @@ export default function CertificatesAdminPage() {
                 <button disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded">{loading ? 'Processando...' : 'Salvar template (novo)'}</button>
                 {selectedTemplate && (
                   <button type="button" onClick={saveSelectedTemplate} disabled={loading} className="px-4 py-2 bg-emerald-600 text-white rounded">
-                    {loading ? 'Salvando...' : {t('admin.salvarAlteracoesDoTemplateSelecionado')}}
+                    {loading ? 'Salvando...' : t('admin.salvarAlteracoesDoTemplateSelecionado')}
                   </button>
                 )}
               </div>

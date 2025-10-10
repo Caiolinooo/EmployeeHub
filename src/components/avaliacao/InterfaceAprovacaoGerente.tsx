@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiCheck, FiEdit2, FiMessageSquare, FiUser, FiCalendar, FiStar, FiEye } from 'react-icons/fi';
@@ -30,9 +30,8 @@ interface InterfaceAprovacaoGerenteProps {
   gerenteId: string;
 }
 
-export default function InterfaceAprovacaoGerente({
+export default function InterfaceAprovacaoGerente({ gerenteId }: InterfaceAprovacaoGerenteProps) {
   const { t } = useI18n();
- gerenteId }: InterfaceAprovacaoGerenteProps) {
   const [avaliacoesPendentes, setAvaliacoesPendentes] = useState<AvaliacaoParaAprovacao[]>([]);
   const [avaliacaoSelecionada, setAvaliacaoSelecionada] = useState<AvaliacaoParaAprovacao | null>(null);
   const [criterios, setCriterios] = useState<CriterioAvaliacao[]>([]);
@@ -315,7 +314,7 @@ export default function InterfaceAprovacaoGerente({
                     }`}
                   >
                     <FiEdit2 className="mr-1" size={14} />
-                    {modoEdicao ? {t('components.modoEdicaoAtivo')} : 'Editar Notas'}
+                    {modoEdicao ? t('components.modoEdicaoAtivo') : 'Editar Notas'}
                   </button>
                 </div>
 

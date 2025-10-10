@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff, FiArrowUp, FiArrowDown, FiX, FiLock, FiCheck, FiInfo, FiDatabase } from 'react-icons/fi';
@@ -358,7 +358,7 @@ export default function CardsPage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        throw new Error({t('admin.vocePrecisaEstarAutenticadoParaAcessarEstaPagina')});
+        throw new Error(t('admin.vocePrecisaEstarAutenticadoParaAcessarEstaPagina'));
       }
 
       console.log('Token encontrado, fazendo requisição para /api/admin/cards');
@@ -390,7 +390,7 @@ export default function CardsPage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        throw new Error({t('admin.vocePrecisaEstarAutenticadoParaAcessarEstaPagina')});
+        throw new Error(t('admin.vocePrecisaEstarAutenticadoParaAcessarEstaPagina'));
       }
 
       console.log('Verificando se a tabela cards existe...');
@@ -446,7 +446,7 @@ export default function CardsPage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        throw new Error({t('admin.vocePrecisaEstarAutenticadoParaVerificarOStatusDaM')});
+        throw new Error(t('admin.vocePrecisaEstarAutenticadoParaVerificarOStatusDaM'));
       }
 
       console.log(t('admin.verificandoStatusDaMigracao'));
@@ -458,7 +458,7 @@ export default function CardsPage() {
       });
 
       if (!response.ok) {
-        throw new Error({t('admin.erroAoVerificarStatusDaMigracaoResponsestatusRespo')});
+        throw new Error(t('admin.erroAoVerificarStatusDaMigracaoResponsestatusRespo'));
       }
 
       const data = await response.json();
@@ -476,7 +476,7 @@ export default function CardsPage() {
       setMigrationStatus({
         needed: false,
         inProgress: false,
-        message: {t('admin.erroAoVerificarStatusDaMigracao')}
+        message: t('admin.erroAoVerificarStatusDaMigracao')
       });
       return null;
     }
@@ -491,7 +491,7 @@ export default function CardsPage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        throw new Error({t('admin.vocePrecisaEstarAutenticadoParaMigrarOsCards')});
+        throw new Error(t('admin.vocePrecisaEstarAutenticadoParaMigrarOsCards'));
       }
 
       console.log('Migrando cards hardcoded para o banco de dados...');
@@ -642,7 +642,7 @@ export default function CardsPage() {
         const token = localStorage.getItem('token');
 
         if (!token) {
-          throw new Error({t('admin.vocePrecisaEstarAutenticadoParaAdicionarUmCard')});
+          throw new Error(t('admin.vocePrecisaEstarAutenticadoParaAdicionarUmCard'));
         }
 
         console.log('Adicionando novo card...');
@@ -674,7 +674,7 @@ export default function CardsPage() {
         const token = localStorage.getItem('token');
 
         if (!token) {
-          throw new Error({t('admin.vocePrecisaEstarAutenticadoParaAtualizarUmCard')});
+          throw new Error(t('admin.vocePrecisaEstarAutenticadoParaAtualizarUmCard'));
         }
 
         console.log(`Atualizando card existente com ID: ${card.id}`);
@@ -740,7 +740,7 @@ export default function CardsPage() {
         const token = localStorage.getItem('token');
 
         if (!token) {
-          throw new Error({t('admin.vocePrecisaEstarAutenticadoParaExcluirUmCard')});
+          throw new Error(t('admin.vocePrecisaEstarAutenticadoParaExcluirUmCard'));
         }
 
         const response = await fetch(`/api/admin/cards/${id}`, {
@@ -777,7 +777,7 @@ export default function CardsPage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        throw new Error({t('admin.vocePrecisaEstarAutenticadoParaAtualizarAVisibilid')});
+        throw new Error(t('admin.vocePrecisaEstarAutenticadoParaAtualizarAVisibilid'));
       }
 
       // Preparar o card para envio
@@ -847,7 +847,7 @@ export default function CardsPage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        throw new Error({t('admin.vocePrecisaEstarAutenticadoParaMoverOCard')});
+        throw new Error(t('admin.vocePrecisaEstarAutenticadoParaMoverOCard'));
       }
 
       // Preparar os cards para envio
@@ -939,7 +939,7 @@ export default function CardsPage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        throw new Error({t('admin.vocePrecisaEstarAutenticadoParaMoverOCard')});
+        throw new Error(t('admin.vocePrecisaEstarAutenticadoParaMoverOCard'));
       }
 
       // Preparar os cards para envio
@@ -1069,8 +1069,8 @@ export default function CardsPage() {
               <p className="font-medium text-blue-800">Informação</p>
               <p className="text-sm text-blue-700">
                 {dataSource === 'database'
-                  ? {t('admin.osCardsEstaoSendoCarregadosDoBancoDeDados')}
-                  : {t('admin.osCardsEstaoSendoCarregadosDoCodigofonteAsAlteraco')}}
+                  ? t('admin.osCardsEstaoSendoCarregadosDoBancoDeDados')
+                  : t('admin.osCardsEstaoSendoCarregadosDoCodigofonteAsAlteraco')}
               </p>
 
               {/* Mostrar status da migração e botão para migrar */}

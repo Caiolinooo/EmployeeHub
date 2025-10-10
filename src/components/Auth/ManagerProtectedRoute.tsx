@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -49,7 +49,7 @@ const ManagerProtectedRoute: React.FC<ManagerProtectedRouteProps> = ({
       // Adicionar logs para depuração
       console.log('ManagerProtectedRoute - Estado atual:', {
         isLoading,
-        user: user ? 'Autenticado' : {t('components.naoAutenticado')},
+        user: user ? 'Autenticado' : t('components.naoAutenticado'),
         profile: profile ? `Role: ${profile.role}` : 'Sem perfil',
         isAdmin,
         isManager
@@ -173,7 +173,7 @@ const ManagerProtectedRoute: React.FC<ManagerProtectedRouteProps> = ({
           const isExpired = responseData?.expired ||
                            (responseData?.error && responseData.error.includes('expirado'));
 
-          console.log('ManagerProtectedRoute - Token expirado?', isExpired ? 'Sim' : {t('components.nao')});
+          console.log('ManagerProtectedRoute - Token expirado?', isExpired ? 'Sim' : t('components.nao'));
 
           // Tentar renovar o token
           console.log(t('components.managerprotectedrouteIniciandoRenovacaoDeToken'));

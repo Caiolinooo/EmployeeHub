@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiTrash2, FiUser, FiMail, FiPhone, FiCalendar, FiAlertCircle, FiRefreshCw } from 'react-icons/fi';
@@ -45,7 +45,7 @@ export default function BannedUsersManager() {
       });
 
       if (!response.ok) {
-        throw new Error({t('components.erroAoBuscarUsuariosBanidos')});
+        throw new Error(t('components.erroAoBuscarUsuariosBanidos'));
       }
 
       const data = await response.json();
@@ -59,7 +59,7 @@ export default function BannedUsersManager() {
   };
 
   const handleUnbanUser = async (user: BannedUser) => {
-    if (!confirm({t('components.temCertezaQueDesejaDesbanirUserfirstnameUserlastna')})) {
+    if (!confirm(t('components.temCertezaQueDesejaDesbanirUserfirstnameUserlastna'))) {
       return;
     }
 
@@ -86,7 +86,7 @@ export default function BannedUsersManager() {
       });
 
       if (!response.ok) {
-        throw new Error({t('components.erroAoDesbanirUsuario')});
+        throw new Error(t('components.erroAoDesbanirUsuario'));
       }
 
       toast.success(t('components.usuarioDesbandidoComSucesso'));

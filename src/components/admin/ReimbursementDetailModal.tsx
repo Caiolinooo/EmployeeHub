@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { FiX, FiCheck, FiDownload, FiFileText, FiDollarSign, FiUser, FiCalendar, FiClock, FiInfo, FiAlertTriangle } from 'react-icons/fi';
@@ -105,7 +105,7 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
 
       // Verificar se o download foi bem-sucedido
       if (!blob) {
-        throw new Error({t('components.naoFoiPossivelBaixarOArquivoAposVariasTentativas')});
+        throw new Error(t('components.naoFoiPossivelBaixarOArquivoAposVariasTentativas'));
       }
 
       // Iniciar o download no navegador
@@ -136,7 +136,7 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
     try {
       // Verificar se temos o protocolo
       if (!reimbursement.protocolo) {
-        throw new Error({t('components.protocoloDeReembolsoNaoEncontrado')});
+        throw new Error(t('components.protocoloDeReembolsoNaoEncontrado'));
       }
 
       console.log(`Rejeitando reembolso ${reimbursement.protocolo} com motivo: ${rejectReason}`);
@@ -160,7 +160,7 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Resposta de erro:', errorText);
-        throw new Error({t('components.erroAoRejeitarSolicitacaoResponsestatus')});
+        throw new Error(t('components.erroAoRejeitarSolicitacaoResponsestatus'));
       }
 
       console.log('Reembolso rejeitado com sucesso via API');

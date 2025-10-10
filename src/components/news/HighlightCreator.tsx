@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useRef } from 'react';
 import { FiX, FiUpload, FiStar, FiImage } from 'react-icons/fi';
@@ -56,7 +56,7 @@ const HighlightCreator: React.FC<HighlightCreatorProps> = ({
       });
 
       if (!uploadResp.ok) {
-        throw new Error({t('components.erroAoFazerUploadDaMidia')});
+        throw new Error(t('components.erroAoFazerUploadDaMidia'));
       }
 
       const uploadData = await uploadResp.json();

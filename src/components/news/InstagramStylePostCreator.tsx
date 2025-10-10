@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useRef } from 'react';
 import { FiX, FiArrowLeft, FiImage, FiVideo, FiSmile, FiMapPin, FiTag, FiUsers, FiCheck } from 'react-icons/fi';
@@ -195,7 +195,7 @@ const InstagramStylePostCreator: React.FC<InstagramStylePostCreatorProps> = ({
                 disabled={currentStep === 'caption' && !postData.content.trim()}
                 className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {currentStep === 'edit' ? {t('components.avancar')} : 'Compartilhar'}
+                {currentStep === 'edit' ? t('components.avancar') : 'Compartilhar'}
               </button>
             )}
             <button
@@ -353,10 +353,10 @@ const InstagramStylePostCreator: React.FC<InstagramStylePostCreatorProps> = ({
                   )}
                 </div>
                 <h3 className="text-lg font-medium mb-2">
-                  {isUploading ? 'Compartilhando...' : {t('components.publicacaoCompartilhada')}}
+                  {isUploading ? 'Compartilhando...' : t('components.publicacaoCompartilhada')}
                 </h3>
                 <p className="text-gray-500">
-                  {isUploading ? {t('components.aguardeEnquantoSuaPublicacaoEProcessada')} : {t('components.suaPublicacaoFoiCompartilhadaComSucesso')}}
+                  {isUploading ? t('components.aguardeEnquantoSuaPublicacaoEProcessada') : t('components.suaPublicacaoFoiCompartilhadaComSucesso')}
                 </p>
               </div>
             </div>

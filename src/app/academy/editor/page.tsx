@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -63,6 +63,7 @@ interface Course {
 const AcademyEditor: React.FC = () => {
   const router = useRouter();
   const { user, getToken } = useSupabaseAuth();
+  const { t } = useI18n();
   const [courses, setCourses] = useState<Course[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,7 +124,7 @@ const AcademyEditor: React.FC = () => {
   };
 
   const handleDeleteCourse = async (courseId: string) => {
-    if (!confirm({t('academy.temCertezaQueDesejaExcluirEsteCursoEstaAcaoNaoPode')})) {
+    if (!confirm(t('academy.temCertezaQueDesejaExcluirEsteCursoEstaAcaoNaoPode'))) {
       return;
     }
 
@@ -206,8 +207,8 @@ const AcademyEditor: React.FC = () => {
   const getDifficultyLabel = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
       case 'beginner': return 'Iniciante';
-      case 'intermediate': return {t('academy.intermediario')};
-      case 'advanced': return {t('academy.avancado')};
+      case 'intermediate': return t('academy.intermediario');
+      case 'advanced': return t('academy.avancado');
       default: return difficulty;
     }
   };

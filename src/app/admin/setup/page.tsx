@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -48,7 +48,7 @@ export default function AdminSetupPage() {
     if (user.role !== 'ADMIN') {
       toast({
         title: "Acesso Negado",
-        description: {t('admin.apenasAdministradoresPodemAcessarEstaPagina')},
+        description: t('admin.apenasAdministradoresPodemAcessarEstaPagina'),
         variant: "destructive",
       });
       router.push('/dashboard');
@@ -90,7 +90,7 @@ export default function AdminSetupPage() {
         newChecks[0] = {
           name: 'Tabela Cards',
           status: 'error',
-          message: {t('admin.tabelaCardsNaoExisteNoSupabase')},
+          message: t('admin.tabelaCardsNaoExisteNoSupabase'),
           sql: `-- SQL para criar a tabela cards
 CREATE TABLE IF NOT EXISTS public.cards (
   id TEXT PRIMARY KEY,
@@ -145,7 +145,7 @@ CREATE POLICY IF NOT EXISTS "cards_admin_policy" ON public.cards
     newChecks.push({
       name: 'Conectividade Supabase',
       status: 'checking',
-      message: {t('admin.testandoConexaoComSupabase')}
+      message: t('admin.testandoConexaoComSupabase')
     });
     setChecks([...newChecks]);
 
@@ -161,28 +161,28 @@ CREATE POLICY IF NOT EXISTS "cards_admin_policy" ON public.cards
         newChecks[1] = {
           name: 'Conectividade Supabase',
           status: 'success',
-          message: {t('admin.conexaoComSupabaseFuncionando')}
+          message: t('admin.conexaoComSupabaseFuncionando')
         };
       } else {
         newChecks[1] = {
           name: 'Conectividade Supabase',
           status: 'error',
-          message: {t('admin.problemaNaConexaoComSupabase')}
+          message: t('admin.problemaNaConexaoComSupabase')
         };
       }
     } catch (error) {
       newChecks[1] = {
         name: 'Conectividade Supabase',
         status: 'error',
-        message: {t('admin.erroNaConexaoComSupabase')}
+        message: t('admin.erroNaConexaoComSupabase')
       };
     }
 
     // Check 3: Verificar usuários
     newChecks.push({
-      name: {t('admin.sistemaDeUsuarios')},
+      name: t('admin.sistemaDeUsuarios'),
       status: 'checking',
-      message: {t('admin.verificandoSistemaDeUsuarios')}
+      message: t('admin.verificandoSistemaDeUsuarios')
     });
     setChecks([...newChecks]);
 
@@ -197,22 +197,22 @@ CREATE POLICY IF NOT EXISTS "cards_admin_policy" ON public.cards
       if (response.ok) {
         const data = await response.json();
         newChecks[2] = {
-          name: {t('admin.sistemaDeUsuarios')},
+          name: t('admin.sistemaDeUsuarios'),
           status: 'success',
-          message: {t('admin.sistemaDeUsuariosFuncionandoDatausercountUsuarios')}
+          message: t('admin.sistemaDeUsuariosFuncionandoDatausercountUsuarios')
         };
       } else {
         newChecks[2] = {
-          name: {t('admin.sistemaDeUsuarios')},
+          name: t('admin.sistemaDeUsuarios'),
           status: 'warning',
-          message: {t('admin.sistemaDeUsuariosComProblemas')}
+          message: t('admin.sistemaDeUsuariosComProblemas')
         };
       }
     } catch (error) {
       newChecks[2] = {
-        name: {t('admin.sistemaDeUsuarios')},
+        name: t('admin.sistemaDeUsuarios'),
         status: 'warning',
-        message: {t('admin.erroAoVerificarSistemaDeUsuarios')}
+        message: t('admin.erroAoVerificarSistemaDeUsuarios')
       };
     }
 
@@ -224,14 +224,14 @@ CREATE POLICY IF NOT EXISTS "cards_admin_policy" ON public.cards
     navigator.clipboard.writeText(text);
     toast({
       title: "Copiado!",
-      description: {t('admin.sqlCopiadoParaAAreaDeTransferencia')},
+      description: t('admin.sqlCopiadoParaAAreaDeTransferencia'),
     });
   };
 
   const testAfterExecution = async () => {
     toast({
       title: "Testando...",
-      description: {t('admin.verificandoSeAsAlteracoesForamAplicadas')},
+      description: t('admin.verificandoSeAsAlteracoesForamAplicadas'),
     });
     await runSystemChecks();
   };

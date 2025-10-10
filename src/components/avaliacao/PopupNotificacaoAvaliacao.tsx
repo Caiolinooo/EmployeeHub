@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiX, FiClock, FiCheckCircle, FiAlertCircle, FiUser, FiCalendar } from 'react-icons/fi';
@@ -17,9 +17,8 @@ interface PopupNotificacaoAvaliacaoProps {
   usuarioId: string;
 }
 
-export default function PopupNotificacaoAvaliacao({
+export default function PopupNotificacaoAvaliacao({ usuarioId }: PopupNotificacaoAvaliacaoProps) {
   const { t } = useI18n();
- usuarioId }: PopupNotificacaoAvaliacaoProps) {
   const [popups, setPopups] = useState<PopupData[]>([]);
   const [popupAtivo, setPopupAtivo] = useState<PopupData | null>(null);
   const router = useRouter();
@@ -122,25 +121,25 @@ export default function PopupNotificacaoAvaliacao({
   const getTituloPopup = (tipo: TipoNotificacaoAvaliacao) => {
     switch (tipo) {
       case 'periodo_iniciado':
-        return {t('components.periodoDeAvaliacaoIniciado')};
+        return t('components.periodoDeAvaliacaoIniciado');
       case 'autoavaliacao_pendente':
-        return {t('components.autoavaliacaoPendente')};
+        return t('components.autoavaliacaoPendente');
       case 'autoavaliacao_prazo':
-        return {t('components.prazoDeAutoavaliacao')};
+        return t('components.prazoDeAutoavaliacao');
       case 'autoavaliacao_recebida':
-        return {t('components.autoavaliacaoRecebida')};
+        return t('components.autoavaliacaoRecebida');
       case 'aprovacao_pendente':
-        return {t('components.aprovacaoPendente')};
+        return t('components.aprovacaoPendente');
       case 'aprovacao_prazo':
-        return {t('components.prazoDeAprovacao')};
+        return t('components.prazoDeAprovacao');
       case 'avaliacao_aprovada':
-        return {t('components.avaliacaoAprovada')};
+        return t('components.avaliacaoAprovada');
       case 'avaliacao_editada':
-        return {t('components.avaliacaoEditada')};
+        return t('components.avaliacaoEditada');
       case 'avaliacao_finalizada':
-        return {t('components.avaliacaoFinalizada')};
+        return t('components.avaliacaoFinalizada');
       default:
-        return {t('components.notificacaoDeAvaliacao')};
+        return t('components.notificacaoDeAvaliacao');
     }
   };
 
@@ -149,25 +148,25 @@ export default function PopupNotificacaoAvaliacao({
     
     switch (tipo) {
       case 'periodo_iniciado':
-        return {t('components.completeSuaAutoavaliacaoAteDadosdatalimiteNewDated')}pt-BR') : 'o prazo estabelecido'}.`;
+        return t('components.completeSuaAutoavaliacaoAteDadosdatalimiteNewDated')pt-BR') : 'o prazo estabelecido'}.`;
       case 'autoavaliacao_pendente':
-        return {t('components.voceTemUmaAutoavaliacaoPendenteCompleteAteDadosdat')}pt-BR') : 'o prazo'}.`;
+        return t('components.voceTemUmaAutoavaliacaoPendenteCompleteAteDadosdat')pt-BR') : 'o prazo'}.`;
       case 'autoavaliacao_prazo':
-        return {t('components.oPrazoParaSuaAutoavaliacaoEstaProximoCompleteHoje')};
+        return t('components.oPrazoParaSuaAutoavaliacaoEstaProximoCompleteHoje');
       case 'autoavaliacao_recebida':
         return `${dados.funcionario_nome || t('components.umFuncionario')} completou sua autoavaliação e aguarda sua aprovação.`;
       case 'aprovacao_pendente':
-        return {t('components.voceTemAvaliacoesPendentesDeAprovacao')};
+        return t('components.voceTemAvaliacoesPendentesDeAprovacao');
       case 'aprovacao_prazo':
-        return {t('components.oPrazoParaAprovacaoDeAvaliacoesEstaProximo')};
+        return t('components.oPrazoParaAprovacaoDeAvaliacoesEstaProximo');
       case 'avaliacao_aprovada':
-        return {t('components.suaAvaliacaoFoiAprovadaPorDadosgerentenome')}seu gerente'}.`;
+        return t('components.suaAvaliacaoFoiAprovadaPorDadosgerentenome')seu gerente'}.`;
       case 'avaliacao_editada':
-        return {t('components.suaAvaliacaoFoiEditadaPorDadosgerentenome')}seu gerente'}.`;
+        return t('components.suaAvaliacaoFoiEditadaPorDadosgerentenome')seu gerente'}.`;
       case 'avaliacao_finalizada':
-        return {t('components.suaAvaliacaoFoiFinalizadaVocePodeVisualizalaAQualq')};
+        return t('components.suaAvaliacaoFoiFinalizadaVocePodeVisualizalaAQualq');
       default:
-        return {t('components.voceTemUmaNovaNotificacaoSobreAvaliacao')};
+        return t('components.voceTemUmaNovaNotificacaoSobreAvaliacao');
     }
   };
 

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -31,7 +31,7 @@ export default function ReimbursementMigrationPage() {
     if (!authLoading && !isAdmin) {
       toast({
         title: 'Acesso negado',
-        description: {t('admin.voceNaoTemPermissaoParaAcessarEstaPagina')},
+        description: t('admin.voceNaoTemPermissaoParaAcessarEstaPagina'),
         variant: 'destructive',
       });
       router.push('/dashboard');
@@ -48,7 +48,7 @@ export default function ReimbursementMigrationPage() {
       // Obter token de autenticação
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error({t('admin.tokenDeAutenticacaoNaoEncontrado')});
+        throw new Error(t('admin.tokenDeAutenticacaoNaoEncontrado'));
       }
 
       // Chamar a API para executar a migração
@@ -69,8 +69,8 @@ export default function ReimbursementMigrationPage() {
 
       setResult(data);
       toast({
-        title: {t('admin.migracaoExecutada')},
-        description: {t('admin.aMigracaoFoiExecutadaComSucesso')},
+        title: t('admin.migracaoExecutada'),
+        description: t('admin.aMigracaoFoiExecutadaComSucesso'),
         variant: 'default',
       });
     } catch (err) {
@@ -96,7 +96,7 @@ export default function ReimbursementMigrationPage() {
       // Obter token de autenticação
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error({t('admin.tokenDeAutenticacaoNaoEncontrado')});
+        throw new Error(t('admin.tokenDeAutenticacaoNaoEncontrado'));
       }
 
       // Chamar a API para verificar o status da migração
@@ -116,7 +116,7 @@ export default function ReimbursementMigrationPage() {
       setResult(data);
       toast({
         title: 'Status verificado',
-        description: {t('admin.oStatusDaMigracaoFoiVerificadoComSucesso')},
+        description: t('admin.oStatusDaMigracaoFoiVerificadoComSucesso'),
         variant: 'default',
       });
     } catch (err) {

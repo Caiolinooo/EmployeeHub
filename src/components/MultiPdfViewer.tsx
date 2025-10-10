@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiDownload, FiX, FiExternalLink, FiRefreshCw } from 'react-icons/fi';
@@ -69,7 +69,7 @@ const MultiPdfViewer: React.FC<MultiPdfViewerProps> = ({
 
         const path = getNormalizedPath();
         if (!path) {
-          throw new Error({t('components.caminhoDoArquivoInvalido')});
+          throw new Error(t('components.caminhoDoArquivoInvalido'));
         }
 
         // Verificar se o PDF original existe
@@ -79,7 +79,7 @@ const MultiPdfViewer: React.FC<MultiPdfViewerProps> = ({
         });
 
         if (!response.ok) {
-          throw new Error({t('components.arquivoNaoEncontradoResponsestatus')});
+          throw new Error(t('components.arquivoNaoEncontradoResponsestatus'));
         }
 
         // PDF existe, usar o visualizador universal por padrão (seguindo o modelo do módulo de reembolso)

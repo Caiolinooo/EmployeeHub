@@ -10,9 +10,7 @@ interface PreferencesTabProps {
   user?: any; // Tornando o parâmetro opcional
 }
 
-export function PreferencesTab({
-  const { t } = useI18n();
- user = null }: PreferencesTabProps) {
+export function PreferencesTab({ user = null }: PreferencesTabProps) {
   const { t, locale, setLocale } = useI18n();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);

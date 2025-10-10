@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -27,10 +27,10 @@ export default function AuthDebugger() {
       
       <div className="grid grid-cols-2 gap-2">
         <div className="font-semibold">Loading:</div>
-        <div>{isLoading ? 'Sim' : {t('components.nao')}}</div>
+        <div>{isLoading ? 'Sim' : t('components.nao')}</div>
         
         <div className="font-semibold">Authenticated:</div>
-        <div>{isAuthenticated ? 'Sim' : {t('components.nao')}}</div>
+        <div>{isAuthenticated ? 'Sim' : t('components.nao')}</div>
         
         <div className="font-semibold">User ID:</div>
         <div>{user?.id || 'N/A'}</div>
@@ -45,13 +45,13 @@ export default function AuthDebugger() {
         <div>{profile?.role || 'N/A'}</div>
         
         <div className="font-semibold">Is Admin:</div>
-        <div>{isAdmin ? 'Sim' : {t('components.nao')}}</div>
+        <div>{isAdmin ? 'Sim' : t('components.nao')}</div>
         
         <div className="font-semibold">Is Manager:</div>
-        <div>{isManager ? 'Sim' : {t('components.nao')}}</div>
+        <div>{isManager ? 'Sim' : t('components.nao')}</div>
         
         <div className="font-semibold">Access to 'avaliacao':</div>
-        <div>{hasAccess('avaliacao') ? 'Sim' : {t('components.nao')}}</div>
+        <div>{hasAccess('avaliacao') ? 'Sim' : t('components.nao')}</div>
       </div>
       
       <div className="mt-4">

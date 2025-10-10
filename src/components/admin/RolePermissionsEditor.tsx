@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiUsers, FiSave, FiRefreshCw, FiCheck, FiX, FiSettings } from 'react-icons/fi';
@@ -33,8 +33,8 @@ const RolePermissionsEditor: React.FC<RolePermissionsEditorProps> = ({ onClose }
 
   const roles = [
     { id: 'ADMIN', label: 'Administrador', description: 'Acesso total ao sistema' },
-    { id: 'MANAGER', label: 'Gerente', description: {t('components.acessoGerencialComAlgumasRestricoes')} },
-    { id: 'USER', label: {t('components.usuario')}, description: {t('components.acessoBasicoDoFuncionario')} }
+    { id: 'MANAGER', label: 'Gerente', description: t('components.acessoGerencialComAlgumasRestricoes') },
+    { id: 'USER', label: t('components.usuario'), description: t('components.acessoBasicoDoFuncionario') }
   ];
 
   // Carregar módulos disponíveis e permissões por role
@@ -105,7 +105,7 @@ const RolePermissionsEditor: React.FC<RolePermissionsEditorProps> = ({ onClose }
       });
 
       if (!response.ok) {
-        throw new Error({t('components.erroAoSalvarPermissoes')});
+        throw new Error(t('components.erroAoSalvarPermissoes'));
       }
 
       alert('Permissões salvas com sucesso!');
@@ -269,7 +269,7 @@ const RolePermissionsEditor: React.FC<RolePermissionsEditorProps> = ({ onClose }
           ) : (
             <FiSave className="h-4 w-4 mr-2" />
           )}
-          {saving ? 'Salvando...' : {t('components.salvarPermissoes')}}
+          {saving ? 'Salvando...' : t('components.salvarPermissoes')}
         </button>
       </div>
     </div>

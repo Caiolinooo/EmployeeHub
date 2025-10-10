@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiDownload, FiX } from 'react-icons/fi';
@@ -62,7 +62,7 @@ const SimplePdfViewer2: React.FC<SimplePdfViewer2Props> = ({
 
         const path = getNormalizedPath();
         if (!path) {
-          throw new Error({t('components.caminhoDoArquivoInvalido')});
+          throw new Error(t('components.caminhoDoArquivoInvalido'));
         }
 
         // Verificar se o arquivo existe
@@ -72,7 +72,7 @@ const SimplePdfViewer2: React.FC<SimplePdfViewer2Props> = ({
         });
         
         if (!response.ok) {
-          throw new Error({t('components.arquivoNaoEncontradoResponsestatus')});
+          throw new Error(t('components.arquivoNaoEncontradoResponsestatus'));
         }
 
         setLoading(false);

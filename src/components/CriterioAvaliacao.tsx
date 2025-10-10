@@ -53,10 +53,8 @@ const CriterioAvaliacao: React.FC<CriterioAvaliacaoProps> = ({
         return 'bg-blue-50 border-blue-200';
       case 'comportamento':
         return 'bg-green-50 border-green-200';
-      case {t('components.competencia')}:
       case 'competencia':
         return 'bg-purple-50 border-purple-200';
-      case {t('components.lideranca')}:
       case 'lideranca':
         return 'bg-yellow-50 border-yellow-200';
       default:

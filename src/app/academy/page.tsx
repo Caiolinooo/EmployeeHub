@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import MainLayout from '@/components/Layout/MainLayout';
@@ -74,6 +74,7 @@ interface Enrollment {
 
 const AcademyPage: React.FC = () => {
   const { user, getToken } = useSupabaseAuth();
+  const { t } = useI18n();
   const [courses, setCourses] = useState<Course[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
@@ -200,14 +201,14 @@ const AcademyPage: React.FC = () => {
       const data = await response.json();
 
       if (data.success) {
-        alert('Matrícula realizada com sucesso!');
+        alert(t('academy.matriculaRealizadaComSucesso'));
         loadEnrollments();
       } else {
-        alert(data.error || 'Erro ao realizar matrícula');
+        alert(data.error || t('academy.erroAoRealizarMatricula'));
       }
     } catch (error) {
       console.error(t('academy.erroAoRealizarMatricula'), error);
-      alert('Erro ao realizar matrícula');
+      alert(t('academy.erroAoRealizarMatricula'));
     }
   };
 
@@ -238,9 +239,9 @@ const AcademyPage: React.FC = () => {
       case 'beginner':
         return 'Iniciante';
       case 'intermediate':
-        return {t('academy.intermediario')};
+        return t('academy.intermediario');
       case 'advanced':
-        return {t('academy.avancado')};
+        return t('academy.avancado');
       default:
         return difficulty;
     }
@@ -464,7 +465,7 @@ const AcademyPage: React.FC = () => {
             <div className="flex items-center justify-center bg-blue-50 rounded-lg p-2">
               <BookOpenIcon className="w-5 h-5 text-blue-600 mr-2" />
               <span className="text-sm font-medium text-blue-900">
-                {filteredCourses.length} cursos {viewMode === 'enrolled' ? 'matriculados' : {t('academy.disponiveis')}}
+                {filteredCourses.length} {t('academy.cursos')} {viewMode === 'enrolled' ? t('academy.matriculados') : t('academy.disponiveis')}
               </span>
             </div>
           </div>

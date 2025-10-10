@@ -146,7 +146,7 @@ export default function PayrollDashboard() {
     }
 
     const company = companies.find(c => c.id === selectedCompany);
-    if (company?.name === {t('components.luzMaritimaLtda')}) {
+    if (company?.name === t('components.luzMaritimaLtda')) {
       // Workflow específico para LUZ Marítima
       router.push(`/folha-pagamento/import?companyId=${selectedCompany}&type=luz-maritima`);
     } else {
@@ -160,7 +160,7 @@ export default function PayrollDashboard() {
     if (!company) return;
 
     // Determinar workflow baseado no tipo da empresa
-    if (company.name === {t('components.luzMaritimaLtda')}) {
+    if (company.name === t('components.luzMaritimaLtda')) {
       router.push(`/folha-pagamento/workflow/luz-maritima?companyId=${companyId}`);
     } else {
       router.push(`/folha-pagamento/workflow/standard?companyId=${companyId}`);

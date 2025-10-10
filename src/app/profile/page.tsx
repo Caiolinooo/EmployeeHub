@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -460,7 +460,7 @@ export default function ProfilePage() {
                 <div className="flex flex-wrap justify-center md:justify-start gap-3">
                   <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
                     {profile.role === 'ADMIN' ? 'Administrador' :
-                     profile.role === 'MANAGER' ? 'Gerente' : {t('profile.usuario')}}
+                     profile.role === 'MANAGER' ? 'Gerente' : t('profile.usuario')}
                   </span>
 
                   {profile.active && (
@@ -571,7 +571,7 @@ export default function ProfilePage() {
                       <input
                         type="text"
                         value={profile.role === 'ADMIN' ? 'Administrador' :
-                               profile.role === 'MANAGER' ? 'Gerente' : {t('profile.usuario')}}
+                               profile.role === 'MANAGER' ? 'Gerente' : t('profile.usuario')}
                         className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
                         disabled
                       />

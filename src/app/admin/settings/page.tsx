@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiSave, FiRefreshCw, FiUpload } from 'react-icons/fi';
@@ -56,7 +56,7 @@ export default function SettingsPage() {
         setCalMarkerColor(typeof marker_color === 'string' ? marker_color : '#6339F5');
       }
     } catch (e) {
-      console.error('Falha ao carregar company_calendar', e);
+      console.error(t('admin.falhaAoCarregarCompanyCalendar'), e);
     } finally {
       setCalLoaded(true);
     }
@@ -82,8 +82,8 @@ export default function SettingsPage() {
             companyName: 'ABZ Group',
             contactEmail: 'contato@groupabz.com',
             footerText: '© 2024 ABZ Group. Todos os direitos reservados.',
-            dashboardTitle: {t('admin.painelDeLogisticaAbzGroup')},
-            dashboardDescription: {t('admin.bemvindoAoCentroDeRecursosParaColaboradoresDaLogis')},
+            dashboardTitle: t('admin.painelDeLogisticaAbzGroup'),
+            dashboardDescription: t('admin.bemvindoAoCentroDeRecursosParaColaboradoresDaLogis'),
             updatedAt: new Date().toISOString(),
           };
 
@@ -106,7 +106,7 @@ export default function SettingsPage() {
             console.error(t('admin.erroAoCriarConfiguracaoPadrao'), createError);
           }
         } else {
-          throw new Error({t('admin.erroAoCarregarConfiguracoes')});
+          throw new Error(t('admin.erroAoCarregarConfiguracoes'));
         }
       } else {
         const data = await response.json();
@@ -128,8 +128,8 @@ export default function SettingsPage() {
         companyName: 'ABZ Group',
         contactEmail: 'contato@groupabz.com',
         footerText: '© 2024 ABZ Group. Todos os direitos reservados.',
-        dashboardTitle: {t('admin.painelDeLogisticaAbzGroup')},
-        dashboardDescription: {t('admin.bemvindoAoCentroDeRecursosParaColaboradoresDaLogis')},
+        dashboardTitle: t('admin.painelDeLogisticaAbzGroup'),
+        dashboardDescription: t('admin.bemvindoAoCentroDeRecursosParaColaboradoresDaLogis'),
         updatedAt: new Date().toISOString(),
       });
     } finally {
@@ -177,11 +177,11 @@ export default function SettingsPage() {
         const data = await response.json();
         return data.files[0].url;
       } else {
-        console.error(`Erro ao fazer upload do ${type}`);
+        console.error(t('admin.erroAoFazerUploadDo', { type }));
         return null;
       }
     } catch (error) {
-      console.error(`Erro ao fazer upload do ${type}:`, error);
+      console.error(t('admin.erroAoFazerUploadDo', { type }), error);
       return null;
     }
   };
@@ -229,16 +229,16 @@ export default function SettingsPage() {
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('Erro na resposta da API:', response.status, errorText);
-          throw new Error({t('admin.erroAoSalvarConfiguracoesResponsestatusErrortext')});
+          console.error(t('admin.erroNaRespostaDaAPI'), response.status, errorText);
+          throw new Error(t('admin.erroAoSalvarConfiguracoes'));
         }
 
-        console.log('Resposta da API:', response.status);
+        console.log(t('admin.respostaDaAPI'), response.status);
 
         const savedConfig = await response.json();
         console.log(t('admin.configuracaoSalvaComSucesso'), savedConfig);
         setConfig(savedConfig);
-        setSuccess({t('admin.configuracoesSalvasComSucesso')});
+        setSuccess(t('admin.configuracoesSalvasComSucesso'));
 
         // Atualizar o contexto global para aplicar as mudanças imediatamente
         if (siteConfig?.refreshConfig) {
@@ -267,7 +267,7 @@ export default function SettingsPage() {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-abz-blue"></div>
-        <p className="ml-2">Carregando configurações...</p>
+        <p className="ml-2">{t('admin.carregandoConfiguracoes')}</p>
       </div>
     );
   }
@@ -275,7 +275,7 @@ export default function SettingsPage() {
   if (!config) {
     return (
       <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-        Erro ao carregar configurações. Por favor, recarregue a página.
+        {t('admin.erroAoCarregarConfiguracoesPorFavorRecarregueAPagina')}
       </div>
     );
   }
@@ -283,9 +283,9 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Configurações do Sistema</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('admin.configuracoesDoSistema')}</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Personalize as configurações gerais do sistema.
+          {t('admin.personalizeAsConfiguracoesGeraisDoSistema')}
         </p>
       </div>
 
@@ -306,12 +306,12 @@ export default function SettingsPage() {
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Configurações Básicas */}
         <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Configurações Básicas</h2>
+          <h2 className="text-lg font-medium text-gray-900 mb-4">{t('admin.configuracoesBasicas')}</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-                Título do Site
+                {t('admin.tituloDoSite')}
               </label>
               <input
                 type="text"
@@ -326,7 +326,7 @@ export default function SettingsPage() {
 
             <div>
               <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
-                Nome da Empresa
+                {t('admin.nomeDaEmpresa')}
               </label>
               <input
                 type="text"
@@ -349,7 +349,7 @@ export default function SettingsPage() {
             className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue"
           >
             <FiRefreshCw className="mr-2 h-4 w-4" />
-            Recarregar
+            {t('admin.recarregar')}
           </button>
           <button
             type="submit"
@@ -357,7 +357,7 @@ export default function SettingsPage() {
             className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-abz-blue hover:bg-abz-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue disabled:opacity-70"
           >
             <FiSave className="mr-2 h-4 w-4" />
-            {isSaving ? 'Salvando...' : {t('admin.salvarConfiguracoes')}}
+            {isSaving ? t('admin.salvando') : t('admin.salvarConfiguracoes')}
           </button>
         </div>
       </form>

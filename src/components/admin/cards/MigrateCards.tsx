@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -123,8 +123,8 @@ export function MigrateCards() {
           <div className="mt-2">
             <p className="text-sm font-medium">
               Status: {migrationStatus.migrationNeeded 
-                ? {t('components.migracaoNecessaria')} 
-                : {t('components.todosOsCardsJaForamMigrados')}}
+                ? t('components.migracaoNecessaria') 
+                : t('components.todosOsCardsJaForamMigrados')}
             </p>
           </div>
         </div>

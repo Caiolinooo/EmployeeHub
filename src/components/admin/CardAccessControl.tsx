@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiUsers, FiUserCheck, FiUserX, FiShield, FiLock, FiUnlock } from 'react-icons/fi';
@@ -75,7 +75,7 @@ export default function CardAccessControl({
         setGroups([
           { id: 'admin', name: 'Administradores', description: 'Acesso total ao sistema', members: 0 },
           { id: 'manager', name: 'Gerentes', description: 'Acesso de gerenciamento', members: 0 },
-          { id: 'user', name: {t('components.usuarios')}, description: {t('components.acessoBasico')}, members: 0 },
+          { id: 'user', name: t('components.usuarios'), description: t('components.acessoBasico'), members: 0 },
           // Adicione outros grupos conforme necessário
         ]);
       } catch (error) {

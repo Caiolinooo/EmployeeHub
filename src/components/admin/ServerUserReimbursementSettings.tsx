@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiSave, FiPlus, FiTrash2, FiMail, FiAlertCircle, FiCheck, FiX } from 'react-icons/fi';
@@ -242,7 +242,7 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
       // Se onSave for fornecido, use-o
       if (onSave) {
         onSave(settings);
-        setSuccess({t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso')});
+        setSuccess(t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso'));
         toast.success(t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso'));
         if (onClose) onClose();
         return;
@@ -276,7 +276,7 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
 
         if (response.ok) {
           console.log(t('components.configuracoesSalvasComSucessoNaApiPrincipal'), responseData);
-          setSuccess({t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso')});
+          setSuccess(t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso'));
           toast.success(t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso'));
 
           if (onClose) onClose();
@@ -319,7 +319,7 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
                   const retryData = await retryResponse.json();
                   console.log(t('components.configuracoesSalvasComSucessoAposAdicionarColuna'), retryData);
 
-                  setSuccess({t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso')});
+                  setSuccess(t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso'));
                   toast.success(t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso'));
 
                   if (onClose) onClose();
@@ -361,7 +361,7 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
           const fallbackData = await fallbackResponse.json();
           console.log(t('components.configuracoesSalvasComSucessoNaApiDeFallback'), fallbackData);
 
-          setSuccess({t('components.configuracoesDeEmailDeReembolsoSalvasComSucessoMod')});
+          setSuccess(t('components.configuracoesDeEmailDeReembolsoSalvasComSucessoMod'));
           toast.success(t('components.configuracoesDeEmailDeReembolsoSalvasComSucessoMod'));
 
           if (onClose) onClose();
@@ -375,7 +375,7 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
       }
 
       // Se chegamos aqui, todas as tentativas falharam
-      throw new Error({t('components.todasAsTentativasDeSalvarConfiguracoesFalharam')});
+      throw new Error(t('components.todasAsTentativasDeSalvarConfiguracoesFalharam'));
     } catch (error) {
       console.error(t('components.erroAoSalvarConfiguracoes'), error);
       toast.error(t('components.erroAoSalvarConfiguracoes'));

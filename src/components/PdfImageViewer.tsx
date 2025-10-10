@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiLoader, FiAlertCircle, FiDownload, FiZoomIn, FiZoomOut } from 'react-icons/fi';
@@ -41,7 +41,7 @@ const PdfImageViewer: React.FC<PdfImageViewerProps> = ({ filePath }) => {
         const response = await fetch(pdfPath, { method: 'HEAD' });
         
         if (!response.ok) {
-          throw new Error({t('components.arquivoNaoEncontradoResponsestatus')});
+          throw new Error(t('components.arquivoNaoEncontradoResponsestatus'));
         }
         
         // Para este exemplo, vamos simular a conversão de PDF para imagens

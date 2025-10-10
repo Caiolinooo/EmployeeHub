@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import { FiAlertTriangle, FiX, FiCheck, FiUser } from 'react-icons/fi';
@@ -105,7 +105,7 @@ export default function DuplicatesModal({ duplicates, onClose, onProceed }: Dupl
                     <div key={`server-${index}`} className="border border-gray-200 rounded-md p-4">
                       <div className="flex items-center mb-2">
                         <span className="text-sm font-medium text-gray-700">
-                          {dup.field === 'email' ? {t('components.emailJaExiste')} : {t('components.telefoneJaExiste')}} 
+                          {dup.field === 'email' ? t('components.emailJaExiste') : t('components.telefoneJaExiste')} 
                           <span className="ml-2 text-gray-900">{typeof dup.value === 'object' ? JSON.stringify(dup.value) : String(dup.value || '')}</span>
                         </span>
                       </div>

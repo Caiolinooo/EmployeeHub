@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useForm, Controller, SubmitHandler, Resolver } from 'react-hook-form';
@@ -115,7 +115,7 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
         }
 
         setIsAuthenticated(!!token);
-        console.log(token ? {t('components.usuarioAutenticadoParaReembolso')} : {t('components.usuarioNaoAutenticadoParaReembolso')});
+        console.log(token ? t('components.usuarioAutenticadoParaReembolso') : t('components.usuarioNaoAutenticadoParaReembolso'));
 
         // Se autenticado, tentar carregar dados do perfil
         if (token && !profile) {
@@ -426,7 +426,7 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
       reset();
     } catch (error) {
       console.error('Error submitting form:', error);
-      toast.error(error instanceof Error ? error.message : {t('components.erroAoEnviarFormularioTenteNovamente')});
+      toast.error(error instanceof Error ? error.message : t('components.erroAoEnviarFormularioTenteNovamente'));
     } finally {
       setSubmitting(false);
     }
@@ -461,7 +461,7 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
           type: 'manual',
           message: t('locale.code') === 'en-US'
             ? `Invalid PIX key for type ${pixTipoValue === 'cpf' ? 'TAX ID' : pixTipoValue}`
-            : {t('components.chavePixInvalidaParaOTipoPixtipovalue')}
+            : t('components.chavePixInvalidaParaOTipoPixtipovalue')
         });
       } else {
         clearErrors('pixChave');
@@ -660,7 +660,7 @@ export default function ReimbursementForm({ profile }: ReimbursementFormProps) {
                     }}
                     options={[
                       { value: 'abz', label: 'ABZ' },
-                      { value: 'luz_maritima', label: {t('components.luzMaritima')} },
+                      { value: 'luz_maritima', label: t('components.luzMaritima') },
                       { value: 'fms', label: 'FMS' },
                       { value: 'msi', label: 'MSI' },
                       { value: 'omega', label: 'Omega' },

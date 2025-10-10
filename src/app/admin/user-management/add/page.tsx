@@ -15,7 +15,7 @@ export default function AddUserPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Redirecionar se nÃ£o for administrador
+  // Redirecionar se não for administrador
   useEffect(() => {
     if (!isLoading && !isAdmin) {
       router.push('/dashboard');
@@ -40,7 +40,7 @@ export default function AddUserPage() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error({t('admin.naoAutorizado')});
+        throw new Error(t('admin.naoAutorizado'));
       }
 
       const response = await fetch('/api/users', {
@@ -60,15 +60,15 @@ export default function AddUserPage() {
         throw new Error(errorData.error || t('admin.erroAoCriarUsuario'));
       }
 
-      setSuccess({t('admin.usuarioCriadoComSucesso')});
+      setSuccess(t('admin.usuarioCriadoComSucesso'));
       
-      // Redirecionar apÃ³s 2 segundos
+      // Redirecionar após 2 segundos
       setTimeout(() => {
         router.push('/admin/user-management');
       }, 2000);
     } catch (error) {
       console.error(t('admin.erroAoSalvarUsuario'), error);
-      setError({t('admin.erroAoSalvarUsuarioErrorInstanceofErrorErrormessag')}Erro desconhecido'}`);
+      setError(t('admin.erroAoSalvarUsuarioErrorInstanceofErrorErrormessag')}Erro desconhecido'}`);
     }
   };
 

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { 
@@ -175,8 +175,8 @@ const Certificates: React.FC<CertificatesProps> = ({ className = '' }) => {
   const getDifficultyLabel = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
       case 'beginner': return 'Iniciante';
-      case 'intermediate': return {t('components.intermediario')};
-      case 'advanced': return {t('components.avancado')};
+      case 'intermediate': return t('components.intermediario');
+      case 'advanced': return t('components.avancado');
       default: return difficulty;
     }
   };

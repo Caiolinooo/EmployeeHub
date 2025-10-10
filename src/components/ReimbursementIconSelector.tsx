@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useRef } from 'react';
 import {
@@ -14,11 +14,11 @@ import { useI18n } from '@/contexts/I18nContext';
 // Definição dos ícones disponíveis para reembolso
 const reimbursementIcons: Record<string, { icon: IconType, label: string, category: string }> = {
   // Alimentação
-  FiCoffee: { icon: FiCoffee, label: {t('components.cafe')}, category: 'alimentacao' },
+  FiCoffee: { icon: FiCoffee, label: t('components.cafe'), category: 'alimentacao' },
   FiShoppingBag: { icon: FiShoppingBag, label: 'Compras', category: 'alimentacao' },
   
   // Transporte
-  FiTruck: { icon: FiTruck, label: {t('components.caminhao')}, category: 'transporte' },
+  FiTruck: { icon: FiTruck, label: t('components.caminhao'), category: 'transporte' },
 
   // Hospedagem
   FiHome: { icon: FiHome, label: 'Casa', category: 'hospedagem' },
@@ -44,14 +44,13 @@ interface ReimbursementIconSelectorProps {
 }
 
 export default function ReimbursementIconSelector({
-  const { t } = useI18n();
-
   selectedIcon,
   onIconChange,
   onCustomIconUpload,
   allowCustomUpload = true,
   category
 }: ReimbursementIconSelectorProps) {
+  const { t } = useI18n();
   const [searchTerm, setSearchTerm] = useState('');
   const [showIconGrid, setShowIconGrid] = useState(false);
   const [customIcons, setCustomIcons] = useState<Record<string, string>>({});
@@ -135,7 +134,7 @@ export default function ReimbursementIconSelector({
           onClick={() => setShowIconGrid(!showIconGrid)}
           className="text-xs text-blue-600 hover:text-blue-800"
         >
-          {showIconGrid ? 'Fechar seletor' : {t('components.mostrarIcones')}}
+          {showIconGrid ? 'Fechar seletor' : t('components.mostrarIcones')}
         </button>
       </div>
       
@@ -151,7 +150,7 @@ export default function ReimbursementIconSelector({
               onClick={() => setShowIconGrid(!showIconGrid)}
               className="px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 flex-1"
             >
-              {selectedIcon ? reimbursementIcons[selectedIcon]?.label || t('components.iconePersonalizado') : {t('components.selecionarIcone')}}
+              {selectedIcon ? reimbursementIcons[selectedIcon]?.label || t('components.iconePersonalizado') : t('components.selecionarIcone')}
             </button>
             
             {allowCustomUpload && (
