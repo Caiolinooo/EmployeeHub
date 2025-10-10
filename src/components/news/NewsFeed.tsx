@@ -6,6 +6,10 @@ import { useACLPermissions } from '@/hooks/useACLPermissions';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/hooks/useToast';
 import InstagramStylePostCreator from './InstagramStylePostCreator';
+import PostTypeSelector from './PostTypeSelector';
+import MediaUploadWithFilters from './MediaUploadWithFilters';
+import EventCreator from './EventCreator';
+import HighlightCreator from './HighlightCreator';
 import NewsCommentSection from './NewsCommentSection';
 import NewsPostEditor from './NewsPostEditor';
 import NewsPostEditorFullScreen from './NewsPostEditorFullScreen';
@@ -68,6 +72,11 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
   const [editingPost, setEditingPost] = useState<NewsPost | null>(null);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showTypeSelector, setShowTypeSelector] = useState(false);
+  const [showMediaUpload, setShowMediaUpload] = useState(false);
+  const [showEventCreator, setShowEventCreator] = useState(false);
+  const [showHighlightCreator, setShowHighlightCreator] = useState(false);
+  const [selectedMediaType, setSelectedMediaType] = useState<'photo' | 'video'>('photo');
   const [openMenuPostId, setOpenMenuPostId] = useState<string | null>(null);
   const { toast } = useToast();
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
@@ -78,6 +87,25 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
   const [editingTitle, setEditingTitle] = useState('');
   const [editingExcerpt, setEditingExcerpt] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
+
+  const handlePostTypeSelect = (type: 'photo' | 'video' | 'event' | 'highlight' | 'text') => {
+    switch (type) {
+      case 'photo':
+      case 'video':
+        setSelectedMediaType(type);
+        setShowMediaUpload(true);
+        break;
+      case 'event':
+        setShowEventCreator(true);
+        break;
+      case 'highlight':
+        setShowHighlightCreator(true);
+        break;
+      case 'text':
+        setShowCreateModal(true);
+        break;
+    }
+  };
 
   const beginInlineEdit = (post: NewsPost) => {
     setEditingPostId(post.id);
@@ -555,7 +583,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
               <FiUser className="w-5 h-5 text-white" />
             </div>
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => setShowTypeSelector(true)}
               className="flex-1 text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-500 transition-colors"
             >
               {t('newsSystem.whatAreYouThinking')}
@@ -563,21 +591,21 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
           </div>
           <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => handlePostTypeSelect('photo')}
               className="flex items-center space-x-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
             >
               <FiImage className="w-4 h-4" />
               <span>Foto/Vídeo</span>
             </button>
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => handlePostTypeSelect('event')}
               className="flex items-center space-x-2 px-4 py-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
             >
               <FiCalendar className="w-4 h-4" />
               <span>Evento</span>
             </button>
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => handlePostTypeSelect('highlight')}
               className="flex items-center space-x-2 px-4 py-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
             >
               <FiStar className="w-4 h-4" />
@@ -629,7 +657,48 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
         </div>
       )}
 
-      {/* Instagram Style Post Creator Modal */}
+      {/* Post Type Selector Modal */}
+      <PostTypeSelector
+        isOpen={showTypeSelector}
+        onClose={() => setShowTypeSelector(false)}
+        onSelectType={handlePostTypeSelect}
+      />
+
+      {/* Media Upload with Filters Modal */}
+      <MediaUploadWithFilters
+        isOpen={showMediaUpload}
+        onClose={() => setShowMediaUpload(false)}
+        userId={userId || ''}
+        onPostCreated={(newPost) => {
+          setPosts(prev => [newPost, ...prev]);
+          setShowMediaUpload(false);
+        }}
+        mediaType={selectedMediaType}
+      />
+
+      {/* Event Creator Modal */}
+      <EventCreator
+        isOpen={showEventCreator}
+        onClose={() => setShowEventCreator(false)}
+        userId={userId || ''}
+        onEventCreated={(newPost) => {
+          setPosts(prev => [newPost, ...prev]);
+          setShowEventCreator(false);
+        }}
+      />
+
+      {/* Highlight Creator Modal */}
+      <HighlightCreator
+        isOpen={showHighlightCreator}
+        onClose={() => setShowHighlightCreator(false)}
+        userId={userId || ''}
+        onHighlightCreated={(newPost) => {
+          setPosts(prev => [newPost, ...prev]);
+          setShowHighlightCreator(false);
+        }}
+      />
+
+      {/* Instagram Style Post Creator Modal (for text posts) */}
       <InstagramStylePostCreator
         userId={userId || ''}
         isOpen={showCreateModal}
