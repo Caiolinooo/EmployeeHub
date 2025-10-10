@@ -82,21 +82,7 @@ export interface DashboardCard {
 export function getHardcodedCards(): DashboardCard[] {
   // Retorna cards com títulos em português (fallback)
   return [
-    {
-      id: 'manual',
-      title: 'Manual do Colaborador',
-      description: 'Acesse o manual completo do colaborador',
-      href: '/manual',
-      icon: FiBookOpen,
-      iconName: 'FiBookOpen',
-      color: 'bg-abz-blue',
-      hoverColor: 'hover:bg-abz-blue-dark',
-      external: false,
-      enabled: true,
-      order: 1,
-      adminOnly: false,
-      managerOnly: false,
-    },
+    // Card "Manual" removido - usar apenas "Manual do Colaborador"
     {
       id: 'avaliacao',
       title: 'Avaliação de Desempenho',
@@ -168,19 +154,7 @@ export function getHardcodedCards(): DashboardCard[] {
 // Função para obter os cards do dashboard com traduções
 export function getTranslatedCards(t: (key: string) => string): DashboardCard[] {
   return [
-    {
-      id: 'manual',
-      title: t('cards.manualColaborador'),
-      description: t('cards.manualColaboradorDesc'),
-      href: '/manual',
-      icon: FiBookOpen,
-      iconName: 'FiBookOpen',
-      color: 'bg-abz-blue',
-      hoverColor: 'hover:bg-abz-blue-dark',
-      external: false,
-      enabled: true,
-      order: 1
-    },
+    // Card "Manual" removido - usar apenas "Manual do Colaborador" que vem do banco
     {
       id: 'procedimentos-logistica',
       title: t('cards.procedimentosLogistica'),
