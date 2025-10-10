@@ -173,7 +173,7 @@ export default function ProfilePage() {
 
       if (response.ok) {
         const data = await response.json();
-        toast.success('Foto de perfil atualizada com sucesso');
+        toast.success(t('profile.photoUpdatedSuccess'));
 
         // Atualizar a URL da imagem
         await loadProfileImage();
@@ -182,11 +182,11 @@ export default function ProfilePage() {
         await refreshProfile();
       } else {
         const error = await response.json();
-        toast.error(error.error || 'Erro ao atualizar foto de perfil');
+        toast.error(error.error || t('profile.errorUpdatingPhoto'));
       }
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
-      toast.error('Erro ao fazer upload da imagem');
+      toast.error(t('profile.errorUpdatingPhoto'));
     } finally {
       setUploading(false);
     }
@@ -363,7 +363,7 @@ export default function ProfilePage() {
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold text-abz-blue mb-6 flex items-center">
-          <FiUser className="mr-2" /> Meu Perfil
+          <FiUser className="mr-2" /> {t('profile.myProfile')}
         </h1>
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -375,7 +375,7 @@ export default function ProfilePage() {
                   {profileImage ? (
                     <Image
                       src={profileImage}
-                      alt="Foto de perfil"
+                      alt={t('profile.profilePhoto')}
                       width={128}
                       height={128}
                       className="object-cover w-full h-full"
@@ -391,7 +391,7 @@ export default function ProfilePage() {
                     onClick={handleUploadClick}
                     className="p-2 bg-abz-blue text-white rounded-full hover:bg-abz-blue-dark h-auto"
                     disabled={uploading}
-                    title="Fazer upload de foto"
+                    title={t('profile.uploadPhoto')}
                     size="icon"
                   >
                     {uploading ? (
@@ -496,10 +496,10 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Informações pessoais */}
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Informações Pessoais</h2>
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('profile.personalInfo')}</h2>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm text-gray-500 mb-1">Nome</label>
+                      <label className="block text-sm text-gray-500 mb-1">{t('profile.firstName')}</label>
                       <input
                         type="text"
                         name="firstName"
@@ -509,7 +509,7 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-gray-500 mb-1">Sobrenome</label>
+                      <label className="block text-sm text-gray-500 mb-1">{t('profile.lastName')}</label>
                       <input
                         type="text"
                         name="lastName"
