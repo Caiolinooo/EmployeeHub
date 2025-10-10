@@ -141,11 +141,15 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
 
       console.log(`Rejeitando reembolso ${reimbursement.protocolo} com motivo: ${rejectReason}`);
 
+      // Obter token de autenticação
+      const token = localStorage.getItem('token');
+
       // Fazer a rejeição diretamente via API (não chamar onReject do pai para evitar duplicação)
       const response = await fetch(`/api/reembolso/${reimbursement.protocolo}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
         },
         body: JSON.stringify({
           status: 'rejeitado',

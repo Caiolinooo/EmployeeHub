@@ -104,21 +104,31 @@ export async function GET(request: NextRequest) {
     const hasUserIdColumn = columns && columns.length > 0;
     console.log(`Coluna user_id ${hasUserIdColumn ? 'existe' : 'não existe'} na tabela Reimbursement`);
 
-    // Se a coluna user_id não existir, tentar adicioná-la
+    // Se a coluna user_id não existir, tentar adicioná-la diretamente
     if (!hasUserIdColumn) {
       console.log('Tentando adicionar coluna user_id...');
       try {
-        const addColumnResponse = await fetch('/api/reembolso/add-user-id-column', {
-          method: 'GET',
+        // Adicionar coluna diretamente via SQL ao invés de fetch
+        const { error: addColumnError } = await supabaseAdmin.rpc('exec_sql', {
+          sql: 'ALTER TABLE "Reimbursement" ADD COLUMN IF NOT EXISTS "user_id" UUID REFERENCES "users_unified"("id") ON DELETE SET NULL;'
         });
 
-        if (addColumnResponse.ok) {
-          console.log('Coluna user_id adicionada com sucesso');
+        if (addColumnError) {
+          console.error('Erro ao adicionar coluna user_id:', addColumnError);
+          // Tentar método alternativo
+          const { error: altError } = await supabaseAdmin
+            .from('Reimbursement')
+            .select('user_id')
+            .limit(1);
+
+          if (altError && altError.message.includes('does not exist')) {
+            console.log('Coluna user_id realmente não existe, mas não foi possível adicionar automaticamente');
+          }
         } else {
-          console.error('Erro ao adicionar coluna user_id');
+          console.log('Coluna user_id adicionada com sucesso');
         }
       } catch (error) {
-        console.error('Erro ao chamar API para adicionar coluna user_id:', error);
+        console.error('Erro ao adicionar coluna user_id:', error);
       }
     }
 
@@ -164,14 +174,16 @@ export async function GET(request: NextRequest) {
       queryUserId = userId;
     }
 
-    // 4. Obter parâmetros de paginação e filtro
+    // 4. Obter parâmetros de paginação, filtro e pesquisa
     let status = null;
+    let searchTerm = null;
     let page = 1;
     let limit = 10;
-    
+
     try {
       const { searchParams: paginationParams } = new URL(request.url);
       status = paginationParams.get('status');
+      searchTerm = paginationParams.get('search');
       page = parseInt(paginationParams.get('page') || '1', 10);
       limit = parseInt(paginationParams.get('limit') || '10', 10);
     } catch (error) {
@@ -187,6 +199,7 @@ export async function GET(request: NextRequest) {
       queryUserId,
       queryUserEmail,
       status: status || 'all',
+      searchTerm: searchTerm || 'none',
       page,
       limit,
       from,
@@ -215,6 +228,20 @@ export async function GET(request: NextRequest) {
     // Aplicar filtro de status se fornecido
     if (status && status !== 'all') {
       query = query.eq('status', status);
+    }
+
+    // Aplicar filtro de pesquisa se fornecido
+    if (searchTerm && searchTerm.trim()) {
+      const term = searchTerm.trim();
+      // Pesquisar em múltiplos campos: protocolo, tipo_reembolso, descricao, valor_total
+      // Usar OR para buscar em qualquer um desses campos
+      query = query.or(
+        `protocolo.ilike.%${term}%,` +
+        `tipo_reembolso.ilike.%${term}%,` +
+        `descricao.ilike.%${term}%,` +
+        `nome.ilike.%${term}%,` +
+        `valor_total.eq.${parseFloat(term) || 0}`
+      );
     }
 
     // Aplicar paginação e ordenação
