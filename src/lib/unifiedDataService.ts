@@ -455,7 +455,7 @@ class UnifiedDataService {
 
       // Buscar menu items do banco
       const { data: menuItems, error } = await supabase
-        .from('MenuItem')
+        .from('menu_items')
         .select('*')
         .eq('enabled', true)
         .order('order', { ascending: true });

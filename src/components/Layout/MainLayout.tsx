@@ -222,8 +222,16 @@ export default function MainLayout({ children }: MainLayoutProps) {
           <div className="p-4 border-t">
             {!isCollapsed && (
               <div className="flex items-center mb-4">
-                <div className="w-10 h-10 rounded-full bg-abz-light-blue flex items-center justify-center mr-3">
-                  <FiUser className="h-5 w-5 text-abz-blue" />
+                <div className="w-10 h-10 rounded-full bg-abz-light-blue flex items-center justify-center mr-3 overflow-hidden">
+                  {(profile as any)?.drive_photo_url || (profile as any)?.avatar ? (
+                    <img
+                      src={(profile as any)?.drive_photo_url || (profile as any)?.avatar}
+                      alt={profile?.first_name || 'Usuário'}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <FiUser className="h-5 w-5 text-abz-blue" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-700 truncate">
