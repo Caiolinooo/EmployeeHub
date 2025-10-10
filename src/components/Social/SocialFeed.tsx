@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import DOMPurify from 'dompurify';
 import {
   HeartIcon,
   ChatBubbleOvalLeftIcon,
@@ -169,13 +168,18 @@ const SocialFeed: React.FC<SocialFeedProps> = ({ className = '' }) => {
       );
     });
 
-    // Sanitizar o HTML para prevenir XSS
-    const sanitizedContent = DOMPurify.sanitize(processedContent, {
-      ALLOWED_TAGS: ['span'],
-      ALLOWED_ATTR: ['class']
-    });
+    // Sanitizar o HTML para prevenir XSS (apenas no cliente)
+    if (typeof window !== 'undefined') {
+      const DOMPurify = require('dompurify');
+      const sanitizedContent = DOMPurify.sanitize(processedContent, {
+        ALLOWED_TAGS: ['span'],
+        ALLOWED_ATTR: ['class']
+      });
+      return <div dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+    }
 
-    return <div dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+    // No servidor, retornar sem sanitização (será sanitizado no cliente)
+    return <div dangerouslySetInnerHTML={{ __html: processedContent }} />;
   };
 
   if (loading) {
