@@ -44,15 +44,11 @@ const BasicPdfViewer: React.FC<BasicPdfViewerProps> = ({
         // Obter o caminho do documento traduzido
         const localizedPath = await getAvailableLocalizedDocumentPath(filePath, locale);
         setLocalizedFilePath(localizedPath);
-
-        // Abrir o PDF em uma nova aba
-        const pdfUrl = getNormalizedPath(localizedPath);
-        window.open(pdfUrl, '_blank');
+        console.log('📄 Documento localizado:', localizedPath);
       } catch (error) {
         console.error('Erro ao obter caminho do documento traduzido:', error);
         // Em caso de erro, usar o caminho original
-        const pdfUrl = getNormalizedPath(filePath);
-        window.open(pdfUrl, '_blank');
+        setLocalizedFilePath(filePath);
       } finally {
         setIsLoading(false);
       }
@@ -67,66 +63,76 @@ const BasicPdfViewer: React.FC<BasicPdfViewerProps> = ({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-70"
+      onClick={onClose}
     >
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+        className="bg-white rounded-lg shadow-xl max-w-6xl w-full h-[90vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">{title}</h2>
-
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center mb-6">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-2"></div>
-              <p className="text-gray-600">
-                {t('viewer.checkingTranslations', 'Verificando traduções disponíveis...')}
-              </p>
-            </div>
-          ) : (
-            <>
-              <p className="text-gray-600 mb-2">
-                {t('viewer.openedInNewTab', 'O documento foi aberto em uma nova aba.')}
-              </p>
-
-              {localizedFilePath !== filePath ? (
-                <p className="text-green-600 text-sm mb-6">
-                  {t('viewer.translatedDocument', 'Documento traduzido disponível para o seu idioma.')}
-                </p>
-              ) : locale !== 'pt-BR' ? (
-                <p className="text-amber-600 text-sm mb-6">
-                  {t('viewer.noTranslation', 'Este documento está disponível apenas em português.')}
-                </p>
-              ) : (
-                <p className="text-gray-500 text-sm mb-6">
-                  {t('viewer.originalDocument', 'Documento original em português.')}
-                </p>
-              )}
-            </>
-          )}
-
-          <div className="flex flex-col space-y-3">
-            {allowDownload && (
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b">
+          <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+          <div className="flex items-center space-x-2">
+            {allowDownload && !isLoading && (
               <a
                 href={getNormalizedPath(localizedFilePath)}
                 download
-                className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
+                title={t('viewer.download', 'Baixar documento')}
               >
-                <FiDownload className="w-5 h-5 mr-2" />
-                {t('viewer.download', 'Baixar documento')}
+                <FiDownload className="w-4 h-4 mr-1.5" />
+                {t('viewer.download', 'Baixar')}
               </a>
             )}
-
             <button
               onClick={onClose}
-              className="inline-flex items-center justify-center px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
+              className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 transition-colors"
+              title={t('viewer.close', 'Fechar')}
             >
-              <FiX className="w-5 h-5 mr-2" />
-              {t('viewer.close', 'Fechar')}
+              <FiX className="w-5 h-5" />
             </button>
           </div>
         </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-hidden">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+              <p className="text-gray-600">
+                {t('viewer.loading', 'Carregando documento...')}
+              </p>
+            </div>
+          ) : (
+            <iframe
+              src={getNormalizedPath(localizedFilePath)}
+              className="w-full h-full border-0"
+              title={title}
+            />
+          )}
+        </div>
+
+        {/* Footer com informações de tradução */}
+        {!isLoading && (
+          <div className="p-3 border-t bg-gray-50 text-center text-sm">
+            {localizedFilePath !== filePath ? (
+              <p className="text-green-600">
+                ✓ {t('viewer.translatedDocument', 'Documento traduzido disponível para o seu idioma')}
+              </p>
+            ) : locale !== 'pt-BR' ? (
+              <p className="text-amber-600">
+                ⚠ {t('viewer.noTranslation', 'Este documento está disponível apenas em português')}
+              </p>
+            ) : (
+              <p className="text-gray-500">
+                {t('viewer.originalDocument', 'Documento original em português')}
+              </p>
+            )}
+          </div>
+        )}
       </motion.div>
     </motion.div>
   );
