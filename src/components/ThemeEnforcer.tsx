@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useSiteConfig } from '@/contexts/SiteConfigContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 /**
  * Componente que garante a aplicação consistente das cores e logos em todo o site
@@ -9,6 +10,8 @@ import { useSiteConfig } from '@/contexts/SiteConfigContext';
  * qualquer estilo que possa ter sido definido por outros componentes
  */
 export default function ThemeEnforcer() {
+  const { t } = useI18n();
+
   const { config } = useSiteConfig();
 
   useEffect(() => {
@@ -16,7 +19,7 @@ export default function ThemeEnforcer() {
 
     // Função para aplicar as configurações
     const applyConfig = () => {
-      console.log('ThemeEnforcer: Aplicando configurações de tema com prioridade máxima');
+      console.log({t('components.themeenforcerAplicandoConfiguracoesDeTemaComPriori')});
       
       // Atualizar título da página
       if (document.title !== config.title) {

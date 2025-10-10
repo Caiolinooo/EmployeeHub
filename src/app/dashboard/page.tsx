@@ -84,7 +84,7 @@ export default function Dashboard() {
               setLoadingCards(false);
               return;
             } catch (e) {
-              console.warn('⚠️ Cache local inválido, removendo...');
+              console.warn({t('dashboard.cacheLocalInvalidoRemovendo')});
               localStorage.removeItem('dashboard-cards-cache');
             }
           }
@@ -192,7 +192,7 @@ export default function Dashboard() {
             localStorage.setItem('dashboard-cards-cache', JSON.stringify(dbCards));
             console.log('💾 Cards salvos no cache local');
           } catch (e) {
-            console.warn('⚠️ Não foi possível salvar no cache local:', e);
+            console.warn({t('dashboard.naoFoiPossivelSalvarNoCacheLocal')}, e);
           }
 
           setCards(dbCards);
@@ -218,21 +218,21 @@ export default function Dashboard() {
         if (cachedCards) {
           try {
             const parsedCards = JSON.parse(cachedCards);
-            console.log('📦 Usando cards do cache local após erro');
+            console.log({t('dashboard.usandoCardsDoCacheLocalAposErro')});
             setCards(parsedCards);
             setError('Usando dados em cache. Alguns cards podem estar desatualizados.');
             setLoadingCards(false);
             return;
           } catch (e) {
-            console.warn('⚠️ Cache local inválido');
+            console.warn({t('dashboard.cacheLocalInvalido')});
             localStorage.removeItem('dashboard-cards-cache');
           }
         }
 
         // Fallback final para cards estáticos
-        console.log('⚠️ Erro crítico, usando cards hardcoded');
+        console.log({t('dashboard.erroCriticoUsandoCardsHardcoded')});
         setCards(getTranslatedCards((key: string) => t(key)));
-        setError('Não foi possível carregar os cards personalizados. Usando configuração padrão.');
+        setError({t('dashboard.naoFoiPossivelCarregarOsCardsPersonalizadosUsandoC')});
       } finally {
         setLoadingCards(false);
       }
@@ -264,7 +264,7 @@ export default function Dashboard() {
 
       if (!hasDbCards) {
         // Se são cards estáticos, atualizar as traduções
-        console.log('Atualizando traduções dos cards estáticos para idioma:', locale);
+        console.log({t('dashboard.atualizandoTraducoesDosCardsEstaticosParaIdioma')}, locale);
         setCards(getTranslatedCards((key: string) => t(key)));
       }
     }
@@ -299,7 +299,7 @@ export default function Dashboard() {
                       (user as any).first_name?.split(' ')[0] ||
                       (user as any).firstName?.split(' ')[0] ||
                       user.email?.split('@')[0]?.split('.')[0] ||
-                      'Usuário'
+                      {t('dashboard.usuario')}
                     }! 👋
                   </h1>
                 </div>

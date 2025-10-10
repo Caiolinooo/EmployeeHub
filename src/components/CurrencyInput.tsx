@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
+import { useI18n } from '@/contexts/I18nContext';
   Currency,
   getExchangeRates,
   convertCurrency,
@@ -21,6 +22,8 @@ interface CurrencyInputProps {
 }
 
 export default function CurrencyInput({
+  const { t } = useI18n();
+
   id,
   label,
   value,
@@ -247,7 +250,7 @@ export default function CurrencyInput({
 
     // Forçar re-render usando um timeout
     setTimeout(() => {
-      console.log('Estado após mudança:', currency);
+      console.log({t('components.estadoAposMudanca')}, currency);
       if (onCurrencyChange) {
         try {
           onCurrencyChange(currency);

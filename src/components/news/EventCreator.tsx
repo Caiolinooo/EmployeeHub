@@ -5,6 +5,7 @@ import { FiX, FiCalendar, FiClock, FiMapPin, FiUsers, FiMail } from 'react-icons
 import { motion } from 'framer-motion';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import toast from 'react-hot-toast';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface EventCreatorProps {
   isOpen: boolean;
@@ -47,7 +48,7 @@ const EventCreator: React.FC<EventCreatorProps> = ({
     e.preventDefault();
     
     if (!formData.title || !formData.startDate || !formData.startTime) {
-      toast.error('Preencha os campos obrigatórios');
+      toast.error({t('components.preenchaOsCamposObrigatorios')});
       return;
     }
 
@@ -89,7 +90,7 @@ const EventCreator: React.FC<EventCreatorProps> = ({
       });
 
       if (!calendarResponse.ok) {
-        throw new Error('Erro ao criar evento no calendário');
+        throw new Error({t('components.erroAoCriarEventoNoCalendario')});
       }
 
       const calendarEvent = await calendarResponse.json();
@@ -221,7 +222,7 @@ const EventCreator: React.FC<EventCreatorProps> = ({
               value={formData.title}
               onChange={handleChange}
               required
-              placeholder="Ex: Reunião de equipe"
+              placeholder={t('components.exReuniaoDeEquipe')}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>
@@ -310,7 +311,7 @@ const EventCreator: React.FC<EventCreatorProps> = ({
               name="location"
               value={formData.location}
               onChange={handleChange}
-              placeholder="Ex: Sala de reuniões 1"
+              placeholder={t('components.exSalaDeReunioes1')}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>

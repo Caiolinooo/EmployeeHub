@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { FiUsers, FiEdit3, FiShield, FiSave, FiRefreshCw, FiCheck, FiX, FiBookOpen, FiMessageSquare } from 'react-icons/fi';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { PERMISSION_DESCRIPTIONS } from '@/lib/permissions';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface User {
   id: string;
@@ -36,6 +37,8 @@ interface UserStats {
 }
 
 export default function EditorPermissionsManager() {
+  const { t } = useI18n();
+
   const { user, getToken } = useSupabaseAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<UserStats | null>(null);
@@ -54,7 +57,7 @@ export default function EditorPermissionsManager() {
     try {
       const token = await getToken();
       if (!token) {
-        throw new Error('Token não encontrado');
+        throw new Error({t('components.tokenNaoEncontrado')});
       }
 
       const response = await fetch('/api/users/permissions/list', {
@@ -65,14 +68,14 @@ export default function EditorPermissionsManager() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao carregar usuários');
+        throw new Error(errorData.error || {t('components.erroAoCarregarUsuarios')});
       }
 
       const data = await response.json();
       setUsers(data.users);
       setStats(data.stats);
     } catch (error) {
-      console.error('Erro ao carregar usuários:', error);
+      console.error({t('components.erroAoCarregarUsuarios')}, error);
       setError(error.message);
     } finally {
       setIsLoading(false);
@@ -88,7 +91,7 @@ export default function EditorPermissionsManager() {
     try {
       const token = await getToken();
       if (!token) {
-        throw new Error('Token não encontrado');
+        throw new Error({t('components.tokenNaoEncontrado')});
       }
 
       const response = await fetch('/api/users/permissions/update', {
@@ -105,16 +108,16 @@ export default function EditorPermissionsManager() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao atualizar permissões');
+        throw new Error(errorData.error || {t('components.erroAoAtualizarPermissoes')});
       }
 
       const data = await response.json();
-      setSuccess(`Permissões atualizadas para ${data.user.name}`);
+      setSuccess({t('components.permissoesAtualizadasParaDatausername')});
       
       // Recarregar lista de usuários
       await fetchUsers();
     } catch (error) {
-      console.error('Erro ao atualizar permissões:', error);
+      console.error({t('components.erroAoAtualizarPermissoes')}, error);
       setError(error.message);
     } finally {
       setIsSaving(false);

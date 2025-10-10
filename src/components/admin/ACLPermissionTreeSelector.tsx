@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { FiChevronDown, FiChevronRight, FiCheck, FiMinus, FiPlus, FiInfo } from 'react-icons/fi';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ACLPermission {
   id: string;
@@ -56,7 +57,7 @@ const ACLPermissionTreeSelector: React.FC<ACLPermissionTreeSelectorProps> = ({
       // Expandir todos os recursos por padrão
       setExpandedResources(new Set(Object.keys(tree)));
     } catch (error) {
-      console.error('Erro ao carregar árvore de permissões:', error);
+      console.error({t('components.erroAoCarregarArvoreDePermissoes')}, error);
     } finally {
       setLoading(false);
     }

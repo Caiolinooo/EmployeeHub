@@ -44,14 +44,14 @@ export default function ProfilePage() {
   useEffect(() => {
     // Aguardar o carregamento completo da autenticação
     if (isLoading) {
-      console.log('🔄 Aguardando carregamento da autenticação...');
+      console.log({t('profile.aguardandoCarregamentoDaAutenticacao')});
       return;
     }
 
     // Verificar se o usuário está autenticado
     if (!user) {
-      console.log('❌ Usuário não autenticado, redirecionando para login');
-      toast.error('Você precisa estar logado para acessar esta página.');
+      console.log({t('profile.usuarioNaoAutenticadoRedirecionandoParaLogin')});
+      toast.error({t('profile.vocePrecisaEstarLogadoParaAcessarEstaPagina')});
       router.replace('/login');
       return;
     }
@@ -67,7 +67,7 @@ export default function ProfilePage() {
       return;
     }
 
-    console.log('✅ Usuário e perfil carregados, inicializando página de perfil');
+    console.log({t('profile.usuarioEPerfilCarregadosInicializandoPaginaDePerfi')});
     console.log('👤 Dados do perfil:', {
       id: profile.id,
       email: profile.email,
@@ -109,7 +109,7 @@ export default function ProfilePage() {
         .single();
 
       if (error) {
-        console.error('Erro ao buscar dados do usuário:', error);
+        console.error({t('profile.erroAoBuscarDadosDoUsuario')}, error);
         setProfileImage(null);
         return;
       }
@@ -129,7 +129,7 @@ export default function ProfilePage() {
           setProfileImage(photoUrl);
         };
         checkImage.onerror = () => {
-          console.warn('Imagem de perfil não encontrada ou inacessível na URL:', photoUrl);
+          console.warn({t('profile.imagemDePerfilNaoEncontradaOuInacessivelNaUrl')}, photoUrl);
           setProfileImage(null); // Fallback to icon
         };
         checkImage.src = photoUrl;
@@ -154,7 +154,7 @@ export default function ProfilePage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        toast.error('Não autorizado');
+        toast.error({t('profile.naoAutorizado')});
         return;
       }
 
@@ -242,12 +242,12 @@ export default function ProfilePage() {
 
     // Verificar o tipo e tamanho do arquivo
     if (!file.type.startsWith('image/')) {
-      toast.error('Por favor, selecione uma imagem válida');
+      toast.error({t('profile.porFavorSelecioneUmaImagemValida')});
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) { // 5MB
-      toast.error('A imagem deve ter no máximo 5MB');
+      toast.error({t('profile.aImagemDeveTerNoMaximo5mb')});
       return;
     }
 
@@ -262,14 +262,14 @@ export default function ProfilePage() {
   // Função para atualizar os dados do perfil
   const updateProfile = async () => {
     if (!profile?.id) {
-      toast.error('Perfil não encontrado. Faça login novamente.');
+      toast.error({t('profile.perfilNaoEncontradoFacaLoginNovamente')});
       return;
     }
 
     try {
       // Validar dados do formulário
       if (!formData.firstName || !formData.lastName) {
-        toast.error('Nome e sobrenome são obrigatórios');
+        toast.error({t('profile.nomeESobrenomeSaoObrigatorios')});
         return;
       }
 
@@ -460,7 +460,7 @@ export default function ProfilePage() {
                 <div className="flex flex-wrap justify-center md:justify-start gap-3">
                   <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
                     {profile.role === 'ADMIN' ? 'Administrador' :
-                     profile.role === 'MANAGER' ? 'Gerente' : 'Usuário'}
+                     profile.role === 'MANAGER' ? 'Gerente' : {t('profile.usuario')}}
                   </span>
 
                   {profile.active && (
@@ -571,7 +571,7 @@ export default function ProfilePage() {
                       <input
                         type="text"
                         value={profile.role === 'ADMIN' ? 'Administrador' :
-                               profile.role === 'MANAGER' ? 'Gerente' : 'Usuário'}
+                               profile.role === 'MANAGER' ? 'Gerente' : {t('profile.usuario')}}
                         className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
                         disabled
                       />
@@ -600,7 +600,7 @@ export default function ProfilePage() {
                       <p className="text-sm text-gray-500">Telefone</p>
                       <p className="font-medium flex items-center">
                         <FiPhone className="mr-2 text-gray-400" />
-                        {profile.phone_number || 'Não informado'}
+                        {profile.phone_number || {t('profile.naoInformado')}}
                       </p>
                     </div>
                   </div>

@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import * as FiIcons from 'react-icons/fi';
 import { IconType } from 'react-icons';
+import { useI18n } from '@/contexts/I18nContext';
 
 /**
  * Componente que transforma tags de ícones do Material Design em componentes React
@@ -71,7 +72,7 @@ const IconTransformer: React.FC = () => {
     const replaceIconTags = () => {
       // Em vez de manipular o DOM diretamente, vamos apenas registrar os ícones que precisam ser substituídos
       // e deixar que o React cuide da renderização
-      console.log('Registrando ícones para substituição:', materialIconNames);
+      console.log({t('components.registrandoIconesParaSubstituicao')}, materialIconNames);
       
       // Essa abordagem é mais segura e evita conflitos com o React
       // Não vamos mais tentar substituir tags HTML diretamente
@@ -117,7 +118,7 @@ const IconTransformer: React.FC = () => {
           }
         }, 500);
       } catch (error) {
-        console.error('Erro ao substituir ícones:', error);
+        console.error({t('components.erroAoSubstituirIcones')}, error);
       }
     };
 

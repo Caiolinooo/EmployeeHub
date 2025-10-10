@@ -5,8 +5,11 @@ import { FiPlus, FiEdit2, FiTrash2, FiCalendar, FiClock, FiUsers, FiCheck, FiX }
 import { supabase } from '@/lib/supabase';
 import { NotificacoesAvaliacaoService } from '@/lib/services/notificacoes-avaliacao';
 import type { PeriodoAvaliacao } from '@/lib/services/workflow-avaliacao';
+import { useI18n } from '@/contexts/I18nContext';
 
 export default function PainelPeriodosAvaliacao() {
+  const { t } = useI18n();
+
   const [periodos, setPeriodos] = useState<PeriodoAvaliacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -33,13 +36,13 @@ export default function PainelPeriodosAvaliacao() {
         .order('data_inicio', { ascending: false });
 
       if (error) {
-        console.error('Erro ao carregar períodos:', error);
+        console.error({t('components.erroAoCarregarPeriodos')}, error);
         return;
       }
 
       setPeriodos(data || []);
     } catch (error) {
-      console.error('Erro ao carregar períodos:', error);
+      console.error({t('components.erroAoCarregarPeriodos')}, error);
     } finally {
       setLoading(false);
     }
@@ -58,7 +61,7 @@ export default function PainelPeriodosAvaliacao() {
           .eq('id', editingPeriodo.id);
 
         if (error) {
-          console.error('Erro ao atualizar período:', error);
+          console.error({t('components.erroAoAtualizarPeriodo')}, error);
           alert('Erro ao atualizar período');
           return;
         }
@@ -71,7 +74,7 @@ export default function PainelPeriodosAvaliacao() {
           .single();
 
         if (error) {
-          console.error('Erro ao criar período:', error);
+          console.error({t('components.erroAoCriarPeriodo')}, error);
           alert('Erro ao criar período');
           return;
         }
@@ -89,7 +92,7 @@ export default function PainelPeriodosAvaliacao() {
       await carregarPeriodos();
       fecharModal();
     } catch (error) {
-      console.error('Erro ao salvar período:', error);
+      console.error({t('components.erroAoSalvarPeriodo')}, error);
       alert('Erro ao salvar período');
     } finally {
       setLoading(false);
@@ -111,7 +114,7 @@ export default function PainelPeriodosAvaliacao() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir este período? Esta ação não pode ser desfeita.')) {
+    if (!confirm({t('components.temCertezaQueDesejaExcluirEstePeriodoEstaAcaoNaoPo')})) {
       return;
     }
 
@@ -122,14 +125,14 @@ export default function PainelPeriodosAvaliacao() {
         .eq('id', id);
 
       if (error) {
-        console.error('Erro ao excluir período:', error);
+        console.error({t('components.erroAoExcluirPeriodo')}, error);
         alert('Erro ao excluir período');
         return;
       }
 
       await carregarPeriodos();
     } catch (error) {
-      console.error('Erro ao excluir período:', error);
+      console.error({t('components.erroAoExcluirPeriodo')}, error);
       alert('Erro ao excluir período');
     }
   };
@@ -277,21 +280,21 @@ export default function PainelPeriodosAvaliacao() {
                       ? 'text-green-600 hover:bg-green-50' 
                       : 'text-gray-400 hover:bg-gray-50'
                   }`}
-                  title={periodo.ativo ? 'Desativar período' : 'Ativar período'}
+                  title={periodo.ativo ? {t('components.desativarPeriodo')} : {t('components.ativarPeriodo')}}
                 >
                   {periodo.ativo ? <FiCheck size={16} /> : <FiX size={16} />}
                 </button>
                 <button
                   onClick={() => handleEdit(periodo)}
                   className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                  title="Editar período"
+                  title={t('components.editarPeriodo')}
                 >
                   <FiEdit2 size={16} />
                 </button>
                 <button
                   onClick={() => handleDelete(periodo.id)}
                   className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  title="Excluir período"
+                  title={t('components.excluirPeriodo')}
                 >
                   <FiTrash2 size={16} />
                 </button>
@@ -322,7 +325,7 @@ export default function PainelPeriodosAvaliacao() {
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900">
-                {editingPeriodo ? 'Editar Período' : 'Novo Período'}
+                {editingPeriodo ? {t('components.editarPeriodo')} : {t('components.novoPeriodo')}}
               </h3>
               <button
                 onClick={fecharModal}
@@ -342,7 +345,7 @@ export default function PainelPeriodosAvaliacao() {
                   value={formData.nome}
                   onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Ex: Avaliação Anual 2024"
+                  placeholder={t('components.exAvaliacaoAnual2024')}
                   required
                 />
               </div>
@@ -356,7 +359,7 @@ export default function PainelPeriodosAvaliacao() {
                   onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   rows={3}
-                  placeholder="Descrição opcional do período"
+                  placeholder={t('components.descricaoOpcionalDoPeriodo')}
                 />
               </div>
 

@@ -22,7 +22,7 @@ export default function AvaliacaoAdminContent() {
   // Verificar se o usuário é administrador
   useEffect(() => {
     if (!isLoading && !isAdmin) {
-      console.log('Usuário não é administrador, redirecionando...');
+      console.log({t('components.usuarioNaoEAdministradorRedirecionando')});
       router.push('/dashboard');
     }
   }, [isLoading, isAdmin, router]);
@@ -113,7 +113,7 @@ export default function AvaliacaoAdminContent() {
                 <p className="text-gray-600 mb-6">
                   {t(
                     'admin.avaliacao.database.description',
-                    'Gerencie as tabelas do banco de dados necessárias para o módulo de avaliação de desempenho.'
+                    {t('components.gerencieAsTabelasDoBancoDeDadosNecessariasParaOMod')}
                   )}
                 </p>
 
@@ -132,7 +132,7 @@ export default function AvaliacaoAdminContent() {
                 <p className="text-gray-600 mb-6">
                   {t(
                     'admin.avaliacao.criterios.description',
-                    'Gerencie os critérios de avaliação utilizados no sistema.'
+                    {t('components.gerencieOsCriteriosDeAvaliacaoUtilizadosNoSistema')}
                   )}
                 </p>
 
@@ -156,7 +156,7 @@ export default function AvaliacaoAdminContent() {
                 <p className="text-gray-600 mb-6">
                   {t(
                     'admin.avaliacao.funcionarios.description',
-                    'Gerencie os funcionários que participam do processo de avaliação.'
+                    {t('components.gerencieOsFuncionariosQueParticipamDoProcessoDeAva')}
                   )}
                 </p>
 

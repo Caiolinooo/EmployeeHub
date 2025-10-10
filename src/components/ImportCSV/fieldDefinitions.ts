@@ -17,8 +17,8 @@ export const userFieldDefinitions = {
     'firstName': ['nome', 'first_name', 'firstname', 'Nome', 'primeiro_nome'],
     'lastName': ['sobrenome', 'last_name', 'lastname', 'surname', 'Sobrenome'],
     'email': ['e-mail', 'mail', 'email_address', 'endereco_email', 'Nome UPN', 'email'],
-    'phoneNumber': ['telefone', 'phone', 'phone_number', 'celular', 'mobile', 'tel', 'fone', 'Telefone Celular', 'Número de telefone'],
-    'position': ['cargo', 'position', 'job_title', 'funcao', 'job', 'titulo', 'Título'],
+    'phoneNumber': ['telefone', 'phone', 'phone_number', 'celular', 'mobile', 'tel', 'fone', 'Telefone Celular', {t('components.numeroDeTelefone')}],
+    'position': ['cargo', 'position', 'job_title', 'funcao', 'job', 'titulo', {t('components.titulo')}],
     'department': ['departamento', 'department', 'dept', 'setor', 'area', 'Departamento'],
     'role': ['funcao', 'role', 'papel', 'nivel_acesso', 'access_level'],
     'active': ['ativo', 'active', 'status', 'situacao', 'state']

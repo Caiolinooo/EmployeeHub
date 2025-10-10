@@ -3,8 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { FiSettings, FiAlertCircle } from 'react-icons/fi';
 import ReimbursementEmailSettings from '@/components/admin/ReimbursementEmailSettings';
+import { useI18n } from '@/contexts/I18nContext';
 
 export default function ReimbursementSettingsPage() {
+  const { t } = useI18n();
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [emailSettings, setEmailSettings] = useState<{
@@ -26,17 +29,17 @@ export default function ReimbursementSettingsPage() {
 
       // Tentar usar a API principal do Supabase
       try {
-        console.log('Tentando carregar configurações da API principal...');
+        console.log({t('admin.tentandoCarregarConfiguracoesDaApiPrincipal')});
         const response = await fetch('/api/reimbursement-settings');
 
         if (response.ok) {
           const data = await response.json();
-          console.log('Configurações de email de reembolso carregadas da API principal:', data);
+          console.log({t('admin.configuracoesDeEmailDeReembolsoCarregadasDaApiPrin')}, data);
           setEmailSettings(data);
           setIsLoading(false);
           return;
         } else {
-          console.error('Erro ao carregar configurações da API principal:', response.status);
+          console.error({t('admin.erroAoCarregarConfiguracoesDaApiPrincipal')}, response.status);
           // Continuar para o fallback
         }
       } catch (mainApiError) {
@@ -46,17 +49,17 @@ export default function ReimbursementSettingsPage() {
 
       // Tentar usar a API de fallback
       try {
-        console.log('Tentando carregar configurações da API de fallback...');
+        console.log({t('admin.tentandoCarregarConfiguracoesDaApiDeFallback')});
         const fallbackResponse = await fetch('/api/reimbursement-settings-fallback');
 
         if (fallbackResponse.ok) {
           const fallbackData = await fallbackResponse.json();
-          console.log('Configurações de email de reembolso carregadas da API de fallback:', fallbackData);
+          console.log({t('admin.configuracoesDeEmailDeReembolsoCarregadasDaApiDeFa')}, fallbackData);
           setEmailSettings(fallbackData);
           setIsLoading(false);
           return;
         } else {
-          console.error('Erro ao carregar configurações da API de fallback:', fallbackResponse.status);
+          console.error({t('admin.erroAoCarregarConfiguracoesDaApiDeFallback')}, fallbackResponse.status);
           // Continuar para os valores padrão
         }
       } catch (fallbackApiError) {
@@ -65,14 +68,14 @@ export default function ReimbursementSettingsPage() {
       }
 
       // Usar valores padrão como último recurso
-      console.log('Usando valores padrão para as configurações');
+      console.log({t('admin.usandoValoresPadraoParaAsConfiguracoes')});
       setEmailSettings({
         enableDomainRule: true,
         recipients: ['andresa.oliveira@groupabz.com', 'fiscal@groupabz.com']
       });
     } catch (err) {
-      console.error('Erro ao carregar configurações:', err);
-      setError('Erro ao carregar configurações. Usando valores padrão.');
+      console.error({t('admin.erroAoCarregarConfiguracoes')}, err);
+      setError({t('admin.erroAoCarregarConfiguracoesUsandoValoresPadrao')});
 
       // Usar valores padrão em caso de erro
       setEmailSettings({
@@ -89,11 +92,11 @@ export default function ReimbursementSettingsPage() {
     recipients: string[];
   }): Promise<boolean> => {
     try {
-      console.log('Salvando configurações de email de reembolso:', settings);
+      console.log({t('admin.salvandoConfiguracoesDeEmailDeReembolso')}, settings);
 
       // Tentar usar a API principal do Supabase
       try {
-        console.log('Tentando salvar configurações na API principal...');
+        console.log({t('admin.tentandoSalvarConfiguracoesNaApiPrincipal')});
 
         // Usar a API do Supabase para salvar as configurações
         const response = await fetch('/api/reimbursement-settings', {
@@ -114,14 +117,14 @@ export default function ReimbursementSettingsPage() {
         }
 
         if (response.ok) {
-          console.log('Configurações salvas com sucesso na API principal:', responseData);
+          console.log({t('admin.configuracoesSalvasComSucessoNaApiPrincipal')}, responseData);
 
           // Atualizar estado local
           setEmailSettings(settings);
           return true;
         }
 
-        console.error('Erro ao salvar configurações na API principal:', responseData.error || 'Status: ' + response.status);
+        console.error({t('admin.erroAoSalvarConfiguracoesNaApiPrincipal')}, responseData.error || 'Status: ' + response.status);
 
         // Se o erro for relacionado à tabela não existente, tentar criar a tabela
         if (responseData.error && responseData.error.includes('relation "public.settings" does not exist')) {
@@ -148,7 +151,7 @@ export default function ReimbursementSettingsPage() {
             });
 
             if (retryResponse.ok) {
-              console.log('Configurações salvas com sucesso após criar tabela');
+              console.log({t('admin.configuracoesSalvasComSucessoAposCriarTabela')});
               setEmailSettings(settings);
               return true;
             } else {
@@ -167,7 +170,7 @@ export default function ReimbursementSettingsPage() {
 
       // Tentar usar a API de fallback
       try {
-        console.log('Tentando salvar configurações na API de fallback...');
+        console.log({t('admin.tentandoSalvarConfiguracoesNaApiDeFallback')});
 
         const fallbackResponse = await fetch('/api/reimbursement-settings-fallback', {
           method: 'POST',
@@ -179,7 +182,7 @@ export default function ReimbursementSettingsPage() {
 
         if (fallbackResponse.ok) {
           const fallbackData = await fallbackResponse.json();
-          console.log('Configurações salvas com sucesso na API de fallback:', fallbackData);
+          console.log({t('admin.configuracoesSalvasComSucessoNaApiDeFallback')}, fallbackData);
 
           // Atualizar estado local
           setEmailSettings(settings);
@@ -192,10 +195,10 @@ export default function ReimbursementSettingsPage() {
       }
 
       // Se chegamos aqui, todas as tentativas falharam
-      console.error('Todas as tentativas de salvar configurações falharam');
+      console.error({t('admin.todasAsTentativasDeSalvarConfiguracoesFalharam')});
       return false;
     } catch (err) {
-      console.error('Erro ao salvar configurações:', err);
+      console.error({t('admin.erroAoSalvarConfiguracoes')}, err);
       return false;
     }
   };

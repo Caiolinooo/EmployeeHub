@@ -15,6 +15,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { canEditAcademy } from '@/lib/permissions';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface Category {
   id: string;
@@ -168,10 +169,10 @@ const AcademyPage: React.FC = () => {
       if (data.success) {
         setEnrollments(data.enrollments);
       } else {
-        console.error('Erro ao carregar matrículas:', data.error);
+        console.error({t('academy.erroAoCarregarMatriculas')}, data.error);
       }
     } catch (error) {
-      console.error('Erro ao carregar matrículas:', error);
+      console.error({t('academy.erroAoCarregarMatriculas')}, error);
     }
   };
 
@@ -181,7 +182,7 @@ const AcademyPage: React.FC = () => {
     try {
       const token = await getToken();
       if (!token) {
-        setError('Token de autenticação não encontrado');
+        setError({t('academy.tokenDeAutenticacaoNaoEncontrado')});
         return;
       }
 
@@ -205,7 +206,7 @@ const AcademyPage: React.FC = () => {
         alert(data.error || 'Erro ao realizar matrícula');
       }
     } catch (error) {
-      console.error('Erro ao realizar matrícula:', error);
+      console.error({t('academy.erroAoRealizarMatricula')}, error);
       alert('Erro ao realizar matrícula');
     }
   };
@@ -237,9 +238,9 @@ const AcademyPage: React.FC = () => {
       case 'beginner':
         return 'Iniciante';
       case 'intermediate':
-        return 'Intermediário';
+        return {t('academy.intermediario')};
       case 'advanced':
-        return 'Avançado';
+        return {t('academy.avancado')};
       default:
         return difficulty;
     }
@@ -463,7 +464,7 @@ const AcademyPage: React.FC = () => {
             <div className="flex items-center justify-center bg-blue-50 rounded-lg p-2">
               <BookOpenIcon className="w-5 h-5 text-blue-600 mr-2" />
               <span className="text-sm font-medium text-blue-900">
-                {filteredCourses.length} cursos {viewMode === 'enrolled' ? 'matriculados' : 'disponíveis'}
+                {filteredCourses.length} cursos {viewMode === 'enrolled' ? 'matriculados' : {t('academy.disponiveis')}}
               </span>
             </div>
           </div>

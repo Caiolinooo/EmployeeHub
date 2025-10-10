@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { FiX, FiClock, FiCheckCircle, FiAlertCircle, FiUser, FiCalendar } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import type { TipoNotificacaoAvaliacao } from '@/lib/services/notificacoes-avaliacao';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface PopupData {
   id: string;
@@ -16,7 +17,9 @@ interface PopupNotificacaoAvaliacaoProps {
   usuarioId: string;
 }
 
-export default function PopupNotificacaoAvaliacao({ usuarioId }: PopupNotificacaoAvaliacaoProps) {
+export default function PopupNotificacaoAvaliacao({
+  const { t } = useI18n();
+ usuarioId }: PopupNotificacaoAvaliacaoProps) {
   const [popups, setPopups] = useState<PopupData[]>([]);
   const [popupAtivo, setPopupAtivo] = useState<PopupData | null>(null);
   const router = useRouter();
@@ -119,25 +122,25 @@ export default function PopupNotificacaoAvaliacao({ usuarioId }: PopupNotificaca
   const getTituloPopup = (tipo: TipoNotificacaoAvaliacao) => {
     switch (tipo) {
       case 'periodo_iniciado':
-        return 'Período de Avaliação Iniciado';
+        return {t('components.periodoDeAvaliacaoIniciado')};
       case 'autoavaliacao_pendente':
-        return 'Autoavaliação Pendente';
+        return {t('components.autoavaliacaoPendente')};
       case 'autoavaliacao_prazo':
-        return 'Prazo de Autoavaliação';
+        return {t('components.prazoDeAutoavaliacao')};
       case 'autoavaliacao_recebida':
-        return 'Autoavaliação Recebida';
+        return {t('components.autoavaliacaoRecebida')};
       case 'aprovacao_pendente':
-        return 'Aprovação Pendente';
+        return {t('components.aprovacaoPendente')};
       case 'aprovacao_prazo':
-        return 'Prazo de Aprovação';
+        return {t('components.prazoDeAprovacao')};
       case 'avaliacao_aprovada':
-        return 'Avaliação Aprovada';
+        return {t('components.avaliacaoAprovada')};
       case 'avaliacao_editada':
-        return 'Avaliação Editada';
+        return {t('components.avaliacaoEditada')};
       case 'avaliacao_finalizada':
-        return 'Avaliação Finalizada';
+        return {t('components.avaliacaoFinalizada')};
       default:
-        return 'Notificação de Avaliação';
+        return {t('components.notificacaoDeAvaliacao')};
     }
   };
 
@@ -146,25 +149,25 @@ export default function PopupNotificacaoAvaliacao({ usuarioId }: PopupNotificaca
     
     switch (tipo) {
       case 'periodo_iniciado':
-        return `Complete sua autoavaliação até ${dados.data_limite ? new Date(dados.data_limite).toLocaleDateString('pt-BR') : 'o prazo estabelecido'}.`;
+        return {t('components.completeSuaAutoavaliacaoAteDadosdatalimiteNewDated')}pt-BR') : 'o prazo estabelecido'}.`;
       case 'autoavaliacao_pendente':
-        return `Você tem uma autoavaliação pendente. Complete até ${dados.data_limite ? new Date(dados.data_limite).toLocaleDateString('pt-BR') : 'o prazo'}.`;
+        return {t('components.voceTemUmaAutoavaliacaoPendenteCompleteAteDadosdat')}pt-BR') : 'o prazo'}.`;
       case 'autoavaliacao_prazo':
-        return 'O prazo para sua autoavaliação está próximo. Complete hoje!';
+        return {t('components.oPrazoParaSuaAutoavaliacaoEstaProximoCompleteHoje')};
       case 'autoavaliacao_recebida':
-        return `${dados.funcionario_nome || 'Um funcionário'} completou sua autoavaliação e aguarda sua aprovação.`;
+        return `${dados.funcionario_nome || {t('components.umFuncionario')}} completou sua autoavaliação e aguarda sua aprovação.`;
       case 'aprovacao_pendente':
-        return 'Você tem avaliações pendentes de aprovação.';
+        return {t('components.voceTemAvaliacoesPendentesDeAprovacao')};
       case 'aprovacao_prazo':
-        return 'O prazo para aprovação de avaliações está próximo.';
+        return {t('components.oPrazoParaAprovacaoDeAvaliacoesEstaProximo')};
       case 'avaliacao_aprovada':
-        return `Sua avaliação foi aprovada por ${dados.gerente_nome || 'seu gerente'}.`;
+        return {t('components.suaAvaliacaoFoiAprovadaPorDadosgerentenome')}seu gerente'}.`;
       case 'avaliacao_editada':
-        return `Sua avaliação foi editada por ${dados.gerente_nome || 'seu gerente'}.`;
+        return {t('components.suaAvaliacaoFoiEditadaPorDadosgerentenome')}seu gerente'}.`;
       case 'avaliacao_finalizada':
-        return 'Sua avaliação foi finalizada. Você pode visualizá-la a qualquer momento.';
+        return {t('components.suaAvaliacaoFoiFinalizadaVocePodeVisualizalaAQualq')};
       default:
-        return 'Você tem uma nova notificação sobre avaliação.';
+        return {t('components.voceTemUmaNovaNotificacaoSobreAvaliacao')};
     }
   };
 

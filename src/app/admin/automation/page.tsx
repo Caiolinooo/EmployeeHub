@@ -43,7 +43,7 @@ export default function AutomationPage() {
       if (!isAdmin) {
         toast({
           title: 'Acesso Negado',
-          description: 'Você não tem permissão para acessar esta página',
+          description: {t('admin.voceNaoTemPermissaoParaAcessarEstaPagina')},
           variant: 'destructive',
           duration: 3000,
         });

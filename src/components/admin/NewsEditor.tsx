@@ -107,7 +107,7 @@ export default function NewsEditor({ newsId, onSave, onCancel }: NewsEditorProps
             throw new Error(t('admin.errorLoadingNews'));
           }
         } catch (error) {
-          console.error('Erro ao carregar notícia:', error);
+          console.error({t('components.erroAoCarregarNoticia')}, error);
           setError(t('admin.errorLoadingNews'));
         } finally {
           setIsLoading(false);
@@ -233,7 +233,7 @@ export default function NewsEditor({ newsId, onSave, onCancel }: NewsEditorProps
       // Chamar função de salvamento
       await onSave(newsData);
     } catch (error) {
-      console.error('Erro ao salvar notícia:', error);
+      console.error({t('components.erroAoSalvarNoticia')}, error);
       setError(t('admin.errorSavingNews'));
     } finally {
       setIsLoading(false);

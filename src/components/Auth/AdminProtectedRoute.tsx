@@ -6,6 +6,7 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { FiLoader, FiAlertCircle } from 'react-icons/fi';
 import Link from 'next/link';
 import ClientOnly from '../ClientOnly';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface AdminProtectedRouteProps {
   children: React.ReactNode;
@@ -69,14 +70,14 @@ const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({
 
   // Se não estiver autenticado, redirecionar para login
   if (!user) {
-    console.log('AdminProtectedRoute - Usuário não autenticado, redirecionando para login');
+    console.log({t('components.adminprotectedrouteUsuarioNaoAutenticadoRedirecion')});
     router.push('/login');
     return <LoadingIndicator />;
   }
 
   // Se não for administrador e não for o usuário principal, negar acesso
   if (!isAdmin && !forceAdmin) {
-    console.log('AdminProtectedRoute - Acesso negado: usuário não é administrador');
+    console.log({t('components.adminprotectedrouteAcessoNegadoUsuarioNaoEAdminist')});
     return <AccessDenied />;
   }
 

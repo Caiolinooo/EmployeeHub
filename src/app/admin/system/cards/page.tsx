@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import MainLayout from '@/components/Layout/MainLayout';
 import { 
+import { useI18n } from '@/contexts/I18nContext';
   FiPlus, 
   FiEdit, 
   // FiTrash2, // Removido - não utilizado
@@ -42,14 +43,16 @@ const iconOptions = [
   { value: 'FiClipboard', icon: FiClipboard, label: 'Prancheta' },
   { value: 'FiFileText', icon: FiFileText, label: 'Arquivo' },
   { value: 'FiBriefcase', icon: FiBriefcase, label: 'Maleta' },
-  { value: 'FiCalendar', icon: FiCalendar, label: 'Calendário' },
+  { value: 'FiCalendar', icon: FiCalendar, label: {t('admin.calendario')} },
   { value: 'FiRss', icon: FiRss, label: 'RSS' },
   { value: 'FiDollarSign', icon: FiDollarSign, label: 'Dinheiro' },
-  { value: 'FiSettings', icon: FiSettings, label: 'Configurações' },
-  { value: 'FiUsers', icon: FiUsers, label: 'Usuários' },
+  { value: 'FiSettings', icon: FiSettings, label: {t('admin.configuracoes')} },
+  { value: 'FiUsers', icon: FiUsers, label: {t('admin.usuarios')} },
 ];
 
 export default function AdminCardsPage() {
+  const { t } = useI18n();
+
   const router = useRouter();
   const { toast } = useToast();
   const [cards, setCards] = useState<DashboardCard[]>([]);
@@ -71,7 +74,7 @@ export default function AdminCardsPage() {
     if (user.role !== 'ADMIN') {
       toast({
         title: "Acesso Negado",
-        description: "Apenas administradores podem acessar esta página.",
+        description: {t('admin.apenasAdministradoresPodemAcessarEstaPagina')},
         variant: "destructive",
       });
       router.push('/dashboard');
@@ -117,7 +120,7 @@ export default function AdminCardsPage() {
         setMigrationStatus(data);
       }
     } catch (error) {
-      console.error('Erro ao verificar status da migração:', error);
+      console.error({t('admin.erroAoVerificarStatusDaMigracao')}, error);
     }
   };
 
@@ -134,23 +137,23 @@ export default function AdminCardsPage() {
       if (response.ok) {
         const result = await response.json();
         toast({
-          title: "Migração Concluída",
+          title: {t('admin.migracaoConcluida')},
           description: `${result.success} sucessos, ${result.errors} erros`,
         });
         loadCards();
         checkMigrationStatus();
       } else {
         toast({
-          title: "Erro na Migração",
-          description: "Falha ao executar a migração",
+          title: {t('admin.erroNaMigracao')},
+          description: {t('admin.falhaAoExecutarAMigracao')},
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('Erro na migração:', error);
+      console.error({t('admin.erroNaMigracao')}, error);
       toast({
-        title: "Erro na Migração",
-        description: "Falha ao executar a migração",
+        title: {t('admin.erroNaMigracao')},
+        description: {t('admin.falhaAoExecutarAMigracao')},
         variant: "destructive",
       });
     }

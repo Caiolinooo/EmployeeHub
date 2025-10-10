@@ -61,7 +61,7 @@ const ACLManagementPanel: React.FC = () => {
         setPermissions(data);
       }
     } catch (error) {
-      console.error('Erro ao carregar permissões:', error);
+      console.error({t('components.erroAoCarregarPermissoes')}, error);
     }
   };
 
@@ -93,7 +93,7 @@ const ACLManagementPanel: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Erro ao criar permissão:', error);
+      console.error({t('components.erroAoCriarPermissao')}, error);
     }
   };
 
@@ -326,7 +326,7 @@ const ACLManagementPanel: React.FC = () => {
                   onChange={(e) => setNewPermission({ ...newPermission, description: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   rows={3}
-                  placeholder="Descrição da permissão"
+                  placeholder={t('components.descricaoDaPermissao')}
                 />
               </div>
 

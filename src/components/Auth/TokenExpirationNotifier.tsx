@@ -6,6 +6,7 @@ import { refreshTokenNow } from '@/lib/tokenRefreshManager';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { FiClock, FiRefreshCw, FiX } from 'react-icons/fi';
+import { useI18n } from '@/contexts/I18nContext';
 
 // Tempo antes da expiração para mostrar aviso (5 minutos)
 const WARNING_TIME = 5 * 60 * 1000;
@@ -17,7 +18,9 @@ interface TokenExpirationNotifierProps {
   onSessionExpired?: () => void;
 }
 
-export default function TokenExpirationNotifier({ onSessionExpired }: TokenExpirationNotifierProps) {
+export default function TokenExpirationNotifier({
+  const { t } = useI18n();
+ onSessionExpired }: TokenExpirationNotifierProps) {
   const [showWarning, setShowWarning] = useState(false);
   const [showCritical, setShowCritical] = useState(false);
   const [timeUntilExpiry, setTimeUntilExpiry] = useState<number>(0);
@@ -68,7 +71,7 @@ export default function TokenExpirationNotifier({ onSessionExpired }: TokenExpir
           setShowCritical(false);
         }
       } catch (error) {
-        console.error('Erro ao verificar expiração do token:', error);
+        console.error({t('components.erroAoVerificarExpiracaoDoToken')}, error);
       }
     };
 
@@ -83,7 +86,7 @@ export default function TokenExpirationNotifier({ onSessionExpired }: TokenExpir
       setShowWarning(false);
       setShowCritical(false);
       setIsRefreshing(false);
-      toast.success('Sessão renovada com sucesso!');
+      toast.success({t('components.sessaoRenovadaComSucesso')});
     };
 
     window.addEventListener('tokenRefreshed', handleTokenRefreshed);
@@ -101,14 +104,14 @@ export default function TokenExpirationNotifier({ onSessionExpired }: TokenExpir
       if (success) {
         setShowWarning(false);
         setShowCritical(false);
-        toast.success('Sessão renovada com sucesso!');
+        toast.success({t('components.sessaoRenovadaComSucesso')});
       } else {
-        toast.error('Erro ao renovar sessão. Faça login novamente.');
+        toast.error({t('components.erroAoRenovarSessaoFacaLoginNovamente')});
         onSessionExpired?.();
       }
     } catch (error) {
       console.error('Erro ao renovar token:', error);
-      toast.error('Erro ao renovar sessão. Faça login novamente.');
+      toast.error({t('components.erroAoRenovarSessaoFacaLoginNovamente')});
       onSessionExpired?.();
     } finally {
       setIsRefreshing(false);
@@ -142,7 +145,7 @@ export default function TokenExpirationNotifier({ onSessionExpired }: TokenExpir
         <FiClock className={`w-5 h-5 mt-0.5 ${iconColor}`} />
         <div className="flex-1">
           <h3 className={`font-medium ${textColor}`}>
-            {isCritical ? 'Sessão Expirando!' : 'Sessão Expira em Breve'}
+            {isCritical ? {t('components.sessaoExpirando')} : {t('components.sessaoExpiraEmBreve')}}
           </h3>
           <p className={`text-sm mt-1 ${textColor}`}>
             {isCritical 

@@ -41,17 +41,17 @@ const ReimbursementEmailSettings: React.FC<ReimbursementEmailSettingsProps> = ({
 
   const handleAddRecipient = () => {
     if (!newRecipient.trim()) {
-      setError('O email não pode estar vazio');
+      setError({t('components.oEmailNaoPodeEstarVazio')});
       return;
     }
 
     if (!validateEmail(newRecipient)) {
-      setError('Email inválido');
+      setError({t('components.emailInvalido')});
       return;
     }
 
     if (recipients.includes(newRecipient)) {
-      setError('Este email já está na lista');
+      setError({t('components.esteEmailJaEstaNaLista')});
       return;
     }
 
@@ -85,11 +85,11 @@ const ReimbursementEmailSettings: React.FC<ReimbursementEmailSettingsProps> = ({
       while (!success && attempts < 3) {
         attempts++;
         try {
-          console.log(`Tentativa ${attempts} de salvar configurações...`);
+          console.log({t('components.tentativaAttemptsDeSalvarConfiguracoes')});
           success = await onSave(settings);
 
           if (success) {
-            console.log('Configurações salvas com sucesso');
+            console.log({t('components.configuracoesSalvasComSucesso')});
             break;
           } else {
             console.error(`Falha na tentativa ${attempts}`);
@@ -105,29 +105,29 @@ const ReimbursementEmailSettings: React.FC<ReimbursementEmailSettingsProps> = ({
       }
 
       if (success) {
-        toast.success('Configurações de email de reembolso salvas com sucesso');
+        toast.success({t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso')});
       } else {
         console.error('Todas as tentativas falharam');
-        toast.error('Erro ao salvar configurações');
+        toast.error({t('components.erroAoSalvarConfiguracoes')});
 
         if (lastError) {
           const errorMessage = lastError instanceof Error ? lastError.message : String(lastError);
-          setError(`Erro ao salvar configurações: ${errorMessage}. Tente novamente.`);
+          setError({t('components.erroAoSalvarConfiguracoesErrormessageTenteNovament')});
         } else {
-          setError('Erro ao salvar configurações. Tente novamente.');
+          setError({t('components.erroAoSalvarConfiguracoesTenteNovamente')});
         }
 
         // Mostrar mensagem com instruções para correção manual
         toast.error(
-          'Erro ao salvar configurações. Verifique a documentação para correção manual.',
+          {t('components.erroAoSalvarConfiguracoesVerifiqueADocumentacaoPar')},
           { duration: 6000 }
         );
       }
     } catch (error) {
-      console.error('Erro ao salvar configurações:', error);
-      toast.error('Erro ao salvar configurações');
+      console.error({t('components.erroAoSalvarConfiguracoes')}, error);
+      toast.error({t('components.erroAoSalvarConfiguracoes')});
       const errorMessage = error instanceof Error ? error.message : String(error);
-      setError(`Erro ao salvar configurações: ${errorMessage}. Tente novamente.`);
+      setError({t('components.erroAoSalvarConfiguracoesErrormessageTenteNovament')});
     } finally {
       setIsSaving(false);
     }

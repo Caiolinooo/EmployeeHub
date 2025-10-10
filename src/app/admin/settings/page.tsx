@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiSave, FiRefreshCw, FiUpload } from 'react-icons/fi';
 import { useSiteConfig } from '@/contexts/SiteConfigContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface SiteConfig {
   id: string;
@@ -24,6 +25,8 @@ interface SiteConfig {
 }
 
 export default function SettingsPage() {
+  const { t } = useI18n();
+
   const siteConfig = useSiteConfig();
   const [config, setConfig] = useState<SiteConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -79,8 +82,8 @@ export default function SettingsPage() {
             companyName: 'ABZ Group',
             contactEmail: 'contato@groupabz.com',
             footerText: '© 2024 ABZ Group. Todos os direitos reservados.',
-            dashboardTitle: 'Painel de Logística ABZ Group',
-            dashboardDescription: 'Bem-vindo ao centro de recursos para colaboradores da logística.',
+            dashboardTitle: {t('admin.painelDeLogisticaAbzGroup')},
+            dashboardDescription: {t('admin.bemvindoAoCentroDeRecursosParaColaboradoresDaLogis')},
             updatedAt: new Date().toISOString(),
           };
 
@@ -97,21 +100,21 @@ export default function SettingsPage() {
             });
 
             if (createResponse.ok) {
-              console.log('Configuração padrão criada com sucesso');
+              console.log({t('admin.configuracaoPadraoCriadaComSucesso')});
             }
           } catch (createError) {
-            console.error('Erro ao criar configuração padrão:', createError);
+            console.error({t('admin.erroAoCriarConfiguracaoPadrao')}, createError);
           }
         } else {
-          throw new Error('Erro ao carregar configurações');
+          throw new Error({t('admin.erroAoCarregarConfiguracoes')});
         }
       } else {
         const data = await response.json();
         setConfig(data);
       }
     } catch (error) {
-      console.error('Erro ao carregar configurações:', error);
-      setError('Erro ao carregar configurações. Por favor, tente novamente.');
+      console.error({t('admin.erroAoCarregarConfiguracoes')}, error);
+      setError({t('admin.erroAoCarregarConfiguracoesPorFavorTenteNovamente')});
 
       // Definir configuração padrão mesmo em caso de erro
       setConfig({
@@ -125,8 +128,8 @@ export default function SettingsPage() {
         companyName: 'ABZ Group',
         contactEmail: 'contato@groupabz.com',
         footerText: '© 2024 ABZ Group. Todos os direitos reservados.',
-        dashboardTitle: 'Painel de Logística ABZ Group',
-        dashboardDescription: 'Bem-vindo ao centro de recursos para colaboradores da logística.',
+        dashboardTitle: {t('admin.painelDeLogisticaAbzGroup')},
+        dashboardDescription: {t('admin.bemvindoAoCentroDeRecursosParaColaboradoresDaLogis')},
         updatedAt: new Date().toISOString(),
       });
     } finally {
@@ -213,7 +216,7 @@ export default function SettingsPage() {
       }
 
       // Salvar configurações
-      console.log('Enviando configurações para o servidor:', updatedConfig);
+      console.log({t('admin.enviandoConfiguracoesParaOServidor')}, updatedConfig);
 
       try {
         const response = await fetch('/api/config', {
@@ -227,19 +230,19 @@ export default function SettingsPage() {
         if (!response.ok) {
           const errorText = await response.text();
           console.error('Erro na resposta da API:', response.status, errorText);
-          throw new Error(`Erro ao salvar configurações: ${response.status} ${errorText}`);
+          throw new Error({t('admin.erroAoSalvarConfiguracoesResponsestatusErrortext')});
         }
 
         console.log('Resposta da API:', response.status);
 
         const savedConfig = await response.json();
-        console.log('Configuração salva com sucesso:', savedConfig);
+        console.log({t('admin.configuracaoSalvaComSucesso')}, savedConfig);
         setConfig(savedConfig);
-        setSuccess('Configurações salvas com sucesso!');
+        setSuccess({t('admin.configuracoesSalvasComSucesso')});
 
         // Atualizar o contexto global para aplicar as mudanças imediatamente
         if (siteConfig?.refreshConfig) {
-          console.log('Atualizando contexto global de configurações...');
+          console.log({t('admin.atualizandoContextoGlobalDeConfiguracoes')});
           await siteConfig.refreshConfig();
         }
 
@@ -252,8 +255,8 @@ export default function SettingsPage() {
           window.location.reload();
         }, 2000);
       } catch (error) {
-        console.error('Erro ao salvar configurações:', error);
-        setError('Erro ao salvar configurações. Por favor, tente novamente.');
+        console.error({t('admin.erroAoSalvarConfiguracoes')}, error);
+        setError({t('admin.erroAoSalvarConfiguracoesPorFavorTenteNovamente')});
       }
     } finally {
       setIsSaving(false);
@@ -354,7 +357,7 @@ export default function SettingsPage() {
             className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-abz-blue hover:bg-abz-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue disabled:opacity-70"
           >
             <FiSave className="mr-2 h-4 w-4" />
-            {isSaving ? 'Salvando...' : 'Salvar Configurações'}
+            {isSaving ? 'Salvando...' : {t('admin.salvarConfiguracoes')}}
           </button>
         </div>
       </form>

@@ -10,6 +10,7 @@ import {
   formatName
 } from "@/lib/nameValidation";
 import { FiAlertTriangle, FiCheckCircle, FiInfo, FiX } from "react-icons/fi";
+import { useI18n } from '@/contexts/I18nContext';
 
 interface Props {
   reminderMinutes?: number; // default 2
@@ -133,12 +134,12 @@ export default function CompleteProfilePrompt({ reminderMinutes = 2 }: Props) {
       const lastValidation = validateName(formattedLastName);
 
       if (!firstValidation.isValid) {
-        toast.warning(firstValidation.message || "Nome inválido");
+        toast.warning(firstValidation.message || {t('components.nomeInvalido')});
         return;
       }
 
       if (!lastValidation.isValid) {
-        toast.warning(lastValidation.message || "Sobrenome inválido");
+        toast.warning(lastValidation.message || {t('components.sobrenomeInvalido')});
         return;
       }
 

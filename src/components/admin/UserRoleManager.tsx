@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { FiShield, FiUser, FiUsers, FiAlertTriangle, FiCheck, FiX, FiInfo } from 'react-icons/fi';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface UserRoleManagerProps {
   userId: string;
@@ -25,9 +26,9 @@ const UserRoleManager: React.FC<UserRoleManagerProps> = ({
 
   // Descrições dos papéis
   const roleDescriptions = {
-    ADMIN: 'Acesso total ao sistema, incluindo todas as funcionalidades administrativas. Pode gerenciar usuários, configurações e conteúdo.',
-    MANAGER: 'Acesso a funcionalidades de gerenciamento, mas sem permissões administrativas completas. Pode gerenciar conteúdo e visualizar relatórios.',
-    USER: 'Acesso básico ao sistema. Pode visualizar conteúdo e usar funcionalidades padrão conforme configurado pelo administrador.'
+    ADMIN: {t('components.acessoTotalAoSistemaIncluindoTodasAsFuncionalidade')},
+    MANAGER: {t('components.acessoAFuncionalidadesDeGerenciamentoMasSemPermiss')},
+    USER: {t('components.acessoBasicoAoSistemaPodeVisualizarConteudoEUsarFu')}
   };
 
   // Permissões padrão para cada papel
@@ -89,7 +90,7 @@ const UserRoleManager: React.FC<UserRoleManagerProps> = ({
     e.preventDefault();
 
     if (selectedRole === currentRole) {
-      setError('O papel selecionado é o mesmo que o atual.');
+      setError({t('components.oPapelSelecionadoEOMesmoQueOAtual')});
       return;
     }
 
@@ -100,7 +101,7 @@ const UserRoleManager: React.FC<UserRoleManagerProps> = ({
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error('Não autorizado');
+        throw new Error({t('components.naoAutorizado')});
       }
 
       const response = await fetch(`/api/users/${userId}/role`, {
@@ -117,7 +118,7 @@ const UserRoleManager: React.FC<UserRoleManagerProps> = ({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao atualizar papel do usuário');
+        throw new Error(errorData.error || {t('components.erroAoAtualizarPapelDoUsuario')});
       }
 
       setSuccess(true);
@@ -126,7 +127,7 @@ const UserRoleManager: React.FC<UserRoleManagerProps> = ({
         onClose();
       }, 1500);
     } catch (error) {
-      console.error('Erro ao atualizar papel do usuário:', error);
+      console.error({t('components.erroAoAtualizarPapelDoUsuario')}, error);
       setError(error instanceof Error ? error.message : 'Erro desconhecido');
     } finally {
       setLoading(false);

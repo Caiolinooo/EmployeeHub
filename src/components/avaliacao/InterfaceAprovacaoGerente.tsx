@@ -7,6 +7,7 @@ import { WorkflowAvaliacaoService } from '@/lib/services/workflow-avaliacao';
 import { getCriteriosPorTipoUsuario } from '@/data/criterios-avaliacao';
 import { isUsuarioLider } from '@/lib/utils/lideranca';
 import type { CriterioAvaliacao } from '@/data/criterios-avaliacao';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface AvaliacaoParaAprovacao {
   id: string;
@@ -29,7 +30,9 @@ interface InterfaceAprovacaoGerenteProps {
   gerenteId: string;
 }
 
-export default function InterfaceAprovacaoGerente({ gerenteId }: InterfaceAprovacaoGerenteProps) {
+export default function InterfaceAprovacaoGerente({
+  const { t } = useI18n();
+ gerenteId }: InterfaceAprovacaoGerenteProps) {
   const [avaliacoesPendentes, setAvaliacoesPendentes] = useState<AvaliacaoParaAprovacao[]>([]);
   const [avaliacaoSelecionada, setAvaliacaoSelecionada] = useState<AvaliacaoParaAprovacao | null>(null);
   const [criterios, setCriterios] = useState<CriterioAvaliacao[]>([]);
@@ -69,18 +72,18 @@ export default function InterfaceAprovacaoGerente({ gerenteId }: InterfaceAprova
         .order('data_autoavaliacao', { ascending: true });
 
       if (error) {
-        console.error('Erro ao carregar avaliações:', error);
+        console.error({t('components.erroAoCarregarAvaliacoes')}, error);
         return;
       }
 
       const avaliacoesFormatadas = avaliacoes?.map(avaliacao => ({
         id: avaliacao.id,
         funcionario_id: avaliacao.funcionario_id,
-        funcionario_nome: (avaliacao.users_unified as any)?.name || 'Nome não encontrado',
-        funcionario_email: (avaliacao.users_unified as any)?.email || 'Email não encontrado',
+        funcionario_nome: (avaliacao.users_unified as any)?.name || {t('components.nomeNaoEncontrado')},
+        funcionario_email: (avaliacao.users_unified as any)?.email || {t('components.emailNaoEncontrado')},
         etapa_atual: avaliacao.etapa_atual,
         data_autoavaliacao: avaliacao.data_autoavaliacao,
-        periodo_nome: (avaliacao.periodos_avaliacao as any)?.nome || 'Período não encontrado',
+        periodo_nome: (avaliacao.periodos_avaliacao as any)?.nome || {t('components.periodoNaoEncontrado')},
         autoavaliacao: avaliacao.autoavaliacoes?.[0] || {
           questao_11_pontos_fortes: '',
           questao_12_areas_melhoria: '',
@@ -92,7 +95,7 @@ export default function InterfaceAprovacaoGerente({ gerenteId }: InterfaceAprova
 
       setAvaliacoesPendentes(avaliacoesFormatadas);
     } catch (error) {
-      console.error('Erro ao carregar avaliações pendentes:', error);
+      console.error({t('components.erroAoCarregarAvaliacoesPendentes')}, error);
     } finally {
       setLoading(false);
     }
@@ -145,7 +148,7 @@ export default function InterfaceAprovacaoGerente({ gerenteId }: InterfaceAprova
         alert('Erro ao processar avaliação');
       }
     } catch (error) {
-      console.error('Erro ao processar avaliação:', error);
+      console.error({t('components.erroAoProcessarAvaliacao')}, error);
       alert('Erro ao processar avaliação');
     } finally {
       setLoading(false);
@@ -232,7 +235,7 @@ export default function InterfaceAprovacaoGerente({ gerenteId }: InterfaceAprova
                   <div className="bg-gray-50 rounded-lg p-4 mb-4">
                     <h4 className="font-medium text-gray-900 mb-2">Principais Pontos Fortes:</h4>
                     <p className="text-sm text-gray-700 line-clamp-2">
-                      {avaliacao.autoavaliacao.questao_11_pontos_fortes || 'Não informado'}
+                      {avaliacao.autoavaliacao.questao_11_pontos_fortes || {t('components.naoInformado')}}
                     </p>
                   </div>
                 </div>
@@ -312,7 +315,7 @@ export default function InterfaceAprovacaoGerente({ gerenteId }: InterfaceAprova
                     }`}
                   >
                     <FiEdit2 className="mr-1" size={14} />
-                    {modoEdicao ? 'Modo Edição Ativo' : 'Editar Notas'}
+                    {modoEdicao ? {t('components.modoEdicaoAtivo')} : 'Editar Notas'}
                   </button>
                 </div>
 
@@ -378,7 +381,7 @@ export default function InterfaceAprovacaoGerente({ gerenteId }: InterfaceAprova
                   value={comentarios}
                   onChange={(e) => setComentarios(e.target.value)}
                   className="w-full h-32 border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Adicione seus comentários sobre a avaliação..."
+                  placeholder={t('components.adicioneSeusComentariosSobreAAvaliacao')}
                 />
               </div>
             </div>

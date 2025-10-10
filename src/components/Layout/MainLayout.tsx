@@ -48,7 +48,9 @@ const mainMenuItems = [
   { id: 'noticias', href: '/noticias', label: 'common.news', icon: FiMessageSquare },
 ];
 
-export default function MainLayout({ children }: MainLayoutProps) {
+export default function MainLayout({
+  const { t } = useI18n();
+ children }: MainLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, profile, logout, isAdmin } = useSupabaseAuth();
@@ -66,13 +68,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
   useEffect(() => {
     // Testar se a tradução está funcionando
     const testTranslation = t('common.dashboard');
-    console.log('🔤 Teste de tradução - common.dashboard:', testTranslation);
+    console.log({t('components.testeDeTraducaoCommondashboard')}, testTranslation);
 
     if (testTranslation && testTranslation !== 'common.dashboard') {
-      console.log('✅ I18n está pronto!');
+      console.log({t('components.i18nEstaPronto')});
       setIsI18nReady(true);
     } else {
-      console.warn('⚠️ I18n ainda não está pronto, aguardando...');
+      console.warn({t('components.i18nAindaNaoEstaProntoAguardando')});
       // Tentar novamente após um pequeno delay
       const timer = setTimeout(() => {
         setIsI18nReady(true);
@@ -88,7 +90,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   useEffect(() => {
     console.log('🔍 DEBUG: isCollapsed mudou para:', isCollapsed);
     if (isCollapsed) {
-      console.warn('⚠️ ATENÇÃO: Sidebar está colapsada! Forçando expansão...');
+      console.warn({t('components.atencaoSidebarEstaColapsadaForcandoExpansao')});
       setIsCollapsed(false);
     }
   }, [isCollapsed]);
@@ -114,12 +116,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
     // Forçar estado expandido
     setIsCollapsed(false);
-    console.log('✅ Sidebar forçada para expandida (isCollapsed = false)');
+    console.log({t('components.sidebarForcadaParaExpandidaIscollapsedFalse')});
   }, []);
 
   const toggleSidebar = () => {
     // TEMPORARIAMENTE DESABILITADO - Manter sidebar sempre expandida
-    console.log('🔒 toggleSidebar chamado, mas está desabilitado para manter sidebar expandida');
+    console.log({t('components.togglesidebarChamadoMasEstaDesabilitadoParaManterS')});
     // const newState = !isCollapsed;
     // setIsCollapsed(newState);
     // localStorage.setItem('main-sidebar-collapsed', JSON.stringify(newState));
@@ -229,7 +231,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   {(profile as any)?.drive_photo_url || (profile as any)?.avatar ? (
                     <img
                       src={(profile as any)?.drive_photo_url || (profile as any)?.avatar}
-                      alt={profile?.first_name || 'Usuário'}
+                      alt={profile?.first_name || {t('components.usuario')}}
                       className="w-full h-full object-cover"
                     />
                   ) : (

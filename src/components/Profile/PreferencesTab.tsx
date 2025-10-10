@@ -10,7 +10,9 @@ interface PreferencesTabProps {
   user?: any; // Tornando o parâmetro opcional
 }
 
-export function PreferencesTab({ user = null }: PreferencesTabProps) {
+export function PreferencesTab({
+  const { t } = useI18n();
+ user = null }: PreferencesTabProps) {
   const { t, locale, setLocale } = useI18n();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -67,7 +69,7 @@ export function PreferencesTab({ user = null }: PreferencesTabProps) {
         preferences: preferences // Aninhar as preferências em um campo específico
       };
 
-      console.log('Enviando dados para atualização:', updateData);
+      console.log({t('components.enviandoDadosParaAtualizacao')}, updateData);
 
       const response = await fetch('/api/users-unified/profile', {
         method: 'PUT',
@@ -89,7 +91,7 @@ export function PreferencesTab({ user = null }: PreferencesTabProps) {
         toast.error(responseData.error || t('profile.preferencesUpdateError', 'Erro ao atualizar preferências'));
       }
     } catch (error) {
-      console.error('Erro ao atualizar preferências:', error);
+      console.error({t('components.erroAoAtualizarPreferencias')}, error);
       toast.error(t('profile.preferencesUpdateError', 'Erro ao atualizar preferências'));
     } finally {
       setIsLoading(false);

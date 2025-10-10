@@ -6,6 +6,7 @@ import {
   EllipsisHorizontalIcon
 } from '@heroicons/react/24/outline';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface User {
   id: string;
@@ -57,11 +58,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, onCommentAdded 
         setComments(data.comments);
         setError(null);
       } else {
-        setError('Erro ao carregar comentários');
+        setError({t('components.erroAoCarregarComentarios')});
       }
     } catch (err) {
-      console.error('Erro ao carregar comentários:', err);
-      setError('Erro ao carregar comentários');
+      console.error({t('components.erroAoCarregarComentarios')}, err);
+      setError({t('components.erroAoCarregarComentarios')});
     } finally {
       setLoading(false);
     }
@@ -99,11 +100,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, onCommentAdded 
         setNewComment('');
         onCommentAdded?.();
       } else {
-        setError('Erro ao enviar comentário');
+        setError({t('components.erroAoEnviarComentario')});
       }
     } catch (err) {
-      console.error('Erro ao enviar comentário:', err);
-      setError('Erro ao enviar comentário');
+      console.error({t('components.erroAoEnviarComentario')}, err);
+      setError({t('components.erroAoEnviarComentario')});
     } finally {
       setSubmitting(false);
     }
@@ -330,7 +331,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, onCommentAdded 
               type="text"
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Escreva um comentário..."
+              placeholder={t('components.escrevaUmComentario')}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               maxLength={500}
             />

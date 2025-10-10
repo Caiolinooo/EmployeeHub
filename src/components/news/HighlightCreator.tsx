@@ -5,6 +5,7 @@ import { FiX, FiUpload, FiStar, FiImage } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import toast from 'react-hot-toast';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface HighlightCreatorProps {
   isOpen: boolean;
@@ -38,7 +39,7 @@ const HighlightCreator: React.FC<HighlightCreatorProps> = ({
 
   const handleSubmit = async () => {
     if (!title || !selectedFile) {
-      toast.error('Preencha todos os campos obrigatórios');
+      toast.error({t('components.preenchaTodosOsCamposObrigatorios')});
       return;
     }
 
@@ -55,7 +56,7 @@ const HighlightCreator: React.FC<HighlightCreatorProps> = ({
       });
 
       if (!uploadResp.ok) {
-        throw new Error('Erro ao fazer upload da mídia');
+        throw new Error({t('components.erroAoFazerUploadDaMidia')});
       }
 
       const uploadData = await uploadResp.json();

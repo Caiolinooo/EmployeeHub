@@ -58,9 +58,9 @@ export default function IntegracaoERPPage() {
   });
 
   const availableModules = [
-    { id: 'usuarios', name: 'Usuários', icon: FiUsers },
+    { id: 'usuarios', name: {t('admin.usuarios')}, icon: FiUsers },
     { id: 'folha_pagamento', name: 'Folha de Pagamento', icon: FiDollarSign },
-    { id: 'avaliacoes', name: 'Avaliações', icon: FiFileText },
+    { id: 'avaliacoes', name: {t('admin.avaliacoes')}, icon: FiFileText },
     { id: 'departamentos', name: 'Departamentos', icon: FiUsers },
     { id: 'cargos', name: 'Cargos', icon: FiFileText },
   ];
@@ -84,7 +84,7 @@ export default function IntegracaoERPPage() {
       setConnections([
         {
           id: '1',
-          name: 'SAP Produção',
+          name: {t('admin.sapProducao')},
           type: 'SAP',
           status: 'connected',
           last_sync: '2024-01-20T14:30:00Z',
@@ -130,7 +130,7 @@ export default function IntegracaoERPPage() {
 
     } catch (error) {
       console.error('Erro ao carregar dados ERP:', error);
-      toast.error('Erro ao carregar dados de integração');
+      toast.error({t('admin.erroAoCarregarDadosDeIntegracao')});
     } finally {
       setLoading(false);
     }
@@ -138,12 +138,12 @@ export default function IntegracaoERPPage() {
 
   const handleCreateConnection = async () => {
     if (!newConnection.name.trim() || !newConnection.endpoint.trim()) {
-      toast.error('Nome e endpoint são obrigatórios');
+      toast.error({t('admin.nomeEEndpointSaoObrigatorios')});
       return;
     }
 
     if (newConnection.modules.length === 0) {
-      toast.error('Selecione pelo menos um módulo');
+      toast.error({t('admin.selecionePeloMenosUmModulo')});
       return;
     }
 
@@ -169,10 +169,10 @@ export default function IntegracaoERPPage() {
         modules: []
       });
       setShowConnectionForm(false);
-      toast.success('Conexão ERP criada com sucesso');
+      toast.success({t('admin.conexaoErpCriadaComSucesso')});
     } catch (error) {
-      console.error('Erro ao criar conexão:', error);
-      toast.error('Erro ao criar conexão ERP');
+      console.error({t('admin.erroAoCriarConexao')}, error);
+      toast.error({t('admin.erroAoCriarConexaoErp')});
     }
   };
 
@@ -187,10 +187,10 @@ export default function IntegracaoERPPage() {
             } 
           : conn
       ));
-      toast.success('Status da conexão atualizado');
+      toast.success({t('admin.statusDaConexaoAtualizado')});
     } catch (error) {
-      console.error('Erro ao atualizar conexão:', error);
-      toast.error('Erro ao atualizar status da conexão');
+      console.error({t('admin.erroAoAtualizarConexao')}, error);
+      toast.error({t('admin.erroAoAtualizarStatusDaConexao')});
     }
   };
 
@@ -201,7 +201,7 @@ export default function IntegracaoERPPage() {
           ? { ...status, status: 'running' as const }
           : status
       ));
-      toast.success(`Sincronização de ${module} iniciada`);
+      toast.success({t('admin.sincronizacaoDeModuleIniciada')});
       
       // Simular sincronização
       setTimeout(() => {
@@ -215,11 +215,11 @@ export default function IntegracaoERPPage() {
               }
             : status
         ));
-        toast.success(`Sincronização de ${module} concluída`);
+        toast.success({t('admin.sincronizacaoDeModuleConcluida')});
       }, 3000);
     } catch (error) {
-      console.error('Erro ao iniciar sincronização:', error);
-      toast.error('Erro ao iniciar sincronização');
+      console.error({t('admin.erroAoIniciarSincronizacao')}, error);
+      toast.error({t('admin.erroAoIniciarSincronizacao')});
     }
   };
 
@@ -475,7 +475,7 @@ export default function IntegracaoERPPage() {
                     value={newConnection.name}
                     onChange={(e) => setNewConnection({...newConnection, name: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Ex: SAP Produção"
+                    placeholder={t('admin.exSapProducao')}
                   />
                 </div>
 

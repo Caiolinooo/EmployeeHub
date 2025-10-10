@@ -9,8 +9,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 
 export default function ReimbursementMigrationPage() {
+  const { t } = useI18n();
+
   const { user, isLoading: authLoading } = useSupabaseAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -28,7 +31,7 @@ export default function ReimbursementMigrationPage() {
     if (!authLoading && !isAdmin) {
       toast({
         title: 'Acesso negado',
-        description: 'Você não tem permissão para acessar esta página.',
+        description: {t('admin.voceNaoTemPermissaoParaAcessarEstaPagina')},
         variant: 'destructive',
       });
       router.push('/dashboard');
@@ -45,7 +48,7 @@ export default function ReimbursementMigrationPage() {
       // Obter token de autenticação
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('Token de autenticação não encontrado');
+        throw new Error({t('admin.tokenDeAutenticacaoNaoEncontrado')});
       }
 
       // Chamar a API para executar a migração
@@ -61,17 +64,17 @@ export default function ReimbursementMigrationPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao executar migração');
+        throw new Error(data.error || {t('admin.erroAoExecutarMigracao')});
       }
 
       setResult(data);
       toast({
-        title: 'Migração executada',
-        description: 'A migração foi executada com sucesso.',
+        title: {t('admin.migracaoExecutada')},
+        description: {t('admin.aMigracaoFoiExecutadaComSucesso')},
         variant: 'default',
       });
     } catch (err) {
-      console.error('Erro ao executar migração:', err);
+      console.error({t('admin.erroAoExecutarMigracao')}, err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
       toast({
         title: 'Erro',
@@ -93,7 +96,7 @@ export default function ReimbursementMigrationPage() {
       // Obter token de autenticação
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('Token de autenticação não encontrado');
+        throw new Error({t('admin.tokenDeAutenticacaoNaoEncontrado')});
       }
 
       // Chamar a API para verificar o status da migração
@@ -107,17 +110,17 @@ export default function ReimbursementMigrationPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao verificar status da migração');
+        throw new Error(data.error || {t('admin.erroAoVerificarStatusDaMigracao')});
       }
 
       setResult(data);
       toast({
         title: 'Status verificado',
-        description: 'O status da migração foi verificado com sucesso.',
+        description: {t('admin.oStatusDaMigracaoFoiVerificadoComSucesso')},
         variant: 'default',
       });
     } catch (err) {
-      console.error('Erro ao verificar status da migração:', err);
+      console.error({t('admin.erroAoVerificarStatusDaMigracao')}, err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
       toast({
         title: 'Erro',

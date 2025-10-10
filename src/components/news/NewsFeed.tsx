@@ -154,7 +154,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
       cancelInlineEdit();
     } catch (e) {
       console.error(e);
-      toast.error('Falha ao salvar alterações');
+      toast.error({t('components.falhaAoSalvarAlteracoes')});
     } finally {
       setSavingEdit(false);
     }
@@ -333,7 +333,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
 
-    if (diffInHours < 1) return 'Agora há pouco';
+    if (diffInHours < 1) return {t('components.agoraHaPouco')};
     if (diffInHours < 24) return `${diffInHours}h`;
     if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d`;
     return date.toLocaleDateString('pt-BR');
@@ -482,7 +482,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
               >
                 <img
                   src={url}
-                  alt={`Mídia ${index + 1}`}
+                  alt={{t('components.midiaIndex1')}}
                   className="w-full h-auto cursor-pointer select-none"
                 />
                 {/* Animação de coração para duplo clique */}

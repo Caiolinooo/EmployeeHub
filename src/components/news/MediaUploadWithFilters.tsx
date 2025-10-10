@@ -5,6 +5,7 @@ import { FiX, FiArrowLeft, FiCheck, FiUpload } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import toast from 'react-hot-toast';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface MediaUploadWithFiltersProps {
   isOpen: boolean;
@@ -84,7 +85,7 @@ const MediaUploadWithFilters: React.FC<MediaUploadWithFiltersProps> = ({
       });
 
       if (!uploadResp.ok) {
-        throw new Error('Erro ao fazer upload da mídia');
+        throw new Error({t('components.erroAoFazerUploadDaMidia')});
       }
 
       const uploadData = await uploadResp.json();
@@ -92,7 +93,7 @@ const MediaUploadWithFilters: React.FC<MediaUploadWithFiltersProps> = ({
 
       // Criar post
       const newPost = {
-        title: caption || 'Nova publicação',
+        title: caption || {t('components.novaPublicacao')},
         content: caption,
         excerpt: caption.substring(0, 200),
         media_urls: mediaUrls,
@@ -121,15 +122,15 @@ const MediaUploadWithFilters: React.FC<MediaUploadWithFiltersProps> = ({
 
       if (response.ok) {
         const createdPost = await response.json();
-        toast.success('Publicação criada com sucesso!');
+        toast.success({t('components.publicacaoCriadaComSucesso')});
         onPostCreated(createdPost);
         onClose();
       } else {
-        throw new Error('Erro ao criar publicação');
+        throw new Error({t('components.erroAoCriarPublicacao')});
       }
     } catch (error) {
       console.error('Erro ao criar post:', error);
-      toast.error('Erro ao criar publicação');
+      toast.error({t('components.erroAoCriarPublicacao')});
     } finally {
       setIsSubmitting(false);
     }
@@ -161,9 +162,9 @@ const MediaUploadWithFilters: React.FC<MediaUploadWithFiltersProps> = ({
             </button>
           )}
           <h2 className="text-xl font-bold text-gray-800 flex-1 text-center">
-            {step === 'upload' && `Selecionar ${mediaType === 'photo' ? 'Foto' : 'Vídeo'}`}
+            {step === 'upload' && `Selecionar ${mediaType === 'photo' ? 'Foto' : {t('components.video')}}`}
             {step === 'filter' && 'Aplicar Filtro'}
-            {step === 'caption' && 'Nova Publicação'}
+            {step === 'caption' && {t('components.novaPublicacao')}}
           </h2>
           {step === 'caption' ? (
             <button
@@ -197,7 +198,7 @@ const MediaUploadWithFilters: React.FC<MediaUploadWithFiltersProps> = ({
                   <FiUpload className="w-20 h-20 mx-auto text-gray-400" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                  Selecione {mediaType === 'photo' ? 'uma foto' : 'um vídeo'}
+                  Selecione {mediaType === 'photo' ? 'uma foto' : {t('components.umVideo')}}
                 </h3>
                 <p className="text-gray-600 mb-6">
                   Arraste e solte ou clique para selecionar
@@ -299,7 +300,7 @@ const MediaUploadWithFilters: React.FC<MediaUploadWithFiltersProps> = ({
                     type="text"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    placeholder="Adicionar localização..."
+                    placeholder={t('components.adicionarLocalizacao')}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>

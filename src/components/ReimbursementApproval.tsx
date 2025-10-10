@@ -79,8 +79,8 @@ export default function ReimbursementApproval() {
   // Verificar permissões do usuário
   useEffect(() => {
     // Forçar a verificação de permissões para garantir que o componente seja exibido corretamente
-    console.log('Verificando permissões de aprovação para o componente...');
-    console.log('Dados do usuário:', {
+    console.log({t('components.verificandoPermissoesDeAprovacaoParaOComponente')});
+    console.log({t('components.dadosDoUsuario')}, {
       id: user?.id,
       email: user?.email,
       isAdmin,
@@ -94,13 +94,13 @@ export default function ReimbursementApproval() {
 
     // Administradores sempre têm permissão
     if (isAdmin) {
-      console.log('Usuário é administrador, concedendo permissão de aprovação');
+      console.log({t('components.usuarioEAdministradorConcedendoPermissaoDeAprovaca')});
       return;
     }
 
     // Verificar se o usuário é gerente
     if (isManager) {
-      console.log('Usuário é gerente, concedendo permissão de aprovação');
+      console.log({t('components.usuarioEGerenteConcedendoPermissaoDeAprovacao')});
       return;
     }
 
@@ -110,7 +110,7 @@ export default function ReimbursementApproval() {
       (user as any)?.access_permissions?.features?.reimbursement_approval
     );
 
-    console.log('Verificando permissões de aprovação:', {
+    console.log({t('components.verificandoPermissoesDeAprovacao')}, {
       isAdmin,
       isManager,
       hasFeaturePermission,
@@ -145,7 +145,7 @@ export default function ReimbursementApproval() {
     );
 
     if (isGroupAbzDomain) {
-      console.log('Email do usuário pertence ao domínio da empresa, concedendo permissão');
+      console.log({t('components.emailDoUsuarioPertenceAoDominioDaEmpresaConcedendo')});
       return;
     }
 
@@ -176,14 +176,14 @@ export default function ReimbursementApproval() {
       const response = await fetchWithAuth(`/api/reembolso/user?${queryParams.toString()}`);
 
       if (!response.ok) {
-        throw new Error(`Erro ao carregar solicitações de reembolso: ${response.status}`);
+        throw new Error({t('components.erroAoCarregarSolicitacoesDeReembolsoResponsestatu')});
       }
 
       const data = await response.json();
       setReimbursements(data.data || []);
       setTotalCount(data.pagination?.total || 0);
     } catch (err) {
-      console.error('Erro ao carregar solicitações de reembolso:', err);
+      console.error({t('components.erroAoCarregarSolicitacoesDeReembolso')}, err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
     } finally {
       setLoading(false);
@@ -198,7 +198,7 @@ export default function ReimbursementApproval() {
 
     // Permitir que administradores e gerentes também carreguem os reembolsos
     if (hasApprovalPermission || isAdmin || isManager || isAdminEmail) {
-      console.log('Carregando reembolsos para aprovação...', {
+      console.log({t('components.carregandoReembolsosParaAprovacao')}, {
         hasApprovalPermission,
         isAdmin,
         role: user?.role,
@@ -222,7 +222,7 @@ export default function ReimbursementApproval() {
         .single();
 
       if (fetchError || !reimbursements) {
-        console.log('Tabela Reimbursement não encontrada, tentando tabela alternativa');
+        console.log({t('components.tabelaReimbursementNaoEncontradaTentandoTabelaAlte')});
         // Tentar com o nome alternativo da tabela
         const { data: altReimbursements, error: altFetchError } = await supabaseAdmin
           .from('reimbursements')
@@ -232,12 +232,12 @@ export default function ReimbursementApproval() {
 
         if (altFetchError) {
           console.error('Erro ao buscar reembolso na tabela alternativa:', altFetchError);
-          throw new Error('Reembolso não encontrado');
+          throw new Error({t('components.reembolsoNaoEncontrado')});
         }
 
         if (!altReimbursements) {
-          console.error('Reembolso não encontrado em nenhuma tabela');
-          throw new Error('Reembolso não encontrado');
+          console.error({t('components.reembolsoNaoEncontradoEmNenhumaTabela')});
+          throw new Error({t('components.reembolsoNaoEncontrado')});
         }
 
         // Usar o protocolo da tabela alternativa
@@ -249,17 +249,17 @@ export default function ReimbursementApproval() {
           method: 'PUT',
           body: JSON.stringify({
             status: 'aprovado',
-            observacao: 'Solicitação aprovada pelo administrador'
+            observacao: {t('components.solicitacaoAprovadaPeloAdministrador')}
           })
         });
 
         if (!response.ok) {
           const errorText = await response.text();
           console.error('Resposta de erro:', errorText);
-          throw new Error(`Erro ao aprovar solicitação: ${response.status}`);
+          throw new Error({t('components.erroAoAprovarSolicitacaoResponsestatus')});
         }
 
-        toast.success('Solicitação aprovada com sucesso!');
+        toast.success({t('components.solicitacaoAprovadaComSucesso')});
         fetchReimbursements();
         return;
       }
@@ -273,27 +273,27 @@ export default function ReimbursementApproval() {
         method: 'PUT',
         body: JSON.stringify({
           status: 'aprovado',
-          observacao: 'Solicitação aprovada pelo administrador'
+          observacao: {t('components.solicitacaoAprovadaPeloAdministrador')}
         })
       });
 
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Resposta de erro:', errorText);
-        throw new Error(`Erro ao aprovar solicitação: ${response.status}`);
+        throw new Error({t('components.erroAoAprovarSolicitacaoResponsestatus')});
       }
 
-      toast.success('Solicitação aprovada com sucesso!');
+      toast.success({t('components.solicitacaoAprovadaComSucesso')});
       fetchReimbursements();
     } catch (err) {
-      console.error('Erro ao aprovar solicitação:', err);
-      toast.error(err instanceof Error ? err.message : 'Erro ao aprovar solicitação');
+      console.error({t('components.erroAoAprovarSolicitacao')}, err);
+      toast.error(err instanceof Error ? err.message : {t('components.erroAoAprovarSolicitacao')});
     }
   };
 
   // Função para abrir o modal de rejeição
   const handleReject = (id: string) => {
-    console.log(`Abrindo modal de rejeição para o reembolso com ID: ${id}`);
+    console.log({t('components.abrindoModalDeRejeicaoParaOReembolsoComIdId')});
     setRejectingId(id);
     setRejectReason('');
     setShowRejectModal(true);
@@ -301,7 +301,7 @@ export default function ReimbursementApproval() {
     // Pequeno atraso para garantir que o DOM seja atualizado
     setTimeout(() => {
       // Tentar focar no textarea
-      const textarea = document.querySelector('textarea[placeholder="Informe o motivo da rejeição..."]');
+      const textarea = document.querySelector('textarea[placeholder={t('components.informeOMotivoDaRejeicao')}]');
       if (textarea) {
         (textarea as HTMLTextAreaElement).focus();
       }
@@ -319,12 +319,12 @@ export default function ReimbursementApproval() {
   const confirmReject = async () => {
     // Verificar se temos um ID e um motivo
     if (!rejectingId) {
-      toast.error('ID do reembolso não encontrado');
+      toast.error({t('components.idDoReembolsoNaoEncontrado')});
       return;
     }
 
     if (!rejectReason.trim()) {
-      toast.error('Por favor, informe o motivo da rejeição');
+      toast.error({t('components.porFavorInformeOMotivoDaRejeicao')});
       return;
     }
 
@@ -341,7 +341,7 @@ export default function ReimbursementApproval() {
         .single();
 
       if (fetchError || !reimbursements) {
-        console.log('Tabela Reimbursement não encontrada, tentando tabela alternativa');
+        console.log({t('components.tabelaReimbursementNaoEncontradaTentandoTabelaAlte')});
         // Tentar com o nome alternativo da tabela
         const { data: altReimbursements, error: altFetchError } = await supabaseAdmin
           .from('reimbursements')
@@ -351,12 +351,12 @@ export default function ReimbursementApproval() {
 
         if (altFetchError) {
           console.error('Erro ao buscar reembolso na tabela alternativa:', altFetchError);
-          throw new Error('Reembolso não encontrado');
+          throw new Error({t('components.reembolsoNaoEncontrado')});
         }
 
         if (!altReimbursements) {
-          console.error('Reembolso não encontrado em nenhuma tabela');
-          throw new Error('Reembolso não encontrado');
+          console.error({t('components.reembolsoNaoEncontradoEmNenhumaTabela')});
+          throw new Error({t('components.reembolsoNaoEncontrado')});
         }
 
         // Usar o protocolo da tabela alternativa
@@ -375,10 +375,10 @@ export default function ReimbursementApproval() {
         if (!response.ok) {
           const errorText = await response.text();
           console.error('Resposta de erro:', errorText);
-          throw new Error(`Erro ao rejeitar solicitação: ${response.status}`);
+          throw new Error({t('components.erroAoRejeitarSolicitacaoResponsestatus')});
         }
 
-        toast.success('Solicitação rejeitada com sucesso!');
+        toast.success({t('components.solicitacaoRejeitadaComSucesso')});
         closeRejectModal();
         fetchReimbursements();
         return;
@@ -400,15 +400,15 @@ export default function ReimbursementApproval() {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Resposta de erro:', errorText);
-        throw new Error(`Erro ao rejeitar solicitação: ${response.status}`);
+        throw new Error({t('components.erroAoRejeitarSolicitacaoResponsestatus')});
       }
 
-      toast.success('Solicitação rejeitada com sucesso!');
+      toast.success({t('components.solicitacaoRejeitadaComSucesso')});
       closeRejectModal();
       fetchReimbursements();
     } catch (err) {
-      console.error('Erro ao rejeitar solicitação:', err);
-      toast.error(err instanceof Error ? err.message : 'Erro ao rejeitar solicitação');
+      console.error({t('components.erroAoRejeitarSolicitacao')}, err);
+      toast.error(err instanceof Error ? err.message : {t('components.erroAoRejeitarSolicitacao')});
     } finally {
       setRejectLoading(false);
     }
@@ -469,7 +469,7 @@ export default function ReimbursementApproval() {
 
   // Forçar permissão para todos os usuários
   if (!hasApprovalPermission && !isAdmin && !isManager && !isAdminEmail && !isAdminOrManagerEmail && !isGroupAbzDomain) {
-    console.log('Acesso negado ao componente de aprovação, mas permitindo acesso para diagnóstico:', {
+    console.log({t('components.acessoNegadoAoComponenteDeAprovacaoMasPermitindoAc')}, {
       hasApprovalPermission,
       isAdmin,
       role: user?.role,
@@ -493,12 +493,12 @@ export default function ReimbursementApproval() {
         <div className="bg-white p-4 rounded-lg shadow-sm mb-4 text-sm">
           <h3 className="font-medium mb-2">Informações do Usuário:</h3>
           <ul className="space-y-1 text-gray-700">
-            <li><strong>ID:</strong> {user?.id || 'Não disponível'}</li>
-            <li><strong>Email:</strong> {user?.email || 'Não disponível'}</li>
-            <li><strong>Função:</strong> {user?.role || 'Não disponível'}</li>
-            <li><strong>Admin:</strong> {isAdmin ? 'Sim' : 'Não'}</li>
-            <li><strong>Gerente:</strong> {isManager ? 'Sim' : 'Não'}</li>
-            <li><strong>Permissão específica:</strong> {hasApprovalPermission ? 'Sim' : 'Não'}</li>
+            <li><strong>ID:</strong> {user?.id || {t('components.naoDisponivel')}}</li>
+            <li><strong>Email:</strong> {user?.email || {t('components.naoDisponivel')}}</li>
+            <li><strong>Função:</strong> {user?.role || {t('components.naoDisponivel')}}</li>
+            <li><strong>Admin:</strong> {isAdmin ? 'Sim' : {t('components.nao')}}</li>
+            <li><strong>Gerente:</strong> {isManager ? 'Sim' : {t('components.nao')}}</li>
+            <li><strong>Permissão específica:</strong> {hasApprovalPermission ? 'Sim' : {t('components.nao')}}</li>
           </ul>
         </div>
 

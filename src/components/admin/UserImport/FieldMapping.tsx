@@ -20,12 +20,12 @@ const FIELD_ALTERNATIVES = {
   name: ['nome', 'fullName', 'nome completo', 'full name', 'nome_completo', 'full_name', 'displayName', 'display_name'],
   email: ['e-mail', 'mail', 'email_address', 'emailAddress', 'e_mail', 'correio'],
   phoneNumber: ['telefone', 'phone', 'celular', 'mobile', 'phone_number', 'phoneNumber', 'telefone_contato', 'mobilePhone'],
-  department: ['departamento', 'setor', 'area', 'área', 'dept', 'department', 'sector', 'business_unit'],
-  position: ['cargo', 'função', 'funcao', 'job_title', 'jobTitle', 'role', 'position', 'title'],
+  department: ['departamento', 'setor', 'area', {t('components.area')}, 'dept', 'department', 'sector', 'business_unit'],
+  position: ['cargo', {t('components.funcao')}, 'funcao', 'job_title', 'jobTitle', 'role', 'position', 'title'],
   admissionDate: ['data_admissao', 'dataAdmissao', 'admission_date', 'admissionDate', 'hire_date', 'hireDate', 'dt_admissao'],
-  registration: ['matricula', 'matrícula', 'registration', 'employee_id', 'employeeId', 'id', 'code', 'codigo'],
+  registration: ['matricula', {t('components.matricula')}, 'registration', 'employee_id', 'employeeId', 'id', 'code', 'codigo'],
   document: ['cpf', 'cnpj', 'documento', 'document', 'ssn', 'tax_id', 'taxId', 'document_number'],
-  notes: ['observacoes', 'observações', 'obs', 'comments', 'description', 'desc', 'notes', 'note']
+  notes: ['observacoes', {t('components.observacoes')}, 'obs', 'comments', 'description', 'desc', 'notes', 'note']
 };
 
 export default function FieldMapping({ data, onApplyMapping, onCancel }: FieldMappingProps) {
@@ -82,7 +82,7 @@ export default function FieldMapping({ data, onApplyMapping, onCancel }: FieldMa
     // Verificar campos obrigatórios
     REQUIRED_FIELDS.forEach(field => {
       if (!mapping[field]) {
-        errors.push(`O campo "${field}" é obrigatório e não foi mapeado.`);
+        errors.push(`O campo "${field}{t('components.eObrigatorioENaoFoiMapeado')});
       }
     });
 

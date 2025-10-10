@@ -12,6 +12,7 @@ import {
   FiXCircle
 } from 'react-icons/fi';
 import { apiCircuitBreaker } from '@/lib/apiRetry';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface NetworkStatusProps {
   className?: string;
@@ -26,7 +27,9 @@ interface ConnectionStatus {
   failures: number;
 }
 
-export default function NetworkStatus({ className = '', showDetails = false }: NetworkStatusProps) {
+export default function NetworkStatus({
+  const { t } = useI18n();
+ className = '', showDetails = false }: NetworkStatusProps) {
   const [status, setStatus] = useState<ConnectionStatus>({
     online: true,
     apiHealthy: true,
@@ -133,13 +136,13 @@ export default function NetworkStatus({ className = '', showDetails = false }: N
   const getStatusMessage = () => {
     switch (overallStatus) {
       case 'offline':
-        return 'Sem conexão com a internet';
+        return {t('components.semConexaoComAInternet')};
       case 'degraded':
         return 'Problemas de conectividade detectados';
       case 'recovering':
         return 'Reconectando...';
       case 'healthy':
-        return 'Conexão estável';
+        return {t('components.conexaoEstavel')};
       default:
         return 'Status desconhecido';
     }
@@ -205,7 +208,7 @@ export default function NetworkStatus({ className = '', showDetails = false }: N
             <div className="flex justify-between">
               <span>API Status:</span>
               <span className={status.apiHealthy ? 'text-green-600' : 'text-red-600'}>
-                {status.apiHealthy ? 'Saudável' : 'Com problemas'}
+                {status.apiHealthy ? {t('components.saudavel')} : 'Com problemas'}
               </span>
             </div>
             
@@ -229,9 +232,9 @@ export default function NetworkStatus({ className = '', showDetails = false }: N
             
             <div className="pt-2 border-t border-gray-200">
               <p className="text-xs text-gray-500">
-                {overallStatus === 'offline' && 'Verifique sua conexão com a internet.'}
+                {overallStatus === 'offline' && {t('components.verifiqueSuaConexaoComAInternet')}}
                 {overallStatus === 'degraded' && 'Algumas funcionalidades podem estar lentas.'}
-                {overallStatus === 'recovering' && 'Tentando restabelecer conexão...'}
+                {overallStatus === 'recovering' && {t('components.tentandoRestabelecerConexao')}}
                 {overallStatus === 'healthy' && 'Todos os sistemas funcionando normalmente.'}
               </p>
             </div>

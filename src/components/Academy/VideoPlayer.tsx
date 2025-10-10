@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { 
+import { useI18n } from '@/contexts/I18nContext';
   PlayIcon, 
   PauseIcon, 
   SpeakerWaveIcon, 
@@ -87,7 +88,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     };
 
     const handleError = () => {
-      setError('Erro ao carregar o vídeo');
+      setError({t('components.erroAoCarregarOVideo')});
       setIsLoading(false);
     };
 

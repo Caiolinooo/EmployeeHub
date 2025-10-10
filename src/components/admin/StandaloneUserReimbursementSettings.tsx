@@ -29,17 +29,17 @@ const StandaloneUserReimbursementSettings: React.FC<StandaloneUserReimbursementS
 
   const handleAddRecipient = () => {
     if (!newRecipient.trim()) {
-      setError('O email não pode estar vazio');
+      setError({t('components.oEmailNaoPodeEstarVazio')});
       return;
     }
 
     if (!validateEmail(newRecipient)) {
-      setError('Email inválido');
+      setError({t('components.emailInvalido')});
       return;
     }
 
     if (recipients.includes(newRecipient)) {
-      setError('Este email já está na lista');
+      setError({t('components.esteEmailJaEstaNaLista')});
       return;
     }
 
@@ -81,14 +81,14 @@ const StandaloneUserReimbursementSettings: React.FC<StandaloneUserReimbursementS
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Erro ao salvar configurações:', errorData.error);
+        console.error({t('components.erroAoSalvarConfiguracoes')}, errorData.error);
         throw new Error(errorData.error || t('common.errorSavingSettings'));
       }
 
       setSuccess(t('common.settingsSavedSuccess'));
       toast.success(t('common.settingsSavedSuccess'));
     } catch (error) {
-      console.error('Erro ao salvar configurações:', error);
+      console.error({t('components.erroAoSalvarConfiguracoes')}, error);
       toast.error(t('common.errorSavingSettings'));
       setError(t('common.errorSavingSettings') + '. ' + t('common.tryAgain'));
     } finally {

@@ -9,6 +9,7 @@ import {
   AtSymbolIcon
 } from '@heroicons/react/24/outline';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface User {
   id: string;
@@ -59,7 +60,7 @@ const PostCreator: React.FC<PostCreatorProps> = ({ onClose, onPostCreated }) => 
     try {
       const token = await getToken();
       if (!token) {
-        setError('Erro de autenticação');
+        setError({t('components.erroDeAutenticacao')});
         return;
       }
 
@@ -146,7 +147,7 @@ const PostCreator: React.FC<PostCreatorProps> = ({ onClose, onPostCreated }) => 
               value={content}
               onChange={(e) => setContent(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={`No que você está pensando, ${user?.first_name}?`}
+              placeholder={{t('components.noQueVoceEstaPensandoUserfirstname')}}
               className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               rows={4}
               maxLength={2000}

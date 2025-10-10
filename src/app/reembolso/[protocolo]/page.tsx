@@ -66,7 +66,7 @@ export default function ReimbursementDetailPage() {
   useEffect(() => {
     const fetchReimbursementDetails = async () => {
       if (!protocolo) {
-        setError('Protocolo não fornecido');
+        setError({t('reimbursement.protocoloNaoFornecido')});
         setLoading(false);
         return;
       }
@@ -132,7 +132,7 @@ export default function ReimbursementDetailPage() {
 
       // Verificar se o download foi bem-sucedido
       if (!blob) {
-        throw new Error('Não foi possível baixar o arquivo após várias tentativas');
+        throw new Error({t('reimbursement.naoFoiPossivelBaixarOArquivoAposVariasTentativas')});
       }
 
       // Iniciar o download no navegador

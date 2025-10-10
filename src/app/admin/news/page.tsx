@@ -467,7 +467,7 @@ export default function NewsPage() {
     setError(null); // Limpar erros anteriores
 
     try {
-      console.log('Iniciando busca de notícias...');
+      console.log({t('admin.iniciandoBuscaDeNoticias')});
 
       // Tentar primeiro a API real
       let url = '/api/news';
@@ -533,7 +533,7 @@ export default function NewsPage() {
         if (!response.ok) {
           const errorText = await response.text();
           console.error('Resposta de erro (API mock):', errorText);
-          throw new Error(`Erro ao carregar notícias: ${response.status} ${response.statusText}`);
+          throw new Error({t('admin.erroAoCarregarNoticiasResponsestatusResponsestatus')});
         }
       }
 
@@ -546,9 +546,9 @@ export default function NewsPage() {
 
       // Verificar se data é um array
       if (!Array.isArray(data)) {
-        console.error('Resposta não é um array:', data);
+        console.error({t('admin.respostaNaoEUmArray')}, data);
         setNewsItems([]);
-        setError('Formato de resposta inválido. Por favor, tente novamente.');
+        setError({t('admin.formatoDeRespostaInvalidoPorFavorTenteNovamente')});
       } else {
         setNewsItems(data);
 
@@ -558,8 +558,8 @@ export default function NewsPage() {
         console.log('Categorias encontradas:', uniqueCategories);
       }
     } catch (error) {
-      console.error('Erro ao carregar notícias:', error);
-      setError('Erro ao carregar notícias. Por favor, tente novamente.');
+      console.error({t('admin.erroAoCarregarNoticias')}, error);
+      setError({t('admin.erroAoCarregarNoticiasPorFavorTenteNovamente')});
       setNewsItems([]); // Definir como array vazio para evitar erros de renderização
     } finally {
       setIsLoading(false);
@@ -586,7 +586,7 @@ export default function NewsPage() {
       file: '',
       enabled: true,
       featured: false,
-      category: selectedCategory || 'Notícias',
+      category: selectedCategory || {t('admin.noticias')},
       author: 'Equipe ABZ',
       thumbnail: null,
       createdAt: new Date().toISOString(),
@@ -621,7 +621,7 @@ export default function NewsPage() {
       }
 
       if (!response.ok) {
-        throw new Error('Erro ao salvar notícia');
+        throw new Error({t('admin.erroAoSalvarNoticia')});
       }
 
       // Recarregar notícias
@@ -631,8 +631,8 @@ export default function NewsPage() {
       setEditingNews(null);
       setIsAdding(false);
     } catch (error) {
-      console.error('Erro ao salvar notícia:', error);
-      setError('Erro ao salvar notícia. Por favor, tente novamente.');
+      console.error({t('admin.erroAoSalvarNoticia')}, error);
+      setError({t('admin.erroAoSalvarNoticiaPorFavorTenteNovamente')});
     }
   };
 
@@ -642,21 +642,21 @@ export default function NewsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir esta notícia?')) {
+    if (window.confirm({t('admin.temCertezaQueDesejaExcluirEstaNoticia')})) {
       try {
         const response = await fetch(`/api/news/${id}`, {
           method: 'DELETE',
         });
 
         if (!response.ok) {
-          throw new Error('Erro ao excluir notícia');
+          throw new Error({t('admin.erroAoExcluirNoticia')});
         }
 
         // Recarregar notícias
         fetchNews();
       } catch (error) {
-        console.error('Erro ao excluir notícia:', error);
-        setError('Erro ao excluir notícia. Por favor, tente novamente.');
+        console.error({t('admin.erroAoExcluirNoticia')}, error);
+        setError({t('admin.erroAoExcluirNoticiaPorFavorTenteNovamente')});
       }
     }
   };
@@ -666,7 +666,7 @@ export default function NewsPage() {
       const news = newsItems.find(item => item.id === id);
 
       if (!news) {
-        throw new Error('Notícia não encontrada');
+        throw new Error({t('admin.noticiaNaoEncontrada')});
       }
 
       const response = await fetch(`/api/news/${id}`, {
@@ -678,14 +678,14 @@ export default function NewsPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao atualizar notícia');
+        throw new Error({t('admin.erroAoAtualizarNoticia')});
       }
 
       // Recarregar notícias
       fetchNews();
     } catch (error) {
-      console.error('Erro ao atualizar notícia:', error);
-      setError('Erro ao atualizar notícia. Por favor, tente novamente.');
+      console.error({t('admin.erroAoAtualizarNoticia')}, error);
+      setError({t('admin.erroAoAtualizarNoticiaPorFavorTenteNovamente')});
     }
   };
 
@@ -694,7 +694,7 @@ export default function NewsPage() {
       const news = newsItems.find(item => item.id === id);
 
       if (!news) {
-        throw new Error('Notícia não encontrada');
+        throw new Error({t('admin.noticiaNaoEncontrada')});
       }
 
       const response = await fetch(`/api/news/${id}`, {
@@ -706,14 +706,14 @@ export default function NewsPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao atualizar notícia');
+        throw new Error({t('admin.erroAoAtualizarNoticia')});
       }
 
       // Recarregar notícias
       fetchNews();
     } catch (error) {
-      console.error('Erro ao atualizar notícia:', error);
-      setError('Erro ao atualizar notícia. Por favor, tente novamente.');
+      console.error({t('admin.erroAoAtualizarNoticia')}, error);
+      setError({t('admin.erroAoAtualizarNoticiaPorFavorTenteNovamente')});
     }
   };
 
@@ -821,7 +821,7 @@ export default function NewsPage() {
             </div>
           ) : sortedNewsItems.length === 0 ? (
             <div className="p-6 text-center text-gray-500">
-              Nenhuma notícia encontrada. Clique em "Adicionar Notícia" para criar uma nova.
+              Nenhuma notícia encontrada. Clique em {t('admin.adicionarNoticia')} para criar uma nova.
             </div>
           ) : (
             <div className="space-y-3 p-4">

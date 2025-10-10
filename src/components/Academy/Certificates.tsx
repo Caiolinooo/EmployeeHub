@@ -12,6 +12,7 @@ import {
   TrophyIcon
 } from '@heroicons/react/24/outline';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface Certificate {
   id: string;
@@ -57,7 +58,7 @@ const Certificates: React.FC<CertificatesProps> = ({ className = '' }) => {
     try {
       const token = await getToken();
       if (!token) {
-        setError('Token de autenticação não encontrado');
+        setError({t('components.tokenDeAutenticacaoNaoEncontrado')});
         return;
       }
 
@@ -174,8 +175,8 @@ const Certificates: React.FC<CertificatesProps> = ({ className = '' }) => {
   const getDifficultyLabel = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
       case 'beginner': return 'Iniciante';
-      case 'intermediate': return 'Intermediário';
-      case 'advanced': return 'Avançado';
+      case 'intermediate': return {t('components.intermediario')};
+      case 'advanced': return {t('components.avancado')};
       default: return difficulty;
     }
   };

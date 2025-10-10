@@ -160,11 +160,11 @@ export default function EvaluationDashboard() {
         throw fetchError;
       }
 
-      console.log('Avaliações carregadas:', data);
+      console.log({t('components.avaliacoesCarregadas')}, data);
       setEvaluations(data || []);
       setTotalCount(count || 0);
     } catch (err) {
-      console.error('Erro ao carregar avaliações:', err);
+      console.error({t('components.erroAoCarregarAvaliacoes')}, err);
 
       // Tratar o erro de forma mais amigável
       let errorMessage = t('evaluation.errorLoadingEvaluations', 'Error loading evaluations');

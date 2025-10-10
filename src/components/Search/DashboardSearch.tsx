@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface SearchResult {
   id: string;
@@ -117,9 +118,9 @@ const DashboardSearch: React.FC = () => {
       case 'document':
         return 'Documento';
       case 'news':
-        return 'Notícia';
+        return {t('components.noticia')};
       case 'user':
-        return 'Usuário';
+        return {t('components.usuario')};
       case 'card':
         return 'Card';
       case 'reimbursement':
@@ -127,9 +128,9 @@ const DashboardSearch: React.FC = () => {
       case 'paystub':
         return 'Contracheque';
       case 'evaluation':
-        return 'Avaliação';
+        return {t('components.avaliacao')};
       case 'policy':
-        return 'Política';
+        return {t('components.politica')};
       case 'procedure':
         return 'Procedimento';
       case 'academy':
@@ -163,7 +164,7 @@ const DashboardSearch: React.FC = () => {
         <input
           ref={inputRef}
           type="text"
-          placeholder="Buscar em todo o sistema... (documentos, notícias, reembolsos, etc.)"
+          placeholder={t('components.buscarEmTodoOSistemaDocumentosNoticiasReembolsosEt')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={handleFocus}
@@ -188,11 +189,11 @@ const DashboardSearch: React.FC = () => {
         <div className="mt-2 flex flex-wrap gap-2">
           {[
             { value: 'all', label: 'Todos' },
-            { value: 'news', label: 'Notícias' },
+            { value: 'news', label: {t('components.noticias')} },
             { value: 'reimbursement', label: 'Reembolsos' },
             { value: 'document', label: 'Documentos' },
             { value: 'academy', label: 'Cursos' },
-            { value: 'policy', label: 'Políticas' }
+            { value: 'policy', label: {t('components.politicas')} }
           ].map((type) => (
             <button
               key={type.value}

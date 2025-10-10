@@ -196,7 +196,7 @@ export default function FormularioAutoavaliacao({
             value={formData.questao_12_areas_melhoria}
             onChange={(e) => handleInputChange('questao_12_areas_melhoria', e.target.value)}
             className="w-full h-32 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-            placeholder="Identifique áreas para melhoria..."
+            placeholder={t('components.identifiqueAreasParaMelhoria')}
             required
           />
         </div>
@@ -216,7 +216,7 @@ export default function FormularioAutoavaliacao({
             value={formData.questao_13_objetivos_alcancados}
             onChange={(e) => handleInputChange('questao_13_objetivos_alcancados', e.target.value)}
             className="w-full h-32 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            placeholder="Liste os objetivos alcançados..."
+            placeholder={t('components.listeOsObjetivosAlcancados')}
             required
           />
         </div>

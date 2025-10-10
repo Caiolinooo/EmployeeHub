@@ -16,6 +16,7 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface Notification {
   id: string;
@@ -69,7 +70,7 @@ const NotificationsPage: React.FC = () => {
         setUnreadCount(data.unread_count);
       }
     } catch (error) {
-      console.error('Erro ao carregar notificações:', error);
+      console.error({t('academy.erroAoCarregarNotificacoes')}, error);
     } finally {
       setLoading(false);
     }
@@ -98,7 +99,7 @@ const NotificationsPage: React.FC = () => {
         setSelectedNotifications([]);
       }
     } catch (error) {
-      console.error('Erro ao marcar notificação como lida:', error);
+      console.error({t('academy.erroAoMarcarNotificacaoComoLida')}, error);
     }
   };
 
@@ -124,7 +125,7 @@ const NotificationsPage: React.FC = () => {
         await loadNotifications();
       }
     } catch (error) {
-      console.error('Erro ao marcar todas as notificações como lidas:', error);
+      console.error({t('academy.erroAoMarcarTodasAsNotificacoesComoLidas')}, error);
     }
   };
 
@@ -147,7 +148,7 @@ const NotificationsPage: React.FC = () => {
         setSelectedNotifications([]);
       }
     } catch (error) {
-      console.error('Erro ao excluir notificações:', error);
+      console.error({t('academy.erroAoExcluirNotificacoes')}, error);
     }
   };
 
@@ -201,11 +202,11 @@ const NotificationsPage: React.FC = () => {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffMinutes < 60) {
-      return `${diffMinutes} minuto${diffMinutes > 1 ? 's' : ''} atrás`;
+      return `${diffMinutes} minuto${diffMinutes > 1 ? 's' : '{t('academy.atras')};
     } else if (diffHours < 24) {
-      return `${diffHours} hora${diffHours > 1 ? 's' : ''} atrás`;
+      return `${diffHours} hora${diffHours > 1 ? 's' : '{t('academy.atras')};
     } else if (diffDays < 7) {
-      return `${diffDays} dia${diffDays > 1 ? 's' : ''} atrás`;
+      return `${diffDays} dia${diffDays > 1 ? 's' : '{t('academy.atras')};
     } else {
       return date.toLocaleDateString('pt-BR', {
         day: '2-digit',
@@ -252,7 +253,7 @@ const NotificationsPage: React.FC = () => {
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Notificações</h1>
                 <p className="text-gray-600 mt-1">
-                  {unreadCount > 0 ? `${unreadCount} não lida${unreadCount > 1 ? 's' : ''}` : 'Todas as notificações lidas'}
+                  {unreadCount > 0 ? {t('academy.unreadcountNaoLidaunreadcount1')}s' : ''}` : {t('academy.todasAsNotificacoesLidas')}}
                 </p>
               </div>
             </div>
@@ -349,12 +350,12 @@ const NotificationsPage: React.FC = () => {
           <div className="text-center py-12">
             <BellIcon className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">
-              {filter === 'unread' ? 'Nenhuma notificação não lida' : 'Nenhuma notificação'}
+              {filter === 'unread' ? {t('academy.nenhumaNotificacaoNaoLida')} : {t('academy.nenhumaNotificacao')}}
             </h3>
             <p className="mt-1 text-sm text-gray-500">
               {filter === 'unread' 
-                ? 'Todas as suas notificações foram lidas.'
-                : 'Você receberá notificações sobre novos cursos e atualizações aqui.'
+                ? {t('academy.todasAsSuasNotificacoesForamLidas')}
+                : {t('academy.voceReceberaNotificacoesSobreNovosCursosEAtualizac')}
               }
             </p>
           </div>

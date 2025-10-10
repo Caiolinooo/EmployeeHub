@@ -82,7 +82,7 @@ export default function AuthorizedUsersManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error('Token não encontrado. Faça login novamente.');
+        throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
       }
 
       const response = await fetch(url, {
@@ -93,14 +93,14 @@ export default function AuthorizedUsersManager() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Erro ao carregar usuários autorizados');
+        throw new Error(errorData.error || {t('components.erroAoCarregarUsuariosAutorizados')});
       }
 
       const data = await response.json();
       setAuthorizedUsers(data);
     } catch (error) {
-      console.error('Erro ao carregar usuários autorizados:', error);
-      setError('Erro ao carregar usuários autorizados. Tente novamente.');
+      console.error({t('components.erroAoCarregarUsuariosAutorizados')}, error);
+      setError({t('components.erroAoCarregarUsuariosAutorizadosTenteNovamente')});
     } finally {
       setLoading(false);
     }
@@ -112,7 +112,7 @@ export default function AuthorizedUsersManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error('Token não encontrado. Faça login novamente.');
+        throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
       }
 
       const response = await fetch('/api/admin/access-stats', {
@@ -123,13 +123,13 @@ export default function AuthorizedUsersManager() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Erro ao carregar estatísticas');
+        throw new Error(errorData.error || {t('components.erroAoCarregarEstatisticas')});
       }
 
       const data = await response.json();
       setStats(data);
     } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error);
+      console.error({t('components.erroAoCarregarEstatisticas')}, error);
     }
   };
 
@@ -167,13 +167,13 @@ export default function AuthorizedUsersManager() {
 
       payload.action = action;
 
-      console.log('Enviando solicitação para API:', payload);
+      console.log({t('components.enviandoSolicitacaoParaApi')}, payload);
 
       // Obter o token do localStorage
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error('Token não encontrado. Faça login novamente.');
+        throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
       }
 
       const response = await fetch('/api/admin/authorized-users', {
@@ -190,7 +190,7 @@ export default function AuthorizedUsersManager() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
         console.error('Resposta de erro da API:', errorData);
-        throw new Error(errorData.error || 'Erro ao adicionar usuário autorizado');
+        throw new Error(errorData.error || {t('components.erroAoAdicionarUsuarioAutorizado')});
       }
 
       const result = await response.json();
@@ -210,7 +210,7 @@ export default function AuthorizedUsersManager() {
             const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
             if (!token) {
-              throw new Error('Token não encontrado. Faça login novamente.');
+              throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
             }
 
             const emailResponse = await fetch('/api/admin/send-invite', {
@@ -248,11 +248,11 @@ export default function AuthorizedUsersManager() {
         fetchAuthorizedUsers();
         fetchStats();
       } else {
-        setError(result.message || 'Erro ao adicionar usuário autorizado');
+        setError(result.message || {t('components.erroAoAdicionarUsuarioAutorizado')});
       }
     } catch (error) {
-      console.error('Erro ao adicionar usuário autorizado:', error);
-      setError('Erro ao adicionar usuário autorizado. Tente novamente.');
+      console.error({t('components.erroAoAdicionarUsuarioAutorizado')}, error);
+      setError({t('components.erroAoAdicionarUsuarioAutorizadoTenteNovamente')});
     }
   };
 
@@ -262,7 +262,7 @@ export default function AuthorizedUsersManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error('Token não encontrado. Faça login novamente.');
+        throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
       }
 
       const response = await fetch('/api/admin/authorized-users', {
@@ -279,21 +279,21 @@ export default function AuthorizedUsersManager() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
-        throw new Error(errorData.error || 'Erro ao aprovar usuário');
+        throw new Error(errorData.error || {t('components.erroAoAprovarUsuario')});
       }
 
       const result = await response.json();
 
       if (result.success) {
-        setSuccessMessage('Usuário aprovado com sucesso');
+        setSuccessMessage({t('components.usuarioAprovadoComSucesso')});
         fetchAuthorizedUsers();
         fetchStats();
       } else {
-        setError(result.message || 'Erro ao aprovar usuário');
+        setError(result.message || {t('components.erroAoAprovarUsuario')});
       }
     } catch (error) {
-      console.error('Erro ao aprovar usuário:', error);
-      setError('Erro ao aprovar usuário. Tente novamente.');
+      console.error({t('components.erroAoAprovarUsuario')}, error);
+      setError({t('components.erroAoAprovarUsuarioTenteNovamente')});
     }
   };
 
@@ -309,7 +309,7 @@ export default function AuthorizedUsersManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error('Token não encontrado. Faça login novamente.');
+        throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
       }
 
       const response = await fetch('/api/admin/authorized-users', {
@@ -327,37 +327,37 @@ export default function AuthorizedUsersManager() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
-        throw new Error(errorData.error || 'Erro ao rejeitar usuário');
+        throw new Error(errorData.error || {t('components.erroAoRejeitarUsuario')});
       }
 
       const result = await response.json();
 
       if (result.success) {
-        setSuccessMessage('Usuário rejeitado com sucesso');
+        setSuccessMessage({t('components.usuarioRejeitadoComSucesso')});
         setShowRejectModal(false);
         fetchAuthorizedUsers();
         fetchStats();
       } else {
-        setError(result.message || 'Erro ao rejeitar usuário');
+        setError(result.message || {t('components.erroAoRejeitarUsuario')});
       }
     } catch (error) {
-      console.error('Erro ao rejeitar usuário:', error);
-      setError('Erro ao rejeitar usuário. Tente novamente.');
+      console.error({t('components.erroAoRejeitarUsuario')}, error);
+      setError({t('components.erroAoRejeitarUsuarioTenteNovamente')});
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir este usuário autorizado?')) {
+    if (!confirm({t('components.temCertezaQueDesejaExcluirEsteUsuarioAutorizado')})) {
       return;
     }
 
     try {
-      console.log(`Excluindo usuário autorizado com ID: ${id}`);
+      console.log({t('components.excluindoUsuarioAutorizadoComIdId')});
       // Obter o token do localStorage
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error('Token não encontrado. Faça login novamente.');
+        throw new Error({t('components.tokenNaoEncontradoFacaLoginNovamente')});
       }
 
       const response = await fetch(`/api/admin/authorized-users/${id}`, {
@@ -372,22 +372,22 @@ export default function AuthorizedUsersManager() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
         console.error('Resposta de erro da API:', errorData);
-        throw new Error(errorData.error || 'Erro ao excluir usuário autorizado');
+        throw new Error(errorData.error || {t('components.erroAoExcluirUsuarioAutorizado')});
       }
 
       const result = await response.json();
       console.log('Resultado da API:', result);
 
       if (result.success) {
-        setSuccessMessage('Usuário autorizado excluído com sucesso');
+        setSuccessMessage({t('components.usuarioAutorizadoExcluidoComSucesso')});
         fetchAuthorizedUsers();
         fetchStats();
       } else {
-        setError(result.message || 'Erro ao excluir usuário autorizado');
+        setError(result.message || {t('components.erroAoExcluirUsuarioAutorizado')});
       }
     } catch (error) {
-      console.error('Erro ao excluir usuário autorizado:', error);
-      setError('Erro ao excluir usuário autorizado. Tente novamente.');
+      console.error({t('components.erroAoExcluirUsuarioAutorizado')}, error);
+      setError({t('components.erroAoExcluirUsuarioAutorizadoTenteNovamente')});
     }
   };
 
@@ -402,8 +402,8 @@ export default function AuthorizedUsersManager() {
   const getAuthorizationTypeText = (user: AuthorizedUser) => {
     if (user.email) return `Email: ${user.email}`;
     if (user.phoneNumber) return `Telefone: ${user.phoneNumber}`;
-    if (user.domain) return `Domínio: ${user.domain}`;
-    if (user.inviteCode) return `Código de Convite: ${user.inviteCode}`;
+    if (user.domain) return {t('components.dominioUserdomain')};
+    if (user.inviteCode) return {t('components.codigoDeConviteUserinvitecode')};
     return 'Desconhecido';
   };
 
@@ -710,7 +710,7 @@ export default function AuthorizedUsersManager() {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Adicione informações relevantes sobre esta autorização"
+                    placeholder={t('components.adicioneInformacoesRelevantesSobreEstaAutorizacao')}
                     rows={3}
                   />
                 </div>
@@ -787,7 +787,7 @@ export default function AuthorizedUsersManager() {
                     <div className="flex items-center">
                       {getAuthorizationTypeIcon(user)}
                       <span className="ml-2 text-sm text-gray-900">
-                        {user.email ? 'Email' : user.phoneNumber ? 'Telefone' : user.domain ? 'Domínio' : 'Convite'}
+                        {user.email ? 'Email' : user.phoneNumber ? 'Telefone' : user.domain ? {t('components.dominio')} : 'Convite'}
                       </span>
                     </div>
                   </td>
@@ -867,7 +867,7 @@ export default function AuthorizedUsersManager() {
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Informe o motivo da rejeição"
+                placeholder={t('components.informeOMotivoDaRejeicao')}
                 rows={3}
               />
             </div>

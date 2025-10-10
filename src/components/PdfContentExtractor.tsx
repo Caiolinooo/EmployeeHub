@@ -33,7 +33,7 @@ const PdfContentExtractor: React.FC<PdfContentExtractorProps> = ({ filePath }) =
           // Construir URL completa para verificação
           const fullPath = `${window.location.origin}${normalizedPath}`;
 
-          console.log('Verificando arquivo PDF para extração:', fullPath);
+          console.log({t('components.verificandoArquivoPdfParaExtracao')}, fullPath);
 
           // Verificar se o arquivo existe
           const fileCheckResponse = await fetch(fullPath, {
@@ -71,7 +71,7 @@ const PdfContentExtractor: React.FC<PdfContentExtractorProps> = ({ filePath }) =
 
         setContent(data.content || t('viewer.noContent', 'Nenhum conteúdo extraído.'));
       } catch (err) {
-        console.error('Erro ao extrair conteúdo do PDF:', err);
+        console.error({t('components.erroAoExtrairConteudoDoPdf')}, err);
         setError(err instanceof Error ? err.message : t('viewer.extractError', 'Erro desconhecido ao extrair conteúdo do PDF'));
       } finally {
         setLoading(false);

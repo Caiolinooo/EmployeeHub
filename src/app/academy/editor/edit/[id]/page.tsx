@@ -16,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { canEditAcademy } from '@/lib/permissions';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface Category {
   id: string;
@@ -94,13 +95,13 @@ const EditCoursePage: React.FC = () => {
         // Verificar se o usuário pode editar este curso
         const canEdit = !!user && (hasFeature('academy_editor') || user.role === 'ADMIN');
         if (!canEdit) {
-          setError('Você não tem permissão para editar este curso');
+          setError({t('academy.voceNaoTemPermissaoParaEditarEsteCurso')});
           return;
         }
 
         setCourse(courseInfo);
       } else {
-        setError('Curso não encontrado');
+        setError({t('academy.cursoNaoEncontrado')});
       }
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
@@ -177,13 +178,13 @@ const EditCoursePage: React.FC = () => {
   };
 
   const validateForm = (): string | null => {
-    if (!course) return 'Dados do curso não carregados';
-    if (!course.title.trim()) return 'Título é obrigatório';
-    if (!course.description.trim()) return 'Descrição é obrigatória';
-    if (!course.category_id) return 'Categoria é obrigatória';
-    if (!course.difficulty_level) return 'Nível de dificuldade é obrigatório';
-    if (course.duration <= 0) return 'Duração deve ser maior que zero';
-    if (!course.video_url?.trim()) return 'URL do vídeo é obrigatória';
+    if (!course) return {t('academy.dadosDoCursoNaoCarregados')};
+    if (!course.title.trim()) return {t('academy.tituloEObrigatorio')};
+    if (!course.description.trim()) return {t('academy.descricaoEObrigatoria')};
+    if (!course.category_id) return {t('academy.categoriaEObrigatoria')};
+    if (!course.difficulty_level) return {t('academy.nivelDeDificuldadeEObrigatorio')};
+    if (course.duration <= 0) return {t('academy.duracaoDeveSerMaiorQueZero')};
+    if (!course.video_url?.trim()) return {t('academy.urlDoVideoEObrigatoria')};
     
     return null;
   };
@@ -389,7 +390,7 @@ const EditCoursePage: React.FC = () => {
                   value={course.title}
                   onChange={(e) => handleInputChange('title', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Ex: Introdução ao React.js"
+                  placeholder={t('academy.exIntroducaoAoReactjs')}
                   maxLength={200}
                 />
               </div>
@@ -417,7 +418,7 @@ const EditCoursePage: React.FC = () => {
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   rows={6}
-                  placeholder="Descrição detalhada do curso, conteúdo abordado, etc."
+                  placeholder={t('academy.descricaoDetalhadaDoCursoConteudoAbordadoEtc')}
                   maxLength={2000}
                 />
                 <div className="text-right text-xs text-gray-500 mt-1">
@@ -576,7 +577,7 @@ const EditCoursePage: React.FC = () => {
                   onChange={(e) => setNewPrerequisite(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addPrerequisite())}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Digite um pré-requisito e pressione Enter"
+                  placeholder={t('academy.digiteUmPrerequisitoEPressioneEnter')}
                   maxLength={200}
                 />
                 <button
@@ -702,7 +703,7 @@ const EditCoursePage: React.FC = () => {
               {submitting ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
               ) : null}
-              {submitting ? 'Salvando...' : 'Salvar Alterações'}
+              {submitting ? 'Salvando...' : {t('academy.salvarAlteracoes')}}
             </button>
           </div>
         </form>

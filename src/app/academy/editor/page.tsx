@@ -19,6 +19,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { canEditAcademy } from '@/lib/permissions';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface Category {
   id: string;
@@ -87,7 +88,7 @@ const AcademyEditor: React.FC = () => {
     try {
       const token = await getToken();
       if (!token) {
-        setError('Token de autenticação não encontrado');
+        setError({t('academy.tokenDeAutenticacaoNaoEncontrado')});
         return;
       }
 
@@ -122,7 +123,7 @@ const AcademyEditor: React.FC = () => {
   };
 
   const handleDeleteCourse = async (courseId: string) => {
-    if (!confirm('Tem certeza que deseja excluir este curso? Esta ação não pode ser desfeita.')) {
+    if (!confirm({t('academy.temCertezaQueDesejaExcluirEsteCursoEstaAcaoNaoPode')})) {
       return;
     }
 
@@ -205,8 +206,8 @@ const AcademyEditor: React.FC = () => {
   const getDifficultyLabel = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
       case 'beginner': return 'Iniciante';
-      case 'intermediate': return 'Intermediário';
-      case 'advanced': return 'Avançado';
+      case 'intermediate': return {t('academy.intermediario')};
+      case 'advanced': return {t('academy.avancado')};
       default: return difficulty;
     }
   };

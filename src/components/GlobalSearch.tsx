@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { DocumentTextIcon, NewspaperIcon, UserIcon, RectangleStackIcon, CurrencyDollarIcon } from '@heroicons/react/24/solid';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface SearchResult {
   id: string;
@@ -124,9 +125,9 @@ const GlobalSearch: React.FC = () => {
       case 'document':
         return 'Documento';
       case 'news':
-        return 'Notícia';
+        return {t('components.noticia')};
       case 'user':
-        return 'Usuário';
+        return {t('components.usuario')};
       case 'card':
         return 'Card';
       case 'reimbursement':
@@ -134,9 +135,9 @@ const GlobalSearch: React.FC = () => {
       case 'paystub':
         return 'Contracheque';
       case 'evaluation':
-        return 'Avaliação';
+        return {t('components.avaliacao')};
       case 'policy':
-        return 'Política';
+        return {t('components.politica')};
       case 'procedure':
         return 'Procedimento';
       case 'academy':
@@ -203,13 +204,13 @@ const GlobalSearch: React.FC = () => {
                   {[
                     { value: 'all', label: 'Todos' },
                     { value: 'document', label: 'Documentos' },
-                    { value: 'news', label: 'Notícias' },
-                    { value: 'user', label: 'Usuários' },
+                    { value: 'news', label: {t('components.noticias')} },
+                    { value: 'user', label: {t('components.usuarios')} },
                     { value: 'card', label: 'Cards' },
                     { value: 'reimbursement', label: 'Reembolsos' },
                     { value: 'paystub', label: 'Contracheques' },
-                    { value: 'evaluation', label: 'Avaliações' },
-                    { value: 'policy', label: 'Políticas' },
+                    { value: 'evaluation', label: {t('components.avaliacoes')} },
+                    { value: 'policy', label: {t('components.politicas')} },
                     { value: 'procedure', label: 'Procedimentos' },
                     { value: 'academy', label: 'Cursos' }
                   ].map((type) => (

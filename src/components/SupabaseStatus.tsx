@@ -2,17 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import { FiDatabase, FiCheck, FiX, FiRefreshCw } from 'react-icons/fi';
+import { useI18n } from '@/contexts/I18nContext';
 
 export default function SupabaseStatus() {
+  const { t } = useI18n();
+
   const [status, setStatus] = useState<'loading' | 'connected' | 'error'>('loading');
-  const [message, setMessage] = useState<string>('Verificando conexão...');
+  const [message, setMessage] = useState<string>({t('components.verificandoConexao')});
   const [details, setDetails] = useState<any>(null);
   const [isChecking, setIsChecking] = useState<boolean>(false);
 
   const checkConnection = async () => {
     setIsChecking(true);
     setStatus('loading');
-    setMessage('Verificando conexão...');
+    setMessage({t('components.verificandoConexao')});
     
     try {
       const response = await fetch('/api/test/supabase');
@@ -20,7 +23,7 @@ export default function SupabaseStatus() {
       
       if (data.status === 'ok') {
         setStatus('connected');
-        setMessage('Conexão estabelecida com sucesso');
+        setMessage({t('components.conexaoEstabelecidaComSucesso')});
         setDetails(data);
       } else {
         setStatus('error');
@@ -29,7 +32,7 @@ export default function SupabaseStatus() {
       }
     } catch (error) {
       setStatus('error');
-      setMessage('Erro ao verificar conexão');
+      setMessage({t('components.erroAoVerificarConexao')});
       setDetails({ error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsChecking(false);

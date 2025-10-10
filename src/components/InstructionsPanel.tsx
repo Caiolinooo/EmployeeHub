@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { FaWhatsapp } from 'react-icons/fa';
+import { useI18n } from '@/contexts/I18nContext';
 
 const InstructionsPanel: React.FC = () => {
   const [show, setShow] = useState(false);
@@ -76,7 +77,7 @@ const InstructionsPanel: React.FC = () => {
             onClick={onClose}
             disabled={!reachedBottom} // Enable only after scrolling down
           >
-            {reachedBottom ? 'Compreendi as Instruções' : 'Role até o final para continuar'}
+            {reachedBottom ? {t('components.compreendiAsInstrucoes')} : {t('components.roleAteOFinalParaContinuar')}}
           </button>
         </div>
       </div>

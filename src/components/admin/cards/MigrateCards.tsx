@@ -46,7 +46,7 @@ export function MigrateCards() {
 
       setMessage(data.message || t('admin.migrationStatusCheckedSuccess'));
     } catch (err) {
-      console.error('Erro ao verificar status da migração:', err);
+      console.error({t('components.erroAoVerificarStatusDaMigracao')}, err);
       setError(err instanceof Error ? err.message : t('common.unknownError'));
       setMessage(null);
     } finally {
@@ -123,8 +123,8 @@ export function MigrateCards() {
           <div className="mt-2">
             <p className="text-sm font-medium">
               Status: {migrationStatus.migrationNeeded 
-                ? 'Migração necessária' 
-                : 'Todos os cards já foram migrados'}
+                ? {t('components.migracaoNecessaria')} 
+                : {t('components.todosOsCardsJaForamMigrados')}}
             </p>
           </div>
         </div>

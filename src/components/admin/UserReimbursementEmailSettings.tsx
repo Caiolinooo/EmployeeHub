@@ -56,19 +56,19 @@ const UserReimbursementEmailSettings: React.FC<UserReimbursementEmailSettingsPro
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao carregar configurações');
+        throw new Error(errorData.error || {t('components.erroAoCarregarConfiguracoes')});
       }
 
       const data = await response.json();
-      console.log('Configurações de email de reembolso do usuário carregadas:', data);
+      console.log({t('components.configuracoesDeEmailDeReembolsoDoUsuarioCarregadas')}, data);
 
       if (data.reimbursement_email_settings) {
         setEnabled(data.reimbursement_email_settings.enabled || false);
         setRecipients(data.reimbursement_email_settings.recipients || []);
       }
     } catch (err) {
-      console.error('Erro ao carregar configurações:', err);
-      setError('Erro ao carregar configurações. Por favor, tente novamente.');
+      console.error({t('components.erroAoCarregarConfiguracoes')}, err);
+      setError({t('components.erroAoCarregarConfiguracoesPorFavorTenteNovamente')});
     } finally {
       setIsSaving(false);
     }
@@ -81,17 +81,17 @@ const UserReimbursementEmailSettings: React.FC<UserReimbursementEmailSettingsPro
 
   const handleAddRecipient = () => {
     if (!newRecipient.trim()) {
-      setError('O email não pode estar vazio');
+      setError({t('components.oEmailNaoPodeEstarVazio')});
       return;
     }
 
     if (!validateEmail(newRecipient)) {
-      setError('Email inválido');
+      setError({t('components.emailInvalido')});
       return;
     }
 
     if (recipients.includes(newRecipient)) {
-      setError('Este email já está na lista');
+      setError({t('components.esteEmailJaEstaNaLista')});
       return;
     }
 
@@ -120,7 +120,7 @@ const UserReimbursementEmailSettings: React.FC<UserReimbursementEmailSettingsPro
       // Se onSave for fornecido, use-o
       if (onSave) {
         onSave(settings);
-        toast.success('Configurações de email de reembolso salvas com sucesso');
+        toast.success({t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso')});
         if (onClose) onClose();
         return;
       }
@@ -141,14 +141,14 @@ const UserReimbursementEmailSettings: React.FC<UserReimbursementEmailSettingsPro
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Erro ao salvar configurações:', errorData.error);
+        console.error({t('components.erroAoSalvarConfiguracoes')}, errorData.error);
         throw new Error(errorData.error || t('common.errorSavingSettings'));
       }
 
       toast.success(t('common.settingsSavedSuccess'));
       if (onClose) onClose();
     } catch (error) {
-      console.error('Erro ao salvar configurações:', error);
+      console.error({t('components.erroAoSalvarConfiguracoes')}, error);
       toast.error(t('common.errorSavingSettings'));
       setError(t('common.errorSavingSettings') + '. ' + t('common.tryAgain'));
     } finally {

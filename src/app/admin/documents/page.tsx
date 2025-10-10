@@ -420,7 +420,7 @@ export default function DocumentsPage() {
       title: '',
       description: '',
       category: selectedCategory || '',
-      language: 'Português',
+      language: {t('admin.portugues')},
       file: '',
       enabled: true,
       order: documents.length + 1,
@@ -501,7 +501,7 @@ export default function DocumentsPage() {
       const document = documents.find(doc => doc.id === id);
 
       if (!document) {
-        throw new Error('Documento não encontrado');
+        throw new Error({t('admin.documentoNaoEncontrado')});
       }
 
       const response = await fetchWithToken(`/api/documents/${id}`, {

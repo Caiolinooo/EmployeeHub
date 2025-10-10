@@ -21,7 +21,7 @@ const TextContentViewer: React.FC<TextContentViewerProps> = ({ filePath }) => {
       setError(null);
 
       try {
-        console.log('Buscando conteúdo do arquivo:', filePath);
+        console.log({t('components.buscandoConteudoDoArquivo')}, filePath);
 
         const response = await fetch(filePath, {
           cache: 'no-cache'
@@ -35,7 +35,7 @@ const TextContentViewer: React.FC<TextContentViewerProps> = ({ filePath }) => {
         setContent(text);
         setLoading(false);
       } catch (err) {
-        console.error('Erro ao buscar conteúdo do arquivo:', err);
+        console.error({t('components.erroAoBuscarConteudoDoArquivo')}, err);
         setError(err instanceof Error ? err.message : String(err));
         setLoading(false);
       }

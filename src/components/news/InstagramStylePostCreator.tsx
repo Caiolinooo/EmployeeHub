@@ -117,7 +117,7 @@ const InstagramStylePostCreator: React.FC<InstagramStylePostCreatorProps> = ({
       }
 
       const newPost = {
-        title: postData.title || 'Nova publicação',
+        title: postData.title || {t('components.novaPublicacao')},
         content: postData.content,
         excerpt: postData.content.substring(0, 200),
         media_urls: mediaUrls,
@@ -195,7 +195,7 @@ const InstagramStylePostCreator: React.FC<InstagramStylePostCreatorProps> = ({
                 disabled={currentStep === 'caption' && !postData.content.trim()}
                 className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {currentStep === 'edit' ? 'Avançar' : 'Compartilhar'}
+                {currentStep === 'edit' ? {t('components.avancar')} : 'Compartilhar'}
               </button>
             )}
             <button
@@ -353,10 +353,10 @@ const InstagramStylePostCreator: React.FC<InstagramStylePostCreatorProps> = ({
                   )}
                 </div>
                 <h3 className="text-lg font-medium mb-2">
-                  {isUploading ? 'Compartilhando...' : 'Publicação compartilhada!'}
+                  {isUploading ? 'Compartilhando...' : {t('components.publicacaoCompartilhada')}}
                 </h3>
                 <p className="text-gray-500">
-                  {isUploading ? 'Aguarde enquanto sua publicação é processada' : 'Sua publicação foi compartilhada com sucesso'}
+                  {isUploading ? {t('components.aguardeEnquantoSuaPublicacaoEProcessada')} : {t('components.suaPublicacaoFoiCompartilhadaComSucesso')}}
                 </p>
               </div>
             </div>

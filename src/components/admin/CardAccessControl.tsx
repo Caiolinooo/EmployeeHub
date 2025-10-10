@@ -65,7 +65,7 @@ export default function CardAccessControl({
           setUsers(data.users || []);
         }
       } catch (error) {
-        console.error('Erro ao carregar usuários:', error);
+        console.error({t('components.erroAoCarregarUsuarios')}, error);
       }
     };
 
@@ -75,7 +75,7 @@ export default function CardAccessControl({
         setGroups([
           { id: 'admin', name: 'Administradores', description: 'Acesso total ao sistema', members: 0 },
           { id: 'manager', name: 'Gerentes', description: 'Acesso de gerenciamento', members: 0 },
-          { id: 'user', name: 'Usuários', description: 'Acesso básico', members: 0 },
+          { id: 'user', name: {t('components.usuarios')}, description: {t('components.acessoBasico')}, members: 0 },
           // Adicione outros grupos conforme necessário
         ]);
       } catch (error) {
@@ -158,7 +158,7 @@ export default function CardAccessControl({
     if (user.firstName || user.lastName) {
       return [user.firstName, user.lastName].filter(Boolean).join(' ');
     }
-    return user.email || user.phoneNumber || 'Usuário sem nome';
+    return user.email || user.phoneNumber || {t('components.usuarioSemNome')};
   };
 
   return (

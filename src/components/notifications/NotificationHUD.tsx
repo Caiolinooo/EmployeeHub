@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { FiBell, FiX, FiCheck, FiCheckCircle, FiClock, FiHeart, FiMessageCircle, FiAlertCircle, FiInfo } from 'react-icons/fi';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface Notification {
   id: string;
@@ -64,7 +65,7 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
         setPage(pageNum);
       }
     } catch (error) {
-      console.error('Erro ao carregar notificações:', error);
+      console.error({t('components.erroAoCarregarNotificacoes')}, error);
     } finally {
       setLoading(false);
     }
@@ -90,7 +91,7 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
     } catch (error) {
-      console.error('Erro ao marcar notificação como lida:', error);
+      console.error({t('components.erroAoMarcarNotificacaoComoLida')}, error);
     }
   };
 
@@ -295,8 +296,8 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
-        aria-label="Notificações"
-        title={unreadCount > 0 ? `${unreadCount} não lidas` : 'Notificações'}
+        aria-label={t('components.notificacoes')}
+        title={unreadCount > 0 ? {t('components.unreadcountNaoLidas')} : {t('components.notificacoes')}}
       >
         <FiBell className="w-6 h-6" />
         {unreadCount > 0 && !isOpen && (
@@ -400,7 +401,7 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
                       disabled={loading}
                       className="text-sm text-blue-600 hover:text-blue-700 disabled:opacity-50"
                     >
-                      {loading ? 'Carregando...' : 'Ver mais notificações'}
+                      {loading ? 'Carregando...' : {t('components.verMaisNotificacoes')}}
                     </button>
                   </div>
                 )}

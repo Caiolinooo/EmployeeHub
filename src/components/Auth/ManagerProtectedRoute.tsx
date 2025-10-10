@@ -49,7 +49,7 @@ const ManagerProtectedRoute: React.FC<ManagerProtectedRouteProps> = ({
       // Adicionar logs para depuração
       console.log('ManagerProtectedRoute - Estado atual:', {
         isLoading,
-        user: user ? 'Autenticado' : 'Não autenticado',
+        user: user ? 'Autenticado' : {t('components.naoAutenticado')},
         profile: profile ? `Role: ${profile.role}` : 'Sem perfil',
         isAdmin,
         isManager
@@ -58,7 +58,7 @@ const ManagerProtectedRoute: React.FC<ManagerProtectedRouteProps> = ({
       // Verificar se há um token válido usando o utilitário
       const token = getToken();
       if (!token) {
-        console.log('ManagerProtectedRoute - Token não encontrado, redirecionando para login');
+        console.log({t('components.managerprotectedrouteTokenNaoEncontradoRedireciona')});
         router.push('/login');
         return;
       }
@@ -67,13 +67,13 @@ const ManagerProtectedRoute: React.FC<ManagerProtectedRouteProps> = ({
 
       // Se está carregando, aguardar
       if (isLoading) {
-        console.log('ManagerProtectedRoute - Carregando dados do usuário...');
+        console.log({t('components.managerprotectedrouteCarregandoDadosDoUsuario')});
         return;
       }
 
       // Se não houver usuário autenticado, tentar renovar o token antes de redirecionar
       if (!user) {
-        console.log('ManagerProtectedRoute - Usuário não autenticado, tentando renovar token...');
+        console.log({t('components.managerprotectedrouteUsuarioNaoAutenticadoTentando')});
 
         try {
           // Enviar o token atual no corpo da requisição
@@ -109,7 +109,7 @@ const ManagerProtectedRoute: React.FC<ManagerProtectedRouteProps> = ({
 
               return;
             } else {
-              console.log('ManagerProtectedRoute - Resposta de renovação não contém token');
+              console.log({t('components.managerprotectedrouteRespostaDeRenovacaoNaoContemT')});
 
               // Verificar se o token foi definido nos cookies mesmo assim
               const tokenInCookie = document.cookie.includes('abzToken=') || document.cookie.includes('token=');
@@ -138,13 +138,13 @@ const ManagerProtectedRoute: React.FC<ManagerProtectedRouteProps> = ({
 
       // Se não houver perfil, aguardar
       if (!profile) {
-        console.log('ManagerProtectedRoute - Perfil do usuário não carregado ainda');
+        console.log({t('components.managerprotectedroutePerfilDoUsuarioNaoCarregadoAi')});
         return;
       }
 
       // Verificar se o usuário tem permissão para acessar a rota
       if (!isAdmin && !isManager) {
-        console.log('ManagerProtectedRoute - Usuário não tem permissão para acessar esta rota:', profile.role);
+        console.log({t('components.managerprotectedrouteUsuarioNaoTemPermissaoParaAce')}, profile.role);
         console.log('ManagerProtectedRoute - Redirecionando para', redirectTo);
         router.push(redirectTo);
         return;
@@ -161,22 +161,22 @@ const ManagerProtectedRoute: React.FC<ManagerProtectedRouteProps> = ({
         let responseData;
         try {
           responseData = await response.json();
-          console.log('ManagerProtectedRoute - Resposta da verificação:', responseData);
+          console.log({t('components.managerprotectedrouteRespostaDaVerificacao')}, responseData);
         } catch (jsonError) {
           console.error('ManagerProtectedRoute - Erro ao parsear resposta:', jsonError);
         }
 
         if (!response.ok) {
-          console.log('ManagerProtectedRoute - Token inválido, tentando renovar...', response.status);
+          console.log({t('components.managerprotectedrouteTokenInvalidoTentandoRenovar')}, response.status);
 
           // Verificar se o token está expirado
           const isExpired = responseData?.expired ||
                            (responseData?.error && responseData.error.includes('expirado'));
 
-          console.log('ManagerProtectedRoute - Token expirado?', isExpired ? 'Sim' : 'Não');
+          console.log('ManagerProtectedRoute - Token expirado?', isExpired ? 'Sim' : {t('components.nao')});
 
           // Tentar renovar o token
-          console.log('ManagerProtectedRoute - Iniciando renovação de token...');
+          console.log({t('components.managerprotectedrouteIniciandoRenovacaoDeToken')});
           try {
             const refreshResponse = await fetch('/api/auth/token-refresh', {
               method: 'POST',
@@ -187,7 +187,7 @@ const ManagerProtectedRoute: React.FC<ManagerProtectedRouteProps> = ({
               body: JSON.stringify({ token })
             });
 
-            console.log('ManagerProtectedRoute - Resposta da renovação:', refreshResponse.status);
+            console.log({t('components.managerprotectedrouteRespostaDaRenovacao')}, refreshResponse.status);
 
             if (!refreshResponse.ok) {
               console.log('ManagerProtectedRoute - Falha ao renovar token, redirecionando para login');
@@ -204,7 +204,7 @@ const ManagerProtectedRoute: React.FC<ManagerProtectedRouteProps> = ({
 
             // Processar a resposta para obter o novo token
             const refreshData = await refreshResponse.json();
-            console.log('ManagerProtectedRoute - Dados da renovação:', refreshData);
+            console.log({t('components.managerprotectedrouteDadosDaRenovacao')}, refreshData);
 
             if (refreshData.token) {
               console.log('ManagerProtectedRoute - Novo token recebido, atualizando...');
@@ -219,16 +219,16 @@ const ManagerProtectedRoute: React.FC<ManagerProtectedRouteProps> = ({
 
               // Se recebemos dados do usuário, verificar permissões
               if (refreshData.user) {
-                console.log('ManagerProtectedRoute - Dados do usuário recebidos:', refreshData.user);
+                console.log({t('components.managerprotectedrouteDadosDoUsuarioRecebidos')}, refreshData.user);
 
                 // Verificar se o usuário tem permissão para acessar a rota
                 const userRole = refreshData.user.role;
                 if (userRole === 'ADMIN' || userRole === 'MANAGER') {
-                  console.log('ManagerProtectedRoute - Usuário tem permissão para acessar esta rota:', userRole);
+                  console.log({t('components.managerprotectedrouteUsuarioTemPermissaoParaAcessa')}, userRole);
                   // Recarregar a página para atualizar o contexto
                   window.location.reload();
                 } else {
-                  console.log('ManagerProtectedRoute - Usuário não tem permissão para acessar esta rota:', userRole);
+                  console.log({t('components.managerprotectedrouteUsuarioNaoTemPermissaoParaAce')}, userRole);
                   router.push(redirectTo);
                 }
               } else {
@@ -236,7 +236,7 @@ const ManagerProtectedRoute: React.FC<ManagerProtectedRouteProps> = ({
                 window.location.reload();
               }
             } else {
-              console.log('ManagerProtectedRoute - Resposta de renovação não contém token');
+              console.log({t('components.managerprotectedrouteRespostaDeRenovacaoNaoContemT')});
 
               // Verificar se o token foi definido nos cookies mesmo assim
               const tokenInCookie = document.cookie.includes('abzToken=') || document.cookie.includes('token=');
@@ -267,7 +267,7 @@ const ManagerProtectedRoute: React.FC<ManagerProtectedRouteProps> = ({
 
           // Verificar se o papel do usuário no token corresponde ao perfil
           if (responseData.role && profile && responseData.role !== profile.role) {
-            console.log('ManagerProtectedRoute - Papel do usuário no token não corresponde ao perfil, atualizando...');
+            console.log({t('components.managerprotectedroutePapelDoUsuarioNoTokenNaoCorre')});
             console.log('ManagerProtectedRoute - Token:', responseData.role, 'Perfil:', profile.role);
 
             // Tentar recarregar o perfil do usuário
@@ -279,29 +279,29 @@ const ManagerProtectedRoute: React.FC<ManagerProtectedRouteProps> = ({
                 .single();
 
               if (!error && userData) {
-                console.log('ManagerProtectedRoute - Perfil do usuário atualizado com sucesso');
+                console.log({t('components.managerprotectedroutePerfilDoUsuarioAtualizadoComS')});
                 // Recarregar a página para atualizar o contexto
                 window.location.reload();
               } else {
-                console.error('ManagerProtectedRoute - Erro ao buscar perfil do usuário:', error);
+                console.error({t('components.managerprotectedrouteErroAoBuscarPerfilDoUsuario')}, error);
               }
             } catch (error) {
-              console.error('ManagerProtectedRoute - Erro ao atualizar perfil do usuário:', error);
+              console.error({t('components.managerprotectedrouteErroAoAtualizarPerfilDoUsuari')}, error);
             }
           }
         } else {
-          console.error('ManagerProtectedRoute - Resposta inesperada da verificação de token:', responseData);
+          console.error({t('components.managerprotectedrouteRespostaInesperadaDaVerificac')}, responseData);
         }
       } catch (error) {
         console.error('ManagerProtectedRoute - Erro ao verificar token:', error);
 
         // Verificar se é um erro de rede
         if (error instanceof TypeError && error.message.includes('fetch')) {
-          console.log('ManagerProtectedRoute - Erro de rede, não redirecionando');
+          console.log({t('components.managerprotectedrouteErroDeRedeNaoRedirecionando')});
           // Não redirecionar em caso de erro de rede, apenas logar
         } else {
           // Para outros tipos de erro, tentar renovar o token
-          console.log('ManagerProtectedRoute - Tentando renovar token após erro...');
+          console.log({t('components.managerprotectedrouteTentandoRenovarTokenAposErro')});
 
           try {
             const refreshResponse = await fetch('/api/auth/token-refresh', {
@@ -318,7 +318,7 @@ const ManagerProtectedRoute: React.FC<ManagerProtectedRouteProps> = ({
               window.location.reload();
             }
           } catch (refreshError) {
-            console.error('ManagerProtectedRoute - Erro ao renovar token após erro:', refreshError);
+            console.error({t('components.managerprotectedrouteErroAoRenovarTokenAposErro')}, refreshError);
           }
         }
       }

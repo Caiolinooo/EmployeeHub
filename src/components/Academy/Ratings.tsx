@@ -12,6 +12,7 @@ import {
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { canModerateContent } from '@/lib/permissions';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface User {
   id: string;
@@ -80,10 +81,10 @@ const Ratings: React.FC<RatingsProps> = ({ courseId, isEnrolled = false, classNa
         setRatings(data.ratings);
         setStats(data.stats);
       } else {
-        console.error('Erro ao carregar avaliações:', data.error);
+        console.error({t('components.erroAoCarregarAvaliacoes')}, data.error);
       }
     } catch (error) {
-      console.error('Erro ao carregar avaliações:', error);
+      console.error({t('components.erroAoCarregarAvaliacoes')}, error);
     } finally {
       setLoading(false);
     }
@@ -123,7 +124,7 @@ const Ratings: React.FC<RatingsProps> = ({ courseId, isEnrolled = false, classNa
         alert(data.error || 'Erro ao enviar avaliação');
       }
     } catch (error) {
-      console.error('Erro ao enviar avaliação:', error);
+      console.error({t('components.erroAoEnviarAvaliacao')}, error);
       alert('Erro ao enviar avaliação');
     } finally {
       setSubmitting(false);
@@ -162,7 +163,7 @@ const Ratings: React.FC<RatingsProps> = ({ courseId, isEnrolled = false, classNa
         alert(data.error || 'Erro ao editar avaliação');
       }
     } catch (error) {
-      console.error('Erro ao editar avaliação:', error);
+      console.error({t('components.erroAoEditarAvaliacao')}, error);
       alert('Erro ao editar avaliação');
     } finally {
       setSubmitting(false);
@@ -170,7 +171,7 @@ const Ratings: React.FC<RatingsProps> = ({ courseId, isEnrolled = false, classNa
   };
 
   const handleDeleteRating = async (ratingId: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta avaliação?')) return;
+    if (!confirm({t('components.temCertezaQueDesejaExcluirEstaAvaliacao')})) return;
 
     try {
       const token = await getToken();
@@ -191,7 +192,7 @@ const Ratings: React.FC<RatingsProps> = ({ courseId, isEnrolled = false, classNa
         alert(data.error || 'Erro ao excluir avaliação');
       }
     } catch (error) {
-      console.error('Erro ao excluir avaliação:', error);
+      console.error({t('components.erroAoExcluirAvaliacao')}, error);
       alert('Erro ao excluir avaliação');
     }
   };
@@ -227,7 +228,7 @@ const Ratings: React.FC<RatingsProps> = ({ courseId, isEnrolled = false, classNa
 
     if (diffDays === 1) return 'Hoje';
     if (diffDays === 2) return 'Ontem';
-    if (diffDays <= 7) return `${diffDays} dias atrás`;
+    if (diffDays <= 7) return {t('components.diffdaysDiasAtras')};
     
     return date.toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -284,7 +285,7 @@ const Ratings: React.FC<RatingsProps> = ({ courseId, isEnrolled = false, classNa
                   {renderStars(Math.round(stats.average_rating))}
                 </div>
                 <p className="text-sm text-gray-600">
-                  Baseado em {stats.total_ratings} avaliação{stats.total_ratings > 1 ? 'ões' : ''}
+                  Baseado em {stats.total_ratings} avaliação{stats.total_ratings > 1 ? {t('components.oes')} : ''}
                 </p>
               </div>
 
@@ -346,7 +347,7 @@ const Ratings: React.FC<RatingsProps> = ({ courseId, isEnrolled = false, classNa
                     className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     rows={4}
                     maxLength={2000}
-                    placeholder="Conte sobre sua experiência com este curso..."
+                    placeholder={t('components.conteSobreSuaExperienciaComEsteCurso')}
                   />
                   <div className="text-right text-xs text-gray-500 mt-1">
                     {userReview.length}/2000 caracteres
@@ -373,7 +374,7 @@ const Ratings: React.FC<RatingsProps> = ({ courseId, isEnrolled = false, classNa
                     {submitting ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                     ) : null}
-                    {submitting ? 'Enviando...' : 'Enviar Avaliação'}
+                    {submitting ? 'Enviando...' : {t('components.enviarAvaliacao')}}
                   </button>
                 </div>
               </form>
@@ -475,7 +476,7 @@ const Ratings: React.FC<RatingsProps> = ({ courseId, isEnrolled = false, classNa
                             className="w-full p-2 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             rows={3}
                             maxLength={2000}
-                            placeholder="Edite seu comentário..."
+                            placeholder={t('components.editeSeuComentario')}
                           />
                           <div className="flex items-center justify-between mt-2">
                             <span className="text-xs text-gray-500">
