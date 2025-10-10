@@ -805,7 +805,6 @@ export default function ReimbursementApproval() {
           isOpen={showDetailModal}
           onClose={handleCloseDetailModal}
           onApprove={handleApprove}
-          onReject={handleReject}
           readOnly={false}
           onStatusChange={fetchReimbursements}
         />

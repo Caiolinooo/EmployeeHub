@@ -54,7 +54,6 @@ interface ReimbursementDetailModalProps {
   onStatusChange?: () => void;
   readOnly?: boolean;
   onApprove?: (protocolo: string) => void;
-  onReject?: (protocolo: string, reason?: string) => void;
   isOpen?: boolean;
 }
 
@@ -63,7 +62,6 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
   onClose,
   reimbursement,
   onApprove,
-  onReject,
   readOnly = false,
   onStatusChange
 }) => {
@@ -143,19 +141,25 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
 
       console.log(`Rejeitando reembolso ${reimbursement.protocolo} com motivo: ${rejectReason}`);
 
-      // Chamar a função onReject com o motivo
-      if (typeof onReject === 'function') {
-        // Usar try/catch para capturar erros específicos da função onReject
-        try {
-          await Promise.resolve(onReject(reimbursement.protocolo, rejectReason));
-          console.log('Função onReject executada com sucesso');
-        } catch (rejectError) {
-          console.error('Erro na função onReject:', rejectError);
-          throw rejectError; // Propagar o erro para ser tratado no catch externo
-        }
-      } else {
-        console.warn('Função onReject não fornecida ou não é uma função');
+      // Fazer a rejeição diretamente via API (não chamar onReject do pai para evitar duplicação)
+      const response = await fetch(`/api/reembolso/${reimbursement.protocolo}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'rejeitado',
+          observacao: rejectReason
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Resposta de erro:', errorText);
+        throw new Error(`Erro ao rejeitar solicitação: ${response.status}`);
       }
+
+      console.log('Reembolso rejeitado com sucesso via API');
 
       // Chamar onStatusChange se fornecido
       if (typeof onStatusChange === 'function') {
