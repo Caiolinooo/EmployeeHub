@@ -34,7 +34,7 @@ const cardsToSync = [
     color: 'bg-abz-blue',
     hoverColor: 'hover:bg-abz-blue-dark',
     external: false,
-    enabled: true,
+    enabled: false,
     order: 1,
     adminOnly: false,
     managerOnly: false,

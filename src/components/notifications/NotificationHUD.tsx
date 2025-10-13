@@ -52,21 +52,29 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
       });
 
       const response = await fetch(`/api/notifications?${params}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
 
-      if (response.ok) {
+      if (data.notifications) {
         if (reset) {
           setNotifications(data.notifications);
         } else {
           setNotifications(prev => [...prev, ...data.notifications]);
         }
 
-        setUnreadCount(data.unreadCount);
-        setHasMore(data.pagination.hasNext);
+        setUnreadCount(data.unreadCount || 0);
+        setHasMore(data.pagination?.hasNext || false);
         setPage(pageNum);
       }
     } catch (error) {
-      console.error(t('components.erroAoCarregarNotificacoes'), error);
+      console.error('Erro ao carregar notificações:', error);
+      // Não mostrar erro para o usuário, apenas logar
+      setNotifications([]);
+      setUnreadCount(0);
     } finally {
       setLoading(false);
     }
