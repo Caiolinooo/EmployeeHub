@@ -132,7 +132,7 @@ export default function ReimbursementDetailPage() {
 
       // Verificar se o download foi bem-sucedido
       if (!blob) {
-        throw new Error({t('reimbursement.naoFoiPossivelBaixarOArquivoAposVariasTentativas')});
+        throw new Error(t('reimbursement.naoFoiPossivelBaixarOArquivoAposVariasTentativas'));
       }
 
       // Iniciar o download no navegador

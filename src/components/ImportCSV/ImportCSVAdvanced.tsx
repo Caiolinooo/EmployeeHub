@@ -238,7 +238,7 @@ export default function ImportCSVAdvanced({
       mapping['lastName'] = 'Sobrenome';
       mapping['email'] = 'Nome UPN';
       mapping['phoneNumber'] = headers.includes('Telefone Celular') ? 'Telefone Celular' : t('components.numeroDeTelefone');
-      mapping['position'] = {t('components.titulo')};
+      mapping['position'] = t('components.titulo');
       mapping['department'] = 'Departamento';
 
       console.log('Mapeamento para Office 365:', mapping);
@@ -363,7 +363,7 @@ export default function ImportCSVAdvanced({
               firstName: user.Nome || '',
               lastName: user.Sobrenome || '',
               email: user['Nome UPN'] || '',
-              phoneNumber: user['Telefone Celular'] || user[{t('components.numeroDeTelefone')}] || '',
+              phoneNumber: user['Telefone Celular'] || user['numero_de_telefone'] || '',
               position: user.Título || '',
               department: user.Departamento || '',
               role: 'USER' // Papel padrão

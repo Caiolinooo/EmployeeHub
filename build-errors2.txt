@@ -1,0 +1,125 @@
+﻿
+> painel-abz@0.1.0 build
+> rimraf .next && next build
+
+   Γû▓ Next.js 15.5.4
+   - Environments: .env.local, .env.production, .env
+   - Experiments (use with caution):
+     Γ£ô optimizeCss
+
+   Creating an optimized production build ...
+node.exe : Failed to compile.
+At C:\Program Files\nodejs\npm.ps1:29 char:3
++   & $NODE_EXE $NPM_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Failed to compile.:String) [], RemoteExcep 
+   tion
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+./src/components/ImportCSV/CSVFieldMapping.tsx
+Error:   [31mx[0m Unexpected eof
+     ,-[[36;1;4mD:\Projeto\Finalizados\Painel 
+ABZ-BR-INT\painel-abz\src\components\ImportCSV\CSVFieldMapping.tsx[0m:311:3]
+ [2m309[0m |     </div>
+ [2m310[0m |   );
+ [2m311[0m | }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/ImportCSV/CSVFieldMapping.tsx
+./src/components/ImportCSV/ImportCSVAdvanced.tsx
+./src/app/avaliacao/importacao/page.tsx
+
+./src/components/admin/UnifiedUserManager.tsx
+Error:   [31mx[0m Unexpected token `string literal (components.usuarioIsnewuser, 
+'components.usuarioIsnewuser')`. Expected yield, an identifier, [ or {
+     ,-[[36;1;4mD:\Projeto\Finalizados\Painel 
+ABZ-BR-INT\painel-abz\src\components\admin\UnifiedUserManager.tsx[0m:659:1]
+ [2m656[0m |         throw new Error(errorData.error || 
+t('components.erroAoSalvarUsuario'));
+ [2m657[0m |       }
+ [2m658[0m | 
+ [2m659[0m |       setSuccessMessage({t('components.usuarioIsnewuser')}criado' : 
+'atualizado'} com sucesso!`);
+     : [35;1m                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+ [2m660[0m |       setShowEditor(false);
+ [2m661[0m |       fetchUsers();
+ [2m661[0m | 
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/admin/UnifiedUserManager.tsx
+./src/app/admin/user-management/page.tsx
+
+./src/components/admin/UserImport/FieldMapping.tsx
+Error:   [31mx[0m Unexpected eof
+     ,-[[36;1;4mD:\Projeto\Finalizados\Painel 
+ABZ-BR-INT\painel-abz\src\components\admin\UserImport\FieldMapping.tsx[0m:379:3]
+ [2m377[0m |     </div>
+ [2m378[0m |   );
+ [2m379[0m | }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/admin/UserImport/FieldMapping.tsx
+./src/components/admin/UserImport/ImportUsers.tsx
+./src/app/admin/user-management/import/page.tsx
+
+./src/app/academy/editor/edit/[id]/page.tsx
+Error:   [31mx[0m Unexpected token `string literal 
+(academy.dadosDoCursoNaoCarregados, 'academy.dadosDoCursoNaoCarregados')`. Expected 
+yield, an identifier, [ or {
+     ,-[[36;1;4mD:\Projeto\Finalizados\Painel 
+ABZ-BR-INT\painel-abz\src\app\academy\editor\edit\[id]\page.tsx[0m:181:1]
+ [2m178[0m |   };
+ [2m179[0m | 
+ [2m180[0m |   const validateForm = (): string | null => {
+ [2m181[0m |     if (!course) return {t('academy.dadosDoCursoNaoCarregados')};
+     : [35;1m                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+ [2m182[0m |     if (!course.title.trim()) return {t('academy.tituloEObrigatorio')};
+ [2m183[0m |     if (!course.description.trim()) return 
+{t('academy.descricaoEObrigatoria')};
+ [2m184[0m |     if (!course.category_id) return {t('academy.categoriaEObrigatoria')};
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/academy/editor/edit/[id]/page.tsx
+
+./src/app/academy/notifications/page.tsx
+Error:   [31mx[0m Unexpected token `academy`. Expected `}`
+     ,-[[36;1;4mD:\Projeto\Finalizados\Painel 
+ABZ-BR-INT\painel-abz\src\app\academy\notifications\page.tsx[0m:205:1]
+ [2m202[0m |     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+ [2m203[0m | 
+ [2m204[0m |     if (diffMinutes < 60) {
+ [2m205[0m |       return `${diffMinutes} minuto${diffMinutes > 1 ? 's' : 
+'{t('academy.atras')};
+     : [35;1m                                                                  
+^^^^^^^[0m
+ [2m206[0m |     } else if (diffHours < 24) {
+ [2m207[0m |       return `${diffHours} hora${diffHours > 1 ? 's' : 
+'{t('academy.atras')};
+ [2m208[0m |     } else if (diffDays < 7) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/academy/notifications/page.tsx
+
+
+> Build failed because of webpack errors

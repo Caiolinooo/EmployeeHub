@@ -216,7 +216,7 @@ const PdfImageViewer: React.FC<PdfImageViewerProps> = ({ filePath }) => {
               // Se for uma imagem, mostrar a imagem
               <img
                 src={imageUrls[currentPage - 1]}
-                alt={{t('components.paginaCurrentpage')}}
+                alt={t('components.paginaCurrentpage', `Página ${currentPage}`)}
                 className="max-w-full"
                 style={{ maxHeight: '80vh' }}
               />

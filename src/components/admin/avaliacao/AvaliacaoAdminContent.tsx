@@ -113,7 +113,7 @@ export default function AvaliacaoAdminContent() {
                 <p className="text-gray-600 mb-6">
                   {t(
                     'admin.avaliacao.database.description',
-                    {t('components.gerencieAsTabelasDoBancoDeDadosNecessariasParaOMod')}
+                    t('components.gerencieAsTabelasDoBancoDeDadosNecessariasParaOMod')
                   )}
                 </p>
 
@@ -132,7 +132,7 @@ export default function AvaliacaoAdminContent() {
                 <p className="text-gray-600 mb-6">
                   {t(
                     'admin.avaliacao.criterios.description',
-                    {t('components.gerencieOsCriteriosDeAvaliacaoUtilizadosNoSistema')}
+                    t('components.gerencieOsCriteriosDeAvaliacaoUtilizadosNoSistema')
                   )}
                 </p>
 
@@ -156,7 +156,7 @@ export default function AvaliacaoAdminContent() {
                 <p className="text-gray-600 mb-6">
                   {t(
                     'admin.avaliacao.funcionarios.description',
-                    {t('components.gerencieOsFuncionariosQueParticipamDoProcessoDeAva')}
+                    t('components.gerencieOsFuncionariosQueParticipamDoProcessoDeAva')
                   )}
                 </p>
 

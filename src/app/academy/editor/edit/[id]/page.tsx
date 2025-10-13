@@ -178,14 +178,14 @@ const EditCoursePage: React.FC = () => {
   };
 
   const validateForm = (): string | null => {
-    if (!course) return {t('academy.dadosDoCursoNaoCarregados')};
-    if (!course.title.trim()) return {t('academy.tituloEObrigatorio')};
-    if (!course.description.trim()) return {t('academy.descricaoEObrigatoria')};
-    if (!course.category_id) return {t('academy.categoriaEObrigatoria')};
-    if (!course.difficulty_level) return {t('academy.nivelDeDificuldadeEObrigatorio')};
-    if (course.duration <= 0) return {t('academy.duracaoDeveSerMaiorQueZero')};
-    if (!course.video_url?.trim()) return {t('academy.urlDoVideoEObrigatoria')};
-    
+    if (!course) return t('academy.dadosDoCursoNaoCarregados');
+    if (!course.title.trim()) return t('academy.tituloEObrigatorio');
+    if (!course.description.trim()) return t('academy.descricaoEObrigatoria');
+    if (!course.category_id) return t('academy.categoriaEObrigatoria');
+    if (!course.difficulty_level) return t('academy.nivelDeDificuldadeEObrigatorio');
+    if (course.duration <= 0) return t('academy.duracaoDeveSerMaiorQueZero');
+    if (!course.video_url?.trim()) return t('academy.urlDoVideoEObrigatoria');
+
     return null;
   };
 
@@ -703,7 +703,7 @@ const EditCoursePage: React.FC = () => {
               {submitting ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
               ) : null}
-              {submitting ? 'Salvando...' : {t('academy.salvarAlteracoes')}}
+              {submitting ? t('academy.salvando') : t('academy.salvarAlteracoes')}
             </button>
           </div>
         </form>

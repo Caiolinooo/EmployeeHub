@@ -410,7 +410,7 @@ export default function ReimbursementDashboard() {
             { duration: 6000 }
           );
         } else {
-          toast.error({t('components.erroAoCriarBucketDeArmazenamentoOSistemaContinuara')},
+          toast.error(t('components.erroAoCriarBucketDeArmazenamentoOSistemaContinuara'),
             { duration: 6000 }
           );
         }
@@ -432,7 +432,7 @@ export default function ReimbursementDashboard() {
 
       // Show a non-blocking toast message
       toast.error(
-        {t('components.erroAoCriarBucketDeArmazenamentoOSistemaContinuara')},
+        t('components.erroAoCriarBucketDeArmazenamentoOSistemaContinuara'),
         { duration: 6000 }
       );
 
@@ -458,7 +458,7 @@ export default function ReimbursementDashboard() {
         // Show a toast with instructions for the admin
         if (profile?.role === 'ADMIN') {
           toast(
-            {t('components.paraGarantirOFuncionamentoCorretoDoSistemaDeReembo')},
+            t('components.paraGarantirOFuncionamentoCorretoDoSistemaDeReembo'),
             { duration: 8000 }
           );
         }
@@ -497,7 +497,7 @@ export default function ReimbursementDashboard() {
 
               // Show a toast with instructions for the admin
               toast(
-                {t('components.atencaoParaGarantirOFuncionamentoCorretoDoSistemaD')},
+                t('components.atencaoParaGarantirOFuncionamentoCorretoDoSistemaD'),
                 { duration: 8000 }
               );
             } else {
@@ -562,7 +562,7 @@ export default function ReimbursementDashboard() {
       } catch (error) {
         console.error('Error initializing reimbursement system:', error);
         // Show a non-blocking error message
-        toast.error({t('components.erroAoInicializarOSistemaDeReembolsosAlgumasFuncio')},
+        toast.error(t('components.erroAoInicializarOSistemaDeReembolsosAlgumasFuncio'),
           { duration: 5000 }
         );
       }

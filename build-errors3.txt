@@ -1,0 +1,143 @@
+﻿
+> painel-abz@0.1.0 build
+> rimraf .next && next build
+
+   Γû▓ Next.js 15.5.4
+   - Environments: .env.local, .env.production, .env
+   - Experiments (use with caution):
+     Γ£ô optimizeCss
+
+   Creating an optimized production build ...
+node.exe : Failed to compile.
+At C:\Program Files\nodejs\npm.ps1:29 char:3
++   & $NODE_EXE $NPM_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Failed to compile.:String) [], RemoteExcep 
+   tion
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+./src/components/admin/UnifiedUserManager.tsx
+Error:   [31mx[0m Expected ',', got '}'
+     ,-[[36;1;4mD:\Projeto\Finalizados\Painel 
+ABZ-BR-INT\painel-abz\src\components\admin\UnifiedUserManager.tsx[0m:669:1]
+ [2m666[0m |       }, 3000);
+ [2m667[0m |     } catch (error) {
+ [2m668[0m |       console.error(t('components.erroAoSalvarUsuario'), error);
+ [2m669[0m |       
+setError(t('components.erroAoSalvarUsuarioErrorInstanceofErrorErrormessag')}Erro 
+desconhecido'}`);
+     : [35;1m                                                                          
+       ^[0m
+ [2m670[0m |     }
+ [2m671[0m |   };
+ [2m671[0m | 
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/admin/UnifiedUserManager.tsx
+./src/app/admin/user-management/page.tsx
+
+./src/app/academy/editor/edit/[id]/page.tsx
+Error:   [31mx[0m Expected '</', got 'string literal (academy.salvarAlteracoes, 
+'academy.salvarAlteracoes')'
+     ,-[[36;1;4mD:\Projeto\Finalizados\Painel 
+ABZ-BR-INT\painel-abz\src\app\academy\editor\edit\[id]\page.tsx[0m:706:1]
+ [2m703[0m |               {submitting ? (
+ [2m704[0m |                 <div className="animate-spin rounded-full h-4 w-4 
+border-b-2 border-white mr-2"></div>
+ [2m705[0m |               ) : null}
+ [2m706[0m |               {submitting ? 'Salvando...' : 
+{t('academy.salvarAlteracoes')}}
+     : [35;1m                                               
+^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+ [2m707[0m |             </button>
+ [2m708[0m |           </div>
+ [2m709[0m |         </form>
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/academy/editor/edit/[id]/page.tsx
+
+./src/app/academy/notifications/page.tsx
+Error:   [31mx[0m Unexpected token `academy`. Expected `}`
+     ,-[[36;1;4mD:\Projeto\Finalizados\Painel 
+ABZ-BR-INT\painel-abz\src\app\academy\notifications\page.tsx[0m:205:1]
+ [2m202[0m |     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+ [2m203[0m | 
+ [2m204[0m |     if (diffMinutes < 60) {
+ [2m205[0m |       return `${diffMinutes} minuto${diffMinutes > 1 ? 's' : 
+'{t('academy.atras')};
+     : [35;1m                                                                  
+^^^^^^^[0m
+ [2m206[0m |     } else if (diffHours < 24) {
+ [2m207[0m |       return `${diffHours} hora${diffHours > 1 ? 's' : 
+'{t('academy.atras')};
+ [2m208[0m |     } else if (diffDays < 7) {
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/academy/notifications/page.tsx
+
+./src/app/admin/avaliacao-setup/page.tsx
+Error:   [31mx[0m Unexpected token `string literal 
+(admin.erroDeConexaoErrorInstanceofErrorErrormessage, 
+'admin.erroDeConexaoErrorInstanceofErrorErrormessage')`. Expected yield, an identifier, 
+[ or {
+    ,-[[36;1;4mD:\Projeto\Finalizados\Painel 
+ABZ-BR-INT\painel-abz\src\app\admin\avaliacao-setup\page.tsx[0m:87:1]
+ [2m84[0m |       }
+ [2m85[0m |     } catch (error) {
+ [2m86[0m |       console.error(t('admin.erroAoAplicarMigracoes'), error);
+ [2m87[0m |       
+setResults([{t('admin.erroDeConexaoErrorInstanceofErrorErrormessage')}Erro 
+desconhecido'}`]);
+    : [35;1m                     
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+ [2m88[0m |       alert('Erro de conex├úo ao aplicar migra├º├╡es');
+ [2m89[0m |     } finally {
+ [2m90[0m |       setLoading(false);
+    `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/admin/avaliacao-setup/page.tsx
+
+./src/app/admin/cards/page.tsx
+Error:   [31mx[0m Unexpected token `string literal 
+(admin.usandoCardsDoCodigofonteVocePodeEditarEstesCardsMa, 
+'admin.usandoCardsDoCodigofonteVocePodeEditarEstesCardsMa')`. Expected yield, an 
+identifier, [ or {
+     ,-[[36;1;4mD:\Projeto\Finalizados\Painel 
+ABZ-BR-INT\painel-abz\src\app\admin\cards\page.tsx[0m:424:1]
+ [2m421[0m |           checkMigrationStatus();
+ [2m422[0m | 
+ [2m423[0m |           // Mostrar uma mensagem informativa
+ [2m424[0m |           
+setSuccessMessage({t('admin.usandoCardsDoCodigofonteVocePodeEditarEstesCardsMa')});
+     : [35;1m                               
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+ [2m425[0m |           setTimeout(() => setSuccessMessage(null), 5000);
+ [2m426[0m |         }
+ [2m427[0m |       }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/admin/cards/page.tsx
+
+
+> Build failed because of webpack errors

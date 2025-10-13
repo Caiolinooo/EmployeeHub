@@ -108,10 +108,10 @@ const RolePermissionsEditor: React.FC<RolePermissionsEditorProps> = ({ onClose }
         throw new Error(t('components.erroAoSalvarPermissoes'));
       }
 
-      alert('Permissões salvas com sucesso!');
+      alert(t('components.permissoesSalvasComSucesso'));
     } catch (error) {
       console.error(t('components.erroAoSalvarPermissoes'), error);
-      alert({t('components.erroAoSalvarPermissoes')});
+      alert(t('components.erroAoSalvarPermissoes'));
     } finally {
       setSaving(false);
     }

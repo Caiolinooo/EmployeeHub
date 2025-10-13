@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
-import { 
 import { useI18n } from '@/contexts/I18nContext';
-  PlayIcon, 
-  PauseIcon, 
-  SpeakerWaveIcon, 
+import {
+  PlayIcon,
+  PauseIcon,
+  SpeakerWaveIcon,
   SpeakerXMarkIcon,
   ArrowsPointingOutIcon,
   ArrowsPointingInIcon,

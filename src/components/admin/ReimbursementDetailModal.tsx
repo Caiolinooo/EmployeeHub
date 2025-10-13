@@ -374,7 +374,7 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
                 autoFocus
               ></textarea>
               <div className="mt-2 text-sm text-red-600">
-                {!rejectReason.trim() && {t('components.oMotivoDaRejeicaoEObrigatorio')}}
+                {!rejectReason.trim() && t('components.oMotivoDaRejeicaoEObrigatorio')}
               </div>
             </div>
           )}

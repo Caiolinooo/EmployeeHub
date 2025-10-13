@@ -84,8 +84,8 @@ export default function AvaliacaoSetupPage() {
       }
     } catch (error) {
       console.error(t('admin.erroAoAplicarMigracoes'), error);
-      setResults([{t('admin.erroDeConexaoErrorInstanceofErrorErrormessage')}Erro desconhecido'}`]);
-      alert('Erro de conexão ao aplicar migrações');
+      setResults([`${t('admin.erroDeConexao')}: ${error instanceof Error ? error.message : t('admin.erroDesconhecido')}`]);
+      alert(t('admin.erroDeConexaoAoAplicarMigracoes'));
     } finally {
       setLoading(false);
     }
@@ -113,7 +113,7 @@ export default function AvaliacaoSetupPage() {
       }
     } catch (error) {
       console.error('Erro ao verificar tabelas:', error);
-      setResults([{t('admin.erroDeConexaoErrorInstanceofErrorErrormessage')}Erro desconhecido'}`]);
+      setResults([`${t('admin.erroDeConexao')}: ${error instanceof Error ? error.message : t('admin.erroDesconhecido')}`]);
     }
   };
 

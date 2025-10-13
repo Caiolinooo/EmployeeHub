@@ -550,7 +550,7 @@ export default function ImportUsers() {
         skipped: 0
       });
 
-      console.log(t('components.iniciandoImportacaoDe'), data.length, {t('components.usuarios')});
+      console.log(t('components.iniciandoImportacaoDe'), data.length, t('components.usuarios'));
       console.log('Dados de exemplo:', JSON.stringify(data[0]));
 
       // Enviar dados para a API

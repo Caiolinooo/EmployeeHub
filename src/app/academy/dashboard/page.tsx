@@ -246,11 +246,11 @@ const AcademyDashboard: React.FC = () => {
   const getActivityMessage = (activity: RecentActivity) => {
     switch (activity.type) {
       case 'enrollment':
-        return t('academy.voceSeMatriculouEm')${activity.courseTitle}"`;
+        return `${t('academy.voceSeMatriculouEm')} "${activity.courseTitle}"`;
       case 'completion':
-        return t('academy.voceConcluiu')${activity.courseTitle}"`;
+        return `${t('academy.voceConcluiu')} "${activity.courseTitle}"`;
       case 'progress':
-        return `Progresso atualizado em "${activity.courseTitle}" (${activity.progress}%)`;
+        return `${t('academy.progressoAtualizadoEm')} "${activity.courseTitle}" (${activity.progress}%)`;
       default:
         return `Atividade em "${activity.courseTitle}"`;
     }

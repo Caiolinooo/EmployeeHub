@@ -6,11 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import MainLayout from '@/components/Layout/MainLayout';
-import { 
 import { useI18n } from '@/contexts/I18nContext';
-  FiCheck, 
-  FiX, 
-  FiAlertTriangle, 
+import {
+  FiCheck,
+  FiX,
+  FiAlertTriangle,
   FiDatabase,
   FiCopy,
   FiRefreshCw,

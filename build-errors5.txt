@@ -1,0 +1,10 @@
+﻿
+> painel-abz@0.1.0 build
+> rimraf .next && next build
+
+   Γû▓ Next.js 15.5.4
+   - Environments: .env.local, .env.production, .env
+   - Experiments (use with caution):
+     Γ£ô optimizeCss
+
+   Creating an optimized production build ...

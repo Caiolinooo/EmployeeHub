@@ -285,7 +285,7 @@ export default function AuthorizedUsersManager() {
       const result = await response.json();
 
       if (result.success) {
-        setSuccessMessage({t('components.usuarioAprovadoComSucesso')});
+        setSuccessMessage(t('components.usuarioAprovadoComSucesso'));
         fetchAuthorizedUsers();
         fetchStats();
       } else {
@@ -333,7 +333,7 @@ export default function AuthorizedUsersManager() {
       const result = await response.json();
 
       if (result.success) {
-        setSuccessMessage({t('components.usuarioRejeitadoComSucesso')});
+        setSuccessMessage(t('components.usuarioRejeitadoComSucesso'));
         setShowRejectModal(false);
         fetchAuthorizedUsers();
         fetchStats();
@@ -379,7 +379,7 @@ export default function AuthorizedUsersManager() {
       console.log('Resultado da API:', result);
 
       if (result.success) {
-        setSuccessMessage({t('components.usuarioAutorizadoExcluidoComSucesso')});
+        setSuccessMessage(t('components.usuarioAutorizadoExcluidoComSucesso'));
         fetchAuthorizedUsers();
         fetchStats();
       } else {

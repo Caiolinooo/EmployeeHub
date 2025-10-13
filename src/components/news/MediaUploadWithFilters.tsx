@@ -164,7 +164,7 @@ const MediaUploadWithFilters: React.FC<MediaUploadWithFiltersProps> = ({
           <h2 className="text-xl font-bold text-gray-800 flex-1 text-center">
             {step === 'upload' && `Selecionar ${mediaType === 'photo' ? 'Foto' : t('components.video')}`}
             {step === 'filter' && 'Aplicar Filtro'}
-            {step === 'caption' && {t('components.novaPublicacao')}}
+            {step === 'caption' && t('components.novaPublicacao')}
           </h2>
           {step === 'caption' ? (
             <button

@@ -6,12 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import MainLayout from '@/components/Layout/MainLayout';
-import { 
 import { useI18n } from '@/contexts/I18nContext';
-  FiPlus, 
-  FiEdit, 
+import {
+  FiPlus,
+  FiEdit,
   // FiTrash2, // Removido - não utilizado
-  FiRefreshCw, 
+  FiRefreshCw,
   FiDatabase,
   FiActivity,
   FiBookOpen,

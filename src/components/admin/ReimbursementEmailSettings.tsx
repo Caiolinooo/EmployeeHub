@@ -119,7 +119,7 @@ const ReimbursementEmailSettings: React.FC<ReimbursementEmailSettingsProps> = ({
 
         // Mostrar mensagem com instruções para correção manual
         toast.error(
-          {t('components.erroAoSalvarConfiguracoesVerifiqueADocumentacaoPar')},
+          t('components.erroAoSalvarConfiguracoesVerifiqueADocumentacaoPar'),
           { duration: 6000 }
         );
       }

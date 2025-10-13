@@ -118,7 +118,7 @@ export default function ReembolsoPage() {
         setActiveTab(tab);
       } else {
         // Se não houver parâmetro de aba ou for inválido, definir para 'request'
-        console.log(t('reimbursement.nenhumaAbaValidaEncontradaNoUrlDefinindoPara')request"');
+        console.log(`${t('reimbursement.nenhumaAbaValidaEncontradaNoUrlDefinindoPara')} "request"`);
         setActiveTab('request');
       }
     }

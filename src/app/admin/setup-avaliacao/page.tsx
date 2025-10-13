@@ -31,18 +31,18 @@ export default function SetupAvaliacaoPage() {
       if (data.success) {
         setResults(data.resultados || []);
         if (data.observacoes) {
-          setResults(prev => [...prev, '', {t('admin.observacoes')}, ...data.observacoes.map((obs: string) => `• ${obs}`)]);
+          setResults(prev => [...prev, '', t('admin.observacoes'), ...data.observacoes.map((obs: string) => `• ${obs}`)]);
         }
         setMigrationApplied(true);
-        alert('Configuração aplicada com sucesso!');
+        alert(t('admin.configuracaoAplicadaComSucesso'));
       } else {
         setResults([`❌ Erro: ${data.error}`]);
         alert(`Erro ao aplicar configuração: ${data.error}`);
       }
     } catch (error) {
       console.error(t('admin.erroAoAplicarConfiguracao'), error);
-      setResults([{t('admin.erroDeConexaoErrorInstanceofErrorErrormessage')}Erro desconhecido'}`]);
-      alert('Erro de conexão ao aplicar configuração');
+      setResults([`${t('admin.erroDeConexao')}: ${error instanceof Error ? error.message : t('admin.erroDesconhecido')}`]);
+      alert(t('admin.erroDeConexaoAoAplicarConfiguracao'));
     } finally {
       setLoading(false);
     }
@@ -68,7 +68,7 @@ export default function SetupAvaliacaoPage() {
       }
     } catch (error) {
       console.error('Erro ao verificar sistema:', error);
-      setResults([{t('admin.erroDeConexaoErrorInstanceofErrorErrormessage')}Erro desconhecido'}`]);
+      setResults([`${t('admin.erroDeConexao')}: ${error instanceof Error ? error.message : t('admin.erroDesconhecido')}`]);
     }
   };
 

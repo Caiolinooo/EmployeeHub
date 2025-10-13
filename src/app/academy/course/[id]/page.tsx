@@ -222,9 +222,9 @@ const CoursePage: React.FC = () => {
 
   const getDifficultyLabel = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
-      case 'beginner': return 'Iniciante';
-      case 'intermediate': return {t('academy.intermediario')};
-      case 'advanced': return {t('academy.avancado')};
+      case 'beginner': return t('academy.iniciante');
+      case 'intermediate': return t('academy.intermediario');
+      case 'advanced': return t('academy.avancado');
       default: return difficulty;
     }
   };

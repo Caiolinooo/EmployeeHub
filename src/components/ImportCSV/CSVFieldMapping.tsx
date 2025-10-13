@@ -48,7 +48,7 @@ export default function CSVFieldMapping({
     // Verificar campos obrigatórios
     required.forEach(field => {
       if (!mapping[field]) {
-        errors.push(`O campo "${field}{t('components.eObrigatorioENaoFoiMapeado')});
+        errors.push(`${t('components.oCampo')} "${field}" ${t('components.eObrigatorioENaoFoiMapeado')}`);
       }
     });
 

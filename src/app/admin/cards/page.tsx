@@ -421,7 +421,7 @@ export default function CardsPage() {
           checkMigrationStatus();
 
           // Mostrar uma mensagem informativa
-          setSuccessMessage({t('admin.usandoCardsDoCodigofonteVocePodeEditarEstesCardsMa')});
+          setSuccessMessage(t('admin.usandoCardsDoCodigofonteVocePodeEditarEstesCardsMa'));
           setTimeout(() => setSuccessMessage(null), 5000);
         }
       }
@@ -516,7 +516,7 @@ export default function CardsPage() {
         message: data.message
       });
 
-      setSuccessMessage({t('admin.migracaoConcluidaDatamessage')});
+      setSuccessMessage(`${t('admin.migracaoConcluida')}: ${data.message}`);
       setTimeout(() => setSuccessMessage(null), 5000);
 
       // Recarregar os cards e verificar a fonte dos dados

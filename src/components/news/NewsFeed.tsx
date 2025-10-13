@@ -482,7 +482,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
               >
                 <img
                   src={url}
-                  alt={{t('components.midiaIndex1')}}
+                  alt={t('components.midiaIndex1', `Mídia ${index + 1}`)}
                   className="w-full h-auto cursor-pointer select-none"
                 />
                 {/* Animação de coração para duplo clique */}

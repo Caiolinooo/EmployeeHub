@@ -202,11 +202,11 @@ const NotificationsPage: React.FC = () => {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffMinutes < 60) {
-      return `${diffMinutes} minuto${diffMinutes > 1 ? 's' : '{t('academy.atras')};
+      return `${diffMinutes} ${diffMinutes > 1 ? t('academy.minutos') : t('academy.minuto')} ${t('academy.atras')}`;
     } else if (diffHours < 24) {
-      return `${diffHours} hora${diffHours > 1 ? 's' : '{t('academy.atras')};
+      return `${diffHours} ${diffHours > 1 ? t('academy.horas') : t('academy.hora')} ${t('academy.atras')}`;
     } else if (diffDays < 7) {
-      return `${diffDays} dia${diffDays > 1 ? 's' : '{t('academy.atras')};
+      return `${diffDays} ${diffDays > 1 ? t('academy.dias') : t('academy.dia')} ${t('academy.atras')}`;
     } else {
       return date.toLocaleDateString('pt-BR', {
         day: '2-digit',
@@ -251,9 +251,9 @@ const NotificationsPage: React.FC = () => {
             <div className="flex items-center">
               <BellIcon className="w-8 h-8 text-blue-600 mr-3" />
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Notificações</h1>
+                <h1 className="text-3xl font-bold text-gray-900">{t('academy.notificacoes')}</h1>
                 <p className="text-gray-600 mt-1">
-                  {unreadCount > 0 ? t('academy.unreadcountNaoLidaunreadcount1')s' : ''}` : t('academy.todasAsNotificacoesLidas')}
+                  {unreadCount > 0 ? `${unreadCount} ${unreadCount > 1 ? t('academy.naoLidas') : t('academy.naoLida')}` : t('academy.todasAsNotificacoesLidas')}
                 </p>
               </div>
             </div>

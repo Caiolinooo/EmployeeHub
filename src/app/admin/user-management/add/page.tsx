@@ -1,4 +1,4 @@
-'use client';
+ï»¿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -15,7 +15,7 @@ export default function AddUserPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Redirecionar se não for administrador
+  // Redirecionar se nï¿½o for administrador
   useEffect(() => {
     if (!isLoading && !isAdmin) {
       router.push('/dashboard');
@@ -62,13 +62,13 @@ export default function AddUserPage() {
 
       setSuccess(t('admin.usuarioCriadoComSucesso'));
       
-      // Redirecionar após 2 segundos
+      // Redirecionar apï¿½s 2 segundos
       setTimeout(() => {
         router.push('/admin/user-management');
       }, 2000);
     } catch (error) {
       console.error(t('admin.erroAoSalvarUsuario'), error);
-      setError(t('admin.erroAoSalvarUsuarioErrorInstanceofErrorErrormessag')}Erro desconhecido'}`);
+      setError(`${t('admin.erroAoSalvarUsuario')}: ${error instanceof Error ? error.message : t('admin.erroDesconhecido')}`);
     }
   };
 

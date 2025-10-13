@@ -301,7 +301,7 @@ export default function ReimbursementApproval() {
     // Pequeno atraso para garantir que o DOM seja atualizado
     setTimeout(() => {
       // Tentar focar no textarea
-      const textarea = document.querySelector('textarea[placeholder={t('components.informeOMotivoDaRejeicao')}]');
+      const textarea = document.querySelector('textarea[name="rejectReason"]');
       if (textarea) {
         (textarea as HTMLTextAreaElement).focus();
       }

@@ -71,7 +71,7 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
         if (userId) url += `userId=${encodeURIComponent(userId)}`;
         else if (email) url += `email=${encodeURIComponent(email)}`;
 
-        console.log(t('components.buscandoConfiguracoesParaUserid')userId: ' + userId : 'email: ' + email}`);
+        console.log(t('components.buscandoConfiguracoesParaUserid'), `userId: ${userId}, email: ${email}`);
 
         // Adicionar timestamp para evitar cache
         url += `&_t=${Date.now()}`;
