@@ -192,12 +192,22 @@ export default function MainLayout({ children }: MainLayoutProps) {
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
               const IconComponent = item.icon;
 
-              // Obter o texto a ser exibido
-              // Se vier do banco (menuItems), usar 'title'
-              // Se vier do hardcoded (mainMenuItems), usar 'label' e traduzir
-              const displayLabel = menuItems.length > 0
-                ? (item as any).title || item.id  // Dados do banco já vêm traduzidos
-                : t((item as any).label) || item.id;  // Dados hardcoded precisam ser traduzidos
+              // Obter o texto a ser exibido com tradução baseada no locale
+              let displayLabel = '';
+              if (menuItems.length > 0) {
+                // Dados do banco - usar title_pt ou title_en baseado no locale
+                const itemWithTranslation = item as any;
+                if (locale === 'en-US' && itemWithTranslation.title_en) {
+                  displayLabel = itemWithTranslation.title_en;
+                } else if (itemWithTranslation.title_pt) {
+                  displayLabel = itemWithTranslation.title_pt;
+                } else {
+                  displayLabel = itemWithTranslation.title || item.id;
+                }
+              } else {
+                // Dados hardcoded - traduzir usando t()
+                displayLabel = t((item as any).label) || item.id;
+              }
 
               return (
                 <Link

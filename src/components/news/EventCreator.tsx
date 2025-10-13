@@ -20,6 +20,7 @@ const EventCreator: React.FC<EventCreatorProps> = ({
   userId,
   onEventCreated
 }) => {
+  const { t } = useI18n();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
