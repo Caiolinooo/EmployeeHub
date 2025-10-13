@@ -142,10 +142,10 @@ class UnifiedDataService {
         color: 'bg-abz-blue',
         hoverColor: 'hover:bg-abz-blue-dark',
         external: false,
-        enabled: true,
+        enabled: false,
         order: 2,
-        showInDashboard: true,
-        showInMenu: true,
+        showInDashboard: false,
+        showInMenu: false,
         showInAdminMenu: false
       },
       {
