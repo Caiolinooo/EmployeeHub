@@ -167,19 +167,53 @@ const CardEditor = ({ card, onSave, onCancel, isNew = false }: CardEditorProps) 
           </div>
         </div>
 
-        <div className="mb-4">
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-            {t('admin.cardDescription', 'Descrição')}
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            value={editedCard.description}
-            onChange={handleChange}
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
-            required
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+              {t('admin.cardDescription', 'Descrição (PT)')}
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={editedCard.description}
+              onChange={handleChange}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="descriptionEn" className="block text-sm font-medium text-gray-700 mb-1">
+              {t('admin.cardDescriptionEn', 'Descrição (EN)')}
+            </label>
+            <textarea
+              id="descriptionEn"
+              name="descriptionEn"
+              value={(editedCard as any).descriptionEn || editedCard.description}
+              onChange={handleChange}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
+              placeholder="English description"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label htmlFor="titleEn" className="block text-sm font-medium text-gray-700 mb-1">
+              {t('admin.cardTitleEn', 'Título (EN)')}
+            </label>
+            <input
+              type="text"
+              id="titleEn"
+              name="titleEn"
+              value={(editedCard as any).titleEn || editedCard.title}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
+              placeholder="English title"
+            />
+          </div>
         </div>
 
         <div className="flex items-center space-x-4 mb-4">
