@@ -187,7 +187,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 ))}
               </div>
             ) : (
-              (menuItems.length > 0 ? menuItems : mainMenuItems).map((item) => {
+              (menuItems.length > 0 ? menuItems : mainMenuItems)
+                .filter(item => item.id !== 'admin') // Nunca mostrar item admin no menu
+                .map((item) => {
                 const isActive = pathname ? (pathname === item.href || pathname.startsWith(item.href + '/')) : false;
                 const IconComponent = item.icon;
 

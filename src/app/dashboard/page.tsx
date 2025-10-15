@@ -298,6 +298,9 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {cards
                   .filter(card => {
+                    // Nunca mostrar o card de admin no dashboard
+                    if (card.id === 'admin') return false;
+
                     if (!card.enabled) return false;
                     if (card.adminOnly && !isAdmin) return false;
                     if (card.managerOnly && !(isAdmin || user?.role === 'MANAGER')) return false;

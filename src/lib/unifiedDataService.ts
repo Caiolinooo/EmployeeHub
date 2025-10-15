@@ -292,23 +292,6 @@ class UnifiedDataService {
         showInDashboard: true,
         showInMenu: true,
         showInAdminMenu: false
-      },
-      {
-        id: 'admin',
-        title: 'Administração',
-        description: 'Painel de administração do sistema',
-        href: '/admin',
-        icon: FiSettings,
-        iconName: 'FiSettings',
-        color: 'bg-abz-indigo',
-        hoverColor: 'hover:bg-abz-indigo-dark',
-        external: false,
-        enabled: true,
-        order: 100,
-        adminOnly: true,
-        showInDashboard: true,
-        showInMenu: true,
-        showInAdminMenu: false
       }
     ];
   }
