@@ -245,10 +245,10 @@ export default function Dashboard() {
               )}
 
               <h2 className="text-3xl font-extrabold text-abz-blue-dark">
-                {t('dashboard.logisticsPanel', config.dashboardTitle || 'ABZ Group')}
+                {config?.dashboardTitle || t('dashboard.logisticsPanel', 'Painel de Logística ABZ Group')}
               </h2>
               <p className="mt-2 text-sm text-gray-500">
-                {t('dashboard.welcomeMessage', config.dashboardDescription || '')}
+                {config?.dashboardDescription || t('dashboard.welcomeMessage', 'Bem-vindo ao Hub da ABZ Group. Reunimos as principais ferramentas em um único local para facilitar o dia a dia dos nossos colaboradores.')}
               </p>
             </div>
 

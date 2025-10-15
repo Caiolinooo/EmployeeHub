@@ -8,6 +8,8 @@ import "./globals.css";
 import ClientProviders from "@/components/ClientProviders";
 // Import the ThemeEnforcerWrapper component
 import ThemeEnforcerWrapper from "@/components/ThemeEnforcerWrapper";
+// Import SiteHead for dynamic title updates
+import SiteHead from "@/components/SiteHead";
 
 // Global error handling is now moved to the GlobalErrorHandler component
 
@@ -48,11 +50,33 @@ const plusJakartaSans = localFont({
   variable: '--font-plus-jakarta',
 });
 
-// Metadata is now handled dynamically by SiteHead component
-export const metadata: Metadata = {
-  title: "Painel ABZ Group", // Default title, will be overridden by SiteHead
-  description: "Painel centralizado para colaboradores da ABZ Group", // Default description
-};
+// Função para gerar metadata dinamicamente
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    // Tentar buscar a configuração do servidor
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const response = await fetch(`${baseUrl}/api/config`, {
+      cache: 'no-store',
+      next: { revalidate: 0 }
+    });
+
+    if (response.ok) {
+      const config = await response.json();
+      return {
+        title: config.title || "Painel ABZ Group",
+        description: config.description || "Painel centralizado para colaboradores da ABZ Group",
+      };
+    }
+  } catch (error) {
+    console.error('Erro ao buscar configuração para metadata:', error);
+  }
+
+  // Fallback para valores padrão
+  return {
+    title: "Painel ABZ Group",
+    description: "Painel centralizado para colaboradores da ABZ Group",
+  };
+}
 
 export default function RootLayout({
   children,
@@ -84,6 +108,7 @@ export default function RootLayout({
       <body className="bg-gray-50" suppressHydrationWarning>
         <ClientProviders>
           <ErrorBoundary fallback={<ErrorFallback />}>
+            <SiteHead />
             {children}
           </ErrorBoundary>
           <ThemeEnforcerWrapper />

@@ -11,7 +11,7 @@ export default function SiteHead() {
     if (!config) return;
 
     // Log for debugging
-    console.log('Applying site configuration:', {
+    console.log('🎨 SiteHead: Aplicando configuração do site:', {
       title: config.title,
       favicon: config.favicon,
       logo: config.logo,
@@ -19,8 +19,11 @@ export default function SiteHead() {
       secondaryColor: config.secondaryColor
     });
 
-    // Update document title
-    document.title = config.title;
+    // Update document title IMMEDIATELY
+    if (typeof document !== 'undefined' && config.title) {
+      document.title = config.title;
+      console.log('✅ SiteHead: Título atualizado para:', config.title);
+    }
 
     // Update favicon - try different approaches to ensure it works
     // 1. Update existing link
