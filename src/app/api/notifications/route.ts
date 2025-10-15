@@ -63,7 +63,10 @@ export async function GET(request: NextRequest) {
 
     // Executar query com retry
     const { data: notifications, error, attempts } = await supabaseWithRetry(
-      () => query,
+      async () => {
+        const result = await query;
+        return result;
+      },
       {
         maxRetries: 2,
         delay: 1000,
@@ -109,11 +112,14 @@ export async function GET(request: NextRequest) {
 
       // Buscar contagem total com retry
       const { data: totalResult, error: totalError } = await supabaseWithRetry(
-        () => supabaseAdmin
-          .from('notifications')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user_id)
-          .or(`expires_at.is.null,expires_at.gt.${currentDate}`),
+        async () => {
+          const result = await supabaseAdmin
+            .from('notifications')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user_id)
+            .or(`expires_at.is.null,expires_at.gt.${currentDate}`);
+          return result;
+        },
         {
           maxRetries: 1,
           delay: 500,
@@ -127,12 +133,15 @@ export async function GET(request: NextRequest) {
 
       // Buscar contagem não lidas com retry
       const { data: unreadResult, error: unreadError } = await supabaseWithRetry(
-        () => supabaseAdmin
-          .from('notifications')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user_id)
-          .is('read_at', null)
-          .or(`expires_at.is.null,expires_at.gt.${currentDate}`),
+        async () => {
+          const result = await supabaseAdmin
+            .from('notifications')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user_id)
+            .is('read_at', null)
+            .or(`expires_at.is.null,expires_at.gt.${currentDate}`);
+          return result;
+        },
         {
           maxRetries: 1,
           delay: 500,
@@ -147,22 +156,22 @@ export async function GET(request: NextRequest) {
       // Se houve erro nas contagens, usar fallback
       if (totalError || unreadError) {
         console.warn('⚠️ Erro ao buscar contagens, usando valores calculados');
-        totalCount = notifications?.length || 0;
-        unreadCount = notifications?.filter(n => !n.read_at).length || 0;
+        totalCount = (notifications as any[])?.length || 0;
+        unreadCount = (notifications as any[])?.filter((n: any) => !n.read_at).length || 0;
       }
 
     } catch (countError) {
       logError('Notifications Count', countError, { user_id });
-      totalCount = notifications?.length || 0;
-      unreadCount = notifications?.filter(n => !n.read_at).length || 0;
+      totalCount = (notifications as any[])?.length || 0;
+      unreadCount = (notifications as any[])?.filter((n: any) => !n.read_at).length || 0;
     }
 
-    console.log(`✅ ${notifications?.length || 0} notificações carregadas (${unreadCount} não lidas)`);
+    console.log(`✅ ${(notifications as any[])?.length || 0} notificações carregadas (${unreadCount} não lidas)`);
 
     // Log de performance
     logPerformance('GET /api/notifications', startTime, {
       user_id,
-      count: notifications?.length || 0,
+      count: (notifications as any[])?.length || 0,
       unreadCount,
       attempts
     });
