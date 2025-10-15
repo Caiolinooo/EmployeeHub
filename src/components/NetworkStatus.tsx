@@ -231,10 +231,10 @@ export default function NetworkStatus({ className = '', showDetails = false }: N
             
             <div className="pt-2 border-t border-gray-200">
               <p className="text-xs text-gray-500">
-                {overallStatus === 'offline' && {t('components.verifiqueSuaConexaoComAInternet')}}
-                {overallStatus === 'degraded' && 'Algumas funcionalidades podem estar lentas.'}
-                {overallStatus === 'recovering' && {t('components.tentandoRestabelecerConexao')}}
-                {overallStatus === 'healthy' && 'Todos os sistemas funcionando normalmente.'}
+                {overallStatus === 'offline' && t('components.verifiqueSuaConexaoComAInternet', 'Verifique sua conexão com a internet')}
+                {overallStatus === 'degraded' && t('components.algumasFuncionalidadesPodemEstarLentas', 'Algumas funcionalidades podem estar lentas.')}
+                {overallStatus === 'recovering' && t('components.tentandoRestabelecerConexao', 'Tentando restabelecer conexão')}
+                {overallStatus === 'healthy' && t('components.todosSistemasNormais', 'Todos os sistemas funcionando normalmente.')}
               </p>
             </div>
           </div>

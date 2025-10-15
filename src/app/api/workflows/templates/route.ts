@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { verifyTokenFromRequest, verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { WorkflowTemplate } from '@/types/workflows';
 
 export const runtime = 'nodejs';
@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
+    const authResult = await verifyTokenFromRequest(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
     // Verificar permissões
     const { data: user } = await supabase
       .from('users_unified')
-      .select('role, access_permissions')
+      .select('role, access_permissions, email')
       .eq('id', authResult.payload.userId)
       .single();
 
@@ -240,7 +240,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
+    const authResult = await verifyTokenFromRequest(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,
@@ -275,7 +275,7 @@ export async function PUT(request: NextRequest) {
     // Verificar se usuário pode criar workflows
     const { data: user } = await supabase
       .from('users_unified')
-      .select('role')
+      .select('role, email')
       .eq('id', authResult.payload.userId)
       .single();
 

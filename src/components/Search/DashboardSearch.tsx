@@ -20,6 +20,7 @@ interface SearchResponse {
   limit: number;
   offset: number;
   hasMore: boolean;
+  error?: string;
 }
 
 const DashboardSearch: React.FC = () => {
@@ -217,21 +218,21 @@ const DashboardSearch: React.FC = () => {
           {loading && (
             <div className="p-4 text-center">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="text-sm text-gray-500 mt-2">Buscando...</p>
+              <p className="text-sm text-gray-500 mt-2">{t('components.buscando', 'Buscando...')}</p>
             </div>
           )}
 
           {!loading && results.length === 0 && query.length >= 2 && (
             <div className="p-4 text-center text-gray-500">
-              <p className="text-sm">Nenhum resultado encontrado para "{query}"</p>
-              <p className="text-xs mt-1">Tente usar termos diferentes ou remover filtros</p>
+              <p className="text-sm">{t('components.nenhumResultadoEncontradoPara', 'Nenhum resultado encontrado para')} "{query}"</p>
+              <p className="text-xs mt-1">{t('components.tenteUsarTermosDiferentesOuRemoverFiltros', 'Tente usar termos diferentes ou remover filtros')}</p>
             </div>
           )}
 
           {!loading && results.length > 0 && (
             <div className="py-2">
               <div className="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-50 border-b">
-                {results.length} resultado{results.length !== 1 ? 's' : ''} encontrado{results.length !== 1 ? 's' : ''}
+                {results.length} {t('components.resultado', 'resultado')}{results.length !== 1 ? 's' : ''} {t('components.encontrado', 'encontrado')}{results.length !== 1 ? 's' : ''}
               </div>
               {results.map((result) => (
                 <button

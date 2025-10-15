@@ -77,6 +77,7 @@ interface EnrollmentLite {
 const AcademyDashboard: React.FC = () => {
   const router = useRouter();
   const { user, getToken } = useSupabaseAuth();
+  const { t } = useI18n();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [recentCourses, setRecentCourses] = useState<Course[]>([]);

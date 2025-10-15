@@ -8,22 +8,22 @@ export default function SupabaseStatus() {
   const { t } = useI18n();
 
   const [status, setStatus] = useState<'loading' | 'connected' | 'error'>('loading');
-  const [message, setMessage] = useState<string>({t('components.verificandoConexao')});
+  const [message, setMessage] = useState<string>(t('components.verificandoConexao', 'Verificando conexão...'));
   const [details, setDetails] = useState<any>(null);
   const [isChecking, setIsChecking] = useState<boolean>(false);
 
   const checkConnection = async () => {
     setIsChecking(true);
     setStatus('loading');
-    setMessage(t('components.verificandoConexao')});
-    
+    setMessage(t('components.verificandoConexao', 'Verificando conexão...'));
+
     try {
       const response = await fetch('/api/test/supabase');
       const data = await response.json();
-      
+
       if (data.status === 'ok') {
         setStatus('connected');
-        setMessage(t('components.conexaoEstabelecidaComSucesso')});
+        setMessage(t('components.conexaoEstabelecidaComSucesso', 'Conexão estabelecida com sucesso'));
         setDetails(data);
       } else {
         setStatus('error');
@@ -32,7 +32,7 @@ export default function SupabaseStatus() {
       }
     } catch (error) {
       setStatus('error');
-      setMessage(t('components.erroAoVerificarConexao')});
+      setMessage(t('components.erroAoVerificarConexao', 'Erro ao verificar conexão'));
       setDetails({ error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsChecking(false);

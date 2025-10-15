@@ -1,10 +1,11 @@
 ﻿"use client";
 
 import React, { useEffect, useState } from "react";
-import { FiBell, FiSave, FiSend, FiRefreshCw } from "react-icons/fi";
+import { FiBell, FiSave, FiSend, FiRefreshCw, FiCopy } from "react-icons/fi";
 import { fetchWithToken } from "@/lib/tokenStorage";
 import ProtectedRoute from "@/components/Auth/ProtectedRoute";
 import { useI18n } from '@/contexts/I18nContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 interface NotificationSettings {
   autoNotifyNewsPosts: boolean;
@@ -35,6 +36,10 @@ export default function AdminNotificationsPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [vapidPublic, setVapidPublic] = useState<string | null>(null);
   const [vapidLoading, setVapidLoading] = useState(false);
+  const [testSending, setTestSending] = useState(false);
+  const { user: authUser, profile } = useSupabaseAuth();
+  const [subCount, setSubCount] = useState<number | null>(null);
+
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -57,6 +62,8 @@ export default function AdminNotificationsPage() {
 
   useEffect(() => {
     loadSettings();
+    loadSubCount();
+
     loadVapid();
   }, []);
 
@@ -70,6 +77,17 @@ export default function AdminNotificationsPage() {
       console.error(e);
     } finally {
       setVapidLoading(false);
+    }
+  };
+
+  const loadSubCount = async () => {
+    try {
+      const res = await fetchWithToken('/api/admin/notifications/push/subscriptions/count');
+      const data = await res.json();
+      setSubCount(typeof data?.total === 'number' ? data.total : null);
+    } catch (e) {
+      console.error(e);
+      setSubCount(null);
     }
   };
 
@@ -90,6 +108,52 @@ export default function AdminNotificationsPage() {
       setVapidLoading(false);
     }
   };
+  // Atalho: habilitar push neste navegador
+  const enablePushHere = async () => {
+    try {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        showToast('Navegador não suporta Web Push');
+        return;
+      }
+      const publicKey = vapidPublic || (await (async () => {
+        try { const res = await fetchWithToken('/api/admin/notifications/push/vapid'); const d = await res.json(); return d?.publicKey || null; } catch { return null; }
+      })());
+      if (!publicKey) { showToast('Chave pública VAPID ausente'); return; }
+
+      // Registrar SW
+      const registration = await navigator.serviceWorker.register('/notifications-sw.js');
+      await navigator.serviceWorker.ready;
+
+      // Assinar push
+      const sub = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey)
+      });
+
+      // Enviar assinatura para o backend
+      const res = await fetchWithToken('/api/notifications/push/subscribe', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: sub })
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || 'Falha ao salvar assinatura');
+      }
+      showToast('Push habilitado neste navegador');
+    } catch (e) {
+      console.error(e);
+      showToast('Falha ao habilitar push');
+    }
+  };
+
+  function urlBase64ToUint8Array(base64String: string) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+    return outputArray;
+  }
+
 
   const saveSettings = async () => {
     if (!settings) return;
@@ -174,10 +238,69 @@ export default function AdminNotificationsPage() {
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-700">
               {vapidLoading ? 'Verificando chaves...' : vapidPublic ? t('admin.chavePublicaConfigurada') : 'Chaves VAPID ausentes'}
+              {vapidPublic && (
+                <div className="mt-2 text-xs text-gray-600 break-all">
+                  <span className="font-mono">{vapidPublic.slice(0, 28)}...{vapidPublic.slice(-12)}</span>
+                  <button
+                    onClick={async () => { try { await navigator.clipboard.writeText(vapidPublic); showToast('Chave pública copiada'); } catch {} }}
+                    className="ml-2 inline-flex items-center px-2 py-1 text-xs border rounded hover:bg-gray-50"
+                    title="Copiar"
+                  >
+                    <FiCopy className="w-3 h-3 mr-1" /> Copiar
+                  </button>
+                </div>
+              )}
+              <div className="mt-2 text-xs text-gray-600">
+                Assinaturas de navegador: {subCount === null ? '—' : subCount}
+                <button onClick={loadSubCount} className="ml-2 px-2 py-1 border rounded hover:bg-gray-50" title="Atualizar contagem">
+                  <FiRefreshCw className="inline-block w-3 h-3" />
+                </button>
+              </div>
             </div>
-            <button onClick={generateVapid} disabled={vapidLoading} className="px-3 py-2 bg-indigo-600 text-white rounded">
-              {vapidLoading ? 'Processando...' : (vapidPublic ? 'Rotacionar chaves' : 'Gerar chaves')}
-            </button>
+            <div className="flex items-center gap-2">
+              <button onClick={generateVapid} disabled={vapidLoading} className="px-3 py-2 bg-indigo-600 text-white rounded">
+                {vapidLoading ? 'Processando...' : (vapidPublic ? 'Rotacionar chaves' : 'Gerar chaves')}
+              </button>
+              <button
+                onClick={enablePushHere}
+                disabled={vapidLoading}
+                className="px-3 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 disabled:opacity-60"
+                title="Habilitar Push neste navegador"
+              >
+                Habilitar Push (navegador)
+              </button>
+              <button
+                onClick={async () => {
+                  const userId = (profile?.id || authUser?.id) as string | undefined;
+                  if (!userId) { showToast('Usuário não identificado'); return; }
+                  try {
+                    setTestSending(true);
+                    const res = await fetchWithToken('/api/notifications', {
+                      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+                        user_id: userId,
+                        type: 'system',
+                        title: 'Teste Push',
+                        message: 'Esta é uma notificação de teste do Web Push.',
+                        action_url: '/'
+                      })
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data?.error || 'Falha no envio');
+                    showToast('Notificação de teste enviada');
+                  } catch (e) {
+                    console.error(e);
+                    showToast('Falha ao enviar teste');
+                  } finally {
+                    setTestSending(false);
+                  }
+                }}
+                disabled={vapidLoading || testSending}
+                className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-60"
+                title="Enviar push de teste para meu usuário"
+              >
+                {testSending ? 'Enviando...' : 'Teste Push (para mim)'}
+              </button>
+            </div>
           </div>
         </div>
 

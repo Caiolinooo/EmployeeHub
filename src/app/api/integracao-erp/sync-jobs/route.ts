@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyToken } from '@/lib/auth';
+import { verifyTokenFromRequest } from '@/lib/auth';
 import { ERPSyncJob, SyncJobConfig } from '@/types/integracao-erp';
 
 export const runtime = 'nodejs';
@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
 export async function GET(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
+    const authResult = await verifyTokenFromRequest(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     // Verificar permissões
     const { data: user } = await supabase
       .from('users_unified')
-      .select('role, access_permissions')
+      .select('role, access_permissions, email')
       .eq('id', authResult.payload.userId)
       .single();
 
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
+    const authResult = await verifyTokenFromRequest(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
     // Verificar permissões
     const { data: user } = await supabase
       .from('users_unified')
-      .select('role, access_permissions')
+      .select('role, access_permissions, email')
       .eq('id', authResult.payload.userId)
       .single();
 
@@ -294,7 +294,7 @@ async function simulateSync(jobId: string) {
 export async function PATCH(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
+    const authResult = await verifyTokenFromRequest(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,
@@ -305,7 +305,7 @@ export async function PATCH(request: NextRequest) {
     // Verificar permissões
     const { data: user } = await supabase
       .from('users_unified')
-      .select('role, access_permissions')
+      .select('role, access_permissions, email')
       .eq('id', authResult.payload.userId)
       .single();
 

@@ -25,6 +25,7 @@ interface RolePermissionsEditorProps {
 }
 
 const RolePermissionsEditor: React.FC<RolePermissionsEditorProps> = ({ onClose }) => {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [availableModules, setAvailableModules] = useState<Module[]>([]);

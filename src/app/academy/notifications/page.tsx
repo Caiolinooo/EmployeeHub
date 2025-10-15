@@ -34,6 +34,7 @@ interface Notification {
 const NotificationsPage: React.FC = () => {
   const router = useRouter();
   const { user, getToken } = useSupabaseAuth();
+  const { t } = useI18n();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);

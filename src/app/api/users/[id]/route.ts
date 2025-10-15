@@ -43,9 +43,7 @@ export async function GET(
     }
 
     // Obter o ID do usuário dos parâmetros da rota
-    // Garantir que params seja await antes de acessar suas propriedades
-    // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const userId = await Promise.resolve(params.id);
+    const { id: userId } = await params;
 
     // Buscar o usuário
     const { data: user, error: fetchError } = await supabaseAdmin
@@ -128,9 +126,7 @@ export async function PUT(
     }
 
     // Obter o ID do usuário dos parâmetros da rota
-    // Garantir que params seja await antes de acessar suas propriedades
-    // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const userId = await Promise.resolve(params.id);
+    const { id: userId } = await params;
 
     // Obter os dados do corpo da requisição
     const body = await request.json();
@@ -319,9 +315,7 @@ export async function DELETE(
     }
 
     // Obter o ID do usuário dos parâmetros da rota
-    // Garantir que params seja await antes de acessar suas propriedades
-    // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const userId = await Promise.resolve(params.id);
+    const { id: userId } = await params;
 
     // Não permitir excluir o próprio usuário
     if (userId === payload.userId) {

@@ -42,7 +42,7 @@ export async function POST(
     }
 
     // Obter o ID do usuário dos parâmetros da rota
-    const userId = params.id;
+    const { id: userId } = await params;
 
     // Obter a nova senha do corpo da requisição
     const body = await request.json();

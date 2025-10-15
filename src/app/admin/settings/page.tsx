@@ -18,6 +18,7 @@ interface SiteConfig {
   footerText: string;
   dashboardTitle: string;
   dashboardDescription: string;
+  sidebarTitle?: string;
   googleClientId?: string;
   googleClientSecret?: string;
   googleRedirectUri?: string;
@@ -84,6 +85,7 @@ export default function SettingsPage() {
             footerText: '© 2024 ABZ Group. Todos os direitos reservados.',
             dashboardTitle: t('admin.painelDeLogisticaAbzGroup'),
             dashboardDescription: t('admin.bemvindoAoCentroDeRecursosParaColaboradoresDaLogis'),
+            sidebarTitle: 'Painel ABZ',
             updatedAt: new Date().toISOString(),
           };
 
@@ -130,6 +132,7 @@ export default function SettingsPage() {
         footerText: '© 2024 ABZ Group. Todos os direitos reservados.',
         dashboardTitle: t('admin.painelDeLogisticaAbzGroup'),
         dashboardDescription: t('admin.bemvindoAoCentroDeRecursosParaColaboradoresDaLogis'),
+        sidebarTitle: 'Painel ABZ',
         updatedAt: new Date().toISOString(),
       });
     } finally {
@@ -177,11 +180,11 @@ export default function SettingsPage() {
         const data = await response.json();
         return data.files[0].url;
       } else {
-        console.error(t('admin.erroAoFazerUploadDo', { type }));
+        console.error(`Erro ao fazer upload do ${type}`);
         return null;
       }
     } catch (error) {
-      console.error(t('admin.erroAoFazerUploadDo', { type }), error);
+      console.error(`Erro ao fazer upload do ${type}`, error);
       return null;
     }
   };
@@ -336,6 +339,95 @@ export default function SettingsPage() {
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
                 required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="dashboardTitle" className="block text-sm font-medium text-gray-700 mb-1">
+                {t('admin.tituloDoPainelPrincipal')}
+              </label>
+              <input
+                type="text"
+                id="dashboardTitle"
+                name="dashboardTitle"
+                value={config.dashboardTitle}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
+                placeholder="Painel de Logística ABZ Group"
+              />
+              <p className="mt-1 text-xs text-gray-500">{t('admin.tituloExibidoNoPainelPrincipal')}</p>
+            </div>
+
+            <div>
+              <label htmlFor="sidebarTitle" className="block text-sm font-medium text-gray-700 mb-1">
+                {t('admin.tituloDoMenuLateral')}
+              </label>
+              <input
+                type="text"
+                id="sidebarTitle"
+                name="sidebarTitle"
+                value={config.sidebarTitle || ''}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
+                placeholder="Painel ABZ"
+              />
+              <p className="mt-1 text-xs text-gray-500">{t('admin.tituloExibidoNoMenuLateral')}</p>
+            </div>
+
+            <div>
+              <label htmlFor="contactEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                {t('admin.emailDeContato')}
+              </label>
+              <input
+                type="email"
+                id="contactEmail"
+                name="contactEmail"
+                value={config.contactEmail}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                {t('admin.descricaoDoSite')}
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                value={config.description}
+                onChange={handleChange}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label htmlFor="dashboardDescription" className="block text-sm font-medium text-gray-700 mb-1">
+                {t('admin.descricaoDoPainelPrincipal')}
+              </label>
+              <textarea
+                id="dashboardDescription"
+                name="dashboardDescription"
+                value={config.dashboardDescription}
+                onChange={handleChange}
+                rows={2}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
+                placeholder="Bem-vindo ao centro de recursos para colaboradores da logística."
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label htmlFor="footerText" className="block text-sm font-medium text-gray-700 mb-1">
+                {t('admin.textoDoRodape')}
+              </label>
+              <input
+                type="text"
+                id="footerText"
+                name="footerText"
+                value={config.footerText}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
               />
             </div>
           </div>

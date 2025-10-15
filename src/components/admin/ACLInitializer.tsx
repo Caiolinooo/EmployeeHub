@@ -18,6 +18,7 @@ interface ACLStatus {
 }
 
 const ACLInitializer: React.FC = () => {
+  const { t } = useI18n();
   const [status, setStatus] = useState<ACLStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

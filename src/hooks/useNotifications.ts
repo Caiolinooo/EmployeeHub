@@ -234,15 +234,37 @@ export function useNotifications(userId?: string): UseNotificationsReturn {
     }
   }, [userId, loadNotifications]);
 
-  // Polling para atualizações automáticas (a cada 30 segundos)
+  // Indústria: polling consciente de visibilidade + refresh em foco
   useEffect(() => {
     if (!userId) return;
 
-    const interval = setInterval(() => {
-      refreshNotifications();
-    }, 30000);
+    let intervalId: any;
+    const BASE_INTERVAL = 60000; // 60s
 
-    return () => clearInterval(interval);
+    const tick = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        refreshNotifications();
+      }
+    };
+
+    // interval only when visible
+    intervalId = setInterval(tick, BASE_INTERVAL);
+
+    const onFocus = () => refreshNotifications();
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        refreshNotifications();
+      }
+    };
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, [userId, refreshNotifications]);
 
   // Cleanup

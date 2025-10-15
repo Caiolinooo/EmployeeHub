@@ -74,6 +74,10 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
           type="text/css"
         />
+        {/* PWA Manifest & Meta */}
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <meta name="theme-color" content="#0B72E7" />
+        <link rel="icon" href="/images/LC1_Azul.png" />
         {/* Meta tag para garantir o tipo MIME correto */}
         <meta httpEquiv="Content-Type" content="text/html; charset=utf-8" />
       </head>

@@ -7,6 +7,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { unifiedDataService, UnifiedItem, getDashboardCards, getMenuItems } from '@/lib/unifiedDataService';
+import { getCardsCached } from '@/lib/cardsCache';
+import { FiGrid } from 'react-icons/fi';
+
 
 interface UseUnifiedDataOptions {
   type: 'dashboard' | 'menu' | 'admin';
@@ -50,6 +53,37 @@ export function useUnifiedData(options: UseUnifiedDataOptions): UseUnifiedDataRe
           break;
         case 'menu':
           loadedItems = await getMenuItems(userRole, userId);
+          try {
+            // Complementar menu com cards visíveis no dashboard (via cache compartilhado)
+            if (userId) {
+              const cards = await getCardsCached({ userId, userRole });
+              const existing = new Set(loadedItems.map((i: any) => i.href));
+              const cardItems = (cards || []).map((c: any) => ({
+                id: c.id,
+                title: c.title,
+                description: c.description || '',
+                href: c.href,
+                icon: FiGrid,
+                iconName: c.iconName || c.icon || 'FiGrid',
+                external: false,
+                enabled: c.enabled !== undefined ? c.enabled : true,
+                order: c.order ?? 999,
+                adminOnly: c.adminOnly,
+                managerOnly: c.managerOnly,
+                allowedRoles: c.allowedRoles,
+                allowedUserIds: c.allowedUserIds,
+                showInMenu: true,
+                showInDashboard: true,
+                source: 'supabase' as const
+              }));
+              const toAdd = cardItems.filter((ci: any) => ci.enabled && !existing.has(ci.href));
+              if (toAdd.length) {
+                loadedItems = [...loadedItems, ...toAdd].sort((a: any, b: any) => (a.order ?? 999) - (b.order ?? 999));
+              }
+            }
+          } catch (e) {
+            console.warn('Falha ao complementar menu com cards do dashboard:', e);
+          }
           break;
         case 'admin':
           // Para admin, carregar todos os items
@@ -63,6 +97,7 @@ export function useUnifiedData(options: UseUnifiedDataOptions): UseUnifiedDataRe
       }
 
       // Aplicar traduções baseadas no locale
+      // IMPORTANTE: Preservar title_pt e title_en para uso no componente
       const translatedItems = await Promise.all(
         loadedItems.map(async (item: any) => {
           let translatedTitle = item.title;
@@ -73,7 +108,7 @@ export function useUnifiedData(options: UseUnifiedDataOptions): UseUnifiedDataRe
             translatedTitle = locale === 'en-US' ? item.title_en : item.title_pt;
           }
           // Se o título parece uma chave de tradução, traduzir
-          else if (item.title.includes('.') || item.title.startsWith('cards.') || item.title.startsWith('admin.')) {
+          else if (item.title && (item.title.includes('.') || item.title.startsWith('cards.') || item.title.startsWith('admin.'))) {
             translatedTitle = t(item.title, item.title);
           }
 
@@ -82,10 +117,16 @@ export function useUnifiedData(options: UseUnifiedDataOptions): UseUnifiedDataRe
             translatedDescription = t(item.description, item.description);
           }
 
+          // Preservar campos originais de tradução para uso posterior
           return {
             ...item,
             title: translatedTitle,
-            description: translatedDescription
+            description: translatedDescription,
+            // Preservar campos de tradução originais
+            title_pt: item.title_pt,
+            title_en: item.title_en,
+            description_pt: item.description_pt,
+            description_en: item.description_en
           };
         })
       );
@@ -155,8 +196,8 @@ export function useUnifiedData(options: UseUnifiedDataOptions): UseUnifiedDataRe
  * Hook específico para cards do dashboard
  */
 export function useDashboardCards(autoRefresh = false) {
-  return useUnifiedData({ 
-    type: 'dashboard', 
+  return useUnifiedData({
+    type: 'dashboard',
     autoRefresh,
     refreshInterval: 300 // 5 minutos
   });
@@ -166,8 +207,8 @@ export function useDashboardCards(autoRefresh = false) {
  * Hook específico para items do menu
  */
 export function useMenuItems(autoRefresh = false) {
-  return useUnifiedData({ 
-    type: 'menu', 
+  return useUnifiedData({
+    type: 'menu',
     autoRefresh,
     refreshInterval: 600 // 10 minutos
   });
@@ -188,14 +229,14 @@ export function useAutoTranslation() {
 
   const translateMultiple = useCallback(async (keys: string[]) => {
     const translations: Record<string, string> = {};
-    
+
     if (autoTranslationEnabled) {
       // Traduzir em paralelo para melhor performance
       const promises = keys.map(async (key) => {
         const translation = await tAsync(key);
         return { key, translation };
       });
-      
+
       const results = await Promise.all(promises);
       results.forEach(({ key, translation }) => {
         translations[key] = translation;

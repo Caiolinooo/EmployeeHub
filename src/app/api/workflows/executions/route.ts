@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { verifyTokenFromRequest, extractTokenFromHeader } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
+    const authResult = await verifyTokenFromRequest(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,

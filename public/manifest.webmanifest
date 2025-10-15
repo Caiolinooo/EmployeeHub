@@ -1,0 +1,15 @@
+{
+  "name": "Painel ABZ Group",
+  "short_name": "Painel ABZ",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0B72E7",
+  "description": "Painel centralizado para colaboradores da ABZ Group",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
+

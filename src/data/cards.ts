@@ -426,20 +426,6 @@ export function getTranslatedCards(t: (key: string) => string): DashboardCard[] 
       order: 14,
       adminOnly: false,
       moduleKey: 'chat'
-    },
-    {
-      id: 'admin',
-      title: t('admin.title'),
-      description: t('admin.dashboard'),
-      href: '/admin',
-      icon: FiUser,
-      iconName: 'FiUser',
-      color: 'bg-abz-indigo',
-      hoverColor: 'hover:bg-abz-indigo-dark',
-      external: false,
-      enabled: true,
-      order: 12,
-      adminOnly: true
     }
   ];
 }

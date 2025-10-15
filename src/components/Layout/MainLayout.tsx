@@ -25,6 +25,7 @@ import {
 } from 'react-icons/fi';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
+import { useSiteConfig } from '@/contexts/SiteConfigContext';
 import { useMenuItems } from '@/hooks/useUnifiedData';
 import NotificationHUD from '@/components/notifications/NotificationHUD';
 import LanguageSelector from '@/components/LanguageSelector';
@@ -53,6 +54,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const router = useRouter();
   const { user, profile, logout, isAdmin } = useSupabaseAuth();
   const { t, locale } = useI18n();
+  const { config } = useSiteConfig();
   const [isI18nReady, setIsI18nReady] = useState(false);
   const [, forceUpdate] = useState({});
 
@@ -87,10 +89,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
   // Debug: Verificar se isCollapsed está mudando
   useEffect(() => {
     console.log('🔍 DEBUG: isCollapsed mudou para:', isCollapsed);
-    if (isCollapsed) {
-      console.warn(t('components.atencaoSidebarEstaColapsadaForcandoExpansao'));
-      setIsCollapsed(false);
-    }
   }, [isCollapsed]);
 
   // Use unified data system for menu items
@@ -106,23 +104,18 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   // Estado persistente para recolher/expandir sidebar
   useEffect(() => {
-    // FORÇAR SIDEBAR SEMPRE EXPANDIDA
-    console.log('🚀 Inicializando sidebar...');
-
-    // Limpar qualquer valor antigo do localStorage
-    localStorage.removeItem('main-sidebar-collapsed');
-
-    // Forçar estado expandido
-    setIsCollapsed(false);
-    console.log(t('components.sidebarForcadaParaExpandidaIscollapsedFalse'));
+    const saved = localStorage.getItem('main-sidebar-collapsed');
+    setIsCollapsed(saved ? JSON.parse(saved) : false);
   }, []);
 
   const toggleSidebar = () => {
-    // TEMPORARIAMENTE DESABILITADO - Manter sidebar sempre expandida
-    console.log(t('components.togglesidebarChamadoMasEstaDesabilitadoParaManterS'));
-    // const newState = !isCollapsed;
-    // setIsCollapsed(newState);
-    // localStorage.setItem('main-sidebar-collapsed', JSON.stringify(newState));
+    // Evitar toggle de colapso no mobile (bug visual); colapso apenas em md+
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      return;
+    }
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    localStorage.setItem('main-sidebar-collapsed', JSON.stringify(newState));
   };
 
   const toggleMobileMenu = () => {
@@ -144,65 +137,88 @@ export default function MainLayout({ children }: MainLayoutProps) {
         {/* Sidebar para desktop */}
         <aside
           className={`bg-white shadow-md fixed inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-all duration-300 ease-in-out z-30 flex flex-col`}
-          style={{ width: isCollapsed ? '64px' : '256px' }}
+          style={{
+            width: typeof window !== 'undefined' && window.innerWidth >= 768
+              ? (isCollapsed ? '64px' : '256px')
+              : '256px'
+          }}
         >
           {/* Logo / título e botão de recolher */}
           <div className="p-4 border-b flex items-center justify-between">
             {!isCollapsed ? (
-              <Link href="/dashboard" className="flex items-center space-x-2"
-                title="Painel ABZ Group"
-              >
-                <FiGrid className="h-6 w-6 text-abz-blue" />
-                <span className="text-lg font-semibold text-abz-blue-dark">Painel ABZ</span>
-              </Link>
-            ) : (
-              <Link href="/dashboard" className="flex items-center justify-center w-full"
-                title="Painel ABZ Group"
-              >
-                <FiGrid className="h-6 w-6 text-abz-blue" />
-              </Link>
-            )}
-            {!isCollapsed && (
-              <div className="flex items-center gap-2">
+              <>
+                <Link href="/dashboard" className="flex items-center space-x-2"
+                  title={config?.title || "Painel ABZ Group"}
+                >
+                  <FiGrid className="h-6 w-6 text-abz-blue" />
+                  <span className="text-lg font-semibold text-abz-blue-dark">{config?.sidebarTitle || "Painel ABZ"}</span>
+                </Link>
                 <button
-                  className="inline-flex rounded-md p-2 text-white bg-abz-blue hover:bg-abz-blue-dark transition-colors shadow-sm"
+                  className="hidden md:inline-flex rounded-md p-2 text-white bg-abz-blue hover:bg-abz-blue-dark transition-colors shadow-sm"
                   onClick={toggleSidebar}
                   title="Recolher menu"
                 >
-                  <FiChevronLeft className="h-5 w-5"/>
+                  <FiChevronLeft className="h-5 w-5" />
                 </button>
-              </div>
+              </>
+            ) : (
+              <button
+                className="hidden md:flex items-center justify-center w-full rounded-md p-2 text-white bg-abz-blue hover:bg-abz-blue-dark transition-colors shadow-sm"
+                onClick={toggleSidebar}
+                title="Expandir menu"
+              >
+                <FiChevronRight className="h-5 w-5" />
+              </button>
             )}
           </div>
 
           {/* Menu de navegação */}
           <nav className="flex-grow overflow-y-auto py-4 space-y-1 px-2">
-            {isCollapsed && (
-              <div className="mb-4 px-2">
-                <button
-                  onClick={toggleSidebar}
-                  className="w-full p-2 bg-abz-blue text-white rounded-md hover:bg-abz-blue-dark transition-colors flex items-center justify-center"
-                  title="Expandir menu"
-                >
-                  <FiChevronRight className="h-5 w-5"/>
-                </button>
+            {menuLoading ? (
+              // Skeleton loading state
+              <div className="space-y-1">
+                {[...Array(9)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'} px-3 py-2 rounded-md`}>
+                      <div className="w-5 h-5 bg-gray-300 rounded"></div>
+                      {!isCollapsed && <div className="h-4 bg-gray-300 rounded w-24"></div>}
+                    </div>
+                  </div>
+                ))}
               </div>
-            )}
-            {(menuItems.length > 0 ? menuItems : mainMenuItems).map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-              const IconComponent = item.icon;
+            ) : (
+              (menuItems.length > 0 ? menuItems : mainMenuItems).map((item) => {
+                const isActive = pathname ? (pathname === item.href || pathname.startsWith(item.href + '/')) : false;
+                const IconComponent = item.icon;
 
               // Obter o texto a ser exibido com tradução baseada no locale
               let displayLabel = '';
               if (menuItems.length > 0) {
                 // Dados do banco - usar title_pt ou title_en baseado no locale
                 const itemWithTranslation = item as any;
+
+                // Debug para o primeiro item
+                if (item.id === menuItems[0]?.id) {
+                  console.log('🔍 Menu Item Debug:', {
+                    id: item.id,
+                    locale: locale,
+                    title: itemWithTranslation.title,
+                    title_pt: itemWithTranslation.title_pt,
+                    title_en: itemWithTranslation.title_en,
+                    hasTranslations: !!(itemWithTranslation.title_pt && itemWithTranslation.title_en)
+                  });
+                }
+
+                // Usar traduções se disponíveis
                 if (locale === 'en-US' && itemWithTranslation.title_en) {
                   displayLabel = itemWithTranslation.title_en;
-                } else if (itemWithTranslation.title_pt) {
+                } else if (locale === 'pt-BR' && itemWithTranslation.title_pt) {
                   displayLabel = itemWithTranslation.title_pt;
+                } else if (itemWithTranslation.title) {
+                  // Fallback para title se não houver traduções específicas
+                  displayLabel = itemWithTranslation.title;
                 } else {
-                  displayLabel = itemWithTranslation.title || item.id;
+                  displayLabel = item.id;
                 }
               } else {
                 // Dados hardcoded - traduzir usando t()
@@ -224,7 +240,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   {!isCollapsed && <span className="whitespace-nowrap">{displayLabel}</span>}
                 </Link>
               );
-            })}
+            })
+            )}
           </nav>
 
           {/* Rodapé com informações do usuário */}
@@ -294,7 +311,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
         )}
 
         {/* Conteúdo principal */}
-        <div className="flex-1 flex flex-col min-h-screen" style={{marginLeft: typeof window === 'undefined' ? undefined : (window.innerWidth >= 768 ? (isCollapsed ? 64 : 256) : 0)}}>
+        <div
+          className="flex-1 flex flex-col min-h-screen md:transition-all md:duration-300"
+          style={{
+            marginLeft: typeof window !== 'undefined' && window.innerWidth >= 768
+              ? (isCollapsed ? '64px' : '256px')
+              : '0'
+          }}
+        >
           {/* Notificações globais fixas (desktop) */}
           <div className="hidden md:block fixed top-4 right-4 z-50">
             {user && <NotificationHUD userId={user.id} position="top-right" />}
@@ -310,7 +334,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 >
                   <FiMenu className="h-6 w-6" />
                 </button>
-                <span className="ml-3 text-lg font-semibold text-abz-blue-dark">Painel ABZ</span>
+                <span className="ml-3 text-lg font-semibold text-abz-blue-dark">{config?.sidebarTitle || "Painel ABZ"}</span>
               </div>
               <div className="flex items-center space-x-2">
                 {user && <NotificationHUD userId={user.id} position="top-right" />}

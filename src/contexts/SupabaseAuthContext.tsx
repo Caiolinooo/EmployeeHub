@@ -65,6 +65,7 @@ export interface UserProfile {
   password?: string | null;
   password_last_changed?: string | null;
   avatar?: string | null;
+  drive_photo_url?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
   access_history?: any;
@@ -230,9 +231,10 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
                                   position: refreshData.user.position,
                                   department: refreshData.user.department,
                                   avatar: refreshData.user.avatar,
+                                  drive_photo_url: (refreshData.user as any).drive_photo_url,
                                   password_last_changed: refreshData.user.password_last_changed,
                                   accessPermissions: refreshData.user.accessPermissions || refreshData.user.access_permissions || {}
-                                }; 
+                                };
 
                 setProfile(profileData);
                 console.log('Perfil do usuário definido a partir dos dados da resposta de renovação');
@@ -304,6 +306,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
                   position: fixData.user.position,
                   department: fixData.user.department,
                   avatar: fixData.user.avatar,
+                  drive_photo_url: (fixData.user as any).drive_photo_url,
                   password_last_changed: fixData.user.password_last_changed,
                 };
 
@@ -1110,6 +1113,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
       // Remover tokens usando o utilitário
       removeToken();
+      removeRefreshToken();
+      stopTokenRefreshManager();
 
       // Remover outros dados de autenticação
       localStorage.removeItem('auth');
@@ -1140,6 +1145,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       try {
         // Remover tokens usando o utilitário
         removeToken();
+        removeRefreshToken();
+        stopTokenRefreshManager();
 
         // Remover outros dados de autenticação
         localStorage.removeItem('auth');

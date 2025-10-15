@@ -42,6 +42,7 @@ interface CommentsProps {
 
 const Comments: React.FC<CommentsProps> = ({ courseId, className = '' }) => {
   const { user, getToken } = useSupabaseAuth();
+  const { t } = useI18n();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);

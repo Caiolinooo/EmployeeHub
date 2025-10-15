@@ -61,7 +61,7 @@ const MaterialIcon: React.FC<MaterialIconProps> = ({
   
   // Se o ícone não existir, usar um ícone padrão carregado dinamicamente
   if (!IconComponent) {
-    console.warn(t('components.icone')${name}{t('components.naoEncontradoUsandoIconePadrao')});
+    console.warn(`${t('components.icone', 'Ícone')} ${name} ${t('components.naoEncontradoUsandoIconePadrao', 'não encontrado, usando ícone padrão')}`);
     const DefaultIcon = lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiHelpCircle })));
     return (
       <Suspense fallback={<IconFallback />}>

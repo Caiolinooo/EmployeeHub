@@ -64,7 +64,11 @@ export async function generateAndStoreCertificate(enrollmentId: string): Promise
     .single();
   if (enrErr || !enr) { console.error('enrollment not found', enrErr); return null; }
 
-  const tpl = await getActiveTemplate(enr.course?.id);
+  const course = Array.isArray(enr.course) ? enr.course[0] : enr.course;
+  const user = Array.isArray(enr.user) ? enr.user[0] : enr.user;
+  const instructor = Array.isArray(course?.instructor) ? course.instructor[0] : course?.instructor;
+
+  const tpl = await getActiveTemplate(course?.id);
   if (!tpl) { console.warn('No active certificate template found'); return null; }
 
   // Download template file from storage
@@ -73,15 +77,15 @@ export async function generateAndStoreCertificate(enrollmentId: string): Promise
   const tplBytes = new Uint8Array(await tplFile.arrayBuffer());
 
   // Prepare data
-  const student_name = `${enr.user?.first_name || ''} ${enr.user?.last_name || ''}`.trim();
-  const course_title = enr.course?.title || '';
-  const course_duration = `${enr.course?.duration || 0} horas`;
-  const course_difficulty = (enr.course?.difficulty_level || '').toString();
+  const student_name = `${user?.first_name || ''} ${user?.last_name || ''}`.trim();
+  const course_title = course?.title || '';
+  const course_duration = `${course?.duration || 0} horas`;
+  const course_difficulty = (course?.difficulty_level || '').toString();
   const completion_date = enr.completed_at ? new Date(enr.completed_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
   const enrollment_date = enr.enrolled_at ? new Date(enr.enrolled_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
   const certificate_id = `ABZ-${enrollmentId.toUpperCase().slice(0,8)}`;
   const issue_date = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
-  const instructor_name = `${enr.course?.instructor?.first_name || ''} ${enr.course?.instructor?.last_name || ''}`.trim();
+  const instructor_name = `${instructor?.first_name || ''} ${instructor?.last_name || ''}`.trim();
 
   const cfg: CertificateConfig = tpl.config_json as any;
 
@@ -126,7 +130,7 @@ export async function generateAndStoreCertificate(enrollmentId: string): Promise
   await supabaseAdmin.storage.from('certificates').upload(outPath, pdfBytes, { contentType: 'application/pdf', upsert: true } as any);
 
   // Record issue
-  const meta = { enrollment_id: enrollmentId, course_id: enr.course?.id };
+  const meta = { enrollment_id: enrollmentId, course_id: course?.id };
   const { data: issue, error: insErr } = await supabaseAdmin
     .from('certificate_issues')
     .insert({ enrollment_id: enrollmentId, template_id: tpl.id, pdf_path: outPath, metadata: meta })

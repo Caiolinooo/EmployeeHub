@@ -31,6 +31,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   onComplete,
   className = ''
 }) => {
+  const { t } = useI18n();
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);

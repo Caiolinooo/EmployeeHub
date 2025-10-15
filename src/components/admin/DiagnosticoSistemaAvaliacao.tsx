@@ -127,11 +127,11 @@ export default function DiagnosticoSistemaAvaliacao() {
       const criteriosLiderancaEspecificos = criteriosLider.filter(c => c.apenas_lideres);
 
       const detalhes = [
-        {t('components.criteriosParaUsuarioComumCriterioscomumlength')},
-        {t('components.criteriosParaLiderCriteriosliderlength')},
-        {t('components.criteriosEspecificosDeLiderancaCriteriosliderancae')},
+        `Critérios para usuário comum: ${criteriosComum.length}`,
+        `Critérios para líder: ${criteriosLider.length}`,
+        `Critérios específicos de liderança: ${criteriosLiderancaEspecificos.length}`,
         '',
-        {t('components.criteriosDeLideranca')},
+        'Critérios de liderança:',
         ...criteriosLiderancaEspecificos.map(c => `  • ${c.nome}`)
       ];
 
@@ -173,11 +173,11 @@ export default function DiagnosticoSistemaAvaliacao() {
       const periodoAtivo = await WorkflowAvaliacaoService.getPeriodoAvaliacaoAtivo();
 
       const detalhes = [
-        {t('components.totalDePeriodosPeriodoslength0')},
-        {t('components.periodosAtivosPeriodosativoslength')},
-        {t('components.periodoAtivoAtualPeriodoativoPeriodoativonome')}Nenhum'}`,
+        `Total de períodos: ${periodos?.length || 0}`,
+        `Períodos ativos: ${periodosAtivos.length}`,
+        `Período ativo atual: ${periodoAtivo ? periodoAtivo.nome : 'Nenhum'}`,
         '',
-        {t('components.periodosEncontrados')},
+        'Períodos encontrados:',
         ...(periodos?.map(p => `  • ${p.nome} (${p.ativo ? 'Ativo' : 'Inativo'})`) || [])
       ];
 
@@ -237,10 +237,10 @@ export default function DiagnosticoSistemaAvaliacao() {
       }, {}) || {};
 
       const detalhes = [
-        {t('components.totalDeAvaliacoesAvaliacoeslength0')},
-        {t('components.totalDeAutoavaliacoesAutoavaliacoeslength0')},
+        `Total de avaliações: ${avaliacoes?.length || 0}`,
+        `Total de autoavaliações: ${autoavaliacoes?.length || 0}`,
         '',
-        {t('components.distribuicaoPorEtapa')},
+        'Distribuição por etapa:',
         ...Object.entries(etapas).map(([etapa, count]) => `  • ${etapa}: ${count}`)
       ];
 
@@ -284,10 +284,10 @@ export default function DiagnosticoSistemaAvaliacao() {
       ) || [];
 
       const detalhes = [
-        {t('components.totalDeNotificacoesNotificacoeslength0')},
-        {t('components.notificacoesDeAvaliacaoNotificacoesavaliacaolength')},
+        `Total de notificações: ${notificacoes?.length || 0}`,
+        `Notificações de avaliação: ${notificacoesAvaliacao.length}`,
         '',
-        {t('components.tiposDeNotificacaoEncontrados')},
+        'Tipos de notificação encontrados:',
         ...Array.from(new Set(notificacoes?.map(n => n.type) || [])).map(type => `  • ${type}`)
       ];
 

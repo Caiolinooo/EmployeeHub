@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { saveToken } from '@/lib/tokenStorage';
+import { removeRefreshToken } from '@/lib/refreshTokenStorage';
 
 // Tipo para usuário
 export interface User {
@@ -639,6 +640,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('abzToken'); // Remover também o token antigo
       localStorage.removeItem('user');
       localStorage.removeItem('rememberMe');
+      removeRefreshToken();
 
       // Limpar cookies relacionados à autenticação
       document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';

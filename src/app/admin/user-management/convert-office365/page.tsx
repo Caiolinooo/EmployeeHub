@@ -14,7 +14,7 @@ import { useDropzone } from 'react-dropzone';
 import Script from 'next/script';
 
 export default function ConvertOffice365Page() {
-  // const { t } = useI18n(); // Removido - não utilizado
+  const { t } = useI18n();
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);

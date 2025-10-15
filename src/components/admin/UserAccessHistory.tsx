@@ -12,6 +12,7 @@ interface UserAccessHistoryProps {
 }
 
 const UserAccessHistory: React.FC<UserAccessHistoryProps> = ({ userId, userName, onClose }) => {
+  const { t } = useI18n();
   const [history, setHistory] = useState<AccessHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

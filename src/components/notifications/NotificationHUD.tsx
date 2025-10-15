@@ -241,22 +241,26 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
     prevUnreadRef.current = unreadCount;
   }, [unreadCount]);
 
-  // Carregar notificações iniciais e configurar polling
+  // Carregar notificações iniciais e refresh em foco/visibilidade (sem polling duplicado)
   useEffect(() => {
-    if (userId) {
-      loadNotifications(1, true);
+    if (!userId) return;
 
-      // Polling a cada 30 segundos
-      intervalRef.current = setInterval(() => {
+    loadNotifications(1, true);
+
+    const onFocus = () => loadNotifications(1, true);
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
         loadNotifications(1, true);
-      }, 30000);
+      }
+    };
 
-      return () => {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-        }
-      };
-    }
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, [userId]);
 
   // Obter ícone por tipo de notificação
@@ -339,6 +343,30 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
                   Marcar todas como lidas
                 </button>
               )}
+              <button
+                onClick={async () => {
+                  try {
+                    const ok = window.confirm('Apagar notificações lidas com mais de 30 dias? Esta ação não pode ser desfeita.');
+                    if (!ok) return;
+                    const res = await fetch('/api/notifications/purge', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ user_id: userId, olderThanDays: 30, onlyRead: true })
+                    });
+                    if (res.ok) {
+                      await loadNotifications(1, true);
+                    } else {
+                      console.error('Falha ao apagar notificações antigas');
+                    }
+                  } catch (e) {
+                    console.error('Erro ao apagar notificações antigas', e);
+                  }
+                }}
+                className="text-sm text-red-600 hover:text-red-700"
+                title="Apagar notificações antigas"
+              >
+                Apagar antigas
+              </button>
               <button
                 onClick={() => setIsOpen(false)}
                 className="p-1 hover:bg-gray-100 rounded"

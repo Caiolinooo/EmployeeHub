@@ -15,6 +15,7 @@
     "restart": "node scripts/restart-server.js",
     "fix-and-restart": "npm run db:fix-avaliacoes && npm run restart",
     "fix-icons": "npm run clear-cache && npm run dev",
+    "icons:generate": "node scripts/generate-pwa-icons.js",
     "lint": "next lint",
     "db:init": "npm run db:setup",
     "db:setup": "npm run db:create-sql-functions && npm run db:create-users-unified && npm run db:setup-avaliacao && npm run db:setup-reimbursement",

@@ -19,6 +19,7 @@ const UserRoleManager: React.FC<UserRoleManagerProps> = ({
   onClose,
   onRoleUpdated
 }) => {
+  const { t } = useI18n();
   const [selectedRole, setSelectedRole] = useState<'ADMIN' | 'MANAGER' | 'USER'>(currentRole);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

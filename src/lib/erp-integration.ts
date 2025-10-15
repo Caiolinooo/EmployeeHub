@@ -82,7 +82,8 @@ export class ERPIntegrationManager {
     config?: Record<string, any>;
   }): Promise<ERPConnection> {
     const encryptedPassword = this.encryptPassword(connectionData.password);
-    
+
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('erp_connections')
       .insert([{
@@ -127,6 +128,8 @@ export class ERPIntegrationManager {
           throw new Error('Tipo de ERP não suportado');
       }
 
+      const supabase = getSupabaseClient();
+
       // Atualizar status
       await supabase
         .from('erp_connections')
@@ -135,13 +138,14 @@ export class ERPIntegrationManager {
 
       return { success: true, message: 'Conexão estabelecida com sucesso' };
     } catch (error) {
+      const supabase = getSupabaseClient();
       // Atualizar status de erro
       await supabase
         .from('erp_connections')
         .update({ status: 'error' })
         .eq('id', connectionId);
 
-      return { success: false, message: error.message };
+      return { success: false, message: error instanceof Error ? error.message : 'Erro desconhecido' };
     }
   }
 
@@ -215,6 +219,8 @@ export class ERPIntegrationManager {
       const connection = await this.getConnection(connectionId);
       const client = await this.createERPClient(connection);
 
+      const supabase = getSupabaseClient();
+
       // Log início da sincronização
       const { data: syncLog } = await supabase
         .from('erp_sync_logs')
@@ -247,8 +253,10 @@ export class ERPIntegrationManager {
 
       const duration = Date.now() - startTime;
 
+      const supabase2 = getSupabaseClient();
+
       // Atualizar log de sincronização
-      await supabase
+      await supabase2
         .from('erp_sync_logs')
         .update({
           status: 'success',
@@ -260,7 +268,7 @@ export class ERPIntegrationManager {
         .eq('id', syncLog.id);
 
       // Atualizar última sincronização
-      await supabase
+      await supabase2
         .from('erp_connections')
         .update({ last_sync: new Date().toISOString() })
         .eq('id', connectionId);
@@ -274,13 +282,14 @@ export class ERPIntegrationManager {
 
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
+      const supabase3 = getSupabaseClient();
       // Log de erro
-      await supabase
+      await supabase3
         .from('erp_sync_logs')
         .update({
           status: 'error',
-          error_details: { message: error.message },
+          error_details: { message: error instanceof Error ? error.message : 'Erro desconhecido' },
           completed_at: new Date().toISOString(),
           duration_ms: duration
         });
@@ -289,7 +298,7 @@ export class ERPIntegrationManager {
         success: false,
         recordsSynced,
         errors: errors + 1,
-        errorDetails: [error.message],
+        errorDetails: [error instanceof Error ? error.message : 'Erro desconhecido'],
         duration
       };
     }
@@ -373,6 +382,7 @@ export class ERPIntegrationManager {
 
   // Inserir/atualizar funcionário
   private async upsertEmployee(employeeData: any): Promise<void> {
+    const supabase = getSupabaseClient();
     const { error } = await supabase
       .from('users_unified')
       .upsert([{
@@ -391,6 +401,7 @@ export class ERPIntegrationManager {
 
   // Obter conexão
   private async getConnection(connectionId: string): Promise<ERPConnection> {
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('erp_connections')
       .select('*')
@@ -403,6 +414,7 @@ export class ERPIntegrationManager {
 
   // Listar conexões
   async getConnections(): Promise<ERPConnection[]> {
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('erp_connections')
       .select('*')
@@ -414,6 +426,7 @@ export class ERPIntegrationManager {
 
   // Obter logs de sincronização
   async getSyncLogs(connectionId?: string): Promise<any[]> {
+    const supabase = getSupabaseClient();
     let query = supabase
       .from('erp_sync_logs')
       .select('*, erp_connections(name)')

@@ -23,9 +23,11 @@ interface SearchResponse {
   limit: number;
   offset: number;
   hasMore: boolean;
+  error?: string;
 }
 
 const GlobalSearch: React.FC = () => {
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -162,7 +164,7 @@ const GlobalSearch: React.FC = () => {
         className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
       >
         <MagnifyingGlassIcon className="w-4 h-4" />
-        <span>Buscar...</span>
+        <span>{t('components.buscar', 'Buscar...')}</span>
         <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-gray-500 bg-white border border-gray-300 rounded">
           Ctrl K
         </kbd>
@@ -181,7 +183,7 @@ const GlobalSearch: React.FC = () => {
                 <input
                   ref={inputRef}
                   type="text"
-                  placeholder="Digite para buscar..."
+                  placeholder={t('components.digiteparaBuscar', 'Digite para buscar...')}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="flex-1 text-lg outline-none"
@@ -198,21 +200,21 @@ const GlobalSearch: React.FC = () => {
               {/* Filtros */}
               <div className="px-4 py-2 border-b bg-gray-50">
                 <div className="flex items-center space-x-2 mb-2">
-                  <span className="text-sm text-gray-600">Filtrar por:</span>
+                  <span className="text-sm text-gray-600">{t('components.filtrarPor', 'Filtrar por:')}</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {[
-                    { value: 'all', label: 'Todos' },
-                    { value: 'document', label: 'Documentos' },
-                    { value: 'news', label: t('components.noticias') },
-                    { value: 'user', label: t('components.usuarios') },
-                    { value: 'card', label: 'Cards' },
-                    { value: 'reimbursement', label: 'Reembolsos' },
-                    { value: 'paystub', label: 'Contracheques' },
-                    { value: 'evaluation', label: t('components.avaliacoes') },
-                    { value: 'policy', label: t('components.politicas') },
-                    { value: 'procedure', label: 'Procedimentos' },
-                    { value: 'academy', label: 'Cursos' }
+                    { value: 'all', label: t('components.todos', 'Todos') },
+                    { value: 'document', label: t('components.documentos', 'Documentos') },
+                    { value: 'news', label: t('components.noticias', 'Notícias') },
+                    { value: 'user', label: t('components.usuarios', 'Usuários') },
+                    { value: 'card', label: t('components.cards', 'Cards') },
+                    { value: 'reimbursement', label: t('components.reembolsos', 'Reembolsos') },
+                    { value: 'paystub', label: t('components.contracheques', 'Contracheques') },
+                    { value: 'evaluation', label: t('components.avaliacoes', 'Avaliações') },
+                    { value: 'policy', label: t('components.politicas', 'Políticas') },
+                    { value: 'procedure', label: t('components.procedimentos', 'Procedimentos') },
+                    { value: 'academy', label: t('components.cursos', 'Cursos') }
                   ].map((type) => (
                     <button
                       key={type.value}
@@ -234,14 +236,14 @@ const GlobalSearch: React.FC = () => {
                 {loading && (
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                    <span className="ml-2 text-gray-600">Buscando...</span>
+                    <span className="ml-2 text-gray-600">{t('components.buscando', 'Buscando...')}</span>
                   </div>
                 )}
 
                 {!loading && query.length >= 2 && results.length === 0 && (
                   <div className="text-center py-8 text-gray-500">
                     <MagnifyingGlassIcon className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                    <p>Nenhum resultado encontrado para "{query}"</p>
+                    <p>{t('components.nenhumResultadoEncontradoPara', 'Nenhum resultado encontrado para')} "{query}"</p>
                   </div>
                 )}
 
@@ -277,8 +279,8 @@ const GlobalSearch: React.FC = () => {
                 {query.length < 2 && (
                   <div className="text-center py-8 text-gray-500">
                     <MagnifyingGlassIcon className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                    <p>Digite pelo menos 2 caracteres para buscar</p>
-                    <p className="text-xs mt-1">Use Ctrl+K para abrir a busca rapidamente</p>
+                    <p>{t('components.digitePeloMenos2CaracteresBuscar', 'Digite pelo menos 2 caracteres para buscar')}</p>
+                    <p className="text-xs mt-1">{t('components.useCtrlKAbrirBuscaRapidamente', 'Use Ctrl+K para abrir a busca rapidamente')}</p>
                   </div>
                 )}
               </div>

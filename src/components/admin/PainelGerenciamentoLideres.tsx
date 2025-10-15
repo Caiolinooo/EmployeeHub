@@ -3,12 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiUser, FiUsers, FiCheck, FiX, FiSearch } from 'react-icons/fi';
 import { supabase } from '@/lib/supabase';
-import { 
 import { useI18n } from '@/contexts/I18nContext';
-  listarLideresAtivos, 
-  adicionarLider, 
-  removerLider, 
-  type DadosLideranca 
+import {
+  listarLideresAtivos,
+  adicionarLider,
+  removerLider,
+  type DadosLideranca
 } from '@/lib/utils/lideranca';
 
 interface Usuario {

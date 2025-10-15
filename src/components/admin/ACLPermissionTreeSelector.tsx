@@ -38,6 +38,7 @@ const ACLPermissionTreeSelector: React.FC<ACLPermissionTreeSelectorProps> = ({
   rolePermissions = [],
   disabled = false
 }) => {
+  const { t } = useI18n();
   const [permissionTree, setPermissionTree] = useState<{ [key: string]: PermissionResource }>({});
   const [expandedResources, setExpandedResources] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);

@@ -55,6 +55,7 @@ interface RatingsProps {
 
 const Ratings: React.FC<RatingsProps> = ({ courseId, isEnrolled = false, className = '' }) => {
   const { user, getToken } = useSupabaseAuth();
+  const { t } = useI18n();
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [stats, setStats] = useState<RatingStats | null>(null);
   const [loading, setLoading] = useState(true);

@@ -43,11 +43,11 @@ const iconOptions = [
   { value: 'FiClipboard', icon: FiClipboard, label: 'Prancheta' },
   { value: 'FiFileText', icon: FiFileText, label: 'Arquivo' },
   { value: 'FiBriefcase', icon: FiBriefcase, label: 'Maleta' },
-  { value: 'FiCalendar', icon: FiCalendar, label: t('admin.calendario') },
+  { value: 'FiCalendar', icon: FiCalendar, label: 'Calendário' },
   { value: 'FiRss', icon: FiRss, label: 'RSS' },
   { value: 'FiDollarSign', icon: FiDollarSign, label: 'Dinheiro' },
-  { value: 'FiSettings', icon: FiSettings, label: t('admin.configuracoes') },
-  { value: 'FiUsers', icon: FiUsers, label: t('admin.usuarios') },
+  { value: 'FiSettings', icon: FiSettings, label: 'Configurações' },
+  { value: 'FiUsers', icon: FiUsers, label: 'Usuários' },
 ];
 
 export default function AdminCardsPage() {

@@ -49,6 +49,13 @@ export interface TokenPayload {
   iat?: number; // Adicionar propriedade iat para issued at
 }
 
+// Tipo para o resultado da verificação de token
+export interface TokenVerificationResult {
+  valid: boolean;
+  payload: TokenPayload | null;
+  error?: string;
+}
+
 // Função para buscar usuário usando PostgreSQL diretamente
 export async function findUserByQuery(query: any): Promise<User | null> {
   try {
@@ -410,6 +417,46 @@ export function extractTokenFromHeader(authHeader: string | undefined): string |
 
   console.log('extractTokenFromHeader: Formato de token não reconhecido:', authHeader.substring(0, 10) + '...');
   return null;
+}
+
+// Função para verificar token a partir de NextRequest (retorna formato {valid, payload})
+export async function verifyTokenFromRequest(request: any): Promise<TokenVerificationResult> {
+  try {
+    // Extrair token do cabeçalho de autorização
+    const authHeader = request.headers.get('authorization');
+    const token = extractTokenFromHeader(authHeader || '');
+
+    if (!token) {
+      return {
+        valid: false,
+        payload: null,
+        error: 'Token não fornecido'
+      };
+    }
+
+    // Verificar o token
+    const payload = verifyToken(token);
+
+    if (!payload) {
+      return {
+        valid: false,
+        payload: null,
+        error: 'Token inválido ou expirado'
+      };
+    }
+
+    return {
+      valid: true,
+      payload
+    };
+  } catch (error) {
+    console.error('Erro ao verificar token:', error);
+    return {
+      valid: false,
+      payload: null,
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    };
+  }
 }
 
 // Função para iniciar o processo de login por SMS ou Email

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useRouter } from 'next/navigation';
 import MainLayout from '@/components/Layout/MainLayout';
@@ -17,6 +17,8 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useSiteConfig } from '@/contexts/SiteConfigContext';
 import DashboardSearch from '@/components/Search/DashboardSearch';
+
+import { getCardsCached, invalidateCardsCache } from '@/lib/cardsCache';
 
 // Error Fallback Component
 function ErrorFallback({error, resetErrorBoundary}: {error: Error; resetErrorBoundary: () => void}) {
@@ -58,6 +60,118 @@ export default function Dashboard() {
   const router = useRouter();
   const [cards, setCards] = useState<DashboardCard[]>([]);
   const [loadingCards, setLoadingCards] = useState(true);
+  const fetchCards = React.useCallback(async (retryCount = 0) => {
+    try {
+      setLoadingCards(true);
+      setError(null);
+
+      // Retry fallback to local cache
+      if (retryCount > 0) {
+        const cachedCards = localStorage.getItem('dashboard-cards-cache');
+        if (cachedCards) {
+          try {
+            const parsedCards = JSON.parse(cachedCards);
+            console.log('📦 Usando cards do cache local como fallback');
+            setCards(parsedCards);
+            setLoadingCards(false);
+            return;
+          } catch (e) {
+            console.warn(t('dashboard.cacheLocalInvalidoRemovendo'));
+            localStorage.removeItem('dashboard-cards-cache');
+          }
+        }
+      }
+
+      // Single-source fetch with de-dupe + TTL
+      const rawCards = await getCardsCached({
+        userId: user?.id || null,
+        userRole: (user as any)?.role || null,
+        userEmail: (user as any)?.email || null,
+        userPhone: (user as any)?.phone_number || null,
+      });
+
+      const currentLanguage = locale;
+      console.log('🌐 Dashboard - Locale atual:', currentLanguage);
+      console.log('📦 Dashboard - Cards do banco:', rawCards?.length || 0);
+
+      const dbCards = (rawCards || []).map((card: any, idx: number) => {
+        const title = currentLanguage === 'en-US' && card.titleEn ? card.titleEn : card.title;
+        const description = currentLanguage === 'en-US' && card.descriptionEn ? card.descriptionEn : card.description;
+
+        // Debug para o primeiro card
+        if (idx === 0) {
+          console.log('🔍 Card Debug:', {
+            locale: currentLanguage,
+            title_pt: card.title,
+            title_en: card.titleEn,
+            selected_title: title,
+            description_pt: card.description,
+            description_en: card.descriptionEn,
+            selected_description: description
+          });
+        }
+
+        // Resolve icon component from iconName string
+        let resolvedIcon = iconMap[card.iconName || card.icon];
+        if (!resolvedIcon) {
+          console.warn(`Icon not found in map: ${card.iconName || card.icon}. Using default.`);
+          resolvedIcon = FiAlertCircle; // Fallback icon
+        }
+
+        return {
+          ...card,
+          title,
+          description,
+          icon: resolvedIcon,
+          moduleKey: card.module_key || card.moduleKey
+        } as DashboardCard;
+      });
+
+      console.log(`✅ ${dbCards.length} cards carregados com sucesso`);
+
+      if (dbCards && dbCards.length > 0) {
+        try {
+          localStorage.setItem('dashboard-cards-cache', JSON.stringify(dbCards));
+          console.log('💾 Cards salvos no cache local');
+        } catch (e) {
+          console.warn(t('dashboard.naoFoiPossivelSalvarNoCacheLocal'), e);
+        }
+        setCards(dbCards);
+      } else {
+        console.log('⚠️ Nenhum card encontrado, usando cards hardcoded');
+        setCards(getTranslatedCards((key: string) => t(key)));
+      }
+    } catch (err) {
+      console.error('Error loading cards:', err);
+      if (retryCount < 2) {
+        console.log(`🔄 Tentando novamente em 2 segundos... (tentativa ${retryCount + 2})`);
+        setTimeout(() => {
+          fetchCards(retryCount + 1);
+        }, 2000);
+        return;
+      }
+      const cachedCards = localStorage.getItem('dashboard-cards-cache');
+      if (cachedCards) {
+        try {
+          const parsedCards = JSON.parse(cachedCards);
+          console.log(t('dashboard.usandoCardsDoCacheLocalAposErro'));
+          setCards(parsedCards);
+          setError('Usando dados em cache. Alguns cards podem estar desatualizados.');
+          setLoadingCards(false);
+          return;
+        } catch (e) {
+          console.warn(t('dashboard.cacheLocalInvalido'));
+          localStorage.removeItem('dashboard-cards-cache');
+        }
+      }
+      console.log(t('dashboard.erroCriticoUsandoCardsHardcoded'));
+      setCards(getTranslatedCards((key: string) => t(key)));
+      setError(t('dashboard.naoFoiPossivelCarregarOsCardsPersonalizadosUsandoC'));
+    } finally {
+      setLoadingCards(false);
+    }
+  }, [user, locale, t]);
+
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -65,191 +179,18 @@ export default function Dashboard() {
       router.replace('/login');
       return;
     }
-
-    const fetchCards = async (retryCount = 0) => {
-      try {
-        setLoadingCards(true);
-        setError(null);
-
-        console.log(`🔄 Dashboard - Carregando cards do Supabase... (tentativa ${retryCount + 1})`);
-
-        // Tentar carregar do cache local primeiro se for retry
-        if (retryCount > 0) {
-          const cachedCards = localStorage.getItem('dashboard-cards-cache');
-          if (cachedCards) {
-            try {
-              const parsedCards = JSON.parse(cachedCards);
-              console.log('📦 Usando cards do cache local como fallback');
-              setCards(parsedCards);
-              setLoadingCards(false);
-              return;
-            } catch (e) {
-              console.warn(t('dashboard.cacheLocalInvalidoRemovendo'));
-              localStorage.removeItem('dashboard-cards-cache');
-            }
-          }
-        }
-
-        // SEMPRE tentar carregar do Supabase primeiro
-        let response = await fetch('/api/cards/supabase', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            userId: user?.id,
-            userRole: user?.role,
-            userEmail: user?.email,
-            userPhone: user?.phone_number
-          })
-        });
-
-        // Se falhar, tentar fazer upgrade da tabela
-        if (!response.ok) {
-          console.warn('⚠️ Erro ao carregar do Supabase, tentando upgrade da tabela...');
-
-          try {
-            const upgradeResponse = await fetch('/api/admin/cards/upgrade-table', {
-              method: 'POST'
-            });
-
-            if (upgradeResponse.ok) {
-              console.log('✅ Tabela cards atualizada, tentando novamente...');
-
-              // Tentar novamente após upgrade
-              response = await fetch('/api/cards/supabase', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  userId: user?.id,
-                  userRole: user?.role,
-                  userEmail: user?.email,
-                  userPhone: user?.phone_number
-                })
-              });
-            }
-          } catch (upgradeError) {
-            console.warn('⚠️ Erro no upgrade da tabela:', upgradeError);
-          }
-        }
-
-        // Se ainda falhar, usar API de fallback
-        if (!response.ok) {
-          console.warn('⚠️ Usando API de fallback...');
-          response = await fetch('/api/cards');
-        }
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch cards from all sources');
-        }
-
-        const data = await response.json();
-        const currentLanguage = locale;
-
-        console.log('🌐 Dashboard - Locale atual:', currentLanguage);
-        console.log('📦 Dashboard - Cards do banco:', data.length);
-
-        const dbCards = data.map((card: any) => {
-          const title = currentLanguage === 'en-US' && card.titleEn ? card.titleEn : card.title;
-          const description = currentLanguage === 'en-US' && card.descriptionEn ? card.descriptionEn : card.description;
-
-          // Debug para o primeiro card
-          if (card.id === data[0]?.id) {
-            console.log('🔍 Card Debug:', {
-              locale: currentLanguage,
-              title_pt: card.title,
-              title_en: card.titleEn,
-              selected_title: title,
-              description_pt: card.description,
-              description_en: card.descriptionEn,
-              selected_description: description
-            });
-          }
-
-          // Resolve icon component from iconName string
-          let resolvedIcon = iconMap[card.iconName || card.icon];
-          if (!resolvedIcon) {
-            console.warn(`Icon not found in map: ${card.iconName || card.icon}. Using default.`);
-            resolvedIcon = FiAlertCircle; // Fallback icon
-          }
-
-          return {
-            ...card,
-            title,
-            description,
-            icon: resolvedIcon,
-            moduleKey: card.module_key || card.moduleKey // Garantir que moduleKey está presente
-          };
-        });
-
-        console.log(`✅ ${dbCards.length} cards carregados com sucesso`);
-
-        if (dbCards && dbCards.length > 0) {
-          // Salvar no cache local para uso futuro
-          try {
-            localStorage.setItem('dashboard-cards-cache', JSON.stringify(dbCards));
-            console.log('💾 Cards salvos no cache local');
-          } catch (e) {
-            console.warn(t('dashboard.naoFoiPossivelSalvarNoCacheLocal'), e);
-          }
-
-          setCards(dbCards);
-        } else {
-          // Se não há cards no banco, usar cards estáticos traduzidos
-          console.log('⚠️ Nenhum card encontrado, usando cards hardcoded');
-          setCards(getTranslatedCards((key: string) => t(key)));
-        }
-      } catch (err) {
-        console.error('Error loading cards:', err);
-
-        // Tentar retry automático (máximo 2 tentativas)
-        if (retryCount < 2) {
-          console.log(`🔄 Tentando novamente em 2 segundos... (tentativa ${retryCount + 2})`);
-          setTimeout(() => {
-            fetchCards(retryCount + 1);
-          }, 2000);
-          return;
-        }
-
-        // Tentar carregar do cache local
-        const cachedCards = localStorage.getItem('dashboard-cards-cache');
-        if (cachedCards) {
-          try {
-            const parsedCards = JSON.parse(cachedCards);
-            console.log(t('dashboard.usandoCardsDoCacheLocalAposErro'));
-            setCards(parsedCards);
-            setError('Usando dados em cache. Alguns cards podem estar desatualizados.');
-            setLoadingCards(false);
-            return;
-          } catch (e) {
-            console.warn(t('dashboard.cacheLocalInvalido'));
-            localStorage.removeItem('dashboard-cards-cache');
-          }
-        }
-
-        // Fallback final para cards estáticos
-        console.log(t('dashboard.erroCriticoUsandoCardsHardcoded'));
-        setCards(getTranslatedCards((key: string) => t(key)));
-        setError(t('dashboard.naoFoiPossivelCarregarOsCardsPersonalizadosUsandoC'));
-      } finally {
-        setLoadingCards(false);
-      }
-    };
-
     if (isAuthenticated) {
       fetchCards();
     } else if (!isLoading) {
-      // Se não está autenticado e não está carregando, inicializar com cards traduzidos
       setCards(getTranslatedCards((key: string) => t(key)));
       setLoadingCards(false);
     }
-  }, [t, isAuthenticated, isLoading, router, locale]);
+  }, [isAuthenticated, isLoading, router, t, fetchCards]);
 
   // Função para limpar cache e recarregar
   const clearCacheAndReload = () => {
     localStorage.removeItem('dashboard-cards-cache');
+    invalidateCardsCache({ userId: (user as any)?.id || null, userRole: (user as any)?.role || null });
     setError(null);
     if (isAuthenticated) {
       fetchCards();
@@ -287,7 +228,6 @@ export default function Dashboard() {
       }}
     >
       <MainLayout>
-        <Suspense fallback={<LoadingSpinner />}>
           <div className="space-y-8">
             <div className="pb-5 border-b border-gray-200">
               {/* Saudação personalizada com nome do usuário */}
@@ -305,10 +245,10 @@ export default function Dashboard() {
               )}
 
               <h2 className="text-3xl font-extrabold text-abz-blue-dark">
-                {config.dashboardTitle || t('dashboard.logisticsPanel')}
+                {t('dashboard.logisticsPanel', config.dashboardTitle || 'ABZ Group')}
               </h2>
               <p className="mt-2 text-sm text-gray-500">
-                {config.dashboardDescription || t('dashboard.welcomeMessage')}
+                {t('dashboard.welcomeMessage', config.dashboardDescription || '')}
               </p>
             </div>
 
@@ -321,7 +261,6 @@ export default function Dashboard() {
             {loadingCards && (
               <div className="flex justify-center items-center py-12">
                 <LoadingSpinner />
-                <span className="ml-3 text-gray-600">{t('common.loading', 'Carregando cards...')}</span>
               </div>
             )}
 
@@ -468,7 +407,6 @@ export default function Dashboard() {
               )}
             </div>
           </div>
-        </Suspense>
       </MainLayout>
     </ErrorBoundary>
   );

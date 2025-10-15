@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { sendPushToUserIds } from '@/lib/push';
 import { supabaseWithRetry, logError, logPerformance } from '@/lib/apiRetry';
 
 // GET - Listar notificações do usuário
@@ -269,8 +270,12 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Notificação criada: ${newNotification.title} para ${user.first_name}`);
 
-    // TODO: Enviar notificação em tempo real via WebSocket
-    // TODO: Enviar push notification se configurado
+    // Enviar push notification se VAPID estiver configurado (não bloqueante)
+    try {
+      await sendPushToUserIds([user_id], { title, body: message || '', url: action_url || '/' });
+    } catch (e) {
+      console.warn('Falha ao enviar push (não bloqueante):', e);
+    }
 
     return NextResponse.json(newNotification, { status: 201 });
 

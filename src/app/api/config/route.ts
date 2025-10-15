@@ -15,6 +15,7 @@ const defaultConfig: SiteConfig = {
   footerText: "© 2024 ABZ Group. Todos os direitos reservados.",
   dashboardTitle: "Painel de Logística ABZ Group",
   dashboardDescription: "Bem-vindo ao centro de recursos para colaboradores da logística.",
+  sidebarTitle: "Painel ABZ",
   googleClientId: "",
   googleClientSecret: "",
   googleRedirectUri: ""

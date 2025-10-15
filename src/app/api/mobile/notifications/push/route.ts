@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyToken } from '@/lib/auth';
+import { verifyTokenFromRequest } from '@/lib/auth';
 import { MobilePushNotification } from '@/types/api-mobile';
 
 export const runtime = 'nodejs';
@@ -11,7 +11,7 @@ export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
+    const authResult = await verifyTokenFromRequest(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     // Verificar permissões de admin
     const { data: user } = await supabase
       .from('users_unified')
-      .select('role, access_permissions')
+      .select('role, access_permissions, email')
       .eq('id', authResult.payload.userId)
       .single();
 
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
         results.push({
           recipient,
           success: false,
-          error: error.message
+          error: error instanceof Error ? error.message : 'Erro desconhecido'
         });
       }
     }
@@ -229,7 +229,7 @@ async function sendPushNotification(params: {
     console.error('Erro ao enviar notificação push:', error);
     return {
       success: false,
-      error: error.message
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
     };
   }
 }
@@ -237,7 +237,7 @@ async function sendPushNotification(params: {
 // Endpoint para registrar token de push
 export async function PUT(request: NextRequest) {
   try {
-    const authResult = await verifyToken(request);
+    const authResult = await verifyTokenFromRequest(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,
@@ -289,7 +289,7 @@ export async function PUT(request: NextRequest) {
 // Endpoint para remover token de push
 export async function DELETE(request: NextRequest) {
   try {
-    const authResult = await verifyToken(request);
+    const authResult = await verifyTokenFromRequest(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,

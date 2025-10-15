@@ -131,18 +131,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Estado persistente para recolher/expandir sidebar
   React.useEffect(() => {
-    // FORÇAR SIDEBAR SEMPRE EXPANDIDA
-    localStorage.removeItem('admin-sidebar-collapsed');
-    setIsCollapsed(false);
-    console.log(t('admin.adminSidebarForcadaParaExpandida'));
+    const saved = localStorage.getItem('admin-sidebar-collapsed');
+    setIsCollapsed(saved ? JSON.parse(saved) : false);
   }, []);
 
   const toggleSidebar = () => {
-    // TEMPORARIAMENTE DESABILITADO - Manter sidebar sempre expandida
-    console.log('🔒 Admin toggleSidebar desabilitado');
-    // const v = !isCollapsed;
-    // setIsCollapsed(v);
-    // localStorage.setItem('admin-sidebar-collapsed', JSON.stringify(v));
+    const v = !isCollapsed;
+    setIsCollapsed(v);
+    localStorage.setItem('admin-sidebar-collapsed', JSON.stringify(v));
   };
 
   // Medir o tempo de renderização do layout

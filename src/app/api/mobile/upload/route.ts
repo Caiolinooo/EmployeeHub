@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyToken } from '@/lib/auth';
+import { verifyTokenFromRequest, verifyToken } from '@/lib/auth';
 import { MobileUploadResponse } from '@/types/api-mobile';
 
 export const runtime = 'nodejs';
@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
+    const authResult = await verifyTokenFromRequest(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,
@@ -51,13 +51,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Validar tipo MIME
-    const allowedMimeTypes = {
+    const allowedMimeTypes: Record<string, string[]> = {
       avatar: ['image/jpeg', 'image/png', 'image/webp'],
       comprovante: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
       documento: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
     };
 
-    if (!allowedMimeTypes[type].includes(file.type)) {
+    if (!allowedMimeTypes[type]?.includes(file.type)) {
       return NextResponse.json({
         success: false,
         error: `Tipo de arquivo não permitido para ${type}`
@@ -206,7 +206,7 @@ async function generateThumbnail(fileName: string, buffer: Uint8Array, mimeType:
 // Endpoint para listar uploads do usuário
 export async function GET(request: NextRequest) {
   try {
-    const authResult = await verifyToken(request);
+    const authResult = await verifyTokenFromRequest(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,
@@ -268,7 +268,7 @@ export async function GET(request: NextRequest) {
 // Endpoint para deletar upload
 export async function DELETE(request: NextRequest) {
   try {
-    const authResult = await verifyToken(request);
+    const authResult = await verifyTokenFromRequest(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,

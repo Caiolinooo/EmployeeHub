@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { authenticateUser } from '@/lib/api-auth';
 
 // PUT - Marcar notificação como lida
 export async function PUT(
@@ -8,8 +9,25 @@ export async function PUT(
 ) {
   try {
     const { notificationId } = await params;
-    const body = await request.json();
-    const { user_id } = body;
+
+    // Tentar ler user_id do body, da autenticação ou da querystring
+    let user_id: string | null = null;
+    try {
+      const body = await request.json();
+      user_id = body?.user_id || null;
+    } catch {}
+    if (!user_id) {
+      try {
+        const auth = await authenticateUser(request);
+        if (auth?.user?.id) user_id = auth.user.id as string;
+      } catch {}
+    }
+    if (!user_id) {
+      try {
+        const { searchParams } = new URL(request.url);
+        user_id = searchParams.get('user_id');
+      } catch {}
+    }
 
     if (!user_id) {
       return NextResponse.json(

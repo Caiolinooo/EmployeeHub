@@ -44,6 +44,7 @@ interface CourseFormData {
 const CreateCoursePage: React.FC = () => {
   const router = useRouter();
   const { user, hasFeature } = useSupabaseAuth();
+  const { t } = useI18n();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);

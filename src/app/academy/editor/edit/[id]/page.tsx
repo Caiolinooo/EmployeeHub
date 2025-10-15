@@ -49,6 +49,7 @@ const EditCoursePage: React.FC = () => {
   const params = useParams();
   const router = useRouter();
   const { user, hasFeature } = useSupabaseAuth();
+  const { t } = useI18n();
   const [categories, setCategories] = useState<Category[]>([]);
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);

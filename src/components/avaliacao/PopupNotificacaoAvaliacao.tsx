@@ -148,25 +148,25 @@ export default function PopupNotificacaoAvaliacao({ usuarioId }: PopupNotificaca
     
     switch (tipo) {
       case 'periodo_iniciado':
-        return t('components.completeSuaAutoavaliacaoAteDadosdatalimiteNewDated')pt-BR') : 'o prazo estabelecido'}.`;
+        return `Complete sua autoavaliação até ${dados.data_limite ? new Date(dados.data_limite).toLocaleDateString('pt-BR') : 'o prazo estabelecido'}.`;
       case 'autoavaliacao_pendente':
-        return t('components.voceTemUmaAutoavaliacaoPendenteCompleteAteDadosdat')pt-BR') : 'o prazo'}.`;
+        return `Você tem uma autoavaliação pendente. Complete até ${dados.data_limite ? new Date(dados.data_limite).toLocaleDateString('pt-BR') : 'o prazo'}.`;
       case 'autoavaliacao_prazo':
-        return t('components.oPrazoParaSuaAutoavaliacaoEstaProximoCompleteHoje');
+        return t('components.oPrazoParaSuaAutoavaliacaoEstaProximoCompleteHoje', 'O prazo para sua autoavaliação está próximo. Complete hoje!');
       case 'autoavaliacao_recebida':
-        return `${dados.funcionario_nome || t('components.umFuncionario')} completou sua autoavaliação e aguarda sua aprovação.`;
+        return `${dados.funcionario_nome || t('components.umFuncionario', 'Um funcionário')} completou sua autoavaliação e aguarda sua aprovação.`;
       case 'aprovacao_pendente':
-        return t('components.voceTemAvaliacoesPendentesDeAprovacao');
+        return t('components.voceTemAvaliacoesPendentesDeAprovacao', 'Você tem avaliações pendentes de aprovação');
       case 'aprovacao_prazo':
-        return t('components.oPrazoParaAprovacaoDeAvaliacoesEstaProximo');
+        return t('components.oPrazoParaAprovacaoDeAvaliacoesEstaProximo', 'O prazo para aprovação de avaliações está próximo');
       case 'avaliacao_aprovada':
-        return t('components.suaAvaliacaoFoiAprovadaPorDadosgerentenome')seu gerente'}.`;
+        return `Sua avaliação foi aprovada por ${dados.gerente_nome || 'seu gerente'}.`;
       case 'avaliacao_editada':
-        return t('components.suaAvaliacaoFoiEditadaPorDadosgerentenome')seu gerente'}.`;
+        return `Sua avaliação foi editada por ${dados.gerente_nome || 'seu gerente'}.`;
       case 'avaliacao_finalizada':
-        return t('components.suaAvaliacaoFoiFinalizadaVocePodeVisualizalaAQualq');
+        return t('components.suaAvaliacaoFoiFinalizadaVocePodeVisualizalaAQualq', 'Sua avaliação foi finalizada. Você pode visualizá-la a qualquer momento.');
       default:
-        return t('components.voceTemUmaNovaNotificacaoSobreAvaliacao');
+        return t('components.voceTemUmaNovaNotificacaoSobreAvaliacao', 'Você tem uma nova notificação sobre avaliação');
     }
   };
 

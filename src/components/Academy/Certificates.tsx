@@ -41,6 +41,7 @@ interface CertificatesProps {
 
 const Certificates: React.FC<CertificatesProps> = ({ className = '' }) => {
   const { user, getToken } = useSupabaseAuth();
+  const { t } = useI18n();
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

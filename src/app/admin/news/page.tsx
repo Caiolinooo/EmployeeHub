@@ -452,6 +452,7 @@ const NewsItemComponent = ({ news, onEdit, onDelete, onToggleVisibility, onToggl
 };
 
 export default function NewsPage() {
+  const { t } = useI18n();
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
   const [editingNews, setEditingNews] = useState<NewsItem | null>(null);
   const [isAdding, setIsAdding] = useState(false);

@@ -19,6 +19,7 @@ interface RolePermissionsStatus {
 }
 
 const RolePermissionsInitializer: React.FC = () => {
+  const { t } = useI18n();
   const [status, setStatus] = useState<RolePermissionsStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

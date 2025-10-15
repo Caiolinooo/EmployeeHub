@@ -33,6 +33,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
+    const supabase = getSupabaseClient();
+
     // Verificar se é admin ou manager
     const { data: userData } = await supabase
       .from('users_unified')
@@ -57,20 +59,20 @@ export async function GET(request: NextRequest) {
 
     // Calcular estatísticas
     const totalEmployees = allUsers?.length || 0;
-    const averageScore = evaluationMetrics?.reduce((sum, m) => sum + (m.overall_score || 0), 0) / (evaluationMetrics?.length || 1);
+    const averageScore = evaluationMetrics?.reduce((sum: number, m: any) => sum + (m.overall_score || 0), 0) / (evaluationMetrics?.length || 1);
     const completedEvaluations = evaluationMetrics?.length || 0;
     const pendingEvaluations = Math.max(0, totalEmployees - completedEvaluations);
 
     // Agrupar por departamento
-    const departmentStats = allUsers?.reduce((acc, user) => {
+    const departmentStats = allUsers?.reduce((acc: any, user: any) => {
       const dept = user.department || 'N/A';
       if (!acc[dept]) {
         acc[dept] = { employees: 0, totalScore: 0, evaluations: 0 };
       }
       acc[dept].employees++;
-      
-      const userMetrics = evaluationMetrics?.filter(m => m.user_id === user.id) || [];
-      const userAvgScore = userMetrics.reduce((sum, m) => sum + (m.overall_score || 0), 0) / (userMetrics.length || 1);
+
+      const userMetrics = evaluationMetrics?.filter((m: any) => m.user_id === user.id) || [];
+      const userAvgScore = userMetrics.reduce((sum: number, m: any) => sum + (m.overall_score || 0), 0) / (userMetrics.length || 1);
       
       acc[dept].totalScore += userAvgScore || 0;
       acc[dept].evaluations += userMetrics.length;
@@ -78,7 +80,7 @@ export async function GET(request: NextRequest) {
       return acc;
     }, {} as Record<string, { employees: number; totalScore: number; evaluations: number }>);
 
-    const departmentScores = Object.entries(departmentStats || {}).map(([name, stats]) => ({
+    const departmentScores = Object.entries(departmentStats || {}).map(([name, stats]: [string, any]) => ({
       name,
       score: stats.totalScore / stats.employees,
       employees: stats.employees
@@ -91,12 +93,12 @@ export async function GET(request: NextRequest) {
       date.setMonth(date.getMonth() - i);
       const monthStart = new Date(date.getFullYear(), date.getMonth(), 1).toISOString().split('T')[0];
       const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString().split('T')[0];
-      
-      const monthMetrics = evaluationMetrics?.filter(m => 
+
+      const monthMetrics = evaluationMetrics?.filter((m: any) =>
         m.period_start >= monthStart && m.period_end <= monthEnd
       ) || [];
-      
-      const monthAvg = monthMetrics.reduce((sum, m) => sum + (m.overall_score || 0), 0) / (monthMetrics.length || 1);
+
+      const monthAvg = monthMetrics.reduce((sum: number, m: any) => sum + (m.overall_score || 0), 0) / (monthMetrics.length || 1);
       
       monthlyTrends.push({
         month: date.toLocaleDateString('pt-BR', { month: 'short' }),
@@ -130,15 +132,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
+    const supabase = getSupabaseClient();
+
     const body = await request.json();
-    const { 
-      user_id, 
-      period_start, 
-      period_end, 
-      department, 
-      position, 
-      overall_score, 
-      metrics 
+    const {
+      user_id,
+      period_start,
+      period_end,
+      department,
+      position,
+      overall_score,
+      metrics
     } = body;
 
     if (!user_id || !period_start || !period_end || overall_score === undefined) {
@@ -211,6 +215,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
+    const supabase = getSupabaseClient();
+
     const body = await request.json();
     const { metricId, updates } = body;
 
@@ -250,6 +256,8 @@ export async function DELETE(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
+
+    const supabase = getSupabaseClient();
 
     const { searchParams } = new URL(request.url);
     const metricId = searchParams.get('metricId');
