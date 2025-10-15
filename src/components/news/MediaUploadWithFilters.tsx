@@ -38,6 +38,7 @@ const MediaUploadWithFilters: React.FC<MediaUploadWithFiltersProps> = ({
   onPostCreated,
   mediaType
 }) => {
+  const { t } = useI18n();
   const [step, setStep] = useState<'upload' | 'filter' | 'caption'>('upload');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');

@@ -55,6 +55,7 @@ const NewsPostEditor: React.FC<NewsPostEditorProps> = ({
   onDraftChange,
   containerClassName
 }) => {
+  const { t } = useI18n();
   const [post, setPost] = useState<NewsPost>({
     title: '',
     content: '',

@@ -39,6 +39,7 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const prevUnreadRef = useRef<number>(0);
+  const holdTimeoutsRef = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
   // Carregar notificações (unificadas - incluindo Academy)
   const loadNotifications = async (pageNum: number = 1, reset: boolean = false) => {
@@ -127,18 +128,17 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
   // Press-and-hold helpers
   const handlePressStart = (id: string) => {
     // create timer to mark as read after 600ms
-    (holdTimeoutsRef as any).current = (holdTimeoutsRef as any).current || {};
-    (holdTimeoutsRef as any).current[id] = setTimeout(() => {
+    holdTimeoutsRef.current[id] = setTimeout(() => {
       markAsRead(id);
       // clear after firing
-      if ((holdTimeoutsRef as any).current[id]) {
-        clearTimeout((holdTimeoutsRef as any).current[id]);
-        delete (holdTimeoutsRef as any).current[id];
+      if (holdTimeoutsRef.current[id]) {
+        clearTimeout(holdTimeoutsRef.current[id]);
+        delete holdTimeoutsRef.current[id];
       }
     }, 600);
   };
   const handlePressEnd = (id: string) => {
-    const timers = (holdTimeoutsRef as any).current || {};
+    const timers = holdTimeoutsRef.current;
     if (timers[id]) {
       clearTimeout(timers[id]);
       delete timers[id];
