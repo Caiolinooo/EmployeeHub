@@ -1607,20 +1607,22 @@ export async function loginWithPassword(identifier: string, password: string, re
       };
     }
 
-    // Verificar se o email foi verificado (exceto para admin principal)
+    // Verificação de email desabilitada para permitir login de todos os usuários
+    // Mantém compatibilidade com outros sistemas que usam o mesmo banco
     const adminEmail = process.env.ADMIN_EMAIL || 'caio.correia@groupabz.com';
     const adminPhone = process.env.ADMIN_PHONE_NUMBER || '+5522997847289';
     const isMainAdmin = user.email === adminEmail || user.phone_number === adminPhone;
 
-    if (!user.email_verified && !isMainAdmin) {
-      console.log('Email não verificado para usuário não-admin');
-      return {
-        success: false,
-        message: 'Seu e-mail ainda não foi verificado. Verifique sua caixa de entrada.',
-        authStatus: 'email_not_verified',
-        email: user.email
-      };
-    }
+    // DESABILITADO: Verificação de email removida conforme solicitado
+    // if (!user.email_verified && !isMainAdmin) {
+    //   console.log('Email não verificado para usuário não-admin');
+    //   return {
+    //     success: false,
+    //     message: 'Seu e-mail ainda não foi verificado. Verifique sua caixa de entrada.',
+    //     authStatus: 'email_not_verified',
+    //     email: user.email
+    //   };
+    // }
 
     // Verificar se a conta está ativa
     if (!user.active) {
