@@ -126,10 +126,31 @@ export default function ProtectedRoute({
       }
     }
 
-    // Adicionar um atraso maior para evitar redirecionamentos rápidos que podem causar loops
-    const redirectTimer = setTimeout(() => {
-      if (!isLoading) {
-        console.log('ProtectedRoute - Verificando permissões após atraso:', {
+    // Verificar se estamos em processo de logout
+    const isLoggingOut = typeof window !== 'undefined' && (
+      localStorage.getItem('logout_in_progress') === 'true' ||
+      sessionStorage.getItem('logout_in_progress') === 'true'
+    );
+
+    if (isLoggingOut) {
+      console.log('🚫 ProtectedRoute - Logout em progresso, não verificar permissões');
+      return;
+    }
+
+    // Verificar se estamos na página de login vindo de um logout
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isFromLogout = urlParams.get('logout') === 'true';
+
+      if (isFromLogout) {
+        console.log('🚫 ProtectedRoute - Página de login detectada após logout');
+        return;
+      }
+    }
+
+    // Verificar permissões imediatamente (sem delay)
+    if (!isLoading) {
+      console.log('ProtectedRoute - Verificando permissões:', {
           isAuthenticated,
           isAdmin,
           isManager,
@@ -139,97 +160,93 @@ export default function ProtectedRoute({
           isAvaliacaoRoute
         });
 
-        // Verificar acesso à rota de avaliação
-        if (isAvaliacaoRoute) {
-          console.log('Verificando acesso à rota de avaliação:', {
-            isAdmin,
-            isManager,
-            hasEvaluationAccess,
-            hasAccessToAvaliacaoRoute
-          });
+      // Verificar acesso à rota de avaliação
+      if (isAvaliacaoRoute) {
+        console.log('Verificando acesso à rota de avaliação:', {
+          isAdmin,
+          isManager,
+          hasEvaluationAccess,
+          hasAccessToAvaliacaoRoute
+        });
 
-          if (hasAccessToAvaliacaoRoute) {
-            console.log('Acesso permitido à rota de avaliação');
-            return;
-          } else {
-            console.log('Acesso negado à rota de avaliação');
-            router.replace('/dashboard');
-            return;
-          }
+        if (hasAccessToAvaliacaoRoute) {
+          console.log('Acesso permitido à rota de avaliação');
+          return;
+        } else {
+          console.log('Acesso negado à rota de avaliação');
+          router.replace('/dashboard');
+          return;
         }
+      }
 
-        // BYPASS TEMPORÁRIO: Permitir acesso à rota de administração para depuração
-        if (typeof window !== 'undefined' && window.location.pathname.includes('/admin')) {
-          console.log('BYPASS: Permitindo acesso à rota de administração para depuração');
+      // BYPASS TEMPORÁRIO: Permitir acesso à rota de administração para depuração
+      if (typeof window !== 'undefined' && window.location.pathname.includes('/admin')) {
+        console.log('BYPASS: Permitindo acesso à rota de administração para depuração');
+        return;
+      }
+
+      if (!isAuthenticated) {
+        // Redirecionar para login se não estiver autenticado
+        console.log('Redirecionando para login: usuário não autenticado');
+        router.replace('/login');
+      } else if (adminOnly && !isAdmin) {
+        // Se o usuário deveria ser admin mas não está marcado como tal, mostrar opção de correção
+        if (shouldBeAdmin) {
+          console.log('Usuário deveria ser administrador mas não está marcado como tal');
+          // Em produção, permitir acesso mesmo sem a marcação de admin para o usuário principal
+          if (!isDevelopment && forceAdmin) {
+            console.log('BYPASS PRODUÇÃO: Permitindo acesso à rota de administração para o usuário principal');
+            return; // Permitir acesso
+          }
+          setShowAdminFix(true);
+        } else {
+          // Redirecionar para dashboard se a rota for apenas para administradores
+          console.log('Redirecionando para dashboard: rota apenas para administradores');
+          router.replace('/dashboard');
+        }
+      } else if (managerOnly && !isAdmin && !isManager) {
+        // Verificar se o usuário é o administrador principal
+        if (shouldBeAdmin) {
+          console.log('Usuário é o administrador principal, mas não está marcado como tal');
+          // Em produção, permitir acesso mesmo sem a marcação de admin para o usuário principal
+          if (!isDevelopment && forceAdmin) {
+            console.log('BYPASS PRODUÇÃO: Permitindo acesso à rota de gerente para o usuário principal');
+            return; // Permitir acesso
+          }
+          setShowAdminFix(true);
           return;
         }
 
-        if (!isAuthenticated) {
-          // Redirecionar para login se não estiver autenticado
-          console.log('Redirecionando para login: usuário não autenticado');
-          router.replace('/login');
-        } else if (adminOnly && !isAdmin) {
-          // Se o usuário deveria ser admin mas não está marcado como tal, mostrar opção de correção
-          if (shouldBeAdmin) {
-            console.log('Usuário deveria ser administrador mas não está marcado como tal');
-            // Em produção, permitir acesso mesmo sem a marcação de admin para o usuário principal
-            if (!isDevelopment && forceAdmin) {
-              console.log('BYPASS PRODUÇÃO: Permitindo acesso à rota de administração para o usuário principal');
-              return; // Permitir acesso
-            }
-            setShowAdminFix(true);
-          } else {
-            // Redirecionar para dashboard se a rota for apenas para administradores
-            console.log('Redirecionando para dashboard: rota apenas para administradores');
-            router.replace('/dashboard');
-          }
-        } else if (managerOnly && !isAdmin && !isManager) {
-          // Verificar se o usuário é o administrador principal
-          if (shouldBeAdmin) {
-            console.log('Usuário é o administrador principal, mas não está marcado como tal');
-            // Em produção, permitir acesso mesmo sem a marcação de admin para o usuário principal
-            if (!isDevelopment && forceAdmin) {
-              console.log('BYPASS PRODUÇÃO: Permitindo acesso à rota de gerente para o usuário principal');
-              return; // Permitir acesso
-            }
-            setShowAdminFix(true);
-            return;
-          }
+        // Redirecionar para dashboard se a rota for apenas para gerentes ou administradores
+        console.log('Redirecionando para dashboard: rota apenas para gerentes ou administradores');
+        console.log('Detalhes do usuário:', {
+          isAdmin,
+          isManager,
+          role: user?.role,
+          email: user?.email,
+          phone: (user as any)?.phone_number
+        });
 
-          // Redirecionar para dashboard se a rota for apenas para gerentes ou administradores
-          console.log('Redirecionando para dashboard: rota apenas para gerentes ou administradores');
-          console.log('Detalhes do usuário:', {
-            isAdmin,
-            isManager,
-            role: user?.role,
-            email: user?.email,
-            phone: (user as any)?.phone_number
-          });
-
-          router.replace('/dashboard');
-        } else if (moduleName && !hasAccess(moduleName) && !isAdmin) {
-          // Verificação especial para o módulo de avaliação
-          if (moduleName === 'avaliacao') {
-            if (!hasAccessToAvaliacaoRoute) {
-              console.log(`Redirecionando para dashboard: sem acesso ao módulo de avaliação`);
-              router.replace('/dashboard');
-            } else {
-              console.log(`Acesso permitido ao módulo de avaliação`);
-            }
-          } else {
-            // Redirecionar para dashboard se o usuário não tiver acesso ao módulo
-            console.log(`Redirecionando para dashboard: sem acesso ao módulo ${moduleName}`);
+        router.replace('/dashboard');
+      } else if (moduleName && !hasAccess(moduleName) && !isAdmin) {
+        // Verificação especial para o módulo de avaliação
+        if (moduleName === 'avaliacao') {
+          if (!hasAccessToAvaliacaoRoute) {
+            console.log(`Redirecionando para dashboard: sem acesso ao módulo de avaliação`);
             router.replace('/dashboard');
+          } else {
+            console.log(`Acesso permitido ao módulo de avaliação`);
           }
         } else {
-          // Adicionar log para depuração
-          console.log('Acesso permitido:', { isAdmin, isManager, moduleName, hasAccess: moduleName ? hasAccess(moduleName) : 'N/A' });
+          // Redirecionar para dashboard se o usuário não tiver acesso ao módulo
+          console.log(`Redirecionando para dashboard: sem acesso ao módulo ${moduleName}`);
+          router.replace('/dashboard');
         }
+      } else {
+        // Adicionar log para depuração
+        console.log('Acesso permitido:', { isAdmin, isManager, moduleName, hasAccess: moduleName ? hasAccess(moduleName) : 'N/A' });
       }
-    }, 2000); // Aumentar o atraso para 2 segundos para dar tempo de carregar o estado de autenticação
-
-    // Limpar o timer quando o componente for desmontado
-    return () => clearTimeout(redirectTimer);
+    }
   }, [isAuthenticated, isAdmin, isManager, isLoading, router, adminOnly, managerOnly, moduleName, hasAccess, isDevelopment, user, shouldBeAdmin, checkingAdmin, isAvaliacaoRoute, hasAccessToAvaliacaoRoute, hasEvaluationAccess, profile]);
 
   // Função para corrigir as permissões de administrador

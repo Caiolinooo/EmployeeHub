@@ -82,6 +82,20 @@ export default function Login() {
 
   // Verificar se o usuário já está autenticado
   useEffect(() => {
+    // Verificar se temos parâmetros 't' ou 'logout' na URL (vindo de logout)
+    // Se sim, não redirecionar automaticamente
+    const hasTimestamp = searchParams?.get('t');
+    const isFromLogout = searchParams?.get('logout') === 'true';
+
+    // Também verificar flag de logout no storage
+    const isLoggingOut = localStorage.getItem('logout_in_progress') === 'true' ||
+                         sessionStorage.getItem('logout_in_progress') === 'true';
+
+    if (isFromLogout || hasTimestamp || isLoggingOut) {
+      console.log('🚫 Login page - Detectado logout em progresso, não redirecionar');
+      return;
+    }
+
     if (isAuthenticated) {
       if (passwordExpired) {
         // Se a senha estiver expirada, redirecionar para definir senha
@@ -90,7 +104,7 @@ export default function Login() {
         router.replace('/dashboard');
       }
     }
-  }, [isAuthenticated, passwordExpired, router]);
+  }, [isAuthenticated, passwordExpired, router, searchParams]);
 
   // Garantir que o usuário administrador exista
   useEffect(() => {
