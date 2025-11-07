@@ -3,6 +3,7 @@
  * - Handles line folding
  * - Extracts SUMMARY, DESCRIPTION, DTSTART, DTEND, LOCATION, UID, ATTENDEE, ORGANIZER
  */
+import { randomUUID } from 'crypto';
 
 export type IcsEvent = {
   id: string;
@@ -96,7 +97,6 @@ export function parseIcs(ics: string): IcsEvent[] {
       fields[name] = value;
     }
 
-    const { randomUUID } = await import('crypto');
     const uid = String(fields['UID'] || '').trim() || `evt-${randomUUID()}`;
     const summary = decodeText(String(fields['SUMMARY'] || '').trim());
     const description = decodeText(String(fields['DESCRIPTION'] || '').trim());

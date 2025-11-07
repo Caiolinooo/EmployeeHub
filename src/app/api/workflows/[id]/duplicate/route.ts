@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyToken } from '@/lib/auth';
+import { verifyRequestToken } from '@/lib/auth';
 import { WorkflowStatistics } from '@/types/workflows';
 
 export const runtime = 'nodejs';
@@ -11,7 +11,7 @@ export async function POST(
 ) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
+    const authResult = verifyRequestToken(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,
@@ -45,7 +45,7 @@ export async function POST(
       // Verificar se usuário é admin
       const { data: user } = await supabase
         .from('users_unified')
-        .select('role')
+        .select('role, email')
         .eq('id', authResult.payload.userId)
         .single();
 
@@ -60,7 +60,7 @@ export async function POST(
     // Verificar se usuário pode criar workflows
     const { data: user } = await supabase
       .from('users_unified')
-      .select('role')
+      .select('role, email')
       .eq('id', authResult.payload.userId)
       .single();
 

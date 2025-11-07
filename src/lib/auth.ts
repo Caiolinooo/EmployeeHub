@@ -49,6 +49,35 @@ export interface TokenPayload {
   iat?: number; // Adicionar propriedade iat para issued at
 }
 
+// Interface para o resultado da verificação de token em requisições
+export interface TokenVerificationResult {
+  valid: boolean;
+  payload: TokenPayload | null;
+}
+
+// Função para verificar token a partir de uma requisição
+export function verifyRequestToken(request: Request | {headers: {get: (name: string) => string | null}}): TokenVerificationResult {
+  try {
+    const authHeader = request.headers.get('authorization');
+    const token = extractTokenFromHeader(authHeader || undefined);
+
+    if (!token) {
+      return { valid: false, payload: null };
+    }
+
+    const payload = verifyToken(token);
+
+    if (!payload) {
+      return { valid: false, payload: null };
+    }
+
+    return { valid: true, payload };
+  } catch (error) {
+    console.error('Erro ao verificar token da requisição:', error);
+    return { valid: false, payload: null };
+  }
+}
+
 // Função para buscar usuário usando PostgreSQL diretamente
 export async function findUserByQuery(query: any): Promise<User | null> {
   try {

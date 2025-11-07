@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyToken } from '@/lib/auth';
+import { verifyRequestToken } from '@/lib/auth';
 import { MobilePushNotification } from '@/types/api-mobile';
 
 export const runtime = 'nodejs';
@@ -11,7 +11,7 @@ export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
+    const authResult = verifyRequestToken(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,
@@ -237,7 +237,7 @@ async function sendPushNotification(params: {
 // Endpoint para registrar token de push
 export async function PUT(request: NextRequest) {
   try {
-    const authResult = await verifyToken(request);
+    const authResult = verifyRequestToken(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,
@@ -289,7 +289,7 @@ export async function PUT(request: NextRequest) {
 // Endpoint para remover token de push
 export async function DELETE(request: NextRequest) {
   try {
-    const authResult = await verifyToken(request);
+    const authResult = verifyRequestToken(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,
