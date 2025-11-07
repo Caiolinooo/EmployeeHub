@@ -3,6 +3,8 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { getHardcodedCards } from '@/data/cards';
 import { verifyToken } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 // POST - Migrar cards hardcoded para o Supabase
 export async function POST(request: NextRequest) {
   try {

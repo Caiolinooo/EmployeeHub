@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 // PUT - Marcar todas as notificações como lidas
 export async function PUT(request: NextRequest) {
   try {

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { PayrollEmployee, PayrollEmployeeForm, PayrollApiResponse, PayrollPaginatedResponse } from '@/types/payroll';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/payroll/employees
  * Lista todos os funcionários da folha de pagamento

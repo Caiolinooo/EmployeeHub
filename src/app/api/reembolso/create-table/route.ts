@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 // Function to check if the Reimbursement table exists
 async function checkReimbursementTableExists() {
   try {

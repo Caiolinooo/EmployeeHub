@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API endpoint to create the 'comprovantes' bucket in Supabase storage
  * This is needed for storing reimbursement attachments

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { withPermission } from '@/lib/api-auth';
 
+export const dynamic = 'force-dynamic';
+
 const SETTINGS_KEY = 'company_calendar';
 
 const defaults = {

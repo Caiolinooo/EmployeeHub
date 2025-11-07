@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { authenticateUser, canModerateContent, logAction } from '@/lib/api-auth';
 
+export const dynamic = 'force-dynamic';
+
 // GET - Listar avaliações de um curso
 export async function GET(request: NextRequest) {
   try {

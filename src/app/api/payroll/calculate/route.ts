@@ -3,6 +3,8 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { calculateEmployeePayroll } from '@/lib/payroll/calculations';
 import { PayrollApiResponse, PayrollCalculationResult, PayrollCalculationInput } from '@/types/payroll';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * POST /api/payroll/calculate
  * Calcula a folha de pagamento para um funcionário

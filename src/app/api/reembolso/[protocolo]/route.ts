@@ -3,6 +3,8 @@ import { supabaseAdmin } from '@/lib/db';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { sendReimbursementApprovalEmail, sendReimbursementRejectionEmail } from '@/lib/notifications';
 
+export const dynamic = 'force-dynamic';
+
 // Função auxiliar para verificar se a tabela de reembolsos existe
 async function checkReimbursementTableExists() {
   try {

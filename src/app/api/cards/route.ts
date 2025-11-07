@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getTranslatedCards } from '@/data/cards';
 
+export const dynamic = 'force-dynamic';
+
 // GET - Obter todos os cards com fallback para dados hardcoded
 export async function GET() {
   try {

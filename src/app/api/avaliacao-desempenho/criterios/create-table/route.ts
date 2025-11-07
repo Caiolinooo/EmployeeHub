@@ -3,6 +3,8 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { isAdminFromRequest } from '@/lib/auth';
 import { criteriosPadrao } from '@/data/criterios-avaliacao';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Rota para criar a tabela de critérios e inserir critérios padrão
  */

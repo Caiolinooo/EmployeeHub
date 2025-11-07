@@ -5,6 +5,8 @@ import dashboardCards from '@/data/cards';
 import { IconType } from 'react-icons';
 import * as Icons from 'react-icons/fi';
 
+export const dynamic = 'force-dynamic';
+
 // Função para converter cards hardcoded para o formato do banco de dados
 function convertHardcodedCards() {
   return dashboardCards.map(card => {

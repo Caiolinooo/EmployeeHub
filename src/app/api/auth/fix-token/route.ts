@@ -3,6 +3,8 @@ import { extractTokenFromHeader, verifyToken, generateToken } from '@/lib/auth';
 import jwt from 'jsonwebtoken';
 import { supabaseAdmin } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 console.log('Inicializando cliente Supabase para fix-token');
 
 export async function POST(request: NextRequest) {

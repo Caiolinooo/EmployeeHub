@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 // POST - Atualizar configurações de email de reembolso de um usuário
 export async function POST(request: NextRequest) {
   try {

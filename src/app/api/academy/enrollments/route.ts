@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { withAcademyAuth } from '@/lib/middleware/academy-auth';
 
+export const dynamic = 'force-dynamic';
+
 // GET - Listar matrículas do usuário ou todas (para admins)
 export async function GET(request: NextRequest) {
   try {

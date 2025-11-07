@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * POST /api/setup-payroll
  * Configura automaticamente o banco de dados do módulo de folha de pagamento

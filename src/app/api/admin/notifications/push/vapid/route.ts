@@ -4,6 +4,8 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import crypto from 'crypto';
 import webpush from 'web-push';
 
+export const dynamic = 'force-dynamic';
+
 function encryptValue(value: string, salt: string = 'abz-security-salt'): string {
   if (!value) return '';
   const key = crypto.createHash('md5').update(salt).digest('hex').slice(0, 32);

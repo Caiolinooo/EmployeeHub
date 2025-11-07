@@ -3,6 +3,8 @@ import { supabaseAdmin } from '@/lib/db';
 import { isAdminFromRequest } from '@/lib/auth';
 import dashboardCards from '@/data/cards';
 
+export const dynamic = 'force-dynamic';
+
 // Função para converter cards hardcoded para o formato do banco de dados
 function convertHardcodedCards() {
   return dashboardCards.map(card => {

@@ -3,6 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import { isAdminFromRequest } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 // Função para processar o upload de arquivos
 export async function POST(request: NextRequest) {
   try {

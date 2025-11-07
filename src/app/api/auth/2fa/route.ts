@@ -4,6 +4,8 @@ import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
 
+export const dynamic = 'force-dynamic';
+
 // Rota para gerar um segredo 2FA para o usuário
 export async function POST(req: NextRequest) {
   try {

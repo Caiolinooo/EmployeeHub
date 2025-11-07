@@ -3,6 +3,8 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { withAcademyAuth, withEditorAuth, logAcademyAction } from '@/lib/middleware/academy-auth';
 import { canEditAcademy } from '@/lib/permissions';
 
+export const dynamic = 'force-dynamic';
+
 // GET - Listar categorias
 export async function GET(request: NextRequest) {
   try {

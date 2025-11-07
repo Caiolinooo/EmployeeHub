@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withPermission } from '@/lib/api-auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 export const GET = withPermission('manager', async (_req: NextRequest, { params }: any) => {
   const id = params?.id;
   if (!id) return NextResponse.json({ error: 'id ausente' }, { status: 400 });

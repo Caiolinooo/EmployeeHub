@@ -4,6 +4,8 @@ import { promisify } from 'util';
 import path from 'path';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 const execAsync = promisify(exec);
 
 export async function POST(request: NextRequest) {

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API endpoint to check the Reimbursement table and provide RLS policy instructions
  * This endpoint no longer attempts to execute SQL directly

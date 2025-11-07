@@ -4,6 +4,8 @@ import path from 'path';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API endpoint to download files
  * This endpoint handles file downloads with proper authentication

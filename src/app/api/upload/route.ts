@@ -5,6 +5,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 
+export const dynamic = 'force-dynamic';
+
 // Função para processar o upload de arquivos
 async function processUpload(req: NextRequest): Promise<{ fields: any; files: any }> {
   try {

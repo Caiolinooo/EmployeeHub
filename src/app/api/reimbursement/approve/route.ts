@@ -4,6 +4,8 @@ import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { sendEmail } from '@/lib/email';
 import { generateReimbursementPDF } from '@/lib/pdf-generator';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API endpoint to approve a reimbursement request
  * This endpoint handles the approval of reimbursement requests with proper authentication

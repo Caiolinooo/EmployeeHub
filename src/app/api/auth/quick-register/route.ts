@@ -5,6 +5,8 @@ import bcrypt from 'bcryptjs';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { checkIfUserIsBanned } from '@/lib/banned-users';
 
+export const dynamic = 'force-dynamic';
+
 // Função para gerar número de protocolo
 async function generateProtocolNumber() {
   const date = new Date();

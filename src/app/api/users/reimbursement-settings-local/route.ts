@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
+export const dynamic = 'force-dynamic';
+
 // Função para obter o caminho do arquivo de configuração de um usuário
 function getUserConfigPath(userId: string) {
   const configDir = path.join(process.cwd(), 'src', 'config', 'users');

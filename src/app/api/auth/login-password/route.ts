@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { supabaseAdmin } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 // Função para gerar um token JWT
 function generateToken(userId: string, phoneNumber: string, role: string) {
   const jwtSecret = process.env.JWT_SECRET;

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractTokenFromHeader } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Rota para redirecionar requisições de /api/avaliacao/avaliacoes/[id] para /api/avaliacao-desempenho/avaliacoes/[id]
  */

@@ -3,6 +3,8 @@ import { supabaseAdmin } from '@/lib/db';
 import { isAdminFromRequest } from '@/lib/auth';
 import dashboardCards from '@/data/cards';
 
+export const dynamic = 'force-dynamic';
+
 // POST - Criar a tabela cards e inserir dados iniciais
 export async function POST(request: NextRequest) {
   try {

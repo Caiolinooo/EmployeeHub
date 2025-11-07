@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendPasswordResetEmail } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API para envio de email de redefinição de senha
  */
