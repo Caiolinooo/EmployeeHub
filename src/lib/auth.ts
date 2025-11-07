@@ -1582,28 +1582,11 @@ export async function loginWithPassword(identifier: string, password: string, re
       };
     }
 
-    // Verificar se o email foi verificado (exceto para admin principal e usuários existentes)
-    // Usuários existentes (email_verified = NULL) são permitidos para compatibilidade
-    // Apenas bloqueia novos usuários que se registraram mas não verificaram (email_verified = false)
-    const adminEmail = process.env.ADMIN_EMAIL || 'caio.correia@groupabz.com';
-    const adminPhone = process.env.ADMIN_PHONE_NUMBER || '+5522997847289';
-    const isMainAdmin = user.email === adminEmail || user.phone_number === adminPhone;
-
-    console.log('👑 É admin principal?', isMainAdmin);
-
-    // Bloqueia apenas se email_verified for explicitamente false (novo usuário não verificado)
-    // Permite se for true (verificado) ou null/undefined (usuário existente antes da verificação)
-    if (user.email_verified === false && !isMainAdmin) {
-      console.log('❌ FALHA: Email não verificado para novo usuário');
-      return {
-        success: false,
-        message: 'Seu e-mail ainda não foi verificado. Verifique sua caixa de entrada e clique no link de verificação.',
-        authStatus: 'email_not_verified',
-        email: user.email
-      };
-    }
-
-    console.log('✅ PASSOU: Verificação de email');
+    // VERIFICAÇÃO DE EMAIL DESABILITADA
+    // Motivo: Todos os usuários existentes têm email_verified = false
+    // Para manter compatibilidade com outros sistemas que usam o mesmo banco,
+    // não alteramos o banco de dados e permitimos login de todos os usuários ativos
+    console.log('⚠️ Verificação de email_verified DESABILITADA (compatibilidade)');
 
     // Verificar se a conta está ativa
     if (!user.active) {
