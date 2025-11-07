@@ -123,22 +123,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('API login-password: Senha correta, gerando token');
+    console.log('API login-password: Senha correta, verificando status do email');
 
-    // DESABILITADO: Verificação de email removida para permitir login de todos os usuários
-    // Mantém compatibilidade com outros sistemas que usam o mesmo banco
-    // if (!user.email_verified && user.email !== (process.env.ADMIN_EMAIL || 'caio.correia@groupabz.com')) {
-    //   console.log('API login-password: Email não verificado para usuário não-admin');
-    //   return NextResponse.json({
-    //     success: false,
-    //     message: 'Seu e-mail ainda não foi verificado. Verifique sua caixa de entrada.',
-    //     code: 'EMAIL_NOT_VERIFIED',
-    //     email: user.email,
-    //     requiresEmailVerification: true
-    //   }, { status: 403 });
-    // }
+    // Verificar se o email foi verificado (exceto para admin principal e usuários existentes)
+    // Usuários existentes (email_verified = NULL) são permitidos para compatibilidade
+    // Apenas bloqueia novos usuários que se registraram mas não verificaram (email_verified = false)
+    if (user.email_verified === false && user.email !== (process.env.ADMIN_EMAIL || 'caio.correia@groupabz.com')) {
+      console.log('API login-password: Email não verificado para novo usuário');
+      return NextResponse.json({
+        success: false,
+        message: 'Seu e-mail ainda não foi verificado. Verifique sua caixa de entrada e clique no link de verificação.',
+        code: 'EMAIL_NOT_VERIFIED',
+        email: user.email,
+        requiresEmailVerification: true
+      }, { status: 403 });
+    }
 
-    console.log('API login-password: Gerando token de autenticação');
+    console.log('API login-password: Email verificado ou usuário existente, gerando token');
 
     // Atualizar o papel do usuário para ADMIN se ainda não for
     if (user.role !== 'ADMIN') {
