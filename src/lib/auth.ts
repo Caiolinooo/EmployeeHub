@@ -1306,108 +1306,72 @@ export async function loginWithPassword(identifier: string, password: string, re
 
     let user;
     try {
-      // Usar Supabase em vez de PostgreSQL direto
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
-
-      if (!supabaseUrl || !supabaseServiceKey) {
-        throw new Error('Configurações do Supabase não encontradas');
-      }
-
-      const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
+      // Usar PostgreSQL direto para evitar problemas de fetch do Supabase em localhost
+      const searchPool = new Pool({
+        connectionString: process.env.DATABASE_URL
       });
 
-      // Se for email, buscar por email
-      if (isEmail) {
-        console.log('Buscando por email:', identifier);
-        const { data: userData, error: userError } = await supabase
-          .from('users_unified')
-          .select('*')
-          .eq('email', identifier)
-          .single();
+      try {
+        // Se for email, buscar por email
+        if (isEmail) {
+          console.log('Buscando por email:', identifier);
+          const result = await searchPool.query(`
+            SELECT * FROM "users_unified"
+            WHERE "email" = $1
+            LIMIT 1
+          `, [identifier]);
 
-        if (userError) {
-          console.log('Erro ao buscar usuário pelo email:', userError.message);
-
-          // Se não encontrou por email, tentar por telefone
-          const { data: fallbackData, error: fallbackError } = await supabase
-            .from('users_unified')
-            .select('*')
-            .eq('phone_number', identifier)
-            .single();
-
-          if (fallbackError) {
-            console.log('Usuário não encontrado por email nem telefone');
-            return {
-              success: false,
-              message: 'Usuário não encontrado'
+          if (result.rows.length > 0) {
+            const userData = result.rows[0];
+            user = {
+              ...userData,
+              phoneNumber: userData.phone_number,
+              firstName: userData.first_name,
+              lastName: userData.last_name,
+              createdAt: userData.created_at,
+              updatedAt: userData.updated_at,
+              accessPermissions: userData.access_permissions,
+              accessHistory: userData.access_history
             };
+            console.log('✅ Usuário encontrado pelo email:', user.id);
+          } else {
+            console.log('❌ Usuário não encontrado por email');
           }
-
-          user = {
-            ...fallbackData,
-            phoneNumber: fallbackData.phone_number,
-            firstName: fallbackData.first_name,
-            lastName: fallbackData.last_name,
-            createdAt: fallbackData.created_at,
-            updatedAt: fallbackData.updated_at,
-            accessPermissions: fallbackData.access_permissions,
-            accessHistory: fallbackData.access_history
-          };
-          console.log('Usuário encontrado pelo telefone:', user.id);
         } else {
-          user = {
-            ...userData,
-            phoneNumber: userData.phone_number,
-            firstName: userData.first_name,
-            lastName: userData.last_name,
-            createdAt: userData.created_at,
-            updatedAt: userData.updated_at,
-            accessPermissions: userData.access_permissions,
-            accessHistory: userData.access_history
-          };
-          console.log('Usuário encontrado pelo email:', user.id);
-        }
-      } else {
-        // Buscar por número de telefone
-        console.log('Buscando por telefone:', identifier);
-        const { data: userData, error: userError } = await supabase
-          .from('users_unified')
-          .select('*')
-          .eq('phone_number', identifier)
-          .single();
+          // Buscar por número de telefone
+          console.log('Buscando por telefone:', identifier);
+          const result = await searchPool.query(`
+            SELECT * FROM "users_unified"
+            WHERE "phone_number" = $1
+            LIMIT 1
+          `, [identifier]);
 
-        if (userError) {
-          console.log('Usuário não encontrado por telefone:', userError.message);
-          return {
-            success: false,
-            message: 'Usuário não encontrado'
-          };
+          if (result.rows.length > 0) {
+            const userData = result.rows[0];
+            user = {
+              ...userData,
+              phoneNumber: userData.phone_number,
+              firstName: userData.first_name,
+              lastName: userData.last_name,
+              createdAt: userData.created_at,
+              updatedAt: userData.updated_at,
+              accessPermissions: userData.access_permissions,
+              accessHistory: userData.access_history
+            };
+            console.log('✅ Usuário encontrado pelo telefone:', user.id);
+          } else {
+            console.log('❌ Usuário não encontrado por telefone');
+          }
         }
-
-        user = {
-          ...userData,
-          phoneNumber: userData.phone_number,
-          firstName: userData.first_name,
-          lastName: userData.last_name,
-          createdAt: userData.created_at,
-          updatedAt: userData.updated_at,
-          accessPermissions: userData.access_permissions,
-          accessHistory: userData.access_history
-        };
-        console.log('Usuário encontrado pelo telefone:', user.id);
+      } finally {
+        await searchPool.end();
       }
 
       if (!user) {
-        console.log('Usuário não encontrado');
+        console.log('❌ Usuário não encontrado no banco de dados');
       }
     } catch (error) {
-      console.error('Erro ao buscar usuário no banco de dados:', error);
+      console.error('❌ Erro ao buscar usuário no banco de dados:', error);
     }
 
     console.log('Buscando usuário por:', isEmail ? 'email' : 'telefone', identifier);
