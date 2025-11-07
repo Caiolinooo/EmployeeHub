@@ -1089,13 +1089,31 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   // Função para fazer logout
   const signOut = async () => {
     try {
-      console.log('Iniciando processo de logout...');
+      console.log('🚪 Iniciando processo de logout...');
+
+      // CRÍTICO: Marcar flag de logout IMEDIATAMENTE para prevenir restauração de sessão
+      localStorage.setItem('logout_in_progress', 'true');
+      sessionStorage.setItem('logout_in_progress', 'true');
+
+      // Limpar estado DO REACT PRIMEIRO (antes de qualquer operação assíncrona)
+      setUser(null);
+      setProfile(null);
+      setLoginStep('phone');
+      setIsLoading(false);
+
+      // Fazer logout no Supabase
+      console.log('🔐 Fazendo logout no Supabase');
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch (supabaseError) {
+        console.error('Erro ao fazer logout no Supabase:', supabaseError);
+      }
 
       // Chamar a API de logout se tiver token personalizado
       const token = getToken();
       if (token) {
         try {
-          console.log('Chamando API de logout para o token personalizado');
+          console.log('📡 Chamando API de logout');
           await fetch('/api/auth/logout', {
             method: 'POST',
             headers: {
@@ -1104,71 +1122,73 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
           });
         } catch (apiError) {
           console.error('Erro ao chamar API de logout:', apiError);
-          // Continuar com o processo de logout mesmo se a API falhar
         }
       }
-
-      // Fazer logout no Supabase PRIMEIRO
-      console.log('Fazendo logout no Supabase');
-      await supabase.auth.signOut();
 
       // Remover tokens usando o utilitário
       removeToken();
       removeRefreshToken();
 
       // Remover TODOS os dados de autenticação do localStorage
-      localStorage.removeItem('auth');
-      localStorage.removeItem('token');
-      localStorage.removeItem('abzToken');
-      localStorage.removeItem('user');
-      localStorage.removeItem('rememberMe');
+      const keysToRemove = ['auth', 'token', 'abzToken', 'user', 'rememberMe', 'sb-access-token', 'sb-refresh-token'];
+      keysToRemove.forEach(key => localStorage.removeItem(key));
 
       // Limpar todos os cookies relacionados à autenticação
       const cookiesToClear = ['token', 'abzToken', 'auth', 'refreshToken', 'sb-access-token', 'sb-refresh-token'];
       cookiesToClear.forEach(cookieName => {
         document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname}`;
         document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname}`;
       });
 
-      // Limpar estado DO REACT IMEDIATAMENTE
-      setUser(null);
-      setProfile(null);
-      setLoginStep('phone');
-      setIsLoading(false);
+      console.log('✅ Logout concluído - redirecionando para login');
 
-      console.log('Logout concluído com sucesso - redirecionando para login');
+      // Remover flag de logout
+      localStorage.removeItem('logout_in_progress');
+      sessionStorage.removeItem('logout_in_progress');
 
       // Usar replace em vez de href para evitar adicionar ao histórico
-      // Adicionar timestamp para forçar reload e evitar cache
-      window.location.replace('/login?t=' + Date.now());
+      // Adicionar timestamp e flag de logout para forçar reload e identificar logout
+      window.location.replace('/login?logout=true&t=' + Date.now());
     } catch (error) {
-      console.error('Erro ao fazer logout:', error);
+      console.error('❌ Erro ao fazer logout:', error);
 
       // Tentar limpar manualmente mesmo em caso de erro
       try {
-        // Remover tokens usando o utilitário
+        // Limpar estado
+        setUser(null);
+        setProfile(null);
+
+        // Remover tokens
         removeToken();
         removeRefreshToken();
 
-        // Remover TODOS os dados de autenticação do localStorage
-        localStorage.clear(); // Limpar TUDO para garantir
+        // Limpar TUDO do localStorage (exceto configurações do usuário que não são sensíveis)
+        const keysToKeep = ['i18nextLng', 'theme', 'NEXT_LOCALE'];
+        const allKeys = Object.keys(localStorage);
+        allKeys.forEach(key => {
+          if (!keysToKeep.includes(key)) {
+            localStorage.removeItem(key);
+          }
+        });
 
         // Limpar todos os cookies
         const cookiesToClear = ['token', 'abzToken', 'auth', 'refreshToken', 'sb-access-token', 'sb-refresh-token'];
         cookiesToClear.forEach(cookieName => {
           document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname}`;
           document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname}`;
         });
-
-        // Limpar estado
-        setUser(null);
-        setProfile(null);
       } catch (cleanupError) {
         console.error('Erro ao limpar dados de autenticação:', cleanupError);
       }
 
+      // Remover flag de logout
+      localStorage.removeItem('logout_in_progress');
+      sessionStorage.removeItem('logout_in_progress');
+
       // Forçar redirecionamento mesmo em caso de erro
-      window.location.replace('/login?t=' + Date.now());
+      window.location.replace('/login?logout=true&t=' + Date.now());
     }
   };
 
@@ -1176,6 +1196,28 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // CRÍTICO: Verificar se estamos em processo de logout
+        const isLoggingOut = localStorage.getItem('logout_in_progress') === 'true' ||
+                             sessionStorage.getItem('logout_in_progress') === 'true';
+
+        if (isLoggingOut) {
+          console.log('🚫 Logout em progresso - não restaurar sessão');
+          setIsLoading(false);
+          return;
+        }
+
+        // Verificar se estamos na página de login vindo de um logout
+        if (typeof window !== 'undefined') {
+          const urlParams = new URLSearchParams(window.location.search);
+          const isFromLogout = urlParams.get('logout') === 'true';
+
+          if (isFromLogout) {
+            console.log('🚫 Página de login detectada após logout - não restaurar sessão');
+            setIsLoading(false);
+            return;
+          }
+        }
+
         // Primeiro tentar carregar o perfil a partir do token
         const tokenProfileLoaded = await loadUserProfileFromToken();
         if (tokenProfileLoaded) {
