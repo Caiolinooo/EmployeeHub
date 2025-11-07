@@ -4,6 +4,7 @@ import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { WorkflowExecution, ExecutionLog, StepExecution } from '@/types/workflows';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST(
   request: NextRequest,

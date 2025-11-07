@@ -4,6 +4,7 @@ import { verifyRequestToken } from '@/lib/auth';
 import { WorkflowStatistics } from '@/types/workflows';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST(
   request: NextRequest,

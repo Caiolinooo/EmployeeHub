@@ -4,6 +4,7 @@ import { verifyRequestToken } from '@/lib/auth';
 import { MobilePushNotification } from '@/types/api-mobile';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 // Configuração do Firebase Admin (seria necessário configurar)
 // import admin from 'firebase-admin';
