@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import AdvancedPDFGenerator from '@/lib/advanced-pdf-generator';
+import { AdvancedPDFGenerator } from '@/lib/advanced-pdf-generator';
 import { createClient } from '@supabase/supabase-js';
 
 // Função para obter o cliente Supabase de forma lazy
@@ -93,6 +93,8 @@ export async function POST(request: NextRequest) {
 async function generateIndividualReport(parameters: any, userId: string) {
   const { targetUserId, periodStart, periodEnd } = parameters;
 
+  const supabase = getSupabaseClient();
+
   // Buscar dados do usuário
   const { data: user } = await supabase
     .from('users_unified')
@@ -116,8 +118,8 @@ async function generateIndividualReport(parameters: any, userId: string) {
     .gte('created_at', periodStart)
     .lte('created_at', periodEnd);
 
-  const avgScore = metrics?.reduce((sum, m) => sum + (m.overall_score || 0), 0) / (metrics?.length || 1);
-  const totalReimbursements = reimbursements?.reduce((sum, r) => sum + (r.amount || 0), 0) || 0;
+  const avgScore = metrics?.reduce((sum: number, m: any) => sum + (m.overall_score || 0), 0) / (metrics?.length || 1);
+  const totalReimbursements = reimbursements?.reduce((sum: number, r: any) => sum + (r.amount || 0), 0) || 0;
 
   return {
     title: 'Relatório de Performance Individual',
@@ -189,6 +191,8 @@ async function generateIndividualReport(parameters: any, userId: string) {
 async function generateDepartmentalReport(parameters: any, userId: string) {
   const { department, periodStart, periodEnd } = parameters;
 
+  const supabase = getSupabaseClient();
+
   // Buscar dados do departamento
   const { data: metrics } = await supabase
     .from('evaluation_metrics')
@@ -197,7 +201,7 @@ async function generateDepartmentalReport(parameters: any, userId: string) {
     .gte('period_start', periodStart)
     .lte('period_end', periodEnd);
 
-  const avgScore = metrics?.reduce((sum, m) => sum + (m.overall_score || 0), 0) / (metrics?.length || 1);
+  const avgScore = metrics?.reduce((sum: number, m: any) => sum + (m.overall_score || 0), 0) / (metrics?.length || 1);
   const employeeCount = new Set(metrics?.map(m => m.user_id)).size;
 
   return {
@@ -259,6 +263,8 @@ async function generateDepartmentalReport(parameters: any, userId: string) {
 async function generateExecutiveReport(parameters: any, userId: string) {
   const { periodStart, periodEnd } = parameters;
 
+  const supabase = getSupabaseClient();
+
   // Buscar dados gerais
   const { data: allMetrics } = await supabase
     .from('evaluation_metrics')
@@ -272,12 +278,12 @@ async function generateExecutiveReport(parameters: any, userId: string) {
     .gte('created_at', periodStart)
     .lte('created_at', periodEnd);
 
-  const avgScore = allMetrics?.reduce((sum, m) => sum + (m.overall_score || 0), 0) / (allMetrics?.length || 1);
-  const totalEmployees = new Set(allMetrics?.map(m => m.user_id)).size;
-  const totalReimbursements = allReimbursements?.reduce((sum, r) => sum + (r.amount || 0), 0) || 0;
+  const avgScore = allMetrics?.reduce((sum: number, m: any) => sum + (m.overall_score || 0), 0) / (allMetrics?.length || 1);
+  const totalEmployees = new Set(allMetrics?.map((m: any) => m.user_id)).size;
+  const totalReimbursements = allReimbursements?.reduce((sum: number, r: any) => sum + (r.amount || 0), 0) || 0;
 
   // Agrupar por departamento
-  const departmentStats = allMetrics?.reduce((acc, metric) => {
+  const departmentStats = allMetrics?.reduce((acc: any, metric: any) => {
     const dept = metric.users_unified?.department || 'N/A';
     if (!acc[dept]) {
       acc[dept] = { count: 0, totalScore: 0 };
@@ -305,7 +311,7 @@ async function generateExecutiveReport(parameters: any, userId: string) {
           labels: Object.keys(departmentStats || {}),
           datasets: [{
             label: 'Pontuação Média',
-            data: Object.values(departmentStats || {}).map(d => d.totalScore / d.count),
+            data: Object.values(departmentStats || {}).map((d: any) => d.totalScore / d.count),
             backgroundColor: '#2563eb'
           }]
         }
@@ -315,7 +321,7 @@ async function generateExecutiveReport(parameters: any, userId: string) {
       {
         title: 'Resumo por Departamento',
         headers: ['Departamento', 'Funcionários', 'Pontuação Média'],
-        rows: Object.entries(departmentStats || {}).map(([dept, stats]) => [
+        rows: Object.entries(departmentStats || {}).map(([dept, stats]: [string, any]) => [
           dept,
           stats.count.toString(),
           (stats.totalScore / stats.count).toFixed(2)

@@ -47,7 +47,7 @@ export default function CertificateTemplateEditor({
       const w2 = window as any;
       if (w2.pdfjsLib) {
         // Set worker
-        w2.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js';
+        w2.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@4.8.69/build/pdf.worker.min.js';
       }
     };
     ensurePdfJs().catch((e) => console.error(e));

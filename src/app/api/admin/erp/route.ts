@@ -177,6 +177,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Atualizar conexão no banco
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('erp_connections')
       .update(updates)
@@ -217,6 +218,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    const supabase = getSupabaseClient();
     const { error } = await supabase
       .from('erp_connections')
       .delete()

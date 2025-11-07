@@ -150,7 +150,7 @@ const PdfViewerComponent: React.FC<PdfViewerComponentProps> = ({
             </div>
           ) : (
             <div className="h-full">
-              <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+              <Worker workerUrl="https://unpkg.com/pdfjs-dist@4.8.69/build/pdf.worker.min.js">
                 <Viewer
                   fileUrl={getNormalizedPath()}
                   plugins={[defaultLayoutPluginInstance]}

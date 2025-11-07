@@ -3,6 +3,13 @@ import { createClient } from '@supabase/supabase-js';
 import fs from 'fs/promises';
 import path from 'path';
 
+// Extend Window interface for chartsReady
+declare global {
+  interface Window {
+    chartsReady?: boolean;
+  }
+}
+
 function getSupabaseClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -313,6 +320,8 @@ export class AdvancedPDFGenerator {
     const fileName = `report_${reportId}.pdf`;
     const filePath = path.join(this.reportsDir, fileName);
 
+    const supabase = getSupabaseClient();
+
     try {
       // Salvar no banco de dados
       await supabase.from('pdf_reports').insert([{
@@ -370,7 +379,7 @@ export class AdvancedPDFGenerator {
         status: 'failed'
       }).eq('id', reportId);
 
-      throw new Error(`Erro ao gerar PDF: ${error.message}`);
+      throw new Error(`Erro ao gerar PDF: ${(error as Error).message}`);
     }
   }
 }

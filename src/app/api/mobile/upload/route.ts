@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyToken } from '@/lib/auth';
+import { verifyRequestToken } from '@/lib/auth';
 import { MobileUploadResponse } from '@/types/api-mobile';
 
 export const runtime = 'nodejs';
@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
+    const authResult = verifyRequestToken(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,
@@ -206,7 +206,7 @@ async function generateThumbnail(fileName: string, buffer: Uint8Array, mimeType:
 // Endpoint para listar uploads do usuário
 export async function GET(request: NextRequest) {
   try {
-    const authResult = await verifyToken(request);
+    const authResult = verifyRequestToken(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,
@@ -268,7 +268,7 @@ export async function GET(request: NextRequest) {
 // Endpoint para deletar upload
 export async function DELETE(request: NextRequest) {
   try {
-    const authResult = await verifyToken(request);
+    const authResult = verifyRequestToken(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,

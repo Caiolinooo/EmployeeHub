@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
         successful_records: 0,
         failed_records: 0,
         progress: 0,
-        created_by: authResult.payload.userId,
+        created_by: authResult.userId,
         is_scheduled: false,
         config: {
           batchSize: 100,
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
         message: `Sincronização iniciada para módulo ${module}`,
         details: { module, type, jobId: job.id },
         timestamp: new Date().toISOString(),
-        user_id: authResult.payload.userId,
+        user_id: authResult.userId,
         ip_address: request.headers.get('x-forwarded-for') || 'unknown',
         user_agent: request.headers.get('user-agent')
       });

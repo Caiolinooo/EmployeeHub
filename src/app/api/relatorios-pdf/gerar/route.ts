@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyToken } from '@/lib/auth';
+import { verifyRequestToken } from '@/lib/auth';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Chart } from 'chart.js';
@@ -16,7 +16,7 @@ export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyToken(request);
+    const authResult = verifyRequestToken(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json(
         { success: false, error: 'Token inválido' },
