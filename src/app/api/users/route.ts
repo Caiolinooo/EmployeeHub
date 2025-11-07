@@ -228,6 +228,7 @@ export async function POST(request: NextRequest) {
           position,
           department,
           active: true,
+          email_verified: true, // Usuários criados pelo admin não precisam verificar email
           password_last_changed: now.toISOString(),
           access_permissions: defaultPermissions[userRole as 'ADMIN' | 'MANAGER' | 'USER'],
           access_history: accessHistory,
