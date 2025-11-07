@@ -163,9 +163,9 @@ const ReactPdfViewer: React.FC<ReactPdfViewerProps> = ({
                   </div>
                 }
                 options={{
-                  cMapUrl: 'https://unpkg.com/pdfjs-dist@3.4.120/cmaps/',
+                  cMapUrl: 'https://unpkg.com/pdfjs-dist@4.8.69/cmaps/',
                   cMapPacked: true,
-                  standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@3.4.120/standard_fonts/'
+                  standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@4.8.69/standard_fonts/'
                 }}
               >
                 <Page
