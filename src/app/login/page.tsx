@@ -83,7 +83,6 @@ export default function Login() {
   // Verificar se o usuário já está autenticado
   useEffect(() => {
     // Verificar se temos parâmetros 't' ou 'logout' na URL (vindo de logout)
-    // Se sim, não redirecionar automaticamente
     const hasTimestamp = searchParams?.get('t');
     const isFromLogout = searchParams?.get('logout') === 'true';
 
@@ -91,8 +90,21 @@ export default function Login() {
     const isLoggingOut = localStorage.getItem('logout_in_progress') === 'true' ||
                          sessionStorage.getItem('logout_in_progress') === 'true';
 
+    // Se estamos vindo de um logout, limpar os parâmetros da URL para permitir login novamente
     if (isFromLogout || hasTimestamp || isLoggingOut) {
-      console.log('🚫 Login page - Detectado logout em progresso, não redirecionar');
+      console.log('🚫 Login page - Detectado logout em progresso, limpando parâmetros da URL');
+
+      // Limpar as flags de logout
+      localStorage.removeItem('logout_in_progress');
+      sessionStorage.removeItem('logout_in_progress');
+
+      // Limpar os parâmetros da URL usando replace para não adicionar ao histórico
+      if (typeof window !== 'undefined') {
+        const cleanUrl = window.location.pathname; // Sem query params
+        window.history.replaceState({}, '', cleanUrl);
+      }
+
+      // Não redirecionar automaticamente
       return;
     }
 

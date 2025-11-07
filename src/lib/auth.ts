@@ -1437,33 +1437,50 @@ export async function loginWithPassword(identifier: string, password: string, re
 
           if (existingAdminResult.rows.length > 0) {
             const existingAdmin = existingAdminResult.rows[0];
-            console.log('Usuário administrador já existe, gerando token');
+            console.log('Usuário administrador já existe, verificando senha');
 
-            // Verificar se a senha está correta ou atualizá-la se necessário
+            // CRÍTICO: Verificar se a senha está correta - NÃO ATUALIZAR SE ESTIVER ERRADA!
             const isPasswordValid = await bcrypt.compare(password, existingAdmin.password);
 
             if (!isPasswordValid) {
-              console.log('Atualizando senha do administrador');
-              const hashedPassword = await bcrypt.hash(password, 10);
-
-              await adminPool.query(`
-                UPDATE "users_unified"
-                SET
-                  "password" = $1,
-                  "updated_at" = CURRENT_TIMESTAMP
-                WHERE "id" = $2
-              `, [hashedPassword, existingAdmin.id]);
+              console.log('❌ Senha incorreta para o administrador');
+              await adminPool.end();
+              return {
+                success: false,
+                message: 'Senha incorreta'
+              };
             }
 
-            // Gerar token JWT
-            const token = generateToken(existingAdmin);
+            console.log('✅ Senha correta, gerando token');
+
+            // Gerar token JWT e refresh token
+            const token = generateToken(existingAdmin, rememberMe);
+            const refreshTokenData = generateRefreshToken(existingAdmin, rememberMe);
+
+            // Salvar refresh token no banco de dados
+            try {
+              const { supabaseAdmin } = await import('@/lib/supabase');
+              await supabaseAdmin
+                .from('refresh_tokens')
+                .insert({
+                  user_id: existingAdmin.id,
+                  token: refreshTokenData.token,
+                  expires_at: refreshTokenData.expiresAt.toISOString(),
+                  remember_me: rememberMe,
+                  is_active: true,
+                  created_at: new Date().toISOString()
+                });
+            } catch (refreshError) {
+              console.warn('Erro ao salvar refresh token:', refreshError);
+            }
 
             await adminPool.end();
             return {
               success: true,
               message: 'Login realizado com sucesso.',
               user: existingAdmin,
-              token
+              token,
+              refreshToken: refreshTokenData.token
             };
           }
 
