@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { withPermission } from '@/lib/api-auth';
 
+export const dynamic = 'force-dynamic';
+
 // GET - Obter todos os documentos
 export async function GET(request: NextRequest) {
 

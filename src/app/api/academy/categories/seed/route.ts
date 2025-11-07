@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { withEditorAuth } from '@/lib/middleware/academy-auth';
 
+export const dynamic = 'force-dynamic';
+
 const DEFAULT_CATEGORIES = [
   { name: 'Tecnologia', description: 'Cursos de tecnologia e programação', icon: 'code', color: '#0066CC', sort_order: 1 },
   { name: 'Negócios', description: 'Gestão, liderança e estratégia', icon: 'briefcase', color: '#28A745', sort_order: 2 },

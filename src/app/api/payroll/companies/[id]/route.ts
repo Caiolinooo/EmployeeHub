@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { PayrollCompany, PayrollCompanyForm, PayrollApiResponse } from '@/types/payroll';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/payroll/companies/[id]
  * Busca uma empresa específica

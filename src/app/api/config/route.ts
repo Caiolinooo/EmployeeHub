@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { SiteConfig } from '@/data/config';
 import { supabaseAdmin } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 // Configuração padrão do site
 const defaultConfig: SiteConfig = {
   title: "Painel ABZ Group",

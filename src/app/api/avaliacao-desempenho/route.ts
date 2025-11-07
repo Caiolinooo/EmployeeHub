@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { initAvaliacaoModule } from '@/lib/avaliacao-module';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Rota para verificar o status do módulo de avaliação de desempenho
  */

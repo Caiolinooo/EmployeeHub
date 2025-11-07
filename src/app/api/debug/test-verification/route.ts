@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { registerCode, getActiveCodes, getLatestCode } from '@/lib/code-service';
 import { sendVerificationEmail } from '@/lib/email-service';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API para testar o envio de códigos de verificação (apenas em ambiente de desenvolvimento)
  */

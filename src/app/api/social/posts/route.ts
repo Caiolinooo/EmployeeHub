@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { authenticateUser } from '@/lib/api-auth';
 
+export const dynamic = 'force-dynamic';
+
 // GET - Listar posts do feed
 export async function GET(request: NextRequest) {
   try {

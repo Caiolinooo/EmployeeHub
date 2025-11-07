@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendVerificationCode } from '@/lib/verification';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API para envio de códigos de verificação
  */

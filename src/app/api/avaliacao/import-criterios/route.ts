@@ -5,6 +5,8 @@ import * as XLSX from 'xlsx';
 import path from 'path';
 import fs from 'fs';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API endpoint to import evaluation criteria from Excel file
  */

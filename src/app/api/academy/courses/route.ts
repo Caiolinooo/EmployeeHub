@@ -4,6 +4,8 @@ import { canEditAcademy } from '@/lib/permissions';
 
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 // GET - Listar cursos
 export async function GET(request: NextRequest) {
   try {

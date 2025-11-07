@@ -3,6 +3,8 @@ import { withPermission } from '@/lib/api-auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { ensureCertificatesBucket } from '@/lib/certificates';
 
+export const dynamic = 'force-dynamic';
+
 export const POST = withPermission('manager', async (req: NextRequest) => {
   try {
     await ensureCertificatesBucket();

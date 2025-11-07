@@ -3,6 +3,8 @@ import { supabaseAdmin } from '@/lib/db';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { sendEmail } from '@/lib/email';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API endpoint to reject a reimbursement request
  * This endpoint handles the rejection of reimbursement requests with proper authentication

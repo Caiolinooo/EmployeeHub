@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API route para adicionar a coluna reimbursement_email_settings à tabela users_unified
  * Esta rota é chamada automaticamente quando a coluna não existe

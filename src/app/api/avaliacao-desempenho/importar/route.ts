@@ -3,6 +3,8 @@ import { initAvaliacaoModule } from '@/lib/avaliacao-module';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Rota para importar funcionários para o módulo de avaliação de desempenho
  */

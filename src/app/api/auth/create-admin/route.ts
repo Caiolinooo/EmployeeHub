@@ -3,6 +3,8 @@ import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 import { getDefaultPermissions } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     // Obter dados do administrador das variáveis de ambiente

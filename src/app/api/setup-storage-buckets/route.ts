@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { isAdminFromRequest } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API para configurar buckets de armazenamento no Supabase
  * Esta API cria os buckets necessários para o funcionamento do sistema

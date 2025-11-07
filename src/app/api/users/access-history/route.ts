@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 // GET - Obter histórico de acesso de um usuário
 export async function GET(request: NextRequest) {
   try {

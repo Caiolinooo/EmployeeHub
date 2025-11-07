@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import * as XLSX from 'xlsx';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API para importação de dados da planilha AN-FIN-005-R0 do cliente LUZ Marítima
  * POST /api/payroll/luz-maritima/import

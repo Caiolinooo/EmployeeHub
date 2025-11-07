@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { supabaseWithRetry, logError, logPerformance } from '@/lib/apiRetry';
 
+export const dynamic = 'force-dynamic';
+
 // GET - Listar notificações do usuário
 export async function GET(request: NextRequest) {
   const startTime = Date.now();

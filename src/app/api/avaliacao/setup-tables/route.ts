@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { isAdminFromRequest } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API endpoint to set up all necessary tables for the evaluation system
  */

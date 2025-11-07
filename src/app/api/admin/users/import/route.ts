@@ -5,6 +5,8 @@ import { sendInviteSMS } from '@/lib/sms';
 import crypto from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const {

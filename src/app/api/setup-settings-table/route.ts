@@ -3,6 +3,8 @@ import { supabaseAdmin } from '@/lib/db';
 import fs from 'fs';
 import path from 'path';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API route to create the settings table directly using standard Supabase operations
  * This avoids using the execute_sql function which requires special permissions

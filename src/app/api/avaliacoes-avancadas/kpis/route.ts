@@ -4,6 +4,7 @@ import { verifyToken } from '@/lib/auth';
 import { KPIAvaliacao, FiltroAnalise } from '@/types/avaliacoes-avancadas';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 // GET - Verificar a estrutura do banco de dados
 export async function GET(request: NextRequest) {
   try {

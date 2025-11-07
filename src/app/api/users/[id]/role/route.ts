@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, handleApiError } from '@/lib/api-utils';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
+export const dynamic = 'force-dynamic';
+
 // POST - Atualizar o papel (role) de um usuário
 export async function POST(
   request: NextRequest,

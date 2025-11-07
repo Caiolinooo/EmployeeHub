@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 // POST - Executar SQL diretamente
 export async function POST(request: NextRequest) {
   try {

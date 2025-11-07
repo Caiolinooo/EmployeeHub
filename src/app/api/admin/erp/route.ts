@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import ERPIntegrationManager from '@/lib/erp-integration';
 import { createClient } from '@supabase/supabase-js';
 
+export const dynamic = 'force-dynamic';
+
 // Função para obter o cliente Supabase de forma lazy
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

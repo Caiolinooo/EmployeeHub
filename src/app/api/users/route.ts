@@ -5,6 +5,8 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { sendNewUserWelcomeEmail } from '@/lib/notifications';
 
+export const dynamic = 'force-dynamic';
+
 // GET - Chamar diretamente a API do Supabase
 export async function GET(request: NextRequest) {
   console.log('Chamando diretamente a API do Supabase de /api/users');

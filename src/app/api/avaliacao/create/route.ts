@@ -4,6 +4,8 @@ import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { criteriosPadrao } from '@/data/criterios-avaliacao';
 import { isValidUUID, generateUUID } from '@/lib/uuid-utils';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Rota para criar uma nova avaliação - redireciona para a API correta
  */

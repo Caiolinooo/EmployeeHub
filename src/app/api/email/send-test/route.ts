@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { sendEmail } from '@/lib/email';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API para enviar um e-mail de teste
  * @route POST /api/email/send-test

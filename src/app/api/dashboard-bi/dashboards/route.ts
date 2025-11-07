@@ -4,6 +4,7 @@ import { verifyRequestToken } from '@/lib/auth';
 import { BIDashboard, DashboardLayout, DashboardPermissions } from '@/types/dashboard-bi';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {

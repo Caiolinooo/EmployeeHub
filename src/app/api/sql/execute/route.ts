@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API endpoint to execute SQL directly in the Supabase database
  * This is a utility endpoint for administrative operations

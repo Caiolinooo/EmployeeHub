@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
+export const dynamic = 'force-dynamic';
+
 interface SearchResult {
   id: string;
   type: 'document' | 'news' | 'user' | 'card' | 'reimbursement' | 'paystub' | 'evaluation' | 'policy' | 'procedure' | 'calendar' | 'academy';

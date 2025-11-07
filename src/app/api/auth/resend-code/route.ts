@@ -3,6 +3,8 @@ import { resendVerificationCode } from '@/lib/verification';
 import { findUserByQuery } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     // Obter dados da requisição

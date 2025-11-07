@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { handleApiError } from '@/lib/api-utils';
 import { testEmailConnection, sendEmail } from '@/lib/email';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API para testar a configuração de e-mail
  * @route POST /api/admin/test-email

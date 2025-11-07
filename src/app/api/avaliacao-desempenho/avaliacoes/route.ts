@@ -3,6 +3,8 @@ import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
 import { isValidUUID, generateUUID } from '@/lib/uuid-utils';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Rota para listar avaliações
  */
