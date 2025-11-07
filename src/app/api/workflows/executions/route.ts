@@ -184,13 +184,13 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case 'cancel':
-        results = await cancelExecutions(executionIds, authResult.payload.userId);
+        results = await cancelExecutions(executionIds, authResult.userId);
         break;
       case 'retry':
-        results = await retryExecutions(executionIds, authResult.payload.userId);
+        results = await retryExecutions(executionIds, authResult.userId);
         break;
       case 'delete':
-        results = await deleteExecutions(executionIds, authResult.payload.userId);
+        results = await deleteExecutions(executionIds, authResult.userId);
         break;
       default:
         return NextResponse.json({
