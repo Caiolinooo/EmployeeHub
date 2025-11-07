@@ -1582,11 +1582,35 @@ export async function loginWithPassword(identifier: string, password: string, re
       };
     }
 
-    // VERIFICAÇÃO DE EMAIL DESABILITADA
-    // Motivo: Todos os usuários existentes têm email_verified = false
-    // Para manter compatibilidade com outros sistemas que usam o mesmo banco,
-    // não alteramos o banco de dados e permitimos login de todos os usuários ativos
-    console.log('⚠️ Verificação de email_verified DESABILITADA (compatibilidade)');
+    // VERIFICAÇÃO DE EMAIL INTELIGENTE
+    // Data de corte: 2025-11-07 23:00:00 UTC (quando implementamos a verificação de email)
+    // Usuários criados ANTES dessa data: não precisam verificar email (migrados)
+    // Usuários criados DEPOIS dessa data: DEVEM verificar email antes de fazer login
+    const EMAIL_VERIFICATION_CUTOFF_DATE = new Date('2025-11-07T23:00:00.000Z');
+    const userCreatedAt = new Date(user.created_at);
+    const isLegacyUser = userCreatedAt < EMAIL_VERIFICATION_CUTOFF_DATE;
+
+    console.log('📅 Data de criação do usuário:', userCreatedAt.toISOString());
+    console.log('📅 Data de corte para verificação:', EMAIL_VERIFICATION_CUTOFF_DATE.toISOString());
+    console.log('👥 Usuário migrado (legado)?', isLegacyUser);
+
+    // Admin principal sempre pode logar
+    const adminEmail = process.env.ADMIN_EMAIL || 'caio.correia@groupabz.com';
+    const adminPhone = process.env.ADMIN_PHONE_NUMBER || '+5522997847289';
+    const isMainAdmin = user.email === adminEmail || user.phone_number === adminPhone;
+
+    // Para novos usuários (criados APÓS a data de corte), verificar email
+    if (!isLegacyUser && !isMainAdmin && user.email_verified === false) {
+      console.log('❌ FALHA: Novo usuário com email não verificado');
+      return {
+        success: false,
+        message: 'Seu e-mail ainda não foi verificado. Verifique sua caixa de entrada e clique no link de verificação.',
+        authStatus: 'email_not_verified',
+        email: user.email
+      };
+    }
+
+    console.log('✅ PASSOU: Verificação de email (usuário migrado ou email verificado)');
 
     // Verificar se a conta está ativa
     if (!user.active) {

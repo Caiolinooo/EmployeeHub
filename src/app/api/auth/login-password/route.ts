@@ -123,13 +123,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('API login-password: Senha correta, gerando token');
+    console.log('API login-password: Senha correta, verificando status do email');
 
-    // VERIFICAÇÃO DE EMAIL DESABILITADA
-    // Motivo: Todos os usuários existentes têm email_verified = false
-    // Para manter compatibilidade com outros sistemas que usam o mesmo banco,
-    // não alteramos o banco de dados e permitimos login de todos os usuários ativos
-    console.log('API login-password: ⚠️ Verificação de email_verified DESABILITADA');
+    // VERIFICAÇÃO DE EMAIL INTELIGENTE
+    // Data de corte: 2025-11-07 23:00:00 UTC (quando implementamos a verificação de email)
+    // Usuários criados ANTES dessa data: não precisam verificar email (migrados)
+    // Usuários criados DEPOIS dessa data: DEVEM verificar email antes de fazer login
+    const EMAIL_VERIFICATION_CUTOFF_DATE = new Date('2025-11-07T23:00:00.000Z');
+    const userCreatedAt = new Date(user.created_at);
+    const isLegacyUser = userCreatedAt < EMAIL_VERIFICATION_CUTOFF_DATE;
+
+    console.log('API login-password: Data de criação do usuário:', userCreatedAt.toISOString());
+    console.log('API login-password: É usuário migrado?', isLegacyUser);
+
+    // Para novos usuários (criados APÓS a data de corte), verificar email
+    if (!isLegacyUser && user.email_verified === false && user.email !== (process.env.ADMIN_EMAIL || 'caio.correia@groupabz.com')) {
+      console.log('API login-password: Novo usuário com email não verificado');
+      return NextResponse.json({
+        success: false,
+        message: 'Seu e-mail ainda não foi verificado. Verifique sua caixa de entrada e clique no link de verificação.',
+        code: 'EMAIL_NOT_VERIFIED',
+        email: user.email,
+        requiresEmailVerification: true
+      }, { status: 403 });
+    }
+
+    console.log('API login-password: Email verificado ou usuário migrado, gerando token');
 
     // Atualizar o papel do usuário para ADMIN se ainda não for
     if (user.role !== 'ADMIN') {
