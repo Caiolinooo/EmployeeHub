@@ -56,7 +56,9 @@
     "verify:notifications": "node scripts/verify-notification-cleanup.js",
     "fix:user-names": "node scripts/fix-user-names.js",
     "list:users": "node scripts/fix-user-names.js --list",
-    "test:name-validation": "node scripts/test-name-validation.js"
+    "test:name-validation": "node scripts/test-name-validation.js",
+    "validate": "node scripts/validate-system.js",
+    "validate:i18n": "node scripts/find-i18n-duplicates.js"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
