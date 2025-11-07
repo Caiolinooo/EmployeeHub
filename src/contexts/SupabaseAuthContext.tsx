@@ -1108,31 +1108,39 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Remover tokens usando o utilitário
-      removeToken();
-
-      // Remover outros dados de autenticação
-      localStorage.removeItem('auth');
-      localStorage.removeItem('user');
-      localStorage.removeItem('rememberMe');
-
-      // Limpar cookies relacionados à autenticação
-      document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      document.cookie = 'abzToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-
-      // Fazer logout no Supabase
+      // Fazer logout no Supabase PRIMEIRO
       console.log('Fazendo logout no Supabase');
       await supabase.auth.signOut();
 
-      // Limpar estado
+      // Remover tokens usando o utilitário
+      removeToken();
+      removeRefreshToken();
+
+      // Remover TODOS os dados de autenticação do localStorage
+      localStorage.removeItem('auth');
+      localStorage.removeItem('token');
+      localStorage.removeItem('abzToken');
+      localStorage.removeItem('user');
+      localStorage.removeItem('rememberMe');
+
+      // Limpar todos os cookies relacionados à autenticação
+      const cookiesToClear = ['token', 'abzToken', 'auth', 'refreshToken', 'sb-access-token', 'sb-refresh-token'];
+      cookiesToClear.forEach(cookieName => {
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname}`;
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      });
+
+      // Limpar estado DO REACT IMEDIATAMENTE
       setUser(null);
       setProfile(null);
       setLoginStep('phone');
+      setIsLoading(false);
 
-      console.log('Logout concluído com sucesso');
+      console.log('Logout concluído com sucesso - redirecionando para login');
 
-      // Redirecionar para login
-      window.location.href = '/login';
+      // Usar replace em vez de href para evitar adicionar ao histórico
+      // Adicionar timestamp para forçar reload e evitar cache
+      window.location.replace('/login?t=' + Date.now());
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
 
@@ -1140,14 +1148,17 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       try {
         // Remover tokens usando o utilitário
         removeToken();
+        removeRefreshToken();
 
-        // Remover outros dados de autenticação
-        localStorage.removeItem('auth');
-        localStorage.removeItem('user');
+        // Remover TODOS os dados de autenticação do localStorage
+        localStorage.clear(); // Limpar TUDO para garantir
 
-        // Limpar cookies relacionados à autenticação
-        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        document.cookie = 'abzToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        // Limpar todos os cookies
+        const cookiesToClear = ['token', 'abzToken', 'auth', 'refreshToken', 'sb-access-token', 'sb-refresh-token'];
+        cookiesToClear.forEach(cookieName => {
+          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname}`;
+          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        });
 
         // Limpar estado
         setUser(null);
@@ -1157,7 +1168,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       }
 
       // Forçar redirecionamento mesmo em caso de erro
-      window.location.href = '/login';
+      window.location.replace('/login?t=' + Date.now());
     }
   };
 

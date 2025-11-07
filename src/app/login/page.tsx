@@ -82,7 +82,11 @@ export default function Login() {
 
   // Verificar se o usuário já está autenticado
   useEffect(() => {
-    if (isAuthenticated) {
+    // Verificar se temos um parâmetro 't' na URL (vindo de logout)
+    // Se sim, não redirecionar automaticamente
+    const hasTimestamp = searchParams?.get('t');
+
+    if (isAuthenticated && !hasTimestamp) {
       if (passwordExpired) {
         // Se a senha estiver expirada, redirecionar para definir senha
         router.replace('/set-password');
@@ -90,7 +94,7 @@ export default function Login() {
         router.replace('/dashboard');
       }
     }
-  }, [isAuthenticated, passwordExpired, router]);
+  }, [isAuthenticated, passwordExpired, router, searchParams]);
 
   // Garantir que o usuário administrador exista
   useEffect(() => {

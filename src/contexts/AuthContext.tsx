@@ -616,6 +616,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Função para fazer logout
   const logout = async () => {
     try {
+      console.log('AuthContext - Iniciando processo de logout...');
+
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       // Chamar a API de logout se tiver token
@@ -632,20 +634,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
     } finally {
-      // Limpar estado e localStorage mesmo se houver erro
+      // Limpar TUDO antes de redirecionar
+
+      // Limpar estado do React IMEDIATAMENTE
       setUser(null);
+      setIsLoading(false);
+      setLoginStep('phone');
+
+      // Remover TODOS os dados de autenticação do localStorage
       localStorage.removeItem('auth');
       localStorage.removeItem('token');
-      localStorage.removeItem('abzToken'); // Remover também o token antigo
+      localStorage.removeItem('abzToken');
       localStorage.removeItem('user');
       localStorage.removeItem('rememberMe');
 
-      // Limpar cookies relacionados à autenticação
-      document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      document.cookie = 'abzToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      // Limpar todos os cookies relacionados à autenticação
+      const cookiesToClear = ['token', 'abzToken', 'auth', 'refreshToken', 'sb-access-token', 'sb-refresh-token'];
+      cookiesToClear.forEach(cookieName => {
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname}`;
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      });
 
-      // Redirecionar para a página de login
-      window.location.href = '/login';
+      console.log('AuthContext - Logout concluído - redirecionando para login');
+
+      // Usar replace em vez de href e adicionar timestamp para forçar reload
+      window.location.replace('/login?t=' + Date.now());
     }
   };
 
