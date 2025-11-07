@@ -266,7 +266,7 @@ export async function PUT(request: NextRequest) {
     // Verificar permissões (owner ou admin)
     const { data: user } = await supabase
       .from('users_unified')
-      .select('role')
+      .select('role, email')
       .eq('id', authResult.payload.userId)
       .single();
 
@@ -366,7 +366,7 @@ export async function DELETE(request: NextRequest) {
     // Verificar permissões (owner ou admin)
     const { data: user } = await supabase
       .from('users_unified')
-      .select('role')
+      .select('role, email')
       .eq('id', authResult.payload.userId)
       .single();
 
