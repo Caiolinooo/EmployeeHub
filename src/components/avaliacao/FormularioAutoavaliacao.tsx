@@ -160,84 +160,84 @@ export default function FormularioAutoavaliacao({
         </p>
       </div>
 
-      {/* Questões de Autoavaliação */}
+      {/* Questões de Autoavaliação - Conforme AN-TED-002-R0 */}
       <div className="space-y-8">
-        {/* Questão 11 - Pontos Fortes */}
+        {/* Questão 11 - Principais resultados obtidos e metas atingidas */}
         <div className="bg-blue-50 p-6 rounded-lg">
           <div className="flex items-center mb-4">
-            <FiUser className="text-blue-600 mr-2" size={20} />
+            <FiTarget className="text-blue-600 mr-2" size={20} />
             <h3 className="text-lg font-semibold text-gray-900">
-              Questão 11: Principais Pontos Fortes
+              Questão 11: Principais resultados obtidos e metas atingidas
             </h3>
           </div>
           <p className="text-gray-700 mb-4">
-            Quais são seus principais pontos fortes no desempenho de suas funções?
+            Principais resultados obtidos e metas atingidas durante o ano. Dê evidências:
           </p>
           <textarea
             value={formData.questao_11_pontos_fortes}
             onChange={(e) => handleInputChange('questao_11_pontos_fortes', e.target.value)}
             className="w-full h-32 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Descreva seus principais pontos fortes..."
+            placeholder="Descreva os principais resultados obtidos e metas atingidas, com evidências..."
             required
           />
         </div>
 
-        {/* Questão 12 - Áreas de Melhoria */}
+        {/* Questão 12 - Melhorias obtidas desde a última avaliação */}
         <div className="bg-yellow-50 p-6 rounded-lg">
           <div className="flex items-center mb-4">
             <FiTrendingUp className="text-yellow-600 mr-2" size={20} />
             <h3 className="text-lg font-semibold text-gray-900">
-              Questão 12: Áreas para Melhoria
+              Questão 12: Melhorias obtidas desde a última avaliação
             </h3>
           </div>
           <p className="text-gray-700 mb-4">
-            Quais áreas você identifica como oportunidades de melhoria em seu desempenho?
+            Melhorias obtidas desde a última avaliação. Dê evidências:
           </p>
           <textarea
             value={formData.questao_12_areas_melhoria}
             onChange={(e) => handleInputChange('questao_12_areas_melhoria', e.target.value)}
             className="w-full h-32 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-            placeholder="Identifique áreas para melhoria..."
+            placeholder="Descreva as melhorias obtidas desde a última avaliação, com evidências..."
             required
           />
         </div>
 
-        {/* Questão 13 - Objetivos Alcançados */}
-        <div className="bg-green-50 p-6 rounded-lg">
-          <div className="flex items-center mb-4">
-            <FiTarget className="text-green-600 mr-2" size={20} />
-            <h3 className="text-lg font-semibold text-gray-900">
-              Questão 13: Objetivos Alcançados
-            </h3>
-          </div>
-          <p className="text-gray-700 mb-4">
-            Quais objetivos você alcançou durante o período avaliado?
-          </p>
-          <textarea
-            value={formData.questao_13_objetivos_alcancados}
-            onChange={(e) => handleInputChange('questao_13_objetivos_alcancados', e.target.value)}
-            className="w-full h-32 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            placeholder="Liste os objetivos alcançados..."
-            required
-          />
-        </div>
-
-        {/* Questão 14 - Planos de Desenvolvimento */}
+        {/* Questão 13 - Aspectos que precisam de desenvolvimento e LNT */}
         <div className="bg-purple-50 p-6 rounded-lg">
           <div className="flex items-center mb-4">
             <FiBookOpen className="text-purple-600 mr-2" size={20} />
             <h3 className="text-lg font-semibold text-gray-900">
-              Questão 14: Planos de Desenvolvimento
+              Questão 13: Aspectos que precisam de desenvolvimento e LNT
             </h3>
           </div>
           <p className="text-gray-700 mb-4">
-            Quais são seus planos de desenvolvimento profissional para o próximo período?
+            Aspectos que precisam de desenvolvimento e LNT (Levantamento de Necessidades de Treinamento):
+          </p>
+          <textarea
+            value={formData.questao_13_objetivos_alcancados}
+            onChange={(e) => handleInputChange('questao_13_objetivos_alcancados', e.target.value)}
+            className="w-full h-32 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            placeholder="Liste os aspectos que precisam de desenvolvimento e necessidades de treinamento..."
+            required
+          />
+        </div>
+
+        {/* Questão 14 - Objetivos para o próximo ano */}
+        <div className="bg-green-50 p-6 rounded-lg">
+          <div className="flex items-center mb-4">
+            <FiUser className="text-green-600 mr-2" size={20} />
+            <h3 className="text-lg font-semibold text-gray-900">
+              Questão 14: Objetivos para o próximo ano
+            </h3>
+          </div>
+          <p className="text-gray-700 mb-4">
+            Objetivos para o próximo ano:
           </p>
           <textarea
             value={formData.questao_14_planos_desenvolvimento}
             onChange={(e) => handleInputChange('questao_14_planos_desenvolvimento', e.target.value)}
-            className="w-full h-32 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            placeholder="Descreva seus planos de desenvolvimento..."
+            className="w-full h-32 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            placeholder="Descreva seus objetivos para o próximo ano..."
             required
           />
         </div>
