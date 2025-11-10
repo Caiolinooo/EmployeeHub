@@ -104,12 +104,36 @@ export default function ExecutarMigrationAvaliacao() {
           <div className="flex items-center">
             <FiCheck className="mr-2" size={20} />
             <div>
-              <p className="font-medium">Migration executada com sucesso!</p>
+              <p className="font-medium">
+                {results?.needsManualExecution
+                  ? 'Migration preparada!'
+                  : 'Migration executada com sucesso!'}
+              </p>
               <p className="text-sm">
-                Todas as alterações foram aplicadas ao banco de dados.
+                {results?.needsManualExecution
+                  ? 'O SQL foi gerado. Execute manualmente no Supabase SQL Editor (veja abaixo).'
+                  : 'Todas as alterações foram aplicadas ao banco de dados.'}
               </p>
             </div>
           </div>
+
+          {results?.needsManualExecution && results?.manualSql && (
+            <div className="mt-4">
+              <p className="font-semibold mb-2">SQL para executar manualmente:</p>
+              <div className="bg-white border border-green-300 rounded p-3 text-xs">
+                <pre className="overflow-auto max-h-96 text-gray-800">{results.manualSql}</pre>
+              </div>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(results.manualSql);
+                  alert('SQL copiado para a área de transferência!');
+                }}
+                className="mt-2 px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+              >
+                Copiar SQL
+              </button>
+            </div>
+          )}
         </div>
       )}
 
