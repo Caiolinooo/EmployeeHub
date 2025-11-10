@@ -63,6 +63,11 @@ Gerencia os períodos de avaliação:
 - `data_aprovacao`: Quando foi aprovada
 - `aprovado_por`: Quem aprovou
 
+### 4. Foreign Keys (Relacionamentos) 🔗
+- `avaliacoes_desempenho_funcionario_id_fkey`: Relaciona avaliação com o funcionário avaliado
+- `avaliacoes_desempenho_avaliador_id_fkey`: Relaciona avaliação com o avaliador
+- **Importante**: Estas foreign keys permitem que queries façam joins entre tabelas
+
 ## 🔧 Problemas Comuns
 
 ### Erro: "column already exists"
@@ -77,6 +82,11 @@ Gerencia os períodos de avaliação:
 ### Erro de Permissão
 - Certifique-se de estar logado como proprietário do projeto no Supabase
 - Ou use o Service Role Key no backend
+
+### Erro: "Could not find a relationship between tables"
+- Este erro ocorre quando as foreign keys não existem
+- **Solução**: Execute a migration completa que inclui as foreign keys
+- As foreign keys são criadas no passo 3.1 da migration
 
 ## 🆘 Precisa de Ajuda?
 

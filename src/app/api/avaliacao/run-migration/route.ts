@@ -109,6 +109,34 @@ export async function POST(request: NextRequest) {
         ADD COLUMN IF NOT EXISTS aprovado_por UUID REFERENCES users(id);
       `,
 
+      // 3.1. Adicionar foreign keys para relacionamentos com funcionarios
+      `
+        DO $$
+        BEGIN
+            -- Foreign key para funcionario_id
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_constraint
+                WHERE conname = 'avaliacoes_desempenho_funcionario_id_fkey'
+            ) THEN
+                ALTER TABLE avaliacoes_desempenho
+                ADD CONSTRAINT avaliacoes_desempenho_funcionario_id_fkey
+                FOREIGN KEY (funcionario_id) REFERENCES funcionarios(id)
+                ON DELETE CASCADE;
+            END IF;
+
+            -- Foreign key para avaliador_id
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_constraint
+                WHERE conname = 'avaliacoes_desempenho_avaliador_id_fkey'
+            ) THEN
+                ALTER TABLE avaliacoes_desempenho
+                ADD CONSTRAINT avaliacoes_desempenho_avaliador_id_fkey
+                FOREIGN KEY (avaliador_id) REFERENCES funcionarios(id)
+                ON DELETE SET NULL;
+            END IF;
+        END $$;
+      `,
+
       // 4. Criar índices
       `
         CREATE INDEX IF NOT EXISTS idx_funcionarios_is_gerente ON funcionarios(is_gerente_avaliacao) WHERE is_gerente_avaliacao = TRUE;
