@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import MainLayout from '@/components/Layout/MainLayout';
-import { FiSearch, FiAlertTriangle, FiArrowLeft, FiTrash2, FiRefreshCw } from 'react-icons/fi';
+import { FiSearch, FiAlertTriangle, FiArrowLeft, FiTrash2, FiRefreshCw, FiClock } from 'react-icons/fi';
 import Link from 'next/link';
 import { useI18n } from '@/contexts/I18nContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 interface Avaliacao {
   id: string;
@@ -21,6 +22,7 @@ interface Avaliacao {
 
 export default function LixeiraPage() {
   const { t } = useI18n();
+  const { isAdmin } = useSupabaseAuth();
   const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +30,7 @@ export default function LixeiraPage() {
   const [restoreLoading, setRestoreLoading] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [cleanupLoading, setCleanupLoading] = useState(false);
 
   useEffect(() => {
     const fetchAvaliacoes = async () => {
@@ -36,11 +39,11 @@ export default function LixeiraPage() {
 
         // Buscar avaliações que estão na lixeira (deleted_at não é null)
         const { data, error } = await supabase
-          .from('avaliacoes')
+          .from('avaliacoes_desempenho')
           .select(`
             *,
-            funcionario:funcionario_id(id, nome, email),
-            avaliador:avaliador_id(id, nome, email)
+            funcionario:funcionarios!avaliacoes_desempenho_funcionario_id_fkey(id, nome, email),
+            avaliador:funcionarios!avaliacoes_desempenho_avaliador_id_fkey(id, nome, email)
           `)
           .not('deleted_at', 'is', null)
           .order('deleted_at', { ascending: false });
@@ -92,10 +95,10 @@ export default function LixeiraPage() {
 
       // Atualizar o campo deleted_at para null
       const { error } = await supabase
-        .from('avaliacoes')
+        .from('avaliacoes_desempenho')
         .update({
           deleted_at: null,
-          status: 'pending' // Restaurar com status pendente
+          status: 'pendente' // Restaurar com status pendente
         })
         .eq('id', id);
 
@@ -133,7 +136,7 @@ export default function LixeiraPage() {
 
       // Excluir a avaliação permanentemente
       const { error } = await supabase
-        .from('avaliacoes')
+        .from('avaliacoes_desempenho')
         .delete()
         .eq('id', id);
 
@@ -160,6 +163,67 @@ export default function LixeiraPage() {
     }
   };
 
+  // Função para calcular dias restantes até exclusão automática
+  const getDaysRemaining = (deletedAt: string): number => {
+    const deletedDate = new Date(deletedAt);
+    const expiryDate = new Date(deletedDate);
+    expiryDate.setDate(expiryDate.getDate() + 30);
+    const today = new Date();
+    const daysRemaining = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(0, daysRemaining);
+  };
+
+  // Função para obter cor do badge de dias restantes
+  const getDaysRemainingColor = (days: number): string => {
+    if (days <= 7) return 'bg-red-100 text-red-800';
+    if (days <= 15) return 'bg-yellow-100 text-yellow-800';
+    return 'bg-blue-100 text-blue-800';
+  };
+
+  // Função para executar limpeza automática manual
+  const handleManualCleanup = async () => {
+    if (!confirm('Tem certeza que deseja executar a limpeza automática? Isso excluirá permanentemente todas as avaliações que estão na lixeira há mais de 30 dias.')) {
+      return;
+    }
+
+    try {
+      setCleanupLoading(true);
+
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/avaliacao/cleanup-trash', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao executar limpeza');
+      }
+
+      // Atualizar a lista removendo itens excluídos
+      if (data.deletedIds && data.deletedIds.length > 0) {
+        setAvaliacoes(prev => prev.filter(av => !data.deletedIds.includes(av.id)));
+        setSuccessMessage(`${data.deletedCount} avaliação(ões) excluída(s) permanentemente.`);
+      } else {
+        setSuccessMessage('Nenhuma avaliação encontrada para exclusão automática.');
+      }
+
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 5000);
+
+    } catch (err) {
+      console.error('Erro ao executar limpeza manual:', err);
+      alert('Ocorreu um erro ao executar a limpeza automática. Por favor, tente novamente.');
+    } finally {
+      setCleanupLoading(false);
+    }
+  };
+
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
@@ -170,7 +234,30 @@ export default function LixeiraPage() {
         </div>
 
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">{t('avaliacao.trash.title', 'Lixeira de Avaliações')}</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">{t('avaliacao.trash.title', 'Lixeira de Avaliações')}</h1>
+            <p className="text-sm text-gray-600 mt-1">
+              Avaliações são excluídas automaticamente após 30 dias na lixeira
+            </p>
+          </div>
+          {isAdmin && (
+            <button
+              onClick={handleManualCleanup}
+              disabled={cleanupLoading}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md flex items-center disabled:opacity-50"
+            >
+              {cleanupLoading ? (
+                <>
+                  <div className="animate-spin h-4 w-4 mr-2 border-t-2 border-b-2 border-white rounded-full"></div>
+                  Limpando...
+                </>
+              ) : (
+                <>
+                  <FiClock className="mr-2" /> Executar Limpeza Automática
+                </>
+              )}
+            </button>
+          )}
         </div>
 
         {/* Mensagem de sucesso */}
@@ -229,6 +316,9 @@ export default function LixeiraPage() {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('avaliacao.trash.deletedAt', 'Excluído em')}
                   </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Dias Restantes
+                  </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('avaliacao.actions', 'Ações')}
                   </th>
@@ -248,6 +338,11 @@ export default function LixeiraPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(avaliacao.deleted_at).toLocaleDateString('pt-BR')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getDaysRemainingColor(getDaysRemaining(avaliacao.deleted_at))}`}>
+                        {getDaysRemaining(avaliacao.deleted_at)} dia(s)
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">
