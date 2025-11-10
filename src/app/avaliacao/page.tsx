@@ -134,14 +134,14 @@ export default function AvaliacaoPage() {
         console.log('Iniciando busca de avaliações...');
         console.log('Verificando permissões:', { isAdmin, isManager, hasEvaluationAccess });
 
-        // Abordagem simplificada: buscar diretamente da tabela avaliacoes
-        console.log('Buscando avaliações na tabela avaliacoes...');
+        // Buscar diretamente da tabela avaliacoes_desempenho (nome correto)
+        console.log('Buscando avaliações na tabela avaliacoes_desempenho...');
         let query = supabase
-          .from('avaliacoes')
+          .from('avaliacoes_desempenho')
           .select(`
             *,
-            funcionario:funcionario_id(id, nome, email),
-            avaliador:avaliador_id(id, nome, email)
+            funcionario:funcionarios!avaliacoes_desempenho_funcionario_id_fkey(id, nome, email),
+            avaliador:funcionarios!avaliacoes_desempenho_avaliador_id_fkey(id, nome, email)
           `)
           .is('deleted_at', null);
 
@@ -271,10 +271,10 @@ export default function AvaliacaoPage() {
 
       // Atualizar o campo deleted_at para a data atual
       const { error } = await supabase
-        .from('avaliacoes')
+        .from('avaliacoes_desempenho')
         .update({
           deleted_at: new Date().toISOString(),
-          status: 'archived' // Também marcar como arquivada
+          status: 'arquivada' // Também marcar como arquivada
         })
         .eq('id', id);
 
