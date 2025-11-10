@@ -65,7 +65,7 @@ export default function ExecutarMigrationAvaliacao() {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
         <div className="flex items-start">
           <FiAlertCircle className="text-blue-600 mt-0.5 mr-3 flex-shrink-0" size={20} />
-          <div className="text-sm text-blue-800">
+          <div className="text-sm text-blue-800 flex-1">
             <p className="font-medium mb-1">O que esta migration faz:</p>
             <ul className="list-disc list-inside space-y-1">
               <li>Adiciona campos is_gerente_avaliacao e is_lider em funcionarios</li>
@@ -75,6 +75,18 @@ export default function ExecutarMigrationAvaliacao() {
               <li>Cria índices otimizados</li>
               <li>Configura políticas de segurança (RLS)</li>
             </ul>
+            <div className="mt-3 pt-3 border-t border-blue-300">
+              <p className="font-medium">📖 Precisa de ajuda?</p>
+              <p className="mt-1">
+                <a
+                  href="/docs/COMO_EXECUTAR_MIGRATION_AVALIACAO.md"
+                  target="_blank"
+                  className="text-blue-700 hover:text-blue-900 underline font-medium"
+                >
+                  Leia o guia passo a passo aqui
+                </a>
+              </p>
+            </div>
           </div>
         </div>
       </div>

@@ -11,6 +11,7 @@ import PainelGerentesAvaliacao from '@/components/admin/PainelGerentesAvaliacao'
 import PainelLideresSetor from '@/components/admin/PainelLideresSetor';
 import ExecutarMigrationAvaliacao from '@/components/admin/ExecutarMigrationAvaliacao';
 import DiagnosticoAdmin from '@/components/admin/DiagnosticoAdmin';
+import DiagnosticoForeignKeys from '@/components/admin/DiagnosticoForeignKeys';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -61,17 +62,46 @@ export default function AvaliacaoAdminContent() {
 
   return (
     <MainLayout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-900">
             {t('admin.avaliacao.title', 'Administração do Módulo de Avaliação')}
           </h1>
         </div>
 
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        {/* Alerta de Migration Necessária */}
+        {activeTab !== 'database' && (
+          <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg shadow-sm">
+            <div className="flex items-start">
+              <FiAlertCircle className="text-yellow-600 mt-0.5 mr-3 flex-shrink-0" size={24} />
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-yellow-800">
+                  ⚠️ Migration Necessária
+                </h3>
+                <div className="mt-2 text-sm text-yellow-700">
+                  <p>
+                    Para usar este módulo, você precisa executar a migration do banco de dados.
+                    Vá para a aba <strong>"Banco de Dados"</strong> e clique em <strong>"Executar Migration"</strong>.
+                  </p>
+                </div>
+                <div className="mt-3">
+                  <button
+                    onClick={() => setActiveTab('database')}
+                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-yellow-700 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors"
+                  >
+                    <FiDatabase className="mr-1" />
+                    Ir para Banco de Dados
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="bg-white rounded-lg shadow">
           {/* Tabs */}
           <div className="border-b border-gray-200">
-            <nav className="flex -mb-px overflow-x-auto">
+            <nav className="flex -mb-px overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
               <button
                 onClick={() => setActiveTab('periodos')}
                 className={`py-4 px-6 text-center border-b-2 font-medium text-sm whitespace-nowrap ${
@@ -169,6 +199,7 @@ export default function AvaliacaoAdminContent() {
 
                 <div className="grid grid-cols-1 gap-6">
                   <DiagnosticoAdmin />
+                  <DiagnosticoForeignKeys />
                   <ExecutarMigrationAvaliacao />
                   <CreateCriteriosTable />
                   <ImportCriteriosButton />

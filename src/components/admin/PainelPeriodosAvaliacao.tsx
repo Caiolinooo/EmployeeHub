@@ -9,6 +9,7 @@ import type { PeriodoAvaliacao } from '@/lib/services/workflow-avaliacao';
 export default function PainelPeriodosAvaliacao() {
   const [periodos, setPeriodos] = useState<PeriodoAvaliacao[]>([]);
   const [loading, setLoading] = useState(true);
+  const [migrationError, setMigrationError] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingPeriodo, setEditingPeriodo] = useState<PeriodoAvaliacao | null>(null);
   const [formData, setFormData] = useState({
@@ -34,12 +35,18 @@ export default function PainelPeriodosAvaliacao() {
 
       if (error) {
         console.error('Erro ao carregar períodos:', error);
+        // Verificar se é um erro de tabela não encontrada (migration não executada)
+        if (error.message && (error.message.includes('relation') || error.message.includes('does not exist') || error.code === 'PGRST204' || error.code === '42P01')) {
+          setMigrationError(true);
+        }
         return;
       }
 
       setPeriodos(data || []);
+      setMigrationError(false);
     } catch (error) {
       console.error('Erro ao carregar períodos:', error);
+      setMigrationError(true);
     } finally {
       setLoading(false);
     }
@@ -211,6 +218,34 @@ export default function PainelPeriodosAvaliacao() {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (migrationError) {
+    return (
+      <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6">
+        <div className="flex items-start">
+          <FiX className="text-red-600 mt-0.5 mr-3 flex-shrink-0" size={32} />
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-red-800 mb-2">
+              Migration Não Executada
+            </h3>
+            <p className="text-sm text-red-700 mb-4">
+              A tabela <code className="bg-red-100 px-2 py-1 rounded">periodos_avaliacao</code> não existe no banco de dados.
+            </p>
+            <p className="text-sm text-red-700 mb-4">
+              Você precisa executar a migration do banco de dados antes de usar esta funcionalidade.
+              Vá para a aba <strong>"Banco de Dados"</strong> e clique em <strong>"Executar Migration"</strong>.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Tentar Novamente
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
