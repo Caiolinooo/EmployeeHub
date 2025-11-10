@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyTokenFromRequest, extractTokenFromHeader } from '@/lib/auth';
+import { verifyRequestToken, extractTokenFromHeader, verifyToken } from '@/lib/auth';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyTokenFromRequest(request);
+    const authResult = verifyRequestToken(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,
@@ -184,13 +185,13 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case 'cancel':
-        results = await cancelExecutions(executionIds, authResult.payload.userId);
+        results = await cancelExecutions(executionIds, authResult.userId);
         break;
       case 'retry':
-        results = await retryExecutions(executionIds, authResult.payload.userId);
+        results = await retryExecutions(executionIds, authResult.userId);
         break;
       case 'delete':
-        results = await deleteExecutions(executionIds, authResult.payload.userId);
+        results = await deleteExecutions(executionIds, authResult.userId);
         break;
       default:
         return NextResponse.json({

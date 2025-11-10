@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+export const dynamic = 'force-dynamic';
+
 function getSupabaseClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -36,6 +38,7 @@ export async function GET(request: NextRequest) {
     const supabase = getSupabaseClient();
 
     // Verificar se é admin ou manager
+    const supabase = getSupabaseClient();
     const { data: userData } = await supabase
       .from('users_unified')
       .select('role')
@@ -153,6 +156,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se já existe uma métrica para este período
+    const supabase = getSupabaseClient();
     const { data: existingMetric } = await supabase
       .from('evaluation_metrics')
       .select('id')
@@ -227,6 +231,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('evaluation_metrics')
       .update({
@@ -269,6 +274,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    const supabase = getSupabaseClient();
     const { error } = await supabase
       .from('evaluation_metrics')
       .delete()

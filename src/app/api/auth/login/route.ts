@@ -3,6 +3,8 @@ import { initiatePhoneLogin, verifyPhoneLogin, loginWithPassword } from '@/lib/a
 // import { Pool } from 'pg'; // Removido - não utilizado
 import { getLatestCode } from '@/lib/code-service';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendVerificationEmail, sendInvitationEmail, testEmailConnection } from '@/lib/email';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API centralizada para funcionalidades de email
  * Esta API substitui as APIs individuais para cada função

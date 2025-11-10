@@ -3,6 +3,8 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { getBannedUsers, unbanUser } from '@/lib/banned-users';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     // Verificar autenticação

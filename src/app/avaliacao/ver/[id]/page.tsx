@@ -84,11 +84,11 @@ export default function VerAvaliacaoPage({ params }: { params: Promise<{ id: str
 
         // Buscar avaliação pelo ID
         const { data, error } = await supabase
-          .from('avaliacoes')
+          .from('avaliacoes_desempenho')
           .select(`
             *,
-            funcionario:funcionario_id(id, nome, cargo, departamento),
-            avaliador:avaliador_id(id, nome, cargo)
+            funcionario:funcionarios!avaliacoes_desempenho_funcionario_id_fkey(id, nome, cargo, departamento),
+            avaliador:funcionarios!avaliacoes_desempenho_avaliador_id_fkey(id, nome, cargo)
           `)
           .eq('id', avaliacaoId)
           .is('deleted_at', null)
@@ -125,7 +125,7 @@ export default function VerAvaliacaoPage({ params }: { params: Promise<{ id: str
 
       // Atualizar o status para 'completed'
       const { error } = await supabase
-        .from('avaliacoes')
+        .from('avaliacoes_desempenho')
         .update({
           status: 'completed',
           updated_at: new Date().toISOString()
@@ -161,10 +161,10 @@ export default function VerAvaliacaoPage({ params }: { params: Promise<{ id: str
 
       // Atualizar o campo deleted_at para a data atual
       const { error } = await supabase
-        .from('avaliacoes')
+        .from('avaliacoes_desempenho')
         .update({
           deleted_at: new Date().toISOString(),
-          status: 'archived'
+          status: 'arquivada'
         })
         .eq('id', avaliacao.id);
 

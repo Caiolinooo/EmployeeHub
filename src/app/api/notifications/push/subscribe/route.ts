@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { authenticateUser } from '@/lib/api-auth';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Espera body: { subscription: PushSubscriptionJSON }
  * Salva/atualiza a assinatura para o usuário autenticado

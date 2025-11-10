@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { MobileHealthCheck } from '@/types/api-mobile';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 // GET - Obter todos os módulos/cards disponíveis para configuração de permissões
 export async function GET() {
   try {

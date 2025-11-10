@@ -5,6 +5,8 @@ import { Readable } from 'stream';
 import { getCredential } from '@/lib/secure-credentials';
 import { supabaseAdmin } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 // OBS: Preferimos Supabase Storage para fotos de perfil. Google Drive fica como fallback legado.
 async function initializeGoogleDriveClient() {
   try {

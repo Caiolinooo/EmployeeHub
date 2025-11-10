@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   console.log('=== API TEST ROUTE DEBUG ===');
   console.log('Recebida requisição de teste');

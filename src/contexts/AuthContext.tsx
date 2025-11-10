@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { saveToken } from '@/lib/tokenStorage';
-import { removeRefreshToken } from '@/lib/refreshTokenStorage';
 
 // Tipo para usuário
 export interface User {
@@ -152,6 +151,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // CRÍTICO: Verificar se estamos em processo de logout
+        const isLoggingOut = localStorage.getItem('logout_in_progress') === 'true' ||
+                             sessionStorage.getItem('logout_in_progress') === 'true';
+
+        if (isLoggingOut) {
+          console.log('🚫 AuthContext - Logout em progresso - não restaurar sessão');
+          setIsLoading(false);
+          return;
+        }
+
+        // Verificar se estamos na página de login vindo de um logout
+        if (typeof window !== 'undefined') {
+          const urlParams = new URLSearchParams(window.location.search);
+          const isFromLogout = urlParams.get('logout') === 'true';
+
+          if (isFromLogout) {
+            console.log('🚫 AuthContext - Página de login detectada após logout - não restaurar sessão');
+            setIsLoading(false);
+            return;
+          }
+        }
+
         const storedAuth = localStorage.getItem('auth');
         let storedToken = localStorage.getItem('token');
 
@@ -617,6 +638,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Função para fazer logout
   const logout = async () => {
     try {
+      console.log('🚪 AuthContext - Iniciando processo de logout...');
+
+      // CRÍTICO: Marcar flag de logout IMEDIATAMENTE
+      localStorage.setItem('logout_in_progress', 'true');
+      sessionStorage.setItem('logout_in_progress', 'true');
+
+      // Limpar estado do React PRIMEIRO
+      setUser(null);
+      setIsLoading(false);
+      setLoginStep('phone');
+
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       // Chamar a API de logout se tiver token
@@ -631,23 +663,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       }
     } catch (error) {
-      console.error('Erro ao fazer logout:', error);
+      console.error('❌ Erro ao fazer logout:', error);
     } finally {
-      // Limpar estado e localStorage mesmo se houver erro
-      setUser(null);
-      localStorage.removeItem('auth');
-      localStorage.removeItem('token');
-      localStorage.removeItem('abzToken'); // Remover também o token antigo
-      localStorage.removeItem('user');
-      localStorage.removeItem('rememberMe');
-      removeRefreshToken();
+      // Remover TODOS os dados de autenticação do localStorage
+      const keysToRemove = ['auth', 'token', 'abzToken', 'user', 'rememberMe', 'sb-access-token', 'sb-refresh-token'];
+      keysToRemove.forEach(key => localStorage.removeItem(key));
 
-      // Limpar cookies relacionados à autenticação
-      document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      document.cookie = 'abzToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      // Limpar todos os cookies relacionados à autenticação
+      const cookiesToClear = ['token', 'abzToken', 'auth', 'refreshToken', 'sb-access-token', 'sb-refresh-token'];
+      cookiesToClear.forEach(cookieName => {
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname}`;
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname}`;
+      });
 
-      // Redirecionar para a página de login
-      window.location.href = '/login';
+      console.log('✅ AuthContext - Logout concluído - redirecionando para login');
+
+      // Remover flag de logout
+      localStorage.removeItem('logout_in_progress');
+      sessionStorage.removeItem('logout_in_progress');
+
+      // Usar replace em vez de href e adicionar timestamp + flag de logout
+      window.location.replace('/login?logout=true&t=' + Date.now());
     }
   };
 

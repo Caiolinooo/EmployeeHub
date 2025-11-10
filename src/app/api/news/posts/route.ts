@@ -5,6 +5,8 @@ import { sendCustomEmail } from '@/lib/notifications';
 import { newsPostTemplate } from '@/lib/emailTemplates';
 import { sendPushToUserIds } from '@/lib/push';
 
+export const dynamic = 'force-dynamic';
+
 // Helpers para garantir tipos consistentes ao retornar os posts
 function safeParseArray(value: any): any[] {
   if (Array.isArray(value)) return value;

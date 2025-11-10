@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API para gerenciar dados manuais do cliente LUZ Marítima
  * Colunas D, E, F, J, M do Sheet Cost que devem ser preenchidas manualmente

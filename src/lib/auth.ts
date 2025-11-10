@@ -49,11 +49,33 @@ export interface TokenPayload {
   iat?: number; // Adicionar propriedade iat para issued at
 }
 
-// Tipo para o resultado da verificação de token
+// Interface para o resultado da verificação de token em requisições
 export interface TokenVerificationResult {
   valid: boolean;
   payload: TokenPayload | null;
-  error?: string;
+}
+
+// Função para verificar token a partir de uma requisição
+export function verifyRequestToken(request: Request | {headers: {get: (name: string) => string | null}}): TokenVerificationResult {
+  try {
+    const authHeader = request.headers.get('authorization');
+    const token = extractTokenFromHeader(authHeader || undefined);
+
+    if (!token) {
+      return { valid: false, payload: null };
+    }
+
+    const payload = verifyToken(token);
+
+    if (!payload) {
+      return { valid: false, payload: null };
+    }
+
+    return { valid: true, payload };
+  } catch (error) {
+    console.error('Erro ao verificar token da requisição:', error);
+    return { valid: false, payload: null };
+  }
 }
 
 // Função para buscar usuário usando PostgreSQL diretamente
@@ -417,46 +439,6 @@ export function extractTokenFromHeader(authHeader: string | undefined): string |
 
   console.log('extractTokenFromHeader: Formato de token não reconhecido:', authHeader.substring(0, 10) + '...');
   return null;
-}
-
-// Função para verificar token a partir de NextRequest (retorna formato {valid, payload})
-export async function verifyTokenFromRequest(request: any): Promise<TokenVerificationResult> {
-  try {
-    // Extrair token do cabeçalho de autorização
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader || '');
-
-    if (!token) {
-      return {
-        valid: false,
-        payload: null,
-        error: 'Token não fornecido'
-      };
-    }
-
-    // Verificar o token
-    const payload = verifyToken(token);
-
-    if (!payload) {
-      return {
-        valid: false,
-        payload: null,
-        error: 'Token inválido ou expirado'
-      };
-    }
-
-    return {
-      valid: true,
-      payload
-    };
-  } catch (error) {
-    console.error('Erro ao verificar token:', error);
-    return {
-      valid: false,
-      payload: null,
-      error: error instanceof Error ? error.message : 'Erro desconhecido'
-    };
-  }
 }
 
 // Função para iniciar o processo de login por SMS ou Email
@@ -1324,108 +1306,72 @@ export async function loginWithPassword(identifier: string, password: string, re
 
     let user;
     try {
-      // Usar Supabase em vez de PostgreSQL direto
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
-
-      if (!supabaseUrl || !supabaseServiceKey) {
-        throw new Error('Configurações do Supabase não encontradas');
-      }
-
-      const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
+      // Usar PostgreSQL direto para evitar problemas de fetch do Supabase em localhost
+      const searchPool = new Pool({
+        connectionString: process.env.DATABASE_URL
       });
 
-      // Se for email, buscar por email
-      if (isEmail) {
-        console.log('Buscando por email:', identifier);
-        const { data: userData, error: userError } = await supabase
-          .from('users_unified')
-          .select('*')
-          .eq('email', identifier)
-          .single();
+      try {
+        // Se for email, buscar por email
+        if (isEmail) {
+          console.log('Buscando por email:', identifier);
+          const result = await searchPool.query(`
+            SELECT * FROM "users_unified"
+            WHERE "email" = $1
+            LIMIT 1
+          `, [identifier]);
 
-        if (userError) {
-          console.log('Erro ao buscar usuário pelo email:', userError.message);
-
-          // Se não encontrou por email, tentar por telefone
-          const { data: fallbackData, error: fallbackError } = await supabase
-            .from('users_unified')
-            .select('*')
-            .eq('phone_number', identifier)
-            .single();
-
-          if (fallbackError) {
-            console.log('Usuário não encontrado por email nem telefone');
-            return {
-              success: false,
-              message: 'Usuário não encontrado'
+          if (result.rows.length > 0) {
+            const userData = result.rows[0];
+            user = {
+              ...userData,
+              phoneNumber: userData.phone_number,
+              firstName: userData.first_name,
+              lastName: userData.last_name,
+              createdAt: userData.created_at,
+              updatedAt: userData.updated_at,
+              accessPermissions: userData.access_permissions,
+              accessHistory: userData.access_history
             };
+            console.log('✅ Usuário encontrado pelo email:', user.id);
+          } else {
+            console.log('❌ Usuário não encontrado por email');
           }
-
-          user = {
-            ...fallbackData,
-            phoneNumber: fallbackData.phone_number,
-            firstName: fallbackData.first_name,
-            lastName: fallbackData.last_name,
-            createdAt: fallbackData.created_at,
-            updatedAt: fallbackData.updated_at,
-            accessPermissions: fallbackData.access_permissions,
-            accessHistory: fallbackData.access_history
-          };
-          console.log('Usuário encontrado pelo telefone:', user.id);
         } else {
-          user = {
-            ...userData,
-            phoneNumber: userData.phone_number,
-            firstName: userData.first_name,
-            lastName: userData.last_name,
-            createdAt: userData.created_at,
-            updatedAt: userData.updated_at,
-            accessPermissions: userData.access_permissions,
-            accessHistory: userData.access_history
-          };
-          console.log('Usuário encontrado pelo email:', user.id);
-        }
-      } else {
-        // Buscar por número de telefone
-        console.log('Buscando por telefone:', identifier);
-        const { data: userData, error: userError } = await supabase
-          .from('users_unified')
-          .select('*')
-          .eq('phone_number', identifier)
-          .single();
+          // Buscar por número de telefone
+          console.log('Buscando por telefone:', identifier);
+          const result = await searchPool.query(`
+            SELECT * FROM "users_unified"
+            WHERE "phone_number" = $1
+            LIMIT 1
+          `, [identifier]);
 
-        if (userError) {
-          console.log('Usuário não encontrado por telefone:', userError.message);
-          return {
-            success: false,
-            message: 'Usuário não encontrado'
-          };
+          if (result.rows.length > 0) {
+            const userData = result.rows[0];
+            user = {
+              ...userData,
+              phoneNumber: userData.phone_number,
+              firstName: userData.first_name,
+              lastName: userData.last_name,
+              createdAt: userData.created_at,
+              updatedAt: userData.updated_at,
+              accessPermissions: userData.access_permissions,
+              accessHistory: userData.access_history
+            };
+            console.log('✅ Usuário encontrado pelo telefone:', user.id);
+          } else {
+            console.log('❌ Usuário não encontrado por telefone');
+          }
         }
-
-        user = {
-          ...userData,
-          phoneNumber: userData.phone_number,
-          firstName: userData.first_name,
-          lastName: userData.last_name,
-          createdAt: userData.created_at,
-          updatedAt: userData.updated_at,
-          accessPermissions: userData.access_permissions,
-          accessHistory: userData.access_history
-        };
-        console.log('Usuário encontrado pelo telefone:', user.id);
+      } finally {
+        await searchPool.end();
       }
 
       if (!user) {
-        console.log('Usuário não encontrado');
+        console.log('❌ Usuário não encontrado no banco de dados');
       }
     } catch (error) {
-      console.error('Erro ao buscar usuário no banco de dados:', error);
+      console.error('❌ Erro ao buscar usuário no banco de dados:', error);
     }
 
     console.log('Buscando usuário por:', isEmail ? 'email' : 'telefone', identifier);
@@ -1455,33 +1401,50 @@ export async function loginWithPassword(identifier: string, password: string, re
 
           if (existingAdminResult.rows.length > 0) {
             const existingAdmin = existingAdminResult.rows[0];
-            console.log('Usuário administrador já existe, gerando token');
+            console.log('Usuário administrador já existe, verificando senha');
 
-            // Verificar se a senha está correta ou atualizá-la se necessário
+            // CRÍTICO: Verificar se a senha está correta - NÃO ATUALIZAR SE ESTIVER ERRADA!
             const isPasswordValid = await bcrypt.compare(password, existingAdmin.password);
 
             if (!isPasswordValid) {
-              console.log('Atualizando senha do administrador');
-              const hashedPassword = await bcrypt.hash(password, 10);
-
-              await adminPool.query(`
-                UPDATE "users_unified"
-                SET
-                  "password" = $1,
-                  "updated_at" = CURRENT_TIMESTAMP
-                WHERE "id" = $2
-              `, [hashedPassword, existingAdmin.id]);
+              console.log('❌ Senha incorreta para o administrador');
+              await adminPool.end();
+              return {
+                success: false,
+                message: 'Senha incorreta'
+              };
             }
 
-            // Gerar token JWT
-            const token = generateToken(existingAdmin);
+            console.log('✅ Senha correta, gerando token');
+
+            // Gerar token JWT e refresh token
+            const token = generateToken(existingAdmin, rememberMe);
+            const refreshTokenData = generateRefreshToken(existingAdmin, rememberMe);
+
+            // Salvar refresh token no banco de dados
+            try {
+              const { supabaseAdmin } = await import('@/lib/supabase');
+              await supabaseAdmin
+                .from('refresh_tokens')
+                .insert({
+                  user_id: existingAdmin.id,
+                  token: refreshTokenData.token,
+                  expires_at: refreshTokenData.expiresAt.toISOString(),
+                  remember_me: rememberMe,
+                  is_active: true,
+                  created_at: new Date().toISOString()
+                });
+            } catch (refreshError) {
+              console.warn('Erro ao salvar refresh token:', refreshError);
+            }
 
             await adminPool.end();
             return {
               success: true,
               message: 'Login realizado com sucesso.',
               user: existingAdmin,
-              token
+              token,
+              refreshToken: refreshTokenData.token
             };
           }
 
@@ -1599,33 +1562,59 @@ export async function loginWithPassword(identifier: string, password: string, re
       };
     }
 
+    // ========== VALIDAÇÕES DE USUÁRIO ==========
+    console.log('\n========== VALIDAÇÕES DE USUÁRIO ==========');
+    console.log('📧 Email do usuário:', user.email);
+    console.log('📱 Telefone:', user.phone_number);
+    console.log('👤 Nome:', user.first_name, user.last_name);
+    console.log('🎭 Role:', user.role);
+    console.log('✅ Ativo:', user.active);
+    console.log('📬 Email verificado:', user.email_verified);
+    console.log('🔐 Tem senha (password):', !!user.password);
+    console.log('🔐 Tem senha (password_hash):', !!user.password_hash);
+
     // Verificar se o usuário tem senha definida
-    if (!user.password) {
-      console.log('Usuário não possui senha definida');
+    if (!user.password && !user.password_hash) {
+      console.log('❌ FALHA: Usuário não possui senha definida');
       return {
         success: false,
         message: 'Usuário não possui senha definida.'
       };
     }
 
-    // Verificar se o email foi verificado (exceto para admin principal)
+    // VERIFICAÇÃO DE EMAIL INTELIGENTE
+    // Data de corte: 2025-11-07 23:00:00 UTC (quando implementamos a verificação de email)
+    // Usuários criados ANTES dessa data: não precisam verificar email (migrados)
+    // Usuários criados DEPOIS dessa data: DEVEM verificar email antes de fazer login
+    const EMAIL_VERIFICATION_CUTOFF_DATE = new Date('2025-11-07T23:00:00.000Z');
+    const userCreatedAt = new Date(user.created_at);
+    const isLegacyUser = userCreatedAt < EMAIL_VERIFICATION_CUTOFF_DATE;
+
+    console.log('📅 Data de criação do usuário:', userCreatedAt.toISOString());
+    console.log('📅 Data de corte para verificação:', EMAIL_VERIFICATION_CUTOFF_DATE.toISOString());
+    console.log('👥 Usuário migrado (legado)?', isLegacyUser);
+
+    // Admin principal sempre pode logar
     const adminEmail = process.env.ADMIN_EMAIL || 'caio.correia@groupabz.com';
     const adminPhone = process.env.ADMIN_PHONE_NUMBER || '+5522997847289';
     const isMainAdmin = user.email === adminEmail || user.phone_number === adminPhone;
 
-    if (!user.email_verified && !isMainAdmin) {
-      console.log('Email não verificado para usuário não-admin');
+    // Para novos usuários (criados APÓS a data de corte), verificar email
+    if (!isLegacyUser && !isMainAdmin && user.email_verified === false) {
+      console.log('❌ FALHA: Novo usuário com email não verificado');
       return {
         success: false,
-        message: 'Seu e-mail ainda não foi verificado. Verifique sua caixa de entrada.',
+        message: 'Seu e-mail ainda não foi verificado. Verifique sua caixa de entrada e clique no link de verificação.',
         authStatus: 'email_not_verified',
         email: user.email
       };
     }
 
+    console.log('✅ PASSOU: Verificação de email (usuário migrado ou email verificado)');
+
     // Verificar se a conta está ativa
     if (!user.active) {
-      console.log('Conta do usuário está desativada');
+      console.log('❌ FALHA: Conta do usuário está desativada');
       return {
         success: false,
         message: 'Sua conta está desativada. Entre em contato com o suporte.',
@@ -1648,30 +1637,47 @@ export async function loginWithPassword(identifier: string, password: string, re
       };
     }
 
-    // Verificar se a senha está correta
+    console.log('✅ PASSOU: Conta está ativa');
+
+    // ========== VERIFICAÇÃO DE SENHA ==========
+    console.log('\n========== VERIFICAÇÃO DE SENHA ==========');
     console.log('Verificando senha para o usuário:', user.email || user.phone_number);
     console.log('Senha fornecida (primeiros caracteres):', password.substring(0, 3) + '...');
-    console.log('Campo password:', user.password ? user.password.substring(0, 20) + '...' : 'Não definido');
-    console.log('Campo password_hash:', user.password_hash ? user.password_hash.substring(0, 20) + '...' : 'Não definido');
+    console.log('Tamanho da senha fornecida:', password.length);
+    console.log('Campo password:', user.password ? user.password.substring(0, 30) + '...' : 'Não definido');
+    console.log('Campo password_hash:', user.password_hash ? user.password_hash.substring(0, 30) + '...' : 'Não definido');
 
     // Verificar a senha usando bcrypt - tentar primeiro o campo 'password', depois 'password_hash'
     let isPasswordValid = false;
     let usedField = '';
 
     if (user.password) {
-      isPasswordValid = await bcrypt.compare(password, user.password);
-      usedField = 'password';
-      console.log('Tentativa com campo "password":', isPasswordValid ? 'Válida' : 'Inválida');
+      console.log('🔍 Tentando verificar com campo "password"...');
+      try {
+        isPasswordValid = await bcrypt.compare(password, user.password);
+        usedField = 'password';
+        console.log('Resultado com "password":', isPasswordValid ? '✅ Válida' : '❌ Inválida');
+      } catch (error) {
+        console.log('❌ Erro ao comparar com "password":', error instanceof Error ? error.message : String(error));
+      }
     }
 
     // Se não funcionou com 'password', tentar com 'password_hash'
     if (!isPasswordValid && user.password_hash) {
-      isPasswordValid = await bcrypt.compare(password, user.password_hash);
-      usedField = 'password_hash';
-      console.log('Tentativa com campo "password_hash":', isPasswordValid ? 'Válida' : 'Inválida');
+      console.log('🔍 Tentando verificar com campo "password_hash"...');
+      try {
+        isPasswordValid = await bcrypt.compare(password, user.password_hash);
+        usedField = 'password_hash';
+        console.log('Resultado com "password_hash":', isPasswordValid ? '✅ Válida' : '❌ Inválida');
+      } catch (error) {
+        console.log('❌ Erro ao comparar com "password_hash":', error instanceof Error ? error.message : String(error));
+      }
     }
 
-    console.log('Resultado final da verificação de senha:', isPasswordValid ? `Válida (usando ${usedField})` : 'Inválida');
+    console.log('\n📊 RESULTADO FINAL DA VERIFICAÇÃO:');
+    console.log('Senha válida?', isPasswordValid ? '✅ SIM' : '❌ NÃO');
+    console.log('Campo usado:', usedField || 'Nenhum');
+    console.log('==========================================\n');
 
     if (!isPasswordValid) {
       console.log('Senha inválida para o usuário:', user.phone_number);

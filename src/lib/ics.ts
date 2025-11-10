@@ -3,6 +3,7 @@
  * - Handles line folding
  * - Extracts SUMMARY, DESCRIPTION, DTSTART, DTEND, LOCATION, UID, ATTENDEE, ORGANIZER
  */
+import { randomUUID } from 'crypto';
 
 export type IcsEvent = {
   id: string;

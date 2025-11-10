@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { testEmailConnection } from '@/lib/email';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API para testar a conexão com o servidor SMTP
  * @route GET /api/email/test

@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FiSettings, FiGrid, FiUsers, FiFileText, FiMenu, FiX, FiLogOut, FiLayers, FiList, FiEdit, FiUser, FiUserCheck, FiDollarSign, FiCheck, FiTool, FiKey, FiUserX, FiChevronLeft, FiChevronRight, FiBell, FiAward, FiSmartphone, FiDatabase } from 'react-icons/fi';
+import { FiSettings, FiGrid, FiUsers, FiFileText, FiMenu, FiX, FiLogOut, FiLayers, FiList, FiEdit, FiUser, FiUserCheck, FiDollarSign, FiCheck, FiTool, FiKey, FiUserX, FiChevronLeft, FiChevronRight, FiBell, FiAward, FiSmartphone, FiDatabase, FiBarChart2 } from 'react-icons/fi';
 import NotificationHUD from '@/components/notifications/NotificationHUD';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -94,6 +94,13 @@ const adminMenuGroups = [
       { id: 'reimbursement-approval', href: '/reembolso?tab=approval', label: 'admin.approveReimbursements', icon: FiCheck },
       { id: 'reimbursement-settings', href: '/admin/reimbursement-settings', label: 'admin.reimbursementSettings', icon: FiSettings },
       { id: 'reimbursement-migration', href: '/admin/reimbursement-migration', label: 'admin.reimbursementMigration', icon: FiSettings },
+    ]
+  },
+  {
+    id: 'evaluation',
+    label: 'Avaliação de Desempenho',
+    items: [
+      { id: 'avaliacao', href: '/admin/avaliacao', label: 'Avaliação de Desempenho', icon: FiBarChart2 },
     ]
   },
   {

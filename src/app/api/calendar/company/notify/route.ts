@@ -3,6 +3,8 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { parseIcs } from '@/lib/ics';
 import { sendEmail } from '@/lib/email-service';
 
+export const dynamic = 'force-dynamic';
+
 function deriveIcsFromGcalUrl(input?: string | null): string | null {
   if (!input) return null;
   try {

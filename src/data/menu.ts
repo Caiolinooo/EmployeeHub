@@ -313,8 +313,21 @@ const menuItems: MenuItem[] = [
     enabled: true,
     order: 12,
     adminOnly: false,
-    managerOnly: true, // Restringir acesso apenas para gerentes e administradores
-    forceShow: false // Não forçar exibição do item de menu
+    managerOnly: false, // Permitir acesso para todos os usuários autenticados
+    moduleKey: 'avaliacao', // Usar verificação de módulo
+    forceShow: false
+  },
+  {
+    id: 'academy',
+    href: '/academy',
+    label: 'ABZ Academy',
+    icon: FiPlay,
+    external: false,
+    enabled: true,
+    order: 13,
+    adminOnly: false,
+    managerOnly: false,
+    moduleKey: 'academy'
   },
   {
     id: 'admin',
@@ -323,7 +336,7 @@ const menuItems: MenuItem[] = [
     icon: FiSettings,
     external: false,
     enabled: true,
-    order: 13,
+    order: 14,
     adminOnly: true
   },
   // Removido o item 'authorized-users' do menu principal

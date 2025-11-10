@@ -76,11 +76,11 @@ export default function EditarAvaliacaoPage({ params }: { params: Promise<{ id: 
 
         // Buscar avaliação pelo ID
         const { data: avaliacaoData, error: avaliacaoError } = await supabase
-          .from('avaliacoes')
+          .from('avaliacoes_desempenho')
           .select(`
             *,
-            funcionario:funcionario_id(id, nome, cargo, departamento),
-            avaliador:avaliador_id(id, nome, cargo)
+            funcionario:funcionarios!avaliacoes_desempenho_funcionario_id_fkey(id, nome, cargo, departamento),
+            avaliador:funcionarios!avaliacoes_desempenho_avaliador_id_fkey(id, nome, cargo)
           `)
           .eq('id', avaliacaoId)
           .is('deleted_at', null)
@@ -93,8 +93,8 @@ export default function EditarAvaliacaoPage({ params }: { params: Promise<{ id: 
         // Buscar todos os funcionários
         const { data: funcionariosData, error: funcionariosError } = await supabase
           .from('funcionarios')
-          .select('id, nome, cargo, departamento, email')
-          .eq('ativo', true)
+          .select('id, nome, cargo, departamento, email, user_id, users:user_id(id, role)')
+          .is('deleted_at', null)
           .order('nome', { ascending: true });
 
         if (funcionariosError) {
@@ -103,10 +103,8 @@ export default function EditarAvaliacaoPage({ params }: { params: Promise<{ id: 
 
         // Separar avaliadores (gerentes e admins) dos funcionários comuns
         const todosFuncionarios = funcionariosData || [];
-        const apenasAvaliadores = todosFuncionarios.filter(f =>
-          f.cargo?.toLowerCase().includes('gerente') ||
-          f.cargo?.toLowerCase().includes('diretor') ||
-          f.cargo?.toLowerCase().includes('admin')
+        const apenasAvaliadores = todosFuncionarios.filter((f: any) =>
+          f.users?.role === 'ADMIN' || f.users?.role === 'MANAGER'
         );
 
         setFuncionarios(todosFuncionarios);
@@ -157,10 +155,9 @@ export default function EditarAvaliacaoPage({ params }: { params: Promise<{ id: 
         return;
       }
 
-      // Criar cliente Supabase
       // Atualizar avaliação
       const { error } = await supabase
-        .from('avaliacoes')
+        .from('avaliacoes_desempenho')
         .update({
           avaliador_id: formData.avaliador_id,
           funcionario_id: formData.funcionario_id,

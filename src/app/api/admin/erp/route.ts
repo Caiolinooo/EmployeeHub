@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import ERPIntegrationManager from '@/lib/erp-integration';
 import { createClient } from '@supabase/supabase-js';
 
+export const dynamic = 'force-dynamic';
+
 // Função para obter o cliente Supabase de forma lazy
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -177,6 +179,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Atualizar conexão no banco
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('erp_connections')
       .update(updates)
@@ -217,6 +220,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    const supabase = getSupabaseClient();
     const { error } = await supabase
       .from('erp_connections')
       .delete()

@@ -3,6 +3,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { sendEmailVerificationLink } from '@/lib/email-verification';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

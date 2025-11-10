@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import { verifyToken } from '@/lib/auth';
 import jwt from 'jsonwebtoken';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Rota para corrigir problemas de autenticação
  */

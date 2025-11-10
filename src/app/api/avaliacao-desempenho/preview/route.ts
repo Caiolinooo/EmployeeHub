@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Rota para processar preview de importação
  */

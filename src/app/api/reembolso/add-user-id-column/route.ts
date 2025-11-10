@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Verifica se a tabela Reimbursement existe e adiciona a coluna user_id se necessário
  */

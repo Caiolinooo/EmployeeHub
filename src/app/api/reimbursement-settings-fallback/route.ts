@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API route para gerenciar configurações de reembolso usando arquivo local
  * Esta é uma alternativa para quando o banco de dados Supabase não está disponível

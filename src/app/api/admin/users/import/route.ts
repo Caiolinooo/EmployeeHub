@@ -5,6 +5,8 @@ import { sendInviteSMS } from '@/lib/sms';
 import crypto from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const {
@@ -144,6 +146,7 @@ export async function POST(request: NextRequest) {
               position: normalizedUser.position,
               role: defaultRole,
               active: true,
+              email_verified: true, // Usuários importados pelo admin não precisam verificar email
               verification_code: inviteCode,
               verification_code_expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 horas
               created_at: now,

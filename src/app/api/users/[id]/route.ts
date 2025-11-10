@@ -3,6 +3,8 @@ import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import bcrypt from 'bcryptjs';
 
+export const dynamic = 'force-dynamic';
+
 // GET - Obter um usuário específico
 export async function GET(
   request: NextRequest,

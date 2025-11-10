@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { authenticateUser } from '@/lib/api-auth';
 
+export const dynamic = 'force-dynamic';
+
 // POST - Curtir/Descurtir post
 export async function POST(request: NextRequest) {
   try {

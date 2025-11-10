@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiCheck, FiEdit2, FiMessageSquare, FiUser, FiCalendar, FiStar, FiEye } from 'react-icons/fi';
@@ -6,8 +6,8 @@ import { supabase } from '@/lib/supabase';
 import { WorkflowAvaliacaoService } from '@/lib/services/workflow-avaliacao';
 import { getCriteriosPorTipoUsuario } from '@/data/criterios-avaliacao';
 import { isUsuarioLider } from '@/lib/utils/lideranca';
+import SeletorEstrelas, { ExibicaoEstrelas } from './SeletorEstrelas';
 import type { CriterioAvaliacao } from '@/data/criterios-avaliacao';
-import { useI18n } from '@/contexts/I18nContext';
 
 interface AvaliacaoParaAprovacao {
   id: string;
@@ -31,7 +31,6 @@ interface InterfaceAprovacaoGerenteProps {
 }
 
 export default function InterfaceAprovacaoGerente({ gerenteId }: InterfaceAprovacaoGerenteProps) {
-  const { t } = useI18n();
   const [avaliacoesPendentes, setAvaliacoesPendentes] = useState<AvaliacaoParaAprovacao[]>([]);
   const [avaliacaoSelecionada, setAvaliacaoSelecionada] = useState<AvaliacaoParaAprovacao | null>(null);
   const [criterios, setCriterios] = useState<CriterioAvaliacao[]>([]);
@@ -71,18 +70,18 @@ export default function InterfaceAprovacaoGerente({ gerenteId }: InterfaceAprova
         .order('data_autoavaliacao', { ascending: true });
 
       if (error) {
-        console.error(t('components.erroAoCarregarAvaliacoes'), error);
+        console.error('Erro ao carregar avaliações:', error);
         return;
       }
 
       const avaliacoesFormatadas = avaliacoes?.map(avaliacao => ({
         id: avaliacao.id,
         funcionario_id: avaliacao.funcionario_id,
-        funcionario_nome: (avaliacao.users_unified as any)?.name || t('components.nomeNaoEncontrado'),
-        funcionario_email: (avaliacao.users_unified as any)?.email || t('components.emailNaoEncontrado'),
+        funcionario_nome: (avaliacao.users_unified as any)?.name || 'Nome não encontrado',
+        funcionario_email: (avaliacao.users_unified as any)?.email || 'Email não encontrado',
         etapa_atual: avaliacao.etapa_atual,
         data_autoavaliacao: avaliacao.data_autoavaliacao,
-        periodo_nome: (avaliacao.periodos_avaliacao as any)?.nome || t('components.periodoNaoEncontrado'),
+        periodo_nome: (avaliacao.periodos_avaliacao as any)?.nome || 'Período não encontrado',
         autoavaliacao: avaliacao.autoavaliacoes?.[0] || {
           questao_11_pontos_fortes: '',
           questao_12_areas_melhoria: '',
@@ -94,7 +93,7 @@ export default function InterfaceAprovacaoGerente({ gerenteId }: InterfaceAprova
 
       setAvaliacoesPendentes(avaliacoesFormatadas);
     } catch (error) {
-      console.error(t('components.erroAoCarregarAvaliacoesPendentes'), error);
+      console.error('Erro ao carregar avaliações pendentes:', error);
     } finally {
       setLoading(false);
     }
@@ -147,7 +146,7 @@ export default function InterfaceAprovacaoGerente({ gerenteId }: InterfaceAprova
         alert('Erro ao processar avaliação');
       }
     } catch (error) {
-      console.error(t('components.erroAoProcessarAvaliacao'), error);
+      console.error('Erro ao processar avaliação:', error);
       alert('Erro ao processar avaliação');
     } finally {
       setLoading(false);
@@ -232,9 +231,9 @@ export default function InterfaceAprovacaoGerente({ gerenteId }: InterfaceAprova
 
                   {/* Preview das respostas */}
                   <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium text-gray-900 mb-2">Principais Pontos Fortes:</h4>
+                    <h4 className="font-medium text-gray-900 mb-2">Principais resultados obtidos e metas atingidas:</h4>
                     <p className="text-sm text-gray-700 line-clamp-2">
-                      {avaliacao.autoavaliacao.questao_11_pontos_fortes || t('components.naoInformado')}
+                      {avaliacao.autoavaliacao.questao_11_pontos_fortes || 'Não informado'}
                     </p>
                   </div>
                 </div>
@@ -276,27 +275,27 @@ export default function InterfaceAprovacaoGerente({ gerenteId }: InterfaceAprova
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Respostas da Autoavaliação */}
+              {/* Respostas da Autoavaliação - Conforme AN-TED-002-R0 */}
               <div className="space-y-4">
                 <h4 className="text-lg font-semibold text-gray-900">Respostas da Autoavaliação</h4>
-                
+
                 <div className="bg-blue-50 p-4 rounded-lg">
-                  <h5 className="font-medium text-gray-900 mb-2">Principais Pontos Fortes:</h5>
+                  <h5 className="font-medium text-gray-900 mb-2">Questão 11: Principais resultados obtidos e metas atingidas durante o ano</h5>
                   <p className="text-gray-700">{avaliacaoSelecionada.autoavaliacao.questao_11_pontos_fortes}</p>
                 </div>
 
                 <div className="bg-yellow-50 p-4 rounded-lg">
-                  <h5 className="font-medium text-gray-900 mb-2">Áreas para Melhoria:</h5>
+                  <h5 className="font-medium text-gray-900 mb-2">Questão 12: Melhorias obtidas desde a última avaliação</h5>
                   <p className="text-gray-700">{avaliacaoSelecionada.autoavaliacao.questao_12_areas_melhoria}</p>
                 </div>
 
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <h5 className="font-medium text-gray-900 mb-2">Objetivos Alcançados:</h5>
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <h5 className="font-medium text-gray-900 mb-2">Questão 13: Aspectos que precisam de desenvolvimento e LNT</h5>
                   <p className="text-gray-700">{avaliacaoSelecionada.autoavaliacao.questao_13_objetivos_alcancados}</p>
                 </div>
 
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <h5 className="font-medium text-gray-900 mb-2">Planos de Desenvolvimento:</h5>
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h5 className="font-medium text-gray-900 mb-2">Questão 14: Objetivos para o próximo ano</h5>
                   <p className="text-gray-700">{avaliacaoSelecionada.autoavaliacao.questao_14_planos_desenvolvimento}</p>
                 </div>
               </div>
@@ -314,49 +313,54 @@ export default function InterfaceAprovacaoGerente({ gerenteId }: InterfaceAprova
                     }`}
                   >
                     <FiEdit2 className="mr-1" size={14} />
-                    {modoEdicao ? t('components.modoEdicaoAtivo') : 'Editar Notas'}
+                    {modoEdicao ? 'Modo Edição Ativo' : 'Editar Notas'}
                   </button>
                 </div>
 
                 <div className="grid gap-4">
                   {criterios.map((criterio) => (
-                    <div key={criterio.id} className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h5 className="font-medium text-gray-900">{criterio.nome}</h5>
-                          <p className="text-sm text-gray-600">{criterio.descricao}</p>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                          <div className="text-center">
-                            <p className="text-xs text-gray-500">Autoavaliação</p>
-                            <div className="flex items-center">
-                              <FiStar className="text-yellow-500 mr-1" size={16} />
-                              <span className="font-medium">
-                                {avaliacaoSelecionada.autoavaliacao.autoavaliacao_criterios[criterio.id] || 0}
+                    <div key={criterio.id} className="bg-white p-4 rounded-lg border border-gray-200">
+                      <div className="mb-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h5 className="font-semibold text-gray-900">{criterio.nome}</h5>
+                            <p className="text-sm text-gray-600 mt-1">{criterio.descricao}</p>
+                            {criterio.apenas_lideres && (
+                              <span className="inline-block mt-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                                Critério de Liderança
                               </span>
-                            </div>
+                            )}
                           </div>
-                          {modoEdicao && (
-                            <div className="text-center">
-                              <p className="text-xs text-gray-500">Sua Avaliação</p>
-                              <select
-                                value={notasGerente[criterio.id] || 0}
-                                onChange={(e) => setNotasGerente(prev => ({
-                                  ...prev,
-                                  [criterio.id]: parseInt(e.target.value)
-                                }))}
-                                className="border border-gray-300 rounded px-2 py-1 text-sm"
-                              >
-                                <option value={0}>0</option>
-                                <option value={1}>1</option>
-                                <option value={2}>2</option>
-                                <option value={3}>3</option>
-                                <option value={4}>4</option>
-                                <option value={5}>5</option>
-                              </select>
-                            </div>
-                          )}
                         </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        {/* Autoavaliação do Colaborador */}
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <p className="text-xs font-medium text-blue-900 mb-2">Autoavaliação do Colaborador:</p>
+                          <ExibicaoEstrelas
+                            valor={avaliacaoSelecionada.autoavaliacao.autoavaliacao_criterios[criterio.id] || 0}
+                            tamanho="sm"
+                            mostrarValor={true}
+                            mostrarLabel={true}
+                          />
+                        </div>
+
+                        {/* Avaliação do Gerente (modo edição) */}
+                        {modoEdicao && (
+                          <div className="bg-green-50 p-3 rounded-lg">
+                            <p className="text-xs font-medium text-green-900 mb-2">Sua Avaliação (Gerente):</p>
+                            <SeletorEstrelas
+                              valor={notasGerente[criterio.id] || 0}
+                              onChange={(nota) => setNotasGerente(prev => ({
+                                ...prev,
+                                [criterio.id]: nota
+                              }))}
+                              tamanho="sm"
+                              mostrarLegenda={false}
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -371,16 +375,24 @@ export default function InterfaceAprovacaoGerente({ gerenteId }: InterfaceAprova
                 )}
               </div>
 
-              {/* Comentários do Gerente */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Comentários do Gerente
-                </label>
+              {/* Comentários do Gerente - Questão 15 */}
+              <div className="bg-orange-50 p-6 rounded-lg border-2 border-orange-200">
+                <div className="flex items-center mb-3">
+                  <FiMessageSquare className="text-orange-600 mr-2" size={20} />
+                  <div>
+                    <label className="block text-base font-semibold text-gray-900">
+                      Questão 15: Comentários do Avaliador
+                    </label>
+                    <p className="text-sm text-gray-600">
+                      Adicione seus comentários e observações finais sobre a avaliação
+                    </p>
+                  </div>
+                </div>
                 <textarea
                   value={comentarios}
                   onChange={(e) => setComentarios(e.target.value)}
-                  className="w-full h-32 border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder={t('components.adicioneSeusComentariosSobreAAvaliacao')}
+                  className="w-full h-32 border border-orange-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Descreva suas observações sobre o desempenho do colaborador, feedback geral, pontos de destaque, áreas que necessitam atenção especial, etc..."
                 />
               </div>
             </div>

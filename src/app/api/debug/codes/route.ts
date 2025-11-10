@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getActiveCodes, getLatestCode } from '@/lib/code-service';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API para visualizar códigos de verificação (apenas em ambiente de desenvolvimento)
  */

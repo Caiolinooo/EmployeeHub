@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { authenticateUser } from '@/lib/api-auth';
 
+export const dynamic = 'force-dynamic';
+
 const defaultPrefs = {
   channels: { in_app: true, email: true, push: false },
   types: {

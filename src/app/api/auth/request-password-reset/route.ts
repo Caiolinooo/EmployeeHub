@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { sendPasswordResetEmail } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API para solicitar reset de senha
  * Gera um token único e envia por email

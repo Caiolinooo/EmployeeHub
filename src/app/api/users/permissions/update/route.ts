@@ -3,6 +3,8 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { PermissionFeatures } from '@/lib/permissions';
 import { verifyToken } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { userId, features } = await request.json();

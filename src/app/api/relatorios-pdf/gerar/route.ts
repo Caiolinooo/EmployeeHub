@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyTokenFromRequest } from '@/lib/auth';
+import { verifyRequestToken } from '@/lib/auth';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Chart } from 'chart.js';
@@ -12,11 +12,12 @@ import {
 } from '@/types/relatorios-pdf';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyTokenFromRequest(request);
+    const authResult = verifyRequestToken(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json(
         { success: false, error: 'Token inválido' },
@@ -125,14 +126,14 @@ async function processarRelatorio(
       })
       .eq('id', solicitacaoId);
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao processar relatório:', error);
-
+    
     await supabase
       .from('solicitacoes_relatorio')
       .update({
         status: 'erro',
-        erro_mensagem: error?.message || 'Erro desconhecido',
+        erro_mensagem: error.message,
         processado_em: new Date().toISOString()
       })
       .eq('id', solicitacaoId);
@@ -347,7 +348,7 @@ async function criarPDF(
 
   // Adicionar rodapé
   if (configuracao.rodape.mostrar_numeracao) {
-    const pageCount = (pdf.internal as any).getNumberOfPages();
+    const pageCount = pdf.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       pdf.setPage(i);
       pdf.setFontSize(10);

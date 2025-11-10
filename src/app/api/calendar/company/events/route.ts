@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { parseIcs, IcsEvent } from '@/lib/ics';
 
+export const dynamic = 'force-dynamic';
+
 // Simple in-memory cache (per lambda instance)
 let CACHE: { ts: number; events: IcsEvent[] } | null = null;
 

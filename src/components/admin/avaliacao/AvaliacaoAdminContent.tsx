@@ -1,11 +1,17 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FiSettings, FiList, FiUsers, FiBarChart2, FiDatabase, FiLoader, FiAlertCircle } from 'react-icons/fi';
+import { FiSettings, FiList, FiUsers, FiBarChart2, FiDatabase, FiLoader, FiAlertCircle, FiCalendar, FiUserCheck, FiAward } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
 import MainLayout from '@/components/Layout/MainLayout';
 import { CreateCriteriosTable } from '@/components/admin/avaliacao/CreateCriteriosTable';
 import { ImportCriteriosButton } from '@/components/admin/avaliacao/ImportCriteriosButton';
+import PainelPeriodosAvaliacao from '@/components/admin/PainelPeriodosAvaliacao';
+import PainelGerentesAvaliacao from '@/components/admin/PainelGerentesAvaliacao';
+import PainelLideresSetor from '@/components/admin/PainelLideresSetor';
+import ExecutarMigrationAvaliacao from '@/components/admin/ExecutarMigrationAvaliacao';
+import DiagnosticoAdmin from '@/components/admin/DiagnosticoAdmin';
+import DiagnosticoForeignKeys from '@/components/admin/DiagnosticoForeignKeys';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -15,7 +21,7 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
  */
 export default function AvaliacaoAdminContent() {
   const { t } = useI18n();
-  const [activeTab, setActiveTab] = useState<'database' | 'criterios' | 'funcionarios'>('database');
+  const [activeTab, setActiveTab] = useState<'database' | 'criterios' | 'funcionarios' | 'periodos' | 'gerentes' | 'lideres'>('periodos');
   const { user, profile, isLoading, isAdmin } = useSupabaseAuth();
   const router = useRouter();
 
@@ -56,31 +62,82 @@ export default function AvaliacaoAdminContent() {
 
   return (
     <MainLayout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-900">
             {t('admin.avaliacao.title', 'Administração do Módulo de Avaliação')}
           </h1>
         </div>
 
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        {/* Alerta de Migration Necessária */}
+        {activeTab !== 'database' && (
+          <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg shadow-sm">
+            <div className="flex items-start">
+              <FiAlertCircle className="text-yellow-600 mt-0.5 mr-3 flex-shrink-0" size={24} />
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-yellow-800">
+                  ⚠️ Migration Necessária
+                </h3>
+                <div className="mt-2 text-sm text-yellow-700">
+                  <p>
+                    Para usar este módulo, você precisa executar a migration do banco de dados.
+                    Vá para a aba <strong>"Banco de Dados"</strong> e clique em <strong>"Executar Migration"</strong>.
+                  </p>
+                </div>
+                <div className="mt-3">
+                  <button
+                    onClick={() => setActiveTab('database')}
+                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-yellow-700 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors"
+                  >
+                    <FiDatabase className="mr-1" />
+                    Ir para Banco de Dados
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="bg-white rounded-lg shadow">
           {/* Tabs */}
           <div className="border-b border-gray-200">
-            <nav className="flex -mb-px">
+            <nav className="flex -mb-px overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
               <button
-                onClick={() => setActiveTab('database')}
-                className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
-                  activeTab === 'database'
+                onClick={() => setActiveTab('periodos')}
+                className={`py-4 px-6 text-center border-b-2 font-medium text-sm whitespace-nowrap ${
+                  activeTab === 'periodos'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                <FiDatabase className="inline-block mr-2" />
-                {t('admin.avaliacao.tabs.database', 'Banco de Dados')}
+                <FiCalendar className="inline-block mr-2" />
+                Períodos de Avaliação
+              </button>
+              <button
+                onClick={() => setActiveTab('gerentes')}
+                className={`py-4 px-6 text-center border-b-2 font-medium text-sm whitespace-nowrap ${
+                  activeTab === 'gerentes'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <FiUserCheck className="inline-block mr-2" />
+                Gerentes de Avaliação
+              </button>
+              <button
+                onClick={() => setActiveTab('lideres')}
+                className={`py-4 px-6 text-center border-b-2 font-medium text-sm whitespace-nowrap ${
+                  activeTab === 'lideres'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <FiAward className="inline-block mr-2" />
+                Líderes de Setor
               </button>
               <button
                 onClick={() => setActiveTab('criterios')}
-                className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
+                className={`py-4 px-6 text-center border-b-2 font-medium text-sm whitespace-nowrap ${
                   activeTab === 'criterios'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -91,7 +148,7 @@ export default function AvaliacaoAdminContent() {
               </button>
               <button
                 onClick={() => setActiveTab('funcionarios')}
-                className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
+                className={`py-4 px-6 text-center border-b-2 font-medium text-sm whitespace-nowrap ${
                   activeTab === 'funcionarios'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -100,11 +157,34 @@ export default function AvaliacaoAdminContent() {
                 <FiUsers className="inline-block mr-2" />
                 {t('admin.avaliacao.tabs.funcionarios', 'Funcionários')}
               </button>
+              <button
+                onClick={() => setActiveTab('database')}
+                className={`py-4 px-6 text-center border-b-2 font-medium text-sm whitespace-nowrap ${
+                  activeTab === 'database'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <FiDatabase className="inline-block mr-2" />
+                {t('admin.avaliacao.tabs.database', 'Banco de Dados')}
+              </button>
             </nav>
           </div>
 
           {/* Tab Content */}
           <div className="p-6">
+            {activeTab === 'periodos' && (
+              <PainelPeriodosAvaliacao />
+            )}
+
+            {activeTab === 'gerentes' && (
+              <PainelGerentesAvaliacao />
+            )}
+
+            {activeTab === 'lideres' && (
+              <PainelLideresSetor />
+            )}
+
             {activeTab === 'database' && (
               <div className="space-y-6">
                 <h2 className="text-lg font-medium text-gray-900 mb-4">
@@ -118,6 +198,9 @@ export default function AvaliacaoAdminContent() {
                 </p>
 
                 <div className="grid grid-cols-1 gap-6">
+                  <DiagnosticoAdmin />
+                  <DiagnosticoForeignKeys />
+                  <ExecutarMigrationAvaliacao />
                   <CreateCriteriosTable />
                   <ImportCriteriosButton />
                 </div>

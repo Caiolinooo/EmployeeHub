@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyTokenFromRequest } from '@/lib/auth';
+import { verifyRequestToken } from '@/lib/auth';
 import { MobilePushNotification } from '@/types/api-mobile';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 // Configuração do Firebase Admin (seria necessário configurar)
 // import admin from 'firebase-admin';
@@ -11,7 +12,7 @@ export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyTokenFromRequest(request);
+    const authResult = verifyRequestToken(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest) {
     // Verificar permissões de admin
     const { data: user } = await supabase
       .from('users_unified')
-      .select('role, access_permissions, email')
+      .select('role, access_permissions')
       .eq('id', authResult.payload.userId)
       .single();
 
@@ -130,7 +131,7 @@ export async function POST(request: NextRequest) {
         results.push({
           recipient,
           success: false,
-          error: error instanceof Error ? error.message : 'Erro desconhecido'
+          error: error.message
         });
       }
     }
@@ -229,7 +230,7 @@ async function sendPushNotification(params: {
     console.error('Erro ao enviar notificação push:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Erro desconhecido'
+      error: error.message
     };
   }
 }
@@ -237,7 +238,7 @@ async function sendPushNotification(params: {
 // Endpoint para registrar token de push
 export async function PUT(request: NextRequest) {
   try {
-    const authResult = await verifyTokenFromRequest(request);
+    const authResult = verifyRequestToken(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,
@@ -289,7 +290,7 @@ export async function PUT(request: NextRequest) {
 // Endpoint para remover token de push
 export async function DELETE(request: NextRequest) {
   try {
-    const authResult = await verifyTokenFromRequest(request);
+    const authResult = verifyRequestToken(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,

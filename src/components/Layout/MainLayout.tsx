@@ -124,10 +124,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   const handleLogout = async () => {
     try {
+      // A função logout() já cuida do redirecionamento
       await logout();
-      router.push('/login');
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
+      // Em caso de erro, forçar redirecionamento mesmo assim
+      window.location.replace('/login?t=' + Date.now());
     }
   };
 

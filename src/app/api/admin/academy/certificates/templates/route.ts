@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withPermission } from '@/lib/api-auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 export const GET = withPermission('manager', async () => {
   const { data, error } = await supabaseAdmin
     .from('certificate_templates')

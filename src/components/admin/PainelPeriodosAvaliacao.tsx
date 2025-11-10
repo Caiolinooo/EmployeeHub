@@ -1,17 +1,15 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiCalendar, FiClock, FiUsers, FiCheck, FiX } from 'react-icons/fi';
 import { supabase } from '@/lib/supabase';
 import { NotificacoesAvaliacaoService } from '@/lib/services/notificacoes-avaliacao';
 import type { PeriodoAvaliacao } from '@/lib/services/workflow-avaliacao';
-import { useI18n } from '@/contexts/I18nContext';
 
 export default function PainelPeriodosAvaliacao() {
-  const { t } = useI18n();
-
   const [periodos, setPeriodos] = useState<PeriodoAvaliacao[]>([]);
   const [loading, setLoading] = useState(true);
+  const [migrationError, setMigrationError] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingPeriodo, setEditingPeriodo] = useState<PeriodoAvaliacao | null>(null);
   const [formData, setFormData] = useState({
@@ -36,13 +34,19 @@ export default function PainelPeriodosAvaliacao() {
         .order('data_inicio', { ascending: false });
 
       if (error) {
-        console.error(t('components.erroAoCarregarPeriodos'), error);
+        console.error('Erro ao carregar períodos:', error);
+        // Verificar se é um erro de tabela não encontrada (migration não executada)
+        if (error.message && (error.message.includes('relation') || error.message.includes('does not exist') || error.code === 'PGRST204' || error.code === '42P01')) {
+          setMigrationError(true);
+        }
         return;
       }
 
       setPeriodos(data || []);
+      setMigrationError(false);
     } catch (error) {
-      console.error(t('components.erroAoCarregarPeriodos'), error);
+      console.error('Erro ao carregar períodos:', error);
+      setMigrationError(true);
     } finally {
       setLoading(false);
     }
@@ -61,7 +65,7 @@ export default function PainelPeriodosAvaliacao() {
           .eq('id', editingPeriodo.id);
 
         if (error) {
-          console.error(t('components.erroAoAtualizarPeriodo'), error);
+          console.error('Erro ao atualizar período:', error);
           alert('Erro ao atualizar período');
           return;
         }
@@ -74,7 +78,7 @@ export default function PainelPeriodosAvaliacao() {
           .single();
 
         if (error) {
-          console.error(t('components.erroAoCriarPeriodo'), error);
+          console.error('Erro ao criar período:', error);
           alert('Erro ao criar período');
           return;
         }
@@ -92,7 +96,7 @@ export default function PainelPeriodosAvaliacao() {
       await carregarPeriodos();
       fecharModal();
     } catch (error) {
-      console.error(t('components.erroAoSalvarPeriodo'), error);
+      console.error('Erro ao salvar período:', error);
       alert('Erro ao salvar período');
     } finally {
       setLoading(false);
@@ -114,7 +118,7 @@ export default function PainelPeriodosAvaliacao() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm(t('components.temCertezaQueDesejaExcluirEstePeriodoEstaAcaoNaoPo'))) {
+    if (!confirm('Tem certeza que deseja excluir este período? Esta ação não pode ser desfeita.')) {
       return;
     }
 
@@ -125,14 +129,14 @@ export default function PainelPeriodosAvaliacao() {
         .eq('id', id);
 
       if (error) {
-        console.error(t('components.erroAoExcluirPeriodo'), error);
+        console.error('Erro ao excluir período:', error);
         alert('Erro ao excluir período');
         return;
       }
 
       await carregarPeriodos();
     } catch (error) {
-      console.error(t('components.erroAoExcluirPeriodo'), error);
+      console.error('Erro ao excluir período:', error);
       alert('Erro ao excluir período');
     }
   };
@@ -218,6 +222,34 @@ export default function PainelPeriodosAvaliacao() {
     );
   }
 
+  if (migrationError) {
+    return (
+      <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6">
+        <div className="flex items-start">
+          <FiX className="text-red-600 mt-0.5 mr-3 flex-shrink-0" size={32} />
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-red-800 mb-2">
+              Migration Não Executada
+            </h3>
+            <p className="text-sm text-red-700 mb-4">
+              A tabela <code className="bg-red-100 px-2 py-1 rounded">periodos_avaliacao</code> não existe no banco de dados.
+            </p>
+            <p className="text-sm text-red-700 mb-4">
+              Você precisa executar a migration do banco de dados antes de usar esta funcionalidade.
+              Vá para a aba <strong>"Banco de Dados"</strong> e clique em <strong>"Executar Migration"</strong>.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Tentar Novamente
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -280,21 +312,21 @@ export default function PainelPeriodosAvaliacao() {
                       ? 'text-green-600 hover:bg-green-50' 
                       : 'text-gray-400 hover:bg-gray-50'
                   }`}
-                  title={periodo.ativo ? t('components.desativarPeriodo') : t('components.ativarPeriodo')}
+                  title={periodo.ativo ? 'Desativar período' : 'Ativar período'}
                 >
                   {periodo.ativo ? <FiCheck size={16} /> : <FiX size={16} />}
                 </button>
                 <button
                   onClick={() => handleEdit(periodo)}
                   className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                  title={t('components.editarPeriodo')}
+                  title="Editar período"
                 >
                   <FiEdit2 size={16} />
                 </button>
                 <button
                   onClick={() => handleDelete(periodo.id)}
                   className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  title={t('components.excluirPeriodo')}
+                  title="Excluir período"
                 >
                   <FiTrash2 size={16} />
                 </button>
@@ -325,7 +357,7 @@ export default function PainelPeriodosAvaliacao() {
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900">
-                {editingPeriodo ? t('components.editarPeriodo') : t('components.novoPeriodo')}
+                {editingPeriodo ? 'Editar Período' : 'Novo Período'}
               </h3>
               <button
                 onClick={fecharModal}
@@ -345,7 +377,7 @@ export default function PainelPeriodosAvaliacao() {
                   value={formData.nome}
                   onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder={t('components.exAvaliacaoAnual2024')}
+                  placeholder="Ex: Avaliação Anual 2024"
                   required
                 />
               </div>
@@ -359,7 +391,7 @@ export default function PainelPeriodosAvaliacao() {
                   onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   rows={3}
-                  placeholder={t('components.descricaoOpcionalDoPeriodo')}
+                  placeholder="Descrição opcional do período"
                 />
               </div>
 

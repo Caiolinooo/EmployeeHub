@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AdvancedPDFGenerator } from '@/lib/advanced-pdf-generator';
 import { createClient } from '@supabase/supabase-js';
 
+export const dynamic = 'force-dynamic';
+
 // Função para obter o cliente Supabase de forma lazy
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -92,6 +94,7 @@ export async function POST(request: NextRequest) {
 // Gerar relatório individual
 async function generateIndividualReport(parameters: any, userId: string) {
   const { targetUserId, periodStart, periodEnd } = parameters;
+
   const supabase = getSupabaseClient();
 
   // Buscar dados do usuário
@@ -140,10 +143,10 @@ async function generateIndividualReport(parameters: any, userId: string) {
         type: 'line' as const,
         title: 'Evolução da Performance',
         data: {
-          labels: metrics?.map((m: any) => new Date(m.period_start).toLocaleDateString('pt-BR')) || [],
+          labels: metrics?.map(m => new Date(m.period_start).toLocaleDateString('pt-BR')) || [],
           datasets: [{
             label: 'Pontuação',
-            data: metrics?.map((m: any) => m.overall_score || 0) || [],
+            data: metrics?.map(m => m.overall_score || 0) || [],
             borderColor: '#2563eb',
             backgroundColor: 'rgba(37, 99, 235, 0.1)'
           }]
@@ -166,7 +169,7 @@ async function generateIndividualReport(parameters: any, userId: string) {
       {
         title: 'Histórico de Avaliações',
         headers: ['Período', 'Pontuação', 'Departamento'],
-        rows: metrics?.map((m: any) => [
+        rows: metrics?.map(m => [
           `${new Date(m.period_start).toLocaleDateString('pt-BR')} - ${new Date(m.period_end).toLocaleDateString('pt-BR')}`,
           m.overall_score?.toFixed(2) || '0.00',
           m.department || 'N/A'
@@ -175,7 +178,7 @@ async function generateIndividualReport(parameters: any, userId: string) {
       {
         title: 'Reembolsos Recentes',
         headers: ['Data', 'Descrição', 'Valor', 'Status'],
-        rows: reimbursements?.slice(0, 10).map((r: any) => [
+        rows: reimbursements?.slice(0, 10).map(r => [
           new Date(r.created_at).toLocaleDateString('pt-BR'),
           r.description || 'N/A',
           `R$ ${(r.amount || 0).toFixed(2)}`,
@@ -189,6 +192,7 @@ async function generateIndividualReport(parameters: any, userId: string) {
 // Gerar relatório departamental
 async function generateDepartmentalReport(parameters: any, userId: string) {
   const { department, periodStart, periodEnd } = parameters;
+
   const supabase = getSupabaseClient();
 
   // Buscar dados do departamento
@@ -200,7 +204,7 @@ async function generateDepartmentalReport(parameters: any, userId: string) {
     .lte('period_end', periodEnd);
 
   const avgScore = metrics?.reduce((sum: number, m: any) => sum + (m.overall_score || 0), 0) / (metrics?.length || 1);
-  const employeeCount = new Set(metrics?.map((m: any) => m.user_id)).size;
+  const employeeCount = new Set(metrics?.map(m => m.user_id)).size;
 
   return {
     title: 'Relatório Departamental',
@@ -217,10 +221,10 @@ async function generateDepartmentalReport(parameters: any, userId: string) {
         type: 'bar' as const,
         title: 'Performance por Funcionário',
         data: {
-          labels: metrics?.slice(0, 10).map((m: any) => m.users_unified?.name || 'N/A') || [],
+          labels: metrics?.slice(0, 10).map(m => m.users_unified?.name || 'N/A') || [],
           datasets: [{
             label: 'Pontuação',
-            data: metrics?.slice(0, 10).map((m: any) => m.overall_score || 0) || [],
+            data: metrics?.slice(0, 10).map(m => m.overall_score || 0) || [],
             backgroundColor: '#2563eb'
           }]
         }
@@ -233,10 +237,10 @@ async function generateDepartmentalReport(parameters: any, userId: string) {
           datasets: [{
             label: 'Funcionários',
             data: [
-              metrics?.filter((m: any) => (m.overall_score || 0) > 8).length || 0,
-              metrics?.filter((m: any) => (m.overall_score || 0) >= 6 && (m.overall_score || 0) <= 8).length || 0,
-              metrics?.filter((m: any) => (m.overall_score || 0) >= 4 && (m.overall_score || 0) < 6).length || 0,
-              metrics?.filter((m: any) => (m.overall_score || 0) < 4).length || 0
+              metrics?.filter(m => (m.overall_score || 0) > 8).length || 0,
+              metrics?.filter(m => (m.overall_score || 0) >= 6 && (m.overall_score || 0) <= 8).length || 0,
+              metrics?.filter(m => (m.overall_score || 0) >= 4 && (m.overall_score || 0) < 6).length || 0,
+              metrics?.filter(m => (m.overall_score || 0) < 4).length || 0
             ],
             backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444']
           }]
@@ -247,7 +251,7 @@ async function generateDepartmentalReport(parameters: any, userId: string) {
       {
         title: 'Ranking Departamental',
         headers: ['Funcionário', 'Pontuação Média', 'Avaliações'],
-        rows: metrics?.map((m: any) => [
+        rows: metrics?.map(m => [
           m.users_unified?.name || 'N/A',
           m.overall_score?.toFixed(2) || '0.00',
           '1'
@@ -260,6 +264,7 @@ async function generateDepartmentalReport(parameters: any, userId: string) {
 // Gerar relatório executivo
 async function generateExecutiveReport(parameters: any, userId: string) {
   const { periodStart, periodEnd } = parameters;
+
   const supabase = getSupabaseClient();
 
   // Buscar dados gerais

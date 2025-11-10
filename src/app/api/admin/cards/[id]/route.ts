@@ -4,6 +4,8 @@ import { isAdminFromRequest } from '@/lib/auth';
 import * as Icons from 'react-icons/fi';
 import { IconType } from 'react-icons';
 
+export const dynamic = 'force-dynamic';
+
 // Função para converter cards do banco de dados para o formato da aplicação
 function convertDatabaseCard(card: any) {
   // Converter o nome do ícone para o componente do ícone

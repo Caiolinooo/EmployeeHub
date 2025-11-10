@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     // Obter configurações do Supabase
@@ -19,15 +21,13 @@ export async function GET(request: NextRequest) {
 
     // Verificar se as tabelas existem
     const tables = [
-      'users_unified',
-      'criterios',
-      'avaliacoes',
-      'periodos_avaliacao',
-      'autoavaliacoes',
-      'lideres',
-      'historico_avaliacao'
+      'funcionarios',  // Tabela de funcionários
+      'criterios',     // Critérios de avaliação
+      'avaliacoes_desempenho', // Avaliações (nome correto)
+      'periodos_avaliacao',    // Períodos de avaliação (será criado pela migration)
+      'pontuacoes'     // Pontuações das avaliações
     ];
-    const results: Record<string, boolean> = {};
+    const results: Record<string, any> = {};
 
     for (const table of tables) {
       try {
@@ -39,13 +39,13 @@ export async function GET(request: NextRequest) {
 
         if (error) {
           console.error(`Erro ao verificar tabela ${table}:`, error);
-          results[table] = false;
+          results[table] = { exists: false, error: error.message };
         } else {
-          results[table] = true;
+          results[table] = { exists: true, error: null };
         }
       } catch (err) {
         console.error(`Erro ao verificar tabela ${table}:`, err);
-        results[table] = false;
+        results[table] = { exists: false, error: String(err) };
       }
     }
 

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { withPermission } from '@/lib/api-auth';
 
+export const dynamic = 'force-dynamic';
+
 // GET - Obter uma notícia pelo ID
 export async function GET(
   request: NextRequest,

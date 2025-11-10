@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 // Obter URLs e chaves para informações de debug
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || '';

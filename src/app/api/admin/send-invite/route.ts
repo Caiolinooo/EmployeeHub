@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, handleApiError } from '@/lib/api-utils';
 import { sendInviteWithRegisterLinkEmail } from '@/lib/notifications';
 
+export const dynamic = 'force-dynamic';
+
 // POST /api/admin/send-invite
 export async function POST(request: NextRequest) {
   try {

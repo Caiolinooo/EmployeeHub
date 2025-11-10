@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 // Secure this endpoint with a static admin token in env
 // Set ADMIN_API_TOKEN in your environment and send it via Authorization: Bearer <token>
 function requireAdminAuth(req: NextRequest) {

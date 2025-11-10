@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyTokenFromRequest } from '@/lib/auth';
+import { verifyRequestToken } from '@/lib/auth';
 import { WorkflowStatistics } from '@/types/workflows';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     // Verificar autenticação
-    const authResult = await verifyTokenFromRequest(request);
+    const authResult = verifyRequestToken(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,
@@ -19,8 +20,7 @@ export async function POST(
       }, { status: 401 });
     }
 
-    const resolvedParams = await params;
-    const workflowId = resolvedParams.id;
+    const workflowId = params.id;
 
     // Buscar workflow original
     const { data: originalWorkflow, error: fetchError } = await supabase

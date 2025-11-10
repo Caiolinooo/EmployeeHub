@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { initAvaliacaoModule } from '@/lib/avaliacao-module';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Rota para listar funcionários
  */

@@ -3,6 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import { isAdminFromRequest } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 // POST - Criar uma nova pasta
 export async function POST(request: NextRequest) {
   try {

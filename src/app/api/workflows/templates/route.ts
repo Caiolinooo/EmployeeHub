@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyTokenFromRequest, verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { verifyRequestToken, extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { WorkflowTemplate } from '@/types/workflows';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
@@ -126,7 +127,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyTokenFromRequest(request);
+    const authResult = verifyRequestToken(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,
@@ -240,7 +241,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authResult = await verifyTokenFromRequest(request);
+    const authResult = verifyRequestToken(request);
     if (!authResult.valid || !authResult.payload) {
       return NextResponse.json({
         success: false,

@@ -4,6 +4,8 @@ import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
 import { sendReimbursementConfirmationEmail } from '@/lib/notifications';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticação
