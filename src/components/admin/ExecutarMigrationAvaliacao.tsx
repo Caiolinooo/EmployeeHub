@@ -15,10 +15,20 @@ export default function ExecutarMigrationAvaliacao() {
     setSuccess(false);
 
     try {
+      // Obter o token de autenticação do localStorage
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        setError('Token de autenticação não encontrado. Por favor, faça login novamente.');
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch('/api/avaliacao/run-migration', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
       });
 
