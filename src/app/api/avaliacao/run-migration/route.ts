@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase';
+import { isAdminFromRequest } from '@/lib/auth';
 
 /**
  * API para executar a migration do módulo de avaliação
@@ -7,26 +8,9 @@ import { createClient } from '@/utils/supabase/server';
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
-
     // Verificar se o usuário é administrador
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { success: false, error: 'Não autenticado' },
-        { status: 401 }
-      );
-    }
-
-    // Verificar se é admin
-    const { data: profile } = await supabase
-      .from('users_unified')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.role !== 'ADMIN') {
+    const adminCheck = await isAdminFromRequest(request);
+    if (!adminCheck.isAdmin) {
       return NextResponse.json(
         { success: false, error: 'Apenas administradores podem executar migrations' },
         { status: 403 }
@@ -131,7 +115,7 @@ export async function POST(request: NextRequest) {
 
     for (let i = 0; i < migrations.length; i++) {
       try {
-        const { error } = await supabase.rpc('exec_sql', { sql: migrations[i] });
+        const { error } = await supabaseAdmin.rpc('execute_sql', { sql: migrations[i] });
 
         if (error) {
           errors.push({ step: i + 1, error: error.message });
@@ -141,7 +125,7 @@ export async function POST(request: NextRequest) {
       } catch (err) {
         // Se o RPC não existir, tentar executar diretamente
         try {
-          const { error } = await supabase.from('_migration_temp').select('*').limit(0);
+          const { error } = await supabaseAdmin.from('_migration_temp').select('*').limit(0);
           if (error) {
             console.warn('Migration step', i + 1, 'skipped or already executed');
           }
