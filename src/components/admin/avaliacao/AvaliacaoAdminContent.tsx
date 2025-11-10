@@ -7,7 +7,7 @@ import MainLayout from '@/components/Layout/MainLayout';
 import { CreateCriteriosTable } from '@/components/admin/avaliacao/CreateCriteriosTable';
 import { ImportCriteriosButton } from '@/components/admin/avaliacao/ImportCriteriosButton';
 import PainelPeriodosAvaliacao from '@/components/admin/PainelPeriodosAvaliacao';
-import PainelGerentesAvaliacao from '@/components/admin/PainelGerentesAvaliacao';
+import PainelGerentesAvaliacao from '@/components/admin/PainelConfigGerentesAvaliacaoAdvanced';
 import PainelLideresSetor from '@/components/admin/PainelLideresSetor';
 import ExecutarMigrationAvaliacao from '@/components/admin/ExecutarMigrationAvaliacao';
 import DiagnosticoAdmin from '@/components/admin/DiagnosticoAdmin';

@@ -6,11 +6,15 @@ import { supabase } from '@/lib/supabase';
 
 interface Funcionario {
   id: string;
-  nome: string;
-  cargo: string;
-  departamento: string;
+  first_name: string;
+  last_name: string;
+  position: string;
+  department: string;
   email: string;
-  is_gerente_avaliacao: boolean;
+  role: string;
+  is_authorized: boolean;
+  active: boolean;
+  is_gerente_avaliacao?: boolean;
 }
 
 export default function PainelGerentesAvaliacao() {
@@ -27,21 +31,27 @@ export default function PainelGerentesAvaliacao() {
   const carregarFuncionarios = async () => {
     try {
       const { data, error } = await supabase
-        .from('funcionarios')
-        .select('id, nome, cargo, departamento, email, is_gerente_avaliacao')
-        .eq('status', 'ativo')
-        .order('nome');
+        .from('users_unified')
+        .select('id, first_name, last_name, position, department, email, role, is_authorized, active')
+        .eq('is_authorized', true)
+        .eq('active', true)
+        .order('first_name');
 
       if (error) {
         console.error('Erro ao carregar funcionários:', error);
-        // Verificar se é um erro de coluna não encontrada (migration não executada)
-        if (error.message && (error.message.includes('column') || error.message.includes('does not exist'))) {
-          setMigrationError(true);
-        }
+        setMigrationError(true);
         return;
       }
 
-      setFuncionarios(data || []);
+      // Mapear dados para o formato esperado
+      const funcionariosMapeados = (data || []).map(user => ({
+        ...user,
+        nome: `${user.first_name} ${user.last_name}`.trim(),
+        cargo: user.position,
+        is_gerente_avaliacao: user.role === 'ADMIN' || user.role === 'MANAGER'
+      }));
+
+      setFuncionarios(funcionariosMapeados);
       setMigrationError(false);
     } catch (error) {
       console.error('Erro ao carregar funcionários:', error);
@@ -53,32 +63,22 @@ export default function PainelGerentesAvaliacao() {
 
   const toggleGerenteAvaliacao = async (funcionarioId: string, isGerente: boolean) => {
     setUpdating(funcionarioId);
-    try {
-      const { error } = await supabase
-        .from('funcionarios')
-        .update({ is_gerente_avaliacao: !isGerente })
-        .eq('id', funcionarioId);
 
-      if (error) {
-        console.error('Erro ao atualizar gerente:', error);
-        alert('Erro ao atualizar gerente de avaliação');
-        return;
-      }
+    // Apenas mostrar feedback visual pois não temos a coluna na tabela users_unified
+    // O status de gerente é baseado na role (ADMIN/MANAGER)
+    alert(`Status de gerente: ${!isGerente ? 'Sim' : 'Não'} (baseado na role do usuário)`);
 
-      await carregarFuncionarios();
-    } catch (error) {
-      console.error('Erro ao atualizar gerente:', error);
-      alert('Erro ao atualizar gerente de avaliação');
-    } finally {
-      setUpdating(null);
-    }
+    // Recarregar para atualizar dados
+    await carregarFuncionarios();
+    setUpdating(null);
   };
 
   const funcionariosFiltrados = funcionarios.filter(f =>
-    f.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    f.cargo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    f.departamento?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    f.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    `${f.first_name} ${f.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    f.position?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    f.department?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    f.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    f.role?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const gerentes = funcionariosFiltrados.filter(f => f.is_gerente_avaliacao);

@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff, FiArrowUp, FiArrowDown, FiX, FiLock, FiCheck, FiInfo, FiDatabase } from 'react-icons/fi';
 import { DashboardCard } from '@/data/cards';
 import * as Icons from 'react-icons/fi';
@@ -383,7 +383,7 @@ export default function CardsPage() {
   });
 
   // Carregar cards
-  const loadCards = async () => {
+  const loadCards = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -415,10 +415,10 @@ export default function CardsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   // Verificar se a tabela cards existe
-  const checkCardsTable = async () => {
+  const checkCardsTable = useCallback(async () => {
     try {
       // Obter o token de autenticação do localStorage
       const token = localStorage.getItem('token');
@@ -471,7 +471,7 @@ export default function CardsPage() {
       setTableExists(false);
       return false;
     }
-  };
+  }, [t]);
 
   // Verificar o status da migração
   const checkMigrationStatus = async () => {

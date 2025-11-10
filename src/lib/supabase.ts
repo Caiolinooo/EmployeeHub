@@ -159,6 +159,8 @@ export const supabase = getSupabaseClient();
 // Para o cliente admin, precisamos usar uma função assíncrona
 let _supabaseAdminPromise: Promise<SupabaseClient> | null = null;
 
+export { getSupabaseAdminClient };
+
 export function getSupabaseAdmin(): Promise<SupabaseClient> {
   if (!_supabaseAdminPromise) {
     _supabaseAdminPromise = getSupabaseAdminClient();

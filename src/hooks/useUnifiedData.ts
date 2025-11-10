@@ -58,24 +58,26 @@ export function useUnifiedData(options: UseUnifiedDataOptions): UseUnifiedDataRe
             if (userId) {
               const cards = await getCardsCached({ userId, userRole });
               const existing = new Set(loadedItems.map((i: any) => i.href));
-              const cardItems = (cards || []).map((c: any) => ({
-                id: c.id,
-                title: c.title,
-                description: c.description || '',
-                href: c.href,
-                icon: FiGrid,
-                iconName: c.iconName || c.icon || 'FiGrid',
-                external: false,
-                enabled: c.enabled !== undefined ? c.enabled : true,
-                order: c.order ?? 999,
-                adminOnly: c.adminOnly,
-                managerOnly: c.managerOnly,
-                allowedRoles: c.allowedRoles,
-                allowedUserIds: c.allowedUserIds,
-                showInMenu: true,
-                showInDashboard: true,
-                source: 'supabase' as const
-              }));
+              const cardItems = (cards || [])
+                .filter((c: any) => c.href && c.href.trim() !== '') // Filtrar itens sem href ou com href vazio
+                .map((c: any) => ({
+                  id: c.id,
+                  title: c.title,
+                  description: c.description || '',
+                  href: c.href,
+                  icon: FiGrid,
+                  iconName: c.iconName || c.icon || 'FiGrid',
+                  external: false,
+                  enabled: c.enabled !== undefined ? c.enabled : true,
+                  order: c.order ?? 999,
+                  adminOnly: c.adminOnly,
+                  managerOnly: c.managerOnly,
+                  allowedRoles: c.allowedRoles,
+                  allowedUserIds: c.allowedUserIds,
+                  showInMenu: true,
+                  showInDashboard: true,
+                  source: 'supabase' as const
+                }));
               const toAdd = cardItems.filter((ci: any) => ci.enabled && !existing.has(ci.href));
               if (toAdd.length) {
                 loadedItems = [...loadedItems, ...toAdd].sort((a: any, b: any) => (a.order ?? 999) - (b.order ?? 999));

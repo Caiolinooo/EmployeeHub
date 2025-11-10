@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { FiAlertTriangle, FiRefreshCw, FiHome } from 'react-icons/fi';
-import { useI18n } from '@/contexts/I18nContext';
 
 export default function GlobalError({
   error,
@@ -11,7 +10,8 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const { t } = useI18n();
+  // Simple translation function since we can't use I18n context here
+  const t = (key: string, fallback: string) => fallback;
 
   // Log the error to help with debugging
   React.useEffect(() => {

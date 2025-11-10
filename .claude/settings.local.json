@@ -8,7 +8,19 @@
       "Bash(git merge:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(npm run clean:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run dev)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(npm run db:apply-foreign-keys:*)",
+      "Bash(psql:*)",
+      "Bash(node:*)",
+      "Bash(taskkill:*)",
+      "Bash(curl:*)",
+      "Bash(cmd:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []

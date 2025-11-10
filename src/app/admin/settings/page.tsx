@@ -247,16 +247,15 @@ export default function SettingsPage() {
         if (siteConfig?.refreshConfig) {
           console.log(t('admin.atualizandoContextoGlobalDeConfiguracoes'));
           await siteConfig.refreshConfig();
+          console.log('Contexto atualizado. Novo sidebarTitle:', siteConfig.config?.sidebarTitle);
         }
 
         // Limpar arquivos
         setLogoFile(null);
         setFaviconFile(null);
 
-        // Forçar recarregamento da página após 2 segundos para garantir que as mudanças sejam aplicadas
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
+        // Não recarregar a página - deixar o contexto atualizar automaticamente
+        console.log('Configurações salvas. O contexto deve atualizar automaticamente.');
       } catch (error) {
         console.error(t('admin.erroAoSalvarConfiguracoes'), error);
         setError(t('admin.erroAoSalvarConfiguracoesPorFavorTenteNovamente'));

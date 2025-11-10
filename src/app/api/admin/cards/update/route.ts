@@ -11,10 +11,10 @@ function convertDatabaseCard(card: any) {
   // Converter o nome do ícone para o componente do ícone
   let icon: IconType = Icons.FiGrid;
 
-  if (card.icon && typeof card.icon === 'string') {
+  if (card.icon_name && typeof card.icon_name === 'string') {
     // Garantir que o nome do ícone esteja no formato correto (PascalCase)
     // Se o nome não começar com 'Fi', adicionar o prefixo
-    const iconName = card.icon.startsWith('Fi') ? card.icon : `Fi${card.icon}`;
+    const iconName = card.icon_name.startsWith('Fi') ? card.icon_name : `Fi${card.icon_name}`;
 
     // Verificar se o ícone existe no objeto Icons
     if (Icons[iconName as keyof typeof Icons]) {
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
           title: body.title,
           description: body.description || '',
           href: body.href,
-          icon: migrationIconName,
+          icon_name: migrationIconName,
           color: body.color || 'blue',
           hover_color: body.hoverColor || 'blue',
           enabled: body.enabled !== undefined ? body.enabled : true,
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
                   title TEXT NOT NULL,
                   description TEXT,
                   href TEXT NOT NULL,
-                  icon TEXT,
+                  icon_name TEXT,
                   color TEXT,
                   hover_color TEXT,
                   external BOOLEAN DEFAULT false,
@@ -248,7 +248,7 @@ export async function POST(request: NextRequest) {
         title: body.title,
         description: body.description || '',
         href: body.href,
-        icon: iconName,
+        icon_name: iconName,
         color: body.color || 'blue',
         hover_color: body.hoverColor || 'blue', // Nota: Supabase usa snake_case
         enabled: body.enabled !== undefined ? body.enabled : true,

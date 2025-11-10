@@ -63,7 +63,19 @@ export async function POST(request: NextRequest) {
         observacoes: data.observacoes || '',
         pontuacao_total: 0 // Será calculado depois com base nas pontuações dos critérios
       })
-      .select()
+      .select(`
+        id,
+        funcionario_id,
+        avaliador_id,
+        periodo,
+        data_inicio,
+        data_fim,
+        status,
+        observacoes,
+        pontuacao_total,
+        created_at,
+        updated_at
+      `)
       .single();
 
     if (error) {

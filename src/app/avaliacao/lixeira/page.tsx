@@ -41,9 +41,18 @@ export default function LixeiraPage() {
         const { data, error } = await supabase
           .from('avaliacoes_desempenho')
           .select(`
-            *,
-            funcionario:funcionarios!avaliacoes_desempenho_funcionario_id_fkey(id, nome, email),
-            avaliador:funcionarios!avaliacoes_desempenho_avaliador_id_fkey(id, nome, email)
+            id,
+            funcionario_id,
+            avaliador_id,
+            periodo,
+            data_inicio,
+            data_fim,
+            status,
+            pontuacao_total,
+            observacoes,
+            created_at,
+            updated_at,
+            deleted_at
           `)
           .not('deleted_at', 'is', null)
           .order('deleted_at', { ascending: false });
@@ -52,8 +61,29 @@ export default function LixeiraPage() {
           throw error;
         }
 
+        // Buscar dados dos funcionários e avaliadores separadamente
+        const funcionariosIds = [...new Set(data?.map(item => item.funcionario_id).filter(Boolean) || [])];
+        const avaliadoresIds = [...new Set(data?.map(item => item.avaliador_id).filter(Boolean) || [])];
+
+        const { data: funcionarios } = await supabase
+          .from('users_unified')
+          .select('id, first_name, last_name, email')
+          .in('id', funcionariosIds);
+
+        const { data: avaliadores } = await supabase
+          .from('users_unified')
+          .select('id, first_name, last_name, email')
+          .in('id', avaliadoresIds);
+
+        // Combinar dados
+        const enrichedData = data?.map(item => ({
+          ...item,
+          funcionario: funcionarios?.find(f => f.id === item.funcionario_id),
+          avaliador: avaliadores?.find(a => a.id === item.avaliador_id)
+        })) || [];
+
         // Formatar dados
-        const avaliacoesFormatadas = data.map(item => ({
+        const avaliacoesFormatadas = enrichedData.map(item => ({
           id: item.id,
           funcionario_id: item.funcionario_id,
           avaliador_id: item.avaliador_id,
@@ -61,8 +91,8 @@ export default function LixeiraPage() {
           status: item.status || 'archived',
           created_at: item.created_at,
           deleted_at: item.deleted_at,
-          funcionario_nome: item.funcionario ? item.funcionario.nome || 'Desconhecido' : 'Desconhecido',
-          avaliador_nome: item.avaliador ? item.avaliador.nome || 'Desconhecido' : 'Desconhecido'
+          funcionario_nome: item.funcionario ? `${item.funcionario.first_name || ''} ${item.funcionario.last_name || ''}`.trim() || 'Desconhecido' : 'Desconhecido',
+          avaliador_nome: item.avaliador ? `${item.avaliador.first_name || ''} ${item.avaliador.last_name || ''}`.trim() || 'Desconhecido' : 'Desconhecido'
         }));
 
         setAvaliacoes(avaliacoesFormatadas);

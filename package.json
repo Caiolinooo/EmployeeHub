@@ -1,6 +1,6 @@
 {
   "name": "painel-abz",
-  "version": "0.1.0",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
@@ -32,6 +32,7 @@
     "db:verify-solution": "node scripts/verify-solution.js",
     "db:fix-rls": "node scripts/fix-rls-client-only.js && node scripts/fix-storage-rls.js",
     "db:fix-sql-functions": "node scripts/create-sql-functions.js",
+    "db:apply-foreign-keys": "node scripts/apply-foreign-keys.js",
     "db:fix-rls-direct": "node scripts/fix-rls-policies-direct.js",
     "db:fix-rls-client": "node scripts/fix-rls-client.js",
     "db:fix-rls-client-only": "node scripts/fix-rls-client-only.js",
@@ -112,7 +113,7 @@
     "pdf-parse": "^1.1.1",
     "pdfjs-dist": "4.8.69",
     "pdfkit": "^0.17.2",
-    "pg": "^8.15.6",
+    "pg": "^8.16.3",
     "playwright": "1.55.1",
     "puppeteer": "^24.22.2",
     "qrcode": "^1.5.4",

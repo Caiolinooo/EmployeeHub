@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initAvaliacaoModule } from '@/lib/avaliacao-module';
-import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { verifyTokenFromRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,22 +10,10 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader || undefined);
+    const { user } = await verifyTokenFromRequest(request);
 
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Não autorizado' },
-        { status: 401 }
-      );
-    }
-
-    const payload = verifyToken(token);
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Token inválido ou expirado' },
-        { status: 401 }
-      );
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'MANAGER')) {
+      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
     // Inicializar o módulo
@@ -65,22 +53,10 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticação
-    const authHeader = request.headers.get('authorization');
-    const token = extractTokenFromHeader(authHeader || undefined);
+    const { user } = await verifyTokenFromRequest(request);
 
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Não autorizado' },
-        { status: 401 }
-      );
-    }
-
-    const payload = verifyToken(token);
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Token inválido ou expirado' },
-        { status: 401 }
-      );
+    if (!user || user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
     // Inicializar o módulo

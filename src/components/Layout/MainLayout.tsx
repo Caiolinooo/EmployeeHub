@@ -55,14 +55,59 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const { user, profile, logout, isAdmin } = useSupabaseAuth();
   const { t, locale } = useI18n();
   const { config } = useSiteConfig();
+
+  // Use unified data system for menu items
+  const { items: menuItems, loading: menuLoading } = useMenuItems(true);
+
+  // Debug para monitorar mudanças no config
+  useEffect(() => {
+    console.log('🔧 MainLayout: Config atualizado', {
+      sidebarTitle: config?.sidebarTitle,
+      title: config?.title,
+      timestamp: Date.now()
+    });
+  }, [config]);
   const [isI18nReady, setIsI18nReady] = useState(false);
   const [, forceUpdate] = useState({});
 
   // Forçar re-render quando o locale mudar
   useEffect(() => {
     console.log('🌐 Locale mudou para:', locale);
+    console.log('🔄 Forçando atualização do MainLayout devido à mudança de locale');
     forceUpdate({});
   }, [locale]);
+
+  // Forçar atualização dos itens do menu quando o locale mudar
+  useEffect(() => {
+    console.log('🔄 Locale mudou, atualizando exibição dos itens do menu');
+    // Sempre limpar o cache do unifiedDataService para forçar recarregamento com novo locale
+    import('@/lib/unifiedDataService').then(({ unifiedDataService }) => {
+      unifiedDataService.clearCache();
+      console.log('🔄 Cache limpo devido à mudança de locale para:', locale);
+    });
+    // Forçar re-render para atualizar os textos
+    forceUpdate({});
+  }, [locale]);
+
+  // Escutar evento customizado de mudança de locale
+  useEffect(() => {
+    const handleLocaleChange = (event: CustomEvent) => {
+      console.log('🌐 Evento localeChanged recebido:', event.detail.locale);
+      // Limpar cache e forçar recarregamento dos dados do menu
+      import('@/lib/unifiedDataService').then(({ unifiedDataService }) => {
+        unifiedDataService.clearCache();
+        // Forçar atualização do menu
+        forceUpdate({});
+      });
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('localeChanged', handleLocaleChange as EventListener);
+      return () => {
+        window.removeEventListener('localeChanged', handleLocaleChange as EventListener);
+      };
+    }
+  }, []);
 
   // Verificar se o I18n está pronto
   useEffect(() => {
@@ -90,9 +135,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
   useEffect(() => {
     console.log('🔍 DEBUG: isCollapsed mudou para:', isCollapsed);
   }, [isCollapsed]);
-
-  // Use unified data system for menu items
-  const { items: menuItems, loading: menuLoading } = useMenuItems(true);
 
   // Debug: Log menu items
   useEffect(() => {
@@ -195,38 +237,35 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 const isActive = pathname ? (pathname === item.href || pathname.startsWith(item.href + '/')) : false;
                 const IconComponent = item.icon;
 
-              // Obter o texto a ser exibido com tradução baseada no locale
-              let displayLabel = '';
-              if (menuItems.length > 0) {
-                // Dados do banco - usar title_pt ou title_en baseado no locale
-                const itemWithTranslation = item as any;
+              // Obter o texto a ser exibido - o hook useUnifiedData já traduz os itens
+              let displayLabel = item.title || item.id;
 
-                // Debug para o primeiro item
-                if (item.id === menuItems[0]?.id) {
-                  console.log('🔍 Menu Item Debug:', {
-                    id: item.id,
-                    locale: locale,
-                    title: itemWithTranslation.title,
-                    title_pt: itemWithTranslation.title_pt,
-                    title_en: itemWithTranslation.title_en,
-                    hasTranslations: !!(itemWithTranslation.title_pt && itemWithTranslation.title_en)
-                  });
-                }
+              // Para itens do menu principal (hardcoded), tentar traduzir via t()
+              if (menuItems.length === 0 && (item as any).label) {
+                displayLabel = t((item as any).label) || item.title || item.id;
+              }
 
-                // Usar traduções se disponíveis
-                if (locale === 'en-US' && itemWithTranslation.title_en) {
-                  displayLabel = itemWithTranslation.title_en;
-                } else if (locale === 'pt-BR' && itemWithTranslation.title_pt) {
-                  displayLabel = itemWithTranslation.title_pt;
-                } else if (itemWithTranslation.title) {
-                  // Fallback para title se não houver traduções específicas
-                  displayLabel = itemWithTranslation.title;
-                } else {
-                  displayLabel = item.id;
-                }
-              } else {
-                // Dados hardcoded - traduzir usando t()
-                displayLabel = t((item as any).label) || item.id;
+              // Para itens do menu hardcoded (quando não vem do banco), tentar traduzir
+              if ((item as any).label && !item.title_pt && !item.title_en) {
+                displayLabel = t((item as any).label) || item.title || item.id;
+              }
+
+              // Debug para o primeiro item
+              if (item.id === menuItems[0]?.id) {
+                console.log('🔍 Menu Item Debug:', {
+                  id: item.id,
+                  locale: locale,
+                  displayLabel: displayLabel,
+                  itemTitle: item.title,
+                  label: (item as any).label,
+                  isFromDatabase: menuItems.length > 0
+                });
+              }
+
+              // Verificação de segurança para garantir que href não é undefined
+              if (!item.href) {
+                console.warn('Menu item sem href encontrado:', item);
+                return null;
               }
 
               return (

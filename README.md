@@ -4,13 +4,14 @@
 
 ![Painel ABZ Logo](public/images/LC1_Azul.png)
 
-[![Next.js](https://img.shields.io/badge/Next.js-14.2.3-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15.0-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-Database-green?style=for-the-badge&logo=supabase)](https://supabase.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 [![Netlify](https://img.shields.io/badge/Netlify-Deploy-00C7B7?style=for-the-badge&logo=netlify)](https://netlify.com/)
-[![React](https://img.shields.io/badge/React-18.2.0-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
+[![React](https://img.shields.io/badge/React-19.0-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-336791?style=for-the-badge&logo=postgresql)](https://postgresql.org/)
+[![Version](https://img.shields.io/badge/Version-1.1.0-orange?style=for-the-badge)](#)
 
 **Sistema completo de gestão empresarial com foco em reembolsos, avaliações e administração de usuários**
 
@@ -92,7 +93,8 @@ graph TB
 
 | Categoria | Tecnologia | Versão | Descrição |
 |-----------|------------|--------|-----------|
-| **Frontend** | Next.js | 14.2.3 | Framework React com SSR |
+| **Frontend** | Next.js | 15.0 | Framework React com SSR |
+| **React** | React | 19.0 | Biblioteca UI reativa |
 | **Linguagem** | TypeScript | 5.0+ | Tipagem estática |
 | **Styling** | Tailwind CSS | 3.4+ | Framework CSS utilitário |
 | **Database** | Supabase | Latest | PostgreSQL como serviço |
@@ -278,10 +280,15 @@ painel-abz/
 - Configurações de email personalizadas por usuário
 
 ### Avaliação de Desempenho
-- Avaliação de funcionários
-- Métricas de desempenho
-- Histórico de avaliações
-- Relatórios de desempenho
+- **Sistema Completo**: Criação, edição e gestão de avaliações
+- **Workflow**: Pendente → Em andamento → Finalizado
+- **Soft Delete**: Lixeira com exclusão automática após 30 dias
+- **Critérios Personalizáveis**: Sistema de pontuação flexível
+- **Autoavaliação**: Funcionários podem se autoavaliar
+- **Avaliação por Gerentes**: Sistema de aprovação hierárquico
+- **Histórico Completo**: Registro de todas as avaliações
+- **Relatórios de Desempenho**: Análise detalhada com gráficos
+- **Notificações Automáticas**: Alertas sobre novas avaliações
 
 ### Documentos
 - Repositório de documentos
@@ -390,6 +397,16 @@ painel-abz/
 ---
 
 ## 🆕 Atualizações Recentes
+
+### **Novembro 2025 (v1.1.0)**
+- ✅ **Next.js 15 + React 19**: Atualização para as versões mais recentes do framework
+- ✅ **Sistema de Avaliação Refatorado**: Correção de bugs críticos e melhoria de performance
+  - Corrigido erro 400 na criação de avaliações (coluna resultado)
+  - Implementado sistema de soft delete com lixeira (30 dias)
+  - Melhorado sistema de tradução do menu lateral
+  - Otimizado cache e performance do sistema
+- ✅ **Segurança Aprimorada**: Hardening de autenticação e permissões
+- ✅ **Estabilidade do Sistema**: Correção de bugs e melhorias gerais
 
 ### **Setembro 2025**
 - ✅ **Academia Corporativa**: Sistema completo de cursos, certificados e templates

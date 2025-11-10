@@ -21,13 +21,14 @@
  *
  * Sistema de autenticação e autorização
  */
+import { NextRequest } from 'next/server';
 import { generateVerificationCode, sendVerificationSMS, isVerificationCodeValid } from './sms';
 // Importar do módulo server-side apenas em contexto de servidor
 // Não importar diretamente aqui para evitar problemas com módulos Node.js no browser
 // import { sendVerificationEmail } from './email';
 import { checkUserAuthorization, createAccessRequest } from './authorization-pg';
 import { sendVerificationCode } from './verification';
-import { supabase } from './supabase';
+import { supabase, getUserById } from './supabase';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 // Não importar nodemailer diretamente aqui para evitar problemas com módulos Node.js no browser
@@ -1064,6 +1065,34 @@ export function isAdmin(user: User | null): boolean {
 }
 
 // Função para verificar se o usuário é administrador a partir de uma requisição
+export async function verifyTokenFromRequest(request: NextRequest): Promise<{ user: any } | { error: string }> {
+  try {
+    // Extrair e verificar o token
+    const authHeader = request.headers.get('authorization');
+    const token = extractTokenFromHeader(authHeader || '');
+
+    if (!token) {
+      return { error: 'Token não encontrado' };
+    }
+
+    const payload = verifyToken(token);
+    if (!payload) {
+      return { error: 'Token inválido ou expirado' };
+    }
+
+    // Buscar usuário completo
+    const user = await getUserById(payload.userId);
+    if (!user) {
+      return { error: 'Usuário não encontrado' };
+    }
+
+    return { user };
+  } catch (error) {
+    console.error('Erro ao verificar token da requisição:', error);
+    return { error: 'Erro ao verificar token' };
+  }
+}
+
 export async function isAdminFromRequest(request: Request): Promise<{ isAdmin: boolean; userId?: string }> {
   try {
     // Extrair e verificar o token

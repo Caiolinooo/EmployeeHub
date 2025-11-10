@@ -342,7 +342,7 @@ class UnifiedDataService {
           return false;
         }
 
-        return item.enabled;
+        return item.enabled && item.href && item.href.trim() !== '';
       });
     }
 

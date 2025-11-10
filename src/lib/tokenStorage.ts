@@ -371,11 +371,14 @@ export const fetchWithToken = async (url: string, options: RequestInit = {}): Pr
     // Log detalhado para depuração
     console.log(`fetchWithToken: Resposta de ${url} - Status: ${response.status}`);
 
+    // Clonar a resposta para permitir múltiplas leituras se necessário
+    const clonedResponse = response.clone();
+
     if (!response.ok) {
       console.error(`fetchWithToken: Erro na resposta - Status: ${response.status}, URL: ${url}`);
-      // Tentar obter detalhes do erro
+      // Tentar obter detalhes do erro da resposta clonada
       try {
-        const errorText = await response.text();
+        const errorText = await clonedResponse.text();
         console.error(`fetchWithToken: Detalhes do erro: ${errorText}`);
       } catch (textError) {
         console.error(`fetchWithToken: Não foi possível obter detalhes do erro: ${textError}`);
