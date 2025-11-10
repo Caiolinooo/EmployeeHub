@@ -1,13 +1,28 @@
 # 🚀 Como Executar a Migration do Módulo de Avaliação
 
-## ⚠️ Problema
+## ⚠️ Problemas Comuns
 
-Você está vendo erros como:
+### Erro de Foreign Keys (MAIS COMUM)
+Se você está vendo este erro:
+```
+Could not find a relationship between 'avaliacoes_desempenho' and 'funcionarios'
+```
+
+**🎯 Solução Rápida**:
+1. No painel de admin, vá para: **Admin → Avaliação → Banco de Dados**
+2. Clique em **"Verificar Foreign Keys"**
+3. Se mostrar que faltam foreign keys, abra o arquivo:
+   - `supabase/migrations/FIX_FOREIGN_KEYS.sql`
+4. Copie o conteúdo do **PASSO 2**
+5. Execute no Supabase SQL Editor
+6. Pronto! Recarregue a página
+
+### Outros Erros
 - "Tabelas não encontradas: periodos_avaliacao"
 - Erro 400 ao carregar gerentes/líderes
 - "Migration Não Executada"
 
-## ✅ Solução: Executar a Migration Manualmente no Supabase
+## ✅ Solução: Executar a Migration Completa no Supabase
 
 ### Passo 1: Copiar o SQL da Migration
 
