@@ -8,14 +8,32 @@ import { isAdminFromRequest } from '@/lib/auth';
  */
 export async function POST(request: NextRequest) {
   try {
+    // Log de depuração: verificar headers recebidos
+    const authHeader = request.headers.get('authorization');
+    console.log('=== DEBUG RUN-MIGRATION ===');
+    console.log('Authorization header:', authHeader ? `${authHeader.substring(0, 20)}...` : 'NOT FOUND');
+
     // Verificar se o usuário é administrador
     const adminCheck = await isAdminFromRequest(request);
+    console.log('Admin check result:', adminCheck);
+
     if (!adminCheck.isAdmin) {
+      console.log('Access denied - user is not admin');
       return NextResponse.json(
-        { success: false, error: 'Apenas administradores podem executar migrations' },
+        {
+          success: false,
+          error: 'Apenas administradores podem executar migrations',
+          debug: {
+            isAdmin: adminCheck.isAdmin,
+            userId: adminCheck.userId,
+            hasAuthHeader: !!authHeader
+          }
+        },
         { status: 403 }
       );
     }
+
+    console.log('Admin check passed, proceeding with migration');
 
     // Executar as migrations
     const migrations = [

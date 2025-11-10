@@ -10,6 +10,7 @@ import PainelPeriodosAvaliacao from '@/components/admin/PainelPeriodosAvaliacao'
 import PainelGerentesAvaliacao from '@/components/admin/PainelGerentesAvaliacao';
 import PainelLideresSetor from '@/components/admin/PainelLideresSetor';
 import ExecutarMigrationAvaliacao from '@/components/admin/ExecutarMigrationAvaliacao';
+import DiagnosticoAdmin from '@/components/admin/DiagnosticoAdmin';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -167,6 +168,7 @@ export default function AvaliacaoAdminContent() {
                 </p>
 
                 <div className="grid grid-cols-1 gap-6">
+                  <DiagnosticoAdmin />
                   <ExecutarMigrationAvaliacao />
                   <CreateCriteriosTable />
                   <ImportCriteriosButton />
