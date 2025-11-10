@@ -6,6 +6,7 @@ import { FiSave, FiSend, FiUser, FiTarget, FiTrendingUp, FiBookOpen } from 'reac
 import { getCriteriosPorTipoUsuario } from '@/data/criterios-avaliacao';
 import { isUsuarioLider } from '@/lib/utils/lideranca';
 import { WorkflowAvaliacaoService } from '@/lib/services/workflow-avaliacao';
+import SeletorEstrelas, { LegendaEscalaAvaliacao } from './SeletorEstrelas';
 import type { CriterioAvaliacao } from '@/data/criterios-avaliacao';
 import type { Autoavaliacao } from '@/lib/services/workflow-avaliacao';
 
@@ -242,40 +243,39 @@ export default function FormularioAutoavaliacao({
         </div>
       </div>
 
-      {/* Avaliação por Critérios */}
+      {/* Legenda da Escala de Avaliação */}
       <div className="mt-12">
+        <LegendaEscalaAvaliacao />
+      </div>
+
+      {/* Avaliação por Critérios */}
+      <div className="mt-8">
         <h3 className="text-xl font-semibold text-gray-900 mb-6">
           Autoavaliação por Critérios
         </h3>
         <div className="grid gap-6">
           {criterios.map((criterio) => (
-            <div key={criterio.id} className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <h4 className="font-medium text-gray-900">{criterio.nome}</h4>
-                  <p className="text-sm text-gray-600">{criterio.descricao}</p>
+            <div key={criterio.id} className="bg-white p-6 rounded-lg border-2 border-gray-200 hover:border-blue-300 transition-colors">
+              <div className="mb-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 text-lg">{criterio.nome}</h4>
+                    <p className="text-sm text-gray-600 mt-1">{criterio.descricao}</p>
+                  </div>
                   {criterio.apenas_lideres && (
-                    <span className="inline-block mt-1 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
-                      Critério de Liderança
+                    <span className="ml-3 px-3 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full whitespace-nowrap">
+                      Liderança
                     </span>
                   )}
                 </div>
               </div>
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600">Nota:</span>
-                {[1, 2, 3, 4, 5].map((nota) => (
-                  <label key={nota} className="flex items-center">
-                    <input
-                      type="radio"
-                      name={`criterio_${criterio.id}`}
-                      value={nota}
-                      checked={formData.autoavaliacao_criterios[criterio.id] === nota}
-                      onChange={() => handleCriterioChange(criterio.id, nota)}
-                      className="mr-1"
-                    />
-                    <span className="text-sm">{nota}</span>
-                  </label>
-                ))}
+              <div className="mt-4">
+                <SeletorEstrelas
+                  valor={formData.autoavaliacao_criterios[criterio.id] || 0}
+                  onChange={(nota) => handleCriterioChange(criterio.id, nota)}
+                  tamanho="md"
+                  mostrarLegenda={true}
+                />
               </div>
             </div>
           ))}

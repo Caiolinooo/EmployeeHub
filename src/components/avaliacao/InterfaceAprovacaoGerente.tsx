@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { WorkflowAvaliacaoService } from '@/lib/services/workflow-avaliacao';
 import { getCriteriosPorTipoUsuario } from '@/data/criterios-avaliacao';
 import { isUsuarioLider } from '@/lib/utils/lideranca';
+import SeletorEstrelas, { ExibicaoEstrelas } from './SeletorEstrelas';
 import type { CriterioAvaliacao } from '@/data/criterios-avaliacao';
 
 interface AvaliacaoParaAprovacao {
@@ -318,43 +319,48 @@ export default function InterfaceAprovacaoGerente({ gerenteId }: InterfaceAprova
 
                 <div className="grid gap-4">
                   {criterios.map((criterio) => (
-                    <div key={criterio.id} className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h5 className="font-medium text-gray-900">{criterio.nome}</h5>
-                          <p className="text-sm text-gray-600">{criterio.descricao}</p>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                          <div className="text-center">
-                            <p className="text-xs text-gray-500">Autoavaliação</p>
-                            <div className="flex items-center">
-                              <FiStar className="text-yellow-500 mr-1" size={16} />
-                              <span className="font-medium">
-                                {avaliacaoSelecionada.autoavaliacao.autoavaliacao_criterios[criterio.id] || 0}
+                    <div key={criterio.id} className="bg-white p-4 rounded-lg border border-gray-200">
+                      <div className="mb-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h5 className="font-semibold text-gray-900">{criterio.nome}</h5>
+                            <p className="text-sm text-gray-600 mt-1">{criterio.descricao}</p>
+                            {criterio.apenas_lideres && (
+                              <span className="inline-block mt-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                                Critério de Liderança
                               </span>
-                            </div>
+                            )}
                           </div>
-                          {modoEdicao && (
-                            <div className="text-center">
-                              <p className="text-xs text-gray-500">Sua Avaliação</p>
-                              <select
-                                value={notasGerente[criterio.id] || 0}
-                                onChange={(e) => setNotasGerente(prev => ({
-                                  ...prev,
-                                  [criterio.id]: parseInt(e.target.value)
-                                }))}
-                                className="border border-gray-300 rounded px-2 py-1 text-sm"
-                              >
-                                <option value={0}>0</option>
-                                <option value={1}>1</option>
-                                <option value={2}>2</option>
-                                <option value={3}>3</option>
-                                <option value={4}>4</option>
-                                <option value={5}>5</option>
-                              </select>
-                            </div>
-                          )}
                         </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        {/* Autoavaliação do Colaborador */}
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <p className="text-xs font-medium text-blue-900 mb-2">Autoavaliação do Colaborador:</p>
+                          <ExibicaoEstrelas
+                            valor={avaliacaoSelecionada.autoavaliacao.autoavaliacao_criterios[criterio.id] || 0}
+                            tamanho="sm"
+                            mostrarValor={true}
+                            mostrarLabel={true}
+                          />
+                        </div>
+
+                        {/* Avaliação do Gerente (modo edição) */}
+                        {modoEdicao && (
+                          <div className="bg-green-50 p-3 rounded-lg">
+                            <p className="text-xs font-medium text-green-900 mb-2">Sua Avaliação (Gerente):</p>
+                            <SeletorEstrelas
+                              valor={notasGerente[criterio.id] || 0}
+                              onChange={(nota) => setNotasGerente(prev => ({
+                                ...prev,
+                                [criterio.id]: nota
+                              }))}
+                              tamanho="sm"
+                              mostrarLegenda={false}
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -369,16 +375,24 @@ export default function InterfaceAprovacaoGerente({ gerenteId }: InterfaceAprova
                 )}
               </div>
 
-              {/* Comentários do Gerente */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Comentários do Gerente
-                </label>
+              {/* Comentários do Gerente - Questão 15 */}
+              <div className="bg-orange-50 p-6 rounded-lg border-2 border-orange-200">
+                <div className="flex items-center mb-3">
+                  <FiMessageSquare className="text-orange-600 mr-2" size={20} />
+                  <div>
+                    <label className="block text-base font-semibold text-gray-900">
+                      Questão 15: Comentários do Avaliador
+                    </label>
+                    <p className="text-sm text-gray-600">
+                      Adicione seus comentários e observações finais sobre a avaliação
+                    </p>
+                  </div>
+                </div>
                 <textarea
                   value={comentarios}
                   onChange={(e) => setComentarios(e.target.value)}
-                  className="w-full h-32 border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Adicione seus comentários sobre a avaliação..."
+                  className="w-full h-32 border border-orange-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Descreva suas observações sobre o desempenho do colaborador, feedback geral, pontos de destaque, áreas que necessitam atenção especial, etc..."
                 />
               </div>
             </div>
