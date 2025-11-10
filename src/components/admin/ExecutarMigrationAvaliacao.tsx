@@ -119,19 +119,43 @@ export default function ExecutarMigrationAvaliacao() {
 
           {results?.needsManualExecution && results?.manualSql && (
             <div className="mt-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                <p className="text-sm font-semibold text-blue-900 mb-2">Instruções:</p>
+                {results?.instructions && (
+                  <ol className="list-decimal list-inside space-y-1 text-sm text-blue-800">
+                    {results.instructions.map((instruction: string, idx: number) => (
+                      <li key={idx}>{instruction}</li>
+                    ))}
+                  </ol>
+                )}
+              </div>
+
               <p className="font-semibold mb-2">SQL para executar manualmente:</p>
               <div className="bg-white border border-green-300 rounded p-3 text-xs">
-                <pre className="overflow-auto max-h-96 text-gray-800">{results.manualSql}</pre>
+                <pre className="overflow-auto max-h-96 text-gray-800 whitespace-pre-wrap">{results.manualSql}</pre>
               </div>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(results.manualSql);
-                  alert('SQL copiado para a área de transferência!');
-                }}
-                className="mt-2 px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
-              >
-                Copiar SQL
-              </button>
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(results.manualSql);
+                    alert('SQL copiado para a área de transferência!');
+                  }}
+                  className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                >
+                  Copiar SQL
+                </button>
+                <a
+                  href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/project/_/sql`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors inline-flex items-center"
+                >
+                  Abrir SQL Editor
+                  <svg className="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </div>
             </div>
           )}
         </div>
