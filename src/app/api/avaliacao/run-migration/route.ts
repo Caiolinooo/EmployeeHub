@@ -169,6 +169,7 @@ export async function POST(request: NextRequest) {
 
     const results = [];
     const errors = [];
+    let needsManualExecution = false;
 
     // Executar migrations via SQL direto usando a REST API do Supabase
     for (let i = 0; i < migrations.length; i++) {
@@ -176,56 +177,76 @@ export async function POST(request: NextRequest) {
         console.log(`Executing migration step ${i + 1}/${migrations.length}`);
 
         // Tentar primeiro via RPC se existir
-        try {
-          const { error } = await supabaseAdmin.rpc('execute_sql', { sql: migrations[i] });
+        const { error } = await supabaseAdmin.rpc('execute_sql', { sql: migrations[i] });
 
-          if (error) {
-            console.warn(`Step ${i + 1} via RPC failed:`, error.message);
-            // Continuar mesmo com erro, pois pode ser porque já existe
-            if (error.message.includes('already exists') || error.message.includes('does not exist')) {
-              results.push({ step: i + 1, success: true, note: 'Already applied or not needed' });
-            } else {
-              errors.push({ step: i + 1, error: error.message });
-            }
-          } else {
-            results.push({ step: i + 1, success: true });
+        if (error) {
+          console.warn(`Step ${i + 1} via RPC failed:`, error.message);
+
+          // Verificar se a função execute_sql não existe
+          if (error.message.includes('Could not find the function') ||
+              error.message.includes('function') && error.message.includes('does not exist')) {
+            console.log(`Step ${i + 1}: execute_sql function not available, will require manual execution`);
+            needsManualExecution = true;
+            results.push({
+              step: i + 1,
+              success: true,
+              note: 'Requires manual execution - execute_sql function not available'
+            });
           }
-        } catch (rpcErr) {
-          // RPC não existe, tentar método alternativo
-          console.log(`Step ${i + 1}: RPC not available, marking as success (manual execution required)`);
-          results.push({
-            step: i + 1,
-            success: true,
-            note: 'RPC not available - may need manual execution via Supabase SQL Editor'
-          });
+          // Continuar mesmo com erro, pois pode ser porque já existe
+          else if (error.message.includes('already exists')) {
+            results.push({ step: i + 1, success: true, note: 'Already applied or not needed' });
+          } else {
+            // Outros erros que não são relacionados à função execute_sql
+            errors.push({ step: i + 1, error: error.message });
+          }
+        } else {
+          results.push({ step: i + 1, success: true });
         }
       } catch (err) {
         console.error(`Error in migration step ${i + 1}:`, err);
-        errors.push({ step: i + 1, error: String(err) });
+        // Verificar se é um erro de função não encontrada
+        const errMsg = err instanceof Error ? err.message : String(err);
+        if (errMsg.includes('Could not find the function') ||
+            errMsg.includes('function') && errMsg.includes('does not exist')) {
+          console.log(`Step ${i + 1}: execute_sql function not available (caught in catch), will require manual execution`);
+          needsManualExecution = true;
+          results.push({
+            step: i + 1,
+            success: true,
+            note: 'Requires manual execution - execute_sql function not available'
+          });
+        } else {
+          errors.push({ step: i + 1, error: errMsg });
+        }
       }
     }
 
-    // Verificar se alguma migration precisa de execução manual
-    const needsManualExecution = results.some(r => r.note?.includes('manual execution'));
-
-    if (errors.length > 0) {
+    // Se precisa execução manual ou tem erros, preparar SQL
+    if (needsManualExecution || errors.length > 0) {
       return NextResponse.json({
-        success: false,
-        message: 'Migration executada com erros',
+        success: needsManualExecution && errors.length === 0, // Sucesso se só precisa execução manual
+        message: needsManualExecution
+          ? 'Migration preparada! Execute o SQL manualmente no Supabase SQL Editor'
+          : 'Migration executada com erros',
         results,
-        errors,
-        manualSql: needsManualExecution ? migrations.join('\n\n') : null
-      }, { status: 500 });
+        errors: errors.length > 0 ? errors : undefined,
+        needsManualExecution,
+        manualSql: migrations.join('\n\n'),
+        instructions: needsManualExecution ? [
+          '1. Acesse o Supabase Dashboard',
+          '2. Vá para SQL Editor',
+          '3. Cole o SQL abaixo e execute',
+          '4. Aguarde a confirmação de sucesso'
+        ] : undefined
+      });
     }
 
     return NextResponse.json({
       success: true,
-      message: needsManualExecution
-        ? 'Migration preparada! Execute o SQL manualmente no Supabase SQL Editor'
-        : 'Migration executada com sucesso!',
+      message: 'Migration executada com sucesso!',
       results,
-      needsManualExecution,
-      manualSql: needsManualExecution ? migrations.join('\n\n') : null
+      needsManualExecution: false
     });
 
   } catch (error) {
