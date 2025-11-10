@@ -18,6 +18,7 @@ export default function PainelLideresSetor() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [updating, setUpdating] = useState<string | null>(null);
+  const [migrationError, setMigrationError] = useState(false);
 
   useEffect(() => {
     carregarFuncionarios();
@@ -33,12 +34,18 @@ export default function PainelLideresSetor() {
 
       if (error) {
         console.error('Erro ao carregar funcionários:', error);
+        // Verificar se é um erro de coluna não encontrada (migration não executada)
+        if (error.message && (error.message.includes('column') || error.message.includes('does not exist'))) {
+          setMigrationError(true);
+        }
         return;
       }
 
       setFuncionarios(data || []);
+      setMigrationError(false);
     } catch (error) {
       console.error('Erro ao carregar funcionários:', error);
+      setMigrationError(true);
     } finally {
       setLoading(false);
     }
@@ -81,6 +88,34 @@ export default function PainelLideresSetor() {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (migrationError) {
+    return (
+      <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6">
+        <div className="flex items-start">
+          <FiAlertCircle className="text-red-600 mt-0.5 mr-3 flex-shrink-0" size={32} />
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-red-800 mb-2">
+              Migration Não Executada
+            </h3>
+            <p className="text-sm text-red-700 mb-4">
+              A coluna <code className="bg-red-100 px-2 py-1 rounded">is_lider</code> não existe na tabela <code className="bg-red-100 px-2 py-1 rounded">funcionarios</code>.
+            </p>
+            <p className="text-sm text-red-700 mb-4">
+              Você precisa executar a migration do banco de dados antes de usar esta funcionalidade.
+              Vá para a aba <strong>"Banco de Dados"</strong> e clique em <strong>"Executar Migration"</strong>.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Tentar Novamente
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
