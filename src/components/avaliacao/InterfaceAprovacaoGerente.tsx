@@ -231,7 +231,7 @@ export default function InterfaceAprovacaoGerente({ gerenteId }: InterfaceAprova
 
                   {/* Preview das respostas */}
                   <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium text-gray-900 mb-2">Principais Pontos Fortes:</h4>
+                    <h4 className="font-medium text-gray-900 mb-2">Principais resultados obtidos e metas atingidas:</h4>
                     <p className="text-sm text-gray-700 line-clamp-2">
                       {avaliacao.autoavaliacao.questao_11_pontos_fortes || 'Não informado'}
                     </p>
@@ -275,27 +275,27 @@ export default function InterfaceAprovacaoGerente({ gerenteId }: InterfaceAprova
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Respostas da Autoavaliação */}
+              {/* Respostas da Autoavaliação - Conforme AN-TED-002-R0 */}
               <div className="space-y-4">
                 <h4 className="text-lg font-semibold text-gray-900">Respostas da Autoavaliação</h4>
-                
+
                 <div className="bg-blue-50 p-4 rounded-lg">
-                  <h5 className="font-medium text-gray-900 mb-2">Principais Pontos Fortes:</h5>
+                  <h5 className="font-medium text-gray-900 mb-2">Questão 11: Principais resultados obtidos e metas atingidas durante o ano</h5>
                   <p className="text-gray-700">{avaliacaoSelecionada.autoavaliacao.questao_11_pontos_fortes}</p>
                 </div>
 
                 <div className="bg-yellow-50 p-4 rounded-lg">
-                  <h5 className="font-medium text-gray-900 mb-2">Áreas para Melhoria:</h5>
+                  <h5 className="font-medium text-gray-900 mb-2">Questão 12: Melhorias obtidas desde a última avaliação</h5>
                   <p className="text-gray-700">{avaliacaoSelecionada.autoavaliacao.questao_12_areas_melhoria}</p>
                 </div>
 
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <h5 className="font-medium text-gray-900 mb-2">Objetivos Alcançados:</h5>
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <h5 className="font-medium text-gray-900 mb-2">Questão 13: Aspectos que precisam de desenvolvimento e LNT</h5>
                   <p className="text-gray-700">{avaliacaoSelecionada.autoavaliacao.questao_13_objetivos_alcancados}</p>
                 </div>
 
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <h5 className="font-medium text-gray-900 mb-2">Planos de Desenvolvimento:</h5>
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h5 className="font-medium text-gray-900 mb-2">Questão 14: Objetivos para o próximo ano</h5>
                   <p className="text-gray-700">{avaliacaoSelecionada.autoavaliacao.questao_14_planos_desenvolvimento}</p>
                 </div>
               </div>
