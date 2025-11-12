@@ -20,6 +20,7 @@ import {
   PaginatedList
 } from '@/lib/schemas/evaluation-schemas';
 import { AvaliacaoWorkflowService } from './avaliacao-workflow-service';
+import { EvaluationSettingsService } from './evaluation-settings';
 
 export class EvaluationService {
 
@@ -488,16 +489,33 @@ export class EvaluationService {
       if (!respostas || respostas.length === 0) {
         return avaliacao;
       }
+      // Obter settings efetivas (usa ciclo_id se existir)
+      let settings = null;
+      try {
+        settings = await EvaluationSettingsService.getEffectiveSettings(avaliacao.ciclo_id || null);
+      } catch (e) {
+        console.warn('Falha ao obter evaluation settings, usando média simples:', e);
+      }
 
-      // Calcular média geral
-      const mediaGeral = respostas.reduce((sum, r) => sum + r.nota, 0) / respostas.length;
-      avaliacao.media_geral = Math.round(mediaGeral * 10) / 10;
+      // Preparar vetor de notas (possível peso por pergunta_id)
+      const notas = respostas.map(r => {
+        const pesoConfig = settings?.calculo?.weights?.[String(r.pergunta_id)] ?? 1;
+        return { valor: r.nota, criterioId: String(r.pergunta_id), peso: pesoConfig };
+      });
+
+      // Calcular média considerando settings (simple_average ou weighted)
+      const mediaGeral = EvaluationSettingsService.calculateScore(notas, settings);
+      avaliacao.media_geral = mediaGeral;
 
       // TODO: Calcular médias por competência quando tivermos mapeamento
       avaliacao.media_por_competencia = {};
 
       // Calcular progresso
-      const totalPerguntas = 5; // Perguntas 11-15
+      // Dependente de settings: se líder inclui 16-17
+      const basePerguntas = [11,12,13,14,15];
+      const liderPerguntas = [16,17];
+      const isLider = respostas.some(r => r.pergunta_id >= 16); // heurística até termos flag robusta
+      const totalPerguntas = isLider ? basePerguntas.length + liderPerguntas.length : basePerguntas.length;
       const perguntasRespondidas = new Set(respostas.map(r => r.pergunta_id)).size;
       avaliacao.progresso = (perguntasRespondidas / totalPerguntas) * 100;
 
