@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import React, { useState } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { FiUpload } from 'react-icons/fi';

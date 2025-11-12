@@ -4,14 +4,9 @@
  */
 
 import { IconType } from 'react-icons';
-import {
-  FiGrid, FiBookOpen, FiClipboard, FiFileText, FiBriefcase,
-  FiCalendar, FiRss, FiDollarSign, FiSettings, FiUsers,
-  FiBarChart2, FiPlay, FiMessageSquare, FiUser, FiActivity,
-  FiClock, FiKey, FiUserCheck, FiUserX, FiBell, FiAward,
-  FiSmartphone, FiDatabase, FiTool, FiLayers, FiList, FiEdit
-} from 'react-icons/fi';
+import { FiGrid, FiBookOpen, FiClipboard, FiDollarSign, FiBarChart2, FiCalendar, FiUsers, FiClock, FiFileText, FiMessageSquare } from 'react-icons/fi';
 import { supabase } from './supabase';
+import { getIconComponent } from './iconMap';
 
 // Interface unificada para items (cards e menus)
 export interface UnifiedItem {
@@ -46,40 +41,7 @@ export interface UnifiedItem {
   source?: 'supabase' | 'hardcoded';
 }
 
-// Mapeamento de ícones - Material Icons para React Icons
-const iconMap: Record<string, IconType> = {
-  // React Icons (FiXxx)
-  FiGrid, FiBookOpen, FiClipboard, FiFileText, FiBriefcase,
-  FiCalendar, FiRss, FiDollarSign, FiSettings, FiUsers,
-  FiBarChart2, FiPlay, FiMessageSquare, FiUser, FiActivity,
-  FiClock, FiKey, FiUserCheck, FiUserX, FiBell, FiAward,
-  FiSmartphone, FiDatabase, FiTool, FiLayers, FiList, FiEdit,
 
-  // Material Icons (mapeamento para React Icons)
-  'dashboard': FiGrid,
-  'book': FiBookOpen,
-  'description': FiFileText,
-  'policy': FiClipboard,
-  'calendar_today': FiCalendar,
-  'newspaper': FiRss,
-  'receipt': FiDollarSign,
-  'payments': FiDollarSign,
-  'schedule': FiClock,
-  'assessment': FiBarChart2,
-  'admin_panel_settings': FiSettings,
-  'settings': FiSettings,
-  'people': FiUsers,
-  'person': FiUser,
-  'play_circle': FiPlay,
-  'chat': FiMessageSquare,
-  'trending_up': FiActivity,
-  'smartphone': FiSmartphone,
-  'storage': FiDatabase,
-  'build': FiTool,
-  'layers': FiLayers,
-  'list': FiList,
-  'edit': FiEdit
-};
 
 // Configuração do serviço
 interface UnifiedDataConfig {
@@ -122,8 +84,8 @@ class UnifiedDataService {
         title: 'Dashboard',
         description: 'Painel principal do sistema',
         href: '/dashboard',
-        icon: FiGrid,
-        iconName: 'FiGrid',
+        icon: getIconComponent('FiHome'),
+        iconName: 'FiHome',
         color: 'bg-abz-blue',
         hoverColor: 'hover:bg-abz-blue-dark',
         external: false,
@@ -377,10 +339,10 @@ class UnifiedDataService {
         items = [...this.hardcodedItems];
       }
 
-      // Processar ícones
+      // Processar ícones usando o mapeamento centralizado
       items = items.map(item => ({
         ...item,
-        icon: iconMap[item.iconName] || FiGrid
+        icon: getIconComponent(item.iconName)
       }));
 
       // Atualizar cache
