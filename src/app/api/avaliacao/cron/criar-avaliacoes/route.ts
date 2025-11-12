@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Inicializar Supabase Admin Client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+// Inicialização segura (evita erro em build quando variáveis ausentes)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+let supabase: ReturnType<typeof createClient> | null = null;
+if (supabaseUrl && supabaseServiceKey) {
+  supabase = createClient(supabaseUrl, supabaseServiceKey);
+}
 
 /**
  * API para criação automática de avaliações
@@ -45,6 +47,9 @@ export async function POST(request: NextRequest) {
     // 1. Buscar períodos que devem iniciar hoje
     const hoje = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
+    if (!supabase) {
+      return NextResponse.json({ success: false, error: 'Supabase não configurado (cron)', }, { status: 500 });
+    }
     const { data: periodos, error: periodosError } = await supabase
       .from('periodos_avaliacao')
       .select('*')
@@ -232,6 +237,7 @@ export async function POST(request: NextRequest) {
  * Busca usuários elegíveis para um período
  */
 async function buscarUsuariosElegiveis(periodo: any): Promise<any[]> {
+  if (!supabase) return [];
   // Verificar se o período tem configuração específica de usuários
   if (periodo.usuarios_elegiveis_config && Array.isArray(periodo.usuarios_elegiveis_config)) {
     const { data: usuarios, error } = await supabase
@@ -257,6 +263,7 @@ async function buscarUsuariosElegiveis(periodo: any): Promise<any[]> {
  * Busca o gerente de um usuário
  */
 async function buscarGerenteUsuario(usuarioId: string, periodoId: string): Promise<any | null> {
+  if (!supabase) return null;
   // Tentar buscar gerente específico do período
   const { data: mapeamento } = await supabase
     .from('avaliacao_colaborador_gerente')
@@ -286,6 +293,7 @@ async function buscarGerenteUsuario(usuarioId: string, periodoId: string): Promi
  * Cria uma avaliação
  */
 async function criarAvaliacao(dados: any): Promise<any | null> {
+  if (!supabase) return null;
   const { data, error } = await supabase
     .from('avaliacoes_desempenho')
     .insert({
@@ -315,6 +323,7 @@ async function criarAvaliacao(dados: any): Promise<any | null> {
  * Envia notificações para colaborador e gerente
  */
 async function enviarNotificacoes(dados: any): Promise<void> {
+  if (!supabase) return;
   try {
     // Notificar colaborador
     await supabase.from('notifications').insert({
@@ -354,6 +363,7 @@ async function enviarNotificacoes(dados: any): Promise<void> {
  * Registra log de execução
  */
 async function registrarLog(dados: any): Promise<void> {
+  if (!supabase) return;
   try {
     await supabase.from('avaliacao_cron_log').insert({
       tipo: dados.tipo,

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import MainLayout from '@/components/Layout/MainLayout';
-import { FiArrowLeft, FiEdit, FiTrash2, FiCheck, FiX, FiAlertTriangle } from 'react-icons/fi';
+import { FiArrowLeft, FiEdit, FiTrash2, FiCheck, FiX, FiAlertTriangle, FiDownload } from 'react-icons/fi';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 
@@ -33,7 +33,7 @@ interface Avaliacao {
 export default function VerAvaliacaoPage() {
   // Obter o ID da avaliação usando useParams do Next.js
   const params = useParams();
-  const avaliacaoId = params.id as string;
+  const avaliacaoId = (params as any)?.id ?? '';
 
   // Validar se o ID é um UUID válido - movido para fora do componente para evitar re-renderização
   const isValidUUID = useCallback((id: string) => {
@@ -58,6 +58,8 @@ export default function VerAvaliacaoPage() {
   const [error, setError] = useState<string | null>(null);
   const [approveLoading, setApproveLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [criterios, setCriterios] = useState<any[]>([]);
+  const [settings, setSettings] = useState<any | null>(null);
 
   // Obter o parâmetro source da URL
   const [source, setSource] = useState<string | null>(null);
@@ -108,6 +110,58 @@ export default function VerAvaliacaoPage() {
 
     fetchAvaliacao();
   }, [avaliacaoId]); // Removido isValidUUID para evitar loop infinito
+
+  // Buscar critérios ativos para exibir pesos
+  useEffect(() => {
+    const fetchCriterios = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('criterios_avaliacao')
+          .select('*')
+          .eq('ativo', true)
+          .order('ordem', { ascending: true });
+        if (!error && data) setCriterios(data);
+      } catch (e) { /* silencioso */ }
+    };
+    fetchCriterios();
+  }, []);
+
+  // Buscar método de cálculo atual (settings globais)
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch('/api/avaliacao/settings');
+        const json = await res.json();
+        if (json?.success) setSettings(json.data);
+      } catch {}
+    };
+    fetchSettings();
+  }, []);
+
+  // Exportar PDF
+  const handleExportPdf = async () => {
+    if (!avaliacao) return;
+    try {
+      const res = await fetch(`/api/avaliacao/${avaliacao.id}/pdf`);
+      const json = await res.json();
+      if (json.success) {
+        const { pdf_base64, filename } = json.data;
+        // Converter base64 para binário
+        const byteChars = atob(pdf_base64);
+        const byteNumbers = new Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename || 'avaliacao.pdf';
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+      } else alert(json.error || 'Erro ao gerar PDF');
+    } catch (e:any) {
+      alert('Falha ao gerar PDF: ' + e.message);
+    }
+  };
 
   // Função para aprovar avaliação
   const handleApprove = async () => {
@@ -237,7 +291,7 @@ export default function VerAvaliacaoPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex justify-between items-center mb-6">
               <h1 className="text-2xl font-bold text-gray-800">Detalhes da Avaliação</h1>
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 flex-wrap">
                 {avaliacao.status !== 'completed' && (
                   <button
                     onClick={handleApprove}
@@ -275,7 +329,72 @@ export default function VerAvaliacaoPage() {
                     </>
                   )}
                 </button>
+                <button
+                  onClick={handleExportPdf}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center"
+                >
+                  <FiDownload className="mr-2" /> Exportar PDF
+                </button>
               </div>
+              {/* Resumo da Avaliação */}
+              {avaliacao && (
+                <div className="mt-6 bg-white border rounded-md shadow-sm">
+                  <div className="px-4 py-3 border-b flex items-center justify-between">
+                    <h2 className="font-semibold text-gray-800">Resumo da Avaliação</h2>
+                    <span className={`text-xs px-2 py-1 rounded-md ${avaliacao.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                      {avaliacao.status}
+                    </span>
+                  </div>
+                  <div className="px-4 py-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <div className="text-gray-500">Colaborador</div>
+                      <div className="font-medium">{avaliacao.funcionario_nome || '-'}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500">Avaliador</div>
+                      <div className="font-medium">{avaliacao.avaliador_nome || '-'}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500">Método de Cálculo</div>
+                      <div className="font-medium">{settings?.calculo?.method === 'weighted' ? 'Ponderado' : 'Média Simples'}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Tabela de critérios e pesos */}
+              {criterios.length > 0 && (
+                <div className="mt-6 bg-white border rounded-md shadow-sm">
+                  <div className="px-4 py-3 border-b flex items-center justify-between">
+                    <h2 className="font-semibold text-gray-800">Critérios da Avaliação</h2>
+                    <span className="text-sm text-gray-500">Total: {criterios.length}</span>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-sm">
+                      <thead>
+                        <tr className="bg-gray-50 border-b">
+                          <th className="text-left px-4 py-2 font-medium text-gray-700">Ordem</th>
+                          <th className="text-left px-4 py-2 font-medium text-gray-700">Nome</th>
+                          <th className="text-left px-4 py-2 font-medium text-gray-700">Peso</th>
+                          <th className="text-left px-4 py-2 font-medium text-gray-700">Tipo</th>
+                          <th className="text-left px-4 py-2 font-medium text-gray-700">Apenas Líderes</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {criterios.map(c => (
+                          <tr key={c.id} className="border-b hover:bg-gray-50">
+                            <td className="px-4 py-2">{c.ordem}</td>
+                            <td className="px-4 py-2">{c.nome}</td>
+                            <td className="px-4 py-2">{c.peso}</td>
+                            <td className="px-4 py-2">{c.tipo}</td>
+                            <td className="px-4 py-2">{c.apenas_lideres ? 'Sim' : 'Não'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">

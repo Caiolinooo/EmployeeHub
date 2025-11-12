@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+let supabase: ReturnType<typeof createClient> | null = null;
+if (supabaseUrl && supabaseServiceKey) {
+  supabase = createClient(supabaseUrl, supabaseServiceKey);
+}
 
 /**
  * GET - Listar períodos de avaliação
@@ -20,6 +22,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    if (!supabase) {
+      return NextResponse.json({ success: false, error: 'Supabase não configurado' }, { status: 500 });
+    }
     const { data: periodos, error } = await supabase
       .from('periodos_avaliacao')
       .select('*')
@@ -58,6 +63,9 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
+    if (!supabase) {
+      return NextResponse.json({ success: false, error: 'Supabase não configurado' }, { status: 500 });
+    }
     const { data: periodo, error } = await supabase
       .from('periodos_avaliacao')
       .insert({
