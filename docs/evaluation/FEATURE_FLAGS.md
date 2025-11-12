@@ -4,7 +4,7 @@ Flag atual:
 
 | Flag | Variável de Ambiente | Descrição | Default |
 |------|----------------------|-----------|---------|
-| avaliacao_weighted_calc | `EVALUACAO_WEIGHTED_ENABLED` | Ativa cálculo via settings (método simple/weighted com pesos por pergunta) | false |
+| avaliacao_weighted_calc | `EVALUACAO_WEIGHTED_ENABLED` | Permite usar método definido em UI (simple_average ou weighted). Se `weighted` escolhido no admin e env=true aplica pesos. | false |
 
 ## Uso
 
@@ -26,6 +26,15 @@ Adicionar ao `.env.local`:
 EVALUACAO_WEIGHTED_ENABLED=true
 ```
 
-## Sem impacto
+## Precedência
 
-Com a flag desativada o sistema mantém cálculo de média simples existente.
+Para aplicar cálculo ponderado são necessários dois fatores:
+
+1. `EVALUACAO_WEIGHTED_ENABLED=true` no ambiente
+2. Método na UI configurado para `weighted` (PATCH /api/avaliacao/settings)
+
+Se qualquer um estiver ausente, usa média simples.
+
+## Fallback
+
+Flag desativada => ignoramos método `weighted` salvo e usamos média simples.

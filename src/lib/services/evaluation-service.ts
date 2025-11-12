@@ -491,19 +491,25 @@ export class EvaluationService {
         return avaliacao;
       }
       // Feature flag controla uso de cálculo avançado
-      const useWeighted = isFeatureEnabled('avaliacao_weighted_calc');
-      if (useWeighted) {
+      const weightedFlag = isFeatureEnabled('avaliacao_weighted_calc');
+      if (weightedFlag) {
         let settings = null;
         try {
           settings = await EvaluationSettingsService.getEffectiveSettings(avaliacao.ciclo_id || null);
         } catch (e) {
           console.warn('Falha ao obter evaluation settings, fallback média simples:', e);
         }
-        const notas = respostas.map(r => {
-          const pesoConfig = settings?.calculo?.weights?.[String(r.pergunta_id)] ?? 1;
-          return { valor: r.nota, criterioId: String(r.pergunta_id), peso: pesoConfig };
-        });
-        avaliacao.media_geral = EvaluationSettingsService.calculateScore(notas, settings);
+        const metodo = settings?.calculo?.method;
+        if (metodo === 'weighted') {
+          const notas = respostas.map(r => {
+            const pesoConfig = settings?.calculo?.weights?.[String(r.pergunta_id)] ?? 1;
+            return { valor: r.nota, criterioId: String(r.pergunta_id), peso: pesoConfig };
+          });
+          avaliacao.media_geral = EvaluationSettingsService.calculateScore(notas, settings);
+        } else {
+          const mediaGeral = respostas.reduce((sum, r) => sum + r.nota, 0) / respostas.length;
+          avaliacao.media_geral = Math.round(mediaGeral * 10) / 10;
+        }
       } else {
         const mediaGeral = respostas.reduce((sum, r) => sum + r.nota, 0) / respostas.length;
         avaliacao.media_geral = Math.round(mediaGeral * 10) / 10;

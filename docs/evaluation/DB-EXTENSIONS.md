@@ -56,6 +56,15 @@ Arquivo: `src/lib/services/evaluation-settings.ts`
 - `getEffectiveSettings(periodoId?)`: retorna config ativa do período ou global.
 - `calculateScore(notas, settings)`: suporta `simple_average` e `weighted`.
 
+## Toggle de Método (Admin UI)
+
+Página: `src/components/admin/avaliacao/AvaliacaoAdminContent.tsx` (tab Configuração)
+
+- Toggle altera `calculo.method` via `PATCH /api/avaliacao/settings`.
+- Precedência: env `EVALUACAO_WEIGHTED_ENABLED=true` + método `weighted` no banco.
+- Sem env ativo, sempre média simples.
+
 ## Observações
+
 - Migração é aditiva e idempotente, compatível com estruturas já existentes no repositório.
 - Não altera contratos de APIs existentes; novas capacidades serão plugadas gradualmente.
