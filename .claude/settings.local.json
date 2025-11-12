@@ -20,9 +20,21 @@
       "Bash(taskkill:*)",
       "Bash(curl:*)",
       "Bash(cmd:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(git push:*)",
+      "Bash(cat:*)",
+      "Bash(npm run build:*)",
+      "Bash(find:*)",
+      "Bash(nul)",
+      "Bash(npm run lint)",
+      "Bash(npx tsc:*)",
+      "Bash(temp_auth_old.txt)",
+      "Bash(powershell -Command \"(Get-Content ''src\\lib\\services\\avaliacao-workflow-service.ts'' | Measure-Object -Line).Lines\")",
+      "Bash(powershell -Command \"Get-Content ''src\\lib\\services\\avaliacao-workflow-service.ts'' -Tail 30\")",
+      "Bash(del temp_auth_old.txt 2)"
     ],
     "deny": [],
     "ask": []
-  }
+  },
+  "spinnerTipsEnabled": false
 }

@@ -15,25 +15,37 @@ export interface DadosLideranca {
 
 /**
  * Verifica se um usuário é líder ativo
+ * Usa a função do banco de dados que verifica:
+ * 1. Tabela gerentes_avaliacao_config (configuração específica de avaliação)
+ * 2. Role do usuário (MANAGER ou ADMIN)
  * @param userId ID do usuário
  * @returns Promise<boolean> - true se o usuário é líder ativo
  */
 export async function isUsuarioLider(userId: string): Promise<boolean> {
   try {
+    // Chama a função do banco de dados is_usuario_lider()
     const { data, error } = await supabase
-      .from('lideres')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('ativo', true)
-      .is('data_fim', null)
-      .single();
+      .rpc('is_usuario_lider', { p_usuario_id: userId });
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-      console.error('Erro ao verificar liderança:', error);
-      return false;
+    if (error) {
+      console.error('Erro ao verificar liderança via RPC:', error);
+
+      // Fallback: verifica role diretamente se a função RPC falhar
+      const { data: userData, error: userError } = await supabase
+        .from('users_unified')
+        .select('role')
+        .eq('id', userId)
+        .single();
+
+      if (userError) {
+        console.error('Erro ao verificar role do usuário:', userError);
+        return false;
+      }
+
+      return userData?.role === 'MANAGER' || userData?.role === 'ADMIN';
     }
 
-    return !!data;
+    return data === true;
   } catch (error) {
     console.error('Erro ao verificar se usuário é líder:', error);
     return false;

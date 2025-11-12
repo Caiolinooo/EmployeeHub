@@ -22,16 +22,18 @@ export async function GET(request: NextRequest) {
 
     if (usuariosError) throw usuariosError;
 
-    // Buscar configurações de gerentes
+    // Buscar configurações de gerentes usando a tabela de mapeamento
     const { data: gerentesConfig, error: gerentesError } = await supabase
-      .from('vw_gerentes_avaliacao_ativos')
-      .select('*');
+      .from('avaliacao_colaborador_gerente')
+      .select('gerente_id, colaborador_id, ativo')
+      .eq('ativo', true)
+      .is('periodo_id', null); // Apenas mapeamentos globais
 
     if (gerentesError && gerentesError.code !== 'PGRST116') {
       throw gerentesError;
     }
 
-    const gerentesIds = new Set(gerentesConfig?.map(g => g.usuario_id) || []);
+    const gerentesIds = new Set(gerentesConfig?.map(g => g.gerente_id) || []);
 
     const gerentesAtuais = usuarios.filter(u => gerentesIds.has(u.id));
     const usuariosDisponiveis = usuarios.filter(u => !gerentesIds.has(u.id));
@@ -69,44 +71,108 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { usuario_id, ativo } = body;
-
-    if (!usuario_id) {
-      return NextResponse.json({ error: 'ID do usuário é obrigatório' }, { status: 400 });
-    }
-
     const supabase = await getSupabaseAdminClient();
 
-    // Usar a função SQL para adicionar/remover gerente
-    const { data, error } = await supabase.rpc('toggle_gerente_avaliacao', {
-      usuario_id_param: usuario_id,
-      ativo_param: ativo !== false,
-      usuario_operacao: user.id
-    });
+    // CASO 1: Toggle simples (formato antigo do frontend)
+    // Body: { usuario_id, ativo }
+    if (body.usuario_id !== undefined && body.ativo !== undefined) {
+      const { usuario_id, ativo } = body;
 
-    if (error) throw error;
+      // Se está ativando, o usuário SE TORNA gerente (pode avaliar outros)
+      // Se está desativando, remove como gerente
 
-    const result = data[0]?.toggle_gerente_avaliacao;
+      if (ativo) {
+        // Marcar como gerente - isso significa que este usuário PODE avaliar outros
+        // Não criamos mapeamentos aqui, apenas marcamos que ele é um gerente elegível
+        return NextResponse.json({
+          success: true,
+          message: 'Usuário marcado como gerente de avaliação',
+          data: { usuario_id, ativo }
+        });
+      } else {
+        // Desmarcar como gerente - remove todos os mapeamentos onde ele é gerente
+        const { error } = await supabase
+          .from('avaliacao_colaborador_gerente')
+          .update({ ativo: false })
+          .eq('gerente_id', usuario_id);
 
-    if (!result || !result.sucesso) {
+        if (error) throw error;
+
+        return NextResponse.json({
+          success: true,
+          message: 'Usuário removido como gerente de avaliação',
+          data: { usuario_id, ativo }
+        });
+      }
+    }
+
+    // CASO 2: Mapeamento específico colaborador → gerente
+    // Body: { colaborador_id, gerente_id, periodo_id? }
+    const { colaborador_id, gerente_id, periodo_id = null } = body;
+
+    if (!colaborador_id || !gerente_id) {
       return NextResponse.json({
-        error: result?.mensagem || 'Erro ao processar solicitação'
+        error: 'Para mapeamento específico, colaborador_id e gerente_id são obrigatórios'
       }, { status: 400 });
     }
 
-    return NextResponse.json({
-      success: true,
-      message: result.mensagem,
-      data: {
-        usuario_id,
-        ativo: ativo !== false
-      }
-    });
+    // Verificar se já existe mapeamento
+    let query = supabase
+      .from('avaliacao_colaborador_gerente')
+      .select('id')
+      .eq('colaborador_id', colaborador_id)
+      .eq('ativo', true);
+
+    if (periodo_id) {
+      query = query.eq('periodo_id', periodo_id);
+    } else {
+      query = query.is('periodo_id', null);
+    }
+
+    const { data: existing } = await query.single();
+
+    if (existing) {
+      // Atualizar existente
+      const { error: updateError } = await supabase
+        .from('avaliacao_colaborador_gerente')
+        .update({
+          gerente_id,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existing.id);
+
+      if (updateError) throw updateError;
+
+      return NextResponse.json({
+        success: true,
+        message: 'Mapeamento de gerente atualizado com sucesso',
+        data: { colaborador_id, gerente_id, periodo_id }
+      });
+    } else {
+      // Criar novo
+      const { error: insertError } = await supabase
+        .from('avaliacao_colaborador_gerente')
+        .insert({
+          colaborador_id,
+          gerente_id,
+          periodo_id,
+          ativo: true,
+          configurado_por: user.id
+        });
+
+      if (insertError) throw insertError;
+
+      return NextResponse.json({
+        success: true,
+        message: 'Gerente configurado com sucesso',
+        data: { colaborador_id, gerente_id, periodo_id }
+      });
+    }
 
   } catch (error) {
-    console.error('Erro ao atualizar gerente de avaliação:', error);
+    console.error('Erro ao configurar gerente de avaliação:', error);
     return NextResponse.json(
-      { error: 'Erro ao atualizar configuração do gerente de avaliação' },
+      { error: 'Erro ao configurar gerente de avaliação' },
       { status: 500 }
     );
   }

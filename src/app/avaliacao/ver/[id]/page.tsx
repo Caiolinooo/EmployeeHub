@@ -1,18 +1,20 @@
 'use client';
 
-import React, { useState, useEffect , use} from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import MainLayout from '@/components/Layout/MainLayout';
 import { FiArrowLeft, FiEdit, FiTrash2, FiCheck, FiX, FiAlertTriangle } from 'react-icons/fi';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 
-// Tipo para avaliação
+// Tipo para avaliação - atualizado para usar campos da view
 interface Avaliacao {
   id: string;
   funcionario_id: string;
   avaliador_id: string;
   periodo: string;
+  periodo_id?: string;
+  periodo_nome?: string;
   data_inicio?: string;
   data_fim?: string;
   status: string;
@@ -20,30 +22,35 @@ interface Avaliacao {
   observacoes?: string;
   created_at: string;
   updated_at?: string;
-  funcionario?: {
-    nome: string;
-    cargo?: string;
-    departamento?: string;
-  };
-  avaliador?: {
-    nome: string;
-    cargo?: string;
-  };
+  // Campos da view com informações do usuário
+  funcionario_nome?: string;
+  funcionario_cargo?: string;
+  funcionario_departamento?: string;
+  avaliador_nome?: string;
+  avaliador_cargo?: string;
 }
 
-export default function VerAvaliacaoPage({ params }: { params: Promise<{ id: string }> }) {
-  // Obter o ID da avaliação de forma segura
-  const [avaliacaoId, setAvaliacaoId] = useState<string>('');
+export default function VerAvaliacaoPage() {
+  // Obter o ID da avaliação usando useParams do Next.js
+  const params = useParams();
+  const avaliacaoId = params.id as string;
 
-  // Usar useEffect para definir o ID de forma segura
+  // Validar se o ID é um UUID válido - movido para fora do componente para evitar re-renderização
+  const isValidUUID = useCallback((id: string) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
+  }, []);
+
+  // Se não houver ID válido, mostrar erro
   useEffect(() => {
-    if (params && params.id) {
-      console.log('ID da avaliação:', params.id);
-      setAvaliacaoId(params.id);
-    } else {
-      console.error('ID da avaliação não encontrado nos parâmetros');
+    if (!avaliacaoId || !isValidUUID(avaliacaoId)) {
+      console.error('ID da avaliação inválido ou não encontrado:', avaliacaoId);
+      setError('ID da avaliação inválido');
+      setLoading(false);
+      return;
     }
-  }, [params]);
+    console.log('ID da avaliação:', avaliacaoId);
+  }, [avaliacaoId]);
 
   const router = useRouter();
   const [avaliacao, setAvaliacao] = useState<Avaliacao | null>(null);
@@ -72,24 +79,14 @@ export default function VerAvaliacaoPage({ params }: { params: Promise<{ id: str
   useEffect(() => {
     const fetchAvaliacao = async () => {
       try {
-        // Verificar se temos um ID válido
-        if (!avaliacaoId) {
-          console.log('Aguardando ID da avaliação...');
-          return;
-        }
-
         console.log('Buscando avaliação com ID:', avaliacaoId);
         setLoading(true);
         setError(null);
 
-        // Buscar avaliação pelo ID
+        // Buscar avaliação pelo ID usando a view vw_avaliacoes_desempenho
         const { data, error } = await supabase
-          .from('avaliacoes_desempenho')
-          .select(`
-            *,
-            funcionario:funcionarios!avaliacoes_desempenho_funcionario_id_fkey(id, nome, cargo, departamento),
-            avaliador:funcionarios!avaliacoes_desempenho_avaliador_id_fkey(id, nome, cargo)
-          `)
+          .from('vw_avaliacoes_desempenho')
+          .select('*')
           .eq('id', avaliacaoId)
           .is('deleted_at', null)
           .single();
@@ -110,7 +107,7 @@ export default function VerAvaliacaoPage({ params }: { params: Promise<{ id: str
     };
 
     fetchAvaliacao();
-  }, [avaliacaoId]);
+  }, [avaliacaoId]); // Removido isValidUUID para evitar loop infinito
 
   // Função para aprovar avaliação
   const handleApprove = async () => {
@@ -123,7 +120,7 @@ export default function VerAvaliacaoPage({ params }: { params: Promise<{ id: str
     try {
       setApproveLoading(true);
 
-      // Atualizar o status para 'completed'
+      // Atualizar o status para 'completed' na tabela original
       const { error } = await supabase
         .from('avaliacoes_desempenho')
         .update({
@@ -159,17 +156,20 @@ export default function VerAvaliacaoPage({ params }: { params: Promise<{ id: str
     try {
       setDeleteLoading(true);
 
-      // Atualizar o campo deleted_at para a data atual
-      const { error } = await supabase
-        .from('avaliacoes_desempenho')
-        .update({
-          deleted_at: new Date().toISOString(),
-          status: 'arquivada'
-        })
-        .eq('id', avaliacao.id);
+      // Usar a API de soft delete
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/avaliacao/soft-delete/${avaliacao.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
 
-      if (error) {
-        throw error;
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao mover para lixeira');
       }
 
       alert('Avaliação movida para a lixeira com sucesso!');
@@ -178,7 +178,7 @@ export default function VerAvaliacaoPage({ params }: { params: Promise<{ id: str
       router.push('/avaliacao');
     } catch (err) {
       console.error('Erro ao mover avaliação para a lixeira:', err);
-      alert('Ocorreu um erro ao mover a avaliação para a lixeira. Por favor, tente novamente.');
+      alert(`Ocorreu um erro ao mover a avaliação para a lixeira: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
     } finally {
       setDeleteLoading(false);
     }
@@ -288,7 +288,7 @@ export default function VerAvaliacaoPage({ params }: { params: Promise<{ id: str
                   </div>
                   <div>
                     <span className="text-gray-600 font-medium">Período:</span>
-                    <p className="text-gray-900">{avaliacao.periodo}</p>
+                    <p className="text-gray-900">{avaliacao.periodo_nome || avaliacao.periodo}</p>
                   </div>
                   <div>
                     <span className="text-gray-600 font-medium">Status:</span>
@@ -316,28 +316,28 @@ export default function VerAvaliacaoPage({ params }: { params: Promise<{ id: str
                 <div className="space-y-3">
                   <div>
                     <span className="text-gray-600 font-medium">Funcionário:</span>
-                    <p className="text-gray-900">{avaliacao.funcionario?.nome || 'Desconhecido'}</p>
+                    <p className="text-gray-900">{avaliacao.funcionario_nome || 'Desconhecido'}</p>
                   </div>
-                  {avaliacao.funcionario?.cargo && (
+                  {avaliacao.funcionario_cargo && (
                     <div>
                       <span className="text-gray-600 font-medium">Cargo do Funcionário:</span>
-                      <p className="text-gray-900">{avaliacao.funcionario.cargo}</p>
+                      <p className="text-gray-900">{avaliacao.funcionario_cargo}</p>
                     </div>
                   )}
-                  {avaliacao.funcionario?.departamento && (
+                  {avaliacao.funcionario_departamento && (
                     <div>
                       <span className="text-gray-600 font-medium">Departamento:</span>
-                      <p className="text-gray-900">{avaliacao.funcionario.departamento}</p>
+                      <p className="text-gray-900">{avaliacao.funcionario_departamento}</p>
                     </div>
                   )}
                   <div>
                     <span className="text-gray-600 font-medium">Avaliador:</span>
-                    <p className="text-gray-900">{avaliacao.avaliador?.nome || 'Desconhecido'}</p>
+                    <p className="text-gray-900">{avaliacao.avaliador_nome || 'Desconhecido'}</p>
                   </div>
-                  {avaliacao.avaliador?.cargo && (
+                  {avaliacao.avaliador_cargo && (
                     <div>
                       <span className="text-gray-600 font-medium">Cargo do Avaliador:</span>
-                      <p className="text-gray-900">{avaliacao.avaliador.cargo}</p>
+                      <p className="text-gray-900">{avaliacao.avaliador_cargo}</p>
                     </div>
                   )}
                 </div>

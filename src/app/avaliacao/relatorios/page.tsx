@@ -7,6 +7,7 @@ import PageHeader from '@/components/PageHeader';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import MainLayout from '@/components/Layout/MainLayout';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
+import { supabase } from '@/lib/supabase';
 
 interface Funcionario {
   id: string;
@@ -19,14 +20,17 @@ interface Funcionario {
 interface Avaliacao {
   id: string;
   periodo: string;
+  periodo_nome?: string;
   data_inicio: string;
   funcionario_id: string;
   avaliador_id: string;
   pontuacao_total: number;
   status: string;
-  funcionarios?: {
-    nome: string;
-  };
+  funcionario_nome: string;
+  funcionario_cargo: string;
+  funcionario_departamento: string;
+  avaliador_nome: string;
+  avaliador_cargo: string;
 }
 
 export default function RelatoriosPage() {
@@ -49,11 +53,9 @@ export default function RelatoriosPage() {
     (new Date().getFullYear() - i).toString()
   );
 
-
-
-  // Carregar funcionários
+  // Carregar funcionários e avaliações
   useEffect(() => {
-    async function loadFuncionarios() {
+    async function loadData() {
       try {
         setIsLoading(true);
 
@@ -65,90 +67,52 @@ export default function RelatoriosPage() {
           throw new Error('Não autorizado. Faça login novamente.');
         }
 
-        // Incluir o token no cabeçalho da requisição
-        const response = await fetch('/api/avaliacao-desempenho/usuarios', {
+        // Carregar funcionários
+        const funcionariosResponse = await fetch('/api/avaliacao-desempenho/usuarios', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
+        if (!funcionariosResponse.ok) {
+          const errorData = await funcionariosResponse.json().catch(() => ({}));
           throw new Error(errorData.error || 'Erro ao carregar funcionários');
         }
 
-        const data = await response.json();
+        const funcionariosData = await funcionariosResponse.json();
 
-        if (data.success && data.data) {
-          setFuncionarios(data.data);
+        if (funcionariosData.success && funcionariosData.data) {
+          setFuncionarios(funcionariosData.data);
         } else {
           setFuncionarios([]);
         }
-      } catch (error) {
-        console.error('Erro ao carregar funcionários:', error);
-        setError(error instanceof Error ? error.message : 'Erro desconhecido');
 
-        // Se o erro for de autenticação, redirecionar para a página de login
-        if (error instanceof Error &&
-            (error.message.includes('autorizado') ||
-             error.message.includes('Token') ||
-             error.message.includes('login'))) {
-          window.location.href = '/login';
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    }
+        // Carregar avaliações usando a view vw_avaliacoes_desempenho
+        console.log('Carregando avaliações usando a view vw_avaliacoes_desempenho...');
+        let query = supabase
+          .from('vw_avaliacoes_desempenho')
+          .select('*')
+          .is('deleted_at', null);
 
-    loadFuncionarios();
-  }, []);
-
-  // Carregar avaliações com base nos filtros
-  useEffect(() => {
-    async function loadAvaliacoes() {
-      try {
-        setIsLoading(true);
-
-        // Obter o token de autenticação do localStorage
-        const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
-
-        if (!token) {
-          console.error('Token de autenticação não encontrado');
-          throw new Error('Não autorizado. Faça login novamente.');
-        }
-
-        // Construir URL com filtros
-        let url = '/api/avaliacao-desempenho/avaliacoes?';
-
+        // Aplicar filtros
         if (selectedFuncionario) {
-          url += `funcionarioId=${selectedFuncionario}&`;
+          query = query.eq('funcionario_id', selectedFuncionario);
         }
 
         if (selectedAno) {
-          url += `ano=${selectedAno}&`;
+          query = query.eq('periodo', selectedAno);
         }
 
-        // Incluir o token no cabeçalho da requisição
-        const response = await fetch(url, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const { data: avaliacoesData, error: avaliacoesError } = await query;
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || 'Erro ao carregar avaliações');
+        if (avaliacoesError) {
+          throw avaliacoesError;
         }
 
-        const data = await response.json();
+        setAvaliacoes(avaliacoesData || []);
 
-        if (data.success && data.data) {
-          setAvaliacoes(data.data);
-        } else {
-          setAvaliacoes([]);
-        }
       } catch (error) {
-        console.error('Erro ao carregar avaliações:', error);
+        console.error('Erro ao carregar dados:', error);
         setError(error instanceof Error ? error.message : 'Erro desconhecido');
 
         // Se o erro for de autenticação, redirecionar para a página de login
@@ -163,27 +127,41 @@ export default function RelatoriosPage() {
       }
     }
 
-    loadAvaliacoes();
+    loadData();
   }, [selectedFuncionario, selectedAno]);
 
   // Exportar relatório para Excel
   const exportarExcel = () => {
     if (avaliacoes.length === 0) return;
 
-    // Cabeçalhos
-    const headers = ['ID', 'Funcionário', 'Período', 'Data', 'Avaliador', 'Pontuação', 'Status'];
+    // Cabeçalhos - incluindo informações sobre liderança
+    const headers = [
+      'ID',
+      'Funcionário',
+      'Cargo',
+      'Departamento',
+      'Período',
+      'Data',
+      'Avaliador',
+      'Pontuação Total',
+      'Status',
+      'Inclui Avaliação de Liderança',
+      'Notas Liderança (Q16-17)'
+    ];
 
     // Dados
     const rows = avaliacoes.map(avaliacao => [
       avaliacao.id,
-      funcionarios.find(f => f.id === avaliacao.funcionario_id)?.first_name + ' ' +
-      funcionarios.find(f => f.id === avaliacao.funcionario_id)?.last_name,
+      avaliacao.funcionario_nome,
+      avaliacao.funcionario_cargo,
+      avaliacao.funcionario_departamento,
       avaliacao.periodo,
       new Date(avaliacao.data_inicio).toLocaleDateString(),
-      funcionarios.find(f => f.id === avaliacao.avaliador_id)?.first_name + ' ' +
-      funcionarios.find(f => f.id === avaliacao.avaliador_id)?.last_name,
-      avaliacao.pontuacao_total,
-      avaliacao.status
+      avaliacao.avaliador_nome,
+      avaliacao.pontuacao_total ? avaliacao.pontuacao_total.toFixed(2) : 'N/A',
+      avaliacao.status,
+      'A ser implementado após migração',
+      'A ser implementado após migração'
     ]);
 
     // Criar CSV (formato que Excel pode abrir)
@@ -193,11 +171,11 @@ export default function RelatoriosPage() {
     ].join('\n');
 
     // Download
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' }); // BOM para UTF-8
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `relatorio_anual_desempenho_${selectedAno}.xlsx`);
+    link.setAttribute('download', `relatorio_anual_desempenho_${selectedAno}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -344,6 +322,8 @@ export default function RelatoriosPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Funcionário</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cargo</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Período</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avaliador</th>
@@ -356,8 +336,14 @@ export default function RelatoriosPage() {
                   <tr key={avaliacao.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {funcionarios.find(f => f.id === avaliacao.funcionario_id)?.first_name} {funcionarios.find(f => f.id === avaliacao.funcionario_id)?.last_name}
+                        {avaliacao.funcionario_nome}
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{avaliacao.funcionario_cargo}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{avaliacao.funcionario_departamento}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{avaliacao.periodo}</div>
@@ -367,7 +353,7 @@ export default function RelatoriosPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {funcionarios.find(f => f.id === avaliacao.avaliador_id)?.first_name} {funcionarios.find(f => f.id === avaliacao.avaliador_id)?.last_name}
+                        {avaliacao.avaliador_nome}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -395,4 +381,3 @@ export default function RelatoriosPage() {
     </ProtectedRoute>
   );
 }
-

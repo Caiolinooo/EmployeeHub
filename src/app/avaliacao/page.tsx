@@ -10,19 +10,23 @@ import { useI18n } from '@/contexts/I18nContext';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'react-hot-toast';
 
-// Tipo para avaliação
+// Tipo para avaliação - atualizado para usar campos da view
 interface Avaliacao {
   id: string;
   funcionario_id: string;
   avaliador_id: string;
   periodo: string;
+  periodo_id?: string;
+  periodo_nome?: string;
   status: string;
   created_at: string;
   updated_at?: string;
+  // Campos da view com informações do usuário
   funcionario_nome?: string;
-  funcionario_email?: string;
+  funcionario_cargo?: string;
+  funcionario_departamento?: string;
   avaliador_nome?: string;
-  avaliador_email?: string;
+  avaliador_cargo?: string;
 }
 
 export default function AvaliacaoPage() {
@@ -134,30 +138,33 @@ export default function AvaliacaoPage() {
         console.log('Iniciando busca de avaliações...');
         console.log('Verificando permissões:', { isAdmin, isManager, hasEvaluationAccess });
 
-        // Buscar diretamente da tabela avaliacoes_desempenho (nome correto)
-        console.log('Buscando avaliações na tabela avaliacoes_desempenho...');
-        let query = supabase
-          .from('avaliacoes_desempenho')
-          .select(`
-            *,
-            funcionario:funcionarios!avaliacoes_desempenho_funcionario_id_fkey(id, nome, email),
-            avaliador:funcionarios!avaliacoes_desempenho_avaliador_id_fkey(id, nome, email)
-          `)
-          .is('deleted_at', null);
+        // Buscar usando a nova API unificada
+        console.log('Buscando avaliações via nova API...');
 
-        // Filtrar por usuário se não for admin ou manager
+        // Obter token de autenticação
+        const token = localStorage.getItem('token');
+
+        // Construir URL com filtros
+        const params = new URLSearchParams();
         if (!isAdmin && !isManager) {
-          console.log('Filtrando avaliações para usuário comum:', user?.id);
-          query = query.eq('funcionario_id', user?.id || '');
+          params.set('funcionario_id', user.id);
         }
 
-        const { data: avaliacoes, error: avaliacoesError } = await query
-          .order('created_at', { ascending: false });
+        const response = await fetch(`/api/evaluations?${params}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
 
-        if (avaliacoesError) {
-          console.error('Erro ao buscar avaliações:', avaliacoesError);
-          throw avaliacoesError;
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error);
         }
+
+        const avaliacoes = result.data?.items || [];
 
         console.log('Avaliações encontradas:', avaliacoes?.length || 0);
 
@@ -171,38 +178,24 @@ export default function AvaliacaoPage() {
         // Log para debug
         console.log('Exemplo de avaliação:', avaliacoes[0]);
 
-        // Formatar dados de forma simples
+        // Formatar dados - agora a view já fornece as informações do usuário
         const avaliacoesFormatadas = avaliacoes.map(item => {
-          // Obter nomes do funcionário e avaliador
-          let funcionarioNome = 'Desconhecido';
-          let avaliadorNome = 'Desconhecido';
-          let funcionarioEmail = null;
-          let avaliadorEmail = null;
-
-          // Verificar se temos dados do funcionário
-          if (item.funcionario) {
-            funcionarioNome = item.funcionario.nome || 'Desconhecido';
-            funcionarioEmail = item.funcionario.email || null;
-          }
-
-          // Verificar se temos dados do avaliador
-          if (item.avaliador) {
-            avaliadorNome = item.avaliador.nome || 'Desconhecido';
-            avaliadorEmail = item.avaliador.email || null;
-          }
-
           return {
             id: item.id,
             funcionario_id: item.funcionario_id,
             avaliador_id: item.avaliador_id,
-            periodo: item.periodo || 'N/A',
+            periodo: item.periodo || item.periodo_nome || 'N/A',
+            periodo_id: item.periodo_id,
+            periodo_nome: item.periodo_nome,
             status: item.status || 'pending',
             created_at: item.created_at || new Date().toISOString(),
             updated_at: item.updated_at,
-            funcionario_nome: funcionarioNome,
-            funcionario_email: funcionarioEmail,
-            avaliador_nome: avaliadorNome,
-            avaliador_email: avaliadorEmail
+            // Campos da view com informações do usuário
+            funcionario_nome: item.funcionario_nome || 'Desconhecido',
+            funcionario_cargo: item.funcionario_cargo,
+            funcionario_departamento: item.funcionario_departamento,
+            avaliador_nome: item.avaliador_nome || 'Desconhecido',
+            avaliador_cargo: item.avaliador_cargo
           };
         });
 
@@ -233,6 +226,8 @@ export default function AvaliacaoPage() {
   const filteredAvaliacoes = avaliacoes.filter(avaliacao =>
     avaliacao.avaliador_nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     avaliacao.funcionario_nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    avaliacao.funcionario_cargo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    avaliacao.funcionario_departamento?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     avaliacao.periodo.toLowerCase().includes(searchTerm.toLowerCase()) ||
     avaliacao.status.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -269,17 +264,20 @@ export default function AvaliacaoPage() {
     try {
       setDeleteLoading(id);
 
-      // Atualizar o campo deleted_at para a data atual
-      const { error } = await supabase
-        .from('avaliacoes_desempenho')
-        .update({
-          deleted_at: new Date().toISOString(),
-          status: 'arquivada' // Também marcar como arquivada
-        })
-        .eq('id', id);
+      // Usar a API de soft delete
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/avaliacao/soft-delete/${id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
 
-      if (error) {
-        throw error;
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao mover para lixeira');
       }
 
       // Atualizar a lista de avaliações (remover a avaliação excluída)
@@ -295,7 +293,7 @@ export default function AvaliacaoPage() {
 
     } catch (err) {
       console.error('Erro ao mover avaliação para a lixeira:', err);
-      alert(t('avaliacao.moveToTrashError', 'Ocorreu um erro ao mover a avaliação para a lixeira. Por favor, tente novamente.'));
+      alert(t('avaliacao.moveToTrashError', `Ocorreu um erro ao mover a avaliação para a lixeira: ${err instanceof Error ? err.message : 'Erro desconhecido'}`));
     } finally {
       setDeleteLoading(null);
     }
@@ -444,6 +442,12 @@ export default function AvaliacaoPage() {
                     {t('avaliacao.funcionario', 'Funcionário')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('avaliacao.cargo', 'Cargo')}
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('avaliacao.departamento', 'Departamento')}
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('avaliacao.periodo', 'Período')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -462,9 +466,18 @@ export default function AvaliacaoPage() {
                   <tr key={avaliacao.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{avaliacao.avaliador_nome}</div>
+                      {avaliacao.avaliador_cargo && (
+                        <div className="text-sm text-gray-500">{avaliacao.avaliador_cargo}</div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{avaliacao.funcionario_nome}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{avaliacao.funcionario_cargo || 'N/A'}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{avaliacao.funcionario_departamento || 'N/A'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{avaliacao.periodo}</div>
@@ -509,4 +522,3 @@ export default function AvaliacaoPage() {
     </MainLayout>
   );
 }
-

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { AvaliacaoWorkflowService } from '@/lib/services/avaliacao-workflow-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -242,7 +243,7 @@ export async function PUT(
     // Verificar se a avaliação existe
     const { data: avaliacaoExistente, error: checkError } = await supabase
       .from('avaliacoes_desempenho')
-      .select('id')
+      .select('*')
       .eq('id', id)
       .single();
 
@@ -259,18 +260,21 @@ export async function PUT(
     const data = await request.json();
     console.log('Dados recebidos para atualização:', data);
 
+    // Armazenar o status anterior para comparação
+    const statusAnterior = avaliacaoExistente.status;
+
     // Atualizar a avaliação
     const { error: updateError } = await supabaseAdmin
       .from('avaliacoes_desempenho')
       .update({
-        funcionario_id: data.funcionario_id || data.funcionarioId,
-        avaliador_id: data.avaliador_id || data.avaliadorId,
-        periodo: data.periodo,
-        data_inicio: data.data_inicio || data.dataInicio,
-        data_fim: data.data_fim || data.dataFim,
-        status: data.status,
-        observacoes: data.observacoes || data.comentarios,
-        pontuacao_total: data.pontuacao_total || data.pontuacao || 0,
+        funcionario_id: data.funcionario_id || data.funcionarioId || avaliacaoExistente.funcionario_id,
+        avaliador_id: data.avaliador_id || data.avaliadorId || avaliacaoExistente.avaliador_id,
+        periodo: data.periodo || avaliacaoExistente.periodo,
+        data_inicio: data.data_inicio || data.dataInicio || avaliacaoExistente.data_inicio,
+        data_fim: data.data_fim || data.dataFim || avaliacaoExistente.data_fim,
+        status: data.status || avaliacaoExistente.status,
+        observacoes: data.observacoes || data.comentarios || avaliacaoExistente.observacoes,
+        pontuacao_total: data.pontuacao_total || data.pontuacao || avaliacaoExistente.pontuacao_total,
         updated_at: new Date().toISOString()
       })
       .eq('id', id);
@@ -331,6 +335,72 @@ export async function PUT(
       }
     }
 
+    // Enviar notificações se o status foi alterado
+    const novoStatus = data.status || avaliacaoExistente.status;
+    if (statusAnterior !== novoStatus) {
+      try {
+        console.log(`Status alterado de ${statusAnterior} para ${novoStatus}. Enviando notificações...`);
+        
+        // Buscar informações completas da avaliação para as notificações
+        const { data: avaliacaoCompleta, error: fetchError } = await supabase
+          .from('vw_avaliacoes_desempenho')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (fetchError) {
+          console.error('Erro ao buscar dados completos da avaliação para notificação:', fetchError);
+        } else if (avaliacaoCompleta) {
+          // Buscar informações do funcionário
+          const { data: funcionario, error: funcionarioError } = await supabase
+            .from('users_unified')
+            .select('id, first_name, last_name, email')
+            .eq('id', avaliacaoCompleta.funcionario_id)
+            .single();
+
+          // Buscar informações do avaliador
+          const { data: avaliador, error: avaliadorError } = await supabase
+            .from('users_unified')
+            .select('id, first_name, last_name, email')
+            .eq('id', avaliacaoCompleta.avaliador_id)
+            .single();
+
+          if (funcionarioError || avaliadorError) {
+            console.error('Erro ao buscar informações de usuário para notificação:', funcionarioError || avaliadorError);
+          } else if (funcionario && avaliador) {
+            // Preparar objeto de avaliação para notificação
+            const avaliacaoParaNotificacao = {
+              id: avaliacaoCompleta.id,
+              funcionario_id: avaliacaoCompleta.funcionario_id,
+              avaliador_id: avaliacaoCompleta.avaliador_id,
+              periodo: avaliacaoCompleta.periodo,
+              data_inicio: avaliacaoCompleta.data_inicio,
+              data_fim: avaliacaoCompleta.data_fim,
+              status: novoStatus,
+              pontuacao_total: avaliacaoCompleta.pontuacao_total,
+              observacoes: avaliacaoCompleta.observacoes,
+              created_at: avaliacaoCompleta.created_at,
+              updated_at: avaliacaoCompleta.updated_at
+            };
+
+            // Enviar notificações usando o workflow service
+            // Usar um método público para acessar a funcionalidade de notificação
+            const workflowService = new AvaliacaoWorkflowService();
+            await (workflowService as any).sendStatusUpdateNotifications(
+              avaliacaoParaNotificacao,
+              statusAnterior,
+              novoStatus,
+              funcionario,
+              avaliador
+            );
+          }
+        }
+      } catch (notificationError) {
+        console.error('Erro ao enviar notificações de atualização de status:', notificationError);
+        // Não falhar a operação principal se as notificações falharem
+      }
+    }
+
     // Buscar a avaliação atualizada
     const { data: avaliacaoAtualizada, error: getError } = await supabase
       .from('vw_avaliacoes_desempenho')
@@ -367,7 +437,7 @@ export async function PUT(
     return NextResponse.json({
       success: true,
       data: avaliacaoAtualizada,
-      message: 'Avaliação atualizada com sucesso',
+      message: 'Avaliação atualizada com sucesso' + (statusAnterior !== novoStatus ? ' e notificações enviadas' : ''),
       timestamp: new Date().toISOString()
     });
   } catch (error) {

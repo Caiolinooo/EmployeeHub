@@ -30,9 +30,6 @@ export interface NotificacaoAvaliacao {
     gerente_nome?: string;
     data_limite?: string;
   };
-  lida: boolean;
-  enviada_push: boolean;
-  enviada_email: boolean;
   created_at?: string;
 }
 
@@ -53,10 +50,7 @@ export class NotificacoesAvaliacaoService {
           type: notificacao.tipo,
           title: notificacao.titulo,
           message: notificacao.mensagem,
-          data: notificacao.dados_avaliacao,
-          read: notificacao.lida,
-          push_sent: notificacao.enviada_push,
-          email_sent: notificacao.enviada_email
+          data: notificacao.dados_avaliacao
         })
         .select('id')
         .single();

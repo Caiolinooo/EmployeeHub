@@ -17,7 +17,10 @@ interface Avaliacao {
   created_at: string;
   deleted_at: string;
   funcionario_nome: string;
+  funcionario_cargo: string;
+  funcionario_departamento: string;
   avaliador_nome: string;
+  avaliador_cargo: string;
 }
 
 export default function LixeiraPage() {
@@ -37,22 +40,14 @@ export default function LixeiraPage() {
       try {
         setLoading(true);
 
-        // Buscar avaliações que estão na lixeira (deleted_at não é null)
+        // Buscar avaliações que estão na lixeira diretamente da tabela
+        console.log('Buscando avaliações na lixeira...');
         const { data, error } = await supabase
           .from('avaliacoes_desempenho')
           .select(`
-            id,
-            funcionario_id,
-            avaliador_id,
-            periodo,
-            data_inicio,
-            data_fim,
-            status,
-            pontuacao_total,
-            observacoes,
-            created_at,
-            updated_at,
-            deleted_at
+            *,
+            funcionario:funcionario_id(id, first_name, last_name, position, department),
+            avaliador:avaliador_id(id, first_name, last_name, position)
           `)
           .not('deleted_at', 'is', null)
           .order('deleted_at', { ascending: false });
@@ -61,29 +56,8 @@ export default function LixeiraPage() {
           throw error;
         }
 
-        // Buscar dados dos funcionários e avaliadores separadamente
-        const funcionariosIds = [...new Set(data?.map(item => item.funcionario_id).filter(Boolean) || [])];
-        const avaliadoresIds = [...new Set(data?.map(item => item.avaliador_id).filter(Boolean) || [])];
-
-        const { data: funcionarios } = await supabase
-          .from('users_unified')
-          .select('id, first_name, last_name, email')
-          .in('id', funcionariosIds);
-
-        const { data: avaliadores } = await supabase
-          .from('users_unified')
-          .select('id, first_name, last_name, email')
-          .in('id', avaliadoresIds);
-
-        // Combinar dados
-        const enrichedData = data?.map(item => ({
-          ...item,
-          funcionario: funcionarios?.find(f => f.id === item.funcionario_id),
-          avaliador: avaliadores?.find(a => a.id === item.avaliador_id)
-        })) || [];
-
-        // Formatar dados
-        const avaliacoesFormatadas = enrichedData.map(item => ({
+        // Formatar dados com relacionamentos do Supabase
+        const avaliacoesFormatadas = data?.map(item => ({
           id: item.id,
           funcionario_id: item.funcionario_id,
           avaliador_id: item.avaliador_id,
@@ -91,9 +65,12 @@ export default function LixeiraPage() {
           status: item.status || 'archived',
           created_at: item.created_at,
           deleted_at: item.deleted_at,
-          funcionario_nome: item.funcionario ? `${item.funcionario.first_name || ''} ${item.funcionario.last_name || ''}`.trim() || 'Desconhecido' : 'Desconhecido',
-          avaliador_nome: item.avaliador ? `${item.avaliador.first_name || ''} ${item.avaliador.last_name || ''}`.trim() || 'Desconhecido' : 'Desconhecido'
-        }));
+          funcionario_nome: item.funcionario ? `${item.funcionario.first_name} ${item.funcionario.last_name}` : 'Desconhecido',
+          funcionario_cargo: item.funcionario?.position || '',
+          funcionario_departamento: item.funcionario?.department || '',
+          avaliador_nome: item.avaliador ? `${item.avaliador.first_name} ${item.avaliador.last_name}` : 'Desconhecido',
+          avaliador_cargo: item.avaliador?.position || ''
+        })) || [];
 
         setAvaliacoes(avaliacoesFormatadas);
         setLoading(false);
@@ -111,6 +88,8 @@ export default function LixeiraPage() {
   const filteredAvaliacoes = avaliacoes.filter(avaliacao =>
     avaliacao.avaliador_nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     avaliacao.funcionario_nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    avaliacao.funcionario_cargo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    avaliacao.funcionario_departamento?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     avaliacao.periodo.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -123,17 +102,20 @@ export default function LixeiraPage() {
     try {
       setRestoreLoading(id);
 
-      // Atualizar o campo deleted_at para null
-      const { error } = await supabase
-        .from('avaliacoes_desempenho')
-        .update({
-          deleted_at: null,
-          status: 'pendente' // Restaurar com status pendente
-        })
-        .eq('id', id);
+      // Usar a API de restauração
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/avaliacao/soft-delete/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
 
-      if (error) {
-        throw error;
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao restaurar avaliação');
       }
 
       // Remover a avaliação da lista
@@ -149,7 +131,7 @@ export default function LixeiraPage() {
 
     } catch (err) {
       console.error('Erro ao restaurar avaliação:', err);
-      alert(t('avaliacao.trash.restoreError', 'Ocorreu um erro ao restaurar a avaliação. Por favor, tente novamente.'));
+      alert(t('avaliacao.trash.restoreError', `Ocorreu um erro ao restaurar a avaliação: ${err instanceof Error ? err.message : 'Erro desconhecido'}`));
     } finally {
       setRestoreLoading(null);
     }
@@ -341,6 +323,12 @@ export default function LixeiraPage() {
                     {t('avaliacao.funcionario', 'Funcionário')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Cargo
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Departamento
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('avaliacao.periodo', 'Período')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -359,9 +347,16 @@ export default function LixeiraPage() {
                   <tr key={avaliacao.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{avaliacao.avaliador_nome}</div>
+                      <div className="text-sm text-gray-500">{avaliacao.avaliador_cargo}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{avaliacao.funcionario_nome}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{avaliacao.funcionario_cargo}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{avaliacao.funcionario_departamento}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{avaliacao.periodo}</div>
@@ -412,4 +407,3 @@ export default function LixeiraPage() {
     </MainLayout>
   );
 }
-

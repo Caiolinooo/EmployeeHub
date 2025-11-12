@@ -8,7 +8,6 @@ export interface CriterioAvaliacao {
   nome: string;
   descricao: string;
   categoria: string;
-  peso?: number; // Mantido apenas para compatibilidade histórica - sempre será 1.0
   pontuacao_maxima: number;
   ativo?: boolean;
   apenas_lideres?: boolean;
@@ -124,86 +123,111 @@ export const criteriosPadrao: CriterioAvaliacao[] = [
     apenas_lideres: false,
     tipo: 'gerente'
   },
+
+  // Questão 16 - LIDERANÇA: CAPACIDADE DE DELEGAÇÃO (apenas para líderes)
+  {
+    id: 'q16-lideranca-delegar',
+    nome: 'Liderança - Capacidade de Delegação',
+    descricao: 'Questão 16: Avalie a capacidade de delegar tarefas e responsabilidades de forma eficaz, desenvolvendo a equipe',
+    categoria: 'Liderança',
+    pontuacao_maxima: 5,
+    ativo: true,
+    apenas_lideres: true,
+    tipo: 'gerente'
+  },
+
+  // Questão 17 - LIDERANÇA: DESENVOLVIMENTO DE EQUIPE (apenas para líderes)
+  {
+    id: 'q17-lideranca-desenvolvimento',
+    nome: 'Liderança - Desenvolvimento de Equipe',
+    descricao: 'Questão 17: Avalie a capacidade de desenvolver, orientar e capacitar membros da equipe para alcançar melhores resultados',
+    categoria: 'Liderança',
+    pontuacao_maxima: 5,
+    ativo: true,
+    apenas_lideres: true,
+    tipo: 'gerente'
+  },
   {
     id: '7c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e6f',
     nome: 'Autonomia e Proatividade',
     descricao: 'Realiza as tarefas diárias sem a necessidade de intervenção da liderança.',
     categoria: 'Comportamento',
-    peso: 1.0,
     pontuacao_maxima: 5,
     ativo: true,
-    apenas_lideres: false
+    apenas_lideres: false,
+    tipo: 'gerente'
   },
   {
     id: '6d4e5f6a-7b8c-4d9e-0f1a-2b3c4d5e6f7a',
     nome: 'Comunicação, Colaboração e Relacionamento',
     descricao: 'Possui uma comunicação clara. Pensa no coletivo e ajuda no aprendizado e conhecimento da equipe. Demonstra bom relacionamento com os colegas.',
     categoria: 'Habilidades Interpessoais',
-    peso: 1.0,
     pontuacao_maxima: 5,
     ativo: true,
-    apenas_lideres: false
+    apenas_lideres: false,
+    tipo: 'gerente'
   },
   {
     id: '5e6f7a8b-9c0d-4e1f-2a3b-4c5d6e7f8a9b',
     nome: 'Conhecimento das atividades',
     descricao: 'Demonstra domínio das atividades que desempenha e compartilha boas ideias e conhecimentos técnicos com o time.',
     categoria: 'Competências Técnicas',
-    peso: 1.0,
     pontuacao_maxima: 5,
     ativo: true,
-    apenas_lideres: false
+    apenas_lideres: false,
+    tipo: 'gerente'
   },
   {
     id: '4f5a6b7c-8d9e-4f0a-1b2c-3d4e5f6a7b8c',
     nome: 'Resolução de problemas',
     descricao: 'Resolve problemas relacionados à sua rotina de trabalho. Utiliza a criatividade para encontrar soluções. Quando necessário, propõe soluções para a tomada de decisão da liderança.',
     categoria: 'Competências Técnicas',
-    peso: 1.0,
     pontuacao_maxima: 5,
     ativo: true,
-    apenas_lideres: false
+    apenas_lideres: false,
+    tipo: 'gerente'
   },
   {
     id: '3a4b5c6d-7e8f-4a9b-0c1d-2e3f4a5b6c7d',
     nome: 'Inteligência Emocional e Solução de conflitos',
     descricao: 'Lida bem com situações de conflito, demonstrando equilíbrio quando há adversidades.',
     categoria: 'Habilidades Interpessoais',
-    peso: 1.0,
     pontuacao_maxima: 5,
     ativo: true,
-    apenas_lideres: false
+    apenas_lideres: false,
+    tipo: 'gerente'
   },
   {
     id: '2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e',
     nome: 'Inovação',
     descricao: 'É capaz de inovar em suas estratégias e propõe ideias que irão agregar valores para o desenvolvimento das atividades e melhorias dos resultados da equipe e da empresa.',
     categoria: 'Comportamento',
-    peso: 1.0,
     pontuacao_maxima: 5,
     ativo: true,
-    apenas_lideres: false
+    apenas_lideres: false,
+    tipo: 'gerente'
   },
-  // Critérios específicos para líderes (Gerentes e Líderes)
+  // Critérios específicos para líderes (Gerentes e Líderes) - LEGADO
+  // Mantidos para compatibilidade, mas as novas perguntas 16-17 são as oficiais
   {
     id: '0d1e2f3a-4b5c-4d6e-7f8a-9b0c1d2e3f4a',
     nome: 'Liderança - Delegação',
     descricao: 'Sabe delegar atividades, definindo e acompanhando prazos para execução.',
     categoria: 'Liderança',
-    peso: 1.0,
     pontuacao_maxima: 5,
-    ativo: true,
-    apenas_lideres: true
+    ativo: false, // Desativado - usar q16-lideranca-delegar
+    apenas_lideres: true,
+    tipo: 'gerente'
   },
   {
     id: '1e2f3a4b-5c6d-4e7f-8a9b-0c1d2e3f4a5b',
     nome: 'Liderança - Feedback e Desenvolvimento de equipe',
     descricao: 'Proporciona feedback constante para seus liderados, identificando pontos de melhorias e apresentando ferramentas e estratégias de atuação.',
     categoria: 'Liderança',
-    peso: 1.0,
     pontuacao_maxima: 5,
-    ativo: true,
-    apenas_lideres: true
+    ativo: false, // Desativado - usar q17-lideranca-desenvolvimento
+    apenas_lideres: true,
+    tipo: 'gerente'
   }
 ];
 
@@ -381,20 +405,16 @@ export function validarAvaliacaoCompleta(
 }
 
 /**
- * Converte avaliações antigas com pesos para o novo formato sem pesos
- * @param avaliacaoAntiga Avaliação no formato antigo com pesos
+ * Converte avaliações antigas para o novo formato
+ * NOTA: Sistema não usa mais pesos desde a versão AN-TED-002-R0
+ * @param avaliacaoAntiga Avaliação no formato antigo
  * @returns Avaliação convertida para o novo formato
  */
 export function converterAvaliacaoAntiga(avaliacaoAntiga: any): ResultadoAvaliacao {
-  // Se já não tem pesos, retorna como está
-  if (!avaliacaoAntiga.pesos || Object.keys(avaliacaoAntiga.pesos).length === 0) {
-    return avaliacaoAntiga;
-  }
-
-  // Converte para o novo formato removendo pesos
+  // Extrai apenas as notas, ignorando qualquer campo de peso que possa existir
   const notasConvertidas: Record<string, number> = {};
 
-  // Para cada critério, converte a nota (ignorando o peso)
+  // Para cada critério, converte a nota
   Object.entries(avaliacaoAntiga.notas || {}).forEach(([criterioId, nota]: [string, any]) => {
     if (typeof nota === 'number' && nota > 0) {
       notasConvertidas[criterioId] = nota;

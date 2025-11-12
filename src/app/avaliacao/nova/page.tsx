@@ -7,6 +7,7 @@ import { FiSave, FiX, FiArrowLeft, FiUser, FiCalendar, FiFileText, FiUsers } fro
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/contexts/I18nContext';
+import { AvaliacaoWorkflowService } from '@/lib/services/avaliacao-workflow-service';
 
 interface Usuario {
   id: string;
@@ -19,14 +20,9 @@ interface Usuario {
   active: boolean;
 }
 
-interface CicloAvaliacao {
-  id: string;
-  nome: string;
-  descricao: string;
-  data_inicio: string;
-  data_fim: string;
-  status: string;
-  ativo: boolean;
+interface PeriodoAvaliacao {
+  value: string;
+  label: string;
 }
 
 export default function NovaAvaliacaoPage() {
@@ -39,12 +35,12 @@ export default function NovaAvaliacaoPage() {
   // Estados para dados
   const [funcionarios, setFuncionarios] = useState<Usuario[]>([]);
   const [gerentesAvaliacao, setGerentesAvaliacao] = useState<Usuario[]>([]);
-  const [ciclos, setCiclos] = useState<CicloAvaliacao[]>([]);
+  const [periodos, setPeriodos] = useState<PeriodoAvaliacao[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
   // Estado do formulário
   const [formData, setFormData] = useState({
-    periodo_id: '',
+    periodo: '',
     funcionario_id: '',
     gerente_avaliacao_id: ''
   });
@@ -58,16 +54,15 @@ export default function NovaAvaliacaoPage() {
     try {
       setLoadingData(true);
 
-      // Carregar períodos de avaliação abertos
-      const { data: periodosData, error: periodosError } = await supabase
-        .from('periodos_avaliacao')
-        .select('*')
-        .eq('ativo', true)
-        .order('created_at', { ascending: false });
+      // Criar lista de períodos (anos) - ano atual e próximos 2 anos
+      const currentYear = new Date().getFullYear();
+      const periodosData: PeriodoAvaliacao[] = [
+        { value: currentYear.toString(), label: `Ano ${currentYear}` },
+        { value: (currentYear + 1).toString(), label: `Ano ${currentYear + 1}` },
+        { value: (currentYear + 2).toString(), label: `Ano ${currentYear + 2}` }
+      ];
 
-      if (periodosError) throw periodosError;
-
-      // Carregar todos os usuários autorizados e ativos
+      // Carregar todos os usuários autorizados e ativos da tabela users_unified
       const { data: usuariosData, error: usuariosError } = await supabase
         .from('users_unified')
         .select('id, first_name, last_name, email, position, role, is_authorized, active')
@@ -104,7 +99,7 @@ export default function NovaAvaliacaoPage() {
         user.role === 'MANAGER'
       );
 
-      setCiclos(periodosData || []);
+      setPeriodos(periodosData);
       setFuncionarios(funcionariosList);
       setGerentesAvaliacao(gerentesList);
 
@@ -127,7 +122,7 @@ export default function NovaAvaliacaoPage() {
 
   // Validar formulário
   const validateForm = () => {
-    if (!formData.periodo_id) {
+    if (!formData.periodo) {
       setError('Selecione um período de avaliação.');
       return false;
     }
@@ -159,58 +154,40 @@ export default function NovaAvaliacaoPage() {
       setError(null);
 
       // Verificar se já existe uma avaliação para este funcionário neste período
-      const { data: existingEvaluation, error: checkError } = await supabase
+      const { data: existingEvaluations, error: checkError } = await supabase
         .from('avaliacoes_desempenho')
         .select('id')
-        .eq('periodo_id', formData.periodo_id)
-        .eq('funcionario_id', formData.funcionario_id)
-        .single();
+        .eq('periodo', formData.periodo)
+        .eq('funcionario_id', formData.funcionario_id);
 
       if (checkError && checkError.code !== 'PGRST116') {
         throw checkError;
       }
 
-      if (existingEvaluation) {
+      if (existingEvaluations && existingEvaluations.length > 0) {
         setError('Já existe uma avaliação para este funcionário neste período.');
         setLoading(false);
         return;
       }
 
-      // Criar nova avaliação
+      // Preparar dados para criação da avaliação
       const avaliacaoData = {
-        periodo_id: formData.periodo_id,
         funcionario_id: formData.funcionario_id,
         avaliador_id: formData.gerente_avaliacao_id,
-        status: 'pendente',
-        periodo: new Date().getFullYear().toString(),
-        dados_colaborador: null,
-        dados_gerente: null,
-        resultado: null
+        periodo: formData.periodo,
+        status: 'pendente' as const,
+        data_inicio: new Date().toISOString().split('T')[0],
+        data_fim: new Date(new Date().setMonth(new Date().getMonth() + 3)).toISOString().split('T')[0],
+        observacoes: '',
+        pontuacao_total: 0
       };
 
-      const { data, error: insertError } = await supabase
-        .from('avaliacoes_desempenho')
-        .insert([avaliacaoData])
-        .select()
-        .single();
+      // Usar o serviço de workflow para criar a avaliação com notificações
+      const result = await AvaliacaoWorkflowService.createAvaliacao(avaliacaoData);
 
-      if (insertError) {
-        throw insertError;
+      if (!result.success) {
+        throw new Error(result.error || 'Erro ao criar avaliação');
       }
-
-      // Criar notificação para o funcionário
-      await supabase
-        .from('notificacoes_avaliacao')
-        .insert([{
-          usuario_id: formData.funcionario_id,
-          tipo: 'abertura_ciclo',
-          titulo: 'Nova Avaliação Disponível',
-          mensagem: `Uma nova avaliação foi criada para você. Por favor, acesse o sistema para responder.`,
-          dados: {
-            avaliacao_id: data.id,
-            periodo_id: formData.periodo_id
-          }
-        }]);
 
       setSuccess(true);
 
@@ -266,7 +243,7 @@ export default function NovaAvaliacaoPage() {
                 <div className="bg-green-50 border border-green-200 text-green-700 p-4 rounded-md mb-6">
                   <div className="flex items-center">
                     <FiSave className="mr-2" />
-                    <span>Avaliação criada com sucesso! Redirecionando...</span>
+                    <span>Avaliação criada com sucesso! Notificações enviadas. Redirecionando...</span>
                   </div>
                 </div>
               ) : null}
@@ -278,23 +255,23 @@ export default function NovaAvaliacaoPage() {
               ) : null}
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Ciclo de Avaliação */}
+                {/* Período de Avaliação */}
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <FiCalendar className="inline mr-1" />
                     Período de Avaliação *
                   </label>
                   <select
-                    name="periodo_id"
-                    value={formData.periodo_id}
+                    name="periodo"
+                    value={formData.periodo}
                     onChange={handleChange}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     required
                   >
                     <option value="">Selecione um período</option>
-                    {ciclos.map(periodo => (
-                      <option key={periodo.id} value={periodo.id}>
-                        {periodo.nome}
+                    {periodos.map(periodo => (
+                      <option key={periodo.value} value={periodo.value}>
+                        {periodo.label}
                       </option>
                     ))}
                   </select>
@@ -351,7 +328,8 @@ export default function NovaAvaliacaoPage() {
                     <li>Apenas usuários configurados como "Gerentes de Avaliação" podem avaliar</li>
                     <li>O status do usuário no sistema (ADMIN/MANAGER) não afeta esta configuração</li>
                     <li>Cada funcionário só pode ter uma avaliação por ciclo</li>
-                    <li>O funcionário receberá uma notificação automaticamente</li>
+                    <li>O funcionário e o gerente receberão notificações automaticamente</li>
+                    <li>Notificações de lembrete serão enviadas para avaliações pendentes</li>
                   </ul>
                 </div>
 

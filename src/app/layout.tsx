@@ -56,8 +56,7 @@ export async function generateMetadata(): Promise<Metadata> {
     // Tentar buscar a configuração do servidor
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const response = await fetch(`${baseUrl}/api/config`, {
-      cache: 'no-store',
-      next: { revalidate: 0 }
+      cache: 'no-store'
     });
 
     if (response.ok) {

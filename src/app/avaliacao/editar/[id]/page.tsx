@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect , use} from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import MainLayout from '@/components/Layout/MainLayout';
 import { FiSave, FiX, FiArrowLeft, FiAlertTriangle } from 'react-icons/fi';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 
 interface Funcionario {
   id: string;
@@ -20,18 +20,40 @@ interface Avaliacao {
   funcionario_id: string;
   avaliador_id: string;
   periodo: string;
+  periodo_id?: string;
+  periodo_nome?: string;
   status: string;
   observacoes?: string;
   created_at: string;
   updated_at?: string;
-  funcionario?: Funcionario;
-  avaliador?: Funcionario;
+  // Campos da view com informações do usuário
+  funcionario_nome?: string;
+  funcionario_cargo?: string;
+  funcionario_departamento?: string;
+  avaliador_nome?: string;
+  avaliador_cargo?: string;
 }
 
-export default function EditarAvaliacaoPage({ params }: { params: Promise<{ id: string }> }) {
-  // Obter o ID da avaliação diretamente dos params
-  // Não usamos React.use() aqui porque está causando erros
-  const avaliacaoId = params.id;
+export default function EditarAvaliacaoPage() {
+  // Obter o ID da avaliação usando useParams do Next.js
+  const params = useParams();
+  const avaliacaoId = params.id as string;
+
+  // Validar se o ID é um UUID válido
+  const isValidUUID = useCallback((id: string) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
+  }, []);
+
+  // Se não houver ID válido, redirecionar
+  useEffect(() => {
+    if (!avaliacaoId || !isValidUUID(avaliacaoId)) {
+      console.error('ID da avaliação inválido ou não encontrado:', avaliacaoId);
+      // Poderia redirecionar para a lista, mas vamos apenas logar o erro
+      return;
+    }
+    console.log('ID da avaliação:', avaliacaoId);
+  }, [avaliacaoId, isValidUUID]);
 
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -70,18 +92,21 @@ export default function EditarAvaliacaoPage({ params }: { params: Promise<{ id: 
 
   // Carregar avaliação e funcionários
   useEffect(() => {
+    // Se não tiver ID válido, não executar
+    if (!avaliacaoId || !isValidUUID(avaliacaoId)) {
+      setLoading(false);
+      setError('ID da avaliação inválido');
+      return;
+    }
+
     const fetchData = async () => {
       try {
         setLoading(true);
 
-        // Buscar avaliação pelo ID
+        // Buscar avaliação pelo ID usando a view vw_avaliacoes_desempenho
         const { data: avaliacaoData, error: avaliacaoError } = await supabase
-          .from('avaliacoes_desempenho')
-          .select(`
-            *,
-            funcionario:funcionarios!avaliacoes_desempenho_funcionario_id_fkey(id, nome, cargo, departamento),
-            avaliador:funcionarios!avaliacoes_desempenho_avaliador_id_fkey(id, nome, cargo)
-          `)
+          .from('vw_avaliacoes_desempenho')
+          .select('*')
           .eq('id', avaliacaoId)
           .is('deleted_at', null)
           .single();
@@ -90,22 +115,30 @@ export default function EditarAvaliacaoPage({ params }: { params: Promise<{ id: 
           throw avaliacaoError;
         }
 
-        // Buscar todos os funcionários
+        // Buscar todos os funcionários da tabela users_unified
         const { data: funcionariosData, error: funcionariosError } = await supabase
-          .from('funcionarios')
-          .select('id, nome, cargo, departamento, email, user_id, users:user_id(id, role)')
-          .is('deleted_at', null)
-          .order('nome', { ascending: true });
+          .from('users_unified')
+          .select('id, first_name, last_name, position, department, email, role')
+          .order('first_name', { ascending: true });
 
         if (funcionariosError) {
           throw funcionariosError;
         }
 
+        // Formatar dados dos funcionários
+        const todosFuncionarios = (funcionariosData || []).map(user => ({
+          id: user.id,
+          nome: `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Desconhecido',
+          cargo: user.position,
+          departamento: user.department,
+          email: user.email
+        }));
+
         // Separar avaliadores (gerentes e admins) dos funcionários comuns
-        const todosFuncionarios = funcionariosData || [];
-        const apenasAvaliadores = todosFuncionarios.filter((f: any) =>
-          f.users?.role === 'ADMIN' || f.users?.role === 'MANAGER'
-        );
+        const apenasAvaliadores = todosFuncionarios.filter(f => {
+          const user = funcionariosData?.find(u => u.id === f.id);
+          return user?.role === 'ADMIN' || user?.role === 'MANAGER';
+        });
 
         setFuncionarios(todosFuncionarios);
         setAvaliadores(apenasAvaliadores);
@@ -115,7 +148,7 @@ export default function EditarAvaliacaoPage({ params }: { params: Promise<{ id: 
         setFormData({
           avaliador_id: avaliacaoData.avaliador_id,
           funcionario_id: avaliacaoData.funcionario_id,
-          periodo: avaliacaoData.periodo,
+          periodo: avaliacaoData.periodo_nome || avaliacaoData.periodo,
           status: avaliacaoData.status,
           observacoes: avaliacaoData.observacoes || ''
         });
@@ -155,7 +188,7 @@ export default function EditarAvaliacaoPage({ params }: { params: Promise<{ id: 
         return;
       }
 
-      // Atualizar avaliação
+      // Atualizar avaliação na tabela original
       const { error } = await supabase
         .from('avaliacoes_desempenho')
         .update({
