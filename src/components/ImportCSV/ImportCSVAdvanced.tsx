@@ -8,14 +8,6 @@ import CSVPreview from './CSVPreview';
 import CSVFieldMapping from './CSVFieldMapping';
 import CSVImportOptions from './CSVImportOptions';
 
-// Tipos de separadores suportados
-const SEPARATORS = [
-  { id: ',', label: t('components.virgula') },
-  { id: ';', label: t('components.pontoEVirgula') },
-  { id: '\t', label: 'Tab (\\t)' },
-  { id: '|', label: 'Pipe (|)' },
-];
-
 interface ImportCSVAdvancedProps {
   onImportComplete?: (data: Record<string, string | number>[]) => void;
   apiEndpoint: string;
@@ -34,6 +26,13 @@ export default function ImportCSVAdvanced({
   fieldDefinitions
 }: ImportCSVAdvancedProps) {
   const { t } = useI18n();
+  // Tipos de separadores suportados (dependem de i18n)
+  const SEPARATORS = [
+    { id: ',', label: t('components.virgula') },
+    { id: ';', label: t('components.pontoEVirgula') },
+    { id: '\t', label: 'Tab (\\t)' },
+    { id: '|', label: 'Pipe (|)' },
+  ];
   const [file, setFile] = useState<File | null>(null);
   const [separator, setSeparator] = useState<string>(',');
   const [previewData, setPreviewData] = useState<Record<string, string | number>[]>([]);
