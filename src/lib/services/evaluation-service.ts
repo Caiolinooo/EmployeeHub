@@ -21,6 +21,7 @@ import {
 } from '@/lib/schemas/evaluation-schemas';
 import { AvaliacaoWorkflowService } from './avaliacao-workflow-service';
 import { EvaluationSettingsService } from './evaluation-settings';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 
 export class EvaluationService {
 
@@ -489,23 +490,24 @@ export class EvaluationService {
       if (!respostas || respostas.length === 0) {
         return avaliacao;
       }
-      // Obter settings efetivas (usa ciclo_id se existir)
-      let settings = null;
-      try {
-        settings = await EvaluationSettingsService.getEffectiveSettings(avaliacao.ciclo_id || null);
-      } catch (e) {
-        console.warn('Falha ao obter evaluation settings, usando média simples:', e);
+      // Feature flag controla uso de cálculo avançado
+      const useWeighted = isFeatureEnabled('avaliacao_weighted_calc');
+      if (useWeighted) {
+        let settings = null;
+        try {
+          settings = await EvaluationSettingsService.getEffectiveSettings(avaliacao.ciclo_id || null);
+        } catch (e) {
+          console.warn('Falha ao obter evaluation settings, fallback média simples:', e);
+        }
+        const notas = respostas.map(r => {
+          const pesoConfig = settings?.calculo?.weights?.[String(r.pergunta_id)] ?? 1;
+          return { valor: r.nota, criterioId: String(r.pergunta_id), peso: pesoConfig };
+        });
+        avaliacao.media_geral = EvaluationSettingsService.calculateScore(notas, settings);
+      } else {
+        const mediaGeral = respostas.reduce((sum, r) => sum + r.nota, 0) / respostas.length;
+        avaliacao.media_geral = Math.round(mediaGeral * 10) / 10;
       }
-
-      // Preparar vetor de notas (possível peso por pergunta_id)
-      const notas = respostas.map(r => {
-        const pesoConfig = settings?.calculo?.weights?.[String(r.pergunta_id)] ?? 1;
-        return { valor: r.nota, criterioId: String(r.pergunta_id), peso: pesoConfig };
-      });
-
-      // Calcular média considerando settings (simple_average ou weighted)
-      const mediaGeral = EvaluationSettingsService.calculateScore(notas, settings);
-      avaliacao.media_geral = mediaGeral;
 
       // TODO: Calcular médias por competência quando tivermos mapeamento
       avaliacao.media_por_competencia = {};
