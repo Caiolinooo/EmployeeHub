@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     console.log('Buscando usuário com ID:', payload.userId);
 
     const { data: user, error: userError } = await supabase
-      .from('users')
+      .from('users_unified')
       .select('*')
       .eq('id', payload.userId)
       .single();
@@ -66,14 +66,15 @@ export async function POST(request: NextRequest) {
     // Verificar se o usuário é o administrador
     const adminEmail = process.env.ADMIN_EMAIL || 'caio.correia@groupabz.com';
     const adminPhone = process.env.ADMIN_PHONE_NUMBER || '+5522997847289';
-    const isAdmin = user.email === adminEmail || user.phone_number === adminPhone;
+    const isAdmin = user.email === adminEmail || user.phone_number === adminPhone || user.role === 'ADMIN';
 
     console.log('Verificando se é o administrador principal:', {
       isAdmin,
       userEmail: user.email,
       adminEmail,
       userPhone: user.phone_number,
-      adminPhone
+      adminPhone,
+      userRole: user.role
     });
 
     if (!isAdmin) {
@@ -83,10 +84,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Atualizar o papel do usuário para ADMIN
+    // Atualizar o papel do usuário para ADMIN e permissões
+    const defaultPermissions = {
+      modules: {
+        dashboard: true,
+        manual: true,
+        procedimentos: true,
+        politicas: true,
+        calendario: true,
+        noticias: true,
+        reembolso: true,
+        contracheque: true,
+        ponto: true,
+        admin: true,
+        avaliacao: true
+      },
+      features: {
+        create_users: true,
+        edit_users: true,
+        delete_users: true,
+        manage_permissions: true,
+        view_reports: true,
+        export_data: true
+      }
+    };
+
     const { error: updateError } = await supabase
-      .from('users')
-      .update({ role: 'ADMIN' })
+      .from('users_unified')
+      .update({ 
+        role: 'ADMIN',
+        access_permissions: defaultPermissions,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', user.id);
 
     if (updateError) {
@@ -95,50 +124,6 @@ export async function POST(request: NextRequest) {
         { error: 'Erro ao atualizar papel do usuário', details: updateError.message },
         { status: 500 }
       );
-    }
-
-    // Verificar se o usuário tem permissões de administrador
-    console.log('Verificando permissões de administrador para o usuário:', user?.id);
-
-    const { data: permissions, error: permissionsError } = await supabase
-      .from('user_permissions')
-      .select('*')
-      .eq('user_id', user?.id)
-      .eq('module', 'admin');
-
-    console.log('Permissões encontradas:', permissions || 'Nenhuma', 'Erro:', permissionsError || 'Nenhum');
-
-    if (permissionsError) {
-      console.error('Erro ao verificar permissões de administrador:', permissionsError);
-    }
-
-    // Se não tiver permissões de administrador, adicionar
-    if (!permissions || permissions.length === 0) {
-      console.log('Adicionando permissões de administrador para usuário existente');
-
-      const permissionsToAdd = [
-        { user_id: user?.id, module: 'admin', feature: null },
-        { user_id: user?.id, module: 'dashboard', feature: null },
-        { user_id: user?.id, module: 'users', feature: null },
-        { user_id: user?.id, module: 'settings', feature: null },
-        { user_id: user?.id, module: 'avaliacao', feature: null }
-      ];
-
-      console.log('Permissões a serem adicionadas:', permissionsToAdd);
-
-      const { data: insertData, error: insertError } = await supabase
-        .from('user_permissions')
-        .insert(permissionsToAdd);
-
-      console.log('Resultado da inserção de permissões:', insertData || 'Sem dados', 'Erro:', insertError || 'Nenhum');
-
-      if (insertError) {
-        console.error('Erro ao adicionar permissões de administrador:', insertError);
-        return NextResponse.json(
-          { error: 'Erro ao adicionar permissões de administrador', details: insertError.message },
-          { status: 500 }
-        );
-      }
     }
 
     return NextResponse.json({

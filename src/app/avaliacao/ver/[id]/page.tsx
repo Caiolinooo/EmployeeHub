@@ -1,487 +1,145 @@
+// src/app/avaliacao/ver/[id]/page.tsx
 'use client';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import ViewEvaluationClient from './ViewEvaluationClient';
+import { Evaluation, EvaluationCriterion, User } from '@/types';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
-import MainLayout from '@/components/Layout/MainLayout';
-import { FiArrowLeft, FiEdit, FiTrash2, FiCheck, FiX, FiAlertTriangle, FiDownload } from 'react-icons/fi';
-import Link from 'next/link';
-import { useRouter, useParams } from 'next/navigation';
-
-// Tipo para avaliação - atualizado para usar campos da view
-interface Avaliacao {
-  id: string;
-  funcionario_id: string;
-  avaliador_id: string;
-  periodo: string;
-  periodo_id?: string;
-  periodo_nome?: string;
-  data_inicio?: string;
-  data_fim?: string;
-  status: string;
-  pontuacao_total?: number;
-  observacoes?: string;
-  created_at: string;
-  updated_at?: string;
-  // Campos da view com informações do usuário
-  funcionario_nome?: string;
-  funcionario_cargo?: string;
-  funcionario_departamento?: string;
-  avaliador_nome?: string;
-  avaliador_cargo?: string;
+interface PageProps {
+  params: { id: string };
 }
 
-export default function VerAvaliacaoPage() {
-  // Obter o ID da avaliação usando useParams do Next.js
-  const params = useParams();
-  const avaliacaoId = (params as any)?.id ?? '';
-
-  // Validar se o ID é um UUID válido - movido para fora do componente para evitar re-renderização
-  const isValidUUID = useCallback((id: string) => {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(id);
-  }, []);
-
-  // Se não houver ID válido, mostrar erro
-  useEffect(() => {
-    if (!avaliacaoId || !isValidUUID(avaliacaoId)) {
-      console.error('ID da avaliação inválido ou não encontrado:', avaliacaoId);
-      setError('ID da avaliação inválido');
-      setLoading(false);
-      return;
-    }
-    console.log('ID da avaliação:', avaliacaoId);
-  }, [avaliacaoId]);
-
+export default function ViewEvaluationPage({ params }: PageProps) {
   const router = useRouter();
-  const [avaliacao, setAvaliacao] = useState<Avaliacao | null>(null);
+  const { user, isAuthenticated } = useSupabaseAuth();
+  const { id } = params;
+  const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
+  const [criteria, setCriteria] = useState<EvaluationCriterion[]>([]);
+  const [employee, setEmployee] = useState<User | null>(null);
+  const [manager, setManager] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [approveLoading, setApproveLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [criterios, setCriterios] = useState<any[]>([]);
-  const [settings, setSettings] = useState<any | null>(null);
-
-  // Obter o parâmetro source da URL
-  const [source, setSource] = useState<string | null>(null);
 
   useEffect(() => {
-    // Verificar se há um parâmetro source na URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const sourceParam = urlParams.get('source');
-    setSource(sourceParam);
-
-    // Remover o parâmetro t da URL se existir
-    if (urlParams.has('t')) {
-      urlParams.delete('t');
-      const newUrl = `${window.location.pathname}${urlParams.toString() ? `?${urlParams.toString()}` : ''}`;
-      window.history.replaceState({}, '', newUrl);
+    if (!isAuthenticated) {
+      router.push(`/login?redirect=/avaliacao/ver/${id}`);
+      return;
     }
-  }, []);
 
-  useEffect(() => {
-    const fetchAvaliacao = async () => {
+    if (!id) return;
+
+    const fetchEvaluationData = async () => {
       try {
-        console.log('Buscando avaliação com ID:', avaliacaoId);
-        setLoading(true);
-        setError(null);
+        // Get token for API calls
+        const token = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('abzToken=') || row.startsWith('token='))
+          ?.split('=')[1];
 
-        // Buscar avaliação pelo ID usando a view vw_avaliacoes_desempenho
-        const { data, error } = await supabase
-          .from('vw_avaliacoes_desempenho')
-          .select('*')
-          .eq('id', avaliacaoId)
-          .is('deleted_at', null)
-          .single();
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json',
+        };
 
-        if (error) {
-          console.error('Erro na consulta Supabase:', error);
-          throw error;
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
         }
 
-        console.log('Avaliação encontrada:', data);
-        setAvaliacao(data);
+        // Fetch evaluation
+        const evalResponse = await fetch(`/api/avaliacao/${id}`, { headers });
+        
+        if (!evalResponse.ok) {
+          if (evalResponse.status === 401) {
+            router.push(`/login?redirect=/avaliacao/ver/${id}`);
+            return;
+          }
+          throw new Error('Failed to fetch evaluation');
+        }
+
+        const evalData = await evalResponse.json();
+        
+        if (!evalData.success || !evalData.data) {
+          router.push('/avaliacao?error=evaluation_not_found');
+          return;
+        }
+
+        setEvaluation(evalData.data);
+
+        // Fetch criteria
+        const criteriaResponse = await fetch('/api/avaliacao/criterios', { headers });
+        const criteriaData = await criteriaResponse.json();
+        
+        if (criteriaData.success) {
+          setCriteria(criteriaData.data);
+        }
+
+        // Fetch employee and manager
+        const employeeId = evalData.data.funcionario_id;
+        const managerId = evalData.data.avaliador_id;
+
+        if (employeeId) {
+          const empResponse = await fetch(`/api/users/${employeeId}`, { headers });
+          const empData = await empResponse.json();
+          if (empData.success) setEmployee(empData.data);
+        }
+
+        if (managerId) {
+          const mgrResponse = await fetch(`/api/users/${managerId}`, { headers });
+          const mgrData = await mgrResponse.json();
+          if (mgrData.success) setManager(mgrData.data);
+        }
+
         setLoading(false);
       } catch (err) {
-        console.error('Erro ao carregar avaliação:', err);
-        setError('Ocorreu um erro ao carregar a avaliação. Por favor, tente novamente.');
+        console.error('Failed to fetch evaluation data:', err);
+        setError('Erro ao carregar avaliação');
         setLoading(false);
       }
     };
 
-    fetchAvaliacao();
-  }, [avaliacaoId]); // Removido isValidUUID para evitar loop infinito
+    fetchEvaluationData();
+  }, [id, router, isAuthenticated]);
 
-  // Buscar critérios ativos para exibir pesos
-  useEffect(() => {
-    const fetchCriterios = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('criterios_avaliacao')
-          .select('*')
-          .eq('ativo', true)
-          .order('ordem', { ascending: true });
-        if (!error && data) setCriterios(data);
-      } catch (e) { /* silencioso */ }
-    };
-    fetchCriterios();
-  }, []);
+  if (!isAuthenticated) {
+    return null; // Redirecting...
+  }
 
-  // Buscar método de cálculo atual (settings globais)
-  useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const res = await fetch('/api/avaliacao/settings');
-        const json = await res.json();
-        if (json?.success) setSettings(json.data);
-      } catch {}
-    };
-    fetchSettings();
-  }, []);
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', padding: '20px' }}>
+        <div className="spinner" style={{ 
+          border: '4px solid #f3f3f3', 
+          borderTop: '4px solid #3498db', 
+          borderRadius: '50%', 
+          width: '40px', 
+          height: '40px', 
+          animation: 'spin 1s linear infinite' 
+        }}></div>
+        <p style={{ marginTop: '16px', color: '#666' }}>Carregando avaliação...</p>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
-  // Exportar PDF
-  const handleExportPdf = async () => {
-    if (!avaliacao) return;
-    try {
-      const res = await fetch(`/api/avaliacao/${avaliacao.id}/pdf`);
-      const json = await res.json();
-      if (json.success) {
-        const { pdf_base64, filename } = json.data;
-        // Converter base64 para binário
-        const byteChars = atob(pdf_base64);
-        const byteNumbers = new Array(byteChars.length);
-        for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = filename || 'avaliacao.pdf';
-        document.body.appendChild(a); a.click(); a.remove();
-        URL.revokeObjectURL(url);
-      } else alert(json.error || 'Erro ao gerar PDF');
-    } catch (e:any) {
-      alert('Falha ao gerar PDF: ' + e.message);
-    }
-  };
-
-  // Função para aprovar avaliação
-  const handleApprove = async () => {
-    if (!avaliacao) return;
-
-    if (!confirm('Tem certeza que deseja aprovar esta avaliação?')) {
-      return;
-    }
-
-    try {
-      setApproveLoading(true);
-
-      // Atualizar o status para 'completed' na tabela original
-      const { error } = await supabase
-        .from('avaliacoes_desempenho')
-        .update({
-          status: 'completed',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', avaliacao.id);
-
-      if (error) {
-        throw error;
-      }
-
-      // Atualizar o estado local
-      setAvaliacao(prev => prev ? { ...prev, status: 'completed' } : null);
-
-      alert('Avaliação aprovada com sucesso!');
-    } catch (err) {
-      console.error('Erro ao aprovar avaliação:', err);
-      alert('Ocorreu um erro ao aprovar a avaliação. Por favor, tente novamente.');
-    } finally {
-      setApproveLoading(false);
-    }
-  };
-
-  // Função para mover para a lixeira
-  const handleMoveToTrash = async () => {
-    if (!avaliacao) return;
-
-    if (!confirm('Tem certeza que deseja mover esta avaliação para a lixeira? Ela será excluída permanentemente após 30 dias.')) {
-      return;
-    }
-
-    try {
-      setDeleteLoading(true);
-
-      // Usar a API de soft delete
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/avaliacao/soft-delete/${avaliacao.id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Erro ao mover para lixeira');
-      }
-
-      alert('Avaliação movida para a lixeira com sucesso!');
-
-      // Redirecionar para a lista de avaliações
-      router.push('/avaliacao');
-    } catch (err) {
-      console.error('Erro ao mover avaliação para a lixeira:', err);
-      alert(`Ocorreu um erro ao mover a avaliação para a lixeira: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
-    } finally {
-      setDeleteLoading(false);
-    }
-  };
-
-  // Função para traduzir o status
-  const traduzirStatus = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'pending': return 'Pendente';
-      case 'in_progress': return 'Em Progresso';
-      case 'completed': return 'Concluída';
-      case 'archived': return 'Arquivada';
-      default: return status;
-    }
-  };
-
-  // Função para obter a cor do status
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'archived': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  if (error || !evaluation) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <p style={{ color: '#e74c3c', fontSize: '18px' }}>{error || 'Avaliação não encontrada'}</p>
+      </div>
+    );
+  }
 
   return (
-    <MainLayout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-6">
-          {source === 'list' ? (
-            <Link href="/avaliacao" className="inline-flex items-center text-blue-600 hover:text-blue-800">
-              <FiArrowLeft className="mr-2" /> Voltar para a lista
-            </Link>
-          ) : (
-            <Link href="/avaliacao" className="inline-flex items-center text-blue-600 hover:text-blue-800">
-              <FiArrowLeft className="mr-2" /> Voltar para a lista
-            </Link>
-          )}
-        </div>
-
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-          </div>
-        ) : error ? (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-md">
-            <div className="flex items-center mb-2">
-              <FiAlertTriangle className="h-5 w-5 mr-2" />
-              <h3 className="text-lg font-medium">Erro</h3>
-            </div>
-            <p>{error}</p>
-          </div>
-        ) : avaliacao ? (
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-gray-800">Detalhes da Avaliação</h1>
-              <div className="flex space-x-2 flex-wrap">
-                {avaliacao.status !== 'completed' && (
-                  <button
-                    onClick={handleApprove}
-                    disabled={approveLoading}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md flex items-center"
-                  >
-                    {approveLoading ? (
-                      <>
-                        <div className="animate-spin h-4 w-4 mr-2 border-t-2 border-b-2 border-white rounded-full"></div>
-                        Aprovando...
-                      </>
-                    ) : (
-                      <>
-                        <FiCheck className="mr-2" /> Aprovar
-                      </>
-                    )}
-                  </button>
-                )}
-                <Link href={`/avaliacao/editar/${avaliacao.id}`} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center">
-                  <FiEdit className="mr-2" /> Editar
-                </Link>
-                <button
-                  onClick={handleMoveToTrash}
-                  disabled={deleteLoading}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md flex items-center"
-                >
-                  {deleteLoading ? (
-                    <>
-                      <div className="animate-spin h-4 w-4 mr-2 border-t-2 border-b-2 border-white rounded-full"></div>
-                      Excluindo...
-                    </>
-                  ) : (
-                    <>
-                      <FiTrash2 className="mr-2" /> Excluir
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={handleExportPdf}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center"
-                >
-                  <FiDownload className="mr-2" /> Exportar PDF
-                </button>
-              </div>
-              {/* Resumo da Avaliação */}
-              {avaliacao && (
-                <div className="mt-6 bg-white border rounded-md shadow-sm">
-                  <div className="px-4 py-3 border-b flex items-center justify-between">
-                    <h2 className="font-semibold text-gray-800">Resumo da Avaliação</h2>
-                    <span className={`text-xs px-2 py-1 rounded-md ${avaliacao.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                      {avaliacao.status}
-                    </span>
-                  </div>
-                  <div className="px-4 py-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <div className="text-gray-500">Colaborador</div>
-                      <div className="font-medium">{avaliacao.funcionario_nome || '-'}</div>
-                    </div>
-                    <div>
-                      <div className="text-gray-500">Avaliador</div>
-                      <div className="font-medium">{avaliacao.avaliador_nome || '-'}</div>
-                    </div>
-                    <div>
-                      <div className="text-gray-500">Método de Cálculo</div>
-                      <div className="font-medium">{settings?.calculo?.method === 'weighted' ? 'Ponderado' : 'Média Simples'}</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Tabela de critérios e pesos */}
-              {criterios.length > 0 && (
-                <div className="mt-6 bg-white border rounded-md shadow-sm">
-                  <div className="px-4 py-3 border-b flex items-center justify-between">
-                    <h2 className="font-semibold text-gray-800">Critérios da Avaliação</h2>
-                    <span className="text-sm text-gray-500">Total: {criterios.length}</span>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full text-sm">
-                      <thead>
-                        <tr className="bg-gray-50 border-b">
-                          <th className="text-left px-4 py-2 font-medium text-gray-700">Ordem</th>
-                          <th className="text-left px-4 py-2 font-medium text-gray-700">Nome</th>
-                          <th className="text-left px-4 py-2 font-medium text-gray-700">Peso</th>
-                          <th className="text-left px-4 py-2 font-medium text-gray-700">Tipo</th>
-                          <th className="text-left px-4 py-2 font-medium text-gray-700">Apenas Líderes</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {criterios.map(c => (
-                          <tr key={c.id} className="border-b hover:bg-gray-50">
-                            <td className="px-4 py-2">{c.ordem}</td>
-                            <td className="px-4 py-2">{c.nome}</td>
-                            <td className="px-4 py-2">{c.peso}</td>
-                            <td className="px-4 py-2">{c.tipo}</td>
-                            <td className="px-4 py-2">{c.apenas_lideres ? 'Sim' : 'Não'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div>
-                <h2 className="text-lg font-semibold mb-4">Informações Gerais</h2>
-                <div className="space-y-3">
-                  <div>
-                    <span className="text-gray-600 font-medium">ID:</span>
-                    <p className="text-gray-900">{avaliacao.id}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-600 font-medium">Período:</span>
-                    <p className="text-gray-900">{avaliacao.periodo_nome || avaliacao.periodo}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-600 font-medium">Status:</span>
-                    <p>
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(avaliacao.status)}`}>
-                        {traduzirStatus(avaliacao.status)}
-                      </span>
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-gray-600 font-medium">Data de Criação:</span>
-                    <p className="text-gray-900">{new Date(avaliacao.created_at).toLocaleDateString('pt-BR')}</p>
-                  </div>
-                  {avaliacao.updated_at && (
-                    <div>
-                      <span className="text-gray-600 font-medium">Última Atualização:</span>
-                      <p className="text-gray-900">{new Date(avaliacao.updated_at).toLocaleDateString('pt-BR')}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <h2 className="text-lg font-semibold mb-4">Pessoas</h2>
-                <div className="space-y-3">
-                  <div>
-                    <span className="text-gray-600 font-medium">Funcionário:</span>
-                    <p className="text-gray-900">{avaliacao.funcionario_nome || 'Desconhecido'}</p>
-                  </div>
-                  {avaliacao.funcionario_cargo && (
-                    <div>
-                      <span className="text-gray-600 font-medium">Cargo do Funcionário:</span>
-                      <p className="text-gray-900">{avaliacao.funcionario_cargo}</p>
-                    </div>
-                  )}
-                  {avaliacao.funcionario_departamento && (
-                    <div>
-                      <span className="text-gray-600 font-medium">Departamento:</span>
-                      <p className="text-gray-900">{avaliacao.funcionario_departamento}</p>
-                    </div>
-                  )}
-                  <div>
-                    <span className="text-gray-600 font-medium">Avaliador:</span>
-                    <p className="text-gray-900">{avaliacao.avaliador_nome || 'Desconhecido'}</p>
-                  </div>
-                  {avaliacao.avaliador_cargo && (
-                    <div>
-                      <span className="text-gray-600 font-medium">Cargo do Avaliador:</span>
-                      <p className="text-gray-900">{avaliacao.avaliador_cargo}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {avaliacao.observacoes && (
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold mb-4">Observações</h2>
-                <div className="bg-gray-50 p-4 rounded-md">
-                  <p className="text-gray-900 whitespace-pre-line">{avaliacao.observacoes}</p>
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 p-6 rounded-md">
-            <div className="flex items-center mb-2">
-              <FiAlertTriangle className="h-5 w-5 mr-2" />
-              <h3 className="text-lg font-medium">Avaliação não encontrada</h3>
-            </div>
-            <p>A avaliação solicitada não foi encontrada ou pode ter sido excluída.</p>
-          </div>
-        )}
-      </div>
-    </MainLayout>
+    <ViewEvaluationClient
+      evaluation={evaluation}
+      criteria={criteria}
+      employee={employee}
+      manager={manager}
+    />
   );
 }

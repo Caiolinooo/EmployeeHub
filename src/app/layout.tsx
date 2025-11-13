@@ -50,32 +50,11 @@ const plusJakartaSans = localFont({
   variable: '--font-plus-jakarta',
 });
 
-// Função para gerar metadata dinamicamente
-export async function generateMetadata(): Promise<Metadata> {
-  try {
-    // Tentar buscar a configuração do servidor
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/config`, {
-      cache: 'no-store'
-    });
-
-    if (response.ok) {
-      const config = await response.json();
-      return {
-        title: config.title || "Painel ABZ Group",
-        description: config.description || "Painel centralizado para colaboradores da ABZ Group",
-      };
-    }
-  } catch (error) {
-    console.error('Erro ao buscar configuração para metadata:', error);
-  }
-
-  // Fallback para valores padrão
-  return {
-    title: "Painel ABZ Group",
-    description: "Painel centralizado para colaboradores da ABZ Group",
-  };
-}
+// Metadata estático (o SiteHead component atualiza dinamicamente em runtime)
+export const metadata: Metadata = {
+  title: "Painel ABZ Group",
+  description: "Painel centralizado para colaboradores da ABZ Group",
+};
 
 export default function RootLayout({
   children,

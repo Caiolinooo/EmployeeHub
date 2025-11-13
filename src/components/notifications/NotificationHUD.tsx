@@ -1,8 +1,9 @@
 ﻿'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { FiBell, FiX, FiCheck, FiCheckCircle, FiClock, FiHeart, FiMessageCircle, FiAlertCircle, FiInfo } from 'react-icons/fi';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { FiBell, FiX, FiCheck, FiCheckCircle, FiClock, FiHeart, FiMessageCircle, FiAlertCircle, FiInfo, FiClipboard } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
+import NotificationBanner from './NotificationBanner';
 
 interface Notification {
   id: string;
@@ -21,12 +22,14 @@ interface NotificationHUDProps {
   userId: string;
   position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
   maxVisible?: number;
+  showBanner?: boolean;
 }
 
 const NotificationHUD: React.FC<NotificationHUDProps> = ({
   userId,
   position = 'top-right',
-  maxVisible = 5
+  maxVisible = 5,
+  showBanner = true
 }) => {
   const { t } = useI18n();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -35,11 +38,28 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [shownBannerIds, setShownBannerIds] = useState<Set<string>>(new Set());
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const bellRef = useRef<HTMLButtonElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const prevUnreadRef = useRef<number>(0);
   const holdTimeoutsRef = useRef<{ [key: string]: NodeJS.Timeout }>({});
+  const clickTimeoutRef = useRef<{ [key: string]: NodeJS.Timeout }>({});
+  const lastNotificationCheck = useRef<string>('');
+
+  // Debounce para clicks (prevenir múltiplos cliques rápidos)
+  const debounceClick = useCallback((id: string, callback: () => void, delay: number = 300) => {
+    // Cancelar timeout anterior se existir
+    if (clickTimeoutRef.current[id]) {
+      clearTimeout(clickTimeoutRef.current[id]);
+    }
+    // Criar novo timeout
+    clickTimeoutRef.current[id] = setTimeout(() => {
+      callback();
+      delete clickTimeoutRef.current[id];
+    }, delay);
+  }, []);
 
   // Carregar notificações (unificadas - incluindo Academy)
   const loadNotifications = async (pageNum: number = 1, reset: boolean = false) => {
@@ -81,45 +101,68 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
     }
   };
 
-  // Marcar notificação como lida
+  // Marcar notificação como lida com atualização em tempo real
   const markAsRead = async (notificationId: string) => {
     try {
+      // Atualização otimista imediata
+      setNotifications(prev =>
+        prev.map(notif =>
+          notif.id === notificationId
+            ? { ...notif, read_at: new Date().toISOString() }
+            : notif
+        )
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+
       const response = await fetch(`/api/notifications/${notificationId}/read`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: userId })
       });
 
-      if (response.ok) {
+      if (!response.ok) {
+        // Reverter em caso de erro
         setNotifications(prev =>
           prev.map(notif =>
             notif.id === notificationId
-              ? { ...notif, read_at: new Date().toISOString() }
+              ? { ...notif, read_at: null }
               : notif
           )
         );
-        setUnreadCount(prev => Math.max(0, prev - 1));
+        setUnreadCount(prev => prev + 1);
+        throw new Error('Falha ao marcar como lida');
       }
     } catch (error) {
       console.error(t('components.erroAoMarcarNotificacaoComoLida'), error);
     }
   };
 
-  // Marcar todas como lidas
+  // Marcar todas como lidas com atualização em tempo real
   const markAllAsRead = async () => {
     try {
+      // Atualização otimista imediata
+      const unreadNotifications = notifications.filter(n => !n.read_at);
+      setNotifications(prev =>
+        prev.map(notif => ({ ...notif, read_at: notif.read_at || new Date().toISOString() }))
+      );
+      setUnreadCount(0);
+
       const response = await fetch('/api/notifications/mark-all-read', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: userId })
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      if (!response.ok) {
+        // Reverter em caso de erro
         setNotifications(prev =>
-          prev.map(notif => ({ ...notif, read_at: new Date().toISOString() }))
+          prev.map(notif => {
+            const wasUnread = unreadNotifications.find(u => u.id === notif.id);
+            return wasUnread ? { ...notif, read_at: null } : notif;
+          })
         );
-        setUnreadCount(0);
+        setUnreadCount(unreadNotifications.length);
+        throw new Error('Falha ao marcar todas como lidas');
       }
     } catch (error) {
       console.error('Erro ao marcar todas como lidas:', error);
@@ -241,16 +284,35 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
     prevUnreadRef.current = unreadCount;
   }, [unreadCount]);
 
-  // Carregar notificações iniciais e refresh em foco/visibilidade (sem polling duplicado)
+  // Sistema de polling em tempo real
   useEffect(() => {
     if (!userId) return;
 
+    // Carregar inicial
     loadNotifications(1, true);
 
-    const onFocus = () => loadNotifications(1, true);
+    // Polling a cada 3 segundos para tempo real
+    const startPolling = () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = setInterval(() => {
+        loadNotifications(1, true);
+      }, 3000);
+    };
+
+    // Iniciar polling
+    startPolling();
+
+    // Refresh em foco/visibilidade
+    const onFocus = () => {
+      loadNotifications(1, true);
+      startPolling();
+    };
     const onVisibility = () => {
       if (document.visibilityState === 'visible') {
         loadNotifications(1, true);
+        startPolling();
+      } else {
+        if (intervalRef.current) clearInterval(intervalRef.current);
       }
     };
 
@@ -258,6 +320,7 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
     document.addEventListener('visibilitychange', onVisibility);
 
     return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
       window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onVisibility);
     };
@@ -272,6 +335,7 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
     }`;
 
     switch (type) {
+      case 'evaluation': return <FiClipboard className={iconClass} />;
       case 'news_post': return <FiInfo className={iconClass} />;
       case 'comment': return <FiMessageCircle className={iconClass} />;
       case 'like': return <FiHeart className={iconClass} />;
@@ -307,26 +371,33 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
     <div className="relative" ref={dropdownRef}>
       {/* Botão de Notificações */}
       <button
+        ref={bellRef}
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
         aria-label={t('components.notificacoes')}
-        title={unreadCount > 0 ? t('components.unreadcountNaoLidas') : t('components.notificacoes')}
+        title={unreadCount > 0 ? `${unreadCount} notificações não lidas` : t('components.notificacoes')}
       >
         <FiBell className="w-6 h-6" />
-        {unreadCount > 0 && !isOpen && (
-          <span className="absolute -top-1 -right-1 h-5 w-5">
-            <span className="absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-60 animate-ping"></span>
-            <span className="relative inline-flex items-center justify-center h-5 w-5 rounded-full bg-red-500 text-white text-xs">
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 h-5 w-5 z-10">
+            {!isOpen && (
+              <span className="absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75 animate-ping"></span>
+            )}
+            <span className="relative inline-flex items-center justify-center h-5 w-5 rounded-full bg-red-500 text-white text-xs font-bold shadow-lg min-w-[20px]">
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           </span>
         )}
-        {unreadCount > 0 && isOpen && (
-          <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full bg-red-500 text-white text-xs">
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
-        )}
       </button>
+
+      {/* Banner de Notificação */}
+      {showBanner && (
+        <NotificationBanner 
+          userId={userId} 
+          position="top" 
+          triggerElement={bellRef.current}
+        />
+      )}
 
       {/* Dropdown de Notificações */}
       {isOpen && (
@@ -346,26 +417,49 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
               <button
                 onClick={async () => {
                   try {
-                    const ok = window.confirm('Apagar notificações lidas com mais de 30 dias? Esta ação não pode ser desfeita.');
+                    if (notifications.length === 0) {
+                      alert('Nenhuma notificação para apagar.');
+                      return;
+                    }
+                    
+                    const ok = window.confirm(`Apagar todas as ${notifications.length} notificações? Esta ação não pode ser desfeita.`);
                     if (!ok) return;
+                    
+                    setLoading(true);
                     const res = await fetch('/api/notifications/purge', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ user_id: userId, olderThanDays: 30, onlyRead: true })
+                      body: JSON.stringify({ user_id: userId, olderThanDays: 0, onlyRead: false })
                     });
+                    
                     if (res.ok) {
-                      await loadNotifications(1, true);
+                      const result = await res.json();
+                      console.log('Purge result:', result);
+                      
+                      // Limpar todas as notificações
+                      setNotifications([]);
+                      setUnreadCount(0);
+                      
+                      // Recarregar para sincronizar com servidor
+                      setTimeout(() => loadNotifications(1, true), 100);
+                      alert(`${result.deletedCount || notifications.length} notificações apagadas com sucesso!`);
                     } else {
-                      console.error('Falha ao apagar notificações antigas');
+                      const error = await res.text();
+                      console.error('Falha ao apagar notificações:', error);
+                      alert('Erro ao apagar notificações. Tente novamente.');
                     }
                   } catch (e) {
-                    console.error('Erro ao apagar notificações antigas', e);
+                    console.error('Erro ao apagar notificações:', e);
+                    alert('Erro ao apagar notificações. Tente novamente.');
+                  } finally {
+                    setLoading(false);
                   }
                 }}
-                className="text-sm text-red-600 hover:text-red-700"
-                title="Apagar notificações antigas"
+                disabled={loading || notifications.length === 0}
+                className="text-sm text-red-600 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                title={`Apagar todas as ${notifications.length} notificações`}
               >
-                Apagar antigas
+                {loading ? 'Apagando...' : `Apagar Todas (${notifications.length})`}
               </button>
               <button
                 onClick={() => setIsOpen(false)}
@@ -391,10 +485,24 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
                     className={`p-4 border-b border-gray-50 hover:bg-gray-50 cursor-pointer ${
                       !notification.read_at ? 'bg-blue-50' : ''
                     }`}
-                    onClick={() => {
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      // Update otimista - marcar como lida no state imediatamente
                       if (!notification.read_at) {
-                        markAsRead(notification.id);
+                        setNotifications(prev =>
+                          prev.map(n => n.id === notification.id ? { ...n, read_at: new Date().toISOString() } : n)
+                        );
+                        setUnreadCount(prev => Math.max(0, prev - 1));
+                        // Fazer request em background
+                        markAsRead(notification.id).catch(() => {
+                          // Reverter em caso de erro
+                          setNotifications(prev =>
+                            prev.map(n => n.id === notification.id ? { ...n, read_at: null } : n)
+                          );
+                          setUnreadCount(prev => prev + 1);
+                        });
                       }
+                      // Navegar se tiver URL
                       if (notification.action_url) {
                         window.location.href = notification.action_url;
                       }

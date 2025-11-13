@@ -4,7 +4,7 @@
  */
 
 import { IconType } from 'react-icons';
-import { FiGrid, FiBookOpen, FiClipboard, FiDollarSign, FiBarChart2, FiCalendar, FiUsers, FiClock, FiFileText, FiMessageSquare } from 'react-icons/fi';
+import { FiGrid } from 'react-icons/fi';
 import { supabase } from './supabase';
 import { getIconComponent } from './iconMap';
 
@@ -100,7 +100,7 @@ class UnifiedDataService {
         title: 'Manual do Colaborador',
         description: 'Acesse o manual completo do colaborador',
         href: '/manual',
-        icon: FiBookOpen,
+        icon: getIconComponent('FiBookOpen'),
         iconName: 'FiBookOpen',
         color: 'bg-abz-blue',
         hoverColor: 'hover:bg-abz-blue-dark',
@@ -116,7 +116,7 @@ class UnifiedDataService {
         title: 'Procedimentos Logística',
         description: 'Procedimentos operacionais de logística',
         href: '/procedimentos-logistica',
-        icon: FiClipboard,
+        icon: getIconComponent('FiClipboard'),
         iconName: 'FiClipboard',
         color: 'bg-abz-green',
         hoverColor: 'hover:bg-abz-green-dark',
@@ -132,7 +132,7 @@ class UnifiedDataService {
         title: 'Reembolso',
         description: 'Sistema de solicitação de reembolsos',
         href: '/reembolso',
-        icon: FiDollarSign,
+        icon: getIconComponent('FiDollarSign'),
         iconName: 'FiDollarSign',
         color: 'bg-abz-green',
         hoverColor: 'hover:bg-abz-green-dark',
@@ -148,7 +148,7 @@ class UnifiedDataService {
         title: 'Avaliação',
         description: 'Sistema de avaliação de desempenho',
         href: '/avaliacao',
-        icon: FiBarChart2,
+        icon: getIconComponent('FiBarChart2'),
         iconName: 'FiBarChart2',
         color: 'bg-abz-blue',
         hoverColor: 'hover:bg-abz-blue-dark',
@@ -165,7 +165,7 @@ class UnifiedDataService {
         title: 'Calendário',
         description: 'Calendário de eventos e feriados',
         href: '/calendario',
-        icon: FiCalendar,
+        icon: getIconComponent('FiCalendar'),
         iconName: 'FiCalendar',
         color: 'bg-abz-green',
         hoverColor: 'hover:bg-abz-green-dark',
@@ -181,7 +181,7 @@ class UnifiedDataService {
         title: 'Contatos',
         description: 'Lista de contatos da empresa',
         href: '/contatos',
-        icon: FiUsers,
+        icon: getIconComponent('FiUsers'),
         iconName: 'FiUsers',
         color: 'bg-abz-blue',
         hoverColor: 'hover:bg-abz-blue-dark',
@@ -197,7 +197,7 @@ class UnifiedDataService {
         title: 'Ponto',
         description: 'Sistema de controle de ponto',
         href: '/ponto',
-        icon: FiClock,
+        icon: getIconComponent('FiClock'),
         iconName: 'FiClock',
         color: 'bg-abz-indigo',
         hoverColor: 'hover:bg-abz-indigo-dark',
@@ -213,7 +213,7 @@ class UnifiedDataService {
         title: 'Contracheque',
         description: 'Consulta de contracheques',
         href: '/contracheque',
-        icon: FiFileText,
+        icon: getIconComponent('FiFileText'),
         iconName: 'FiFileText',
         color: 'bg-abz-green',
         hoverColor: 'hover:bg-abz-green-dark',
@@ -229,7 +229,7 @@ class UnifiedDataService {
         title: 'Academy',
         description: 'Portal de treinamentos e cursos',
         href: '/academy',
-        icon: FiBookOpen,
+        icon: getIconComponent('FiBookOpen'),
         iconName: 'FiBookOpen',
         color: 'bg-abz-blue',
         hoverColor: 'hover:bg-abz-blue-dark',
@@ -245,7 +245,7 @@ class UnifiedDataService {
         title: 'Notícias',
         description: 'Central de notícias e comunicados',
         href: '/noticias',
-        icon: FiMessageSquare,
+        icon: getIconComponent('FiMessageSquare'),
         iconName: 'FiMessageSquare',
         color: 'bg-abz-indigo',
         hoverColor: 'hover:bg-abz-indigo-dark',

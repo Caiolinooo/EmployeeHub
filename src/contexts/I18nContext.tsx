@@ -87,7 +87,7 @@ export function I18nProvider({ children }: I18nProviderProps) {
         availableLocales,
       }}
     >
-      {mounted ? children : null}
+      {mounted ? children : <div style={{ display: 'none' }} />}
     </I18nContext.Provider>
   );
 }

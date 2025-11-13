@@ -131,25 +131,47 @@ const NotificationsPage: React.FC = () => {
   };
 
   const deleteNotifications = async (notificationIds: string[]) => {
-    if (!user?.id) return;
+    if (!user?.id || notificationIds.length === 0) return;
 
     try {
+      setLoading(true);
       const token = await getToken();
-      if (!token) return;
+      
+      // Update otimista - remover do state imediatamente
+      setNotifications(prev => prev.filter(n => !notificationIds.includes(n.id)));
+      setSelectedNotifications([]);
 
-      const response = await fetch(`/api/academy/notifications?notification_ids=${notificationIds.join(',')}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      // Tentar endpoint genérico primeiro, depois academy como fallback
+      let response = await fetch(`/api/notifications?user_id=${user.id}&notification_ids=${notificationIds.join(',')}`, {
+        method: 'DELETE'
       });
 
-      if (response.ok) {
-        await loadNotifications();
-        setSelectedNotifications([]);
+      // Se falhar, tentar endpoint academy
+      if (!response.ok && token) {
+        console.log('Tentando endpoint academy como fallback...');
+        response = await fetch(`/api/academy/notifications?notification_ids=${notificationIds.join(',')}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
       }
+
+      if (!response.ok) {
+        // Reverter mudanças em caso de erro
+        await loadNotifications();
+        throw new Error('Falha ao excluir notificações');
+      }
+
+      console.log(`✅ ${notificationIds.length} notificação(ões) excluída(s)`);
+      
     } catch (error) {
       console.error(t('academy.erroAoExcluirNotificacoes'), error);
+      alert('Erro ao excluir notificações. Tente novamente.');
+      // Recarregar em caso de erro
+      await loadNotifications();
+    } finally {
+      setLoading(false);
     }
   };
 

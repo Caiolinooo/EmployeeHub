@@ -4,6 +4,173 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
 ---
 
+## [1.2.0] - 2025-01-15 - WORKFLOW DE AVALIAÇÃO COMPLETO ✅
+
+### 🎯 **RESUMO DA VERSÃO**
+Implementação completa do workflow de avaliação de desempenho com notificações por email, interface para gerentes e correção de status do banco de dados.
+
+### ✨ **NOVAS FUNCIONALIDADES**
+
+#### 📧 **Sistema de Notificações por Email**
+- **Integração Completa**: Todas as notificações agora são enviadas por email + push + banco
+- **Templates HTML**: Templates profissionais para cada tipo de notificação
+- **Tipos de Notificações**:
+  - Autoavaliação Pendente (ao criar avaliação)
+  - Autoavaliação Recebida (quando colaborador submete)
+  - Avaliação Aprovada (quando gerente aprova)
+  - Avaliação Editada (quando gerente edita)
+
+#### 🔄 **APIs de Workflow**
+- **POST /api/avaliacao-desempenho/avaliacoes/[id]/submit**
+  - Colaborador finaliza autoavaliação
+  - Status muda para `aguardando_aprovacao`
+  - Gerente recebe notificação por email + push
+
+- **POST /api/avaliacao-desempenho/avaliacoes/[id]/approve**
+  - Gerente aprova avaliação com comentários
+  - Status muda para `concluida`
+  - Colaborador recebe notificação por email + push
+
+- **GET /api/avaliacao-desempenho/avaliacoes/pending-review**
+  - Lista avaliações aguardando revisão do gerente
+  - Filtrado por `avaliador_id` e status `aguardando_aprovacao`
+
+#### 🎨 **Interface do Gerente**
+- **Seção Destacada**: Banner azul/roxo no topo da página `/avaliacao`
+- **Filtro Inteligente**: Mostra apenas avaliações onde o gerente é o avaliador
+- **Badge de Notificação**: Badge vermelho no menu lateral com contagem
+- **Atualização Automática**: Contagem atualiza a cada 1 minuto
+
+#### 🔧 **Correções de Status**
+- **Status Corretos Implementados**:
+  - `pendente` - Avaliação criada, aguardando início
+  - `em_andamento` - Colaborador preenchendo
+  - `aguardando_aprovacao` - Aguardando revisão do gerente ✨
+  - `concluida` - Finalizada
+  - `devolvida` - Devolvida para ajustes
+  - `cancelada` - Cancelada
+
+### 📁 **ARQUIVOS CRIADOS**
+
+#### Novas APIs
+1. `src/app/api/avaliacao-desempenho/avaliacoes/[id]/submit/route.ts`
+2. `src/app/api/avaliacao-desempenho/avaliacoes/[id]/approve/route.ts`
+3. `src/app/api/avaliacao-desempenho/avaliacoes/pending-review/route.ts`
+
+#### Páginas
+1. `src/app/avaliacao/pendentes/page.tsx`
+2. `src/app/avaliacao/pendentes/PendentesClient.tsx`
+
+#### Documentação
+1. `WORKFLOW_AVALIACAO_COMPLETO.md` - Documentação completa do workflow
+
+### 📝 **ARQUIVOS MODIFICADOS**
+
+#### Serviços
+- `src/lib/services/notificacoes-avaliacao.ts`
+  - Adicionado envio de email automático
+  - Novo método `enviarNotificacaoEmail()` com templates HTML
+  - Integração com `sendEmail()` do sistema de email
+
+#### Componentes
+- `src/components/Layout/MainLayout.tsx`
+  - Adicionado badge de notificação no menu
+  - Busca contagem de pendentes a cada minuto
+  - Badge visível apenas para MANAGER e ADMIN
+
+- `src/app/avaliacao/EvaluationListClient.tsx`
+  - Corrigidos status do banco de dados
+  - Adicionada seção destacada para gerentes
+  - Filtro de avaliações pendentes do gerente
+
+- `src/app/avaliacao/preencher/[id]/FillEvaluationClient.tsx`
+  - Atualizado botão de submissão para usar nova API
+  - Integração com `/submit` e `/approve`
+
+- `src/app/avaliacao/ver/[id]/ViewEvaluationClient.tsx`
+  - Atualizado botão de aprovação para usar nova API
+  - Integração com `/approve`
+
+- `src/components/avaliacao/EvaluationCard.tsx`
+  - Corrigidos status para usar valores do banco
+
+- `src/components/avaliacao/StatusBadge.tsx`
+  - Adicionados todos os status corretos
+  - Cores e ícones apropriados para cada status
+
+### 🔄 **FLUXO COMPLETO DO WORKFLOW**
+
+```
+1. Admin/Gerente cria avaliação
+   ↓ (Email enviado)
+2. Colaborador recebe notificação
+   ↓
+3. Colaborador preenche autoavaliação
+   Status: pendente → em_andamento
+   ↓
+4. Colaborador submete para revisão
+   Status: em_andamento → aguardando_aprovacao
+   ↓ (Email enviado ao gerente)
+5. Gerente recebe notificação
+   ↓
+6. Gerente revisa e aprova
+   Status: aguardando_aprovacao → concluida
+   ↓ (Email enviado ao colaborador)
+7. Colaborador recebe confirmação
+```
+
+### 📊 **MÉTRICAS**
+
+| Métrica | Valor |
+|---------|-------|
+| Novas APIs | 3 |
+| Arquivos Modificados | 8 |
+| Arquivos Criados | 6 |
+| Status Implementados | 6 |
+| Tipos de Notificação | 4 |
+| Linhas de Código | ~1,500 |
+
+### 🎯 **BENEFÍCIOS**
+
+- ✅ **Comunicação Completa**: Todas as partes são notificadas por email
+- ✅ **Visibilidade**: Gerentes veem claramente avaliações pendentes
+- ✅ **Rastreabilidade**: Histórico completo de notificações
+- ✅ **UX Melhorada**: Interface intuitiva e responsiva
+- ✅ **Status Corretos**: Alinhamento com banco de dados
+
+### 🔧 **CORREÇÕES DE BUGS**
+
+- 🐛 Status incorretos (pendente_autoavaliacao → pendente)
+- 🐛 Notificações não enviadas por email
+- 🐛 Gerente não via avaliações pendentes
+- 🐛 Badge de notificação ausente
+- 🐛 Botões de ação não integrados com APIs
+
+### 📚 **DOCUMENTAÇÃO**
+
+- 📖 `WORKFLOW_AVALIACAO_COMPLETO.md` - Guia completo do workflow
+- 📖 Exemplos de código para frontend
+- 📖 Checklist de testes
+- 📖 Troubleshooting
+- 📖 Próximos passos recomendados
+
+### 🏷️ **Tags**
+- `workflow`
+- `evaluation`
+- `notifications`
+- `email-integration`
+- `manager-interface`
+- `status-fix`
+
+---
+
+**Responsável**: Amazon Q Developer  
+**Data**: 2025-01-15  
+**Versão**: v1.2.0  
+**Status**: Workflow Completo ✅
+
+---
+
 ## [1.0.0] - 2025-01-23 - VERSÃO ESTÁVEL ATUAL ✅
 
 ### 🎯 **RESUMO DA VERSÃO**

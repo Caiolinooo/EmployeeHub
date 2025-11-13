@@ -1,10 +1,19 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FiUserPlus, FiUserMinus, FiSearch, FiRefreshCw, FiAlertCircle, FiFilter, FiCheckSquare, FiSquare } from 'react-icons/fi';
+import {
+  FiUsers,
+  FiSave,
+  FiAlertCircle,
+  FiSearch,
+  FiCheck,
+  FiUserCheck,
+  FiUserPlus,
+  FiRefreshCw,
+} from 'react-icons/fi';
 import { fetchWithToken } from '@/lib/tokenStorage';
 
-interface Usuario {
+interface User {
   id: string;
   first_name: string;
   last_name: string;
@@ -16,11 +25,17 @@ interface Usuario {
   active: boolean;
 }
 
+interface GerenteConfig {
+  gerente_id: string;
+  colaborador_id: string;
+  ativo: boolean;
+}
+
 interface GerenteResponse {
-  usuarios: Usuario[];
-  gerentesAtuais: Usuario[];
-  usuariosDisponiveis: Usuario[];
-  gerentesConfig: any[];
+  usuarios: User[];
+  gerentesAtuais: User[];
+  usuariosDisponiveis: User[];
+  gerentesConfig: GerenteConfig[];
   estatisticas: {
     totalUsuarios: number;
     totalGerentes: number;
@@ -30,22 +45,22 @@ interface GerenteResponse {
 
 export default function PainelConfigGerentesAvaliacaoAdvanced() {
   const [data, setData] = useState<GerenteResponse | null>(null);
+  const [mapeamentosEdit, setMapeamentosEdit] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState<string | null>(null);
-  const [bulkUpdating, setBulkUpdating] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [salvando, setSalvando] = useState(false);
+  const [busca, setBusca] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [showOnlySelected, setShowOnlySelected] = useState(false);
-  const [filterRole, setFilterRole] = useState<string>('todos');
-  const [filterDepartment, setFilterDepartment] = useState<string>('todos');
+  const [filtros, setFiltros] = useState({
+    departamento: '',
+    cargo: '',
+  });
 
   useEffect(() => {
-    loadData();
+    carregarDados();
   }, []);
 
-  const loadData = async () => {
+  const carregarDados = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -64,166 +79,170 @@ export default function PainelConfigGerentesAvaliacaoAdvanced() {
 
       setData(result.data);
 
+      // Criar mapa de mapeamentos para edição
+      const mapeamentosObj: Record<string, string> = {};
+      result.data.gerentesConfig.forEach((config: GerenteConfig) => {
+        mapeamentosObj[config.colaborador_id] = config.gerente_id;
+      });
+      setMapeamentosEdit(mapeamentosObj);
+
     } catch (err) {
       console.error('Erro ao carregar dados:', err);
-      setError(err instanceof Error ? err.message : 'Erro ao carregar dados. Tente recarregar a página.');
+      setError(err instanceof Error ? err.message : 'Erro ao carregar dados.');
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleGerente = async (usuarioId: string, isCurrentlyGerente: boolean) => {
+  const salvarMapeamento = async (colaborador_id: string, gerente_id: string) => {
     try {
-      setUpdating(usuarioId);
-      setError(null);
-      setSuccess(null);
+      if (colaborador_id === gerente_id) {
+        setError('❌ Erro: Um usuário não pode ser gerente de si mesmo!');
+        return false;
+      }
 
       const response = await fetchWithToken('/api/admin/gerentes-avaliacao', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          usuario_id: usuarioId,
-          ativo: !isCurrentlyGerente
-        })
+        body: JSON.stringify({ colaborador_id, gerente_id }),
       });
 
       const result = await response.json();
 
-      if (!result.success) {
-        throw new Error(result.error || 'Erro ao atualizar gerente');
+      if (result.success) {
+        return true;
+      } else {
+        setError(`Erro: ${result.error}`);
+        return false;
       }
-
-      setSuccess(result.message);
-      await loadData(); // Recarregar dados
-
-      setTimeout(() => setSuccess(null), 3000);
-
     } catch (err) {
-      console.error('Erro ao atualizar gerente:', err);
-      setError(err instanceof Error ? err.message : 'Erro ao atualizar configuração do gerente.');
-    } finally {
-      setUpdating(null);
+      console.error('Erro ao salvar mapeamento:', err);
+      setError('Erro ao salvar mapeamento');
+      return false;
     }
   };
 
-  const bulkToggleGerentes = async (makeGerentes: boolean) => {
-    if (selectedUsers.length === 0) {
-      setError('Selecione pelo menos um usuário para esta operação.');
-      return;
-    }
-
+  const salvarTodosMapeamentos = async () => {
     try {
-      setBulkUpdating(true);
+      setSalvando(true);
       setError(null);
       setSuccess(null);
+      
+      let sucesso = 0;
+      let erros = 0;
 
-      const usuarios = selectedUsers.map(id => ({
-        usuario_id: id,
-        ativo: makeGerentes
-      }));
-
-      const response = await fetchWithToken('/api/admin/gerentes-avaliacao', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuarios })
-      });
-
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.error || 'Erro na operação em lote');
+      for (const [colaborador_id, gerente_id] of Object.entries(mapeamentosEdit)) {
+        if (gerente_id) {
+          const resultado = await salvarMapeamento(colaborador_id, gerente_id);
+          if (resultado) sucesso++;
+          else erros++;
+        }
       }
 
-      setSuccess(result.message);
-      setSelectedUsers([]);
-      await loadData();
+      if (erros === 0) {
+        setSuccess(`✅ ${sucesso} mapeamentos salvos com sucesso!`);
+        await carregarDados();
+      } else {
+        setError(`⚠️ ${sucesso} salvos, ${erros} com erro`);
+        await carregarDados();
+      }
 
-      setTimeout(() => setSuccess(null), 5000);
-
+      setTimeout(() => {
+        setSuccess(null);
+        setError(null);
+      }, 5000);
     } catch (err) {
-      console.error('Erro na operação em lote:', err);
-      setError(err instanceof Error ? err.message : 'Erro na operação em lote.');
+      console.error('Erro ao salvar mapeamentos:', err);
+      setError('Erro ao salvar mapeamentos');
     } finally {
-      setBulkUpdating(false);
+      setSalvando(false);
     }
   };
 
-  const toggleUserSelection = (userId: string) => {
-    setSelectedUsers(prev =>
-      prev.includes(userId)
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId]
-    );
-  };
-
-  const selectAllVisible = (visibleUsers: Usuario[]) => {
-    const visibleIds = visibleUsers.map(u => u.id);
-    const allSelected = visibleIds.every(id => selectedUsers.includes(id));
-
-    if (allSelected) {
-      setSelectedUsers(prev => prev.filter(id => !visibleIds.includes(id)));
-    } else {
-      setSelectedUsers(prev => [...new Set([...prev, ...visibleIds])]);
+  const atualizarMapeamento = (colaboradorId: string, gerenteId: string) => {
+    if (colaboradorId === gerenteId) {
+      setError('❌ Um usuário não pode ser gerente de si mesmo!');
+      setTimeout(() => setError(null), 3000);
+      return;
     }
+    setMapeamentosEdit((prev) => ({
+      ...prev,
+      [colaboradorId]: gerenteId,
+    }));
   };
 
-  if (!data) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <p className="ml-4 text-gray-600">Carregando configurações...</p>
       </div>
     );
   }
 
-  // Filtrar usuários
-  const filteredUsuarios = data.usuarios.filter(usuario => {
-    const searchMatch = `${usuario.first_name} ${usuario.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         usuario.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         usuario.position?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         usuario.role?.toLowerCase().includes(searchTerm.toLowerCase());
+  if (!data) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <p className="text-red-700">Erro ao carregar dados. Tente recarregar a página.</p>
+      </div>
+    );
+  }
 
-    const roleMatch = filterRole === 'todos' || usuario.role === filterRole;
-    const departmentMatch = filterDepartment === 'todos' || usuario.department === filterDepartment;
+  const colaboradoresFiltrados = data.usuarios.filter((u) => {
+    const nomeCompleto = `${u.first_name} ${u.last_name}`;
+    const matchBusca =
+      nomeCompleto.toLowerCase().includes(busca.toLowerCase()) ||
+      u.email.toLowerCase().includes(busca.toLowerCase()) ||
+      u.position?.toLowerCase().includes(busca.toLowerCase());
 
-    return searchMatch && roleMatch && departmentMatch;
+    const matchDepartamento =
+      !filtros.departamento || u.department === filtros.departamento;
+
+    const matchCargo = !filtros.cargo || u.position === filtros.cargo;
+
+    return matchBusca && matchDepartamento && matchCargo;
   });
 
-  // Separar usuários
-  const gerentesAtuais = filteredUsuarios.filter(u => data.gerentesConfig.some(g => g.usuario_id === u.id));
-  const usuariosDisponiveis = filteredUsuarios.filter(u => !data.gerentesConfig.some(g => g.usuario_id === u.id));
+  const departamentos = Array.from(
+    new Set(data.usuarios.map((f) => f.department).filter(Boolean))
+  );
+  const cargos = Array.from(
+    new Set(data.usuarios.map((f) => f.position).filter(Boolean))
+  );
 
-  // Se mostrar apenas selecionados
-  const displayGerentes = showOnlySelected
-    ? gerentesAtuais.filter(u => selectedUsers.includes(u.id))
-    : gerentesAtuais;
-  const displayDisponiveis = showOnlySelected
-    ? usuariosDisponiveis.filter(u => selectedUsers.includes(u.id))
-    : usuariosDisponiveis;
-
-  const uniqueRoles = [...new Set(data.usuarios.map(u => u.role))];
-  const uniqueDepartments = [...new Set(data.usuarios.map(u => u.department).filter(Boolean))];
+  const totalMapeados = Object.keys(mapeamentosEdit).filter(
+    (key) => mapeamentosEdit[key]
+  ).length;
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Configurar Gerentes de Avaliação</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Configuração de Gerentes de Avaliação</h2>
         <p className="text-gray-600 mt-2">
-          Defina quais usuários podem atuar como gerentes de avaliação, independente da sua role no sistema.
+          Defina qual gerente será responsável por avaliar cada colaborador
         </p>
       </div>
 
-      {/* Alerta de informação */}
+      {/* Info Card */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="flex items-start">
           <FiAlertCircle className="text-blue-600 mt-0.5 mr-3 flex-shrink-0" size={20} />
           <div className="text-sm text-blue-800">
-            <p className="font-medium mb-1">Sistema Avançado de Gerenciamento</p>
+            <p className="font-semibold mb-1">Importante:</p>
             <ul className="list-disc list-inside space-y-1">
-              <li>Totalmente independente das roles do sistema (ADMIN/MANAGER/FUNCIONARY)</li>
-              <li>Selecione múltiplos usuários para operações em lote</li>
-              <li>Filtre por role, departamento ou busca por nome/email</li>
-              <li>A configuração afeta apenas o módulo de avaliação</li>
+              <li>
+                <strong>Gerente:</strong> Responsável por avaliar o desempenho do colaborador nas perguntas Q15-Q17
+              </li>
+              <li>
+                O colaborador preenche a autoavaliação (Q11-Q14) e o gerente revisa e completa (Q15-Q17)
+              </li>
+              <li>
+                Colaboradores sem gerente configurado <strong>NÃO</strong> receberão avaliações automaticamente
+              </li>
+              <li>
+                <strong className="text-red-600">Não é possível configurar alguém como gerente de si mesmo</strong>
+              </li>
             </ul>
           </div>
         </div>
@@ -242,373 +261,217 @@ export default function PainelConfigGerentesAvaliacaoAdvanced() {
         </div>
       )}
 
-      {/* Botões de ação e estatísticas */}
-      <div className="flex justify-between items-center">
-        <div className="flex gap-3">
-          <button
-            onClick={loadData}
-            disabled={loading}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-          >
-            <FiRefreshCw className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Recarregar
-          </button>
-        </div>
-
-        <div className="flex gap-3 items-center">
-          <span className="text-sm text-gray-600">
-            {selectedUsers.length} usuário(s) selecionado(s)
-          </span>
-          {selectedUsers.length > 0 && (
-            <>
-              <button
-                onClick={() => bulkToggleGerentes(true)}
-                disabled={bulkUpdating}
-                className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50"
-              >
-                {bulkUpdating ? 'Processando...' : 'Tornar Gerentes'}
-              </button>
-              <button
-                onClick={() => bulkToggleGerentes(false)}
-                disabled={bulkUpdating}
-                className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 disabled:opacity-50"
-              >
-                {bulkUpdating ? 'Processando...' : 'Remover Gerentes'}
-              </button>
-              <button
-                onClick={() => setSelectedUsers([])}
-                className="px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-700"
-              >
-                Limpar Seleção
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
       {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-blue-600 font-medium">Total de Usuários</p>
-              <p className="text-2xl font-bold text-blue-900">{data.estatisticas.totalUsuarios}</p>
+              <p className="text-sm text-gray-600">Total de Usuários</p>
+              <p className="text-2xl font-bold text-gray-900">{data.usuarios.length}</p>
             </div>
-            <FiAlertCircle className="text-blue-600" size={32} />
+            <FiUsers className="text-blue-600" size={32} />
           </div>
         </div>
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-green-600 font-medium">Gerentes Ativos</p>
-              <p className="text-2xl font-bold text-green-900">{data.estatisticas.totalGerentes}</p>
+              <p className="text-sm text-gray-600">Gerentes Configurados</p>
+              <p className="text-2xl font-bold text-green-600">{data.gerentesAtuais.length}</p>
             </div>
-            <FiUserPlus className="text-green-600" size={32} />
+            <FiUserCheck className="text-green-600" size={32} />
           </div>
         </div>
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 font-medium">Disponíveis</p>
-              <p className="text-2xl font-bold text-gray-900">{data.estatisticas.totalDisponiveis}</p>
+              <p className="text-sm text-gray-600">Colaboradores Mapeados</p>
+              <p className="text-2xl font-bold text-purple-600">{totalMapeados}</p>
             </div>
-            <FiUserMinus className="text-gray-600" size={32} />
-          </div>
-        </div>
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-purple-600 font-medium">Selecionados</p>
-              <p className="text-2xl font-bold text-purple-900">{selectedUsers.length}</p>
-            </div>
-            <FiCheckSquare className="text-purple-600" size={32} />
+            <FiUserPlus className="text-purple-600" size={32} />
           </div>
         </div>
       </div>
 
-      {/* Filtros e Busca */}
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
-        <div className="space-y-4">
-          <div className="flex flex-wrap gap-4">
-            <div className="flex-1 min-w-64">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <FiSearch className="inline mr-1" />
-                Buscar Usuários
-              </label>
+      {/* Barra de Ferramentas */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="md:col-span-2">
+            <div className="relative">
+              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar por nome, email, cargo ou role..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Buscar colaborador..."
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
-            </div>
-
-            <div className="min-w-48">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <FiFilter className="inline mr-1" />
-                Filtrar por Role
-              </label>
-              <select
-                value={filterRole}
-                onChange={(e) => setFilterRole(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="todos">Todas as Roles</option>
-                {uniqueRoles.map(role => (
-                  <option key={role} value={role}>{role}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="min-w-48">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Filtrar por Departamento
-              </label>
-              <select
-                value={filterDepartment}
-                onChange={(e) => setFilterDepartment(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="todos">Todos os Departamentos</option>
-                {uniqueDepartments.map(dept => (
-                  <option key={dept} value={dept}>{dept}</option>
-                ))}
-              </select>
             </div>
           </div>
 
+          <div>
+            <select
+              value={filtros.departamento}
+              onChange={(e) => setFiltros({ ...filtros, departamento: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Todos os departamentos</option>
+              {departamentos.map((dep) => (
+                <option key={dep} value={dep}>
+                  {dep}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <select
+              value={filtros.cargo}
+              onChange={(e) => setFiltros({ ...filtros, cargo: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Todos os cargos</option>
+              {cargos.map((cargo) => (
+                <option key={cargo} value={cargo}>
+                  {cargo}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between mt-4 pt-4 border-t">
+          <div className="text-sm text-gray-600">
+            <FiCheck className="inline text-green-600 mr-1" />
+            {totalMapeados} de {data.usuarios.length} colaboradores com gerente definido
+          </div>
           <div className="flex gap-2">
             <button
-              onClick={() => {
-                setSearchTerm('');
-                setFilterRole('todos');
-                setFilterDepartment('todos');
-              }}
-              className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+              onClick={carregarDados}
+              disabled={loading}
+              className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
             >
-              Limpar Filtros
+              <FiRefreshCw className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Recarregar
             </button>
             <button
-              onClick={() => setShowOnlySelected(!showOnlySelected)}
-              className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors"
+              onClick={salvarTodosMapeamentos}
+              disabled={salvando}
+              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
             >
-              {showOnlySelected ? 'Mostrar Todos' : 'Mostrar Apenas Selecionados'}
+              <FiSave className="mr-2" />
+              {salvando ? 'Salvando...' : 'Salvar Todas Alterações'}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Tabela de Gerentes Atuais */}
-      {displayGerentes.length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200">
-          <div className="bg-green-50 px-6 py-4 border-b border-green-200">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-green-900">
-                👥 Gerentes de Avaliação Atuais ({displayGerentes.length})
-              </h3>
-              <button
-                onClick={() => selectAllVisible(displayGerentes)}
-                className="text-sm text-green-700 hover:text-green-900"
-              >
-                <FiCheckSquare className="inline mr-1" />
-                Selecionar Todos
-              </button>
-            </div>
-          </div>
+      {/* Lista de Colaboradores */}
+      {colaboradoresFiltrados.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+          <FiUsers className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            Nenhum colaborador encontrado
+          </h3>
+          <p className="text-gray-600">
+            Ajuste os filtros ou busca para ver os resultados
+          </p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
-                    <input
-                      type="checkbox"
-                      checked={displayGerentes.every(u => selectedUsers.includes(u.id))}
-                      onChange={() => selectAllVisible(displayGerentes)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                  </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Nome
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email
+                    Colaborador
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Cargo
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Role Sistema
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Departamento
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ações
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Gerente (Avaliador)
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {displayGerentes.map((usuario) => (
-                  <tr key={usuario.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <input
-                        type="checkbox"
-                        checked={selectedUsers.includes(usuario.id)}
-                        onChange={() => toggleUserSelection(usuario.id)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="bg-green-100 rounded-full p-1 mr-3">
-                          <FiUserPlus className="text-green-600" size={16} />
+                {colaboradoresFiltrados.map((colaborador) => {
+                  const temGerente = mapeamentosEdit[colaborador.id];
+                  const gerenteAtual = data.usuarios.find(u => u.id === mapeamentosEdit[colaborador.id]);
+                  
+                  return (
+                    <tr key={colaborador.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                            {colaborador.first_name?.[0]}
+                            {colaborador.last_name?.[0]}
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {colaborador.first_name} {colaborador.last_name}
+                            </div>
+                            <div className="text-sm text-gray-500">{colaborador.email}</div>
+                          </div>
                         </div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {usuario.first_name} {usuario.last_name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{colaborador.position || '-'}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {colaborador.department || '-'}
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {usuario.email}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {usuario.position || 'Sem cargo'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                        {usuario.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {usuario.department || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => toggleGerente(usuario.id, true)}
-                        disabled={updating === usuario.id}
-                        className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 disabled:opacity-50 transition-colors"
-                      >
-                        {updating === usuario.id ? 'Removendo...' : 'Remover'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-6 py-4">
+                        <select
+                          value={mapeamentosEdit[colaborador.id] || ''}
+                          onChange={(e) =>
+                            atualizarMapeamento(colaborador.id, e.target.value)
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                        >
+                          <option value="">Selecione um gerente</option>
+                          {data.usuarios
+                            .filter(u => u.id !== colaborador.id) // Não pode ser gerente de si mesmo
+                            .map((gerente) => (
+                              <option key={gerente.id} value={gerente.id}>
+                                {gerente.first_name} {gerente.last_name} ({gerente.position || 'Sem cargo'})
+                              </option>
+                            ))}
+                        </select>
+                        {gerenteAtual && (
+                          <div className="mt-1 text-xs text-gray-500">
+                            Atual: {gerenteAtual.first_name} {gerenteAtual.last_name}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        {temGerente ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <FiCheck className="mr-1" />
+                            Configurado
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            <FiAlertCircle className="mr-1" />
+                            Pendente
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </div>
       )}
-
-      {/* Tabela de Usuários Disponíveis */}
-      <div className="bg-white rounded-lg border border-gray-200">
-        <div className="bg-blue-50 px-6 py-4 border-b border-blue-200">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-blue-900">
-              👤 Usuários Disponíveis ({displayDisponiveis.length})
-            </h3>
-            <button
-              onClick={() => selectAllVisible(displayDisponiveis)}
-              className="text-sm text-blue-700 hover:text-blue-900"
-            >
-              <FiCheckSquare className="inline mr-1" />
-              Selecionar Todos
-            </button>
-          </div>
-        </div>
-
-        {displayDisponiveis.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
-                    <input
-                      type="checkbox"
-                      checked={displayDisponiveis.every(u => selectedUsers.includes(u.id))}
-                      onChange={() => selectAllVisible(displayDisponiveis)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Nome
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Cargo
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Role Sistema
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Departamento
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {displayDisponiveis.map((usuario) => (
-                  <tr key={usuario.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <input
-                        type="checkbox"
-                        checked={selectedUsers.includes(usuario.id)}
-                        onChange={() => toggleUserSelection(usuario.id)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="bg-gray-100 rounded-full p-1 mr-3">
-                          <FiUserMinus className="text-gray-400" size={16} />
-                        </div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {usuario.first_name} {usuario.last_name}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {usuario.email}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {usuario.position || 'Sem cargo'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                        {usuario.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {usuario.department || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => toggleGerente(usuario.id, false)}
-                        disabled={updating === usuario.id}
-                        className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                      >
-                        {updating === usuario.id ? 'Adicionando...' : 'Tornar Gerente'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="text-center py-12 bg-gray-50">
-            <p className="text-gray-600">
-              {searchTerm || filterRole !== 'todos' || filterDepartment !== 'todos' || showOnlySelected
-                ? 'Nenhum usuário encontrado com os filtros aplicados.'
-                : 'Todos os usuários já são gerentes de avaliação.'}
-            </p>
-          </div>
-        )}
-      </div>
     </div>
   );
 }

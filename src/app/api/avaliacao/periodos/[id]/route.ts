@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Supabase environment variables are not configured');
+  }
+  
+  return createClient(supabaseUrl, supabaseServiceKey);
+}
 
 /**
  * GET - Buscar período específico
@@ -23,6 +29,7 @@ export async function GET(
       );
     }
 
+    const supabase = getSupabaseClient();
     const { data: periodo, error } = await supabase
       .from('periodos_avaliacao')
       .select('*')
@@ -65,6 +72,7 @@ export async function PUT(
 
     const body = await request.json();
 
+    const supabase = getSupabaseClient();
     const { data: periodo, error } = await supabase
       .from('periodos_avaliacao')
       .update({
@@ -117,6 +125,7 @@ export async function DELETE(
       );
     }
 
+    const supabase = getSupabaseClient();
     const { error } = await supabase
       .from('periodos_avaliacao')
       .delete()

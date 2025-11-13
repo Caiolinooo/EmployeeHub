@@ -156,8 +156,7 @@ export async function POST(request: NextRequest) {
           colaborador_id,
           gerente_id,
           periodo_id,
-          ativo: true,
-          configurado_por: user.id
+          ativo: true
         });
 
       if (insertError) throw insertError;

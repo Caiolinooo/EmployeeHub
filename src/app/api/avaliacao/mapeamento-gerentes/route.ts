@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
     // Check if users exist
     const { data: colaborador, error: colaboradorError } = await supabase
       .from('users_unified')
-      .select('id, name')
+      .select('id, first_name, last_name')
       .eq('id', colaborador_id)
       .single();
 
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
 
     const { data: gerente, error: gerenteError } = await supabase
       .from('users_unified')
-      .select('id, name')
+      .select('id, first_name, last_name')
       .eq('id', gerente_id)
       .single();
 
@@ -243,7 +243,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data,
-      message: `Manager mapping created: ${colaborador.name} → ${gerente.name}`
+      message: `Manager mapping created: ${colaborador.first_name} ${colaborador.last_name} → ${gerente.first_name} ${gerente.last_name}`
     }, { status: 201 });
 
   } catch (error: any) {

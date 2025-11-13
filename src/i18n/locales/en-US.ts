@@ -1095,6 +1095,19 @@ export default {
   starRating: {
     ariaLabel: '{star} of {maxRating} stars',
   },
+  starRating: {
+    ariaLabel: '{star} of {maxRating} stars',
+    scale: {
+      level1: 'Frequently did not meet expectations',
+      level2: 'Did not meet expectations',
+      level3: 'Met expectations',
+      level4: 'Frequently exceeded expectations',
+      level5: 'Consistently exceeded expectations'
+    },
+    selectRating: 'Select a rating',
+    currentRating: 'Current rating',
+    noRating: 'No rating'
+  },
   evaluation: {
     noPermission: 'You do not have permission to access the evaluation module.',
     errorLoadingEvaluations: 'Error loading evaluations',

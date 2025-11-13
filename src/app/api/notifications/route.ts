@@ -298,3 +298,83 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// DELETE - Excluir notificações
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const user_id = searchParams.get('user_id');
+    const notificationIds = searchParams.get('notification_ids')?.split(',').filter(id => id.trim());
+    const deleteAll = searchParams.get('delete_all') === 'true';
+
+    if (!user_id) {
+      return NextResponse.json(
+        { error: 'user_id é obrigatório' },
+        { status: 400 }
+      );
+    }
+
+    console.log(`🗑️ API Notifications - DELETE solicitado para usuário ${user_id}`);
+
+    // Excluir todas as notificações do usuário
+    if (deleteAll) {
+      const { error: deleteError } = await supabaseAdmin
+        .from('notifications')
+        .delete()
+        .eq('user_id', user_id);
+
+      if (deleteError) {
+        console.error('Erro ao excluir todas as notificações:', deleteError);
+        return NextResponse.json(
+          { error: 'Erro ao excluir notificações' },
+          { status: 500 }
+        );
+      }
+
+      console.log(`✅ Todas as notificações do usuário ${user_id} foram excluídas`);
+      return NextResponse.json({
+        success: true,
+        message: 'Todas as notificações foram excluídas'
+      });
+    }
+
+    // Excluir notificações específicas
+    if (!notificationIds || notificationIds.length === 0) {
+      return NextResponse.json(
+        { error: 'notification_ids é obrigatório quando delete_all=false' },
+        { status: 400 }
+      );
+    }
+
+    console.log(`🗑️ Excluindo ${notificationIds.length} notificação(ões): ${notificationIds.join(', ')}`);
+
+    const { error: deleteError, count } = await supabaseAdmin
+      .from('notifications')
+      .delete({ count: 'exact' })
+      .in('id', notificationIds)
+      .eq('user_id', user_id);
+
+    if (deleteError) {
+      console.error('Erro ao excluir notificações específicas:', deleteError);
+      return NextResponse.json(
+        { error: 'Erro ao excluir notificações' },
+        { status: 500 }
+      );
+    }
+
+    console.log(`✅ ${count || 0} notificação(ões) excluída(s) com sucesso`);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Notificações excluídas com sucesso',
+      deletedCount: count || 0
+    });
+
+  } catch (error) {
+    console.error('Erro ao excluir notificações:', error);
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    );
+  }
+}

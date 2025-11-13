@@ -16,7 +16,7 @@ interface User {
   status: string;
 }
 
-export default function UsuariosElegiveis Page() {
+export default function UsuariosElegiveisPage() {
   const { user, isAdmin } = useSupabaseAuth();
   const [usuarios, setUsuarios] = useState<User[]>([]);
   const [elegiveisIds, setElegiveisIds] = useState<Set<string>>(new Set());

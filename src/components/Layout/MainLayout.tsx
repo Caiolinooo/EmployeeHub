@@ -69,6 +69,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   }, [config]);
   const [isI18nReady, setIsI18nReady] = useState(false);
   const [, forceUpdate] = useState({});
+  const [pendingCount, setPendingCount] = useState(0);
 
   // Forçar re-render quando o locale mudar
   useEffect(() => {
@@ -149,6 +150,30 @@ export default function MainLayout({ children }: MainLayoutProps) {
     const saved = localStorage.getItem('main-sidebar-collapsed');
     setIsCollapsed(saved ? JSON.parse(saved) : false);
   }, []);
+
+  // Buscar contagem de avaliações pendentes para gerentes
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      if (!user || (profile?.role !== 'MANAGER' && profile?.role !== 'ADMIN')) return;
+      
+      try {
+        const token = document.cookie.split('; ').find(row => row.startsWith('abzToken='))?.split('=')[1];
+        const response = await fetch('/api/avaliacao-desempenho/avaliacoes/pending-review', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.success) {
+          setPendingCount(data.count || 0);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar contagem de pendentes:', error);
+      }
+    };
+
+    fetchPendingCount();
+    const interval = setInterval(fetchPendingCount, 60000); // Atualizar a cada minuto
+    return () => clearInterval(interval);
+  }, [user, profile]);
 
   const toggleSidebar = () => {
     // Evitar toggle de colapso no mobile (bug visual); colapso apenas em md+
@@ -235,7 +260,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 .filter(item => item.id !== 'admin') // Nunca mostrar item admin no menu
                 .map((item) => {
                 const isActive = pathname ? (pathname === item.href || pathname.startsWith(item.href + '/')) : false;
-                const IconComponent = item.icon;
+                
+                // Garantir que o ícone seja um componente válido
+                const IconComponent = item.icon || FiGrid;
 
               // Obter o texto a ser exibido - o hook useUnifiedData já traduz os itens
               let displayLabel = item.title || item.id;
@@ -268,12 +295,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 return null;
               }
 
+              const showBadge = item.id === 'avaliacao' && pendingCount > 0 && (profile?.role === 'MANAGER' || profile?.role === 'ADMIN');
+
               return (
                 <Link
                   key={item.id}
                   href={item.href}
                   title={displayLabel}
-                  className={`flex items-center ${isCollapsed ? 'px-2 justify-center' : 'px-4'} py-2.5 rounded-md text-sm font-medium transition-colors duration-150 ${
+                  className={`flex items-center ${isCollapsed ? 'px-2 justify-center' : 'px-4'} py-2.5 rounded-md text-sm font-medium transition-colors duration-150 relative ${
                     isActive
                       ? 'bg-abz-blue text-white shadow-sm'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-abz-blue-dark'
@@ -281,6 +310,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 >
                   <IconComponent className={`${isCollapsed ? '' : 'mr-3'} h-5 w-5 ${isActive ? 'text-white' : 'text-gray-400'}`} />
                   {!isCollapsed && <span className="whitespace-nowrap">{displayLabel}</span>}
+                  {showBadge && (
+                    <span className={`${isCollapsed ? 'absolute -top-1 -right-1' : 'ml-auto'} inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full`}>
+                      {pendingCount}
+                    </span>
+                  )}
                 </Link>
               );
             })

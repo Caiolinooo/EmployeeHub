@@ -1,6 +1,6 @@
 {
   "name": "painel-abz",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
@@ -59,7 +59,11 @@
     "list:users": "node scripts/fix-user-names.js --list",
     "test:name-validation": "node scripts/test-name-validation.js",
     "validate": "node scripts/validate-system.js",
-    "validate:i18n": "node scripts/find-i18n-duplicates.js"
+    "validate:i18n": "node scripts/find-i18n-duplicates.js",
+    "setup:vapid": "node scripts/setup-vapid.js",
+    "test:push": "node scripts/test-push-notifications.js",
+    "test:evaluation-workflow": "node scripts/test-evaluation-workflow.js",
+    "generate:vapid": "npx web-push generate-vapid-keys"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -96,7 +100,7 @@
     "file-saver": "^2.0.5",
     "form-data": "^4.0.0",
     "formidable": "^3.5.2",
-    "framer-motion": "^12.6.3",
+    "framer-motion": "^12.23.24",
     "googleapis": "^133.0.0",
     "html2canvas": "^1.4.1",
     "http-proxy-middleware": "^2.0.6",
@@ -129,6 +133,7 @@
     "react-icons": "^5.5.0",
     "react-pdf": "^9.2.1",
     "react-toastify": "^11.0.5",
+    "recharts": "^3.4.1",
     "socket.io": "^4.8.1",
     "speakeasy": "^2.0.0",
     "tailwind-merge": "^3.3.0",

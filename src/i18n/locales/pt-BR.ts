@@ -1136,6 +1136,16 @@ export default {
   },
   starRating: {
     ariaLabel: '{star} de {maxRating} estrelas',
+    scale: {
+      level1: 'Frequentemente não alcançou a expectativa',
+      level2: 'Não alcançou a expectativa',
+      level3: 'Alcançou a expectativa',
+      level4: 'Frequentemente excedeu a expectativa',
+      level5: 'Consistentemente excedeu a expectativa'
+    },
+    selectRating: 'Selecione uma avaliação',
+    currentRating: 'Avaliação atual',
+    noRating: 'Sem avaliação'
   },
   evaluation: {
     noPermission: 'Você não tem permissão para acessar o módulo de avaliação.',

@@ -1,6 +1,6 @@
 # Painel ABZ – Copilot Guide
 
-- Em primeiro lugar sempre use os MCPS para te auxiliar em qualquer ação que vc tomar.
+- Em primeiro lugar sempre use os MCPS - use o sequential thinking e o memory bank, assim como o context7 para te auxiliar em qualquer ação que vc tomar.
 - Next.js App Router lives in `src/app`; legacy pages in `src/pages` are historical only, so add new routes/components under the App Router structure.
 - Production traffic flows through `server.js` (Express) which adds security headers, static caching, and optional proxying—keep new server logic compatible with that wrapper.
 - Supabase access is centralized in `src/lib/supabase.ts`; reuse `supabase`, `getSupabaseAdmin()`, or `supabaseAdmin` instead of creating new clients.

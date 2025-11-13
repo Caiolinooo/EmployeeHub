@@ -28,12 +28,14 @@ export interface Competencia {
 
 // Perguntas do questionário (11-17)
 export interface QuestionarioPergunta {
-  id: number; // 11-17
+  id: string; // Changed to string for consistency with card-based component
+  pergunta: string; // Added for consistency
   titulo: string;
   descricao: string;
   tipo: 'collaborator' | 'manager'; // Quem responde
   obrigatoria: boolean;
   apenas_lideres?: boolean; // Se true, pergunta só aparece para líderes
+  categoria: string; // Categoria da questão
 }
 
 // Resposta detalhada de avaliação
@@ -237,42 +239,48 @@ export const COMPETENCIAS_PADRAO: Competencia[] = [
 // Perguntas do questionário (11-15)
 export const QUESTIONARIO_PADRAO: QuestionarioPergunta[] = [
   {
-    id: 11,
+    id: 'Q11',
+    pergunta: 'Pontos Fortes',
     titulo: 'Pontos Fortes',
     descricao: 'Descreva seus principais pontos fortes e competências que você considera mais desenvolvidas',
     tipo: 'collaborator',
     obrigatoria: true
   },
   {
-    id: 12,
+    id: 'Q12',
+    pergunta: 'Áreas de Melhoria',
     titulo: 'Áreas de Melhoria',
     descricao: 'Identifique as áreas onde você acredita que precisa desenvolver mais',
     tipo: 'collaborator',
     obrigatoria: true
   },
   {
-    id: 13,
+    id: 'Q13',
+    pergunta: 'Objetivos Alcançados',
     titulo: 'Objetivos Alcançados',
     descricao: 'Descreva os principais objetivos que você alcançou no período avaliado',
     tipo: 'collaborator',
     obrigatoria: true
   },
   {
-    id: 14,
+    id: 'Q14',
+    pergunta: 'Planos de Desenvolvimento',
     titulo: 'Planos de Desenvolvimento',
     descricao: 'Quais são seus planos para desenvolvimento profissional no próximo período?',
     tipo: 'collaborator',
     obrigatoria: true
   },
   {
-    id: 15,
+    id: 'Q15',
+    pergunta: 'Comentário do Avaliador',
     titulo: 'Comentário do Avaliador',
     descricao: 'Avaliação geral e feedback do gestor sobre o desempenho do colaborador',
     tipo: 'manager',
     obrigatoria: true
   },
   {
-    id: 16,
+    id: 'Q16',
+    pergunta: 'Liderança - Capacidade de Delegação',
     titulo: 'Liderança - Capacidade de Delegação',
     descricao: 'Avalie a capacidade de delegar tarefas e responsabilidades de forma eficaz, garantindo que a equipe esteja bem orientada e capacitada',
     tipo: 'manager',
@@ -280,7 +288,8 @@ export const QUESTIONARIO_PADRAO: QuestionarioPergunta[] = [
     apenas_lideres: true
   },
   {
-    id: 17,
+    id: 'Q17',
+    pergunta: 'Liderança - Desenvolvimento de Equipe',
     titulo: 'Liderança - Desenvolvimento de Equipe',
     descricao: 'Avalie a capacidade de desenvolver, orientar e capacitar membros da equipe, promovendo crescimento profissional e engajamento',
     tipo: 'manager',
