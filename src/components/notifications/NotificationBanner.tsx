@@ -11,6 +11,8 @@ interface Notification {
   message: string;
   priority: 'low' | 'normal' | 'high' | 'urgent';
   action_url?: string;
+  read_at?: string | null;
+  created_at?: string;
 }
 
 interface NotificationBannerProps {
@@ -42,17 +44,27 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
 
     const checkForNewNotifications = async () => {
       try {
-        // Buscar TODAS as notificações (não apenas não lidas)
+        // Buscar notificações priorizando não lidas; backend já retorna unreadCount
         const response = await fetch(`/api/notifications?user_id=${userId}&limit=10`);
         if (!response.ok) return;
 
         const data = await response.json();
-        const notifications = data.notifications || [];
+        let notifications: Notification[] = data.notifications || [];
+
+        // Preferir notificações não lidas se o backend trouxer read_at
+        const unread = notifications.filter((n) => !n.read_at);
+        if (unread.length > 0) {
+          notifications = unread;
+        }
         
         if (notifications.length > 0) {
           // Encontrar a notificação mais recente que ainda não foi mostrada
           const newNotification = notifications
-            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+            .sort((a, b) => {
+              const aDate = a.created_at ? new Date(a.created_at).getTime() : 0;
+              const bDate = b.created_at ? new Date(b.created_at).getTime() : 0;
+              return bDate - aDate;
+            })
             .find(n => !shownNotifications.has(n.id));
           
           if (newNotification) {
@@ -66,11 +78,6 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
               return newSet;
             });
             setIsVisible(true);
-
-            // Auto-hide após duração especificada
-            setTimeout(() => {
-              setIsVisible(false);
-            }, autoHideDuration);
           }
         }
       } catch (error) {
@@ -82,7 +89,7 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
     checkForNewNotifications();
 
     // Polling a cada 2 segundos para tempo real
-    const interval = setInterval(checkForNewNotifications, 2000);
+    const interval = setInterval(checkForNewNotifications, 4000);
 
     return () => clearInterval(interval);
   }, [userId, autoHideDuration, shownNotifications]);

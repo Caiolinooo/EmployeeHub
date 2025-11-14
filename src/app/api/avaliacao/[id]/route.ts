@@ -124,7 +124,7 @@ export async function PATCH(
 
     const userId = decoded.userId;
     const body = await request.json();
-    const { respostas, status, comentario_gerente, solicitar_ajustes } = body;
+    const { respostas, notas_gerente, status, solicitar_ajustes } = body;
 
     // Usar instância síncrona do supabaseAdmin
 
@@ -153,11 +153,24 @@ export async function PATCH(
       );
     }
 
+    // 2.1. Bloquear edição de avaliações concluídas
+    if (avaliacaoAtual.status === 'concluida') {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Esta avaliação já foi concluída e não pode mais ser editada',
+          hint: 'Apenas administradores podem excluir avaliações concluídas'
+        },
+        { status: 400 }
+      );
+    }
+
     // 3. Validar transições de status
     const statusAtual = avaliacaoAtual.status;
     
-    // Colaborador só pode editar se status for pendente_autoavaliacao
-    if (isCollaborator && !isManager && statusAtual !== 'pendente_autoavaliacao') {
+    // Colaborador pode editar se status for: pendente, em_andamento, devolvida, aprovada_aguardando_comentario
+    const statusEditaveisColaborador = ['pendente', 'em_andamento', 'devolvida', 'aprovada_aguardando_comentario'];
+    if (isCollaborator && !isManager && !statusEditaveisColaborador.includes(statusAtual)) {
       return NextResponse.json(
         { 
           success: false, 
@@ -168,13 +181,13 @@ export async function PATCH(
       );
     }
 
-    // Gerente só pode editar se status for pendente_aprovacao_gerente
-    if (isManager && !isCollaborator && statusAtual !== 'pendente_aprovacao_gerente') {
+    // Gerente só pode editar se status for aguardando_aprovacao ou aguardando_finalizacao
+    if (isManager && !isCollaborator && !['aguardando_aprovacao', 'aguardando_finalizacao'].includes(statusAtual)) {
       return NextResponse.json(
         { 
           success: false, 
           error: 'Esta avaliação ainda não está disponível para revisão gerencial',
-          hint: statusAtual === 'pendente_autoavaliacao' 
+          hint: statusAtual === 'pendente' || statusAtual === 'em_andamento'
             ? 'Aguardando o colaborador finalizar a autoavaliação'
             : 'A avaliação já foi concluída'
         },
@@ -195,17 +208,25 @@ export async function PATCH(
       };
     }
 
-    // Adicionar comentário do gerente se fornecido
-    if (comentario_gerente !== undefined) {
-      updateData.comentario_gerente = comentario_gerente;
+    if (notas_gerente !== undefined) {
+      // Mesclar notas do gerente existentes com novas
+      updateData.notas_gerente = {
+        ...avaliacaoAtual.notas_gerente,
+        ...notas_gerente
+      };
     }
 
     if (status !== undefined) {
-      // Validar transições permitidas
+      // Validar transições permitidas (status corretos do banco)
       const transicoesPermitidas: Record<string, string[]> = {
-        'pendente_autoavaliacao': ['pendente_aprovacao_gerente'],
-        'pendente_aprovacao_gerente': ['concluida', 'devolvida_para_ajustes'],
-        'devolvida_para_ajustes': ['pendente_aprovacao_gerente'],
+        'pendente': ['em_andamento', 'aguardando_aprovacao', 'cancelada'],
+        'em_andamento': ['aguardando_aprovacao', 'cancelada'],
+        'aguardando_aprovacao': ['aprovada_aguardando_comentario', 'devolvida', 'cancelada'],
+        'aprovada_aguardando_comentario': ['aguardando_finalizacao', 'devolvida', 'cancelada'],
+        'aguardando_finalizacao': ['concluida', 'devolvida', 'cancelada'],
+        'devolvida': ['aguardando_aprovacao', 'cancelada'],
+        'concluida': [], // Status final
+        'cancelada': [] // Status final
       };
 
       if (
@@ -228,13 +249,22 @@ export async function PATCH(
       // Se status mudar para concluída, calcular nota final
       if (status === 'concluida') {
         const respostasCompletas = updateData.respostas || avaliacaoAtual.respostas;
-        const notas = Object.values(respostasCompletas)
+        const notasGerenteCompletas = updateData.notas_gerente || avaliacaoAtual.notas_gerente || {};
+        
+        // Coletar notas das questões do gerente (Q15-Q17)
+        const notasQuestoesGerente = Object.values(respostasCompletas)
           .map((r: any) => r.nota)
           .filter((n): n is number => typeof n === 'number' && n > 0);
 
-        if (notas.length > 0) {
+        // Coletar notas do gerente para questões do colaborador (Q11-Q14)
+        const notasAvaliacaoColaborador = Object.values(notasGerenteCompletas)
+          .filter((n): n is number => typeof n === 'number' && n > 0);
+
+        const todasNotas = [...notasQuestoesGerente, ...notasAvaliacaoColaborador];
+
+        if (todasNotas.length > 0) {
           updateData.nota_final = (
-            notas.reduce((sum, n) => sum + n, 0) / notas.length
+            todasNotas.reduce((sum, n) => sum + n, 0) / todasNotas.length
           ).toFixed(2);
         }
       }
@@ -273,7 +303,7 @@ export async function PATCH(
           .single();
 
         // Notificar quando colaborador envia autoavaliação para aprovação
-        if (status === 'pendente_aprovacao_gerente' && manager && statusAtual === 'pendente_autoavaliacao') {
+        if (status === 'aguardando_aprovacao' && manager && (statusAtual === 'pendente' || statusAtual === 'em_andamento')) {
           await notifyManagerSelfEvaluationCompleted(
             manager.id,
             avaliacaoAtualizada.id,
@@ -282,17 +312,17 @@ export async function PATCH(
         }
 
         // Notificar quando gerente devolve para ajustes
-        if (status === 'devolvida_para_ajustes' && employee) {
+        if (status === 'devolvida' && employee) {
           await notifyEmployeeEvaluationReturned(
             employee.id,
             avaliacaoAtualizada.id,
             manager?.name || 'Gestor',
-            comentario_gerente
+            avaliacaoAtualizada.respostas?.['Q15']?.comentario || ''
           );
         }
 
         // Notificar quando colaborador reenvia após ajustes
-        if (status === 'pendente_aprovacao_gerente' && manager && statusAtual === 'devolvida_para_ajustes') {
+        if (status === 'aguardando_aprovacao' && manager && statusAtual === 'devolvida') {
           await notifyManagerEvaluationRevised(
             manager.id,
             avaliacaoAtualizada.id,

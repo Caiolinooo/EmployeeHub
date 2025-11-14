@@ -11,6 +11,7 @@ import { EvaluationPeriod } from '@/types';
 interface ActivePeriodCardProps {
   period: EvaluationPeriod;
   existingEvaluationId?: string | null;
+  evaluationStatus?: string;
   index: number;
   type: 'active' | 'upcoming';
 }
@@ -18,6 +19,7 @@ interface ActivePeriodCardProps {
 export default function ActivePeriodCard({
   period,
   existingEvaluationId,
+  evaluationStatus,
   index,
   type
 }: ActivePeriodCardProps) {
@@ -156,46 +158,76 @@ export default function ActivePeriodCard({
       </div>
 
       {/* Botão de Ação */}
-      <motion.button
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={handleIniciarAvaliacao}
-        disabled={isLoading}
-        className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
-          existingEvaluationId
-            ? 'bg-blue-600 hover:bg-blue-700 text-white'
-            : type === 'active'
-            ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-md'
-            : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-        } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-      >
-        {isLoading ? (
-          <>
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            <span>Carregando...</span>
-          </>
-        ) : existingEvaluationId ? (
-          <>
-            <FiArrowRight className="w-5 h-5" />
-            <span>Continuar Avaliação</span>
-          </>
-        ) : type === 'active' ? (
-          <>
-            <FiPlay className="w-5 h-5" />
-            <span>Iniciar Minha Avaliação</span>
-          </>
-        ) : (
-          <>
-            <FiClock className="w-5 h-5" />
-            <span>Disponível em breve</span>
-          </>
-        )}
-      </motion.button>
+      {evaluationStatus === 'concluida' ? (
+        <div className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold bg-green-50 border-2 border-green-200 text-green-700">
+          <FiCheckCircle className="w-5 h-5" />
+          <span>Avaliação Concluída</span>
+        </div>
+      ) : evaluationStatus === 'aguardando_aprovacao' || 
+         evaluationStatus === 'aprovada_aguardando_comentario' || 
+         evaluationStatus === 'aguardando_finalizacao' ? (
+        <div className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold bg-yellow-50 border-2 border-yellow-200 text-yellow-700">
+          <FiClock className="w-5 h-5" />
+          <span>Aguardando Avaliação do Gestor</span>
+        </div>
+      ) : (
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={handleIniciarAvaliacao}
+          disabled={isLoading}
+          className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${
+            existingEvaluationId
+              ? 'bg-blue-600 hover:bg-blue-700 text-white'
+              : type === 'active'
+              ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-md'
+              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+          } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          {isLoading ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span>Carregando...</span>
+            </>
+          ) : existingEvaluationId ? (
+            <>
+              <FiArrowRight className="w-5 h-5" />
+              <span>Continuar Avaliação</span>
+            </>
+          ) : type === 'active' ? (
+            <>
+              <FiPlay className="w-5 h-5" />
+              <span>Iniciar Minha Avaliação</span>
+            </>
+          ) : (
+            <>
+              <FiClock className="w-5 h-5" />
+              <span>Disponível em breve</span>
+            </>
+          )}
+        </motion.button>
+      )}
 
       {/* Info adicional */}
-      {existingEvaluationId && (
+      {evaluationStatus === 'concluida' && (
+        <p className="text-xs text-center text-green-600 mt-2">
+          Esta avaliação foi finalizada pelo seu gestor
+        </p>
+      )}
+      {existingEvaluationId && 
+       evaluationStatus !== 'aguardando_aprovacao' && 
+       evaluationStatus !== 'aprovada_aguardando_comentario' && 
+       evaluationStatus !== 'aguardando_finalizacao' && 
+       evaluationStatus !== 'concluida' && (
         <p className="text-xs text-center text-gray-500 mt-2">
           Você já iniciou esta avaliação
+        </p>
+      )}
+      {(evaluationStatus === 'aguardando_aprovacao' || 
+        evaluationStatus === 'aprovada_aguardando_comentario' || 
+        evaluationStatus === 'aguardando_finalizacao') && (
+        <p className="text-xs text-center text-gray-500 mt-2">
+          Sua autoavaliação foi enviada e está aguardando revisão
         </p>
       )}
     </motion.div>

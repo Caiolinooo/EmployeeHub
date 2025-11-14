@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
-import { NotificacoesAvaliacaoService } from '@/lib/services/notificacoes-avaliacao';
+import { notifyEmployeeEvaluationCompleted } from '@/lib/evaluation-notifications';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * Rota para gerente aprovar avaliação
+ * POST - Gerente finaliza avaliação após comentário final do funcionário
  */
 export async function POST(
   request: NextRequest,
@@ -33,16 +33,12 @@ export async function POST(
 
     if (payload.role !== 'MANAGER' && payload.role !== 'ADMIN') {
       return NextResponse.json(
-        { success: false, error: 'Apenas gerentes e administradores podem aprovar avaliações' },
+        { success: false, error: 'Apenas gerentes podem finalizar avaliações' },
         { status: 403 }
       );
     }
 
     const { id } = await params;
-    const body = await request.json();
-    const { comentario_avaliador, notas_gerente } = body;
-
-    console.log(`API approve: Aprovando avaliação ${id} por gerente ${payload.userId}`);
 
     const { data: avaliacao, error: fetchError } = await supabaseAdmin
       .from('avaliacoes_desempenho')
@@ -59,73 +55,79 @@ export async function POST(
 
     if (avaliacao.avaliador_id !== payload.userId && payload.role !== 'ADMIN') {
       return NextResponse.json(
-        { success: false, error: 'Você não é o gerente responsável por esta avaliação' },
+        { success: false, error: 'Você não é o gerente desta avaliação' },
         { status: 403 }
       );
     }
 
-    const updateData: any = {
-      status: 'aprovada_aguardando_comentario',
-      status_aprovacao: 'em_revisao',
-      comentario_avaliador: comentario_avaliador || '',
-      updated_at: new Date().toISOString()
-    };
-
-    if (notas_gerente) {
-      updateData.notas_gerente = {
-        ...avaliacao.notas_gerente,
-        ...notas_gerente
-      };
+    if (avaliacao.status !== 'aguardando_finalizacao') {
+      return NextResponse.json(
+        { success: false, error: 'Esta avaliação não está pronta para finalização' },
+        { status: 400 }
+      );
     }
+
+    // Calcular nota final
+    const respostas = avaliacao.respostas || {};
+    const notasGerente = avaliacao.notas_gerente || {};
+    
+    const notasQuestoesGerente = Object.values(respostas)
+      .map((r: any) => r?.nota)
+      .filter((n): n is number => typeof n === 'number' && n > 0);
+
+    const notasAvaliacaoColaborador = Object.values(notasGerente)
+      .filter((n): n is number => typeof n === 'number' && n > 0);
+
+    const todasNotas = [...notasQuestoesGerente, ...notasAvaliacaoColaborador];
+    const nota_final = todasNotas.length > 0
+      ? (todasNotas.reduce((sum, n) => sum + n, 0) / todasNotas.length).toFixed(2)
+      : null;
 
     const { error: updateError } = await supabaseAdmin
       .from('avaliacoes_desempenho')
-      .update(updateData)
+      .update({
+        status: 'concluida',
+        status_aprovacao: 'aprovada',
+        nota_final,
+        data_aprovacao: new Date().toISOString(),
+        aprovado_por: payload.userId,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', id);
 
     if (updateError) {
-      console.error('Erro ao aprovar avaliação:', updateError);
+      console.error('Erro ao finalizar avaliação:', updateError);
       return NextResponse.json(
-        { success: false, error: 'Erro ao aprovar avaliação' },
+        { success: false, error: 'Erro ao finalizar avaliação' },
         { status: 500 }
       );
     }
 
-    const { data: funcionario } = await supabaseAdmin
-      .from('users_unified')
-      .select('id, first_name, last_name, email')
-      .eq('id', avaliacao.funcionario_id)
-      .single();
-
     const { data: gerente } = await supabaseAdmin
       .from('users_unified')
-      .select('id, first_name, last_name, email')
+      .select('first_name, last_name')
       .eq('id', payload.userId)
       .single();
 
-    // Notificar funcionário para adicionar comentário final
-    if (funcionario && gerente) {
-      const { createEvaluationNotification } = await import('@/lib/evaluation-notifications');
-      await createEvaluationNotification({
-        userId: funcionario.id,
-        type: 'evaluation_revised',
-        evaluationId: avaliacao.id,
-        managerName: `${gerente.first_name} ${gerente.last_name}`,
-        employeeName: `${funcionario.first_name} ${funcionario.last_name}`
-      });
-      console.log(`Notificação enviada para funcionário ${funcionario.id} adicionar comentário final`);
+    if (gerente) {
+      await notifyEmployeeEvaluationCompleted(
+        avaliacao.funcionario_id,
+        avaliacao.id,
+        `${gerente.first_name} ${gerente.last_name}`
+      );
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Avaliação aprovada. Aguardando comentário final do funcionário.',
+      message: 'Avaliação finalizada com sucesso',
       data: {
         id: avaliacao.id,
-        status: 'aprovada_aguardando_comentario'
+        status: 'concluida',
+        nota_final
       }
     });
   } catch (error) {
-    console.error('Erro ao aprovar avaliação:', error);
+    console.error('Erro ao finalizar avaliação:', error);
     return NextResponse.json(
       { success: false, error: 'Erro interno do servidor' },
       { status: 500 }

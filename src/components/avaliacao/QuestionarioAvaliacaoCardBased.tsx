@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiChevronDown, FiChevronUp, FiUser, FiUsers } from 'react-icons/fi';
-import { QUESTIONARIO_PADRAO, ESCALA_AVALIACAO } from '@/lib/schemas/evaluation-schemas-new';
+import { QUESTIONARIO_PADRAO, ESCALA_AVALIACAO } from '@/lib/schemas/evaluation-schemas';
 import StarRating from '@/components/StarRating';
 
 interface QuestionarioAvaliacaoCardBasedProps {
@@ -11,13 +11,19 @@ interface QuestionarioAvaliacaoCardBasedProps {
   onChange: (questionId: string, value: any) => void;
   isManager?: boolean;
   readOnly?: boolean;
+  isEmployeeLeader?: boolean; // Se o funcionário sendo avaliado é líder
+  notasGerente?: Record<string, number>; // Notas do gerente para questões do colaborador
+  onNotaGerenteChange?: (questionId: string, nota: number) => void;
 }
 
 export default function QuestionarioAvaliacaoCardBased({
   respostas,
   onChange,
   isManager = false,
-  readOnly = false
+  readOnly = false,
+  isEmployeeLeader = false,
+  notasGerente = {},
+  onNotaGerenteChange
 }: QuestionarioAvaliacaoCardBasedProps) {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     autoavaliacao: true,
@@ -40,10 +46,18 @@ export default function QuestionarioAvaliacaoCardBased({
     return acc;
   }, {} as Record<string, typeof QUESTIONARIO_PADRAO>);
 
-  // Filtrar questões baseado no tipo de usuário
-  const getQuestionsForUser = (categoria: string) => {
+  // Filtrar questões baseado no tipo de usuário e categoria
+  const getQuestionsForUser = (categoria: string, forceType?: 'collaborator' | 'manager') => {
     const questions = questionsByCategory[categoria] || [];
     return questions.filter(q => {
+      // Filtrar questões de liderança se o funcionário não é líder
+      if (q.apenas_lideres && !isEmployeeLeader) {
+        return false;
+      }
+      
+      if (forceType) {
+        return q.tipo === forceType;
+      }
       if (isManager) {
         return q.tipo === 'manager';
       } else {
@@ -52,7 +66,7 @@ export default function QuestionarioAvaliacaoCardBased({
     });
   };
 
-  const renderStarRating = (questionId: string, currentValue: number) => {
+  const renderStarRating = (questionId: string, currentValue: number, isReadOnly: boolean = readOnly) => {
     const resposta = respostas[questionId];
     
     return (
@@ -64,15 +78,17 @@ export default function QuestionarioAvaliacaoCardBased({
           nota: newRating
         })}
         size="lg"
-        readOnly={readOnly}
+        readOnly={isReadOnly}
         showLabel={true}
-        showTooltip={!readOnly}
+        showTooltip={!isReadOnly}
       />
     );
   };
 
-  const renderQuestion = (question: typeof QUESTIONARIO_PADRAO[0]) => {
+  const renderQuestion = (question: typeof QUESTIONARIO_PADRAO[0], isReadOnly: boolean = readOnly) => {
     const resposta = respostas[question.id];
+    const isCollaboratorQuestion = question.tipo === 'collaborator';
+    const notaGerente = notasGerente[question.id];
 
     return (
       <motion.div
@@ -93,7 +109,7 @@ export default function QuestionarioAvaliacaoCardBased({
           )}
         </div>
 
-        {/* Rating - Apenas para avaliações do gerente */}
+        {/* Rating - Apenas para avaliações do gerente (Q15, Q16, Q17) */}
         {question.tipo === 'manager' && (
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
@@ -110,7 +126,16 @@ export default function QuestionarioAvaliacaoCardBased({
                 </span>
               )}
             </div>
-            {renderStarRating(question.id, resposta?.nota || 0)}
+            <div className="mb-4">
+              {renderStarRating(question.id, resposta?.nota || 0, isReadOnly)}
+            </div>
+            <div className="text-xs text-gray-600 space-y-1">
+              <p><strong>1</strong> - Frequentemente não alcançou a expectativa</p>
+              <p><strong>2</strong> - Não alcançou a expectativa</p>
+              <p><strong>3</strong> - Alcançou a expectativa</p>
+              <p><strong>4</strong> - Frequentemente excedeu a expectativa</p>
+              <p><strong>5</strong> - Consistentemente excedeu a expectativa</p>
+            </div>
           </div>
         )}
 
@@ -125,7 +150,7 @@ export default function QuestionarioAvaliacaoCardBased({
               ...resposta, 
               comentario: e.target.value 
             })}
-            readOnly={readOnly}
+            readOnly={isReadOnly}
             placeholder="Descreva evidências, exemplos ou contextos relevantes..."
             className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
             rows={4}
@@ -134,6 +159,38 @@ export default function QuestionarioAvaliacaoCardBased({
             {question.obrigatorio ? '* Campo obrigatório' : 'Opcional'}
           </p>
         </div>
+
+        {/* Nota do Gerente (apenas para questões do colaborador quando gerente está avaliando) */}
+        {isManager && isCollaboratorQuestion && onNotaGerenteChange && (
+          <div className="mt-6 pt-6 border-t-2 border-purple-200 bg-purple-50 -mx-6 -mb-6 px-6 pb-6 rounded-b-xl">
+            <label className="block text-sm font-semibold text-purple-700 mb-3">
+              📊 Nota do Gerente para esta resposta:
+            </label>
+            <div className="flex items-center gap-4">
+              <StarRating
+                maxRating={5}
+                initialRating={notaGerente || 0}
+                onChange={(nota) => onNotaGerenteChange(question.id, nota)}
+                size="lg"
+                readOnly={readOnly}
+                showLabel={true}
+                showTooltip={!readOnly}
+              />
+              {notaGerente && (
+                <span className={`text-2xl font-bold ${
+                  notaGerente >= 4 ? 'text-green-600' :
+                  notaGerente >= 3 ? 'text-blue-600' :
+                  notaGerente >= 2 ? 'text-yellow-600' : 'text-red-600'
+                }`}>
+                  {notaGerente}/5
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-purple-600 mt-2">
+              Avalie a qualidade e completude da resposta do colaborador
+            </p>
+          </div>
+        )}
       </motion.div>
     );
   };
@@ -177,7 +234,7 @@ export default function QuestionarioAvaliacaoCardBased({
               className="px-6 pb-6"
             >
               <div className="space-y-6">
-                {getQuestionsForUser('Autoavaliação').map(renderQuestion)}
+                {getQuestionsForUser('Autoavaliação', 'collaborator').map(q => renderQuestion(q, isManager))}
               </div>
             </motion.div>
           )}
@@ -222,7 +279,7 @@ export default function QuestionarioAvaliacaoCardBased({
                 className="px-6 pb-6"
               >
                 <div className="space-y-6">
-                  {getQuestionsForUser('Avaliação do Gerente').map(renderQuestion)}
+                  {getQuestionsForUser('Avaliação do Gerente', 'manager').map(q => renderQuestion(q, false))}
                 </div>
               </motion.div>
             )}

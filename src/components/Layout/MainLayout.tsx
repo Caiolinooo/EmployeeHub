@@ -154,24 +154,43 @@ export default function MainLayout({ children }: MainLayoutProps) {
   // Buscar contagem de avaliações pendentes para gerentes
   useEffect(() => {
     const fetchPendingCount = async () => {
-      if (!user || (profile?.role !== 'MANAGER' && profile?.role !== 'ADMIN')) return;
+      if (!user) {
+        console.log('🔴 Badge: Sem usuário logado');
+        return;
+      }
+      
+      console.log('🔵 Badge: Buscando avaliações pendentes para:', user.id, 'Role:', profile?.role);
       
       try {
         const token = document.cookie.split('; ').find(row => row.startsWith('abzToken='))?.split('=')[1];
+        if (!token) {
+          console.log('🔴 Badge: Token não encontrado');
+          return;
+        }
+
         const response = await fetch('/api/avaliacao-desempenho/avaliacoes/pending-review', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
+        
+        console.log('🔵 Badge: Response status:', response.status);
+        
         const data = await response.json();
+        console.log('🔵 Badge: Data recebida:', data);
+        
         if (data.success) {
-          setPendingCount(data.count || 0);
+          const count = data.count || 0;
+          console.log(`✅ Badge: ${count} avaliações pendentes`);
+          setPendingCount(count);
+        } else {
+          console.log('🔴 Badge: Erro na resposta:', data.error);
         }
       } catch (error) {
-        console.error('Erro ao buscar contagem de pendentes:', error);
+        console.error('🔴 Badge: Erro ao buscar contagem:', error);
       }
     };
 
     fetchPendingCount();
-    const interval = setInterval(fetchPendingCount, 60000); // Atualizar a cada minuto
+    const interval = setInterval(fetchPendingCount, 60000);
     return () => clearInterval(interval);
   }, [user, profile]);
 
@@ -398,7 +417,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
         >
           {/* Notificações globais fixas (desktop) */}
           <div className="hidden md:block fixed top-4 right-4 z-50">
-            {user && <NotificationHUD userId={user.id} position="top-right" />}
+            {user && <NotificationHUD userId={user.id} position="top-right" evaluationPendingCount={pendingCount} />}
           </div>
 
           {/* Header mobile */}
@@ -414,7 +433,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 <span className="ml-3 text-lg font-semibold text-abz-blue-dark">{config?.sidebarTitle || "Painel ABZ"}</span>
               </div>
               <div className="flex items-center space-x-2">
-                {user && <NotificationHUD userId={user.id} position="top-right" />}
+                {user && <NotificationHUD userId={user.id} position="top-right" evaluationPendingCount={pendingCount} />}
               </div>
             </div>
           </header>

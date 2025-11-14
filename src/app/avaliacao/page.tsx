@@ -42,7 +42,8 @@ export default async function EvaluationPage() {
     }
 
     const [evaluations, periods, employees, availablePeriods] = await Promise.all([
-      getEvaluations({ userId, userRole: userData.role }),
+      // A lógica de gerente é interna ao serviço, baseada em avaliacao_colaborador_gerente
+      getEvaluations({ userId }),
       getEvaluationPeriods(),
       getEmployees(),
       getAvailablePeriods(userId)
@@ -54,7 +55,8 @@ export default async function EvaluationPage() {
         const evaluation = await getMyEvaluationForPeriod(userId, period.id);
         return {
           period,
-          existingEvaluationId: evaluation?.id || null
+          existingEvaluationId: evaluation?.id || null,
+          evaluationStatus: evaluation?.status || null
         };
       })
     );
@@ -64,7 +66,8 @@ export default async function EvaluationPage() {
         const evaluation = await getMyEvaluationForPeriod(userId, period.id);
         return {
           period,
-          existingEvaluationId: evaluation?.id || null
+          existingEvaluationId: evaluation?.id || null,
+          evaluationStatus: evaluation?.status || null
         };
       })
     );

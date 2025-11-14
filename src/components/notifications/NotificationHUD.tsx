@@ -23,13 +23,15 @@ interface NotificationHUDProps {
   position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
   maxVisible?: number;
   showBanner?: boolean;
+  evaluationPendingCount?: number;
 }
 
 const NotificationHUD: React.FC<NotificationHUDProps> = ({
   userId,
   position = 'top-right',
   maxVisible = 5,
-  showBanner = true
+  showBanner = true,
+  evaluationPendingCount = 0
 }) => {
   const { t } = useI18n();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -375,7 +377,7 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
         aria-label={t('components.notificacoes')}
-        title={unreadCount > 0 ? `${unreadCount} notificações não lidas` : t('components.notificacoes')}
+        title={unreadCount > 0 || evaluationPendingCount > 0 ? `${unreadCount} notificações, ${evaluationPendingCount} avaliações pendentes` : t('components.notificacoes')}
       >
         <FiBell className="w-6 h-6" />
         {unreadCount > 0 && (
@@ -388,16 +390,20 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
             </span>
           </span>
         )}
+        {evaluationPendingCount > 0 && (
+          <span className="absolute -bottom-1 -right-1 h-5 w-5 z-10">
+            {!isOpen && (
+              <span className="absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75 animate-ping"></span>
+            )}
+            <span className="relative inline-flex items-center justify-center h-5 w-5 rounded-full bg-blue-600 text-white text-xs font-bold shadow-lg min-w-[20px]">
+              {evaluationPendingCount > 99 ? '99+' : evaluationPendingCount}
+            </span>
+          </span>
+        )}
       </button>
 
-      {/* Banner de Notificação */}
-      {showBanner && (
-        <NotificationBanner 
-          userId={userId} 
-          position="top" 
-          triggerElement={bellRef.current}
-        />
-      )}
+      {/* Banner de Notificação desativado temporariamente para evitar loop de exibição.
+          As notificações continuam disponíveis no sino e no dropdown. */}
 
       {/* Dropdown de Notificações */}
       {isOpen && (

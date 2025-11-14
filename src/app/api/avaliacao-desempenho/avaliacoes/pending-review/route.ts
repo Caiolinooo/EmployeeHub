@@ -27,22 +27,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (payload.role !== 'MANAGER' && payload.role !== 'ADMIN') {
-      return NextResponse.json(
-        { success: false, error: 'Apenas gerentes e administradores podem acessar esta rota' },
-        { status: 403 }
-      );
-    }
-
     console.log(`API pending-review: Buscando avaliações pendentes para gerente ${payload.userId}`);
 
-    // Buscar avaliações aguardando aprovação do gerente
+    // Buscar avaliações aguardando aprovação do gerente (direto da tabela, não da view)
     const { data: avaliacoes, error } = await supabaseAdmin
-      .from('vw_avaliacoes_desempenho')
+      .from('avaliacoes_desempenho')
       .select('*')
       .eq('avaliador_id', payload.userId)
       .eq('status', 'aguardando_aprovacao')
-      .order('data_autoavaliacao', { ascending: false });
+      .order('created_at', { ascending: false });
+
+    console.log(`Encontradas ${avaliacoes?.length || 0} avaliações pendentes`);
 
     if (error) {
       console.error('Erro ao buscar avaliações pendentes:', error);
@@ -52,10 +47,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const count = avaliacoes?.length || 0;
+    console.log(`Retornando ${count} avaliações pendentes`);
+
     return NextResponse.json({
       success: true,
       data: avaliacoes || [],
-      count: avaliacoes?.length || 0
+      count
     });
   } catch (error) {
     console.error('Erro ao buscar avaliações pendentes:', error);

@@ -13,6 +13,7 @@ import { motion } from 'framer-motion';
 interface PeriodWithEvaluation {
   period: EvaluationPeriod;
   existingEvaluationId: string | null;
+  evaluationStatus?: string | null;
 }
 
 interface EvaluationListClientProps {
@@ -35,25 +36,69 @@ export default function EvaluationListClient({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [showWelcome, setShowWelcome] = useState(true);
-  
-  const isManager = currentUser?.role === 'MANAGER';
+  const [isEvaluationManager, setIsEvaluationManager] = useState(false);
+
+  // Ser gerente no módulo de avaliação NÃO depende do role global,
+  // e sim de estar configurado como gerente de alguém nas avaliações.
+  useEffect(() => {
+    const checkEvaluationManager = async () => {
+      try {
+        if (!currentUser?.id) return;
+
+        const token = document.cookie.split('; ').find(row => row.startsWith('abzToken='))?.split('=')[1];
+        if (!token) {
+          console.log('Token não encontrado para verificar gerente');
+          return;
+        }
+
+        const response = await fetch(`/api/avaliacao/is-manager`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+        });
+
+        if (!response.ok) {
+          console.log('Erro ao verificar gerente:', response.status);
+          return;
+        }
+
+        const result = await response.json();
+        if (result?.success && typeof result.data?.isManager === 'boolean') {
+          setIsEvaluationManager(result.data.isManager);
+          console.log('Is evaluation manager:', result.data.isManager);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar se usuário é gerente no módulo de avaliação:', error);
+      }
+    };
+
+    checkEvaluationManager();
+  }, [currentUser?.id]);
 
   const getEmployeeName = (id: string) => {
     if (!id) return 'Desconhecido';
     const employee = initialEmployees.find(e => e.id === id);
-    return employee?.name || 'Desconhecido';
+    return (employee as any)?.name || 'Desconhecido';
   };
   
   const getManagerName = (id: string) => {
     if (!id) return 'Gestor não atribuído';
     const manager = initialEmployees.find(e => e.id === id);
-    return manager?.name || 'Gestor não atribuído';
+    return (manager as any)?.name || 'Gestor não atribuído';
   };
   
   const getPeriodName = (id: string) => {
     if (!id) return 'N/A';
     const period = initialPeriods.find(p => p.id === id);
     return period?.nome || 'N/A';
+  };
+  
+  const getCycleName = (id: string) => {
+    if (!id) return undefined;
+    const period = initialPeriods.find(p => p.id === id);
+    return period?.nome;
   };
 
   // Filtrar avaliações
@@ -66,12 +111,23 @@ export default function EvaluationListClient({
 
   // Categorizar por status - USANDO STATUS CORRETOS DO BANCO
   const pending = filteredEvaluations.filter(ev => ev.status === 'pendente' || ev.status === 'em_andamento');
-  const awaitingManager = filteredEvaluations.filter(ev => ev.status === 'aguardando_aprovacao');
+  const awaitingManager = filteredEvaluations.filter(ev => 
+    ev.status === 'aguardando_aprovacao' || 
+    ev.status === 'aprovada_aguardando_comentario' || 
+    ev.status === 'aguardando_finalizacao'
+  );
   const completed = filteredEvaluations.filter(ev => ev.status === 'concluida');
   const needsAction = filteredEvaluations.filter(ev => ev.status === 'devolvida');
   
   // Filtrar avaliações pendentes de revisão do gerente atual
-  const myPendingReviews = isManager ? awaitingManager.filter(ev => ev.avaliador_id === currentUser.id) : [];
+  const myPendingReviews = isEvaluationManager
+    ? awaitingManager.filter(ev => ev.avaliador_id === currentUser.id)
+    : [];
+  
+  // Remover avaliações que já estão em myPendingReviews da lista awaitingManager
+  const awaitingManagerFiltered = awaitingManager.filter(
+    ev => !myPendingReviews.some(pending => pending.id === ev.id)
+  );
 
   // Estatísticas
   const stats = [
@@ -85,8 +141,8 @@ export default function EvaluationListClient({
     },
     {
       icon: <FiTrendingUp className="w-6 h-6" />,
-      label: isManager ? 'Aguardando Minha Revisão' : 'Aguardando Gerente',
-      value: isManager ? myPendingReviews.length : awaitingManager.length,
+      label: isEvaluationManager ? 'Aguardando Minha Revisão' : 'Aguardando Gerente',
+      value: isEvaluationManager ? myPendingReviews.length : awaitingManager.length,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-200'
@@ -114,7 +170,7 @@ export default function EvaluationListClient({
       <WelcomeModal 
         isOpen={showWelcome} 
         onClose={() => setShowWelcome(false)} 
-        userRole={isManager ? "manager" : "collaborator"}
+        userRole={isEvaluationManager ? "manager" : "collaborator"}
       />
 
       <div className="w-full px-6 py-8">
@@ -136,10 +192,10 @@ export default function EvaluationListClient({
           {/* Título */}
           <div>
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
-              {isManager ? 'Avaliações da Equipe' : 'Avaliações de Desempenho'}
+              {isEvaluationManager ? 'Avaliações da Equipe' : 'Avaliações de Desempenho'}
             </h1>
             <p className="text-gray-600">
-              {isManager 
+              {isEvaluationManager 
                 ? 'Gerencie e acompanhe as avaliações dos seus colaboradores'
                 : 'Acompanhe seu desenvolvimento e evolução profissional'
               }
@@ -194,6 +250,7 @@ export default function EvaluationListClient({
                         key={item.period.id}
                         period={item.period}
                         existingEvaluationId={item.existingEvaluationId}
+                        evaluationStatus={item.evaluationStatus}
                         index={index}
                         type="active"
                       />
@@ -218,6 +275,7 @@ export default function EvaluationListClient({
                         key={item.period.id}
                         period={item.period}
                         existingEvaluationId={item.existingEvaluationId}
+                        evaluationStatus={item.evaluationStatus}
                         index={index}
                         type="upcoming"
                       />
@@ -260,7 +318,7 @@ export default function EvaluationListClient({
           </motion.div>
 
           {/* Avaliações Pendentes de Revisão do Gerente - DESTAQUE */}
-          {isManager && myPendingReviews.length > 0 && (
+          {isEvaluationManager && myPendingReviews.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -284,8 +342,10 @@ export default function EvaluationListClient({
                     employeeName={getEmployeeName(ev.funcionario_id)}
                     managerName={getManagerName(ev.avaliador_id)}
                     periodName={getPeriodName(ev.periodo_id)}
+                    cycleName={getCycleName(ev.periodo_id)}
                     index={index}
-                    isManagerView={isManager}
+                    isManagerView={isEvaluationManager}
+                    currentUserRole={currentUser.role}
                   />
                 ))}
               </div>
@@ -312,8 +372,10 @@ export default function EvaluationListClient({
                     employeeName={getEmployeeName(ev.funcionario_id)}
                     managerName={getManagerName(ev.avaliador_id)}
                     periodName={getPeriodName(ev.periodo_id)}
+                    cycleName={getCycleName(ev.periodo_id)}
                     index={index}
-                    isManagerView={isManager}
+                    isManagerView={isEvaluationManager}
+                    currentUserRole={currentUser.role}
                   />
                 ))}
               </div>
@@ -321,7 +383,7 @@ export default function EvaluationListClient({
           )}
 
           {/* Aguardando Gerente */}
-          {awaitingManager.length > 0 && (
+          {awaitingManagerFiltered.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -333,15 +395,17 @@ export default function EvaluationListClient({
                 Aguardando Gerente
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {awaitingManager.map((ev, index) => (
+                {awaitingManagerFiltered.map((ev, index) => (
                   <EvaluationCard
                     key={ev.id}
                     evaluation={ev}
                     employeeName={getEmployeeName(ev.funcionario_id)}
                     managerName={getManagerName(ev.avaliador_id)}
                     periodName={getPeriodName(ev.periodo_id)}
+                    cycleName={getCycleName(ev.periodo_id)}
                     index={index}
-                    isManagerView={isManager}
+                    isManagerView={isEvaluationManager}
+                    currentUserRole={currentUser.role}
                   />
                 ))}
               </div>
@@ -368,8 +432,10 @@ export default function EvaluationListClient({
                     employeeName={getEmployeeName(ev.funcionario_id)}
                     managerName={getManagerName(ev.avaliador_id)}
                     periodName={getPeriodName(ev.periodo_id)}
+                    cycleName={getCycleName(ev.periodo_id)}
                     index={index}
-                    isManagerView={isManager}
+                    isManagerView={isEvaluationManager}
+                    currentUserRole={currentUser.role}
                   />
                 ))}
               </div>

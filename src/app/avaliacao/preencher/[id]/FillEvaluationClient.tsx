@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { FiSave, FiSend, FiArrowLeft } from 'react-icons/fi';
+import { FiSave, FiSend, FiArrowLeft, FiAlertCircle } from 'react-icons/fi';
 import QuestionarioAvaliacaoCardBased from '@/components/avaliacao/QuestionarioAvaliacaoCardBased';
 import { Evaluation } from '@/types';
 import { QUESTIONARIO_PADRAO } from '@/lib/schemas/evaluation-schemas';
@@ -27,6 +27,44 @@ export default function FillEvaluationClient({
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // Verificar se avaliação está concluída e bloquear edição
+  useEffect(() => {
+    if (evaluation.status === 'concluida') {
+      alert('Esta avaliação já foi concluída e não pode mais ser editada.');
+      router.push(`/avaliacao/ver/${evaluation.id}`);
+    }
+  }, [evaluation.status, evaluation.id, router]);
+
+  // Bloquear renderização se avaliação estiver concluída
+  if (evaluation.status === 'concluida') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-lg p-8 border-2 border-yellow-200 max-w-md">
+          <div className="flex items-center gap-3 mb-4">
+            <FiAlertCircle className="w-8 h-8 text-yellow-600" />
+            <h2 className="text-xl font-bold text-gray-900">Avaliação Concluída</h2>
+          </div>
+          <p className="text-gray-700 mb-6">
+            Esta avaliação já foi finalizada e não pode mais ser editada.
+          </p>
+          <button
+            onClick={() => router.push(`/avaliacao/ver/${evaluation.id}`)}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors"
+          >
+            Visualizar Avaliação
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  // Verificar se o funcionário é líder (baseado no role ou cargo)
+  const isEmployeeLeader = evaluation.funcionario?.role === 'MANAGER' || 
+                           evaluation.funcionario?.role === 'ADMIN' ||
+                           evaluation.funcionario?.cargo?.toLowerCase().includes('gerente') ||
+                           evaluation.funcionario?.cargo?.toLowerCase().includes('líder') ||
+                           evaluation.funcionario?.cargo?.toLowerCase().includes('coordenador');
+
   const handleChange = (questionId: string, value: any) => {
     setRespostas(prev => ({
       ...prev,
@@ -36,23 +74,26 @@ export default function FillEvaluationClient({
   };
 
   const validateRespostas = (): boolean => {
-    const questionsToValidate = isManager
-      ? QUESTIONARIO_PADRAO.filter(q => ['Q15', 'Q16', 'Q17'].includes(q.id))
-      : QUESTIONARIO_PADRAO.filter(q => ['Q11', 'Q12', 'Q13', 'Q14'].includes(q.id));
+    // Verificar se há pelo menos uma resposta preenchida
+    const hasAnyResponse = Object.values(respostas).some(r => 
+      (r?.comentario && r.comentario.trim().length > 0) || (r?.nota && r.nota > 0)
+    );
 
-    for (const question of questionsToValidate) {
-      if (question.obrigatoria) {
-        const resposta = respostas[question.id];
-        if (!resposta || !resposta.nota || resposta.nota === 0) {
-          setError(`Por favor, responda a questão ${question.id.replace('Q', '')}: ${question.pergunta}`);
-          return false;
-        }
-      }
+    if (!hasAnyResponse) {
+      setError('Por favor, preencha pelo menos uma questão antes de enviar');
+      return false;
     }
+
     return true;
   };
 
   const handleSaveDraft = async () => {
+    // Verificação adicional antes de salvar
+    if (evaluation.status === 'concluida') {
+      setError('Esta avaliação já foi concluída e não pode mais ser editada.');
+      return;
+    }
+
     try {
       setIsSaving(true);
       setError(null);
@@ -84,6 +125,12 @@ export default function FillEvaluationClient({
   };
 
   const handleSubmit = async () => {
+    // Verificação adicional antes de submeter
+    if (evaluation.status === 'concluida') {
+      setError('Esta avaliação já foi concluída e não pode mais ser editada.');
+      return;
+    }
+
     if (!validateRespostas()) {
       return;
     }
@@ -92,28 +139,27 @@ export default function FillEvaluationClient({
       setIsSaving(true);
       setError(null);
 
-      // Primeiro salvar as respostas
-      const saveResponse = await fetch(`/api/avaliacao/${evaluation.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          respostas,
-          status: evaluation.status
-        }),
-      });
-
-      if (!saveResponse.ok) {
-        const data = await saveResponse.json();
-        throw new Error(data.error || 'Erro ao salvar avaliação');
-      }
-
-      // Depois submeter para revisão (colaborador) ou aprovar (gerente)
       const token = document.cookie.split('; ').find(row => row.startsWith('abzToken='))?.split('=')[1];
       
       if (isManager) {
         // Gerente aprova a avaliação
+        // Primeiro salvar respostas
+        const saveResponse = await fetch(`/api/avaliacao/${evaluation.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            respostas
+          }),
+        });
+
+        if (!saveResponse.ok) {
+          const data = await saveResponse.json();
+          throw new Error(data.error || 'Erro ao salvar avaliação');
+        }
+
+        // Depois aprovar
         const approveResponse = await fetch(`/api/avaliacao-desempenho/avaliacoes/${evaluation.id}/approve`, {
           method: 'POST',
           headers: {
@@ -129,6 +175,10 @@ export default function FillEvaluationClient({
           const data = await approveResponse.json();
           throw new Error(data.error || 'Erro ao aprovar avaliação');
         }
+
+        alert('Avaliação aprovada com sucesso!');
+        router.push('/avaliacao');
+        router.refresh();
       } else {
         // Colaborador submete para revisão
         const submitResponse = await fetch(`/api/avaliacao-desempenho/avaliacoes/${evaluation.id}/submit`, {
@@ -137,17 +187,20 @@ export default function FillEvaluationClient({
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify({
+            respostas
+          }),
         });
 
         if (!submitResponse.ok) {
           const data = await submitResponse.json();
           throw new Error(data.error || 'Erro ao submeter avaliação');
         }
-      }
 
-      // Redirecionar para a página de visualização
-      router.push(`/avaliacao/ver/${evaluation.id}?success=true`);
-      router.refresh();
+        alert('Avaliação enviada para aprovação do gestor!');
+        router.push('/avaliacao');
+        router.refresh();
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao enviar avaliação');
     } finally {
@@ -228,11 +281,11 @@ export default function FillEvaluationClient({
               <>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 font-bold">•</span>
-                  Avalie o desempenho do colaborador nas questões 15 a 17
+                  Avalie o desempenho do colaborador respondendo as questões de avaliação gerencial
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 font-bold">•</span>
-                  Revise a autoavaliação do colaborador (questões 11-14) se necessário
+                  Revise a autoavaliação do colaborador se necessário
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 font-bold">•</span>
@@ -243,15 +296,15 @@ export default function FillEvaluationClient({
               <>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 font-bold">•</span>
-                  Responda as questões 11 a 14 sobre seu desempenho
+                  Preencha todas as questões sobre seu desempenho
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 font-bold">•</span>
-                  Use a escala de 1 a 5 estrelas para avaliar cada aspecto
+                  Seja honesto e objetivo nas suas respostas
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600 font-bold">•</span>
-                  Forneça exemplos específicos nos comentários
+                  Forneça exemplos concretos quando possível
                 </li>
               </>
             )}
@@ -273,6 +326,7 @@ export default function FillEvaluationClient({
             onChange={handleChange}
             isManager={isManager}
             readOnly={false}
+            isEmployeeLeader={isEmployeeLeader}
           />
         </motion.div>
 

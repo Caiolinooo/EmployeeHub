@@ -7,32 +7,63 @@ import { sendNewEvaluationNotification, sendSelfEvaluationCompleteNotification, 
 
 /**
  * Busca todas as avaliações com base nos filtros fornecidos.
- * Se userId for fornecido, filtra baseado no papel do usuário:
- * - MANAGER: busca avaliações onde ele é o avaliador
- * - Outros: busca apenas suas próprias avaliações
+ * Retorna avaliações onde o usuário é funcionário OU avaliador,
+ * permitindo que gerentes vejam avaliações de sua equipe E suas próprias avaliações.
  */
 export const getEvaluations = async (filters: any): Promise<Evaluation[]> => {
-  let query = supabase.from('avaliacoes_desempenho').select('*');
+  const { userId, status } = filters || {};
 
-  // Filtrar por usuário baseado no papel
-  if (filters.userId && filters.userRole) {
-    if (filters.userRole === 'MANAGER') {
-      // Gerente vê avaliações dos seus funcionários
-      query = query.eq('avaliador_id', filters.userId);
-    } else {
-      // Funcionário vê apenas suas próprias avaliações
-      query = query.eq('funcionario_id', filters.userId);
+  if (!userId) {
+    // Sem userId, buscar todas
+    let query = supabase.from('avaliacoes_desempenho').select('*');
+    if (status) {
+      query = query.eq('status', status);
     }
+    const { data, error } = await query;
+    if (error) throw error;
+    return data as Evaluation[];
   }
 
-  // Adicionar outros filtros
-  if (filters.status) {
-    query = query.eq('status', filters.status);
+  // Buscar avaliações onde o usuário é funcionário
+  let queryAsFuncionario = supabase
+    .from('avaliacoes_desempenho')
+    .select('*')
+    .eq('funcionario_id', userId);
+
+  if (status) {
+    queryAsFuncionario = queryAsFuncionario.eq('status', status);
   }
 
-  const { data, error } = await query;
-  if (error) throw error;
-  return data as Evaluation[];
+  // Buscar avaliações onde o usuário é avaliador
+  let queryAsAvaliador = supabase
+    .from('avaliacoes_desempenho')
+    .select('*')
+    .eq('avaliador_id', userId);
+
+  if (status) {
+    queryAsAvaliador = queryAsAvaliador.eq('status', status);
+  }
+
+  const [resultFuncionario, resultAvaliador] = await Promise.all([
+    queryAsFuncionario,
+    queryAsAvaliador
+  ]);
+
+  if (resultFuncionario.error) throw resultFuncionario.error;
+  if (resultAvaliador.error) throw resultAvaliador.error;
+
+  // Combinar resultados e remover duplicatas (caso existam)
+  const allEvaluations = [
+    ...(resultFuncionario.data || []),
+    ...(resultAvaliador.data || [])
+  ];
+
+  // Remover duplicatas baseado no ID
+  const uniqueEvaluations = Array.from(
+    new Map(allEvaluations.map(ev => [ev.id, ev])).values()
+  );
+
+  return uniqueEvaluations as Evaluation[];
 };
 
 /**
@@ -110,12 +141,13 @@ export const getEvaluationCriteria = async (): Promise<EvaluationCriterion[]> =>
 
 /**
  * Busca todos os funcionários.
+ * Inclui TODOS os usuários independente do role, pois qualquer usuário
+ * pode ser funcionário ou avaliador em uma avaliação.
  */
 export const getEmployees = async (): Promise<User[]> => {
     const { data, error } = await supabase
       .from('users_unified')
-      .select('id, name, email, role, department')
-      .in('role', ['user', 'manager']);
+      .select('id, name, email, role, department');
   
     if (error) {
       console.error('Error fetching employees:', error);

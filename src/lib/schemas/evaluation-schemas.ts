@@ -244,7 +244,8 @@ export const QUESTIONARIO_PADRAO: QuestionarioPergunta[] = [
     titulo: 'Pontos Fortes',
     descricao: 'Descreva seus principais pontos fortes e competências que você considera mais desenvolvidas',
     tipo: 'collaborator',
-    obrigatoria: true
+    obrigatoria: true,
+    categoria: 'Autoavaliação'
   },
   {
     id: 'Q12',
@@ -252,7 +253,8 @@ export const QUESTIONARIO_PADRAO: QuestionarioPergunta[] = [
     titulo: 'Áreas de Melhoria',
     descricao: 'Identifique as áreas onde você acredita que precisa desenvolver mais',
     tipo: 'collaborator',
-    obrigatoria: true
+    obrigatoria: true,
+    categoria: 'Autoavaliação'
   },
   {
     id: 'Q13',
@@ -260,7 +262,8 @@ export const QUESTIONARIO_PADRAO: QuestionarioPergunta[] = [
     titulo: 'Objetivos Alcançados',
     descricao: 'Descreva os principais objetivos que você alcançou no período avaliado',
     tipo: 'collaborator',
-    obrigatoria: true
+    obrigatoria: true,
+    categoria: 'Autoavaliação'
   },
   {
     id: 'Q14',
@@ -268,33 +271,100 @@ export const QUESTIONARIO_PADRAO: QuestionarioPergunta[] = [
     titulo: 'Planos de Desenvolvimento',
     descricao: 'Quais são seus planos para desenvolvimento profissional no próximo período?',
     tipo: 'collaborator',
-    obrigatoria: true
+    obrigatoria: true,
+    categoria: 'Autoavaliação'
   },
   {
     id: 'Q15',
-    pergunta: 'Comentário do Avaliador',
-    titulo: 'Comentário do Avaliador',
-    descricao: 'Avaliação geral e feedback do gestor sobre o desempenho do colaborador',
+    pergunta: 'Prazos e Metas',
+    titulo: 'Prazos e Metas',
+    descricao: 'Cumpre as atividades dentro dos prazos que são estabelecidos. Alcança todas as metas propostas.',
     tipo: 'manager',
-    obrigatoria: true
+    obrigatoria: true,
+    categoria: 'Avaliação do Gerente'
   },
   {
     id: 'Q16',
-    pergunta: 'Liderança - Capacidade de Delegação',
-    titulo: 'Liderança - Capacidade de Delegação',
-    descricao: 'Avalie a capacidade de delegar tarefas e responsabilidades de forma eficaz, garantindo que a equipe esteja bem orientada e capacitada',
+    pergunta: 'Comprometimento',
+    titulo: 'Comprometimento',
+    descricao: 'Demonstra esforço para alcançar resultados individuais, resultados da equipe e resultados da empresa.',
     tipo: 'manager',
     obrigatoria: true,
-    apenas_lideres: true
+    categoria: 'Avaliação do Gerente'
   },
   {
     id: 'Q17',
-    pergunta: 'Liderança - Desenvolvimento de Equipe',
-    titulo: 'Liderança - Desenvolvimento de Equipe',
-    descricao: 'Avalie a capacidade de desenvolver, orientar e capacitar membros da equipe, promovendo crescimento profissional e engajamento',
+    pergunta: 'Autonomia e Proatividade',
+    titulo: 'Autonomia e Proatividade',
+    descricao: 'Realiza as tarefas diárias sem a necessidade de intervenção da liderança.',
     tipo: 'manager',
     obrigatoria: true,
-    apenas_lideres: true
+    categoria: 'Avaliação do Gerente'
+  },
+  {
+    id: 'Q18',
+    pergunta: 'Comunicação, Colaboração e Relacionamento',
+    titulo: 'Comunicação, Colaboração e Relacionamento',
+    descricao: 'Possui uma comunicação clara. Pensa no coletivo e ajuda no aprendizado e conhecimento da equipe. Demonstra bom relacionamento com os colegas.',
+    tipo: 'manager',
+    obrigatoria: true,
+    categoria: 'Avaliação do Gerente'
+  },
+  {
+    id: 'Q19',
+    pergunta: 'Conhecimento das atividades',
+    titulo: 'Conhecimento das atividades',
+    descricao: 'Demonstra domínio das atividades que desempenha e compartilha boas ideias e conhecimentos técnicos com o time.',
+    tipo: 'manager',
+    obrigatoria: true,
+    categoria: 'Avaliação do Gerente'
+  },
+  {
+    id: 'Q20',
+    pergunta: 'Resolução de problemas',
+    titulo: 'Resolução de problemas',
+    descricao: 'Resolve problemas relacionados à sua rotina de trabalho. Utiliza a criatividade para encontrar soluções. Quando necessário, propõe soluções para a tomada de decisão da liderança.',
+    tipo: 'manager',
+    obrigatoria: true,
+    categoria: 'Avaliação do Gerente'
+  },
+  {
+    id: 'Q21',
+    pergunta: 'Inteligência Emocional e Solução de conflitos',
+    titulo: 'Inteligência Emocional e Solução de conflitos',
+    descricao: 'Lida bem com situações de conflito, demonstrando equilíbrio quando há adversidades.',
+    tipo: 'manager',
+    obrigatoria: true,
+    categoria: 'Avaliação do Gerente'
+  },
+  {
+    id: 'Q22',
+    pergunta: 'Inovação',
+    titulo: 'Inovação',
+    descricao: 'É capaz de inovar em suas estratégias e propõe ideias que irão agregar valores para o desenvolvimento das atividades e melhorias dos resultados da equipe e da empresa.',
+    tipo: 'manager',
+    obrigatoria: true,
+    categoria: 'Avaliação do Gerente'
+  },
+  {
+    id: 'Q23',
+    pergunta: 'Liderança - Delegação',
+    titulo: 'Liderança - Delegação',
+    descricao: 'Sabe delegar atividades, definindo e acompanhando prazos para execução.',
+    tipo: 'manager',
+    obrigatoria: true,
+    apenas_lideres: true,
+    categoria: 'Avaliação do Gerente'
+  },
+  {
+    id: 'Q24',
+    pergunta: 'Liderança - Feedback e Desenvolvimento de equipe',
+    titulo: 'Liderança - Feedback e Desenvolvimento de equipe',
+    descricao: 'Proporciona feedback constante para seus liderados, identificando pontos de melhorias e apresentando ferramentas e estratégias de atuação.',
+    tipo: 'manager',
+    obrigatoria: true,
+    apenas_lideres: true,
+    categoria: 'Avaliação do Gerente'
   }
 ];
 

@@ -1,14 +1,15 @@
 ﻿'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import StatusBadge from './StatusBadge';
-import { FiCalendar, FiUser, FiClock, FiArrowRight } from 'react-icons/fi';
+import { FiCalendar, FiUser, FiClock, FiArrowRight, FiTrash2 } from 'react-icons/fi';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
 interface EvaluationCardProps {
   evaluation: {
@@ -24,8 +25,11 @@ interface EvaluationCardProps {
   employeeName: string;
   managerName?: string;
   periodName: string;
+  cycleName?: string;
   index?: number;
   isManagerView?: boolean;
+  currentUserRole?: string; // Role do usuário atual
+  onDelete?: () => void; // Callback após exclusão
 }
 
 export default function EvaluationCard({
@@ -33,15 +37,74 @@ export default function EvaluationCard({
   employeeName,
   managerName,
   periodName,
+  cycleName,
   index = 0,
-  isManagerView = false
+  isManagerView = false,
+  currentUserRole,
+  onDelete
 }: EvaluationCardProps) {
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
   const isPending = evaluation.status === 'pendente' || evaluation.status === 'em_andamento';
   const isAwaitingManager = evaluation.status === 'aguardando_aprovacao';
   const isCompleted = evaluation.status === 'concluida';
   
   // Nome a ser exibido depende da visão
   const displayName = isManagerView ? employeeName : (managerName || 'Gestor não atribuído');
+  
+  const isAdmin = currentUserRole === 'ADMIN';
+  
+  const handleHardDelete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const confirmMessage = `⚠️ ATENÇÃO: EXCLUSÃO PERMANENTE \n\n` +
+      `Esta ação é IRREVERSÍVEL!\n\n` +
+      `A avaliação de "${displayName}" será PERMANENTEMENTE excluída do banco de dados.\n\n` +
+      `Todos os dados serão perdidos e NÃO poderão ser recuperados.\n\n` +
+      `Deseja realmente continuar?`;
+    
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+    
+    // Segunda confirmação
+    if (!window.confirm('Última confirmação: Tem certeza ABSOLUTA?')) {
+      return;
+    }
+    
+    setIsDeleting(true);
+    
+    try {
+      const token = document.cookie.split('; ').find(row => row.startsWith('abzToken='))?.split('=')[1];
+      
+      const response = await fetch(`/api/avaliacao-desempenho/avaliacoes/${evaluation.id}/hard-delete`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Erro ao excluir avaliação');
+      }
+      
+      alert('✅ Avaliação excluída permanentemente com sucesso!');
+      
+      if (onDelete) {
+        onDelete();
+      } else {
+        router.refresh();
+      }
+    } catch (error) {
+      console.error('Erro ao excluir avaliação:', error);
+      alert(`❌ Erro ao excluir avaliação: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <motion.div
@@ -62,16 +125,33 @@ export default function EvaluationCard({
         >
           <CardHeader className="pb-3">
             <div className="flex justify-between items-start gap-3">
+              {isAdmin && (
+                <button
+                  onClick={handleHardDelete}
+                  disabled={isDeleting}
+                  className="absolute top-2 right-2 z-10 p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Excluir permanentemente (ADMIN)"
+                >
+                  <FiTrash2 size={16} />
+                </button>
+              )}
               <div className="flex-1">
                 <h3 className="font-semibold text-lg text-gray-900 mb-1 flex items-center gap-2">
                   <FiUser className="text-abz-blue" />
                   {displayName}
                 </h3>
-                <p className="text-sm text-gray-600">
-                  {periodName}
-                  {isManagerView && <span className="ml-2 text-xs text-gray-500">• Colaborador</span>}
-                  {!isManagerView && <span className="ml-2 text-xs text-gray-500">• Seu Gestor</span>}
-                </p>
+                <div className="space-y-0.5">
+                  {cycleName && (
+                    <p className="text-sm font-medium text-abz-blue">
+                      {cycleName}
+                    </p>
+                  )}
+                  <p className="text-sm text-gray-600">
+                    {periodName}
+                    {isManagerView && <span className="ml-2 text-xs text-gray-500">• Colaborador</span>}
+                    {!isManagerView && <span className="ml-2 text-xs text-gray-500">• Seu Gestor</span>}
+                  </p>
+                </div>
               </div>
               <StatusBadge status={evaluation.status} />
             </div>
@@ -128,9 +208,18 @@ export default function EvaluationCard({
               </div>
             )}
 
-            <div className="flex items-center justify-end pt-2 text-abz-blue hover:text-abz-blue-dark transition-colors">
-              <span className="text-sm font-medium">Ver detalhes</span>
-              <FiArrowRight className="ml-1" size={16} />
+            <div className="flex items-center justify-between pt-2 border-t">
+              <span className="text-sm text-gray-600">
+                {evaluation.status === 'pendente' && 'Aguardando preenchimento'}
+                {evaluation.status === 'em_andamento' && 'Em andamento'}
+                {evaluation.status === 'aguardando_aprovacao' && 'Aguardando aprovação'}
+                {evaluation.status === 'concluida' && 'Concluída'}
+                {evaluation.status === 'devolvida' && 'Devolvida para ajustes'}
+              </span>
+              <div className="flex items-center text-abz-blue hover:text-abz-blue-dark transition-colors">
+                <span className="text-sm font-medium">Ver detalhes</span>
+                <FiArrowRight className="ml-1" size={16} />
+              </div>
             </div>
           </CardContent>
         </Card>

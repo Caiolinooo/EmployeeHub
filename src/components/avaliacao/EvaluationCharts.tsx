@@ -21,26 +21,43 @@ import {
 interface EvaluationChartsProps {
   respostas: Record<string, any>;
   questionarioData: Array<{ id: string; pergunta: string; tipo?: 'collaborator' | 'manager' }>;
+  notasGerente?: Record<string, number>;
 }
 
 export default function EvaluationCharts({
   respostas,
-  questionarioData
+  questionarioData,
+  notasGerente = {}
 }: EvaluationChartsProps) {
-  // Filtrar apenas questões do tipo 'manager' para os cálculos
+  // Filtrar questões por tipo
   const managerQuestions = questionarioData.filter(q => q.tipo === 'manager');
+  const collaboratorQuestions = questionarioData.filter(q => q.tipo === 'collaborator');
   
-  // Preparar dados para radar chart - APENAS QUESTÕES DO GERENTE
-  const radarData = managerQuestions
+  // Preparar dados para radar chart - QUESTÕES DO GERENTE
+  const radarDataManager = managerQuestions
     .filter(q => respostas[q.id]?.nota)
     .map(q => ({
       subject: q.id,
       fullName: q.pergunta,
       value: respostas[q.id].nota,
-      fullMark: 5
+      fullMark: 5,
+      tipo: 'Avaliação Gerencial'
     }));
 
-  // Dados para distribuição de scores - APENAS NOTAS DO GERENTE
+  // Preparar dados para radar chart - NOTAS DO GERENTE PARA QUESTÕES DO COLABORADOR
+  const radarDataCollaborator = collaboratorQuestions
+    .filter(q => notasGerente[q.id])
+    .map(q => ({
+      subject: q.id,
+      fullName: q.pergunta,
+      value: notasGerente[q.id],
+      fullMark: 5,
+      tipo: 'Nota do Gerente'
+    }));
+
+  const radarData = [...radarDataManager, ...radarDataCollaborator];
+
+  // Dados para distribuição de scores - TODAS AS NOTAS
   const scoreDistribution = [
     { range: '1 Estrela', count: 0, color: '#ef4444' },
     { range: '2 Estrelas', count: 0, color: '#f97316' },
@@ -49,7 +66,7 @@ export default function EvaluationCharts({
     { range: '5 Estrelas', count: 0, color: '#22c55e' }
   ];
 
-  // Contar apenas notas de questões do gerente
+  // Contar notas de questões do gerente
   managerQuestions.forEach((question) => {
     const resposta = respostas[question.id];
     if (resposta?.nota) {
@@ -57,14 +74,34 @@ export default function EvaluationCharts({
     }
   });
 
-  // Calcular média - APENAS QUESTÕES DO GERENTE
+  // Contar notas do gerente para questões do colaborador
+  collaboratorQuestions.forEach((question) => {
+    const nota = notasGerente[question.id];
+    if (nota) {
+      scoreDistribution[nota - 1].count++;
+    }
+  });
+
+  // Calcular média - TODAS AS NOTAS
   const managerResponses = managerQuestions
     .map(q => respostas[q.id])
     .filter((r: any) => r?.nota);
+
+  const collaboratorNotes = collaboratorQuestions
+    .map(q => notasGerente[q.id])
+    .filter((n): n is number => typeof n === 'number' && n > 0);
+
+  const allNotes = [
+    ...managerResponses.map((r: any) => r.nota),
+    ...collaboratorNotes
+  ];
     
-  const average = managerResponses.length > 0
-    ? managerResponses.reduce((sum: number, r: any) => sum + r.nota, 0) / managerResponses.length
+  const average = allNotes.length > 0
+    ? allNotes.reduce((sum: number, n: number) => sum + n, 0) / allNotes.length
     : 0;
+
+  const totalQuestions = managerQuestions.length + collaboratorQuestions.length;
+  const answeredQuestions = managerResponses.length + collaboratorNotes.length;
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -98,14 +135,14 @@ export default function EvaluationCharts({
 
         <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg">
           <p className="text-sm font-medium opacity-90 mb-2">Questões Avaliadas</p>
-          <p className="text-4xl font-bold">{managerResponses.length}</p>
-          <p className="text-sm opacity-75 mt-2">de {managerQuestions.length} questões do gerente</p>
+          <p className="text-4xl font-bold">{answeredQuestions}</p>
+          <p className="text-sm opacity-75 mt-2">de {totalQuestions} questões totais</p>
         </div>
 
         <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
           <p className="text-sm font-medium opacity-90 mb-2">Progresso</p>
           <p className="text-4xl font-bold">
-            {managerQuestions.length > 0 ? ((managerResponses.length / managerQuestions.length) * 100).toFixed(0) : 0}%
+            {totalQuestions > 0 ? ((answeredQuestions / totalQuestions) * 100).toFixed(0) : 0}%
           </p>
           <p className="text-sm opacity-75 mt-2">completado</p>
         </div>
@@ -201,43 +238,100 @@ export default function EvaluationCharts({
         className="bg-white rounded-xl shadow-lg p-6 border-2 border-gray-200"
       >
         <h3 className="text-xl font-bold text-gray-900 mb-4">Detalhamento por Questão</h3>
-        <div className="space-y-3">
-          {radarData.map((item, index) => (
-            <div key={item.subject} className="flex items-center gap-4">
-              <div className="flex-shrink-0 w-16 text-center">
-                <span className="inline-block px-3 py-1 bg-gray-100 rounded-lg font-semibold text-sm">
-                  {item.subject}
-                </span>
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-medium text-gray-700 truncate">
-                    {item.fullName}
-                  </p>
-                  <span className={`text-sm font-bold ${
-                    item.value >= 4 ? 'text-green-600' :
-                    item.value >= 3 ? 'text-blue-600' :
-                    item.value >= 2 ? 'text-yellow-600' : 'text-red-600'
-                  }`}>
-                    {item.value.toFixed(1)}
-                  </span>
+        
+        {/* Questões do Gerente */}
+        {radarDataManager.length > 0 && (
+          <div className="mb-6">
+            <h4 className="text-sm font-semibold text-purple-700 mb-3 flex items-center gap-2">
+              <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+              Avaliação Gerencial (Q15-Q17)
+            </h4>
+            <div className="space-y-3">
+              {radarDataManager.map((item, index) => (
+                <div key={item.subject} className="flex items-center gap-4">
+                  <div className="flex-shrink-0 w-16 text-center">
+                    <span className="inline-block px-3 py-1 bg-purple-100 rounded-lg font-semibold text-sm text-purple-700">
+                      {item.subject}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-sm font-medium text-gray-700 truncate">
+                        {item.fullName}
+                      </p>
+                      <span className={`text-sm font-bold ${
+                        item.value >= 4 ? 'text-green-600' :
+                        item.value >= 3 ? 'text-blue-600' :
+                        item.value >= 2 ? 'text-yellow-600' : 'text-red-600'
+                      }`}>
+                        {item.value.toFixed(1)}
+                      </span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(item.value / 5) * 100}%` }}
+                        transition={{ delay: 0.5 + index * 0.05, duration: 0.5 }}
+                        className={`h-full rounded-full ${
+                          item.value >= 4 ? 'bg-green-500' :
+                          item.value >= 3 ? 'bg-blue-500' :
+                          item.value >= 2 ? 'bg-yellow-500' : 'bg-red-500'
+                        }`}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(item.value / 5) * 100}%` }}
-                    transition={{ delay: 0.5 + index * 0.05, duration: 0.5 }}
-                    className={`h-full rounded-full ${
-                      item.value >= 4 ? 'bg-green-500' :
-                      item.value >= 3 ? 'bg-blue-500' :
-                      item.value >= 2 ? 'bg-yellow-500' : 'bg-red-500'
-                    }`}
-                  />
-                </div>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        )}
+
+        {/* Notas do Gerente para Questões do Colaborador */}
+        {radarDataCollaborator.length > 0 && (
+          <div>
+            <h4 className="text-sm font-semibold text-blue-700 mb-3 flex items-center gap-2">
+              <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+              Notas do Gerente para Autoavaliação (Q11-Q14)
+            </h4>
+            <div className="space-y-3">
+              {radarDataCollaborator.map((item, index) => (
+                <div key={item.subject} className="flex items-center gap-4">
+                  <div className="flex-shrink-0 w-16 text-center">
+                    <span className="inline-block px-3 py-1 bg-blue-100 rounded-lg font-semibold text-sm text-blue-700">
+                      {item.subject}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-sm font-medium text-gray-700 truncate">
+                        {item.fullName}
+                      </p>
+                      <span className={`text-sm font-bold ${
+                        item.value >= 4 ? 'text-green-600' :
+                        item.value >= 3 ? 'text-blue-600' :
+                        item.value >= 2 ? 'text-yellow-600' : 'text-red-600'
+                      }`}>
+                        {item.value.toFixed(1)}
+                      </span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(item.value / 5) * 100}%` }}
+                        transition={{ delay: 0.5 + (radarDataManager.length + index) * 0.05, duration: 0.5 }}
+                        className={`h-full rounded-full ${
+                          item.value >= 4 ? 'bg-green-500' :
+                          item.value >= 3 ? 'bg-blue-500' :
+                          item.value >= 2 ? 'bg-yellow-500' : 'bg-red-500'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </motion.div>
     </div>
   );

@@ -33,6 +33,13 @@ export async function authenticateUser(request: NextRequest): Promise<{
 
     const userData = authResult.user;
 
+    if (!userData) {
+      return {
+        user: null,
+        error: NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 })
+      };
+    }
+
     if (!userData.active) {
       return {
         user: null,

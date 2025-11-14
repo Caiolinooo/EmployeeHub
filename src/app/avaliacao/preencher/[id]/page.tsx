@@ -52,13 +52,16 @@ export default function FillEvaluationPage({ params }: PageProps) {
           return;
         }
 
-        // Check status and role
-        if (isMgr && evalData.status === 'pendente_autoavaliacao') {
-          router.push(`/avaliacao?error=waiting_for_self_assessment&id=${id}`);
+        // Check status and role (usando status corretos do banco)
+        const statusEditaveisColaborador = ['pendente', 'em_andamento', 'devolvida'];
+        const statusEditaveisGerente = ['aguardando_aprovacao'];
+
+        if (isMgr && !statusEditaveisGerente.includes(evalData.status)) {
+          router.push(`/avaliacao/ver/${id}`);
           return;
         }
 
-        if (isCollab && evalData.status !== 'pendente_autoavaliacao') {
+        if (isCollab && !statusEditaveisColaborador.includes(evalData.status)) {
           router.push(`/avaliacao/ver/${id}`);
           return;
         }
