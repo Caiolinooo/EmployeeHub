@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
-import { 
-  PlayIcon, 
-  PauseIcon, 
-  SpeakerWaveIcon, 
+import { useI18n } from '@/contexts/I18nContext';
+import {
+  PlayIcon,
+  PauseIcon,
+  SpeakerWaveIcon,
   SpeakerXMarkIcon,
   ArrowsPointingOutIcon,
   ArrowsPointingInIcon,
@@ -30,6 +31,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   onComplete,
   className = ''
 }) => {
+  const { t } = useI18n();
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
@@ -87,7 +89,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     };
 
     const handleError = () => {
-      setError('Erro ao carregar o vídeo');
+      setError(t('components.erroAoCarregarOVideo'));
       setIsLoading(false);
     };
 

@@ -1,13 +1,14 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiUser, FiUsers, FiCheck, FiX, FiSearch } from 'react-icons/fi';
 import { supabase } from '@/lib/supabase';
-import { 
-  listarLideresAtivos, 
-  adicionarLider, 
-  removerLider, 
-  type DadosLideranca 
+import { useI18n } from '@/contexts/I18nContext';
+import {
+  listarLideresAtivos,
+  adicionarLider,
+  removerLider,
+  type DadosLideranca
 } from '@/lib/utils/lideranca';
 
 interface Usuario {
@@ -18,6 +19,8 @@ interface Usuario {
 }
 
 export default function PainelGerenciamentoLideres() {
+  const { t } = useI18n();
+
   const [lideres, setLideres] = useState<DadosLideranca[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +52,7 @@ export default function PainelGerenciamentoLideres() {
         .order('name');
 
       if (error) {
-        console.error('Erro ao carregar usuários:', error);
+        console.error(t('components.erroAoCarregarUsuarios'), error);
         return;
       }
 
@@ -80,7 +83,7 @@ export default function PainelGerenciamentoLideres() {
         alert('Erro ao adicionar líder');
       }
     } catch (error) {
-      console.error('Erro ao adicionar líder:', error);
+      console.error(t('components.erroAoAdicionarLider'), error);
       alert('Erro ao adicionar líder');
     } finally {
       setLoading(false);
@@ -88,7 +91,7 @@ export default function PainelGerenciamentoLideres() {
   };
 
   const handleRemover = async (userId: string, nomeUsuario: string) => {
-    if (!confirm(`Tem certeza que deseja remover ${nomeUsuario} da função de liderança?`)) {
+    if (!confirm(t('components.temCertezaQueDesejaRemoverNomeusuarioDaFuncaoDeLid'))) {
       return;
     }
 
@@ -102,7 +105,7 @@ export default function PainelGerenciamentoLideres() {
         alert('Erro ao remover líder');
       }
     } catch (error) {
-      console.error('Erro ao remover líder:', error);
+      console.error(t('components.erroAoRemoverLider'), error);
       alert('Erro ao remover líder');
     }
   };
@@ -250,10 +253,10 @@ export default function PainelGerenciamentoLideres() {
                         </div>
                         <div className="ml-3">
                           <div className="text-sm font-medium text-gray-900">
-                            {(lider as any).users_unified?.name || 'Nome não encontrado'}
+                            {(lider as any).users_unified?.name || t('components.nomeNaoEncontrado')}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {(lider as any).users_unified?.email || 'Email não encontrado'}
+                            {(lider as any).users_unified?.email || t('components.emailNaoEncontrado')}
                           </div>
                         </div>
                       </div>
@@ -273,10 +276,10 @@ export default function PainelGerenciamentoLideres() {
                       <button
                         onClick={() => handleRemover(
                           lider.user_id, 
-                          (lider as any).users_unified?.name || 'Usuário'
+                          (lider as any).users_unified?.name || t('components.usuario')
                         )}
                         className="text-red-600 hover:text-red-900 transition-colors"
-                        title="Remover liderança"
+                        title={t('components.removerLideranca')}
                       >
                         <FiTrash2 size={16} />
                       </button>
@@ -312,7 +315,7 @@ export default function PainelGerenciamentoLideres() {
                   <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                   <input
                     type="text"
-                    placeholder="Buscar usuário..."
+                    placeholder={t('components.buscarUsuario')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -347,7 +350,7 @@ export default function PainelGerenciamentoLideres() {
                   <option value="Gerente">Gerente</option>
                   <option value="Coordenador">Coordenador</option>
                   <option value="Supervisor">Supervisor</option>
-                  <option value="Líder de Equipe">Líder de Equipe</option>
+                  <option value={t('components.liderDeEquipe')}>Líder de Equipe</option>
                   <option value="Diretor">Diretor</option>
                 </select>
               </div>

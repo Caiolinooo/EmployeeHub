@@ -36,18 +36,20 @@ function validateSupabaseConfig() {
   return { url: supabaseUrl, anonKey: supabaseAnonKey };
 }
 
-// Implementar padrão Singleton para evitar múltiplas instâncias do GoTrueClient
-// Usar globalThis para armazenar as instâncias únicas dos clientes
+// Implementar padrão Singleton reforçado para evitar múltiplas instâncias do GoTrueClient
+// Usar globalThis para armazenar as instâncias únicas dos clientes com flags de inicialização
 // Isso garante que mesmo em ambientes de desenvolvimento com hot-reloading,
-// apenas uma instância será criada
+// apenas uma instância será criada e mantida
 
 // Verificar se estamos no ambiente do navegador
 const isBrowser = typeof window !== 'undefined';
 
-// Definir o tipo para o objeto global
+// Definir o tipo para o objeto global com flags de inicialização
 type GlobalWithSupabase = typeof globalThis & {
   _supabaseClient?: SupabaseClient;
   _supabaseAdminClient?: SupabaseClient;
+  _supabaseInitialized?: boolean;
+  _supabaseAdminInitialized?: boolean;
 };
 
 // Função para criar ou retornar a instância do cliente Supabase
@@ -55,17 +57,17 @@ function getSupabaseClient(): SupabaseClient {
   // Usar o objeto global para armazenar a instância
   const globalWithSupabase = globalThis as GlobalWithSupabase;
 
-  // Se já temos uma instância no objeto global, retorná-la
-  if (globalWithSupabase._supabaseClient) {
+  // Se já temos uma instância no objeto global e está inicializada, retorná-la
+  if (globalWithSupabase._supabaseClient && globalWithSupabase._supabaseInitialized) {
     return globalWithSupabase._supabaseClient;
   }
 
   // Validar e obter configurações do Supabase
   const config = validateSupabaseConfig();
 
-  // Criar uma nova instância apenas se ainda não existir
+  // Criar uma nova instância apenas se ainda não existir ou não foi inicializada
   if (isBrowser) {
-    console.log('Criando nova instância do cliente Supabase');
+    console.log('Criando nova instância do cliente Supabase (Singleton reforçado)');
   }
 
   // Criar a instância e armazená-la no objeto global
@@ -77,6 +79,7 @@ function getSupabaseClient(): SupabaseClient {
   });
 
   globalWithSupabase._supabaseClient = instance;
+  globalWithSupabase._supabaseInitialized = true;
   return instance;
 }
 
@@ -102,8 +105,8 @@ async function getSupabaseAdminClient(): Promise<SupabaseClient> {
   // Usar o objeto global para armazenar a instância
   const globalWithSupabase = globalThis as GlobalWithSupabase;
 
-  // Se já temos uma instância no objeto global, retorná-la
-  if (globalWithSupabase._supabaseAdminClient) {
+  // Se já temos uma instância no objeto global e está inicializada, retorná-la
+  if (globalWithSupabase._supabaseAdminClient && globalWithSupabase._supabaseAdminInitialized) {
     return globalWithSupabase._supabaseAdminClient;
   }
 
@@ -133,9 +136,9 @@ async function getSupabaseAdminClient(): Promise<SupabaseClient> {
   // Validar a chave de serviço
   const validatedServiceKey = validateServiceKey(serviceKey);
 
-  // Criar uma nova instância apenas se ainda não existir
+  // Criar uma nova instância apenas se ainda não existir ou não foi inicializada
   if (isBrowser) {
-    console.log('Criando nova instância do cliente Supabase Admin');
+    console.log('Criando nova instância do cliente Supabase Admin (Singleton reforçado)');
   }
 
   // Criar a instância e armazená-la no objeto global
@@ -151,6 +154,7 @@ async function getSupabaseAdminClient(): Promise<SupabaseClient> {
   );
 
   globalWithSupabase._supabaseAdminClient = instance;
+  globalWithSupabase._supabaseAdminInitialized = true;
   return instance;
 }
 
@@ -158,6 +162,8 @@ async function getSupabaseAdminClient(): Promise<SupabaseClient> {
 export const supabase = getSupabaseClient();
 // Para o cliente admin, precisamos usar uma função assíncrona
 let _supabaseAdminPromise: Promise<SupabaseClient> | null = null;
+
+export { getSupabaseAdminClient };
 
 export function getSupabaseAdmin(): Promise<SupabaseClient> {
   if (!_supabaseAdminPromise) {
@@ -212,11 +218,12 @@ export const supabaseAdmin = (() => {
 
 // Adicionar logs para depuração apenas no navegador
 if (isBrowser) {
-  console.log('=== INICIALIZANDO SUPABASE ===');
+  console.log('=== INICIALIZANDO SUPABASE (SINGLETON REFORÇADO) ===');
   console.log('URL do Supabase:', supabaseUrl);
   console.log('Chave anônima presente:', supabaseAnonKey ? 'Sim' : 'Não');
   console.log('Chave de serviço presente:', supabaseServiceKey ? 'Sim' : 'Não');
   console.log('Comprimento da chave de serviço:', supabaseServiceKey ? supabaseServiceKey.length : 0);
+  console.log('Singleton inicializado:', (globalThis as GlobalWithSupabase)._supabaseInitialized ? 'Sim' : 'Não');
 }
 
 // Função para verificar a conexão com o Supabase

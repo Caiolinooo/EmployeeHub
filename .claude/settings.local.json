@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"D:\\Projeto\\Finalizados\\Painel ABZ-BR-INT\\painel-abz\\CLAUDE.md\")",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(git merge:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(npm run clean:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run dev)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(npm run db:apply-foreign-keys:*)",
+      "Bash(psql:*)",
+      "Bash(node:*)",
+      "Bash(taskkill:*)",
+      "Bash(curl:*)",
+      "Bash(cmd:*)",
+      "Bash(npm run dev:*)",
+      "Bash(git push:*)",
+      "Bash(cat:*)",
+      "Bash(npm run build:*)",
+      "Bash(find:*)",
+      "Bash(nul)",
+      "Bash(npm run lint)",
+      "Bash(npx tsc:*)",
+      "Bash(temp_auth_old.txt)",
+      "Bash(powershell -Command \"(Get-Content ''src\\lib\\services\\avaliacao-workflow-service.ts'' | Measure-Object -Line).Lines\")",
+      "Bash(powershell -Command \"Get-Content ''src\\lib\\services\\avaliacao-workflow-service.ts'' -Tail 30\")",
+      "Bash(del temp_auth_old.txt 2)",
+      "WebSearch"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "spinnerTipsEnabled": false
+}

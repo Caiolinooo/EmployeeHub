@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -16,6 +16,7 @@ import {
   TrophyIcon
 } from '@heroicons/react/24/outline';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface Course {
   id: string;
@@ -58,6 +59,7 @@ interface Enrollment {
 const MyCoursesPage: React.FC = () => {
   const router = useRouter();
   const { user, getToken } = useSupabaseAuth();
+  const { t } = useI18n();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -78,7 +80,7 @@ const MyCoursesPage: React.FC = () => {
     try {
       const token = await getToken();
       if (!token) {
-        setError('Token de autenticação não encontrado');
+        setError(t('academy.tokenDeAutenticacaoNaoEncontrado'));
         return;
       }
 
@@ -96,7 +98,7 @@ const MyCoursesPage: React.FC = () => {
         setError(data.error || 'Erro ao carregar cursos');
       }
     } catch (error) {
-      console.error('Erro ao carregar matrículas:', error);
+      console.error(t('academy.erroAoCarregarMatriculas'), error);
       setError('Erro ao carregar cursos');
     } finally {
       setLoading(false);
@@ -115,8 +117,8 @@ const MyCoursesPage: React.FC = () => {
   const getDifficultyLabel = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
       case 'beginner': return 'Iniciante';
-      case 'intermediate': return 'Intermediário';
-      case 'advanced': return 'Avançado';
+      case 'intermediate': return t('academy.intermediario');
+      case 'advanced': return t('academy.avancado');
       default: return difficulty;
     }
   };
@@ -338,11 +340,11 @@ const MyCoursesPage: React.FC = () => {
             <BookOpenIcon className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">
               {filter === 'all' ? 'Nenhum curso matriculado' : 
-               filter === 'completed' ? 'Nenhum curso concluído' :
+               filter === 'completed' ? t('academy.nenhumCursoConcluido') :
                'Nenhum curso em progresso'}
             </h3>
             <p className="mt-1 text-sm text-gray-500">
-              {filter === 'all' ? 'Explore nossos cursos disponíveis e comece a aprender.' :
+              {filter === 'all' ? t('academy.exploreNossosCursosDisponiveisEComeceAAprender') :
                'Continue estudando para completar seus cursos.'}
             </p>
             {filter === 'all' && (

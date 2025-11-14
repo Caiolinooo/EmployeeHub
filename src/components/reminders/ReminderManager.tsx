@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { FiClock, FiPlus, FiEdit, FiTrash2, FiCalendar, FiUsers, FiUser, FiCheck, FiX, FiAlertCircle } from 'react-icons/fi';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface Reminder {
   id: string;
@@ -224,7 +225,7 @@ const ReminderManager: React.FC<ReminderManagerProps> = ({ userId, postId }) => 
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Título do lembrete"
+                  placeholder={t('components.tituloDoLembrete')}
                 />
               </div>
 

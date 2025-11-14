@@ -1,10 +1,13 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { FiCheck, FiAlertTriangle, FiEye, FiEyeOff } from 'react-icons/fi';
+import { useI18n } from '@/contexts/I18nContext';
 
 export default function PasswordChange() {
+  const { t } = useI18n();
+
   const { updatePassword } = useSupabaseAuth();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -34,19 +37,19 @@ export default function PasswordChange() {
     if (/[A-Z]/.test(password)) {
       strength += 1;
     } else {
-      feedback.push('Inclua pelo menos uma letra maiúscula');
+      feedback.push(t('components.incluaPeloMenosUmaLetraMaiuscula'));
     }
 
     if (/[a-z]/.test(password)) {
       strength += 1;
     } else {
-      feedback.push('Inclua pelo menos uma letra minúscula');
+      feedback.push(t('components.incluaPeloMenosUmaLetraMinuscula'));
     }
 
     if (/[0-9]/.test(password)) {
       strength += 1;
     } else {
-      feedback.push('Inclua pelo menos um número');
+      feedback.push(t('components.incluaPeloMenosUmNumero'));
     }
 
     if (/[^A-Za-z0-9]/.test(password)) {
@@ -79,12 +82,12 @@ export default function PasswordChange() {
 
     // Validar senhas
     if (newPassword !== confirmPassword) {
-      setError('As senhas não coincidem');
+      setError(t('components.asSenhasNaoCoincidem'));
       return;
     }
 
     if (passwordStrength < 3) {
-      setError('A senha não é forte o suficiente');
+      setError(t('components.aSenhaNaoEForteOSuficiente'));
       return;
     }
 
@@ -95,7 +98,7 @@ export default function PasswordChange() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
       
       if (!token) {
-        throw new Error('Não autorizado');
+        throw new Error(t('components.naoAutorizado'));
       }
       
       const verifyResponse = await fetch('/api/auth/verify-password', {
@@ -214,7 +217,7 @@ export default function PasswordChange() {
                 <span className="ml-2 text-xs text-gray-500">
                   {passwordStrength === 0 ? 'Muito fraca' :
                    passwordStrength === 1 ? 'Fraca' :
-                   passwordStrength === 2 ? 'Razoável' :
+                   passwordStrength === 2 ? t('components.razoavel') :
                    passwordStrength === 3 ? 'Boa' :
                    passwordStrength === 4 ? 'Forte' :
                    'Muito forte'}

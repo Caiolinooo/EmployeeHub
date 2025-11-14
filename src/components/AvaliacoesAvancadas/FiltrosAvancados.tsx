@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiCalendar, FiUsers, FiBriefcase, FiCheck, FiX } from 'react-icons/fi';
@@ -49,7 +49,7 @@ export default function FiltrosAvancados({ filtros, onChange, onApply }: Filtros
       }
 
     } catch (error) {
-      console.error('Erro ao carregar opções de filtro:', error);
+      console.error(t('components.erroAoCarregarOpcoesDeFiltro'), error);
     } finally {
       setLoading(false);
     }
@@ -222,7 +222,7 @@ export default function FiltrosAvancados({ filtros, onChange, onApply }: Filtros
             {[
               { value: 'pendente', label: 'Pendente' },
               { value: 'em_andamento', label: 'Em Andamento' },
-              { value: 'concluida', label: 'Concluída' },
+              { value: 'concluida', label: t('components.concluida') },
               { value: 'cancelada', label: 'Cancelada' }
             ].map(status => (
               <label key={status.value} className="flex items-center">

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { 
@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { canModerateContent } from '@/lib/permissions';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface User {
   id: string;
@@ -41,6 +42,7 @@ interface CommentsProps {
 
 const Comments: React.FC<CommentsProps> = ({ courseId, className = '' }) => {
   const { user, getToken } = useSupabaseAuth();
+  const { t } = useI18n();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -63,10 +65,10 @@ const Comments: React.FC<CommentsProps> = ({ courseId, className = '' }) => {
       if (data.success) {
         setComments(data.comments);
       } else {
-        console.error('Erro ao carregar comentários:', data.error);
+        console.error(t('components.erroAoCarregarComentarios'), data.error);
       }
     } catch (error) {
-      console.error('Erro ao carregar comentários:', error);
+      console.error(t('components.erroAoCarregarComentarios'), error);
     } finally {
       setLoading(false);
     }
@@ -103,7 +105,7 @@ const Comments: React.FC<CommentsProps> = ({ courseId, className = '' }) => {
         alert(data.error || 'Erro ao enviar comentário');
       }
     } catch (error) {
-      console.error('Erro ao enviar comentário:', error);
+      console.error(t('components.erroAoEnviarComentario'), error);
       alert('Erro ao enviar comentário');
     } finally {
       setSubmitting(false);
@@ -178,7 +180,7 @@ const Comments: React.FC<CommentsProps> = ({ courseId, className = '' }) => {
         alert(data.error || 'Erro ao editar comentário');
       }
     } catch (error) {
-      console.error('Erro ao editar comentário:', error);
+      console.error(t('components.erroAoEditarComentario'), error);
       alert('Erro ao editar comentário');
     } finally {
       setSubmitting(false);
@@ -186,7 +188,7 @@ const Comments: React.FC<CommentsProps> = ({ courseId, className = '' }) => {
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    if (!confirm('Tem certeza que deseja excluir este comentário?')) return;
+    if (!confirm(t('components.temCertezaQueDesejaExcluirEsteComentario'))) return;
 
     try {
       const token = await getToken();
@@ -207,7 +209,7 @@ const Comments: React.FC<CommentsProps> = ({ courseId, className = '' }) => {
         alert(data.error || 'Erro ao excluir comentário');
       }
     } catch (error) {
-      console.error('Erro ao excluir comentário:', error);
+      console.error(t('components.erroAoExcluirComentario'), error);
       alert('Erro ao excluir comentário');
     }
   };
@@ -220,7 +222,7 @@ const Comments: React.FC<CommentsProps> = ({ courseId, className = '' }) => {
 
     if (diffDays === 1) return 'Hoje';
     if (diffDays === 2) return 'Ontem';
-    if (diffDays <= 7) return `${diffDays} dias atrás`;
+    if (diffDays <= 7) return t('components.diffdaysDiasAtras');
     
     return date.toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -280,7 +282,7 @@ const Comments: React.FC<CommentsProps> = ({ courseId, className = '' }) => {
                     className="w-full p-2 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     rows={3}
                     maxLength={1000}
-                    placeholder="Edite seu comentário..."
+                    placeholder={t('components.editeSeuComentario')}
                   />
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-xs text-gray-500">
@@ -460,7 +462,7 @@ const Comments: React.FC<CommentsProps> = ({ courseId, className = '' }) => {
                 className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 rows={4}
                 maxLength={1000}
-                placeholder="Compartilhe sua opinião sobre este curso..."
+                placeholder={t('components.compartilheSuaOpiniaoSobreEsteCurso')}
               />
               <div className="flex items-center justify-between mt-3">
                 <span className="text-sm text-gray-500">

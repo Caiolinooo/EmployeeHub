@@ -1,7 +1,8 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { FiSettings, FiCheck, FiAlertTriangle, FiRefreshCw } from 'react-icons/fi';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ACLStatus {
   permissions_count: number;
@@ -17,6 +18,7 @@ interface ACLStatus {
 }
 
 const ACLInitializer: React.FC = () => {
+  const { t } = useI18n();
   const [status, setStatus] = useState<ACLStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -130,7 +132,7 @@ const ACLInitializer: React.FC = () => {
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className={`text-2xl font-bold ${status.initialized ? 'text-green-600' : 'text-red-600'}`}>
-                {status.initialized ? 'SIM' : 'NÃO'}
+                {status.initialized ? 'SIM' : t('components.nao')}
               </div>
               <div className="text-sm text-gray-600">Sistema Inicializado</div>
             </div>

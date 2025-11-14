@@ -1,4 +1,4 @@
--- Create the users_unified table with the same structure as the users table
+![1762984249383](image/20250822_create_users_unified_table/1762984249383.png)![1762984251745](image/20250822_create_users_unified_table/1762984251745.png)-- Create the users_unified table with the same structure as the users table
 CREATE TABLE IF NOT EXISTS users_unified (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email TEXT UNIQUE NOT NULL,

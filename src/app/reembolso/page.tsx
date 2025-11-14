@@ -34,14 +34,14 @@ export default function ReembolsoPage() {
   // Check if user has approval permission
   useEffect(() => {
     // Forçar a verificação de permissões para garantir que a aba de aprovação seja exibida corretamente
-    console.log('Verificando permissões de aprovação para exibir aba...');
+    console.log(t('reimbursement.verificandoPermissoesDeAprovacaoParaExibirAba'));
 
     // IMPORTANTE: Garantir que todos os administradores e gerentes tenham acesso
     // independentemente de estarem cadastrados ou não
 
     // Administradores sempre têm permissão
     if (isAdmin) {
-      console.log('Usuário é administrador, concedendo permissão de aprovação');
+      console.log(t('reimbursement.usuarioEAdministradorConcedendoPermissaoDeAprovaca'));
       setHasApprovalPermission(true);
       setIsLoading(false);
       return;
@@ -50,7 +50,7 @@ export default function ReembolsoPage() {
     // Verificar se o usuário é gerente
     const isManager = profile?.role === 'MANAGER';
     if (isManager) {
-      console.log('Usuário é gerente, concedendo permissão de aprovação');
+      console.log(t('reimbursement.usuarioEGerenteConcedendoPermissaoDeAprovacao'));
       setHasApprovalPermission(true);
       setIsLoading(false);
       return;
@@ -84,7 +84,7 @@ export default function ReembolsoPage() {
       userEmail.toLowerCase().endsWith('@abz.com.br')
     );
 
-    console.log('Verificando permissões de aprovação:', {
+    console.log(t('reimbursement.verificandoPermissoesDeAprovacao'), {
       isAdmin,
       isManager,
       hasFeaturePermission,
@@ -118,7 +118,7 @@ export default function ReembolsoPage() {
         setActiveTab(tab);
       } else {
         // Se não houver parâmetro de aba ou for inválido, definir para 'request'
-        console.log('Nenhuma aba válida encontrada no URL, definindo para "request"');
+        console.log(`${t('reimbursement.nenhumaAbaValidaEncontradaNoUrlDefinindoPara')} "request"`);
         setActiveTab('request');
       }
     }

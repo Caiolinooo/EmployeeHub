@@ -6,11 +6,14 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle2, Database } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { fetchWithToken } from '@/lib/tokenStorage';
+import { useI18n } from '@/contexts/I18nContext';
 
 /**
  * Componente para criar a tabela de critérios no banco de dados
  */
 export function CreateCriteriosTable() {
+  const { t } = useI18n();
+
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [success, setSuccess] = useState(false);
@@ -29,7 +32,7 @@ export function CreateCriteriosTable() {
     try {
       setChecking(true);
       setError(null);
-      setMessage('Verificando tabelas do sistema de avaliação...');
+      setMessage(t('components.verificandoTabelasDoSistemaDeAvaliacao'));
 
       // Chamar a API para verificar todas as tabelas
       const response = await fetchWithToken('/api/avaliacao/setup-tables');
@@ -46,9 +49,9 @@ export function CreateCriteriosTable() {
 
       if (criteriosTable?.exists) {
         setSuccess(true);
-        setMessage(`A tabela de critérios já existe no banco de dados com ${criteriosTable.count || 0} critérios.`);
+        setMessage(t('components.aTabelaDeCriteriosJaExisteNoBancoDeDadosComCriteri'));
       } else {
-        setMessage('Uma ou mais tabelas necessárias não existem. Clique no botão para criar as tabelas do sistema.');
+        setMessage(t('components.umaOuMaisTabelasNecessariasNaoExistemCliqueNoBotao'));
       }
     } catch (err) {
       console.error('Erro ao verificar tabelas:', err);
@@ -65,7 +68,7 @@ export function CreateCriteriosTable() {
       setLoading(true);
       setError(null);
       setSuccess(false);
-      setMessage('Criando tabelas do sistema de avaliação...');
+      setMessage(t('components.criandoTabelasDoSistemaDeAvaliacao'));
 
       // Chamar a API para criar todas as tabelas
       const response = await fetchWithToken('/api/avaliacao/setup-tables', {

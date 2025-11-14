@@ -8,6 +8,8 @@ import "./globals.css";
 import ClientProviders from "@/components/ClientProviders";
 // Import the ThemeEnforcerWrapper component
 import ThemeEnforcerWrapper from "@/components/ThemeEnforcerWrapper";
+// Import SiteHead for dynamic title updates
+import SiteHead from "@/components/SiteHead";
 
 // Global error handling is now moved to the GlobalErrorHandler component
 
@@ -48,10 +50,10 @@ const plusJakartaSans = localFont({
   variable: '--font-plus-jakarta',
 });
 
-// Metadata is now handled dynamically by SiteHead component
+// Metadata estático (o SiteHead component atualiza dinamicamente em runtime)
 export const metadata: Metadata = {
-  title: "Painel ABZ Group", // Default title, will be overridden by SiteHead
-  description: "Painel centralizado para colaboradores da ABZ Group", // Default description
+  title: "Painel ABZ Group",
+  description: "Painel centralizado para colaboradores da ABZ Group",
 };
 
 export default function RootLayout({
@@ -74,12 +76,17 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
           type="text/css"
         />
+        {/* PWA Manifest & Meta */}
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <meta name="theme-color" content="#0B72E7" />
+        <link rel="icon" href="/images/LC1_Azul.png" />
         {/* Meta tag para garantir o tipo MIME correto */}
         <meta httpEquiv="Content-Type" content="text/html; charset=utf-8" />
       </head>
       <body className="bg-gray-50" suppressHydrationWarning>
         <ClientProviders>
           <ErrorBoundary fallback={<ErrorFallback />}>
+            <SiteHead />
             {children}
           </ErrorBoundary>
           <ThemeEnforcerWrapper />

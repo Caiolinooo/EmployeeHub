@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -164,7 +164,7 @@ export default function UsersPage() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error('Não autorizado');
+        throw new Error(t('admin.naoAutorizado'));
       }
 
       if (isNewUser) {
@@ -183,7 +183,7 @@ export default function UsersPage() {
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error || 'Erro ao criar usuário');
+          throw new Error(errorData.error || t('admin.erroAoCriarUsuario'));
         }
       } else if (selectedUser) {
         // Atualizar usuário existente
@@ -201,7 +201,7 @@ export default function UsersPage() {
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error || 'Erro ao atualizar usuário');
+          throw new Error(errorData.error || t('admin.erroAoAtualizarUsuario'));
         }
       }
 
@@ -209,7 +209,7 @@ export default function UsersPage() {
       setShowEditor(false);
       fetchUsers();
     } catch (error) {
-      console.error('Erro ao salvar usuário:', error);
+      console.error(t('admin.erroAoSalvarUsuario'), error);
       alert(error instanceof Error ? error.message : 'Erro desconhecido');
     }
   };
@@ -222,7 +222,7 @@ export default function UsersPage() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error('Não autorizado');
+        throw new Error(t('admin.naoAutorizado'));
       }
 
       const response = await fetch(`/api/users/${selectedUser._id}`, {
@@ -234,14 +234,14 @@ export default function UsersPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao excluir usuário');
+        throw new Error(errorData.error || t('admin.erroAoExcluirUsuario'));
       }
 
       // Fechar o modal e recarregar a lista
       setShowDeleteConfirm(false);
       fetchUsers();
     } catch (error) {
-      console.error('Erro ao excluir usuário:', error);
+      console.error(t('admin.erroAoExcluirUsuario'), error);
       alert(error instanceof Error ? error.message : 'Erro desconhecido');
     }
   };
@@ -254,7 +254,7 @@ export default function UsersPage() {
       case 'MANAGER':
         return 'Gerente';
       case 'USER':
-        return 'Usuário';
+        return t('admin.usuario');
       default:
         return role;
     }
@@ -311,7 +311,7 @@ export default function UsersPage() {
           </div>
           <input
             type="text"
-            placeholder="Buscar usuários por nome, telefone, email, departamento..."
+            placeholder={t('admin.buscarUsuariosPorNomeTelefoneEmailDepartamento')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-abz-blue focus:border-abz-blue sm:text-sm"
@@ -430,7 +430,7 @@ export default function UsersPage() {
                         <button
                           onClick={() => handleViewHistory(user)}
                           className="text-gray-600 hover:text-abz-blue"
-                          title="Ver histórico de acesso"
+                          title={t('admin.verHistoricoDeAcesso')}
                         >
                           <FiClock />
                         </button>
@@ -451,14 +451,14 @@ export default function UsersPage() {
                         <button
                           onClick={() => handleEditUser(user)}
                           className="text-gray-600 hover:text-abz-blue"
-                          title="Editar usuário"
+                          title={t('admin.editarUsuario')}
                         >
                           <FiEdit2 />
                         </button>
                         <button
                           onClick={() => handleDeleteConfirm(user)}
                           className="text-gray-600 hover:text-red-600"
-                          title="Excluir usuário"
+                          title={t('admin.excluirUsuario')}
                         >
                           <FiTrash2 />
                         </button>
@@ -505,8 +505,7 @@ export default function UsersPage() {
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('common.confirmDelete', 'Confirmar Exclusão')}</h2>
             <p className="text-gray-700 mb-6">
-              {t('admin.users.confirmDeleteMessage', 'Tem certeza que deseja excluir o usuário')} <strong>{selectedUser.firstName} {selectedUser.lastName}</strong>?
-              {t('admin.users.actionCannotBeUndone', 'Esta ação não pode ser desfeita.')}
+              {t('admin.users.confirmDeleteMessage', 'Tem certeza que deseja excluir o usuário')} <strong>{selectedUser.firstName} {selectedUser.lastName}</strong>? t('admin.users.actionCannotBeUndone', 'Esta ação não pode ser desfeita.')
             </p>
             <div className="flex justify-end space-x-3">
               <button

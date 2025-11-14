@@ -33,7 +33,7 @@ export default function ChangePasswordTab() {
 
     // Verificar se as senhas coincidem
     if (newPassword !== confirmPassword) {
-      setError('As senhas não coincidem');
+      setError(t('components.asSenhasNaoCoincidem'));
       return;
     }
 

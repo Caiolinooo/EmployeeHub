@@ -1,7 +1,8 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiDatabase, FiCheck, FiAlertTriangle, FiRefreshCw, FiCopy } from 'react-icons/fi';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface RolePermissionsStatus {
   exists: boolean;
@@ -18,6 +19,7 @@ interface RolePermissionsStatus {
 }
 
 const RolePermissionsInitializer: React.FC = () => {
+  const { t } = useI18n();
   const [status, setStatus] = useState<RolePermissionsStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +38,7 @@ const RolePermissionsInitializer: React.FC = () => {
       setStatus(data);
       
       if (!data.exists) {
-        setError(data.message || 'Tabela role_permissions não existe');
+        setError(data.message || t('components.tabelaRolepermissionsNaoExiste'));
       }
     } catch (err) {
       setError('Erro ao conectar com a API');
@@ -63,7 +65,7 @@ const RolePermissionsInitializer: React.FC = () => {
 
       if (response.ok) {
         if (data.already_exists) {
-          setSuccess('Tabela role_permissions já existe e está funcionando');
+          setSuccess(t('components.tabelaRolepermissionsJaExisteEEstaFuncionando'));
         } else {
           setSuccess(data.message);
         }
@@ -90,7 +92,7 @@ const RolePermissionsInitializer: React.FC = () => {
     if (status?.sql_script) {
       try {
         await navigator.clipboard.writeText(status.sql_script);
-        setSuccess('SQL copiado para a área de transferência!');
+        setSuccess(t('components.sqlCopiadoParaAAreaDeTransferencia'));
       } catch (err) {
         setError('Erro ao copiar SQL');
       }
@@ -149,7 +151,7 @@ const RolePermissionsInitializer: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className={`text-2xl font-bold ${status.exists ? 'text-green-600' : 'text-red-600'}`}>
-                {status.exists ? 'EXISTE' : 'NÃO EXISTE'}
+                {status.exists ? 'EXISTE' : t('components.naoExiste')}
               </div>
               <div className="text-sm text-gray-600">Status da Tabela</div>
             </div>

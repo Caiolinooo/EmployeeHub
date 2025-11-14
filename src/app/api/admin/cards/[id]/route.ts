@@ -46,7 +46,7 @@ function convertDatabaseCard(card: any) {
 // GET - Obter um card específico
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verificar se o usuário é administrador
@@ -95,7 +95,7 @@ export async function GET(
 // PUT - Atualizar um card existente
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verificar se o usuário é administrador
@@ -147,16 +147,23 @@ export async function PUT(
       .from('cards')
       .update({
         title: body.title,
+        title_en: body.titleEn || body.title_en || body.title,
         description: body.description || '',
+        description_en: body.descriptionEn || body.description_en || body.description || '',
         href: body.href,
-        icon: iconName,
-        color: body.color || 'blue',
-        hover_color: body.hoverColor || 'blue', // Nota: Supabase usa snake_case
+        icon_name: body.iconName || body.icon_name || iconName,
+        color: body.color || 'bg-abz-blue',
+        hover_color: body.hoverColor || body.hover_color || 'hover:bg-abz-blue-dark',
         enabled: body.enabled !== undefined ? body.enabled : true,
         order: body.order || 0,
-        admin_only: body.adminOnly !== undefined ? body.adminOnly : false, // Nota: Supabase usa snake_case
+        admin_only: body.adminOnly !== undefined ? body.adminOnly : false,
         manager_only: body.managerOnly !== undefined ? body.managerOnly : false,
         external: body.external !== undefined ? body.external : false,
+        module_key: body.moduleKey || body.module_key || null,
+        category: body.category || null,
+        tags: body.tags || [],
+        allowed_roles: body.allowedRoles || body.allowed_roles || [],
+        allowed_user_ids: body.allowedUserIds || body.allowed_user_ids || [],
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
@@ -188,7 +195,7 @@ export async function PUT(
 // DELETE - Excluir um card
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verificar se o usuário é administrador

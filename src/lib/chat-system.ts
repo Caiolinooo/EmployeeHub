@@ -1,6 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
-import { Server as SocketIOServer } from 'socket.io';
+import { Server as SocketIOServer, Socket } from 'socket.io';
 import { Server as HTTPServer } from 'http';
+
+// Extend Socket interface to include userId
+interface AuthenticatedSocket extends Socket {
+  userId?: string;
+}
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -64,7 +69,7 @@ export class ChatSystem {
       }
     });
 
-    this.io.on('connection', (socket) => {
+    this.io.on('connection', (socket: AuthenticatedSocket) => {
       console.log('Usuário conectado:', socket.id);
 
       // Autenticação do usuário

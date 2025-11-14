@@ -13,6 +13,9 @@ export function middleware(request: NextRequest) {
   // Definir o locale como variável global para acesso no cliente
   response.cookies.set('NEXT_LOCALE', locale);
 
+  // A verificação de token foi movida para getServerSideProps nas páginas de avaliação
+  // para evitar conflitos de roteamento com o middleware.
+  /*
   // Verificar se é uma rota de avaliação e se não há token
   const { pathname } = request.nextUrl;
   if (pathname.startsWith('/avaliacao')) {
@@ -31,6 +34,7 @@ export function middleware(request: NextRequest) {
       console.log('Root Middleware: Token encontrado nos cookies, permitindo acesso à rota de avaliação');
     }
   }
+  */
 
   return response;
 }

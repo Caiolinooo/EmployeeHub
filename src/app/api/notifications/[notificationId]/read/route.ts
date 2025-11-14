@@ -1,17 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { authenticateUser } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
 // PUT - Marcar notificação como lida
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { notificationId: string } }
+  { params }: { params: Promise<{ notificationId: string }> }
 ) {
   try {
-    const notificationId = params.notificationId;
-    const body = await request.json();
-    const { user_id } = body;
+    const { notificationId } = await params;
+
+    // Tentar ler user_id do body, da autenticação ou da querystring
+    let user_id: string | null = null;
+    try {
+      const body = await request.json();
+      user_id = body?.user_id || null;
+    } catch {}
+    if (!user_id) {
+      try {
+        const auth = await authenticateUser(request);
+        if (auth?.user?.id) user_id = auth.user.id as string;
+      } catch {}
+    }
+    if (!user_id) {
+      try {
+        const { searchParams } = new URL(request.url);
+        user_id = searchParams.get('user_id');
+      } catch {}
+    }
 
     if (!user_id) {
       return NextResponse.json(
@@ -83,10 +101,10 @@ export async function PUT(
 // DELETE - Marcar notificação como não lida
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { notificationId: string } }
+  { params }: { params: Promise<{ notificationId: string }> }
 ) {
   try {
-    const notificationId = params.notificationId;
+    const { notificationId } = await params;
     const { searchParams } = new URL(request.url);
     const user_id = searchParams.get('user_id');
 

@@ -14,6 +14,7 @@ import {
   Calendar
 } from 'lucide-react';
 import { PayrollEmployee, PayrollEmployeeFilter } from '@/types/payroll';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface EmployeeListProps {
   companyId?: string;
@@ -26,12 +27,13 @@ interface EmployeeListProps {
  * Lista de funcionários da folha de pagamento
  * Mantém o design system do Painel ABZ
  */
-export default function EmployeeList({ 
-  companyId, 
-  departmentId, 
-  onEmployeeSelect, 
-  selectable = false 
+export default function EmployeeList({
+  companyId,
+  departmentId,
+  onEmployeeSelect,
+  selectable = false
 }: EmployeeListProps) {
+  const { t } = useI18n();
   const [employees, setEmployees] = useState<PayrollEmployee[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -62,10 +64,10 @@ export default function EmployeeList({
       if (data.success) {
         setEmployees(data.data);
       } else {
-        console.error('Erro ao carregar funcionários:', data.error);
+        console.error(t('components.erroAoCarregarFuncionarios'), data.error);
       }
     } catch (error) {
-      console.error('Erro ao carregar funcionários:', error);
+      console.error(t('components.erroAoCarregarFuncionarios'), error);
     } finally {
       setLoading(false);
     }
@@ -175,7 +177,7 @@ export default function EmployeeList({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Buscar funcionários..."
+              placeholder={t('components.buscarFuncionarios')}
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-abz-blue focus:border-transparent"
@@ -234,7 +236,7 @@ export default function EmployeeList({
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600">
                         <div className="flex items-center space-x-2">
                           <Building2 className="h-4 w-4" />
-                          <span>{employee.position || 'Cargo não informado'}</span>
+                          <span>{employee.position || t('components.cargoNaoInformado')}</span>
                         </div>
                         <div className="flex items-center space-x-2">
                           <span className="font-medium">Matrícula:</span>

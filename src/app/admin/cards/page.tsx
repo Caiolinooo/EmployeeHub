@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff, FiArrowUp, FiArrowDown, FiX, FiLock, FiCheck, FiInfo, FiDatabase } from 'react-icons/fi';
 import { DashboardCard } from '@/data/cards';
 import * as Icons from 'react-icons/fi';
@@ -167,19 +167,53 @@ const CardEditor = ({ card, onSave, onCancel, isNew = false }: CardEditorProps) 
           </div>
         </div>
 
-        <div className="mb-4">
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-            {t('admin.cardDescription', 'Descrição')}
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            value={editedCard.description}
-            onChange={handleChange}
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
-            required
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+              {t('admin.cardDescription', 'Descrição (PT)')}
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={editedCard.description}
+              onChange={handleChange}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="descriptionEn" className="block text-sm font-medium text-gray-700 mb-1">
+              {t('admin.cardDescriptionEn', 'Descrição (EN)')}
+            </label>
+            <textarea
+              id="descriptionEn"
+              name="descriptionEn"
+              value={(editedCard as any).descriptionEn || editedCard.description}
+              onChange={handleChange}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
+              placeholder="English description"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label htmlFor="titleEn" className="block text-sm font-medium text-gray-700 mb-1">
+              {t('admin.cardTitleEn', 'Título (EN)')}
+            </label>
+            <input
+              type="text"
+              id="titleEn"
+              name="titleEn"
+              value={(editedCard as any).titleEn || editedCard.title}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
+              placeholder="English title"
+            />
+          </div>
         </div>
 
         <div className="flex items-center space-x-4 mb-4">
@@ -349,7 +383,7 @@ export default function CardsPage() {
   });
 
   // Carregar cards
-  const loadCards = async () => {
+  const loadCards = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -358,7 +392,7 @@ export default function CardsPage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        throw new Error('Você precisa estar autenticado para acessar esta página');
+        throw new Error(t('admin.vocePrecisaEstarAutenticadoParaAcessarEstaPagina'));
       }
 
       console.log('Token encontrado, fazendo requisição para /api/admin/cards');
@@ -381,16 +415,16 @@ export default function CardsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   // Verificar se a tabela cards existe
-  const checkCardsTable = async () => {
+  const checkCardsTable = useCallback(async () => {
     try {
       // Obter o token de autenticação do localStorage
       const token = localStorage.getItem('token');
 
       if (!token) {
-        throw new Error('Você precisa estar autenticado para acessar esta página');
+        throw new Error(t('admin.vocePrecisaEstarAutenticadoParaAcessarEstaPagina'));
       }
 
       console.log('Verificando se a tabela cards existe...');
@@ -406,7 +440,7 @@ export default function CardsPage() {
       }
 
       const data = await response.json();
-      console.log('Resultado da verificação da tabela cards:', data);
+      console.log(t('admin.resultadoDaVerificacaoDaTabelaCards'), data);
 
       // Verificar se a tabela existe
       setTableExists(data.exists);
@@ -421,13 +455,13 @@ export default function CardsPage() {
           checkMigrationStatus();
 
           // Mostrar uma mensagem informativa
-          setSuccessMessage('Usando cards do código-fonte. Você pode editar estes cards, mas as alterações serão salvas no banco de dados.');
+          setSuccessMessage(t('admin.usandoCardsDoCodigofonteVocePodeEditarEstesCardsMa'));
           setTimeout(() => setSuccessMessage(null), 5000);
         }
       }
 
       if (!data.exists) {
-        setError('A tabela de cards não existe. Clique no botão abaixo para criá-la.');
+        setError(t('admin.aTabelaDeCardsNaoExisteCliqueNoBotaoAbaixoParaCria'));
       }
 
       return data.exists;
@@ -437,7 +471,7 @@ export default function CardsPage() {
       setTableExists(false);
       return false;
     }
-  };
+  }, [t]);
 
   // Verificar o status da migração
   const checkMigrationStatus = async () => {
@@ -446,10 +480,10 @@ export default function CardsPage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        throw new Error('Você precisa estar autenticado para verificar o status da migração');
+        throw new Error(t('admin.vocePrecisaEstarAutenticadoParaVerificarOStatusDaM'));
       }
 
-      console.log('Verificando status da migração...');
+      console.log(t('admin.verificandoStatusDaMigracao'));
 
       const response = await fetch('/api/admin/cards/migrate', {
         headers: {
@@ -458,11 +492,11 @@ export default function CardsPage() {
       });
 
       if (!response.ok) {
-        throw new Error(`Erro ao verificar status da migração: ${response.status} ${response.statusText}`);
+        throw new Error(t('admin.erroAoVerificarStatusDaMigracaoResponsestatusRespo'));
       }
 
       const data = await response.json();
-      console.log('Resultado da verificação do status da migração:', data);
+      console.log(t('admin.resultadoDaVerificacaoDoStatusDaMigracao'), data);
 
       setMigrationStatus({
         needed: data.migrationNeeded,
@@ -472,11 +506,11 @@ export default function CardsPage() {
 
       return data;
     } catch (err) {
-      console.error('Erro ao verificar status da migração:', err);
+      console.error(t('admin.erroAoVerificarStatusDaMigracao'), err);
       setMigrationStatus({
         needed: false,
         inProgress: false,
-        message: 'Erro ao verificar status da migração'
+        message: t('admin.erroAoVerificarStatusDaMigracao')
       });
       return null;
     }
@@ -491,7 +525,7 @@ export default function CardsPage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        throw new Error('Você precisa estar autenticado para migrar os cards');
+        throw new Error(t('admin.vocePrecisaEstarAutenticadoParaMigrarOsCards'));
       }
 
       console.log('Migrando cards hardcoded para o banco de dados...');
@@ -508,7 +542,7 @@ export default function CardsPage() {
       }
 
       const data = await response.json();
-      console.log('Resultado da migração de cards:', data);
+      console.log(t('admin.resultadoDaMigracaoDeCards'), data);
 
       setMigrationStatus({
         needed: false,
@@ -516,7 +550,7 @@ export default function CardsPage() {
         message: data.message
       });
 
-      setSuccessMessage(`Migração concluída: ${data.message}`);
+      setSuccessMessage(`${t('admin.migracaoConcluida')}: ${data.message}`);
       setTimeout(() => setSuccessMessage(null), 5000);
 
       // Recarregar os cards e verificar a fonte dos dados
@@ -619,7 +653,7 @@ export default function CardsPage() {
       adminOnly: false
     };
 
-    console.log('Criando novo card com ícone:', typeof newCard.icon, (newCard.icon as React.ComponentType)?.displayName || newCard.iconName);
+    console.log(t('admin.criandoNovoCardComIcone'), typeof newCard.icon, (newCard.icon as React.ComponentType)?.displayName || newCard.iconName);
 
     setEditingCard(newCard);
     setIsAdding(true);
@@ -642,7 +676,7 @@ export default function CardsPage() {
         const token = localStorage.getItem('token');
 
         if (!token) {
-          throw new Error('Você precisa estar autenticado para adicionar um card');
+          throw new Error(t('admin.vocePrecisaEstarAutenticadoParaAdicionarUmCard'));
         }
 
         console.log('Adicionando novo card...');
@@ -674,7 +708,7 @@ export default function CardsPage() {
         const token = localStorage.getItem('token');
 
         if (!token) {
-          throw new Error('Você precisa estar autenticado para atualizar um card');
+          throw new Error(t('admin.vocePrecisaEstarAutenticadoParaAtualizarUmCard'));
         }
 
         console.log(`Atualizando card existente com ID: ${card.id}`);
@@ -706,7 +740,7 @@ export default function CardsPage() {
             console.log('Card atualizado com sucesso:', result.card);
             setCards(prev => prev.map(c => c.id === card.id ? result.card : c));
           } else {
-            console.warn('Resposta da API não contém o card atualizado:', result);
+            console.warn(t('admin.respostaDaApiNaoContemOCardAtualizado'), result);
             // Recarregar todos os cards para garantir que estamos exibindo os dados mais recentes
             loadCards();
           }
@@ -714,7 +748,7 @@ export default function CardsPage() {
           setSuccessMessage(t('admin.cardUpdatedSuccess', 'Card atualizado com sucesso!'));
           setTimeout(() => setSuccessMessage(null), 3000);
         } catch (fetchError) {
-          console.error('Erro na requisição fetch:', fetchError);
+          console.error(t('admin.erroNaRequisicaoFetch'), fetchError);
           throw fetchError;
         }
       }
@@ -740,7 +774,7 @@ export default function CardsPage() {
         const token = localStorage.getItem('token');
 
         if (!token) {
-          throw new Error('Você precisa estar autenticado para excluir um card');
+          throw new Error(t('admin.vocePrecisaEstarAutenticadoParaExcluirUmCard'));
         }
 
         const response = await fetch(`/api/admin/cards/${id}`, {
@@ -777,7 +811,7 @@ export default function CardsPage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        throw new Error('Você precisa estar autenticado para atualizar a visibilidade do card');
+        throw new Error(t('admin.vocePrecisaEstarAutenticadoParaAtualizarAVisibilid'));
       }
 
       // Preparar o card para envio
@@ -815,7 +849,7 @@ export default function CardsPage() {
         // Atualizar o estado local com o card retornado pela API
         setCards(prev => prev.map(c => c.id === id ? result.card : c));
       } else {
-        console.warn('Resposta da API não contém o card atualizado:', result);
+        console.warn(t('admin.respostaDaApiNaoContemOCardAtualizado'), result);
         // Atualizar o estado local com base no que sabemos
         setCards(prev => prev.map(c => c.id === id ? { ...c, enabled } : c));
       }
@@ -847,7 +881,7 @@ export default function CardsPage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        throw new Error('Você precisa estar autenticado para mover o card');
+        throw new Error(t('admin.vocePrecisaEstarAutenticadoParaMoverOCard'));
       }
 
       // Preparar os cards para envio
@@ -939,7 +973,7 @@ export default function CardsPage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        throw new Error('Você precisa estar autenticado para mover o card');
+        throw new Error(t('admin.vocePrecisaEstarAutenticadoParaMoverOCard'));
       }
 
       // Preparar os cards para envio
@@ -987,7 +1021,7 @@ export default function CardsPage() {
 
       if (!response2.ok) {
         const errorText = await response2.text();
-        console.error('Resposta de erro (próximo card):', errorText);
+        console.error(t('admin.respostaDeErroProximoCard'), errorText);
         throw new Error(`Erro ao atualizar ordem do card: ${response2.status} ${response2.statusText}`);
       }
 
@@ -1069,8 +1103,8 @@ export default function CardsPage() {
               <p className="font-medium text-blue-800">Informação</p>
               <p className="text-sm text-blue-700">
                 {dataSource === 'database'
-                  ? 'Os cards estão sendo carregados do banco de dados.'
-                  : 'Os cards estão sendo carregados do código-fonte. As alterações serão salvas no banco de dados.'}
+                  ? t('admin.osCardsEstaoSendoCarregadosDoBancoDeDados')
+                  : t('admin.osCardsEstaoSendoCarregadosDoCodigofonteAsAlteraco')}
               </p>
 
               {/* Mostrar status da migração e botão para migrar */}

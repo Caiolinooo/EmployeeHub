@@ -7,13 +7,13 @@ export const dynamic = 'force-dynamic';
 // GET - Obter uma notícia pelo ID
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const { params } = context;
   try {
     // Garantir que params seja await antes de acessar suas propriedades
     // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
 
     const { data: news, error } = await supabaseAdmin
       .from('news')
@@ -42,13 +42,13 @@ export async function GET(
 export const PUT = withPermission('manager', async (
   request: NextRequest,
   _user: any,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) => {
   const { params } = context;
   try {
     // Garantir que params seja await antes de acessar suas propriedades
     // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
     console.log(`API de notícias - Iniciando atualização da notícia ID: ${id}`);
 
     const body = await request.json();
@@ -128,13 +128,13 @@ export const PUT = withPermission('manager', async (
 export const DELETE = withPermission('manager', async (
   request: NextRequest,
   _user: any,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) => {
   const { params } = context;
   try {
     // Garantir que params seja await antes de acessar suas propriedades
     // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
     console.log(`API de notícias - Iniciando exclusão da notícia ID: ${id}`);
 
     // Verificar se a notícia existe

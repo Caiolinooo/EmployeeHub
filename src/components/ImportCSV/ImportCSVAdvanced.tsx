@@ -1,4 +1,4 @@
-
+﻿
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -7,14 +7,6 @@ import { FiUpload, FiFile, FiX, FiCheck, FiAlertCircle, FiLoader, FiEdit, FiSett
 import CSVPreview from './CSVPreview';
 import CSVFieldMapping from './CSVFieldMapping';
 import CSVImportOptions from './CSVImportOptions';
-
-// Tipos de separadores suportados
-const SEPARATORS = [
-  { id: ',', label: 'Vírgula (,)' },
-  { id: ';', label: 'Ponto e vírgula (;)' },
-  { id: '\t', label: 'Tab (\\t)' },
-  { id: '|', label: 'Pipe (|)' },
-];
 
 interface ImportCSVAdvancedProps {
   onImportComplete?: (data: Record<string, string | number>[]) => void;
@@ -34,6 +26,13 @@ export default function ImportCSVAdvanced({
   fieldDefinitions
 }: ImportCSVAdvancedProps) {
   const { t } = useI18n();
+  // Tipos de separadores suportados (dependem de i18n)
+  const SEPARATORS = [
+    { id: ',', label: t('components.virgula') },
+    { id: ';', label: t('components.pontoEVirgula') },
+    { id: '\t', label: 'Tab (\\t)' },
+    { id: '|', label: 'Pipe (|)' },
+  ];
   const [file, setFile] = useState<File | null>(null);
   const [separator, setSeparator] = useState<string>(',');
   const [previewData, setPreviewData] = useState<Record<string, string | number>[]>([]);
@@ -120,12 +119,12 @@ export default function ImportCSVAdvanced({
       // Obter cabeçalhos
       const headerLine = lines[0];
       const headerValues = headerLine.split(sep).map(h => h.trim());
-      console.log('Cabeçalhos detectados:', headerValues);
+      console.log(t('components.cabecalhosDetectados'), headerValues);
       setHeaders(headerValues);
 
       // Verificar se é formato Office 365
       const isOffice365Format = headerValues.some(h =>
-        h === 'Nome para exibição' ||
+        h === t('components.nomeParaExibicao') ||
         h === 'Nome UPN' ||
         (h === 'Nome' && headerValues.includes('Sobrenome'))
       );
@@ -220,12 +219,12 @@ export default function ImportCSVAdvanced({
     const allFields = [...required, ...optional];
 
     console.log('Mapeando campos automaticamente. Headers:', headers);
-    console.log('Campos necessários:', required);
+    console.log(t('components.camposNecessarios'), required);
     console.log('Campos opcionais:', optional);
 
     // Verificar se estamos lidando com formato Office 365
     const isOffice365Format = headers.some(h =>
-      h === 'Nome para exibição' ||
+      h === t('components.nomeParaExibicao') ||
       h === 'Nome UPN' ||
       (h === 'Nome' && headers.includes('Sobrenome'))
     );
@@ -237,8 +236,8 @@ export default function ImportCSVAdvanced({
       mapping['firstName'] = 'Nome';
       mapping['lastName'] = 'Sobrenome';
       mapping['email'] = 'Nome UPN';
-      mapping['phoneNumber'] = headers.includes('Telefone Celular') ? 'Telefone Celular' : 'Número de telefone';
-      mapping['position'] = 'Título';
+      mapping['phoneNumber'] = headers.includes('Telefone Celular') ? 'Telefone Celular' : t('components.numeroDeTelefone');
+      mapping['position'] = t('components.titulo');
       mapping['department'] = 'Departamento';
 
       console.log('Mapeamento para Office 365:', mapping);
@@ -268,7 +267,7 @@ export default function ImportCSVAdvanced({
       }
     });
 
-    console.log('Mapeamento automático:', mapping);
+    console.log(t('components.mapeamentoAutomatico'), mapping);
     setFieldMapping(mapping);
   };
 
@@ -289,7 +288,7 @@ export default function ImportCSVAdvanced({
         }
       }
     } catch (error) {
-      console.error('Erro ao carregar último mapeamento:', error);
+      console.error(t('components.erroAoCarregarUltimoMapeamento'), error);
     }
   };
 
@@ -298,7 +297,7 @@ export default function ImportCSVAdvanced({
     try {
       localStorage.setItem(`lastFieldMapping_${importType}`, JSON.stringify(mapping));
     } catch (error) {
-      console.error('Erro ao salvar último mapeamento:', error);
+      console.error(t('components.erroAoSalvarUltimoMapeamento'), error);
     }
   };
 
@@ -310,11 +309,11 @@ export default function ImportCSVAdvanced({
     }
 
     if (selectedRows.length === 0) {
-      setError('Nenhuma linha selecionada para importação');
+      setError(t('components.nenhumaLinhaSelecionadaParaImportacao'));
       return;
     }
 
-    console.log('Iniciando importação com tipo:', importType, 'e endpoint:', apiEndpoint);
+    console.log(t('components.iniciandoImportacaoComTipo'), importType, 'e endpoint:', apiEndpoint);
 
     setIsLoading(true);
     setError(null);
@@ -346,16 +345,16 @@ export default function ImportCSVAdvanced({
       if (apiEndpoint.includes('/api/admin/users/import')) {
         // Processar dados para o formato esperado pela API de usuários
         const processedUsers = dataToImport.map(user => {
-          console.log('Processando usuário:', JSON.stringify(user));
+          console.log(t('components.processandoUsuario'), JSON.stringify(user));
 
           // Verificar se estamos lidando com formato Office 365
           const isOffice365Format = Object.keys(user).some(key =>
-            key === 'Nome para exibição' ||
+            key === t('components.nomeParaExibicao') ||
             key === 'Nome UPN' ||
             key === 'Nome' && 'Sobrenome' in user
           );
 
-          console.log('É formato Office 365?', isOffice365Format);
+          console.log(t('components.eFormatoOffice365'), isOffice365Format);
 
           if (isOffice365Format) {
             // Mapear campos do Office 365 para o formato esperado
@@ -363,13 +362,13 @@ export default function ImportCSVAdvanced({
               firstName: user.Nome || '',
               lastName: user.Sobrenome || '',
               email: user['Nome UPN'] || '',
-              phoneNumber: user['Telefone Celular'] || user['Número de telefone'] || '',
+              phoneNumber: user['Telefone Celular'] || user['numero_de_telefone'] || '',
               position: user.Título || '',
               department: user.Departamento || '',
               role: 'USER' // Papel padrão
             };
 
-            console.log('Usuário mapeado:', JSON.stringify(mappedUser));
+            console.log(t('components.usuarioMapeado'), JSON.stringify(mappedUser));
             return mappedUser;
           }
 
@@ -483,7 +482,7 @@ export default function ImportCSVAdvanced({
           className="flex items-center text-sm text-gray-600 hover:text-gray-900"
         >
           <FiSettings className="mr-1" />
-          {showImportOptions ? 'Ocultar opções avançadas' : 'Mostrar opções avançadas'}
+          {showImportOptions ? t('components.ocultarOpcoesAvancadas') : t('components.mostrarOpcoesAvancadas')}
         </button>
 
         {showImportOptions && (

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 
@@ -50,15 +50,15 @@ export default function NewsAdminPage() {
 
     try {
       const response = await fetch('/api/news');
-      
+
       if (!response.ok) {
-        throw new Error(`Erro ao carregar notícias: ${response.status} ${response.statusText}`);
+        throw new Error(t('admin.erroAoCarregarNoticiasResponsestatusResponsestatus'));
       }
       
       const data = await response.json();
       setNews(data);
     } catch (err) {
-      console.error('Erro ao carregar notícias:', err);
+      console.error(t('admin.erroAoCarregarNoticias'), err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
     } finally {
       setLoading(false);
@@ -123,7 +123,7 @@ export default function NewsAdminPage() {
       });
 
       if (!response.ok) {
-        throw new Error(`Erro ao criar notícia: ${response.status} ${response.statusText}`);
+        throw new Error(t('admin.erroAoCriarNoticiaResponsestatusResponsestatustext'));
       }
 
       // Recarregar notícias
@@ -144,7 +144,7 @@ export default function NewsAdminPage() {
       
       setEditingNews(null);
     } catch (err) {
-      console.error('Erro ao criar notícia:', err);
+      console.error(t('admin.erroAoCriarNoticia'), err);
       alert(err instanceof Error ? err.message : 'Erro desconhecido ao criar notícia');
     }
   };
@@ -179,7 +179,7 @@ export default function NewsAdminPage() {
       });
 
       if (!response.ok) {
-        throw new Error(`Erro ao atualizar notícia: ${response.status} ${response.statusText}`);
+        throw new Error(t('admin.erroAoAtualizarNoticiaResponsestatusResponsestatus'));
       }
 
       // Recarregar notícias
@@ -200,14 +200,14 @@ export default function NewsAdminPage() {
       
       setEditingNews(null);
     } catch (err) {
-      console.error('Erro ao atualizar notícia:', err);
+      console.error(t('admin.erroAoAtualizarNoticia'), err);
       alert(err instanceof Error ? err.message : 'Erro desconhecido ao atualizar notícia');
     }
   };
 
   // Função para excluir uma notícia
   const deleteNews = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta notícia?')) return;
+    if (!confirm(t('admin.temCertezaQueDesejaExcluirEstaNoticia'))) return;
 
     try {
       const response = await fetchWithToken(`/api/news/${id}`, {
@@ -215,13 +215,13 @@ export default function NewsAdminPage() {
       });
 
       if (!response.ok) {
-        throw new Error(`Erro ao excluir notícia: ${response.status} ${response.statusText}`);
+        throw new Error(t('admin.erroAoExcluirNoticiaResponsestatusResponsestatuste'));
       }
 
       // Recarregar notícias
       loadNews();
     } catch (err) {
-      console.error('Erro ao excluir notícia:', err);
+      console.error(t('admin.erroAoExcluirNoticia'), err);
       alert(err instanceof Error ? err.message : 'Erro desconhecido ao excluir notícia');
     }
   };

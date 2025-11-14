@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -17,6 +17,7 @@ import {
   AcademicCapIcon
 } from '@heroicons/react/24/outline';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface DashboardStats {
   totalCourses: number;
@@ -76,6 +77,7 @@ interface EnrollmentLite {
 const AcademyDashboard: React.FC = () => {
   const router = useRouter();
   const { user, getToken } = useSupabaseAuth();
+  const { t } = useI18n();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [recentCourses, setRecentCourses] = useState<Course[]>([]);
@@ -97,7 +99,7 @@ const AcademyDashboard: React.FC = () => {
     try {
       const token = await getToken();
       if (!token) {
-        setError('Token de autenticação não encontrado');
+        setError(t('academy.tokenDeAutenticacaoNaoEncontrado'));
         return;
       }
 
@@ -220,7 +222,7 @@ const AcademyDashboard: React.FC = () => {
 
     if (diffDays === 1) return 'Hoje';
     if (diffDays === 2) return 'Ontem';
-    if (diffDays <= 7) return `${diffDays} dias atrás`;
+    if (diffDays <= 7) return t('academy.diffdaysDiasAtras');
 
     return date.toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -245,11 +247,11 @@ const AcademyDashboard: React.FC = () => {
   const getActivityMessage = (activity: RecentActivity) => {
     switch (activity.type) {
       case 'enrollment':
-        return `Você se matriculou em "${activity.courseTitle}"`;
+        return `${t('academy.voceSeMatriculouEm')} "${activity.courseTitle}"`;
       case 'completion':
-        return `Você concluiu "${activity.courseTitle}"`;
+        return `${t('academy.voceConcluiu')} "${activity.courseTitle}"`;
       case 'progress':
-        return `Progresso atualizado em "${activity.courseTitle}" (${activity.progress}%)`;
+        return `${t('academy.progressoAtualizadoEm')} "${activity.courseTitle}" (${activity.progress}%)`;
       default:
         return `Atividade em "${activity.courseTitle}"`;
     }

@@ -25,6 +25,7 @@ import {
 } from 'react-icons/fi';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
+import { useSiteConfig } from '@/contexts/SiteConfigContext';
 import { useMenuItems } from '@/hooks/useUnifiedData';
 import NotificationHUD from '@/components/notifications/NotificationHUD';
 import LanguageSelector from '@/components/LanguageSelector';
@@ -46,7 +47,6 @@ const mainMenuItems = [
   { id: 'contracheque', href: '/contracheque', label: 'common.payroll', icon: FiFileText },
   { id: 'academy', href: '/academy', label: 'common.academy', icon: FiBook },
   { id: 'noticias', href: '/noticias', label: 'common.news', icon: FiMessageSquare },
-  { id: 'profile', href: '/profile', label: 'common.profile', icon: FiUser },
 ];
 
 export default function MainLayout({ children }: MainLayoutProps) {
@@ -54,26 +54,73 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const router = useRouter();
   const { user, profile, logout, isAdmin } = useSupabaseAuth();
   const { t, locale } = useI18n();
+  const { config } = useSiteConfig();
+
+  // Use unified data system for menu items
+  const { items: menuItems, loading: menuLoading } = useMenuItems(true);
+
+  // Debug para monitorar mudanças no config
+  useEffect(() => {
+    console.log('🔧 MainLayout: Config atualizado', {
+      sidebarTitle: config?.sidebarTitle,
+      title: config?.title,
+      timestamp: Date.now()
+    });
+  }, [config]);
   const [isI18nReady, setIsI18nReady] = useState(false);
   const [, forceUpdate] = useState({});
+  const [pendingCount, setPendingCount] = useState(0);
 
   // Forçar re-render quando o locale mudar
   useEffect(() => {
     console.log('🌐 Locale mudou para:', locale);
+    console.log('🔄 Forçando atualização do MainLayout devido à mudança de locale');
     forceUpdate({});
   }, [locale]);
+
+  // Forçar atualização dos itens do menu quando o locale mudar
+  useEffect(() => {
+    console.log('🔄 Locale mudou, atualizando exibição dos itens do menu');
+    // Sempre limpar o cache do unifiedDataService para forçar recarregamento com novo locale
+    import('@/lib/unifiedDataService').then(({ unifiedDataService }) => {
+      unifiedDataService.clearCache();
+      console.log('🔄 Cache limpo devido à mudança de locale para:', locale);
+    });
+    // Forçar re-render para atualizar os textos
+    forceUpdate({});
+  }, [locale]);
+
+  // Escutar evento customizado de mudança de locale
+  useEffect(() => {
+    const handleLocaleChange = (event: CustomEvent) => {
+      console.log('🌐 Evento localeChanged recebido:', event.detail.locale);
+      // Limpar cache e forçar recarregamento dos dados do menu
+      import('@/lib/unifiedDataService').then(({ unifiedDataService }) => {
+        unifiedDataService.clearCache();
+        // Forçar atualização do menu
+        forceUpdate({});
+      });
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('localeChanged', handleLocaleChange as EventListener);
+      return () => {
+        window.removeEventListener('localeChanged', handleLocaleChange as EventListener);
+      };
+    }
+  }, []);
 
   // Verificar se o I18n está pronto
   useEffect(() => {
     // Testar se a tradução está funcionando
     const testTranslation = t('common.dashboard');
-    console.log('🔤 Teste de tradução - common.dashboard:', testTranslation);
+    console.log(t('components.testeDeTraducaoCommondashboard'), testTranslation);
 
     if (testTranslation && testTranslation !== 'common.dashboard') {
-      console.log('✅ I18n está pronto!');
+      console.log(t('components.i18nEstaPronto'));
       setIsI18nReady(true);
     } else {
-      console.warn('⚠️ I18n ainda não está pronto, aguardando...');
+      console.warn(t('components.i18nAindaNaoEstaProntoAguardando'));
       // Tentar novamente após um pequeno delay
       const timer = setTimeout(() => {
         setIsI18nReady(true);
@@ -88,14 +135,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   // Debug: Verificar se isCollapsed está mudando
   useEffect(() => {
     console.log('🔍 DEBUG: isCollapsed mudou para:', isCollapsed);
-    if (isCollapsed) {
-      console.warn('⚠️ ATENÇÃO: Sidebar está colapsada! Forçando expansão...');
-      setIsCollapsed(false);
-    }
   }, [isCollapsed]);
-
-  // Use unified data system for menu items
-  const { items: menuItems, loading: menuLoading } = useMenuItems(true);
 
   // Debug: Log menu items
   useEffect(() => {
@@ -107,23 +147,61 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   // Estado persistente para recolher/expandir sidebar
   useEffect(() => {
-    // FORÇAR SIDEBAR SEMPRE EXPANDIDA
-    console.log('🚀 Inicializando sidebar...');
-
-    // Limpar qualquer valor antigo do localStorage
-    localStorage.removeItem('main-sidebar-collapsed');
-
-    // Forçar estado expandido
-    setIsCollapsed(false);
-    console.log('✅ Sidebar forçada para expandida (isCollapsed = false)');
+    const saved = localStorage.getItem('main-sidebar-collapsed');
+    setIsCollapsed(saved ? JSON.parse(saved) : false);
   }, []);
 
+  // Buscar contagem de avaliações pendentes para gerentes
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      if (!user) {
+        console.log('🔴 Badge: Sem usuário logado');
+        return;
+      }
+      
+      console.log('🔵 Badge: Buscando avaliações pendentes para:', user.id, 'Role:', profile?.role);
+      
+      try {
+        const token = document.cookie.split('; ').find(row => row.startsWith('abzToken='))?.split('=')[1];
+        if (!token) {
+          console.log('🔴 Badge: Token não encontrado');
+          return;
+        }
+
+        const response = await fetch('/api/avaliacao-desempenho/avaliacoes/pending-review', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        console.log('🔵 Badge: Response status:', response.status);
+        
+        const data = await response.json();
+        console.log('🔵 Badge: Data recebida:', data);
+        
+        if (data.success) {
+          const count = data.count || 0;
+          console.log(`✅ Badge: ${count} avaliações pendentes`);
+          setPendingCount(count);
+        } else {
+          console.log('🔴 Badge: Erro na resposta:', data.error);
+        }
+      } catch (error) {
+        console.error('🔴 Badge: Erro ao buscar contagem:', error);
+      }
+    };
+
+    fetchPendingCount();
+    const interval = setInterval(fetchPendingCount, 60000);
+    return () => clearInterval(interval);
+  }, [user, profile]);
+
   const toggleSidebar = () => {
-    // TEMPORARIAMENTE DESABILITADO - Manter sidebar sempre expandida
-    console.log('🔒 toggleSidebar chamado, mas está desabilitado para manter sidebar expandida');
-    // const newState = !isCollapsed;
-    // setIsCollapsed(newState);
-    // localStorage.setItem('main-sidebar-collapsed', JSON.stringify(newState));
+    // Evitar toggle de colapso no mobile (bug visual); colapso apenas em md+
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      return;
+    }
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    localStorage.setItem('main-sidebar-collapsed', JSON.stringify(newState));
   };
 
   const toggleMobileMenu = () => {
@@ -147,67 +225,103 @@ export default function MainLayout({ children }: MainLayoutProps) {
         {/* Sidebar para desktop */}
         <aside
           className={`bg-white shadow-md fixed inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-all duration-300 ease-in-out z-30 flex flex-col`}
-          style={{ width: isCollapsed ? '64px' : '256px' }}
+          style={{
+            width: typeof window !== 'undefined' && window.innerWidth >= 768
+              ? (isCollapsed ? '64px' : '256px')
+              : '256px'
+          }}
         >
           {/* Logo / título e botão de recolher */}
           <div className="p-4 border-b flex items-center justify-between">
             {!isCollapsed ? (
-              <Link href="/dashboard" className="flex items-center space-x-2"
-                title="Painel ABZ Group"
-              >
-                <FiGrid className="h-6 w-6 text-abz-blue" />
-                <span className="text-lg font-semibold text-abz-blue-dark">Painel ABZ</span>
-              </Link>
-            ) : (
-              <Link href="/dashboard" className="flex items-center justify-center w-full"
-                title="Painel ABZ Group"
-              >
-                <FiGrid className="h-6 w-6 text-abz-blue" />
-              </Link>
-            )}
-            {!isCollapsed && (
-              <div className="flex items-center gap-2">
+              <>
+                <Link href="/dashboard" className="flex items-center space-x-2"
+                  title={config?.title || "Painel ABZ Group"}
+                >
+                  <FiGrid className="h-6 w-6 text-abz-blue" />
+                  <span className="text-lg font-semibold text-abz-blue-dark">{config?.sidebarTitle || "Painel ABZ"}</span>
+                </Link>
                 <button
-                  className="inline-flex rounded-md p-2 text-white bg-abz-blue hover:bg-abz-blue-dark transition-colors shadow-sm"
+                  className="hidden md:inline-flex rounded-md p-2 text-white bg-abz-blue hover:bg-abz-blue-dark transition-colors shadow-sm"
                   onClick={toggleSidebar}
                   title="Recolher menu"
                 >
-                  <FiChevronLeft className="h-5 w-5"/>
+                  <FiChevronLeft className="h-5 w-5" />
                 </button>
-              </div>
+              </>
+            ) : (
+              <button
+                className="hidden md:flex items-center justify-center w-full rounded-md p-2 text-white bg-abz-blue hover:bg-abz-blue-dark transition-colors shadow-sm"
+                onClick={toggleSidebar}
+                title="Expandir menu"
+              >
+                <FiChevronRight className="h-5 w-5" />
+              </button>
             )}
           </div>
 
           {/* Menu de navegação */}
           <nav className="flex-grow overflow-y-auto py-4 space-y-1 px-2">
-            {isCollapsed && (
-              <div className="mb-4 px-2">
-                <button
-                  onClick={toggleSidebar}
-                  className="w-full p-2 bg-abz-blue text-white rounded-md hover:bg-abz-blue-dark transition-colors flex items-center justify-center"
-                  title="Expandir menu"
-                >
-                  <FiChevronRight className="h-5 w-5"/>
-                </button>
+            {menuLoading ? (
+              // Skeleton loading state
+              <div className="space-y-1">
+                {[...Array(9)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'} px-3 py-2 rounded-md`}>
+                      <div className="w-5 h-5 bg-gray-300 rounded"></div>
+                      {!isCollapsed && <div className="h-4 bg-gray-300 rounded w-24"></div>}
+                    </div>
+                  </div>
+                ))}
               </div>
-            )}
-            {(menuItems.length > 0 ? menuItems : mainMenuItems).map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-              const IconComponent = item.icon;
+            ) : (
+              (menuItems.length > 0 ? menuItems : mainMenuItems)
+                .filter(item => item.id !== 'admin') // Nunca mostrar item admin no menu
+                .map((item) => {
+                const isActive = pathname ? (pathname === item.href || pathname.startsWith(item.href + '/')) : false;
+                
+                // Garantir que o ícone seja um componente válido
+                const IconComponent = item.icon || FiGrid;
 
-              // Obter o texto a ser exibido
-              // Se vier do banco (menuItems), usar 'title'
-              // Se vier do hardcoded (mainMenuItems), usar 'label' e traduzir
-              const displayLabel = menuItems.length > 0
-                ? (item as any).title || item.id  // Dados do banco já vêm traduzidos
-                : t((item as any).label) || item.id;  // Dados hardcoded precisam ser traduzidos
+              // Obter o texto a ser exibido - o hook useUnifiedData já traduz os itens
+              let displayLabel = item.title || item.id;
+
+              // Para itens do menu principal (hardcoded), tentar traduzir via t()
+              if (menuItems.length === 0 && (item as any).label) {
+                displayLabel = t((item as any).label) || item.title || item.id;
+              }
+
+              // Para itens do menu hardcoded (quando não vem do banco), tentar traduzir
+              if ((item as any).label && !item.title_pt && !item.title_en) {
+                displayLabel = t((item as any).label) || item.title || item.id;
+              }
+
+              // Debug para o primeiro item
+              if (item.id === menuItems[0]?.id) {
+                console.log('🔍 Menu Item Debug:', {
+                  id: item.id,
+                  locale: locale,
+                  displayLabel: displayLabel,
+                  itemTitle: item.title,
+                  label: (item as any).label,
+                  isFromDatabase: menuItems.length > 0
+                });
+              }
+
+              // Verificação de segurança para garantir que href não é undefined
+              if (!item.href) {
+                console.warn('Menu item sem href encontrado:', item);
+                return null;
+              }
+
+              const showBadge = item.id === 'avaliacao' && pendingCount > 0 && (profile?.role === 'MANAGER' || profile?.role === 'ADMIN');
 
               return (
                 <Link
                   key={item.id}
                   href={item.href}
                   title={displayLabel}
-                  className={`flex items-center ${isCollapsed ? 'px-2 justify-center' : 'px-4'} py-2.5 rounded-md text-sm font-medium transition-colors duration-150 ${
+                  className={`flex items-center ${isCollapsed ? 'px-2 justify-center' : 'px-4'} py-2.5 rounded-md text-sm font-medium transition-colors duration-150 relative ${
                     isActive
                       ? 'bg-abz-blue text-white shadow-sm'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-abz-blue-dark'
@@ -215,25 +329,43 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 >
                   <IconComponent className={`${isCollapsed ? '' : 'mr-3'} h-5 w-5 ${isActive ? 'text-white' : 'text-gray-400'}`} />
                   {!isCollapsed && <span className="whitespace-nowrap">{displayLabel}</span>}
+                  {showBadge && (
+                    <span className={`${isCollapsed ? 'absolute -top-1 -right-1' : 'ml-auto'} inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full`}>
+                      {pendingCount}
+                    </span>
+                  )}
                 </Link>
               );
-            })}
+            })
+            )}
           </nav>
 
           {/* Rodapé com informações do usuário */}
           <div className="p-4 border-t">
             {!isCollapsed && (
-              <div className="flex items-center mb-4">
-                <div className="w-10 h-10 rounded-full bg-abz-light-blue flex items-center justify-center mr-3">
-                  <FiUser className="h-5 w-5 text-abz-blue" />
+              <Link
+                href="/profile"
+                className="flex items-center mb-4 hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors cursor-pointer group"
+                title="Ver perfil"
+              >
+                <div className="w-10 h-10 rounded-full bg-abz-light-blue flex items-center justify-center mr-3 overflow-hidden group-hover:ring-2 group-hover:ring-abz-blue transition-all">
+                  {(profile as any)?.drive_photo_url || (profile as any)?.avatar ? (
+                    <img
+                      src={(profile as any)?.drive_photo_url || (profile as any)?.avatar}
+                      alt={profile?.first_name || t('components.usuario')}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <FiUser className="h-5 w-5 text-abz-blue" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-700 truncate">
+                  <p className="text-sm font-medium text-gray-700 truncate group-hover:text-abz-blue transition-colors">
                     {profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : user?.email}
                   </p>
                   <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                 </div>
-              </div>
+              </Link>
             )}
             
             <div className={`flex ${isCollapsed ? 'flex-col space-y-2' : 'space-x-2'}`}>
@@ -275,10 +407,17 @@ export default function MainLayout({ children }: MainLayoutProps) {
         )}
 
         {/* Conteúdo principal */}
-        <div className="flex-1 flex flex-col min-h-screen" style={{marginLeft: typeof window === 'undefined' ? undefined : (window.innerWidth >= 768 ? (isCollapsed ? 64 : 256) : 0)}}>
+        <div
+          className="flex-1 flex flex-col min-h-screen md:transition-all md:duration-300"
+          style={{
+            marginLeft: typeof window !== 'undefined' && window.innerWidth >= 768
+              ? (isCollapsed ? '64px' : '256px')
+              : '0'
+          }}
+        >
           {/* Notificações globais fixas (desktop) */}
           <div className="hidden md:block fixed top-4 right-4 z-50">
-            {user && <NotificationHUD userId={user.id} position="top-right" />}
+            {user && <NotificationHUD userId={user.id} position="top-right" evaluationPendingCount={pendingCount} />}
           </div>
 
           {/* Header mobile */}
@@ -291,10 +430,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 >
                   <FiMenu className="h-6 w-6" />
                 </button>
-                <span className="ml-3 text-lg font-semibold text-abz-blue-dark">Painel ABZ</span>
+                <span className="ml-3 text-lg font-semibold text-abz-blue-dark">{config?.sidebarTitle || "Painel ABZ"}</span>
               </div>
               <div className="flex items-center space-x-2">
-                {user && <NotificationHUD userId={user.id} position="top-right" />}
+                {user && <NotificationHUD userId={user.id} position="top-right" evaluationPendingCount={pendingCount} />}
               </div>
             </div>
           </header>

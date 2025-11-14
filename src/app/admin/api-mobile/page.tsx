@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { 
@@ -49,14 +49,14 @@ export default function APIMobilePage() {
   const [showKeys, setShowKeys] = useState<{[key: string]: boolean}>({});
 
   const availablePermissions = [
-    { id: 'users.read', name: 'Ler Usuários' },
-    { id: 'users.write', name: 'Escrever Usuários' },
+    { id: 'users.read', name: t('admin.lerUsuarios') },
+    { id: 'users.write', name: t('admin.escreverUsuarios') },
     { id: 'reimbursements.read', name: 'Ler Reembolsos' },
     { id: 'reimbursements.write', name: 'Escrever Reembolsos' },
-    { id: 'evaluations.read', name: 'Ler Avaliações' },
-    { id: 'evaluations.write', name: 'Escrever Avaliações' },
-    { id: 'notifications.read', name: 'Ler Notificações' },
-    { id: 'notifications.write', name: 'Escrever Notificações' },
+    { id: 'evaluations.read', name: t('admin.lerAvaliacoes') },
+    { id: 'evaluations.write', name: t('admin.escreverAvaliacoes') },
+    { id: 'notifications.read', name: t('admin.lerNotificacoes') },
+    { id: 'notifications.write', name: t('admin.escreverNotificacoes') },
   ];
 
   useEffect(() => {
@@ -111,12 +111,12 @@ export default function APIMobilePage() {
 
   const handleCreateKey = async () => {
     if (!newKeyName.trim()) {
-      toast.error('Nome da chave é obrigatório');
+      toast.error(t('admin.nomeDaChaveEObrigatorio'));
       return;
     }
 
     if (selectedPermissions.length === 0) {
-      toast.error('Selecione pelo menos uma permissão');
+      toast.error(t('admin.selecionePeloMenosUmaPermissao'));
       return;
     }
 
@@ -156,7 +156,7 @@ export default function APIMobilePage() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success('Chave copiada para a área de transferência');
+    toast.success(t('admin.chaveCopiadaParaAAreaDeTransferencia'));
   };
 
   const toggleShowKey = (keyId: string) => {

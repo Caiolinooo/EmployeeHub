@@ -7,9 +7,10 @@ export const dynamic = 'force-dynamic';
 // GET /api/admin/authorized-users/[id]
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const { params } = context;
+  const { id } = await params;
   try {
     // Verificar autenticação
     const authHeader = request.headers.get('authorization') || '';
@@ -43,9 +44,6 @@ export async function GET(
         { status: 403 }
       );
     }
-
-    // Obter ID do usuário autorizado
-    const id = params.id;
 
     // Buscar usuário autorizado
     const { data: authorizedUser, error: findError } = await supabaseAdmin
@@ -74,9 +72,10 @@ export async function GET(
 // DELETE /api/admin/authorized-users/[id]
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const { params } = context;
+  const { id } = await params;
   try {
     // Verificar autenticação
     const authHeader = request.headers.get('authorization') || '';
@@ -110,9 +109,6 @@ export async function DELETE(
         { status: 403 }
       );
     }
-
-    // Obter ID do usuário autorizado
-    const id = params.id;
 
     // Verificar se o usuário autorizado existe
     const { data: authorizedUser, error: findError } = await supabaseAdmin
@@ -158,9 +154,10 @@ export async function DELETE(
 // PUT /api/admin/authorized-users/[id]
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const { params } = context;
+  const { id } = await params;
   try {
     // Verificar autenticação
     const authHeader = request.headers.get('authorization') || '';
@@ -194,9 +191,6 @@ export async function PUT(
         { status: 403 }
       );
     }
-
-    // Obter ID do usuário autorizado
-    const id = params.id;
 
     // Obter dados do corpo da requisição
     const body = await request.json();

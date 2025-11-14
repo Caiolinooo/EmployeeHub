@@ -6,13 +6,13 @@ export const dynamic = 'force-dynamic';
 // GET - Obter um item de menu pelo ID
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const { params } = context;
   try {
     // Garantir que params seja await antes de acessar suas propriedades
     // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
 
     const { data: menuItem, error } = await supabaseAdmin
       .from('menu_items')
@@ -40,12 +40,12 @@ export async function GET(
 // PUT - Atualizar um item de menu
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Garantir que params seja await antes de acessar suas propriedades
     // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
     const body = await request.json();
     const { href, label, icon, external, enabled, order, adminOnly } = body;
 
@@ -107,12 +107,12 @@ export async function PUT(
 // DELETE - Excluir um item de menu
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Garantir que params seja await antes de acessar suas propriedades
     // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
 
     // Verificar se o item de menu existe
     const { data: existingMenuItem, error: findError } = await supabaseAdmin

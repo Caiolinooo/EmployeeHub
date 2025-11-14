@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { FiX, FiKey, FiSave, FiAlertTriangle } from 'react-icons/fi';
@@ -31,7 +31,7 @@ const UserPasswordReset: React.FC<UserPasswordResetProps> = ({ userId, userName,
 
     // Validar confirmação de senha
     if (password !== confirmPassword) {
-      setError('As senhas não coincidem');
+      setError(t('components.asSenhasNaoCoincidem'));
       return;
     }
 
@@ -48,11 +48,11 @@ const UserPasswordReset: React.FC<UserPasswordResetProps> = ({ userId, userName,
                    document.cookie.split('; ').find(row => row.startsWith('abzToken='))?.split('=')[1];
 
       if (!token) {
-        console.error('Token não encontrado em nenhum local de armazenamento');
-        throw new Error('Não autorizado - Token não encontrado');
+        console.error(t('components.tokenNaoEncontradoEmNenhumLocalDeArmazenamento'));
+        throw new Error(t('components.naoAutorizadoTokenNaoEncontrado'));
       }
 
-      console.log('Enviando solicitação de redefinição de senha para usuário:', userId);
+      console.log(t('components.enviandoSolicitacaoDeRedefinicaoDeSenhaParaUsuario'), userId);
 
       const response = await fetch(`/api/users-unified/${userId}/reset-password`, {
         method: 'POST',

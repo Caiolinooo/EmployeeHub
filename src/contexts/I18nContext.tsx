@@ -59,6 +59,11 @@ export function I18nProvider({ children }: I18nProviderProps) {
     // Save to localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('locale', newLocale);
+
+      // Disparar evento customizado para notificar componentes da mudança
+      window.dispatchEvent(new CustomEvent('localeChanged', {
+        detail: { locale: newLocale }
+      }));
     }
 
     console.log('🌐 Idioma alterado com sucesso para:', newLocale);
@@ -82,7 +87,7 @@ export function I18nProvider({ children }: I18nProviderProps) {
         availableLocales,
       }}
     >
-      {mounted ? children : null}
+      {mounted ? children : <div style={{ display: 'none' }} />}
     </I18nContext.Provider>
   );
 }

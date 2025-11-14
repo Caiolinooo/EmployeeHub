@@ -1,11 +1,14 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { FiShield, FiCheck, FiX, FiAlertTriangle, FiLock } from 'react-icons/fi';
 import Image from 'next/image';
+import { useI18n } from '@/contexts/I18nContext';
 
 export default function TwoFactorSetup() {
+  const { t } = useI18n();
+
   const { isAuthenticated } = useSupabaseAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +36,7 @@ export default function TwoFactorSetup() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
       
       if (!token) {
-        throw new Error('Não autorizado');
+        throw new Error(t('components.naoAutorizado'));
       }
       
       const response = await fetch('/api/auth/2fa', {
@@ -67,7 +70,7 @@ export default function TwoFactorSetup() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
       
       if (!token) {
-        throw new Error('Não autorizado');
+        throw new Error(t('components.naoAutorizado'));
       }
       
       const response = await fetch('/api/auth/2fa', {
@@ -103,7 +106,7 @@ export default function TwoFactorSetup() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
       
       if (!token) {
-        throw new Error('Não autorizado');
+        throw new Error(t('components.naoAutorizado'));
       }
       
       const response = await fetch('/api/auth/2fa', {
@@ -120,7 +123,7 @@ export default function TwoFactorSetup() {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao verificar código');
+        throw new Error(errorData.error || t('components.erroAoVerificarCodigo'));
       }
       
       const data = await response.json();
@@ -130,7 +133,7 @@ export default function TwoFactorSetup() {
       setShowSetup(false);
       setVerificationCode('');
     } catch (error) {
-      console.error('Erro ao verificar código 2FA:', error);
+      console.error(t('components.erroAoVerificarCodigo2fa'), error);
       setError(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
       setLoading(false);
@@ -139,7 +142,7 @@ export default function TwoFactorSetup() {
 
   // Função para desativar 2FA
   const disable2fa = async () => {
-    if (!confirm('Tem certeza que deseja desativar a autenticação de dois fatores? Isso reduzirá a segurança da sua conta.')) {
+    if (!confirm(t('components.temCertezaQueDesejaDesativarAAutenticacaoDeDoisFat'))) {
       return;
     }
     
@@ -151,7 +154,7 @@ export default function TwoFactorSetup() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
       
       if (!token) {
-        throw new Error('Não autorizado');
+        throw new Error(t('components.naoAutorizado'));
       }
       
       const response = await fetch('/api/auth/2fa', {
@@ -224,8 +227,8 @@ export default function TwoFactorSetup() {
                 <p className="font-semibold">Status: {is2faEnabled ? 'Ativado' : 'Desativado'}</p>
                 <p className="text-sm text-gray-600">
                   {is2faEnabled 
-                    ? 'Sua conta está protegida com autenticação de dois fatores.' 
-                    : 'Recomendamos ativar a autenticação de dois fatores para aumentar a segurança da sua conta.'}
+                    ? t('components.suaContaEstaProtegidaComAutenticacaoDeDoisFatores') 
+                    : t('components.recomendamosAtivarAAutenticacaoDeDoisFatoresParaAu')}
                 </p>
               </div>
             </div>
@@ -245,7 +248,7 @@ export default function TwoFactorSetup() {
               className="px-4 py-2 bg-abz-blue text-white rounded-md hover:bg-abz-blue-dark transition-colors"
               disabled={loading}
             >
-              {loading ? 'Processando...' : 'Configurar Autenticação de Dois Fatores'}
+              {loading ? 'Processando...' : t('components.configurarAutenticacaoDeDoisFatores')}
             </button>
           )}
         </div>
@@ -296,7 +299,7 @@ export default function TwoFactorSetup() {
                   type="text"
                   value={verificationCode}
                   onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').substring(0, 6))}
-                  placeholder="Código de 6 dígitos"
+                  placeholder={t('components.codigoDe6Digitos')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-abz-blue"
                   maxLength={6}
                 />

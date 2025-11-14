@@ -68,10 +68,13 @@ function decodeText(val: string): string {
     .replace(/\\;/g, ';');
 }
 
-export function parseIcs(ics: string): IcsEvent[] {
+export async function parseIcs(ics: string): Promise<IcsEvent[]> {
   const text = unfoldLines(ics);
   const blocks = text.split(/BEGIN:VEVENT/).slice(1).map(b => b.split(/END:VEVENT/)[0]);
   const events: IcsEvent[] = [];
+
+  // Import crypto once for all events
+  const { randomUUID } = await import('crypto');
 
   for (const block of blocks) {
     const lines = block.split(/\r?\n/);

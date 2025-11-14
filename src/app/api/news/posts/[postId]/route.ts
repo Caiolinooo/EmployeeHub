@@ -7,10 +7,10 @@ export const dynamic = 'force-dynamic';
 // GET - Obter post específico
 export async function GET(
   request: NextRequest,
-  { params }: { params: { postId: string } }
+  { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
-    const postId = params.postId;
+    const { postId } = await params;
     console.log(`🔄 API News Post - Buscando post: ${postId}`);
 
     const { data: post, error } = await supabaseAdmin
@@ -65,10 +65,10 @@ export async function GET(
 export const PUT = withPermission('manager', async (
   request: NextRequest,
   _user: any,
-  { params }: { params: { postId: string } }
+  { params }: { params: Promise<{ postId: string }> }
 ) => {
   try {
-    const postId = params.postId;
+    const { postId } = await params;
     const body = await request.json();
     const {
       title,
@@ -172,10 +172,10 @@ export const PUT = withPermission('manager', async (
 export const DELETE = withPermission('manager', async (
   request: NextRequest,
   _user: any,
-  { params }: { params: { postId: string } }
+  { params }: { params: Promise<{ postId: string }> }
 ) => {
   try {
-    const postId = params.postId;
+    const { postId } = await params;
     console.log(`🔄 API News Post - Excluindo post: ${postId}`);
 
     // Verificar se o post existe

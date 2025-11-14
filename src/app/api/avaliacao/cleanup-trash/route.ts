@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { supabaseAdmin } from '@/lib/supabase';
 
 /**
  * API para limpeza automática de avaliações na lixeira após 30 dias
@@ -130,93 +132,47 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Verificar autenticação do usuário
+    // Verificar autenticação usando JWT customizado
     const authHeader = request.headers.get('authorization');
+    const token = extractTokenFromHeader(authHeader || undefined);
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!token) {
       return NextResponse.json(
-        { error: 'Token de autenticação não fornecido' },
+        { error: 'Não autorizado' },
         { status: 401 }
       );
     }
 
-    const token = authHeader.substring(7);
-
-    // Criar cliente Supabase
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseAnonKey) {
+    const payload = verifyToken(token);
+    if (!payload) {
       return NextResponse.json(
-        { error: 'Configuração do Supabase incompleta' },
-        { status: 500 }
-      );
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    });
-
-    // Verificar se o usuário é admin
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !userData.user) {
-      return NextResponse.json(
-        { error: 'Usuário não autenticado' },
+        { error: 'Token inválido ou expirado' },
         { status: 401 }
       );
     }
 
-    // Buscar informações do usuário para verificar role
-    const { data: profile, error: profileError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', userData.user.id)
+    // Verificar se o usuário é administrador
+    const { data: requestingUser, error: userError } = await supabaseAdmin
+      .from('users_unified')
+      .select('id, role')
+      .eq('id', payload.userId)
       .single();
 
-    if (profileError || !profile) {
-      // Tentar na tabela users_unified
-      const { data: unifiedProfile, error: unifiedError } = await supabase
-        .from('users_unified')
-        .select('role')
-        .eq('id', userData.user.id)
-        .single();
-
-      if (unifiedError || !unifiedProfile || unifiedProfile.role !== 'ADMIN') {
-        return NextResponse.json(
-          { error: 'Apenas administradores podem executar limpeza manual' },
-          { status: 403 }
-        );
-      }
-    } else if (profile.role !== 'ADMIN') {
+    if (userError || !requestingUser || requestingUser.role !== 'ADMIN') {
       return NextResponse.json(
-        { error: 'Apenas administradores podem executar limpeza manual' },
+        { error: 'Acesso negado. Apenas administradores podem executar limpeza manual.' },
         { status: 403 }
       );
     }
 
-    // Executar a mesma lógica de limpeza
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!supabaseServiceKey) {
-      return NextResponse.json(
-        { error: 'Configuração do Supabase incompleta' },
-        { status: 500 }
-      );
-    }
-
-    const supabaseService = createClient(supabaseUrl, supabaseServiceKey);
-
+    // Executar a lógica de limpeza usando supabaseAdmin
     // Calcular data de 30 dias atrás
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
 
     // Buscar avaliações que estão na lixeira há mais de 30 dias
-    const { data: avaliacoesParaExcluir, error: selectError } = await supabaseService
+    const { data: avaliacoesParaExcluir, error: selectError } = await supabaseAdmin
       .from('avaliacoes_desempenho')
       .select('id, funcionario_id, periodo, deleted_at')
       .not('deleted_at', 'is', null)
@@ -241,13 +197,13 @@ export async function POST(request: NextRequest) {
     const idsParaExcluir = avaliacoesParaExcluir.map(av => av.id);
 
     // Excluir pontuações relacionadas
-    await supabaseService
+    await supabaseAdmin
       .from('pontuacoes')
       .delete()
       .in('avaliacao_id', idsParaExcluir);
 
     // Excluir as avaliações
-    const { error: deleteError } = await supabaseService
+    const { error: deleteError } = await supabaseAdmin
       .from('avaliacoes_desempenho')
       .delete()
       .in('id', idsParaExcluir);

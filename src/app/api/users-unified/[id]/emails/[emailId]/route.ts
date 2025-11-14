@@ -6,11 +6,11 @@ export const dynamic = 'force-dynamic';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; emailId: string } }
+  { params }: { params: Promise<{ id: string; emailId: string }> }
 ) {
   try {
     // Aguardar os parâmetros da rota antes de acessá-los
-    const { id, emailId } = params;
+    const { id, emailId } = await params;
 
     // Verificar autenticação
     const authHeader = request.headers.get('authorization');
@@ -105,11 +105,11 @@ export async function DELETE(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string; emailId: string } }
+  { params }: { params: Promise<{ id: string; emailId: string }> }
 ) {
   try {
     // Aguardar os parâmetros da rota antes de acessá-los
-    const { id, emailId } = params;
+    const { id, emailId } = await params;
 
     // Verificar autenticação
     const authHeader = request.headers.get('authorization');

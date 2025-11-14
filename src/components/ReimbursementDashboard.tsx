@@ -77,12 +77,12 @@ export default function ReimbursementDashboard() {
   // Carregar solicitações de reembolso do usuário atual
   const fetchReimbursements = async () => {
     if (!user?.email) {
-      setError('Usuário não autenticado');
+      setError(t('components.usuarioNaoAutenticado'));
       setLoading(false);
       return;
     }
 
-    console.log('Email do usuário logado para busca de reembolsos:', user.email);
+    console.log(t('components.emailDoUsuarioLogadoParaBuscaDeReembolsos'), user.email);
 
     try {
       setLoading(true);
@@ -90,7 +90,7 @@ export default function ReimbursementDashboard() {
 
       // Normalizar o email para evitar problemas de case sensitivity
       const normalizedEmail = user.email.toLowerCase().trim();
-      console.log(`Email do usuário normalizado: ${normalizedEmail}`);
+      console.log(t('components.emailDoUsuarioNormalizadoNormalizedemail'));
 
       // Construir parâmetros de consulta
       const queryParams = new URLSearchParams();
@@ -109,7 +109,7 @@ export default function ReimbursementDashboard() {
       queryParams.append('limit', limit.toString());
 
       // Fazer a requisição para a API
-      console.log('Buscando reembolsos do usuário via API...');
+      console.log(t('components.buscandoReembolsosDoUsuarioViaApi'));
       console.log('URL:', `/api/reembolso/user?${queryParams.toString()}`);
 
       const response = await fetchWithAuth(`/api/reembolso/user?${queryParams.toString()}`);
@@ -208,7 +208,7 @@ export default function ReimbursementDashboard() {
         }
       }
     } catch (err) {
-      console.error('Erro ao carregar solicitações de reembolso:', err);
+      console.error(t('components.erroAoCarregarSolicitacoesDeReembolso'), err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
       setReimbursements([]);
       setTotalCount(0);
@@ -222,8 +222,8 @@ export default function ReimbursementDashboard() {
     if (user?.email) {
       // Adicionar um pequeno atraso para garantir que o console.log anterior seja concluído
       const timer = setTimeout(() => {
-        console.log('Iniciando busca de reembolsos após montagem do componente ou mudança de filtros');
-        console.log('Informações do usuário:', {
+        console.log(t('components.iniciandoBuscaDeReembolsosAposMontagemDoComponente'));
+        console.log(t('components.informacoesDoUsuario'), {
           email: user?.email,
           id: user?.id,
           role: profile?.role,
@@ -248,7 +248,7 @@ export default function ReimbursementDashboard() {
         .limit(1);
 
       if (error) {
-        console.error('Tabela Reimbursement não encontrada:', error);
+        console.error(t('components.tabelaReimbursementNaoEncontrada'), error);
 
         // Tentar com o nome alternativo
         const { data: altTableExists, error: altError } = await supabaseAdmin
@@ -257,7 +257,7 @@ export default function ReimbursementDashboard() {
           .limit(1);
 
         if (altError) {
-          console.error('Tabela reimbursements também não encontrada:', altError);
+          console.error(t('components.tabelaReimbursementsTambemNaoEncontrada'), altError);
           setTableExists(false);
           setTableName(null);
           return false;
@@ -371,7 +371,7 @@ export default function ReimbursementDashboard() {
         return true;
       } catch (supabaseErr) {
         console.error('Erro ao criar tabela via Supabase:', supabaseErr);
-        toast.error('Não foi possível criar a tabela de reembolsos. Entre em contato com o administrador.');
+        toast.error(t('components.naoFoiPossivelCriarATabelaDeReembolsosEntreEmConta'));
         return false;
       }
     } finally {
@@ -410,7 +410,7 @@ export default function ReimbursementDashboard() {
             { duration: 6000 }
           );
         } else {
-          toast.error('Erro ao criar bucket de armazenamento. O sistema continuará funcionando, mas o upload de arquivos pode falhar.',
+          toast.error(t('components.erroAoCriarBucketDeArmazenamentoOSistemaContinuara'),
             { duration: 6000 }
           );
         }
@@ -432,7 +432,7 @@ export default function ReimbursementDashboard() {
 
       // Show a non-blocking toast message
       toast.error(
-        'Erro ao criar bucket de armazenamento. O sistema continuará funcionando, mas o upload de arquivos pode falhar.',
+        t('components.erroAoCriarBucketDeArmazenamentoOSistemaContinuara'),
         { duration: 6000 }
       );
 
@@ -458,7 +458,7 @@ export default function ReimbursementDashboard() {
         // Show a toast with instructions for the admin
         if (profile?.role === 'ADMIN') {
           toast(
-            'Para garantir o funcionamento correto do sistema de reembolsos, verifique as políticas de segurança no painel do Supabase.',
+            t('components.paraGarantirOFuncionamentoCorretoDoSistemaDeReembo'),
             { duration: 8000 }
           );
         }
@@ -497,7 +497,7 @@ export default function ReimbursementDashboard() {
 
               // Show a toast with instructions for the admin
               toast(
-                'Atenção: Para garantir o funcionamento correto do sistema de reembolsos, verifique as políticas de segurança no painel do Supabase.',
+                t('components.atencaoParaGarantirOFuncionamentoCorretoDoSistemaD'),
                 { duration: 8000 }
               );
             } else {
@@ -562,7 +562,7 @@ export default function ReimbursementDashboard() {
       } catch (error) {
         console.error('Error initializing reimbursement system:', error);
         // Show a non-blocking error message
-        toast.error('Erro ao inicializar o sistema de reembolsos. Algumas funcionalidades podem não estar disponíveis.',
+        toast.error(t('components.erroAoInicializarOSistemaDeReembolsosAlgumasFuncio'),
           { duration: 5000 }
         );
       }
@@ -574,7 +574,7 @@ export default function ReimbursementDashboard() {
   // Efeito adicional para verificar se há reembolsos para o usuário quando o componente montar
   useEffect(() => {
     if (user?.email && tableExists) {
-      console.log(`Verificando reembolsos existentes para o usuário: ${user.email}`);
+      console.log(t('components.verificandoReembolsosExistentesParaOUsuarioUserema'));
       // Não fazemos nada aqui para evitar chamadas de API que podem falhar
       // Os dados de exemplo já são carregados pela função fetchReimbursements
     }

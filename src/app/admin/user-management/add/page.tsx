@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -15,7 +15,7 @@ export default function AddUserPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Redirecionar se não for administrador
+  // Redirecionar se n�o for administrador
   useEffect(() => {
     if (!isLoading && !isAdmin) {
       router.push('/dashboard');
@@ -40,7 +40,7 @@ export default function AddUserPage() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error('Não autorizado');
+        throw new Error(t('admin.naoAutorizado'));
       }
 
       const response = await fetch('/api/users', {
@@ -57,18 +57,18 @@ export default function AddUserPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao criar usuário');
+        throw new Error(errorData.error || t('admin.erroAoCriarUsuario'));
       }
 
-      setSuccess('Usuário criado com sucesso!');
+      setSuccess(t('admin.usuarioCriadoComSucesso'));
       
-      // Redirecionar após 2 segundos
+      // Redirecionar ap�s 2 segundos
       setTimeout(() => {
         router.push('/admin/user-management');
       }, 2000);
     } catch (error) {
-      console.error('Erro ao salvar usuário:', error);
-      setError(`Erro ao salvar usuário: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      console.error(t('admin.erroAoSalvarUsuario'), error);
+      setError(`${t('admin.erroAoSalvarUsuario')}: ${error instanceof Error ? error.message : t('admin.erroDesconhecido')}`);
     }
   };
 

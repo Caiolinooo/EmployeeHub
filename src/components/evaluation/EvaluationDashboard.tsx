@@ -14,6 +14,8 @@ interface Evaluation {
   funcionario_id: string;
   avaliador_id: string;
   periodo: string;
+  periodo_id?: string;
+  periodo_nome?: string;
   data_inicio: string;
   data_fim: string;
   status: string;
@@ -21,6 +23,7 @@ interface Evaluation {
   observacoes?: string;
   created_at: string;
   updated_at: string;
+  // Campos da view com informações do usuário
   funcionario_nome?: string;
   funcionario_cargo?: string;
   funcionario_departamento?: string;
@@ -67,50 +70,7 @@ export default function EvaluationDashboard() {
         throw new Error(t('auth.userNotAuthenticated', 'User not authenticated'));
       }
 
-      // Verificar se a view existe antes de tentar consultar
-      try {
-        // Primeiro, verificar se a tabela/view existe
-        const { data: tableExists, error: tableCheckError } = await supabase
-          .from('vw_avaliacoes_desempenho')
-          .select('id')
-          .limit(1);
-
-        if (tableCheckError) {
-          console.error('Erro ao verificar tabela:', tableCheckError);
-          // Se a tabela não existir, tentar usar a tabela avaliacoes_desempenho diretamente
-          const { data: fallbackData, error: fallbackError, count } = await supabase
-            .from('avaliacoes_desempenho')
-            .select(`
-              id,
-              funcionario_id,
-              avaliador_id,
-              periodo,
-              data_inicio,
-              data_fim,
-              status,
-              pontuacao_total,
-              observacoes,
-              created_at,
-              updated_at
-            `, { count: 'exact' })
-            .order('created_at', { ascending: false })
-            .range((page - 1) * limit, page * limit - 1);
-
-          if (fallbackError) {
-            throw fallbackError;
-          }
-
-          // Usar dados básicos sem informações de funcionário/avaliador
-          setEvaluations(fallbackData || []);
-          setTotalCount(count || 0);
-          return;
-        }
-      } catch (tableError) {
-        console.error('Erro ao verificar tabela:', tableError);
-        // Continuar com a consulta normal, pois o erro pode ser por outro motivo
-      }
-
-      // Construir consulta base
+      // Construir consulta base usando a view vw_avaliacoes_desempenho
       let query = supabase
         .from('vw_avaliacoes_desempenho')
         .select(`
@@ -118,6 +78,7 @@ export default function EvaluationDashboard() {
           funcionario_id,
           avaliador_id,
           periodo,
+          periodo_nome,
           data_inicio,
           data_fim,
           status,
@@ -139,7 +100,7 @@ export default function EvaluationDashboard() {
 
       // Aplicar busca
       if (searchTerm) {
-        query = query.or(`funcionario_nome.ilike.%${searchTerm}%,periodo.ilike.%${searchTerm}%`);
+        query = query.or(`funcionario_nome.ilike.%${searchTerm}%,periodo.ilike.%${searchTerm}%,periodo_nome.ilike.%${searchTerm}%`);
       }
 
       // Aplicar filtro de acesso baseado no papel do usuário
@@ -160,11 +121,11 @@ export default function EvaluationDashboard() {
         throw fetchError;
       }
 
-      console.log('Avaliações carregadas:', data);
+      console.log(t('components.avaliacoesCarregadas'), data);
       setEvaluations(data || []);
       setTotalCount(count || 0);
     } catch (err) {
-      console.error('Erro ao carregar avaliações:', err);
+      console.error(t('components.erroAoCarregarAvaliacoes'), err);
 
       // Tratar o erro de forma mais amigável
       let errorMessage = t('evaluation.errorLoadingEvaluations', 'Error loading evaluations');
@@ -194,7 +155,7 @@ export default function EvaluationDashboard() {
 
   // Função para visualizar detalhes de uma avaliação
   const handleViewDetails = (evaluation: Evaluation) => {
-    router.push(`/avaliacao/avaliacoes/${evaluation.id}`);
+    router.push(`/avaliacao/ver/${evaluation.id}`);
   };
 
   // Função para formatar data
@@ -327,7 +288,7 @@ export default function EvaluationDashboard() {
                   </p>
                   {renderEvaluatorInfo(evaluation)}
                   <p className="text-sm text-gray-600 mt-2">
-                    <span className="font-medium">{t('evaluation.period', 'Period')}:</span> {evaluation.periodo}
+                    <span className="font-medium">{t('evaluation.period', 'Period')}:</span> {evaluation.periodo_nome || evaluation.periodo}
                     <span className="ml-3 font-medium">{t('common.status', 'Status')}:</span>
                     <span className={`ml-1 px-2 py-0.5 text-xs rounded-full inline-flex items-center
                       ${evaluation.status === 'concluida' ? 'bg-green-100 text-green-800' :

@@ -1,7 +1,8 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiUsers, FiSave, FiRefreshCw, FiCheck, FiX, FiSettings } from 'react-icons/fi';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface Module {
   id: string;
@@ -24,6 +25,7 @@ interface RolePermissionsEditorProps {
 }
 
 const RolePermissionsEditor: React.FC<RolePermissionsEditorProps> = ({ onClose }) => {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [availableModules, setAvailableModules] = useState<Module[]>([]);
@@ -32,8 +34,8 @@ const RolePermissionsEditor: React.FC<RolePermissionsEditorProps> = ({ onClose }
 
   const roles = [
     { id: 'ADMIN', label: 'Administrador', description: 'Acesso total ao sistema' },
-    { id: 'MANAGER', label: 'Gerente', description: 'Acesso gerencial com algumas restrições' },
-    { id: 'USER', label: 'Usuário', description: 'Acesso básico do funcionário' }
+    { id: 'MANAGER', label: 'Gerente', description: t('components.acessoGerencialComAlgumasRestricoes') },
+    { id: 'USER', label: t('components.usuario'), description: t('components.acessoBasicoDoFuncionario') }
   ];
 
   // Carregar módulos disponíveis e permissões por role
@@ -104,13 +106,13 @@ const RolePermissionsEditor: React.FC<RolePermissionsEditorProps> = ({ onClose }
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao salvar permissões');
+        throw new Error(t('components.erroAoSalvarPermissoes'));
       }
 
-      alert('Permissões salvas com sucesso!');
+      alert(t('components.permissoesSalvasComSucesso'));
     } catch (error) {
-      console.error('Erro ao salvar permissões:', error);
-      alert('Erro ao salvar permissões');
+      console.error(t('components.erroAoSalvarPermissoes'), error);
+      alert(t('components.erroAoSalvarPermissoes'));
     } finally {
       setSaving(false);
     }
@@ -268,7 +270,7 @@ const RolePermissionsEditor: React.FC<RolePermissionsEditorProps> = ({ onClose }
           ) : (
             <FiSave className="h-4 w-4 mr-2" />
           )}
-          {saving ? 'Salvando...' : 'Salvar Permissões'}
+          {saving ? 'Salvando...' : t('components.salvarPermissoes')}
         </button>
       </div>
     </div>

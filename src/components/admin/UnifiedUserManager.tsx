@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -31,7 +31,7 @@ import UserPasswordReset from '@/components/admin/UserPasswordReset';
 import UserRoleManager from '@/components/admin/UserRoleManager';
 import { useAllUsers } from '@/hooks/useAllUsers';
 
-// Interface para o usuário na lista
+// Interface para o usu�rio na lista
 interface User {
   _id: string;
   phoneNumber: string;
@@ -49,7 +49,7 @@ interface User {
   accessPermissions?: any;
 }
 
-// Interface para usuário autorizado
+// Interface para usu�rio autorizado
 type AuthorizedUser = {
   _id: string;
   email?: string;
@@ -65,7 +65,7 @@ type AuthorizedUser = {
   notes?: string;
 };
 
-// Estatísticas de acesso
+// Estat�sticas de acesso
 type AuthStats = {
   users: {
     total: number;
@@ -91,15 +91,15 @@ export default function UnifiedUserManager() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'users' | 'authorized'>('users');
 
-  // Lista unificada de usuários do projeto
+  // Lista unificada de usu�rios do projeto
   const { users: hookUsers, loading: hookLoading, error: hookError, refresh: refreshAllUsers } = useAllUsers();
 
-  // Estados para usuários regulares
+  // Estados para usu�rios regulares
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Estados para usuários autorizados
+  // Estados para usu�rios autorizados
   const [authorizedUsers, setAuthorizedUsers] = useState<AuthorizedUser[]>([]);
   const [stats, setStats] = useState<AuthStats | null>(null);
   const [filter, setFilter] = useState('all');
@@ -113,7 +113,7 @@ export default function UnifiedUserManager() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isNewUser, setIsNewUser] = useState(false);
 
-  // Estados para formulário de autorização
+  // Estados para formul�rio de autoriza��o
   const [showAddForm, setShowAddForm] = useState(false);
   const [formType, setFormType] = useState<'email' | 'phone' | 'domain' | 'invite'>('email');
   const [email, setEmail] = useState('');
@@ -131,7 +131,7 @@ export default function UnifiedUserManager() {
   const [successMessage, setSuccessMessage] = useState('');
   const [isFixingToken, setIsFixingToken] = useState(false);
 
-  // Estados para rejeição
+  // Estados para rejei��o
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState('');
@@ -163,7 +163,7 @@ export default function UnifiedUserManager() {
                 localStorage.removeItem('abzToken');
               }
             } else {
-              console.log('Falha na renovação do token, tentando fix-token');
+              console.log(t('components.falhaNaRenovacaoDoTokenTentandoFixtoken'));
 
               // Tentar corrigir o token
               try {
@@ -192,7 +192,7 @@ export default function UnifiedUserManager() {
           console.error('Erro ao renovar token antes de carregar dados:', refreshError);
         }
 
-        // Carregar dados após tentativa de renovação/correção do token
+        // Carregar dados ap�s tentativa de renova��o/corre��o do token
         fetchUsers();
         fetchAuthorizedUsers();
         fetchStats();
@@ -206,7 +206,7 @@ export default function UnifiedUserManager() {
   useEffect(() => {
     console.log('UnifiedUserManager - Tab changed to:', activeTab);
     if (activeTab === 'users') {
-      console.log('Iniciando busca de usuários devido à mudança de aba');
+      console.log(t('components.iniciandoBuscaDeUsuariosDevidoAMudancaDeAba'));
       // Adicionar um pequeno delay para garantir que o componente esteja totalmente montado
       setTimeout(() => {
         fetchUsers();
@@ -220,7 +220,7 @@ export default function UnifiedUserManager() {
 
 
 
-  // Função para corrigir o token manualmente
+  // Fun��o para corrigir o token manualmente
   const fixToken = async () => {
     setIsFixingToken(true);
     setError(null);
@@ -230,7 +230,7 @@ export default function UnifiedUserManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error('Não há token para corrigir. Faça login novamente.');
+        throw new Error(t('components.naoHaTokenParaCorrigirFacaLoginNovamente'));
       }
 
       // Primeiro tentar renovar o token
@@ -262,7 +262,7 @@ export default function UnifiedUserManager() {
         }
       }
 
-      // Se a renovação falhar, tentar corrigir o token
+      // Se a renova��o falhar, tentar corrigir o token
       console.log('Tentando corrigir token manualmente...');
       const fixResponse = await fetch('/api/auth/fix-token', {
         method: 'POST',
@@ -302,7 +302,7 @@ export default function UnifiedUserManager() {
         try {
           console.log('Tentando criar novo token para o administrador...');
 
-          // Redirecionar para a página de correção de admin
+          // Redirecionar para a p�gina de corre��o de admin
           router.push('/admin-fix');
         } catch (adminFixError) {
           console.error('Erro ao tentar corrigir token de administrador:', adminFixError);
@@ -313,7 +313,7 @@ export default function UnifiedUserManager() {
     }
   };
 
-  // Filtrar usuários quando o termo de busca mudar
+  // Filtrar usu�rios quando o termo de busca mudar
   useEffect(() => {
     if (searchTerm.trim() === '') {
       setFilteredUsers(users);
@@ -342,9 +342,9 @@ export default function UnifiedUserManager() {
     if (hookError) setError(hookError);
   }, [hookUsers, hookError]);
 
-  // Buscar usuários regulares
+  // Buscar usu�rios regulares
   const fetchUsers = async () => {
-    console.log('=== INICIANDO BUSCA DE USUÁRIOS (useAllUsers) ===');
+    console.log(t('components.iniciandoBuscaDeUsuariosUseallusers'));
     setLoading(true);
     setError(null);
     try {
@@ -359,7 +359,7 @@ export default function UnifiedUserManager() {
 
 
 
-  // Buscar usuários autorizados
+  // Buscar usu�rios autorizados
   const fetchAuthorizedUsers = async () => {
     setLoading(true);
     try {
@@ -371,10 +371,10 @@ export default function UnifiedUserManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error('Token não encontrado. Faça login novamente.');
+        throw new Error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
       }
 
-      console.log('Buscando usuários autorizados com token:', token.substring(0, 10) + '...');
+      console.log(t('components.buscandoUsuariosAutorizadosComToken'), token.substring(0, 10) + '...');
 
       const response = await fetch(url, {
         headers: {
@@ -386,42 +386,42 @@ export default function UnifiedUserManager() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error('Erro ao buscar usuários autorizados:', errorData);
+        console.error(t('components.erroAoBuscarUsuariosAutorizados'), errorData);
 
-        // Se o erro for de acesso negado e o usuário for o administrador principal, redirecionar para a página de correção
+        // Se o erro for de acesso negado e o usu�rio for o administrador principal, redirecionar para a p�gina de corre��o
         if (response.status === 403 &&
             (user?.email === 'caio.correia@groupabz.com' || (user as any)?.phone_number === '+5522997847289')) {
-          console.log('Usuário é o administrador principal mas não tem acesso. Redirecionando para correção...');
+          console.log(t('components.usuarioEOAdministradorPrincipalMasNaoTemAcessoRedi'));
           router.push('/admin-fix');
           return;
         }
 
-        throw new Error(errorData.error || 'Erro ao carregar usuários autorizados');
+        throw new Error(errorData.error || t('components.erroAoCarregarUsuariosAutorizados'));
       }
 
       const responseText = await response.text();
       console.log('Resposta recebida, tamanho:', responseText.length);
 
-      // Verificar se a resposta está vazia
+      // Verificar se a resposta est� vazia
       if (!responseText || responseText.trim() === '') {
-        console.error('Resposta vazia recebida da API de usuários autorizados');
+        console.error(t('components.respostaVaziaRecebidaDaApiDeUsuariosAutorizados'));
         setAuthorizedUsers([]);
-        setError('Nenhum usuário autorizado encontrado. A resposta da API está vazia.');
+        setError(t('components.nenhumUsuarioAutorizadoEncontradoARespostaDaApiEst'));
         return;
       }
 
       try {
         const data = JSON.parse(responseText);
-        console.log('Usuários autorizados recebidos:', data.length);
+        console.log(t('components.usuariosAutorizadosRecebidos'), data.length);
 
-        // Verificar se os dados estão no formato esperado
+        // Verificar se os dados est�o no formato esperado
         if (Array.isArray(data)) {
-          // Verificar se os dados têm a estrutura esperada
+          // Verificar se os dados t�m a estrutura esperada
           if (data.length > 0) {
             const firstUser = data[0];
-            // Verificar se os campos necessários estão presentes
+            // Verificar se os campos necess�rios est�o presentes
             if (!firstUser._id) {
-              console.warn('Dados de usuário autorizado podem estar em formato incorreto:', firstUser);
+              console.warn(t('components.dadosDeUsuarioAutorizadoPodemEstarEmFormatoIncorre'), firstUser);
               console.log('Tentando mapear para o formato correto...');
 
               // Tentar mapear para o formato correto
@@ -447,44 +447,44 @@ export default function UnifiedUserManager() {
               console.log('Dados mapeados:', mappedData.length);
               setAuthorizedUsers(mappedData);
             } else {
-              // Dados já estão no formato correto
+              // Dados j� est�o no formato correto
               setAuthorizedUsers(data);
             }
           } else {
-            // Array vazio, definir como está
+            // Array vazio, definir como est�
             setAuthorizedUsers(data);
           }
         } else {
-          console.error('Formato de resposta inesperado para usuários autorizados:', typeof data);
-          setError('Formato de resposta inesperado. Esperava um array de usuários autorizados.');
+          console.error(t('components.formatoDeRespostaInesperadoParaUsuariosAutorizados'), typeof data);
+          setError(t('components.formatoDeRespostaInesperadoEsperavaUmArrayDeUsuari'));
           setAuthorizedUsers([]);
         }
       } catch (parseError) {
-        console.error('Erro ao analisar resposta JSON de usuários autorizados:', parseError);
+        console.error(t('components.erroAoAnalisarRespostaJsonDeUsuariosAutorizados'), parseError);
         console.log('Primeiros 100 caracteres da resposta:', responseText.substring(0, 100));
-        setError('Erro ao processar dados de usuários autorizados. Formato inválido.');
+        setError(t('components.erroAoProcessarDadosDeUsuariosAutorizadosFormatoIn'));
         setAuthorizedUsers([]);
       }
     } catch (error) {
-      console.error('Erro ao carregar usuários autorizados:', error);
-      setError('Erro ao carregar usuários autorizados. Tente novamente.');
+      console.error(t('components.erroAoCarregarUsuariosAutorizados'), error);
+      setError(t('components.erroAoCarregarUsuariosAutorizadosTenteNovamente'));
     } finally {
       setLoading(false);
     }
   };
 
-  // Buscar estatísticas
+  // Buscar estat�sticas
   const fetchStats = async () => {
     try {
       let token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error('Token não encontrado. Faça login novamente.');
+        throw new Error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
       }
 
-      // Tentar renovar o token antes de fazer a requisição
+      // Tentar renovar o token antes de fazer a requisi��o
       try {
-        console.log('Tentando renovar token antes de buscar estatísticas...');
+        console.log(t('components.tentandoRenovarTokenAntesDeBuscarEstatisticas'));
         const refreshResponse = await fetch('/api/auth/token-refresh', {
           method: 'POST',
           headers: {
@@ -494,7 +494,7 @@ export default function UnifiedUserManager() {
 
         if (refreshResponse.ok) {
           const refreshData = await refreshResponse.json();
-          console.log('Token renovado com sucesso antes de buscar estatísticas');
+          console.log(t('components.tokenRenovadoComSucessoAntesDeBuscarEstatisticas'));
 
           if (refreshData.token && refreshData.token !== token) {
             console.log('Atualizando token renovado no localStorage');
@@ -507,10 +507,10 @@ export default function UnifiedUserManager() {
           }
         }
       } catch (refreshError) {
-        console.error('Erro ao renovar token antes de buscar estatísticas:', refreshError);
+        console.error(t('components.erroAoRenovarTokenAntesDeBuscarEstatisticas'), refreshError);
       }
 
-      console.log('Buscando estatísticas com token:', token?.substring(0, 10) + '...');
+      console.log(t('components.buscandoEstatisticasComToken'), token?.substring(0, 10) + '...');
 
       const response = await fetch('/api/admin/access-stats', {
         headers: {
@@ -518,15 +518,15 @@ export default function UnifiedUserManager() {
         }
       });
 
-      console.log('Resposta da API de estatísticas:', response.status, response.statusText);
+      console.log(t('components.respostaDaApiDeEstatisticas'), response.status, response.statusText);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error('Erro ao buscar estatísticas:', errorData);
+        console.error(t('components.erroAoBuscarEstatisticas'), errorData);
 
-        // Se o erro for de token inválido, tentar corrigir o token
+        // Se o erro for de token inv�lido, tentar corrigir o token
         if (response.status === 401) {
-          console.log('Token inválido ou expirado, tentando corrigir...');
+          console.log(t('components.tokenInvalidoOuExpiradoTentandoCorrigir'));
           try {
             // Tentar corrigir o token
             const fixResponse = await fetch('/api/auth/fix-token', {
@@ -557,7 +557,7 @@ export default function UnifiedUserManager() {
 
                 if (retryResponse.ok) {
                   const data = await retryResponse.json();
-                  console.log('Estatísticas recebidas após correção de token:', data);
+                  console.log(t('components.estatisticasRecebidasAposCorrecaoDeToken'), data);
                   setStats(data);
                   return;
                 }
@@ -568,28 +568,28 @@ export default function UnifiedUserManager() {
           }
         }
 
-        // Se o erro for de acesso negado e o usuário for o administrador principal, redirecionar para a página de correção
+        // Se o erro for de acesso negado e o usu�rio for o administrador principal, redirecionar para a p�gina de corre��o
         if (response.status === 403 &&
             (user?.email === 'caio.correia@groupabz.com' || (user as any)?.phone_number === '+5522997847289')) {
-          console.log('Usuário é o administrador principal mas não tem acesso às estatísticas. Redirecionando para correção...');
+          console.log(t('components.usuarioEOAdministradorPrincipalMasNaoTemAcessoAsEs'));
           router.push('/admin-fix');
           return;
         }
 
-        throw new Error(errorData.error || 'Erro ao carregar estatísticas');
+        throw new Error(errorData.error || t('components.erroAoCarregarEstatisticas'));
       }
 
       const data = await response.json();
-      console.log('Estatísticas recebidas:', data);
+      console.log(t('components.estatisticasRecebidas'), data);
       setStats(data);
     } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error);
-      // Não mostrar o erro na interface para não confundir o usuário
-      // Apenas registrar no console para depuração
+      console.error(t('components.erroAoCarregarEstatisticas'), error);
+      // N�o mostrar o erro na interface para n�o confundir o usu�rio
+      // Apenas registrar no console para depura��o
     }
   };
 
-  // Funções para gerenciar usuários regulares
+  // Fun��es para gerenciar usu�rios regulares
   const handleAddUser = () => {
     setSelectedUser(null);
     setIsNewUser(true);
@@ -628,7 +628,7 @@ export default function UnifiedUserManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error('Não autorizado');
+        throw new Error(t('components.naoAutorizado'));
       }
 
       const method = isNewUser ? 'POST' : 'PUT';
@@ -653,10 +653,10 @@ export default function UnifiedUserManager() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao salvar usuário');
+        throw new Error(errorData.error || t('components.erroAoSalvarUsuario'));
       }
 
-      setSuccessMessage(`Usuário ${isNewUser ? 'criado' : 'atualizado'} com sucesso!`);
+      setSuccessMessage(`${t('components.usuario')} ${isNewUser ? t('components.criado') : t('components.atualizado')} ${t('components.comSucesso')}!`);
       setShowEditor(false);
       fetchUsers();
 
@@ -665,8 +665,8 @@ export default function UnifiedUserManager() {
         setSuccessMessage('');
       }, 3000);
     } catch (error) {
-      console.error('Erro ao salvar usuário:', error);
-      setError(`Erro ao salvar usuário: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      console.error(t('components.erroAoSalvarUsuario'), error);
+      setError(`${t('components.erroAoSalvarUsuario')}: ${error instanceof Error ? error.message : t('components.erroDesconhecido')}`);
     }
   };
 
@@ -678,7 +678,7 @@ export default function UnifiedUserManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error('Não autorizado');
+        throw new Error(t('components.naoAutorizado'));
       }
 
       const response = await fetch(`/api/users/${selectedUser._id}`, {
@@ -690,24 +690,24 @@ export default function UnifiedUserManager() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao excluir usuário');
+        throw new Error(errorData.error || t('components.erroAoExcluirUsuario'));
       }
 
-      setSuccessMessage('Usuário excluído com sucesso!');
+      setSuccessMessage(t('components.usuarioExcluidoComSucesso'));
       setShowDeleteConfirm(false);
       fetchUsers();
 
-      // Limpar a mensagem após 3 segundos
+      // Limpar a mensagem ap�s 3 segundos
       setTimeout(() => {
         setSuccessMessage('');
       }, 3000);
     } catch (error) {
-      console.error('Erro ao excluir usuário:', error);
-      setError(`Erro ao excluir usuário: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      console.error(t('components.erroAoExcluirUsuario'), error);
+      setError(`${t('components.erroAoExcluirUsuario')}: ${error instanceof Error ? error.message : t('components.erroDesconhecido')}`);
     }
   };
 
-  // Funções para gerenciar usuários autorizados
+  // Fun��es para gerenciar usu�rios autorizados
   const handleAddAuthorizedUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -732,7 +732,7 @@ export default function UnifiedUserManager() {
           break;
         case 'invite':
           action = 'generate_invite';
-          // Adicionar configurações de expiração se fornecidas
+          // Adicionar configura��es de expira��o se fornecidas
           if (expiryDays) payload.expiryDays = expiryDays;
           if (maxUses) payload.maxUses = maxUses;
           break;
@@ -743,7 +743,7 @@ export default function UnifiedUserManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error('Token não encontrado. Faça login novamente.');
+        throw new Error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
       }
 
       const response = await fetch('/api/admin/authorized-users', {
@@ -757,7 +757,7 @@ export default function UnifiedUserManager() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
-        throw new Error(errorData.error || 'Erro ao adicionar usuário autorizado');
+        throw new Error(errorData.error || t('components.erroAoAdicionarUsuarioAutorizado'));
       }
 
       const result = await response.json();
@@ -765,17 +765,17 @@ export default function UnifiedUserManager() {
       if (result.success) {
         setSuccessMessage(result.message);
 
-        // Se for código de convite, mostrar o código gerado
+        // Se for c�digo de convite, mostrar o c�digo gerado
         if (formType === 'invite' && result.inviteCode) {
           setGeneratedInviteCode(result.inviteCode);
 
           // Se tiver email para enviar o convite
           if (inviteEmail && result.inviteCode && result.expiresAt) {
-            // Enviar email com o código de convite
+            // Enviar email com o c�digo de convite
             const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
             if (!token) {
-              throw new Error('Token não encontrado. Faça login novamente.');
+              throw new Error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
             }
 
             const emailResponse = await fetch('/api/admin/send-invite', {
@@ -800,7 +800,7 @@ export default function UnifiedUserManager() {
           }
         }
 
-        // Limpar formulário
+        // Limpar formul�rio
         setEmail('');
         setPhoneNumber('');
         setDomain('');
@@ -813,11 +813,11 @@ export default function UnifiedUserManager() {
         fetchAuthorizedUsers();
         fetchStats();
       } else {
-        setError(result.message || 'Erro ao adicionar usuário autorizado');
+        setError(result.message || t('components.erroAoAdicionarUsuarioAutorizado'));
       }
     } catch (error) {
-      console.error('Erro ao adicionar usuário autorizado:', error);
-      setError('Erro ao adicionar usuário autorizado. Tente novamente.');
+      console.error(t('components.erroAoAdicionarUsuarioAutorizado'), error);
+      setError(t('components.erroAoAdicionarUsuarioAutorizadoTenteNovamente'));
     }
   };
 
@@ -826,7 +826,7 @@ export default function UnifiedUserManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error('Token não encontrado. Faça login novamente.');
+        throw new Error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
       }
 
       const response = await fetch('/api/admin/authorized-users', {
@@ -843,21 +843,21 @@ export default function UnifiedUserManager() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
-        throw new Error(errorData.error || 'Erro ao aprovar usuário');
+        throw new Error(errorData.error || t('components.erroAoAprovarUsuario'));
       }
 
       const result = await response.json();
 
       if (result.success) {
-        setSuccessMessage('Usuário aprovado com sucesso');
+        setSuccessMessage(t('components.usuarioAprovadoComSucesso'));
         fetchAuthorizedUsers();
         fetchStats();
       } else {
-        setError(result.message || 'Erro ao aprovar usuário');
+        setError(result.message || t('components.erroAoAprovarUsuario'));
       }
     } catch (error) {
-      console.error('Erro ao aprovar usuário:', error);
-      setError('Erro ao aprovar usuário. Tente novamente.');
+      console.error(t('components.erroAoAprovarUsuario'), error);
+      setError(t('components.erroAoAprovarUsuarioTenteNovamente'));
     }
   };
 
@@ -872,7 +872,7 @@ export default function UnifiedUserManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error('Token não encontrado. Faça login novamente.');
+        throw new Error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
       }
 
       const response = await fetch('/api/admin/authorized-users', {
@@ -890,27 +890,27 @@ export default function UnifiedUserManager() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
-        throw new Error(errorData.error || 'Erro ao rejeitar usuário');
+        throw new Error(errorData.error || t('components.erroAoRejeitarUsuario'));
       }
 
       const result = await response.json();
 
       if (result.success) {
-        setSuccessMessage('Usuário rejeitado com sucesso');
+        setSuccessMessage(t('components.usuarioRejeitadoComSucesso'));
         setShowRejectModal(false);
         fetchAuthorizedUsers();
         fetchStats();
       } else {
-        setError(result.message || 'Erro ao rejeitar usuário');
+        setError(result.message || t('components.erroAoRejeitarUsuario'));
       }
     } catch (error) {
-      console.error('Erro ao rejeitar usuário:', error);
-      setError('Erro ao rejeitar usuário. Tente novamente.');
+      console.error(t('components.erroAoRejeitarUsuario'), error);
+      setError(t('components.erroAoRejeitarUsuarioTenteNovamente'));
     }
   };
 
   const handleDeleteAuthorizedUser = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir este usuário autorizado?')) {
+    if (!confirm(t('components.temCertezaQueDesejaExcluirEsteUsuarioAutorizado'))) {
       return;
     }
 
@@ -918,7 +918,7 @@ export default function UnifiedUserManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error('Token não encontrado. Faça login novamente.');
+        throw new Error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
       }
 
       const response = await fetch(`/api/admin/authorized-users/${id}`, {
@@ -930,28 +930,28 @@ export default function UnifiedUserManager() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
-        throw new Error(errorData.error || 'Erro ao excluir usuário autorizado');
+        throw new Error(errorData.error || t('components.erroAoExcluirUsuarioAutorizado'));
       }
 
       const result = await response.json();
 
       if (result.success) {
-        setSuccessMessage('Usuário autorizado excluído com sucesso');
+        setSuccessMessage(t('components.usuarioAutorizadoExcluidoComSucesso'));
         fetchAuthorizedUsers();
         fetchStats();
       } else {
-        setError(result.message || 'Erro ao excluir usuário autorizado');
+        setError(result.message || t('components.erroAoExcluirUsuarioAutorizado'));
       }
     } catch (error) {
-      console.error('Erro ao excluir usuário autorizado:', error);
-      setError('Erro ao excluir usuário autorizado. Tente novamente.');
+      console.error(t('components.erroAoExcluirUsuarioAutorizado'), error);
+      setError(t('components.erroAoExcluirUsuarioAutorizadoTenteNovamente'));
     }
   };
 
   const handleApproveUser = async (userId: string) => {
     const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
     if (!token) {
-      setError('Token de autenticação não encontrado');
+      setError(t('components.tokenDeAutenticacaoNaoEncontrado'));
       return;
     }
 
@@ -968,19 +968,19 @@ export default function UnifiedUserManager() {
         throw new Error(`Erro HTTP: ${response.status}`);
       }
 
-      setSuccessMessage('Usuário aprovado com sucesso');
+      setSuccessMessage(t('components.usuarioAprovadoComSucesso'));
       await fetchUsers();
       await fetchStats();
     } catch (err) {
-      console.error('Erro ao aprovar usuário:', err);
-      setError(err instanceof Error ? err.message : 'Erro ao aprovar usuário');
+      console.error(t('components.erroAoAprovarUsuario'), err);
+      setError(err instanceof Error ? err.message : t('components.erroAoAprovarUsuario'));
     }
   };
 
   const handleRejectUser = async (userId: string) => {
     const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
     if (!token) {
-      setError('Token de autenticação não encontrado');
+      setError(t('components.tokenDeAutenticacaoNaoEncontrado'));
       return;
     }
 
@@ -997,16 +997,16 @@ export default function UnifiedUserManager() {
         throw new Error(`Erro HTTP: ${response.status}`);
       }
 
-      setSuccessMessage('Usuário rejeitado');
+      setSuccessMessage(t('components.usuarioRejeitado'));
       await fetchUsers();
       await fetchStats();
     } catch (err) {
-      console.error('Erro ao rejeitar usuário:', err);
-      setError(err instanceof Error ? err.message : 'Erro ao rejeitar usuário');
+      console.error(t('components.erroAoRejeitarUsuario'), err);
+      setError(err instanceof Error ? err.message : t('components.erroAoRejeitarUsuario'));
     }
   };
 
-  // Funções auxiliares
+  // Fun��es auxiliares
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('pt-BR', {
@@ -1029,8 +1029,8 @@ export default function UnifiedUserManager() {
   const getAuthorizationTypeText = (user: AuthorizedUser) => {
     if (user.email) return `Email: ${user.email}`;
     if (user.phoneNumber) return `Telefone: ${user.phoneNumber}`;
-    if (user.domain) return `Domínio: ${user.domain}`;
-    if (user.inviteCode) return `Código de Convite: ${user.inviteCode}`;
+    if (user.domain) return t('components.dominioUserdomain');
+    if (user.inviteCode) return t('components.codigoDeConviteUserinvitecode');
     return 'Desconhecido';
   };
 
@@ -1049,7 +1049,7 @@ export default function UnifiedUserManager() {
     }
   };
 
-  // Renderização do componente
+  // Renderiza��o do componente
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Abas */}
@@ -1070,14 +1070,14 @@ export default function UnifiedUserManager() {
             className={`flex items-center px-4 py-2 rounded-md ${activeTab === 'users' ? 'bg-abz-blue text-white' : 'bg-gray-200 text-gray-700'}`}
           >
             <FiUser className="mr-2" />
-            Usuários
+            Usu�rios
           </button>
           <button
             onClick={() => setActiveTab('authorized')}
             className={`flex items-center px-4 py-2 rounded-md ${activeTab === 'authorized' ? 'bg-abz-blue text-white' : 'bg-gray-200 text-gray-700'}`}
           >
             <FiUserCheck className="mr-2" />
-            Autorizações
+            Autoriza��es
           </button>
         </div>
       </div>
@@ -1103,7 +1103,7 @@ export default function UnifiedUserManager() {
         </div>
       )}
 
-      {/* Conteúdo da aba de usuários */}
+      {/* Conte�do da aba de usu�rios */}
       {activeTab === 'users' && (
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex flex-wrap justify-between items-center mb-6">
@@ -1111,7 +1111,7 @@ export default function UnifiedUserManager() {
               <div className="relative mr-2">
                 <input
                   type="text"
-                  placeholder="Buscar usuários..."
+                  placeholder={t('components.buscarUsuarios')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-abz-blue focus:border-abz-blue w-full md:w-64"
@@ -1120,11 +1120,11 @@ export default function UnifiedUserManager() {
               </div>
               <button
                 onClick={() => {
-                  console.log('Atualizando lista de usuários manualmente');
+                  console.log(t('components.atualizandoListaDeUsuariosManualmente'));
                   fetchUsers();
                 }}
                 className="flex items-center px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-                title={t('admin.refreshUserList', 'Atualizar lista de usuários')}
+                title={t('admin.refreshUserList', 'Atualizar lista de usu�rios')}
               >
                 <FiRefreshCw className="mr-1" />
                 {t('common.refresh', 'Atualizar')}
@@ -1136,7 +1136,7 @@ export default function UnifiedUserManager() {
               className="flex items-center px-4 py-2 bg-abz-blue text-white rounded-md hover:bg-abz-blue-dark transition-colors"
             >
               <FiPlus className="mr-2" />
-              {t('userEditor.newUser', 'Novo Usuário')}
+              {t('userEditor.newUser', 'Novo Usu�rio')}
             </button>
           </div>
 
@@ -1151,19 +1151,19 @@ export default function UnifiedUserManager() {
                     Contato
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Função
+                    Fun��o
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Autorização
+                    Autoriza��o
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Criado em
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ações
+                    A��es
                   </th>
                 </tr>
               </thead>
@@ -1177,12 +1177,12 @@ export default function UnifiedUserManager() {
                 ) : filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
-                      Nenhum usuário encontrado.
+                      Nenhum usu�rio encontrado.
                     </td>
                   </tr>
                 ) : (
                   filteredUsers.map((user) => {
-                    console.log(`Renderizando usuário: ${user.firstName} ${user.lastName} (${user._id})`);
+                    console.log(t('components.renderizandoUsuarioUserfirstnameUserlastnameUserid'));
                     return (
                     <tr key={user._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -1206,9 +1206,9 @@ export default function UnifiedUserManager() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {user.role === 'ADMIN' ? 'Administrador' : user.role === 'MANAGER' ? 'Gerente' : 'Usuário'}
+                          {user.role === 'ADMIN' ? 'Administrador' : user.role === 'MANAGER' ? 'Gerente' : t('components.usuario')}
                         </div>
-                        <div className="text-sm text-gray-500">{user.position || 'Não definido'}</div>
+                        <div className="text-sm text-gray-500">{user.position || 'N�o definido'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${user.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
@@ -1232,7 +1232,7 @@ export default function UnifiedUserManager() {
                                 <button
                                   onClick={() => handleApproveUser(user._id)}
                                   className="inline-flex items-center px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-md transition-colors"
-                                  title="Aprovar usuário"
+                                  title={t('components.aprovarUsuario')}
                                 >
                                   <FiCheck className="w-3 h-3 mr-1" />
                                   Aprovar
@@ -1240,7 +1240,7 @@ export default function UnifiedUserManager() {
                                 <button
                                   onClick={() => handleRejectUser(user._id)}
                                   className="inline-flex items-center px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-md transition-colors"
-                                  title="Rejeitar usuário"
+                                  title={t('components.rejeitarUsuario')}
                                 >
                                   <FiX className="w-3 h-3 mr-1" />
                                   Rejeitar
@@ -1260,7 +1260,7 @@ export default function UnifiedUserManager() {
                           <button
                             onClick={() => handleViewHistory(user)}
                             className="text-gray-600 hover:text-abz-blue"
-                            title="Ver histórico de acesso"
+                            title={t('components.verHistoricoDeAcesso')}
                           >
                             <FiClock />
                           </button>
@@ -1274,21 +1274,21 @@ export default function UnifiedUserManager() {
                           <button
                             onClick={() => handleManageRole(user)}
                             className="text-gray-600 hover:text-abz-blue"
-                            title="Gerenciar papel/função"
+                            title="Gerenciar papel/fun��o"
                           >
                             <FiShield />
                           </button>
                           <button
                             onClick={() => handleEditUser(user)}
                             className="text-gray-600 hover:text-abz-blue"
-                            title="Editar usuário"
+                            title={t('components.editarUsuario')}
                           >
                             <FiEdit2 />
                           </button>
                           <button
                             onClick={() => handleDeleteConfirm(user)}
                             className="text-gray-600 hover:text-red-600"
-                            title="Excluir usuário"
+                            title={t('components.excluirUsuario')}
                           >
                             <FiTrash2 />
                           </button>
@@ -1304,14 +1304,14 @@ export default function UnifiedUserManager() {
         </div>
       )}
 
-      {/* Conteúdo da aba de usuários autorizados */}
+      {/* Conte�do da aba de usu�rios autorizados */}
       {activeTab === 'authorized' && (
         <div className="bg-white rounded-lg shadow-md p-6">
-          {/* Estatísticas */}
+          {/* Estat�sticas */}
           {stats && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-blue-700">Usuários</h3>
+                <h3 className="text-lg font-semibold text-blue-700">Usu�rios</h3>
                 <div className="mt-2 space-y-1">
                   <p className="text-sm">Total: <span className="font-bold">{stats.users.total}</span></p>
                   <p className="text-sm">Ativos: <span className="font-bold">{stats.users.active}</span></p>
@@ -1320,17 +1320,17 @@ export default function UnifiedUserManager() {
               </div>
 
               <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-green-700">Autorizações</h3>
+                <h3 className="text-lg font-semibold text-green-700">Autoriza��es</h3>
                 <div className="mt-2 space-y-1">
                   <p className="text-sm">Email: <span className="font-bold">{stats.authorizations.email}</span></p>
                   <p className="text-sm">Telefone: <span className="font-bold">{stats.authorizations.phone}</span></p>
-                  <p className="text-sm">Domínio: <span className="font-bold">{stats.authorizations.domain}</span></p>
+                  <p className="text-sm">Dom�nio: <span className="font-bold">{stats.authorizations.domain}</span></p>
                   <p className="text-sm">Convite: <span className="font-bold">{stats.authorizations.inviteCode}</span></p>
                 </div>
               </div>
 
               <div className="bg-yellow-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-yellow-700">Solicitações</h3>
+                <h3 className="text-lg font-semibold text-yellow-700">Solicita��es</h3>
                 <div className="mt-2 space-y-1">
                   <p className="text-sm">Pendentes: <span className="font-bold">{stats.authorizations.pending}</span></p>
                   <p className="text-sm">Rejeitadas: <span className="font-bold">{stats.authorizations.rejected}</span></p>
@@ -1348,7 +1348,7 @@ export default function UnifiedUserManager() {
             </div>
           )}
 
-          {/* Botões de ação */}
+          {/* Bot�es de a��o */}
           <div className="flex flex-wrap justify-between items-center mb-6">
             <div className="flex space-x-2 mb-2 sm:mb-0">
               <button
@@ -1391,10 +1391,10 @@ export default function UnifiedUserManager() {
             </div>
           </div>
 
-          {/* Formulário de adição */}
+          {/* Formul�rio de adi��o */}
           {showAddForm && (
             <div className="bg-gray-50 p-4 rounded-lg mb-6">
-              <h3 className="text-lg font-semibold mb-4">Adicionar Autorização</h3>
+              <h3 className="text-lg font-semibold mb-4">Adicionar Autoriza��o</h3>
 
               <div className="flex flex-wrap gap-2 mb-4">
                 <button
@@ -1418,7 +1418,7 @@ export default function UnifiedUserManager() {
                   className={`flex items-center px-3 py-2 rounded-md ${formType === 'domain' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
                 >
                   <FiGlobe className="mr-2" />
-                  Domínio
+                  Dom�nio
                 </button>
 
                 <button
@@ -1426,7 +1426,7 @@ export default function UnifiedUserManager() {
                   className={`flex items-center px-3 py-2 rounded-md ${formType === 'invite' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
                 >
                   <FiKey className="mr-2" />
-                  Código de Convite
+                  C�digo de Convite
                 </button>
               </div>
 
@@ -1451,7 +1451,7 @@ export default function UnifiedUserManager() {
                 {formType === 'phone' && (
                   <div>
                     <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                      Número de Telefone
+                      N�mero de Telefone
                     </label>
                     <input
                       type="tel"
@@ -1468,7 +1468,7 @@ export default function UnifiedUserManager() {
                 {formType === 'domain' && (
                   <div>
                     <label htmlFor="domain" className="block text-sm font-medium text-gray-700 mb-1">
-                      Domínio
+                      Dom�nio
                     </label>
                     <input
                       type="text"
@@ -1487,7 +1487,7 @@ export default function UnifiedUserManager() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       <div>
                         <label htmlFor="expiryDays" className="block text-sm font-medium text-gray-700 mb-1">
-                          Dias até Expiração (opcional)
+                          Dias at� Expira��o (opcional)
                         </label>
                         <input
                           type="number"
@@ -1502,7 +1502,7 @@ export default function UnifiedUserManager() {
                       </div>
                       <div>
                         <label htmlFor="maxUses" className="block text-sm font-medium text-gray-700 mb-1">
-                          Número Máximo de Usos (opcional)
+                          N�mero M�ximo de Usos (opcional)
                         </label>
                         <input
                           type="number"
@@ -1530,18 +1530,18 @@ export default function UnifiedUserManager() {
                         placeholder="usuario@exemplo.com"
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        Se preenchido, o código de convite será enviado para este email
+                        Se preenchido, o c�digo de convite ser� enviado para este email
                       </p>
                     </div>
 
                     {generatedInviteCode && (
                       <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md mt-4">
-                        <p className="font-semibold mb-2">Código de Convite Gerado:</p>
+                        <p className="font-semibold mb-2">C�digo de Convite Gerado:</p>
                         <div className="bg-white p-3 rounded border border-yellow-300 text-center">
                           <span className="text-xl font-mono font-bold tracking-wider">{generatedInviteCode}</span>
                         </div>
                         <p className="text-sm mt-2 text-yellow-700">
-                          Compartilhe este código com o usuário que você deseja convidar.
+                          Compartilhe este c�digo com o usu�rio que voc� deseja convidar.
                         </p>
                       </div>
                     )}
@@ -1552,14 +1552,14 @@ export default function UnifiedUserManager() {
                   <>
                     <div>
                       <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-                        Observações (opcional)
+                        Observa��es (opcional)
                       </label>
                       <textarea
                         id="notes"
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Adicione informações relevantes sobre esta autorização"
+                        placeholder={t('components.adicioneInformacoesRelevantesSobreEstaAutorizacao')}
                         rows={3}
                       />
                     </div>
@@ -1569,7 +1569,7 @@ export default function UnifiedUserManager() {
                         type="submit"
                         className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                       >
-                        {formType === 'invite' ? 'Gerar Código' : 'Adicionar'}
+                        {formType === 'invite' ? t('components.gerarCodigo') : 'Adicionar'}
                       </button>
                     </div>
                   </>
@@ -1583,7 +1583,7 @@ export default function UnifiedUserManager() {
                       }}
                       className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                     >
-                      Gerar Outro Código
+                      Gerar Outro C�digo
                     </button>
                   </div>
                 )}
@@ -1591,7 +1591,7 @@ export default function UnifiedUserManager() {
             </div>
           )}
 
-          {/* Lista de usuários autorizados */}
+          {/* Lista de usu�rios autorizados */}
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -1600,19 +1600,19 @@ export default function UnifiedUserManager() {
                     Tipo
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Identificação
+                    Identifica��o
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Data de Criação
+                    Data de Cria��o
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Expiração / Usos
+                    Expira��o / Usos
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ações
+                    A��es
                   </th>
                 </tr>
               </thead>
@@ -1626,7 +1626,7 @@ export default function UnifiedUserManager() {
                 ) : authorizedUsers.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
-                      Nenhum usuário autorizado encontrado.
+                      Nenhum usu�rio autorizado encontrado.
                     </td>
                   </tr>
                 ) : (
@@ -1636,7 +1636,7 @@ export default function UnifiedUserManager() {
                         <div className="flex items-center">
                           {getAuthorizationTypeIcon(user)}
                           <span className="ml-2 text-sm text-gray-900">
-                            {user.email ? 'Email' : user.phoneNumber ? 'Telefone' : user.domain ? 'Domínio' : 'Convite'}
+                            {user.email ? 'Email' : user.phoneNumber ? 'Telefone' : user.domain ? t('components.dominio') : 'Convite'}
                           </span>
                         </div>
                       </td>
@@ -1742,10 +1742,9 @@ export default function UnifiedUserManager() {
       {showDeleteConfirm && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-4">{t('common.confirmDelete', 'Confirmar Exclusão')}</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('common.confirmDelete', 'Confirmar Exclus�o')}</h3>
             <p className="mb-4">
-              {t('admin.users.confirmDeleteMessage', 'Tem certeza que deseja excluir o usuário')} <strong>{selectedUser.firstName} {selectedUser.lastName}</strong>?
-              {t('admin.users.actionCannotBeUndone', 'Esta ação não pode ser desfeita.')}
+              {t('admin.users.confirmDeleteMessage', 'Tem certeza que deseja excluir o usu�rio')} <strong>{selectedUser.firstName} {selectedUser.lastName}</strong>? t('admin.users.actionCannotBeUndone', 'Esta a��o n�o pode ser desfeita.')
             </p>
             <div className="flex justify-end space-x-2">
               <button
@@ -1780,7 +1779,7 @@ export default function UnifiedUserManager() {
           onClose={() => setShowPasswordReset(false)}
           onSuccess={() => {
             setShowPasswordReset(false);
-            // Opcional: recarregar dados do usuário
+            // Opcional: recarregar dados do usu�rio
           }}
         />
       )}
@@ -1798,22 +1797,22 @@ export default function UnifiedUserManager() {
         />
       )}
 
-      {/* Modal de rejeição */}
+      {/* Modal de rejei��o */}
       {showRejectModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-4">Rejeitar Solicitação</h3>
+            <h3 className="text-lg font-semibold mb-4">Rejeitar Solicita��o</h3>
 
             <div className="mb-4">
               <label htmlFor="rejectReason" className="block text-sm font-medium text-gray-700 mb-1">
-                Motivo da Rejeição
+                Motivo da Rejei��o
               </label>
               <textarea
                 id="rejectReason"
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Informe o motivo da rejeição"
+                placeholder={t('components.informeOMotivoDaRejeicao')}
                 rows={3}
               />
             </div>

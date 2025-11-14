@@ -6,10 +6,10 @@ export const dynamic = 'force-dynamic';
 // GET - Obter lembrete específico
 export async function GET(
   request: NextRequest,
-  { params }: { params: { reminderId: string } }
+  { params }: { params: Promise<{ reminderId: string }> }
 ) {
   try {
-    const reminderId = params.reminderId;
+    const { reminderId } = await params;
     console.log(`🔄 API Reminder - Buscando lembrete: ${reminderId}`);
 
     const { data: reminder, error } = await supabaseAdmin
@@ -54,10 +54,10 @@ export async function GET(
 // PUT - Atualizar lembrete
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { reminderId: string } }
+  { params }: { params: Promise<{ reminderId: string }> }
 ) {
   try {
-    const reminderId = params.reminderId;
+    const { reminderId } = await params;
     const body = await request.json();
     const {
       title,
@@ -146,10 +146,10 @@ export async function PUT(
 // DELETE - Excluir lembrete
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { reminderId: string } }
+  { params }: { params: Promise<{ reminderId: string }> }
 ) {
   try {
-    const reminderId = params.reminderId;
+    const { reminderId } = await params;
     console.log(`🔄 API Reminder - Excluindo lembrete: ${reminderId}`);
 
     // Verificar se o lembrete existe

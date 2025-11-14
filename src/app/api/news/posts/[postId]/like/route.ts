@@ -6,10 +6,10 @@ export const dynamic = 'force-dynamic';
 // POST - Curtir/Descurtir post
 export async function POST(
   request: NextRequest,
-  { params }: { params: { postId: string } }
+  { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
-    const postId = params.postId;
+    const { postId } = await params;
     const body = await request.json();
     const { user_id } = body;
 
@@ -140,10 +140,10 @@ export async function POST(
 // GET - Verificar se usuário curtiu o post e obter lista de likes
 export async function GET(
   request: NextRequest,
-  { params }: { params: { postId: string } }
+  { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
-    const postId = params.postId;
+    const { postId } = await params;
     const { searchParams } = new URL(request.url);
     const user_id = searchParams.get('user_id');
     const include_users = searchParams.get('include_users') === 'true';

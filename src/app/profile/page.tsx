@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -44,14 +44,14 @@ export default function ProfilePage() {
   useEffect(() => {
     // Aguardar o carregamento completo da autenticação
     if (isLoading) {
-      console.log('🔄 Aguardando carregamento da autenticação...');
+      console.log(t('profile.aguardandoCarregamentoDaAutenticacao'));
       return;
     }
 
     // Verificar se o usuário está autenticado
     if (!user) {
-      console.log('❌ Usuário não autenticado, redirecionando para login');
-      toast.error('Você precisa estar logado para acessar esta página.');
+      console.log(t('profile.usuarioNaoAutenticadoRedirecionandoParaLogin'));
+      toast.error(t('profile.vocePrecisaEstarLogadoParaAcessarEstaPagina'));
       router.replace('/login');
       return;
     }
@@ -67,7 +67,7 @@ export default function ProfilePage() {
       return;
     }
 
-    console.log('✅ Usuário e perfil carregados, inicializando página de perfil');
+    console.log(t('profile.usuarioEPerfilCarregadosInicializandoPaginaDePerfi'));
     console.log('👤 Dados do perfil:', {
       id: profile.id,
       email: profile.email,
@@ -109,7 +109,7 @@ export default function ProfilePage() {
         .single();
 
       if (error) {
-        console.error('Erro ao buscar dados do usuário:', error);
+        console.error(t('profile.erroAoBuscarDadosDoUsuario'), error);
         setProfileImage(null);
         return;
       }
@@ -129,7 +129,7 @@ export default function ProfilePage() {
           setProfileImage(photoUrl);
         };
         checkImage.onerror = () => {
-          console.warn('Imagem de perfil não encontrada ou inacessível na URL:', photoUrl);
+          console.warn(t('profile.imagemDePerfilNaoEncontradaOuInacessivelNaUrl'), photoUrl);
           setProfileImage(null); // Fallback to icon
         };
         checkImage.src = photoUrl;
@@ -154,7 +154,7 @@ export default function ProfilePage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        toast.error('Não autorizado');
+        toast.error(t('profile.naoAutorizado'));
         return;
       }
 
@@ -173,7 +173,7 @@ export default function ProfilePage() {
 
       if (response.ok) {
         const data = await response.json();
-        toast.success('Foto de perfil atualizada com sucesso');
+        toast.success(t('profile.photoUpdatedSuccess'));
 
         // Atualizar a URL da imagem
         await loadProfileImage();
@@ -182,11 +182,11 @@ export default function ProfilePage() {
         await refreshProfile();
       } else {
         const error = await response.json();
-        toast.error(error.error || 'Erro ao atualizar foto de perfil');
+        toast.error(error.error || t('profile.errorUpdatingPhoto'));
       }
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
-      toast.error('Erro ao fazer upload da imagem');
+      toast.error(t('profile.errorUpdatingPhoto'));
     } finally {
       setUploading(false);
     }
@@ -242,12 +242,12 @@ export default function ProfilePage() {
 
     // Verificar o tipo e tamanho do arquivo
     if (!file.type.startsWith('image/')) {
-      toast.error('Por favor, selecione uma imagem válida');
+      toast.error(t('profile.porFavorSelecioneUmaImagemValida'));
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) { // 5MB
-      toast.error('A imagem deve ter no máximo 5MB');
+      toast.error(t('profile.aImagemDeveTerNoMaximo5mb'));
       return;
     }
 
@@ -262,14 +262,14 @@ export default function ProfilePage() {
   // Função para atualizar os dados do perfil
   const updateProfile = async () => {
     if (!profile?.id) {
-      toast.error('Perfil não encontrado. Faça login novamente.');
+      toast.error(t('profile.perfilNaoEncontradoFacaLoginNovamente'));
       return;
     }
 
     try {
       // Validar dados do formulário
       if (!formData.firstName || !formData.lastName) {
-        toast.error('Nome e sobrenome são obrigatórios');
+        toast.error(t('profile.nomeESobrenomeSaoObrigatorios'));
         return;
       }
 
@@ -363,7 +363,7 @@ export default function ProfilePage() {
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold text-abz-blue mb-6 flex items-center">
-          <FiUser className="mr-2" /> Meu Perfil
+          <FiUser className="mr-2" /> {t('profile.myProfile')}
         </h1>
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -375,7 +375,7 @@ export default function ProfilePage() {
                   {profileImage ? (
                     <Image
                       src={profileImage}
-                      alt="Foto de perfil"
+                      alt={t('profile.profilePhoto')}
                       width={128}
                       height={128}
                       className="object-cover w-full h-full"
@@ -391,7 +391,7 @@ export default function ProfilePage() {
                     onClick={handleUploadClick}
                     className="p-2 bg-abz-blue text-white rounded-full hover:bg-abz-blue-dark h-auto"
                     disabled={uploading}
-                    title="Fazer upload de foto"
+                    title={t('profile.uploadPhoto')}
                     size="icon"
                   >
                     {uploading ? (
@@ -460,7 +460,7 @@ export default function ProfilePage() {
                 <div className="flex flex-wrap justify-center md:justify-start gap-3">
                   <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
                     {profile.role === 'ADMIN' ? 'Administrador' :
-                     profile.role === 'MANAGER' ? 'Gerente' : 'Usuário'}
+                     profile.role === 'MANAGER' ? 'Gerente' : t('profile.usuario')}
                   </span>
 
                   {profile.active && (
@@ -496,10 +496,10 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Informações pessoais */}
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Informações Pessoais</h2>
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('profile.personalInfo')}</h2>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm text-gray-500 mb-1">Nome</label>
+                      <label className="block text-sm text-gray-500 mb-1">{t('profile.firstName')}</label>
                       <input
                         type="text"
                         name="firstName"
@@ -509,7 +509,7 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-gray-500 mb-1">Sobrenome</label>
+                      <label className="block text-sm text-gray-500 mb-1">{t('profile.lastName')}</label>
                       <input
                         type="text"
                         name="lastName"
@@ -571,7 +571,7 @@ export default function ProfilePage() {
                       <input
                         type="text"
                         value={profile.role === 'ADMIN' ? 'Administrador' :
-                               profile.role === 'MANAGER' ? 'Gerente' : 'Usuário'}
+                               profile.role === 'MANAGER' ? 'Gerente' : t('profile.usuario')}
                         className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
                         disabled
                       />
@@ -600,7 +600,7 @@ export default function ProfilePage() {
                       <p className="text-sm text-gray-500">Telefone</p>
                       <p className="font-medium flex items-center">
                         <FiPhone className="mr-2 text-gray-400" />
-                        {profile.phone_number || 'Não informado'}
+                        {profile.phone_number || t('profile.naoInformado')}
                       </p>
                     </div>
                   </div>

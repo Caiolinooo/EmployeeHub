@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { sendEmail } from '@/lib/email';
 
 /**
  * Tipos de notificação para avaliação
@@ -30,9 +31,6 @@ export interface NotificacaoAvaliacao {
     gerente_nome?: string;
     data_limite?: string;
   };
-  lida: boolean;
-  enviada_push: boolean;
-  enviada_email: boolean;
   created_at?: string;
 }
 
@@ -42,7 +40,7 @@ export interface NotificacaoAvaliacao {
 export class NotificacoesAvaliacaoService {
 
   /**
-   * Cria uma notificação no banco de dados
+   * Cria uma notificação no banco de dados e envia por email
    */
   static async criarNotificacao(notificacao: Omit<NotificacaoAvaliacao, 'id' | 'created_at'>): Promise<string | null> {
     try {
@@ -54,9 +52,9 @@ export class NotificacoesAvaliacaoService {
           title: notificacao.titulo,
           message: notificacao.mensagem,
           data: notificacao.dados_avaliacao,
-          read: notificacao.lida,
-          push_sent: notificacao.enviada_push,
-          email_sent: notificacao.enviada_email
+          action_url: `/avaliacao`,
+          priority: 'normal',
+          read_at: null
         })
         .select('id')
         .single();
@@ -66,10 +64,97 @@ export class NotificacoesAvaliacaoService {
         return null;
       }
 
+      // Enviar email após criar notificação
+      await this.enviarNotificacaoEmail(notificacao);
+
       return data.id;
     } catch (error) {
       console.error('Erro ao criar notificação:', error);
       return null;
+    }
+  }
+
+  /**
+   * Envia notificação por email
+   */
+  static async enviarNotificacaoEmail(notificacao: Omit<NotificacaoAvaliacao, 'id' | 'created_at'>): Promise<void> {
+    try {
+      // Buscar email do usuário
+      const { data: usuario, error } = await supabase
+        .from('users_unified')
+        .select('email, first_name, last_name')
+        .eq('id', notificacao.usuario_id)
+        .single();
+
+      if (error || !usuario?.email) {
+        console.error('Erro ao buscar email do usuário:', error);
+        return;
+      }
+
+      const nomeUsuario = `${usuario.first_name} ${usuario.last_name}`;
+      const portalUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const avaliacaoUrl = `${portalUrl}/avaliacao`;
+
+      // Template de email
+      const text = `
+Olá ${nomeUsuario},
+
+${notificacao.mensagem}
+
+Acesse o portal para mais detalhes: ${avaliacaoUrl}
+
+Atenciosamente,
+Equipe ABZ Group
+      `.trim();
+
+      const html = `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${notificacao.titulo}</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f9f9f9; color: #333333;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+            <tr>
+              <td align="center" style="padding: 20px 0;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); overflow: hidden;">
+                  <tr>
+                    <td align="center" style="padding: 30px 20px; background-color: #ffffff;">
+                      <img src="${process.env.EMAIL_LOGO_URL || 'https://abzgroup.com.br/wp-content/uploads/2023/05/LC1_Azul.png'}" alt="ABZ Group Logo" style="max-width: 200px; height: auto;">
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 20px 30px;">
+                      <h2 style="color: #0066cc; text-align: center; margin-top: 0;">${notificacao.titulo}</h2>
+                      <p style="margin-bottom: 20px;">Olá ${nomeUsuario},</p>
+                      <p style="margin-bottom: 20px;">${notificacao.mensagem}</p>
+                      <div style="text-align: center; margin: 30px 0;">
+                        <a href="${avaliacaoUrl}" style="background-color: #0066cc; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Acessar Avaliações</a>
+                      </div>
+                      <p style="margin-bottom: 5px;">Atenciosamente,</p>
+                      <p style="margin-bottom: 20px;"><strong>Equipe ABZ Group</strong></p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 20px 30px; text-align: center; background-color: #ffffff; border-top: 1px solid #e0e0e0;">
+                      <p style="font-size: 12px; color: #999999; margin: 0;">&copy; ${new Date().getFullYear()} ABZ Group. Todos os direitos reservados.</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `;
+
+      await sendEmail(usuario.email, notificacao.titulo, text, html);
+      console.log(`Email de notificação enviado para ${usuario.email}`);
+    } catch (error) {
+      console.error('Erro ao enviar email de notificação:', error);
+      // Não falhar a operação principal se o email falhar
     }
   }
 

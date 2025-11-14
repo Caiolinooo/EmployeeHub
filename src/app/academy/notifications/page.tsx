@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -16,6 +16,7 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface Notification {
   id: string;
@@ -33,6 +34,7 @@ interface Notification {
 const NotificationsPage: React.FC = () => {
   const router = useRouter();
   const { user, getToken } = useSupabaseAuth();
+  const { t } = useI18n();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -69,7 +71,7 @@ const NotificationsPage: React.FC = () => {
         setUnreadCount(data.unread_count);
       }
     } catch (error) {
-      console.error('Erro ao carregar notificações:', error);
+      console.error(t('academy.erroAoCarregarNotificacoes'), error);
     } finally {
       setLoading(false);
     }
@@ -98,7 +100,7 @@ const NotificationsPage: React.FC = () => {
         setSelectedNotifications([]);
       }
     } catch (error) {
-      console.error('Erro ao marcar notificação como lida:', error);
+      console.error(t('academy.erroAoMarcarNotificacaoComoLida'), error);
     }
   };
 
@@ -124,30 +126,52 @@ const NotificationsPage: React.FC = () => {
         await loadNotifications();
       }
     } catch (error) {
-      console.error('Erro ao marcar todas as notificações como lidas:', error);
+      console.error(t('academy.erroAoMarcarTodasAsNotificacoesComoLidas'), error);
     }
   };
 
   const deleteNotifications = async (notificationIds: string[]) => {
-    if (!user?.id) return;
+    if (!user?.id || notificationIds.length === 0) return;
 
     try {
+      setLoading(true);
       const token = await getToken();
-      if (!token) return;
+      
+      // Update otimista - remover do state imediatamente
+      setNotifications(prev => prev.filter(n => !notificationIds.includes(n.id)));
+      setSelectedNotifications([]);
 
-      const response = await fetch(`/api/academy/notifications?notification_ids=${notificationIds.join(',')}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      // Tentar endpoint genérico primeiro, depois academy como fallback
+      let response = await fetch(`/api/notifications?user_id=${user.id}&notification_ids=${notificationIds.join(',')}`, {
+        method: 'DELETE'
       });
 
-      if (response.ok) {
-        await loadNotifications();
-        setSelectedNotifications([]);
+      // Se falhar, tentar endpoint academy
+      if (!response.ok && token) {
+        console.log('Tentando endpoint academy como fallback...');
+        response = await fetch(`/api/academy/notifications?notification_ids=${notificationIds.join(',')}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
       }
+
+      if (!response.ok) {
+        // Reverter mudanças em caso de erro
+        await loadNotifications();
+        throw new Error('Falha ao excluir notificações');
+      }
+
+      console.log(`✅ ${notificationIds.length} notificação(ões) excluída(s)`);
+      
     } catch (error) {
-      console.error('Erro ao excluir notificações:', error);
+      console.error(t('academy.erroAoExcluirNotificacoes'), error);
+      alert('Erro ao excluir notificações. Tente novamente.');
+      // Recarregar em caso de erro
+      await loadNotifications();
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -201,11 +225,11 @@ const NotificationsPage: React.FC = () => {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffMinutes < 60) {
-      return `${diffMinutes} minuto${diffMinutes > 1 ? 's' : ''} atrás`;
+      return `${diffMinutes} ${diffMinutes > 1 ? t('academy.minutos') : t('academy.minuto')} ${t('academy.atras')}`;
     } else if (diffHours < 24) {
-      return `${diffHours} hora${diffHours > 1 ? 's' : ''} atrás`;
+      return `${diffHours} ${diffHours > 1 ? t('academy.horas') : t('academy.hora')} ${t('academy.atras')}`;
     } else if (diffDays < 7) {
-      return `${diffDays} dia${diffDays > 1 ? 's' : ''} atrás`;
+      return `${diffDays} ${diffDays > 1 ? t('academy.dias') : t('academy.dia')} ${t('academy.atras')}`;
     } else {
       return date.toLocaleDateString('pt-BR', {
         day: '2-digit',
@@ -250,9 +274,9 @@ const NotificationsPage: React.FC = () => {
             <div className="flex items-center">
               <BellIcon className="w-8 h-8 text-blue-600 mr-3" />
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Notificações</h1>
+                <h1 className="text-3xl font-bold text-gray-900">{t('academy.notificacoes')}</h1>
                 <p className="text-gray-600 mt-1">
-                  {unreadCount > 0 ? `${unreadCount} não lida${unreadCount > 1 ? 's' : ''}` : 'Todas as notificações lidas'}
+                  {unreadCount > 0 ? `${unreadCount} ${unreadCount > 1 ? t('academy.naoLidas') : t('academy.naoLida')}` : t('academy.todasAsNotificacoesLidas')}
                 </p>
               </div>
             </div>
@@ -349,12 +373,12 @@ const NotificationsPage: React.FC = () => {
           <div className="text-center py-12">
             <BellIcon className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">
-              {filter === 'unread' ? 'Nenhuma notificação não lida' : 'Nenhuma notificação'}
+              {filter === 'unread' ? t('academy.nenhumaNotificacaoNaoLida') : t('academy.nenhumaNotificacao')}
             </h3>
             <p className="mt-1 text-sm text-gray-500">
               {filter === 'unread' 
-                ? 'Todas as suas notificações foram lidas.'
-                : 'Você receberá notificações sobre novos cursos e atualizações aqui.'
+                ? t('academy.todasAsSuasNotificacoesForamLidas')
+                : t('academy.voceReceberaNotificacoesSobreNovosCursosEAtualizac')
               }
             </p>
           </div>

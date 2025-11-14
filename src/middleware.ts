@@ -95,8 +95,8 @@ export function middleware(request: NextRequest) {
   }
 
   if (pathname === '/avaliacao/nova-avaliacao' || pathname === '/avaliacao/nova-avaliacao/') {
-    console.log('Middleware: Redirecionando /avaliacao/nova-avaliacao para /avaliacao/nova');
-    return NextResponse.redirect(new URL('/avaliacao/nova', request.url));
+    console.log('Middleware: Redirecionando /avaliacao/nova-avaliacao para /avaliacao (criação manual desabilitada)');
+    return NextResponse.redirect(new URL('/avaliacao', request.url));
   }
 
   if (pathname === '/avaliacao/avaliacoes/lixeira' || pathname === '/avaliacao/avaliacoes/lixeira/') {

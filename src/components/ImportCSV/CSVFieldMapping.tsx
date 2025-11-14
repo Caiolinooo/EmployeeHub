@@ -48,7 +48,7 @@ export default function CSVFieldMapping({
     // Verificar campos obrigatórios
     required.forEach(field => {
       if (!mapping[field]) {
-        errors.push(`O campo "${field}" é obrigatório e não foi mapeado.`);
+        errors.push(`${t('components.oCampo')} "${field}" ${t('components.eObrigatorioENaoFoiMapeado')}`);
       }
     });
 
@@ -70,7 +70,7 @@ export default function CSVFieldMapping({
       try {
         localStorage.setItem('lastFieldMapping_csv', JSON.stringify(mapping));
       } catch (error) {
-        console.error('Erro ao salvar último mapeamento:', error);
+        console.error(t('components.erroAoSalvarUltimoMapeamento'), error);
       }
 
       onApply();

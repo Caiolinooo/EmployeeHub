@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
       contactEmail: "contato@groupabz.com",
       footerText: "© 2024 ABZ Group. Todos os direitos reservados.",
       dashboardTitle: "Painel de Logística ABZ Group",
+      sidebarTitle: "Painel ABZ",
       googleClientId: "",
       googleClientSecret: "",
       googleRedirectUri: ""
@@ -51,6 +52,8 @@ CREATE TABLE IF NOT EXISTS site_config (
   "contactEmail" VARCHAR(255) DEFAULT 'contato@groupabz.com',
   "footerText" TEXT DEFAULT '© 2024 ABZ Group. Todos os direitos reservados.',
   "dashboardTitle" VARCHAR(255) DEFAULT 'Painel de Logística ABZ Group',
+  "dashboardDescription" TEXT DEFAULT 'Bem-vindo ao centro de recursos para colaboradores da logística.',
+  "sidebarTitle" VARCHAR(255) DEFAULT 'Painel ABZ',
   "googleClientId" TEXT DEFAULT '',
   "googleClientSecret" TEXT DEFAULT '',
   "googleRedirectUri" TEXT DEFAULT '',
@@ -60,8 +63,8 @@ CREATE TABLE IF NOT EXISTS site_config (
 
 -- Inserir configuração padrão
 INSERT INTO site_config (
-  title, description, logo, favicon, "primaryColor", "secondaryColor", 
-  "companyName", "contactEmail", "footerText", "dashboardTitle",
+  title, description, logo, favicon, "primaryColor", "secondaryColor",
+  "companyName", "contactEmail", "footerText", "dashboardTitle", "dashboardDescription", "sidebarTitle",
   "googleClientId", "googleClientSecret", "googleRedirectUri"
 ) VALUES (
   'Painel ABZ Group',
@@ -74,6 +77,8 @@ INSERT INTO site_config (
   'contato@groupabz.com',
   '© 2024 ABZ Group. Todos os direitos reservados.',
   'Painel de Logística ABZ Group',
+  'Bem-vindo ao centro de recursos para colaboradores da logística.',
+  'Painel ABZ',
   '',
   '',
   ''

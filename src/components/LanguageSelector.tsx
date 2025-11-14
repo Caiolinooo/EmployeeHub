@@ -10,7 +10,8 @@ interface LanguageSelectorProps {
   className?: string;
 }
 
-export default function LanguageSelector({ variant = 'dropdown', className = '' }: LanguageSelectorProps) {
+export default function LanguageSelector({
+  variant = 'dropdown', className = '' }: LanguageSelectorProps) {
   const { locale, setLocale, t, availableLocales } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [isChanging, setIsChanging] = useState(false);
@@ -62,7 +63,7 @@ export default function LanguageSelector({ variant = 'dropdown', className = '' 
         setIsChanging(false);
       }, 500);
     } else {
-      console.log('🌐 LanguageSelector: Idioma já é o atual, não alterando');
+      console.log(t('components.languageselectorIdiomaJaEOAtualNaoAlterando'));
     }
 
     setIsOpen(false);

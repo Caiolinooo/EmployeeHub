@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { FaEnvelope, FaSpinner, FaCheckCircle } from 'react-icons/fa';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface EmailVerificationPromptProps {
   email: string;
@@ -17,6 +18,7 @@ export default function EmailVerificationPrompt({
   onClose,
   showCloseButton = true
 }: EmailVerificationPromptProps) {
+  const { t } = useI18n();
   const [isLoading, setIsLoading] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
 
@@ -35,14 +37,14 @@ export default function EmailVerificationPrompt({
 
       if (response.ok && data.success) {
         setVerificationSent(true);
-        toast.success('E-mail de verificação enviado com sucesso!');
+        toast.success(t('components.emailDeVerificacaoEnviadoComSucesso'));
         onVerificationSent?.();
       } else {
-        toast.error(data.error || 'Erro ao enviar e-mail de verificação');
+        toast.error(data.error || t('components.erroAoEnviarEmailDeVerificacao'));
       }
     } catch (error) {
-      console.error('Erro ao reenviar verificação:', error);
-      toast.error('Erro ao enviar e-mail de verificação');
+      console.error(t('components.erroAoReenviarVerificacao'), error);
+      toast.error(t('components.erroAoEnviarEmailDeVerificacao'));
     } finally {
       setIsLoading(false);
     }
@@ -88,7 +90,7 @@ export default function EmailVerificationPrompt({
                 Enviando...
               </>
             ) : (
-              'Reenviar E-mail de Verificação'
+              t('components.reenviarEmailDeVerificacao')
             )}
           </button>
           

@@ -16,7 +16,7 @@ const allSystemCards = [
     color: 'bg-blue-600',
     hover_color: 'hover:bg-blue-700',
     external: false,
-    enabled: true,
+    enabled: false,
     order: 1,
     admin_only: false,
     manager_only: false,

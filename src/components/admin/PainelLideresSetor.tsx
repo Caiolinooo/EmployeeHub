@@ -6,9 +6,10 @@ import { supabase } from '@/lib/supabase';
 
 interface Funcionario {
   id: string;
-  nome: string;
-  cargo: string;
-  departamento: string;
+  first_name: string;
+  last_name: string;
+  position: string;
+  department: string;
   email: string;
   is_lider: boolean;
 }
@@ -27,10 +28,11 @@ export default function PainelLideresSetor() {
   const carregarFuncionarios = async () => {
     try {
       const { data, error } = await supabase
-        .from('funcionarios')
-        .select('id, nome, cargo, departamento, email, is_lider')
-        .eq('status', 'ativo')
-        .order('nome');
+        .from('users_unified')
+        .select('id, first_name, last_name, position, department, email, is_lider')
+        .eq('is_authorized', true)
+        .eq('active', true)
+        .order('first_name');
 
       if (error) {
         console.error('Erro ao carregar funcionários:', error);
@@ -55,7 +57,7 @@ export default function PainelLideresSetor() {
     setUpdating(funcionarioId);
     try {
       const { error } = await supabase
-        .from('funcionarios')
+        .from('users_unified')
         .update({ is_lider: !isLider })
         .eq('id', funcionarioId);
 
@@ -75,9 +77,9 @@ export default function PainelLideresSetor() {
   };
 
   const funcionariosFiltrados = funcionarios.filter(f =>
-    f.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    f.cargo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    f.departamento?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    `${f.first_name} ${f.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    f.position?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    f.department?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     f.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -199,11 +201,11 @@ export default function PainelLideresSetor() {
                       <FiAward className="text-purple-600" size={20} />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">{funcionario.nome}</h4>
+                      <h4 className="font-semibold text-gray-900">{funcionario.first_name} {funcionario.last_name}</h4>
                       <div className="text-sm text-gray-600 space-x-2">
-                        {funcionario.cargo && <span>{funcionario.cargo}</span>}
-                        {funcionario.cargo && funcionario.departamento && <span>•</span>}
-                        {funcionario.departamento && <span>{funcionario.departamento}</span>}
+                        {funcionario.position && <span>{funcionario.position}</span>}
+                        {funcionario.position && funcionario.department && <span>•</span>}
+                        {funcionario.department && <span>{funcionario.department}</span>}
                       </div>
                       {funcionario.email && (
                         <p className="text-xs text-gray-500 mt-1">{funcionario.email}</p>
@@ -239,11 +241,11 @@ export default function PainelLideresSetor() {
                       <FiAward className="text-gray-400" size={20} />
                     </div>
                     <div>
-                      <h4 className="font-medium text-gray-900">{funcionario.nome}</h4>
+                      <h4 className="font-medium text-gray-900">{funcionario.first_name} {funcionario.last_name}</h4>
                       <div className="text-sm text-gray-600 space-x-2">
-                        {funcionario.cargo && <span>{funcionario.cargo}</span>}
-                        {funcionario.cargo && funcionario.departamento && <span>•</span>}
-                        {funcionario.departamento && <span>{funcionario.departamento}</span>}
+                        {funcionario.position && <span>{funcionario.position}</span>}
+                        {funcionario.position && funcionario.department && <span>•</span>}
+                        {funcionario.department && <span>{funcionario.department}</span>}
                       </div>
                       {funcionario.email && (
                         <p className="text-xs text-gray-500 mt-1">{funcionario.email}</p>

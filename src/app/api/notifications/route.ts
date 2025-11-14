@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { sendPushToUserIds } from '@/lib/push';
 import { supabaseWithRetry, logError, logPerformance } from '@/lib/apiRetry';
 
 export const dynamic = 'force-dynamic';
@@ -64,7 +65,10 @@ export async function GET(request: NextRequest) {
 
     // Executar query com retry
     const { data: notifications, error, attempts } = await supabaseWithRetry(
-      () => query,
+      async () => {
+        const result = await query;
+        return result;
+      },
       {
         maxRetries: 2,
         delay: 1000,
@@ -110,11 +114,14 @@ export async function GET(request: NextRequest) {
 
       // Buscar contagem total com retry
       const { data: totalResult, error: totalError } = await supabaseWithRetry(
-        () => supabaseAdmin
-          .from('notifications')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user_id)
-          .or(`expires_at.is.null,expires_at.gt.${currentDate}`),
+        async () => {
+          const result = await supabaseAdmin
+            .from('notifications')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user_id)
+            .or(`expires_at.is.null,expires_at.gt.${currentDate}`);
+          return result;
+        },
         {
           maxRetries: 1,
           delay: 500,
@@ -128,12 +135,15 @@ export async function GET(request: NextRequest) {
 
       // Buscar contagem não lidas com retry
       const { data: unreadResult, error: unreadError } = await supabaseWithRetry(
-        () => supabaseAdmin
-          .from('notifications')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user_id)
-          .is('read_at', null)
-          .or(`expires_at.is.null,expires_at.gt.${currentDate}`),
+        async () => {
+          const result = await supabaseAdmin
+            .from('notifications')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user_id)
+            .is('read_at', null)
+            .or(`expires_at.is.null,expires_at.gt.${currentDate}`);
+          return result;
+        },
         {
           maxRetries: 1,
           delay: 500,
@@ -148,22 +158,22 @@ export async function GET(request: NextRequest) {
       // Se houve erro nas contagens, usar fallback
       if (totalError || unreadError) {
         console.warn('⚠️ Erro ao buscar contagens, usando valores calculados');
-        totalCount = notifications?.length || 0;
-        unreadCount = notifications?.filter(n => !n.read_at).length || 0;
+        totalCount = (notifications as any[])?.length || 0;
+        unreadCount = (notifications as any[])?.filter((n: any) => !n.read_at).length || 0;
       }
 
     } catch (countError) {
       logError('Notifications Count', countError, { user_id });
-      totalCount = notifications?.length || 0;
-      unreadCount = notifications?.filter(n => !n.read_at).length || 0;
+      totalCount = (notifications as any[])?.length || 0;
+      unreadCount = (notifications as any[])?.filter((n: any) => !n.read_at).length || 0;
     }
 
-    console.log(`✅ ${notifications?.length || 0} notificações carregadas (${unreadCount} não lidas)`);
+    console.log(`✅ ${(notifications as any[])?.length || 0} notificações carregadas (${unreadCount} não lidas)`);
 
     // Log de performance
     logPerformance('GET /api/notifications', startTime, {
       user_id,
-      count: notifications?.length || 0,
+      count: (notifications as any[])?.length || 0,
       unreadCount,
       attempts
     });
@@ -271,13 +281,97 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Notificação criada: ${newNotification.title} para ${user.first_name}`);
 
-    // TODO: Enviar notificação em tempo real via WebSocket
-    // TODO: Enviar push notification se configurado
+    // Enviar push notification se VAPID estiver configurado (não bloqueante)
+    try {
+      await sendPushToUserIds([user_id], { title, body: message || '', url: action_url || '/' });
+    } catch (e) {
+      console.warn('Falha ao enviar push (não bloqueante):', e);
+    }
 
     return NextResponse.json(newNotification, { status: 201 });
 
   } catch (error) {
     console.error('Erro ao criar notificação:', error);
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE - Excluir notificações
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const user_id = searchParams.get('user_id');
+    const notificationIds = searchParams.get('notification_ids')?.split(',').filter(id => id.trim());
+    const deleteAll = searchParams.get('delete_all') === 'true';
+
+    if (!user_id) {
+      return NextResponse.json(
+        { error: 'user_id é obrigatório' },
+        { status: 400 }
+      );
+    }
+
+    console.log(`🗑️ API Notifications - DELETE solicitado para usuário ${user_id}`);
+
+    // Excluir todas as notificações do usuário
+    if (deleteAll) {
+      const { error: deleteError } = await supabaseAdmin
+        .from('notifications')
+        .delete()
+        .eq('user_id', user_id);
+
+      if (deleteError) {
+        console.error('Erro ao excluir todas as notificações:', deleteError);
+        return NextResponse.json(
+          { error: 'Erro ao excluir notificações' },
+          { status: 500 }
+        );
+      }
+
+      console.log(`✅ Todas as notificações do usuário ${user_id} foram excluídas`);
+      return NextResponse.json({
+        success: true,
+        message: 'Todas as notificações foram excluídas'
+      });
+    }
+
+    // Excluir notificações específicas
+    if (!notificationIds || notificationIds.length === 0) {
+      return NextResponse.json(
+        { error: 'notification_ids é obrigatório quando delete_all=false' },
+        { status: 400 }
+      );
+    }
+
+    console.log(`🗑️ Excluindo ${notificationIds.length} notificação(ões): ${notificationIds.join(', ')}`);
+
+    const { error: deleteError, count } = await supabaseAdmin
+      .from('notifications')
+      .delete({ count: 'exact' })
+      .in('id', notificationIds)
+      .eq('user_id', user_id);
+
+    if (deleteError) {
+      console.error('Erro ao excluir notificações específicas:', deleteError);
+      return NextResponse.json(
+        { error: 'Erro ao excluir notificações' },
+        { status: 500 }
+      );
+    }
+
+    console.log(`✅ ${count || 0} notificação(ões) excluída(s) com sucesso`);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Notificações excluídas com sucesso',
+      deletedCount: count || 0
+    });
+
+  } catch (error) {
+    console.error('Erro ao excluir notificações:', error);
     return NextResponse.json(
       { error: 'Erro interno do servidor' },
       { status: 500 }

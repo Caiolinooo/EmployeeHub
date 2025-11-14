@@ -1,6 +1,7 @@
 'use client';
 
 import React, { lazy, Suspense } from 'react';
+import { useI18n } from '@/contexts/I18nContext';
 // import { IconType } from 'react-icons';
 
 // Import dinâmico de ícones específicos para reduzir bundle size
@@ -60,7 +61,7 @@ const MaterialIcon: React.FC<MaterialIconProps> = ({
   
   // Se o ícone não existir, usar um ícone padrão carregado dinamicamente
   if (!IconComponent) {
-    console.warn(`Ícone "${name}" não encontrado. Usando ícone padrão.`);
+    console.warn(`${t('components.icone', 'Ícone')} ${name} ${t('components.naoEncontradoUsandoIconePadrao', 'não encontrado, usando ícone padrão')}`);
     const DefaultIcon = lazy(() => import('react-icons/fi').then(mod => ({ default: mod.FiHelpCircle })));
     return (
       <Suspense fallback={<IconFallback />}>

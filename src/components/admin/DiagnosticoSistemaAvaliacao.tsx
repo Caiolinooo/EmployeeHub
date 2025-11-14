@@ -1,10 +1,11 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { FiPlay, FiCheck, FiX, FiAlertCircle, FiRefreshCw } from 'react-icons/fi';
 import { supabase } from '@/lib/supabase';
 import { WorkflowAvaliacaoService } from '@/lib/services/workflow-avaliacao';
 import { getCriteriosPorTipoUsuario } from '@/data/criterios-avaliacao';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface TestResult {
   name: string;
@@ -14,13 +15,15 @@ interface TestResult {
 }
 
 export default function DiagnosticoSistemaAvaliacao() {
+  const { t } = useI18n();
+
   const [tests, setTests] = useState<TestResult[]>([
-    { name: 'Conexão com Banco', status: 'pending', message: 'Aguardando execução' },
-    { name: 'Tabelas Essenciais', status: 'pending', message: 'Aguardando execução' },
-    { name: 'Sistema de Critérios', status: 'pending', message: 'Aguardando execução' },
-    { name: 'Períodos de Avaliação', status: 'pending', message: 'Aguardando execução' },
-    { name: 'Workflow de Avaliação', status: 'pending', message: 'Aguardando execução' },
-    { name: 'Sistema de Notificações', status: 'pending', message: 'Aguardando execução' }
+    { name: t('components.conexaoComBanco'), status: 'pending', message: t('components.aguardandoExecucao') },
+    { name: 'Tabelas Essenciais', status: 'pending', message: t('components.aguardandoExecucao') },
+    { name: t('components.sistemaDeCriterios'), status: 'pending', message: t('components.aguardandoExecucao') },
+    { name: t('components.periodosDeAvaliacao'), status: 'pending', message: t('components.aguardandoExecucao') },
+    { name: t('components.workflowDeAvaliacao'), status: 'pending', message: t('components.aguardandoExecucao') },
+    { name: t('components.sistemaDeNotificacoes'), status: 'pending', message: t('components.aguardandoExecucao') }
   ]);
   
   const [isRunning, setIsRunning] = useState(false);
@@ -43,7 +46,7 @@ export default function DiagnosticoSistemaAvaliacao() {
       if (error) {
         updateTest(index, { 
           status: 'error', 
-          message: 'Falha na conexão', 
+          message: t('components.falhaNaConexao'), 
           details: error.message 
         });
         return false;
@@ -51,13 +54,13 @@ export default function DiagnosticoSistemaAvaliacao() {
 
       updateTest(index, { 
         status: 'success', 
-        message: 'Conexão estabelecida com sucesso' 
+        message: t('components.conexaoEstabelecidaComSucesso') 
       });
       return true;
     } catch (error) {
       updateTest(index, { 
         status: 'error', 
-        message: 'Erro na conexão', 
+        message: t('components.erroNaConexao'), 
         details: error instanceof Error ? error.message : 'Erro desconhecido'
       });
       return false;
@@ -101,7 +104,7 @@ export default function DiagnosticoSistemaAvaliacao() {
     if (erros.length === 0) {
       updateTest(index, { 
         status: 'success', 
-        message: `Todas as ${tabelas.length} tabelas estão acessíveis`,
+        message: t('components.todasAsTabelaslengthTabelasEstaoAcessiveis'),
         details: resultados.join('\n')
       });
       return true;
@@ -124,9 +127,9 @@ export default function DiagnosticoSistemaAvaliacao() {
       const criteriosLiderancaEspecificos = criteriosLider.filter(c => c.apenas_lideres);
 
       const detalhes = [
-        `✅ Critérios para usuário comum: ${criteriosComum.length}`,
-        `✅ Critérios para líder: ${criteriosLider.length}`,
-        `✅ Critérios específicos de liderança: ${criteriosLiderancaEspecificos.length}`,
+        `Critérios para usuário comum: ${criteriosComum.length}`,
+        `Critérios para líder: ${criteriosLider.length}`,
+        `Critérios específicos de liderança: ${criteriosLiderancaEspecificos.length}`,
         '',
         'Critérios de liderança:',
         ...criteriosLiderancaEspecificos.map(c => `  • ${c.nome}`)
@@ -134,14 +137,14 @@ export default function DiagnosticoSistemaAvaliacao() {
 
       updateTest(index, { 
         status: 'success', 
-        message: 'Sistema de critérios funcionando',
+        message: t('components.sistemaDeCriteriosFuncionando'),
         details: detalhes.join('\n')
       });
       return true;
     } catch (error) {
       updateTest(index, { 
         status: 'error', 
-        message: 'Erro no sistema de critérios',
+        message: t('components.erroNoSistemaDeCriterios'),
         details: error instanceof Error ? error.message : 'Erro desconhecido'
       });
       return false;
@@ -160,7 +163,7 @@ export default function DiagnosticoSistemaAvaliacao() {
       if (error) {
         updateTest(index, { 
           status: 'error', 
-          message: 'Erro ao acessar períodos',
+          message: t('components.erroAoAcessarPeriodos'),
           details: error.message
         });
         return false;
@@ -170,9 +173,9 @@ export default function DiagnosticoSistemaAvaliacao() {
       const periodoAtivo = await WorkflowAvaliacaoService.getPeriodoAvaliacaoAtivo();
 
       const detalhes = [
-        `✅ Total de períodos: ${periodos?.length || 0}`,
-        `✅ Períodos ativos: ${periodosAtivos.length}`,
-        `✅ Período ativo atual: ${periodoAtivo ? periodoAtivo.nome : 'Nenhum'}`,
+        `Total de períodos: ${periodos?.length || 0}`,
+        `Períodos ativos: ${periodosAtivos.length}`,
+        `Período ativo atual: ${periodoAtivo ? periodoAtivo.nome : 'Nenhum'}`,
         '',
         'Períodos encontrados:',
         ...(periodos?.map(p => `  • ${p.nome} (${p.ativo ? 'Ativo' : 'Inativo'})`) || [])
@@ -180,14 +183,14 @@ export default function DiagnosticoSistemaAvaliacao() {
 
       updateTest(index, { 
         status: 'success', 
-        message: `${periodos?.length || 0} período(s) configurado(s)`,
+        message: t('components.periodoslength0PeriodosConfigurados'),
         details: detalhes.join('\n')
       });
       return true;
     } catch (error) {
       updateTest(index, { 
         status: 'error', 
-        message: 'Erro ao verificar períodos',
+        message: t('components.erroAoVerificarPeriodos'),
         details: error instanceof Error ? error.message : 'Erro desconhecido'
       });
       return false;
@@ -207,7 +210,7 @@ export default function DiagnosticoSistemaAvaliacao() {
       if (avaliacoesError) {
         updateTest(index, { 
           status: 'error', 
-          message: 'Erro ao acessar avaliações',
+          message: t('components.erroAoAcessarAvaliacoes'),
           details: avaliacoesError.message
         });
         return false;
@@ -222,7 +225,7 @@ export default function DiagnosticoSistemaAvaliacao() {
       if (autoavaliacoesError) {
         updateTest(index, { 
           status: 'error', 
-          message: 'Erro ao acessar autoavaliações',
+          message: t('components.erroAoAcessarAutoavaliacoes'),
           details: autoavaliacoesError.message
         });
         return false;
@@ -234,8 +237,8 @@ export default function DiagnosticoSistemaAvaliacao() {
       }, {}) || {};
 
       const detalhes = [
-        `✅ Total de avaliações: ${avaliacoes?.length || 0}`,
-        `✅ Total de autoavaliações: ${autoavaliacoes?.length || 0}`,
+        `Total de avaliações: ${avaliacoes?.length || 0}`,
+        `Total de autoavaliações: ${autoavaliacoes?.length || 0}`,
         '',
         'Distribuição por etapa:',
         ...Object.entries(etapas).map(([etapa, count]) => `  • ${etapa}: ${count}`)
@@ -270,7 +273,7 @@ export default function DiagnosticoSistemaAvaliacao() {
       if (error) {
         updateTest(index, { 
           status: 'error', 
-          message: 'Erro ao acessar notificações',
+          message: t('components.erroAoAcessarNotificacoes'),
           details: error.message
         });
         return false;
@@ -281,8 +284,8 @@ export default function DiagnosticoSistemaAvaliacao() {
       ) || [];
 
       const detalhes = [
-        `✅ Total de notificações: ${notificacoes?.length || 0}`,
-        `✅ Notificações de avaliação: ${notificacoesAvaliacao.length}`,
+        `Total de notificações: ${notificacoes?.length || 0}`,
+        `Notificações de avaliação: ${notificacoesAvaliacao.length}`,
         '',
         'Tipos de notificação encontrados:',
         ...Array.from(new Set(notificacoes?.map(n => n.type) || [])).map(type => `  • ${type}`)
@@ -290,14 +293,14 @@ export default function DiagnosticoSistemaAvaliacao() {
 
       updateTest(index, { 
         status: 'success', 
-        message: 'Sistema de notificações acessível',
+        message: t('components.sistemaDeNotificacoesAcessivel'),
         details: detalhes.join('\n')
       });
       return true;
     } catch (error) {
       updateTest(index, { 
         status: 'error', 
-        message: 'Erro no sistema de notificações',
+        message: t('components.erroNoSistemaDeNotificacoes'),
         details: error instanceof Error ? error.message : 'Erro desconhecido'
       });
       return false;
@@ -329,7 +332,7 @@ export default function DiagnosticoSistemaAvaliacao() {
     setTests(prev => prev.map(test => ({
       ...test,
       status: 'pending' as const,
-      message: 'Aguardando execução',
+      message: t('components.aguardandoExecucao'),
       details: undefined
     })));
   };

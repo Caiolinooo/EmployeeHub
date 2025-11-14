@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiLoader, FiAlertCircle, FiDownload, FiZoomIn, FiZoomOut } from 'react-icons/fi';
@@ -41,7 +41,7 @@ const PdfImageViewer: React.FC<PdfImageViewerProps> = ({ filePath }) => {
         const response = await fetch(pdfPath, { method: 'HEAD' });
         
         if (!response.ok) {
-          throw new Error(`Arquivo não encontrado (${response.status})`);
+          throw new Error(t('components.arquivoNaoEncontradoResponsestatus'));
         }
         
         // Para este exemplo, vamos simular a conversão de PDF para imagens
@@ -64,7 +64,7 @@ const PdfImageViewer: React.FC<PdfImageViewerProps> = ({ filePath }) => {
             }
           }
         } catch (err) {
-          console.log('Erro ao verificar imagens pré-renderizadas:', err);
+          console.log(t('components.erroAoVerificarImagensPrerenderizadas'), err);
         }
         
         // Se não encontrou imagens pré-renderizadas, usar o PDF original
@@ -216,7 +216,7 @@ const PdfImageViewer: React.FC<PdfImageViewerProps> = ({ filePath }) => {
               // Se for uma imagem, mostrar a imagem
               <img
                 src={imageUrls[currentPage - 1]}
-                alt={`Página ${currentPage}`}
+                alt={t('components.paginaCurrentpage', `Página ${currentPage}`)}
                 className="max-w-full"
                 style={{ maxHeight: '80vh' }}
               />

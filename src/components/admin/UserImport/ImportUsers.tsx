@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
@@ -82,12 +82,12 @@ export default function ImportUsers() {
 
       // Verificar se o arquivo é válido
       if (!selectedFile || typeof selectedFile !== 'object') {
-        throw new Error('Arquivo inválido');
+        throw new Error(t('components.arquivoInvalido'));
       }
 
       // Verificar se o arquivo tem as propriedades necessárias
       if (!selectedFile.name || typeof selectedFile.size !== 'number') {
-        throw new Error('Arquivo com formato inválido');
+        throw new Error(t('components.arquivoComFormatoInvalido'));
       }
 
       setFile(selectedFile);
@@ -265,7 +265,7 @@ export default function ImportUsers() {
       proceedWithImport(allData);
     } catch (err: any) {
       setIsLoading(false);
-      setError(err.message || 'Erro durante a importação');
+      setError(err.message || t('components.erroDuranteAImportacao'));
     }
   };
 
@@ -550,7 +550,7 @@ export default function ImportUsers() {
         skipped: 0
       });
 
-      console.log('Iniciando importação de', data.length, 'usuários');
+      console.log(t('components.iniciandoImportacaoDe'), data.length, t('components.usuarios'));
       console.log('Dados de exemplo:', JSON.stringify(data[0]));
 
       // Enviar dados para a API
@@ -572,11 +572,11 @@ export default function ImportUsers() {
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Erro na resposta da API:', errorData);
-        throw new Error(errorData.error || 'Erro ao importar usuários');
+        throw new Error(errorData.error || t('components.erroAoImportarUsuarios'));
       }
 
       const result = await response.json();
-      console.log('Resultado da importação:', result);
+      console.log(t('components.resultadoDaImportacao'), result);
 
       // Atualizar progresso final
       setProgress({
@@ -594,14 +594,14 @@ export default function ImportUsers() {
 
       setIsLoading(false);
     } catch (err: any) {
-      console.error('Erro durante a importação:', err);
+      console.error(t('components.erroDuranteAImportacao'), err);
 
       // Registrar erro
       if (importLogId) {
         await logImportError(importLogId, err.message || 'Erro desconhecido');
       }
 
-      setError(err.message || 'Erro durante a importação');
+      setError(err.message || t('components.erroDuranteAImportacao'));
       setIsLoading(false);
 
       // Manter a tela de progresso para mostrar o erro

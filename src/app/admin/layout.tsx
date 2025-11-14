@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import Link from 'next/link';
@@ -28,7 +28,7 @@ const adminMenuItems = [
   { id: 'role-permissions', href: '/admin/role-permissions', label: 'admin.rolePermissions', icon: FiKey },
   { id: 'user-approval-settings', href: '/admin/user-approval-settings', label: 'admin.userApprovalSettings', icon: FiUserCheck },
   { id: 'banned-users', href: '/admin/banned-users', label: 'admin.bannedUsers', icon: FiUserX },
-  { id: 'notifications', href: '/admin/notifications', label: 'Notificações', icon: FiBell },
+  { id: 'notifications', href: '/admin/notifications', label: 'admin.notificacoes', icon: FiBell },
   { id: 'academy-certificates', href: '/admin/academy/certificates', label: 'Academy - Certificados', icon: FiAward },
   // Seção de Reembolsos
   { id: 'reimbursement-dashboard', href: '/reembolso?tab=dashboard', label: 'admin.myReimbursements', icon: FiDollarSign },
@@ -83,7 +83,7 @@ const adminMenuGroups = [
     id: 'communications',
     label: 'admin.communications',
     items: [
-      { id: 'notifications', href: '/admin/notifications', label: 'Notificações', icon: FiBell },
+      { id: 'notifications', href: '/admin/notifications', label: 'admin.notificacoes', icon: FiBell },
     ]
   },
   {
@@ -138,18 +138,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Estado persistente para recolher/expandir sidebar
   React.useEffect(() => {
-    // FORÇAR SIDEBAR SEMPRE EXPANDIDA
-    localStorage.removeItem('admin-sidebar-collapsed');
-    setIsCollapsed(false);
-    console.log('✅ Admin sidebar forçada para expandida');
+    const saved = localStorage.getItem('admin-sidebar-collapsed');
+    setIsCollapsed(saved ? JSON.parse(saved) : false);
   }, []);
 
   const toggleSidebar = () => {
-    // TEMPORARIAMENTE DESABILITADO - Manter sidebar sempre expandida
-    console.log('🔒 Admin toggleSidebar desabilitado');
-    // const v = !isCollapsed;
-    // setIsCollapsed(v);
-    // localStorage.setItem('admin-sidebar-collapsed', JSON.stringify(v));
+    const v = !isCollapsed;
+    setIsCollapsed(v);
+    localStorage.setItem('admin-sidebar-collapsed', JSON.stringify(v));
   };
 
   // Medir o tempo de renderização do layout
@@ -254,18 +250,29 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* Rodapé com informações do usuário e botão de logout */}
           <div className="p-4 border-t">
-            <div className="flex items-center mb-4">
-              <div className="w-10 h-10 rounded-full bg-abz-light-blue flex items-center justify-center mr-3">
-                {/* user?.avatar não existe no tipo User */}
-                <FiUser className="h-5 w-5 text-abz-blue" />
+            <Link
+              href="/profile"
+              className="flex items-center mb-4 hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors cursor-pointer group"
+              title={t('common.viewProfile', 'Ver perfil') as string}
+            >
+              <div className="w-10 h-10 rounded-full bg-abz-light-blue flex items-center justify-center mr-3 overflow-hidden group-hover:ring-2 group-hover:ring-abz-blue transition-all">
+                {(profile as any)?.drive_photo_url || (profile as any)?.avatar ? (
+                  <img
+                    src={(profile as any)?.drive_photo_url || (profile as any)?.avatar}
+                    alt={profile?.first_name || t('admin.usuario')}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <FiUser className="h-5 w-5 text-abz-blue" />
+                )}
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-700">{user?.email}</p>
+                <p className="text-sm font-medium text-gray-700 group-hover:text-abz-blue transition-colors">{user?.email}</p>
                 <p className="text-xs text-gray-500">
-                  {profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : 'Usuário'}
+                  {profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : t('admin.usuario')}
                 </p>
               </div>
-            </div>
+            </Link>
             <div className="mb-3">
               <LanguageSelector variant="inline" className="justify-center" />
             </div>

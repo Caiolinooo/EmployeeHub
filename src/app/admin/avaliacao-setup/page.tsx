@@ -1,8 +1,9 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiPlay, FiCheck, FiX, FiAlertCircle, FiDatabase, FiSettings } from 'react-icons/fi';
 import MainLayout from '@/components/Layout/MainLayout';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface User {
   id: string;
@@ -11,6 +12,8 @@ interface User {
 }
 
 export default function AvaliacaoSetupPage() {
+  const { t } = useI18n();
+
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
@@ -45,7 +48,7 @@ export default function AvaliacaoSetupPage() {
           }
         }
       } catch (error) {
-        console.error('Erro ao verificar autenticação:', error);
+        console.error(t('admin.erroAoVerificarAutenticacao'), error);
       } finally {
         setAuthLoading(false);
       }
@@ -80,9 +83,9 @@ export default function AvaliacaoSetupPage() {
         alert(`Erro ao aplicar migrações: ${data.error}`);
       }
     } catch (error) {
-      console.error('Erro ao aplicar migrações:', error);
-      setResults([`❌ Erro de conexão: ${error instanceof Error ? error.message : 'Erro desconhecido'}`]);
-      alert('Erro de conexão ao aplicar migrações');
+      console.error(t('admin.erroAoAplicarMigracoes'), error);
+      setResults([`${t('admin.erroDeConexao')}: ${error instanceof Error ? error.message : t('admin.erroDesconhecido')}`]);
+      alert(t('admin.erroDeConexaoAoAplicarMigracoes'));
     } finally {
       setLoading(false);
     }
@@ -102,7 +105,7 @@ export default function AvaliacaoSetupPage() {
       
       if (data.success) {
         const tableResults = Object.entries(data.tables).map(([table, exists]) => 
-          `${exists ? '✅' : '❌'} Tabela ${table}: ${exists ? 'Existe' : 'Não encontrada'}`
+          `${exists ? '✅' : '❌'} Tabela ${table}: ${exists ? 'Existe' : t('admin.naoEncontrada')}`
         );
         setResults(tableResults);
       } else {
@@ -110,7 +113,7 @@ export default function AvaliacaoSetupPage() {
       }
     } catch (error) {
       console.error('Erro ao verificar tabelas:', error);
-      setResults([`❌ Erro de conexão: ${error instanceof Error ? error.message : 'Erro desconhecido'}`]);
+      setResults([`${t('admin.erroDeConexao')}: ${error instanceof Error ? error.message : t('admin.erroDesconhecido')}`]);
     }
   };
 
@@ -197,7 +200,7 @@ export default function AvaliacaoSetupPage() {
                 className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
               >
                 <FiPlay className="mr-2" size={16} />
-                {loading ? 'Aplicando...' : 'Aplicar Migrações'}
+                {loading ? 'Aplicando...' : t('admin.aplicarMigracoes')}
               </button>
             </div>
           </div>

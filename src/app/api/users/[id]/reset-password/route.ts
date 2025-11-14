@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verificar autenticação
@@ -44,7 +44,7 @@ export async function POST(
     }
 
     // Obter o ID do usuário dos parâmetros da rota
-    const userId = params.id;
+    const { id: userId } = await params;
 
     // Obter a nova senha do corpo da requisição
     const body = await request.json();

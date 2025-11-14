@@ -6,6 +6,7 @@ import {
   EllipsisHorizontalIcon
 } from '@heroicons/react/24/outline';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface User {
   id: string;
@@ -31,7 +32,8 @@ interface CommentSectionProps {
 }
 
 const CommentSection: React.FC<CommentSectionProps> = ({ postId, onCommentAdded }) => {
-  const { user, getToken } = useSupabaseAuth();
+  const { t } = useI18n();
+  const { user, profile, getToken } = useSupabaseAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -57,11 +59,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, onCommentAdded 
         setComments(data.comments);
         setError(null);
       } else {
-        setError('Erro ao carregar comentários');
+        setError(t('components.erroAoCarregarComentarios'));
       }
     } catch (err) {
-      console.error('Erro ao carregar comentários:', err);
-      setError('Erro ao carregar comentários');
+      console.error(t('components.erroAoCarregarComentarios'), err);
+      setError(t('components.erroAoCarregarComentarios'));
     } finally {
       setLoading(false);
     }
@@ -99,11 +101,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, onCommentAdded 
         setNewComment('');
         onCommentAdded?.();
       } else {
-        setError('Erro ao enviar comentário');
+        setError(t('components.erroAoEnviarComentario'));
       }
     } catch (err) {
-      console.error('Erro ao enviar comentário:', err);
-      setError('Erro ao enviar comentário');
+      console.error(t('components.erroAoEnviarComentario'), err);
+      setError(t('components.erroAoEnviarComentario'));
     } finally {
       setSubmitting(false);
     }
@@ -241,13 +243,13 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, onCommentAdded 
 
                 {/* Formulário de resposta */}
                 {replyingTo === comment.id && (
-                  <form 
+                  <form
                     onSubmit={(e) => handleSubmitReply(e, comment.id)}
                     className="mt-3 flex space-x-2"
                   >
                     <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-white text-xs font-medium">
-                        {user?.first_name?.charAt(0) || 'U'}
+                        {profile?.first_name?.charAt(0) || 'U'}
                       </span>
                     </div>
                     <div className="flex-1 flex space-x-2">
@@ -255,7 +257,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, onCommentAdded 
                         type="text"
                         value={replyContent}
                         onChange={(e) => setReplyContent(e.target.value)}
-                        placeholder={`Responder para ${comment.user.first_name}...`}
+                        placeholder={`Responder para ${comment.user.first_name || 'usuário'}...`}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         maxLength={500}
                       />
@@ -322,7 +324,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, onCommentAdded 
         <form onSubmit={handleSubmitComment} className="flex space-x-3">
           <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
             <span className="text-white text-sm font-medium">
-              {user?.first_name?.charAt(0) || 'U'}
+              {profile?.first_name?.charAt(0) || 'U'}
             </span>
           </div>
           <div className="flex-1 flex space-x-2">
@@ -330,7 +332,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, onCommentAdded 
               type="text"
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Escreva um comentário..."
+              placeholder={t('components.escrevaUmComentario')}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               maxLength={500}
             />

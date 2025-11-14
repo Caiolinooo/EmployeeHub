@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiTrash2, FiUser, FiMail, FiPhone, FiCalendar, FiAlertCircle, FiRefreshCw } from 'react-icons/fi';
@@ -33,7 +33,7 @@ export default function BannedUsersManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
       
       if (!token) {
-        toast.error('Token não encontrado. Faça login novamente.');
+        toast.error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
         return;
       }
 
@@ -45,21 +45,21 @@ export default function BannedUsersManager() {
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao buscar usuários banidos');
+        throw new Error(t('components.erroAoBuscarUsuariosBanidos'));
       }
 
       const data = await response.json();
       setBannedUsers(data.data || []);
     } catch (error) {
-      console.error('Erro ao buscar usuários banidos:', error);
-      toast.error('Erro ao carregar usuários banidos');
+      console.error(t('components.erroAoBuscarUsuariosBanidos'), error);
+      toast.error(t('components.erroAoCarregarUsuariosBanidos'));
     } finally {
       setLoading(false);
     }
   };
 
   const handleUnbanUser = async (user: BannedUser) => {
-    if (!confirm(`Tem certeza que deseja desbanir ${user.first_name} ${user.last_name}? Isso permitirá que o usuário se cadastre novamente.`)) {
+    if (!confirm(t('components.temCertezaQueDesejaDesbanirUserfirstnameUserlastna'))) {
       return;
     }
 
@@ -68,7 +68,7 @@ export default function BannedUsersManager() {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
       
       if (!token) {
-        toast.error('Token não encontrado. Faça login novamente.');
+        toast.error(t('components.tokenNaoEncontradoFacaLoginNovamente'));
         return;
       }
 
@@ -86,14 +86,14 @@ export default function BannedUsersManager() {
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao desbanir usuário');
+        throw new Error(t('components.erroAoDesbanirUsuario'));
       }
 
-      toast.success('Usuário desbandido com sucesso');
+      toast.success(t('components.usuarioDesbandidoComSucesso'));
       fetchBannedUsers(); // Recarregar lista
     } catch (error) {
-      console.error('Erro ao desbanir usuário:', error);
-      toast.error('Erro ao desbanir usuário');
+      console.error(t('components.erroAoDesbanirUsuario'), error);
+      toast.error(t('components.erroAoDesbanirUsuario'));
     } finally {
       setUnbanningUser(null);
     }
@@ -214,7 +214,7 @@ export default function BannedUsersManager() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900 max-w-xs truncate">
-                        {user.ban_reason || 'Não especificado'}
+                        {user.ban_reason || t('components.naoEspecificado')}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

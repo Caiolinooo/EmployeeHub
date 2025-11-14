@@ -175,17 +175,25 @@ export async function POST(request: NextRequest) {
     const { data: card, error } = await supabaseAdmin
       .from('cards')
       .insert({
-        id: `card-${Date.now()}`, // Gerar ID único
+        id: body.id || `card-${Date.now()}`, // Usar ID fornecido ou gerar novo
         title: body.title,
+        title_en: body.titleEn || body.title_en || body.title, // Suportar ambos os formatos
         description: body.description || '',
+        description_en: body.descriptionEn || body.description_en || body.description || '',
         href: body.href,
-        icon: body.icon || 'FiGrid',
-        color: body.color || 'blue',
-        hover_color: body.hoverColor || 'blue', // Nota: Supabase usa snake_case
+        icon_name: body.iconName || body.icon_name || body.icon || 'FiGrid',
+        color: body.color || 'bg-abz-blue',
+        hover_color: body.hoverColor || body.hover_color || 'hover:bg-abz-blue-dark',
         enabled: body.enabled !== undefined ? body.enabled : true,
         order: body.order || 0,
-        admin_only: body.adminOnly || false, // Nota: Supabase usa snake_case
+        admin_only: body.adminOnly || body.admin_only || false,
+        manager_only: body.managerOnly || body.manager_only || false,
         external: body.external || false,
+        module_key: body.moduleKey || body.module_key || null,
+        category: body.category || null,
+        tags: body.tags || [],
+        allowed_roles: body.allowedRoles || body.allowed_roles || [],
+        allowed_user_ids: body.allowedUserIds || body.allowed_user_ids || [],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })

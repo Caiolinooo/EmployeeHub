@@ -1,0 +1,27 @@
+# Painel ABZ – Copilot Guide
+
+- Em primeiro lugar sempre use todos  os MCPS - use o sequential thinking e o memory bank, assim como o context7 para te auxiliar em qualquer ação que vc tomar.
+- Next.js App Router lives in `src/app`; legacy pages in `src/pages` are historical only, so add new routes/components under the App Router structure.
+- Production traffic flows through `server.js` (Express) which adds security headers, static caching, and optional proxying—keep new server logic compatible with that wrapper.
+- Supabase access is centralized in `src/lib/supabase.ts`; reuse `supabase`, `getSupabaseAdmin()`, or `supabaseAdmin` instead of creating new clients.
+- Secrets and service keys are stored in the `app_secrets` table and surfaced via `src/lib/secure-credentials.ts`; prefer `getCredential()` when an API route needs sensitive config.
+- Authentication logic is consolidated in `src/lib/auth.ts` and mirrored on the client in `src/contexts/AuthContext.tsx`; leverage helpers like `verifyRequestToken`, `isAdminFromRequest`, and context hooks before rolling new auth code.
+- Frontend providers (`ClientProviders`, `SupabaseAuthProvider`, `I18nProvider`, `SiteConfigProvider`) wrap every page; avoid using server-only APIs inside components that mount under these providers.
+- Middleware in `middleware.ts` enforces locale cookies and token checks for `/avaliacao/*`; mirror this pattern when creating new protected top-level routes.
+- API endpoints live in `src/app/api/**/route.ts` and consistently return `{ success, data, error }`; follow the same response shape and logging style when adding endpoints.
+- Evaluation automation relies on `/api/avaliacao/cron/criar-avaliacoes`; require `CRON_SECRET` or an admin Bearer token for any new cron-style routes.
+- Business rules are usually factored into the service layer (`src/services/*.ts`) or shared libs in `src/lib/`; prefer extending those modules instead of duplicating logic in APIs or components.
+- Reimbursement and evaluation UIs source constants from `src/data/`; extend these data files when adding new cards, menu items, or criteria.
+- Forms use `react-hook-form` with Zod schemas (see `src/lib/schema.ts` and `src/components/ReimbursementForm.tsx`); keep validation in sync between schema and UI hints.
+- Internationalization strings live in `src/i18n/locales/{pt-BR,en-US}.ts`; update both files and run `npm run validate:i18n` or `npm run check:translations` after touching copy.
+- Site metadata and branding come from `/api/config`, fetched in `src/app/layout.tsx`; new runtime configuration should go through the same API to keep SSR safe.
+- Notifications (web and email) funnel through helpers in `src/lib/email*.ts` and the service worker `public/notifications-sw.js`; reuse those utilities to respect user preferences.
+- Frontend auth state persists tokens via `src/lib/tokenStorage` and expects APIs to set headers/cookies exactly like existing auth routes; breaking that contract destabilizes auto refresh.
+- When touching evaluation tables (`avaliacoes_desempenho`, `periodos_avaliacao`, etc.), review `docs/evaluation/README.md` and the scripts referenced there to avoid schema drift.
+- Database setup scripts (`npm run db:setup`, `npm run db:fix-avaliacoes`, `npm run db:check`) should be your first step before running dev or tests; they hydrate Supabase with required functions and policies.
+- Builds clean `.next` via `npm run build`; use `npm run rebuild` to purge caches, and `npm run start:prod` to boot the Express server locally for production parity.
+- Targeted diagnostics live under `scripts/` (e.g., `scripts/test-automatic-evaluation-creation.js`, `scripts/test-reimbursement-system.js`); run them with `node` when validating module behavior.
+- RLS fixes and storage policies are managed through scripts like `scripts/fix-rls-client-only.js`; avoid ad-hoc SQL in APIs and let these scripts handle policy updates.
+- Shared UI helpers such as `ErrorBoundary`, `GlobalErrorHandler`, `ThemeEnforcerWrapper`, and Material icon shims sit in `src/components`; reuse them instead of adding new global wrappers.
+- Assets belong under `public/images` (or `public/icons` for PWA); reference them via `/images/...` as seen in `public/notifications-sw.js` to keep caching rules intact.
+- Documentation cribs in `CLAUDE.md`, `README.md`, and `docs/` capture architecture decisions—consult them before large structural edits.

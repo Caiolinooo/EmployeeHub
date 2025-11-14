@@ -4,13 +4,9 @@
  */
 
 import { IconType } from 'react-icons';
-import { 
-  FiGrid, FiBookOpen, FiClipboard, FiFileText, FiBriefcase, 
-  FiCalendar, FiRss, FiDollarSign, FiSettings, FiUsers,
-  FiBarChart2, FiPlay, FiMessageSquare, FiUser, FiActivity,
-  FiClock, FiKey, FiUserCheck, FiUserX, FiBell, FiAward,
-  FiSmartphone, FiDatabase, FiTool, FiLayers, FiList, FiEdit
-} from 'react-icons/fi';
+import { FiGrid } from 'react-icons/fi';
+import { supabase } from './supabase';
+import { getIconComponent } from './iconMap';
 
 // Interface unificada para items (cards e menus)
 export interface UnifiedItem {
@@ -45,40 +41,7 @@ export interface UnifiedItem {
   source?: 'supabase' | 'hardcoded';
 }
 
-// Mapeamento de ícones - Material Icons para React Icons
-const iconMap: Record<string, IconType> = {
-  // React Icons (FiXxx)
-  FiGrid, FiBookOpen, FiClipboard, FiFileText, FiBriefcase,
-  FiCalendar, FiRss, FiDollarSign, FiSettings, FiUsers,
-  FiBarChart2, FiPlay, FiMessageSquare, FiUser, FiActivity,
-  FiClock, FiKey, FiUserCheck, FiUserX, FiBell, FiAward,
-  FiSmartphone, FiDatabase, FiTool, FiLayers, FiList, FiEdit,
 
-  // Material Icons (mapeamento para React Icons)
-  'dashboard': FiGrid,
-  'book': FiBookOpen,
-  'description': FiFileText,
-  'policy': FiClipboard,
-  'calendar_today': FiCalendar,
-  'newspaper': FiRss,
-  'receipt': FiDollarSign,
-  'payments': FiDollarSign,
-  'schedule': FiClock,
-  'assessment': FiBarChart2,
-  'admin_panel_settings': FiSettings,
-  'settings': FiSettings,
-  'people': FiUsers,
-  'person': FiUser,
-  'play_circle': FiPlay,
-  'chat': FiMessageSquare,
-  'trending_up': FiActivity,
-  'smartphone': FiSmartphone,
-  'storage': FiDatabase,
-  'build': FiTool,
-  'layers': FiLayers,
-  'list': FiList,
-  'edit': FiEdit
-};
 
 // Configuração do serviço
 interface UnifiedDataConfig {
@@ -121,8 +84,8 @@ class UnifiedDataService {
         title: 'Dashboard',
         description: 'Painel principal do sistema',
         href: '/dashboard',
-        icon: FiGrid,
-        iconName: 'FiGrid',
+        icon: getIconComponent('FiHome'),
+        iconName: 'FiHome',
         color: 'bg-abz-blue',
         hoverColor: 'hover:bg-abz-blue-dark',
         external: false,
@@ -137,15 +100,15 @@ class UnifiedDataService {
         title: 'Manual do Colaborador',
         description: 'Acesse o manual completo do colaborador',
         href: '/manual',
-        icon: FiBookOpen,
+        icon: getIconComponent('FiBookOpen'),
         iconName: 'FiBookOpen',
         color: 'bg-abz-blue',
         hoverColor: 'hover:bg-abz-blue-dark',
         external: false,
-        enabled: true,
+        enabled: false,
         order: 2,
-        showInDashboard: true,
-        showInMenu: true,
+        showInDashboard: false,
+        showInMenu: false,
         showInAdminMenu: false
       },
       {
@@ -153,7 +116,7 @@ class UnifiedDataService {
         title: 'Procedimentos Logística',
         description: 'Procedimentos operacionais de logística',
         href: '/procedimentos-logistica',
-        icon: FiClipboard,
+        icon: getIconComponent('FiClipboard'),
         iconName: 'FiClipboard',
         color: 'bg-abz-green',
         hoverColor: 'hover:bg-abz-green-dark',
@@ -169,7 +132,7 @@ class UnifiedDataService {
         title: 'Reembolso',
         description: 'Sistema de solicitação de reembolsos',
         href: '/reembolso',
-        icon: FiDollarSign,
+        icon: getIconComponent('FiDollarSign'),
         iconName: 'FiDollarSign',
         color: 'bg-abz-green',
         hoverColor: 'hover:bg-abz-green-dark',
@@ -185,7 +148,7 @@ class UnifiedDataService {
         title: 'Avaliação',
         description: 'Sistema de avaliação de desempenho',
         href: '/avaliacao',
-        icon: FiBarChart2,
+        icon: getIconComponent('FiBarChart2'),
         iconName: 'FiBarChart2',
         color: 'bg-abz-blue',
         hoverColor: 'hover:bg-abz-blue-dark',
@@ -202,7 +165,7 @@ class UnifiedDataService {
         title: 'Calendário',
         description: 'Calendário de eventos e feriados',
         href: '/calendario',
-        icon: FiCalendar,
+        icon: getIconComponent('FiCalendar'),
         iconName: 'FiCalendar',
         color: 'bg-abz-green',
         hoverColor: 'hover:bg-abz-green-dark',
@@ -218,7 +181,7 @@ class UnifiedDataService {
         title: 'Contatos',
         description: 'Lista de contatos da empresa',
         href: '/contatos',
-        icon: FiUsers,
+        icon: getIconComponent('FiUsers'),
         iconName: 'FiUsers',
         color: 'bg-abz-blue',
         hoverColor: 'hover:bg-abz-blue-dark',
@@ -234,7 +197,7 @@ class UnifiedDataService {
         title: 'Ponto',
         description: 'Sistema de controle de ponto',
         href: '/ponto',
-        icon: FiClock,
+        icon: getIconComponent('FiClock'),
         iconName: 'FiClock',
         color: 'bg-abz-indigo',
         hoverColor: 'hover:bg-abz-indigo-dark',
@@ -250,7 +213,7 @@ class UnifiedDataService {
         title: 'Contracheque',
         description: 'Consulta de contracheques',
         href: '/contracheque',
-        icon: FiFileText,
+        icon: getIconComponent('FiFileText'),
         iconName: 'FiFileText',
         color: 'bg-abz-green',
         hoverColor: 'hover:bg-abz-green-dark',
@@ -266,7 +229,7 @@ class UnifiedDataService {
         title: 'Academy',
         description: 'Portal de treinamentos e cursos',
         href: '/academy',
-        icon: FiBookOpen,
+        icon: getIconComponent('FiBookOpen'),
         iconName: 'FiBookOpen',
         color: 'bg-abz-blue',
         hoverColor: 'hover:bg-abz-blue-dark',
@@ -282,46 +245,13 @@ class UnifiedDataService {
         title: 'Notícias',
         description: 'Central de notícias e comunicados',
         href: '/noticias',
-        icon: FiMessageSquare,
+        icon: getIconComponent('FiMessageSquare'),
         iconName: 'FiMessageSquare',
         color: 'bg-abz-indigo',
         hoverColor: 'hover:bg-abz-indigo-dark',
         external: false,
         enabled: true,
         order: 11,
-        showInDashboard: true,
-        showInMenu: true,
-        showInAdminMenu: false
-      },
-      {
-        id: 'profile',
-        title: 'Perfil',
-        description: 'Gerenciar perfil do usuário',
-        href: '/profile',
-        icon: FiUser,
-        iconName: 'FiUser',
-        color: 'bg-abz-blue',
-        hoverColor: 'hover:bg-abz-blue-dark',
-        external: false,
-        enabled: true,
-        order: 12,
-        showInDashboard: false,
-        showInMenu: true,
-        showInAdminMenu: false
-      },
-      {
-        id: 'admin',
-        title: 'Administração',
-        description: 'Painel de administração do sistema',
-        href: '/admin',
-        icon: FiSettings,
-        iconName: 'FiSettings',
-        color: 'bg-abz-indigo',
-        hoverColor: 'hover:bg-abz-indigo-dark',
-        external: false,
-        enabled: true,
-        order: 100,
-        adminOnly: true,
         showInDashboard: true,
         showInMenu: true,
         showInAdminMenu: false
@@ -375,7 +305,7 @@ class UnifiedDataService {
           return false;
         }
 
-        return item.enabled;
+        return item.enabled && item.href && item.href.trim() !== '';
       });
     }
 
@@ -409,10 +339,10 @@ class UnifiedDataService {
         items = [...this.hardcodedItems];
       }
 
-      // Processar ícones
+      // Processar ícones usando o mapeamento centralizado
       items = items.map(item => ({
         ...item,
-        icon: iconMap[item.iconName] || FiGrid
+        icon: getIconComponent(item.iconName)
       }));
 
       // Atualizar cache
@@ -441,27 +371,26 @@ class UnifiedDataService {
     try {
       console.log('🔄 Loading items from Supabase...');
 
-      // Importar supabase client dinamicamente para evitar problemas de SSR
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-      if (!supabaseUrl || !supabaseKey) {
-        console.warn('🔄 Supabase credentials not found, using fallback');
+      // Usar o singleton do Supabase já importado no topo do arquivo
+      if (!supabase) {
+        console.warn('🔄 Supabase client not available, using fallback');
         return [];
       }
 
-      const supabase = createClient(supabaseUrl, supabaseKey);
-
       // Buscar menu items do banco
       const { data: menuItems, error } = await supabase
-        .from('MenuItem')
+        .from('menu_items')
         .select('*')
         .eq('enabled', true)
         .order('order', { ascending: true });
 
       if (error) {
-        console.error('🔄 Error loading from Supabase:', error);
+        // Silenciar erro se a tabela não existir (código PGRST116)
+        if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
+          console.log('🔄 Table menu_items does not exist, using fallback');
+        } else {
+          console.error('🔄 Error loading from Supabase:', error);
+        }
         return [];
       }
 

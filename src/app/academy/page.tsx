@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import MainLayout from '@/components/Layout/MainLayout';
@@ -15,6 +15,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { canEditAcademy } from '@/lib/permissions';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface Category {
   id: string;
@@ -73,6 +74,7 @@ interface Enrollment {
 
 const AcademyPage: React.FC = () => {
   const { user, getToken } = useSupabaseAuth();
+  const { t } = useI18n();
   const [courses, setCourses] = useState<Course[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
@@ -168,10 +170,10 @@ const AcademyPage: React.FC = () => {
       if (data.success) {
         setEnrollments(data.enrollments);
       } else {
-        console.error('Erro ao carregar matrículas:', data.error);
+        console.error(t('academy.erroAoCarregarMatriculas'), data.error);
       }
     } catch (error) {
-      console.error('Erro ao carregar matrículas:', error);
+      console.error(t('academy.erroAoCarregarMatriculas'), error);
     }
   };
 
@@ -181,7 +183,7 @@ const AcademyPage: React.FC = () => {
     try {
       const token = await getToken();
       if (!token) {
-        setError('Token de autenticação não encontrado');
+        setError(t('academy.tokenDeAutenticacaoNaoEncontrado'));
         return;
       }
 
@@ -199,14 +201,14 @@ const AcademyPage: React.FC = () => {
       const data = await response.json();
 
       if (data.success) {
-        alert('Matrícula realizada com sucesso!');
+        alert(t('academy.matriculaRealizadaComSucesso'));
         loadEnrollments();
       } else {
-        alert(data.error || 'Erro ao realizar matrícula');
+        alert(data.error || t('academy.erroAoRealizarMatricula'));
       }
     } catch (error) {
-      console.error('Erro ao realizar matrícula:', error);
-      alert('Erro ao realizar matrícula');
+      console.error(t('academy.erroAoRealizarMatricula'), error);
+      alert(t('academy.erroAoRealizarMatricula'));
     }
   };
 
@@ -237,9 +239,9 @@ const AcademyPage: React.FC = () => {
       case 'beginner':
         return 'Iniciante';
       case 'intermediate':
-        return 'Intermediário';
+        return t('academy.intermediario');
       case 'advanced':
-        return 'Avançado';
+        return t('academy.avancado');
       default:
         return difficulty;
     }
@@ -463,7 +465,7 @@ const AcademyPage: React.FC = () => {
             <div className="flex items-center justify-center bg-blue-50 rounded-lg p-2">
               <BookOpenIcon className="w-5 h-5 text-blue-600 mr-2" />
               <span className="text-sm font-medium text-blue-900">
-                {filteredCourses.length} cursos {viewMode === 'enrolled' ? 'matriculados' : 'disponíveis'}
+                {filteredCourses.length} {t('academy.cursos')} {viewMode === 'enrolled' ? t('academy.matriculados') : t('academy.disponiveis')}
               </span>
             </div>
           </div>

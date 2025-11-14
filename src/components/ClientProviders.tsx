@@ -6,7 +6,6 @@ import 'react-toastify/dist/ReactToastify.css';
 import GlobalErrorHandler from './GlobalErrorHandler';
 
 // Import providers directly in the client component
-import { AuthProvider } from '@/contexts/AuthContext';
 import { I18nProvider } from '@/contexts/I18nContext';
 import { SupabaseAuthProvider } from '@/contexts/SupabaseAuthContext';
 import { SiteConfigProvider } from '@/contexts/SiteConfigContext';

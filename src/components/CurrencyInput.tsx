@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useI18n } from '@/contexts/I18nContext';
 import {
   Currency,
   getExchangeRates,
@@ -31,6 +32,7 @@ export default function CurrencyInput({
   required = false,
   className = ''
 }: CurrencyInputProps) {
+  const { t } = useI18n();
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(currency || 'BRL');
   const [showCurrencySelector, setShowCurrencySelector] = useState(false);
   const [convertedValues, setConvertedValues] = useState<Record<Currency, string>>({
@@ -247,7 +249,7 @@ export default function CurrencyInput({
 
     // Forçar re-render usando um timeout
     setTimeout(() => {
-      console.log('Estado após mudança:', currency);
+      console.log(t('components.estadoAposMudanca'), currency);
       if (onCurrencyChange) {
         try {
           onCurrencyChange(currency);

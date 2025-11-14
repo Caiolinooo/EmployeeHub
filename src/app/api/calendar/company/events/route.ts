@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
     if (!res.ok) return NextResponse.json({ error: `Falha ao baixar ICS (${res.status})` }, { status: 502 });
     const icsText = await res.text();
 
-    let events = parseIcs(icsText);
+    let events = await parseIcs(icsText);
     // Filter by date range
     const now = new Date();
     const max = new Date();

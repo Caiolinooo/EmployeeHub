@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -6,10 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import MainLayout from '@/components/Layout/MainLayout';
-import { 
-  FiCheck, 
-  FiX, 
-  FiAlertTriangle, 
+import { useI18n } from '@/contexts/I18nContext';
+import {
+  FiCheck,
+  FiX,
+  FiAlertTriangle,
   FiDatabase,
   FiCopy,
   FiRefreshCw,
@@ -25,6 +26,8 @@ interface SystemCheck {
 }
 
 export default function AdminSetupPage() {
+  const { t } = useI18n();
+
   const router = useRouter();
   const { toast } = useToast();
   const [checks, setChecks] = useState<SystemCheck[]>([]);
@@ -45,7 +48,7 @@ export default function AdminSetupPage() {
     if (user.role !== 'ADMIN') {
       toast({
         title: "Acesso Negado",
-        description: "Apenas administradores podem acessar esta página.",
+        description: t('admin.apenasAdministradoresPodemAcessarEstaPagina'),
         variant: "destructive",
       });
       router.push('/dashboard');
@@ -87,7 +90,7 @@ export default function AdminSetupPage() {
         newChecks[0] = {
           name: 'Tabela Cards',
           status: 'error',
-          message: 'Tabela cards não existe no Supabase',
+          message: t('admin.tabelaCardsNaoExisteNoSupabase'),
           sql: `-- SQL para criar a tabela cards
 CREATE TABLE IF NOT EXISTS public.cards (
   id TEXT PRIMARY KEY,
@@ -142,7 +145,7 @@ CREATE POLICY IF NOT EXISTS "cards_admin_policy" ON public.cards
     newChecks.push({
       name: 'Conectividade Supabase',
       status: 'checking',
-      message: 'Testando conexão com Supabase...'
+      message: t('admin.testandoConexaoComSupabase')
     });
     setChecks([...newChecks]);
 
@@ -158,28 +161,28 @@ CREATE POLICY IF NOT EXISTS "cards_admin_policy" ON public.cards
         newChecks[1] = {
           name: 'Conectividade Supabase',
           status: 'success',
-          message: 'Conexão com Supabase funcionando'
+          message: t('admin.conexaoComSupabaseFuncionando')
         };
       } else {
         newChecks[1] = {
           name: 'Conectividade Supabase',
           status: 'error',
-          message: 'Problema na conexão com Supabase'
+          message: t('admin.problemaNaConexaoComSupabase')
         };
       }
     } catch (error) {
       newChecks[1] = {
         name: 'Conectividade Supabase',
         status: 'error',
-        message: 'Erro na conexão com Supabase'
+        message: t('admin.erroNaConexaoComSupabase')
       };
     }
 
     // Check 3: Verificar usuários
     newChecks.push({
-      name: 'Sistema de Usuários',
+      name: t('admin.sistemaDeUsuarios'),
       status: 'checking',
-      message: 'Verificando sistema de usuários...'
+      message: t('admin.verificandoSistemaDeUsuarios')
     });
     setChecks([...newChecks]);
 
@@ -194,22 +197,22 @@ CREATE POLICY IF NOT EXISTS "cards_admin_policy" ON public.cards
       if (response.ok) {
         const data = await response.json();
         newChecks[2] = {
-          name: 'Sistema de Usuários',
+          name: t('admin.sistemaDeUsuarios'),
           status: 'success',
-          message: `Sistema de usuários funcionando (${data.userCount} usuários)`
+          message: t('admin.sistemaDeUsuariosFuncionandoDatausercountUsuarios')
         };
       } else {
         newChecks[2] = {
-          name: 'Sistema de Usuários',
+          name: t('admin.sistemaDeUsuarios'),
           status: 'warning',
-          message: 'Sistema de usuários com problemas'
+          message: t('admin.sistemaDeUsuariosComProblemas')
         };
       }
     } catch (error) {
       newChecks[2] = {
-        name: 'Sistema de Usuários',
+        name: t('admin.sistemaDeUsuarios'),
         status: 'warning',
-        message: 'Erro ao verificar sistema de usuários'
+        message: t('admin.erroAoVerificarSistemaDeUsuarios')
       };
     }
 
@@ -221,14 +224,14 @@ CREATE POLICY IF NOT EXISTS "cards_admin_policy" ON public.cards
     navigator.clipboard.writeText(text);
     toast({
       title: "Copiado!",
-      description: "SQL copiado para a área de transferência",
+      description: t('admin.sqlCopiadoParaAAreaDeTransferencia'),
     });
   };
 
   const testAfterExecution = async () => {
     toast({
       title: "Testando...",
-      description: "Verificando se as alterações foram aplicadas",
+      description: t('admin.verificandoSeAsAlteracoesForamAplicadas'),
     });
     await runSystemChecks();
   };
@@ -337,7 +340,7 @@ CREATE POLICY IF NOT EXISTS "cards_admin_policy" ON public.cards
                         <li>1. Acesse o Supabase Dashboard</li>
                         <li>2. Vá para SQL Editor</li>
                         <li>3. Cole e execute o SQL acima</li>
-                        <li>4. Clique em "Testar Após Execução"</li>
+                        <li>4. Clique em {t('admin.testarAposExecucao')}</li>
                       </ol>
                     </div>
                   </div>

@@ -21,7 +21,7 @@ export default function ImportDashboardPage() {
         setStats(importStats);
         setError(null);
       } catch (err: any) {
-        setError(err.message || 'Erro ao carregar estatísticas');
+        setError(err.message || t('admin.erroAoCarregarEstatisticas'));
       } finally {
         setIsLoading(false);
       }

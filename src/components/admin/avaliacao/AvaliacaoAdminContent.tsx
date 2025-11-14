@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { FiSettings, FiList, FiUsers, FiBarChart2, FiDatabase, FiLoader, FiAlertCircle, FiCalendar, FiUserCheck, FiAward } from 'react-icons/fi';
+import { isFeatureEnabled } from '@/lib/featureFlags';
+import { CriteriosManager } from './CriteriosManager';
 import { useI18n } from '@/contexts/I18nContext';
 import MainLayout from '@/components/Layout/MainLayout';
 import { CreateCriteriosTable } from '@/components/admin/avaliacao/CreateCriteriosTable';
 import { ImportCriteriosButton } from '@/components/admin/avaliacao/ImportCriteriosButton';
 import PainelPeriodosAvaliacao from '@/components/admin/PainelPeriodosAvaliacao';
-import PainelGerentesAvaliacao from '@/components/admin/PainelGerentesAvaliacao';
+import PainelGerentesAvaliacao from '@/components/admin/PainelConfigGerentesAvaliacaoAdvanced';
 import PainelLideresSetor from '@/components/admin/PainelLideresSetor';
 import ExecutarMigrationAvaliacao from '@/components/admin/ExecutarMigrationAvaliacao';
 import DiagnosticoAdmin from '@/components/admin/DiagnosticoAdmin';
@@ -21,14 +23,100 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
  */
 export default function AvaliacaoAdminContent() {
   const { t } = useI18n();
-  const [activeTab, setActiveTab] = useState<'database' | 'criterios' | 'funcionarios' | 'periodos' | 'gerentes' | 'lideres'>('periodos');
+  const [activeTab, setActiveTab] = useState<'database' | 'criterios' | 'funcionarios' | 'periodos' | 'gerentes' | 'lideres' | 'config'>('periodos');
+  const [settings, setSettings] = useState<any>(null);
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const weightedEnvEnabled = isFeatureEnabled('avaliacao_weighted_calc');
+
+  // Carregar settings globais
+  useEffect(() => {
+    const load = async () => {
+      setSettingsLoading(true);
+      try {
+        const res = await fetch('/api/avaliacao/settings');
+        const json = await res.json();
+        if (json.success) setSettings(json.data);
+      } catch(err) {
+        console.warn('Falha ao carregar settings', err);
+      } finally {
+        setSettingsLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const toggleWeighted = async () => {
+    if (!weightedEnvEnabled) {
+      alert('A função de cálculo ponderado está desativada via ambiente. Defina EVALUACAO_WEIGHTED_ENABLED=true para ativar.');
+      return;
+    }
+    const targetMethod = settings?.calculo?.method === 'weighted' ? 'simple_average' : 'weighted';
+    try {
+      const res = await fetch('/api/avaliacao/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ method: targetMethod })
+      });
+      const json = await res.json();
+      if (json.success) {
+        setSettings(json.data);
+      } else {
+        alert('Erro ao atualizar método: ' + (json.error || 'desconhecido'));
+      }
+    } catch (e:any) {
+      alert('Falha na requisição: ' + e.message);
+    }
+  };
+                <button
+                  onClick={() => setActiveTab('config')}
+                  className={`py-4 px-6 text-center border-b-2 font-medium text-sm whitespace-nowrap ${
+                    activeTab === 'config'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <FiSettings className="inline-block mr-2" />
+                  Configuração
+                </button>
+              {activeTab === 'config' && (
+                <div className="space-y-6">
+                  <h2 className="text-lg font-medium text-gray-900 mb-4">Configuração de Cálculo</h2>
+                  <div className="p-4 border rounded-md bg-gray-50 space-y-4">
+                    <p className="text-sm text-gray-600">
+                      Controle do método de cálculo das médias. O ambiente deve ter <code className="px-1 bg-yellow-200 rounded">EVALUACAO_WEIGHTED_ENABLED=true</code> para permitir uso de pesos.
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-gray-800">Cálculo Ponderado</p>
+                        <p className="text-xs text-gray-500">Quando ativo, usa pesos configurados por pergunta (default 1).</p>
+                      </div>
+                      <button
+                        onClick={toggleWeighted}
+                        disabled={settingsLoading}
+                        className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${
+                          settings?.calculo?.method === 'weighted' && weightedEnvEnabled
+                            ? 'bg-green-600 hover:bg-green-700 text-white'
+                            : 'bg-gray-300 hover:bg-gray-400 text-gray-800'
+                        }`}
+                      >
+                        {settingsLoading ? 'Atualizando...' : settings?.calculo?.method === 'weighted' && weightedEnvEnabled ? 'Ativado' : 'Desativado'}
+                      </button>
+                    </div>
+                    {!weightedEnvEnabled && (
+                      <div className="text-xs text-red-600">
+                        A flag de ambiente não está ativa. Mesmo que o método esteja setado para weighted, o cálculo continuará simples.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
   const { user, profile, isLoading, isAdmin } = useSupabaseAuth();
   const router = useRouter();
 
   // Verificar se o usuário é administrador
   useEffect(() => {
     if (!isLoading && !isAdmin) {
-      console.log('Usuário não é administrador, redirecionando...');
+      console.log(t('components.usuarioNaoEAdministradorRedirecionando'));
       router.push('/dashboard');
     }
   }, [isLoading, isAdmin, router]);
@@ -62,7 +150,7 @@ export default function AvaliacaoAdminContent() {
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="w-full px-6 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-900">
             {t('admin.avaliacao.title', 'Administração do Módulo de Avaliação')}
@@ -193,7 +281,7 @@ export default function AvaliacaoAdminContent() {
                 <p className="text-gray-600 mb-6">
                   {t(
                     'admin.avaliacao.database.description',
-                    'Gerencie as tabelas do banco de dados necessárias para o módulo de avaliação de desempenho.'
+                    t('components.gerencieAsTabelasDoBancoDeDadosNecessariasParaOMod')
                   )}
                 </p>
 
@@ -215,19 +303,10 @@ export default function AvaliacaoAdminContent() {
                 <p className="text-gray-600 mb-6">
                   {t(
                     'admin.avaliacao.criterios.description',
-                    'Gerencie os critérios de avaliação utilizados no sistema.'
+                    t('components.gerencieOsCriteriosDeAvaliacaoUtilizadosNoSistema')
                   )}
                 </p>
-
-                <div className="flex justify-center">
-                  <Link
-                    href="/avaliacao/criterios"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    <FiList className="mr-2 -ml-1 h-5 w-5" />
-                    {t('admin.avaliacao.criterios.manage', 'Gerenciar Critérios')}
-                  </Link>
-                </div>
+                <CriteriosManager />
               </div>
             )}
 
@@ -239,7 +318,7 @@ export default function AvaliacaoAdminContent() {
                 <p className="text-gray-600 mb-6">
                   {t(
                     'admin.avaliacao.funcionarios.description',
-                    'Gerencie os funcionários que participam do processo de avaliação.'
+                    t('components.gerencieOsFuncionariosQueParticipamDoProcessoDeAva')
                   )}
                 </p>
 

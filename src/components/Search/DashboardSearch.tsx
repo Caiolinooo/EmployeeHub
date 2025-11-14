@@ -1,7 +1,8 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface SearchResult {
   id: string;
@@ -19,9 +20,11 @@ interface SearchResponse {
   limit: number;
   offset: number;
   hasMore: boolean;
+  error?: string;
 }
 
 const DashboardSearch: React.FC = () => {
+  const { t } = useI18n();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -117,9 +120,9 @@ const DashboardSearch: React.FC = () => {
       case 'document':
         return 'Documento';
       case 'news':
-        return 'Notícia';
+        return t('components.noticia');
       case 'user':
-        return 'Usuário';
+        return t('components.usuario');
       case 'card':
         return 'Card';
       case 'reimbursement':
@@ -127,9 +130,9 @@ const DashboardSearch: React.FC = () => {
       case 'paystub':
         return 'Contracheque';
       case 'evaluation':
-        return 'Avaliação';
+        return t('components.avaliacao');
       case 'policy':
-        return 'Política';
+        return t('components.politica');
       case 'procedure':
         return 'Procedimento';
       case 'academy':
@@ -163,7 +166,7 @@ const DashboardSearch: React.FC = () => {
         <input
           ref={inputRef}
           type="text"
-          placeholder="Buscar em todo o sistema... (documentos, notícias, reembolsos, etc.)"
+          placeholder={t('components.buscarEmTodoOSistemaDocumentosNoticiasReembolsosEt')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={handleFocus}
@@ -188,11 +191,11 @@ const DashboardSearch: React.FC = () => {
         <div className="mt-2 flex flex-wrap gap-2">
           {[
             { value: 'all', label: 'Todos' },
-            { value: 'news', label: 'Notícias' },
+            { value: 'news', label: t('components.noticias') },
             { value: 'reimbursement', label: 'Reembolsos' },
             { value: 'document', label: 'Documentos' },
             { value: 'academy', label: 'Cursos' },
-            { value: 'policy', label: 'Políticas' }
+            { value: 'policy', label: t('components.politicas') }
           ].map((type) => (
             <button
               key={type.value}
@@ -215,21 +218,21 @@ const DashboardSearch: React.FC = () => {
           {loading && (
             <div className="p-4 text-center">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="text-sm text-gray-500 mt-2">Buscando...</p>
+              <p className="text-sm text-gray-500 mt-2">{t('components.buscando', 'Buscando...')}</p>
             </div>
           )}
 
           {!loading && results.length === 0 && query.length >= 2 && (
             <div className="p-4 text-center text-gray-500">
-              <p className="text-sm">Nenhum resultado encontrado para "{query}"</p>
-              <p className="text-xs mt-1">Tente usar termos diferentes ou remover filtros</p>
+              <p className="text-sm">{t('components.nenhumResultadoEncontradoPara', 'Nenhum resultado encontrado para')} "{query}"</p>
+              <p className="text-xs mt-1">{t('components.tenteUsarTermosDiferentesOuRemoverFiltros', 'Tente usar termos diferentes ou remover filtros')}</p>
             </div>
           )}
 
           {!loading && results.length > 0 && (
             <div className="py-2">
               <div className="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-50 border-b">
-                {results.length} resultado{results.length !== 1 ? 's' : ''} encontrado{results.length !== 1 ? 's' : ''}
+                {results.length} {t('components.resultado', 'resultado')}{results.length !== 1 ? 's' : ''} {t('components.encontrado', 'encontrado')}{results.length !== 1 ? 's' : ''}
               </div>
               {results.map((result) => (
                 <button

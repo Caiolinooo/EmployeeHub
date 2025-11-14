@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { FiSave, FiX, FiUser, FiMail, FiPhone, FiBriefcase, FiUsers, FiPlus, FiTrash2, FiDollarSign, FiShield } from 'react-icons/fi';
@@ -125,7 +125,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
         setRolePermissions(permissions);
 
       } catch (error) {
-        console.error('Erro ao carregar módulos e permissões:', error);
+        console.error(t('components.erroAoCarregarModulosEPermissoes'), error);
       } finally {
         setLoadingModules(false);
       }
@@ -174,9 +174,9 @@ const UserEditor: React.FC<UserEditorProps> = ({
       //   await revokePermission(editedUser._id, permissionId);
       // }
 
-      console.log('✅ Permissões ACL atualizadas com sucesso');
+      console.log(t('components.permissoesAclAtualizadasComSucesso'));
     } catch (error) {
-      console.error('Erro ao atualizar permissões ACL:', error);
+      console.error(t('components.erroAoAtualizarPermissoesAcl'), error);
     }
   };
 
@@ -435,7 +435,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
                     value={editedUser.position || ''}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
-                    placeholder="Ex: Analista de Logística"
+                    placeholder={t('components.exAnalistaDeLogistica')}
                   />
                 </div>
 
@@ -450,7 +450,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
                     value={editedUser.department || ''}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-abz-blue focus:border-abz-blue"
-                    placeholder="Ex: Logística"
+                    placeholder={t('components.exLogistica')}
                   />
                 </div>
 
@@ -470,7 +470,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
                       minLength={8}
                     />
                     <p className="mt-1 text-xs text-gray-500">
-                      {isNewUser ? 'Mínimo de 8 caracteres' : 'Deixe em branco para manter a senha atual'}
+                      {isNewUser ? t('components.minimoDe8Caracteres') : 'Deixe em branco para manter a senha atual'}
                     </p>
                   </div>
                 )}
@@ -504,7 +504,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
                 className="flex items-center text-abz-blue hover:text-abz-blue-dark font-medium"
               >
                 <FiUsers className="mr-2" />
-                {showPermissions ? 'Ocultar Permissões' : 'Configurar Permissões de Acesso'}
+                {showPermissions ? t('components.ocultarPermissoes') : t('components.configurarPermissoesDeAcesso')}
               </button>
 
               {/* Temporariamente desabilitado
@@ -514,7 +514,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
                 className="flex items-center text-green-600 hover:text-green-700 font-medium"
               >
                 <FiShield className="mr-2" />
-                {showACLPermissions ? 'Ocultar ACL' : 'Permissões ACL Avançadas'}
+                {showACLPermissions ? 'Ocultar ACL' : t('components.permissoesAclAvancadas')}
               </button>
               */}
             </div>
@@ -654,7 +654,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
                 className="flex items-center text-abz-blue hover:text-abz-blue-dark font-medium"
               >
                 <FiMail className="mr-2" />
-                {showReimbursementSettings ? 'Ocultar Configurações de Email' : 'Configurar Email de Reembolso'}
+                {showReimbursementSettings ? t('components.ocultarConfiguracoesDeEmail') : 'Configurar Email de Reembolso'}
               </button>
 
               {showReimbursementSettings && (

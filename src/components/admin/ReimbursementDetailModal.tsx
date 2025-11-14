@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { FiX, FiCheck, FiDownload, FiFileText, FiDollarSign, FiUser, FiCalendar, FiClock, FiInfo, FiAlertTriangle } from 'react-icons/fi';
@@ -54,7 +54,6 @@ interface ReimbursementDetailModalProps {
   onStatusChange?: () => void;
   readOnly?: boolean;
   onApprove?: (protocolo: string) => void;
-  onReject?: (protocolo: string, reason?: string) => void;
   isOpen?: boolean;
 }
 
@@ -63,7 +62,6 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
   onClose,
   reimbursement,
   onApprove,
-  onReject,
   readOnly = false,
   onStatusChange
 }) => {
@@ -107,7 +105,7 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
 
       // Verificar se o download foi bem-sucedido
       if (!blob) {
-        throw new Error('Não foi possível baixar o arquivo após várias tentativas');
+        throw new Error(t('components.naoFoiPossivelBaixarOArquivoAposVariasTentativas'));
       }
 
       // Iniciar o download no navegador
@@ -125,45 +123,55 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
   const handleRejectWithReason = async () => {
     // Validar se o motivo foi informado
     if (!rejectReason.trim()) {
-      console.log('Tentativa de rejeição sem motivo');
-      toast.error('Por favor, informe o motivo da rejeição.');
+      console.log(t('components.tentativaDeRejeicaoSemMotivo'));
+      toast.error(t('components.porFavorInformeOMotivoDaRejeicao'));
       return;
     }
 
-    console.log(`Iniciando rejeição do reembolso ${reimbursement.protocolo}`);
-    console.log(`Motivo da rejeição: ${rejectReason}`);
+    console.log(t('components.iniciandoRejeicaoDoReembolsoReimbursementprotocolo'));
+    console.log(t('components.motivoDaRejeicaoRejectreason'));
 
     setLoading(true);
 
     try {
       // Verificar se temos o protocolo
       if (!reimbursement.protocolo) {
-        throw new Error('Protocolo de reembolso não encontrado');
+        throw new Error(t('components.protocoloDeReembolsoNaoEncontrado'));
       }
 
       console.log(`Rejeitando reembolso ${reimbursement.protocolo} com motivo: ${rejectReason}`);
 
-      // Chamar a função onReject com o motivo
-      if (typeof onReject === 'function') {
-        // Usar try/catch para capturar erros específicos da função onReject
-        try {
-          await Promise.resolve(onReject(reimbursement.protocolo, rejectReason));
-          console.log('Função onReject executada com sucesso');
-        } catch (rejectError) {
-          console.error('Erro na função onReject:', rejectError);
-          throw rejectError; // Propagar o erro para ser tratado no catch externo
-        }
-      } else {
-        console.warn('Função onReject não fornecida ou não é uma função');
+      // Obter token de autenticação
+      const token = localStorage.getItem('token');
+
+      // Fazer a rejeição diretamente via API (não chamar onReject do pai para evitar duplicação)
+      const response = await fetch(`/api/reembolso/${reimbursement.protocolo}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
+        body: JSON.stringify({
+          status: 'rejeitado',
+          observacao: rejectReason
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Resposta de erro:', errorText);
+        throw new Error(t('components.erroAoRejeitarSolicitacaoResponsestatus'));
       }
+
+      console.log('Reembolso rejeitado com sucesso via API');
 
       // Chamar onStatusChange se fornecido
       if (typeof onStatusChange === 'function') {
         try {
           await Promise.resolve(onStatusChange());
-          console.log('Função onStatusChange executada com sucesso');
+          console.log(t('components.funcaoOnstatuschangeExecutadaComSucesso'));
         } catch (statusError) {
-          console.error('Erro na função onStatusChange:', statusError);
+          console.error(t('components.erroNaFuncaoOnstatuschange'), statusError);
           // Não propagar este erro, pois a rejeição já foi realizada
         }
       }
@@ -360,13 +368,13 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
               <textarea
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
-                placeholder="Informe o motivo da rejeição..."
+                placeholder={t('components.informeOMotivoDaRejeicao')}
                 className="w-full p-3 border border-red-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
                 rows={4}
                 autoFocus
               ></textarea>
               <div className="mt-2 text-sm text-red-600">
-                {!rejectReason.trim() && 'O motivo da rejeição é obrigatório'}
+                {!rejectReason.trim() && t('components.oMotivoDaRejeicaoEObrigatorio')}
               </div>
             </div>
           )}
@@ -401,7 +409,7 @@ const ReimbursementDetailModal: React.FC<ReimbursementDetailModalProps> = ({
               <>
                 <button
                   onClick={() => {
-                    console.log('Abrindo formulário de rejeição');
+                    console.log(t('components.abrindoFormularioDeRejeicao'));
                     setShowRejectForm(true);
                     // Pequeno atraso para garantir que o DOM seja atualizado
                     setTimeout(() => {

@@ -1,13 +1,16 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 /**
  * Componente para depurar o estado de autenticação
  * Exibe informações sobre o usuário, perfil e permissões
  */
 export default function AuthDebugger() {
+  const { t } = useI18n();
+
   const { 
     user, 
     profile, 
@@ -24,10 +27,10 @@ export default function AuthDebugger() {
       
       <div className="grid grid-cols-2 gap-2">
         <div className="font-semibold">Loading:</div>
-        <div>{isLoading ? 'Sim' : 'Não'}</div>
+        <div>{isLoading ? 'Sim' : t('components.nao')}</div>
         
         <div className="font-semibold">Authenticated:</div>
-        <div>{isAuthenticated ? 'Sim' : 'Não'}</div>
+        <div>{isAuthenticated ? 'Sim' : t('components.nao')}</div>
         
         <div className="font-semibold">User ID:</div>
         <div>{user?.id || 'N/A'}</div>
@@ -42,13 +45,13 @@ export default function AuthDebugger() {
         <div>{profile?.role || 'N/A'}</div>
         
         <div className="font-semibold">Is Admin:</div>
-        <div>{isAdmin ? 'Sim' : 'Não'}</div>
+        <div>{isAdmin ? 'Sim' : t('components.nao')}</div>
         
         <div className="font-semibold">Is Manager:</div>
-        <div>{isManager ? 'Sim' : 'Não'}</div>
+        <div>{isManager ? 'Sim' : t('components.nao')}</div>
         
         <div className="font-semibold">Access to 'avaliacao':</div>
-        <div>{hasAccess('avaliacao') ? 'Sim' : 'Não'}</div>
+        <div>{hasAccess('avaliacao') ? 'Sim' : t('components.nao')}</div>
       </div>
       
       <div className="mt-4">

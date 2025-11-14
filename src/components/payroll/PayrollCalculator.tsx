@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { 
@@ -19,6 +19,7 @@ import {
 } from '@/types/payroll';
 import { calculateEmployeePayroll } from '@/lib/payroll/calculations';
 import { LegalTablesHelper } from '@/lib/payroll/legal-tables';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface PayrollCalculatorProps {
   employee: PayrollEmployee;
@@ -30,6 +31,7 @@ interface PayrollCalculatorProps {
  * Mantém o design system do Painel ABZ
  */
 export default function PayrollCalculator({ employee, onCalculationComplete }: PayrollCalculatorProps) {
+  const { t } = useI18n();
   const [items, setItems] = useState<PayrollCalculationItem[]>([]);
   const [codes, setCodes] = useState<PayrollCode[]>([]);
   const [result, setResult] = useState<PayrollCalculationResult | null>(null);
@@ -50,7 +52,7 @@ export default function PayrollCalculator({ employee, onCalculationComplete }: P
         setCodes(data.data);
       }
     } catch (error) {
-      console.error('Erro ao carregar códigos:', error);
+      console.error(t('components.erroAoCarregarCodigos'), error);
     }
   };
 
@@ -61,7 +63,7 @@ export default function PayrollCalculator({ employee, onCalculationComplete }: P
         codeId: 'base-salary',
         code: '001',
         type: 'provento',
-        name: 'Salário Base',
+        name: t('components.salarioBase'),
         calculationType: 'fixed',
         value: employee.baseSalary,
         quantity: 1,
@@ -200,7 +202,7 @@ export default function PayrollCalculator({ employee, onCalculationComplete }: P
             <button
               onClick={() => setShowLegalInfo(!showLegalInfo)}
               className="p-2 text-gray-400 hover:text-abz-blue transition-colors"
-              title="Informações sobre legislação"
+              title={t('components.informacoesSobreLegislacao')}
             >
               <Info className="h-4 w-4" />
             </button>

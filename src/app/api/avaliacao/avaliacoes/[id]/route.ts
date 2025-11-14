@@ -8,12 +8,12 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Garantir que params seja await antes de acessar suas propriedades
     // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
 
     // Validar se o ID é um UUID válido
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -65,12 +65,12 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Garantir que params seja await antes de acessar suas propriedades
     // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
 
     // Validar se o ID é um UUID válido
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -127,12 +127,12 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Garantir que params seja await antes de acessar suas propriedades
     // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
 
     // Validar se o ID é um UUID válido
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

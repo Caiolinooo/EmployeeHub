@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiSave, FiPlus, FiTrash2, FiMail, FiAlertCircle, FiCheck, FiX } from 'react-icons/fi';
@@ -44,7 +44,7 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
     setReadOnly(!isAdmin);
 
     if (!isAdmin) {
-      console.log('Usuário não é administrador. Modo somente leitura ativado.');
+      console.log(t('components.usuarioNaoEAdministradorModoSomenteLeituraAtivado'));
     }
   }, [isAdmin]);
 
@@ -64,14 +64,14 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
 
       // Tentar usar a API principal
       try {
-        console.log('Tentando carregar configurações da API principal...');
+        console.log(t('components.tentandoCarregarConfiguracoesDaApiPrincipal'));
 
         // Construir URL com parâmetros
         let url = '/api/users/reimbursement-settings-server?';
         if (userId) url += `userId=${encodeURIComponent(userId)}`;
         else if (email) url += `email=${encodeURIComponent(email)}`;
 
-        console.log(`Buscando configurações para ${userId ? 'userId: ' + userId : 'email: ' + email}`);
+        console.log(t('components.buscandoConfiguracoesParaUserid'), `userId: ${userId}, email: ${email}`);
 
         // Adicionar timestamp para evitar cache
         url += `&_t=${Date.now()}`;
@@ -87,7 +87,7 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
         const data = await response.json();
 
         if (response.ok) {
-          console.log('Configurações de email de reembolso do usuário carregadas:', data);
+          console.log(t('components.configuracoesDeEmailDeReembolsoDoUsuarioCarregadas'), data);
 
           if (data.reimbursement_email_settings) {
             setEnabled(data.reimbursement_email_settings.enabled || false);
@@ -96,11 +96,11 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
             return;
           }
         } else {
-          console.error('Erro ao carregar configurações da API principal:', data.error);
+          console.error(t('components.erroAoCarregarConfiguracoesDaApiPrincipal'), data.error);
 
           // Se o erro for relacionado à coluna não existente, tentar adicionar a coluna
           if (data.error && data.error.includes('column') && data.error.includes('reimbursement_email_settings') && data.error.includes('does not exist')) {
-            console.log('Coluna reimbursement_email_settings não existe, tentando adicionar...');
+            console.log(t('components.colunaReimbursementemailsettingsNaoExisteTentandoA'));
 
             // Tentar adicionar a coluna usando a API de setup
             try {
@@ -112,14 +112,14 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
               });
 
               if (setupResponse.ok) {
-                console.log('Coluna adicionada com sucesso, tentando carregar configurações novamente...');
+                console.log(t('components.colunaAdicionadaComSucessoTentandoCarregarConfigur'));
 
                 // Tentar carregar configurações novamente
                 const retryResponse = await fetch(url);
 
                 if (retryResponse.ok) {
                   const retryData = await retryResponse.json();
-                  console.log('Configurações carregadas com sucesso após adicionar coluna:', retryData);
+                  console.log(t('components.configuracoesCarregadasComSucessoAposAdicionarColu'), retryData);
 
                   if (retryData.reimbursement_email_settings) {
                     setEnabled(retryData.reimbursement_email_settings.enabled || false);
@@ -144,7 +144,7 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
 
       // Tentar usar a API de fallback
       try {
-        console.log('Tentando carregar configurações da API de fallback...');
+        console.log(t('components.tentandoCarregarConfiguracoesDaApiDeFallback'));
 
         // Construir URL com parâmetros
         let fallbackUrl = '/api/users/reimbursement-settings-local?';
@@ -155,7 +155,7 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
 
         if (fallbackResponse.ok) {
           const fallbackData = await fallbackResponse.json();
-          console.log('Configurações carregadas da API de fallback:', fallbackData);
+          console.log(t('components.configuracoesCarregadasDaApiDeFallback'), fallbackData);
 
           if (fallbackData.reimbursement_email_settings) {
             setEnabled(fallbackData.reimbursement_email_settings.enabled || false);
@@ -171,13 +171,13 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
       }
 
       // Se chegamos aqui, usar valores padrão
-      console.log('Usando valores padrão para as configurações');
+      console.log(t('components.usandoValoresPadraoParaAsConfiguracoes'));
       setEnabled(false);
       setRecipients([]);
-      setError('Não foi possível carregar as configurações. Usando valores padrão.');
+      setError(t('components.naoFoiPossivelCarregarAsConfiguracoesUsandoValores'));
     } catch (err) {
-      console.error('Erro ao carregar configurações:', err);
-      setError('Erro ao carregar configurações. Por favor, tente novamente.');
+      console.error(t('components.erroAoCarregarConfiguracoes'), err);
+      setError(t('components.erroAoCarregarConfiguracoesPorFavorTenteNovamente'));
 
       // Usar valores padrão em caso de erro
       setEnabled(false);
@@ -194,17 +194,17 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
 
   const handleAddRecipient = () => {
     if (!newRecipient.trim()) {
-      setError('O email não pode estar vazio');
+      setError(t('components.oEmailNaoPodeEstarVazio'));
       return;
     }
 
     if (!validateEmail(newRecipient)) {
-      setError('Email inválido');
+      setError(t('components.emailInvalido'));
       return;
     }
 
     if (recipients.includes(newRecipient)) {
-      setError('Este email já está na lista');
+      setError(t('components.esteEmailJaEstaNaLista'));
       return;
     }
 
@@ -227,8 +227,8 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
 
     // Verificar se o usuário tem permissão para salvar
     if (readOnly) {
-      setError('Você não tem permissão para editar as configurações de email de reembolso.');
-      toast.error('Acesso negado. Apenas administradores podem editar estas configurações.');
+      setError(t('components.voceNaoTemPermissaoParaEditarAsConfiguracoesDeEmai'));
+      toast.error(t('components.acessoNegadoApenasAdministradoresPodemEditarEstasC'));
       setIsSaving(false);
       return;
     }
@@ -242,15 +242,15 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
       // Se onSave for fornecido, use-o
       if (onSave) {
         onSave(settings);
-        setSuccess('Configurações de email de reembolso salvas com sucesso');
-        toast.success('Configurações de email de reembolso salvas com sucesso');
+        setSuccess(t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso'));
+        toast.success(t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso'));
         if (onClose) onClose();
         return;
       }
 
       // Tentar salvar via API principal
       try {
-        console.log('Tentando salvar configurações na API principal...');
+        console.log(t('components.tentandoSalvarConfiguracoesNaApiPrincipal'));
 
         const response = await fetch('/api/users/reimbursement-settings-server', {
           method: 'POST',
@@ -275,19 +275,19 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
         }
 
         if (response.ok) {
-          console.log('Configurações salvas com sucesso na API principal:', responseData);
-          setSuccess('Configurações de email de reembolso salvas com sucesso');
-          toast.success('Configurações de email de reembolso salvas com sucesso');
+          console.log(t('components.configuracoesSalvasComSucessoNaApiPrincipal'), responseData);
+          setSuccess(t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso'));
+          toast.success(t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso'));
 
           if (onClose) onClose();
           setIsSaving(false);
           return;
         } else {
-          console.error('Erro ao salvar configurações na API principal:', responseData.error);
+          console.error(t('components.erroAoSalvarConfiguracoesNaApiPrincipal'), responseData.error);
 
           // Se o erro for relacionado à coluna não existente, tentar adicionar a coluna
           if (responseData.error && responseData.error.includes('column') && responseData.error.includes('reimbursement_email_settings') && responseData.error.includes('does not exist')) {
-            console.log('Coluna reimbursement_email_settings não existe, tentando adicionar...');
+            console.log(t('components.colunaReimbursementemailsettingsNaoExisteTentandoA'));
 
             // Tentar adicionar a coluna usando a API de setup
             try {
@@ -299,7 +299,7 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
               });
 
               if (setupResponse.ok) {
-                console.log('Coluna adicionada com sucesso, tentando salvar configurações novamente...');
+                console.log(t('components.colunaAdicionadaComSucessoTentandoSalvarConfigurac'));
 
                 // Tentar salvar configurações novamente
                 const retryResponse = await fetch('/api/users/reimbursement-settings-server', {
@@ -317,10 +317,10 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
 
                 if (retryResponse.ok) {
                   const retryData = await retryResponse.json();
-                  console.log('Configurações salvas com sucesso após adicionar coluna:', retryData);
+                  console.log(t('components.configuracoesSalvasComSucessoAposAdicionarColuna'), retryData);
 
-                  setSuccess('Configurações de email de reembolso salvas com sucesso');
-                  toast.success('Configurações de email de reembolso salvas com sucesso');
+                  setSuccess(t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso'));
+                  toast.success(t('components.configuracoesDeEmailDeReembolsoSalvasComSucesso'));
 
                   if (onClose) onClose();
                   setIsSaving(false);
@@ -342,7 +342,7 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
 
       // Tentar salvar via API de fallback
       try {
-        console.log('Tentando salvar configurações na API de fallback...');
+        console.log(t('components.tentandoSalvarConfiguracoesNaApiDeFallback'));
 
         const fallbackResponse = await fetch('/api/users/reimbursement-settings-local', {
           method: 'POST',
@@ -359,10 +359,10 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
 
         if (fallbackResponse.ok) {
           const fallbackData = await fallbackResponse.json();
-          console.log('Configurações salvas com sucesso na API de fallback:', fallbackData);
+          console.log(t('components.configuracoesSalvasComSucessoNaApiDeFallback'), fallbackData);
 
-          setSuccess('Configurações de email de reembolso salvas com sucesso (modo offline)');
-          toast.success('Configurações de email de reembolso salvas com sucesso (modo offline)');
+          setSuccess(t('components.configuracoesDeEmailDeReembolsoSalvasComSucessoMod'));
+          toast.success(t('components.configuracoesDeEmailDeReembolsoSalvasComSucessoMod'));
 
           if (onClose) onClose();
           setIsSaving(false);
@@ -375,11 +375,11 @@ const ServerUserReimbursementSettings: React.FC<ServerUserReimbursementSettingsP
       }
 
       // Se chegamos aqui, todas as tentativas falharam
-      throw new Error('Todas as tentativas de salvar configurações falharam');
+      throw new Error(t('components.todasAsTentativasDeSalvarConfiguracoesFalharam'));
     } catch (error) {
-      console.error('Erro ao salvar configurações:', error);
-      toast.error('Erro ao salvar configurações');
-      setError('Erro ao salvar configurações. Tente novamente.');
+      console.error(t('components.erroAoSalvarConfiguracoes'), error);
+      toast.error(t('components.erroAoSalvarConfiguracoes'));
+      setError(t('components.erroAoSalvarConfiguracoesTenteNovamente'));
     } finally {
       setIsSaving(false);
     }

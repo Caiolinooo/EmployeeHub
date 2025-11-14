@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
-import { Pool } from 'pg';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,75 +11,77 @@ export async function POST(request: NextRequest) {
     const token = extractTokenFromHeader(authHeader || undefined);
 
     if (!token) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { message: 'Logout realizado com sucesso' },
         { status: 200 }
       );
+      res.cookies.set('token', '', { path: '/', maxAge: 0 });
+      res.cookies.set('refreshToken', '', { path: '/', maxAge: 0 });
+      return res;
     }
 
     // Verificar o token
     const payload = verifyToken(token);
     if (!payload || !payload.userId) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { message: 'Logout realizado com sucesso' },
         { status: 200 }
       );
+      res.cookies.set('token', '', { path: '/', maxAge: 0 });
+      res.cookies.set('refreshToken', '', { path: '/', maxAge: 0 });
+      return res;
     }
 
-    // Conectar ao banco de dados PostgreSQL
-    const pool = new Pool({
-      connectionString: process.env.DATABASE_URL
-    });
+    // Registrar logout e revogar refresh tokens no Supabase
+    console.log('Registrando logout para o usuário:', payload.userId);
 
     try {
-      // Registrar o logout no histórico de acesso do usuário
-      console.log('Registrando logout para o usuário:', payload.userId);
-      
-      // Primeiro, buscar o histórico de acesso atual
-      const userResult = await pool.query(`
-        SELECT "accessHistory" FROM "User" WHERE "id" = $1
-      `, [payload.userId]);
-      
-      if (userResult.rows.length > 0) {
-        const user = userResult.rows[0];
-        let accessHistory = user.accessHistory || [];
-        
-        // Se não for um array, converter para array
-        if (!Array.isArray(accessHistory)) {
-          accessHistory = [];
-        }
-        
-        // Adicionar o evento de logout
-        accessHistory.push({
-          timestamp: new Date(),
+      // 1) Atualizar histórico de acesso em users_unified
+      const { data: currentUser } = await supabaseAdmin
+        .from('users_unified')
+        .select('access_history, first_name')
+        .eq('id', payload.userId)
+        .single();
+
+      const history = Array.isArray(currentUser?.access_history) ? currentUser!.access_history : [];
+      const updatedHistory = [
+        ...history,
+        {
+          timestamp: new Date().toISOString(),
           action: 'LOGOUT',
           details: 'Logout realizado via API'
-        });
-        
-        // Atualizar o histórico de acesso
-        await pool.query(`
-          UPDATE "User"
-          SET "accessHistory" = $1, "updatedAt" = CURRENT_TIMESTAMP
-          WHERE "id" = $2
-        `, [JSON.stringify(accessHistory), payload.userId]);
-        
-        console.log('Logout registrado com sucesso');
-      }
-      
-      // Fechar a conexão com o banco de dados
-      await pool.end();
-      
-      return NextResponse.json(
+        }
+      ];
+
+      await supabaseAdmin
+        .from('users_unified')
+        .update({ access_history: updatedHistory, updated_at: new Date().toISOString() })
+        .eq('id', payload.userId);
+
+      // 2) Revogar todos os refresh tokens ativos do usuário
+      await supabaseAdmin
+        .from('refresh_tokens')
+        .update({ is_active: false })
+        .eq('user_id', payload.userId)
+        .eq('is_active', true);
+
+      // 3) Limpar cookies no cliente (se estiverem sendo usados)
+      const res = NextResponse.json(
         { message: 'Logout realizado com sucesso' },
         { status: 200 }
       );
+      res.cookies.set('token', '', { path: '/', maxAge: 0 });
+      res.cookies.set('refreshToken', '', { path: '/', maxAge: 0 });
+      return res;
     } catch (error) {
-      console.error('Erro ao registrar logout no PostgreSQL:', error);
-      await pool.end();
-      return NextResponse.json(
+      console.error('Erro ao registrar logout no Supabase:', error);
+      const res = NextResponse.json(
         { message: 'Logout realizado com sucesso, mas houve um erro ao registrar' },
         { status: 200 }
       );
+      res.cookies.set('token', '', { path: '/', maxAge: 0 });
+      res.cookies.set('refreshToken', '', { path: '/', maxAge: 0 });
+      return res;
     }
   } catch (error) {
     console.error('Erro ao processar logout:', error);

@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 // GET - Obter um card específico
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     console.log(`API de admin/cards/${params.id} Supabase - Recebendo requisição GET`);
@@ -75,7 +75,7 @@ export async function GET(
 
     // Garantir que params seja await antes de acessar suas propriedades
     // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
     console.log(`Buscando card com ID: ${id}`);
 
     // Buscar o card
@@ -125,7 +125,7 @@ export async function GET(
 // PUT - Atualizar um card existente
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     console.log(`API de admin/cards/${params.id} Supabase - Recebendo requisição PUT`);
@@ -193,7 +193,7 @@ export async function PUT(
 
     // Garantir que params seja await antes de acessar suas propriedades
     // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
     const body = await request.json();
     console.log(`Atualizando card com ID: ${id}`);
 
@@ -274,7 +274,7 @@ export async function PUT(
 // DELETE - Excluir um card
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     console.log(`API de admin/cards/${params.id} Supabase - Recebendo requisição DELETE`);
@@ -342,7 +342,7 @@ export async function DELETE(
 
     // Garantir que params seja await antes de acessar suas propriedades
     // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
     console.log(`Excluindo card com ID: ${id}`);
 
     // Verificar se o card existe

@@ -263,6 +263,143 @@ export const passwordExpiryTemplate = (daysRemaining: number) => {
   return baseTemplate(content);
 };
 
+// ==============================
+// Templates para Avaliações
+// ==============================
+
+export const evaluationCreatedTemplate = (
+  colaboradorNome: string,
+  periodoNome: string,
+  dataLimiteAutoavaliacao?: string,
+  linkAvaliacao?: string
+) => {
+  const config = getEmailConfig();
+
+  const prazoTexto = dataLimiteAutoavaliacao
+    ? `<p><strong>Prazo para autoavaliação:</strong> ${dataLimiteAutoavaliacao}</p>`
+    : '';
+
+  const botaoLink = linkAvaliacao
+    ? `<div style="text-align: center; margin-top: 20px;"><a href="${config.appUrl}${linkAvaliacao}" class="button">Iniciar minha avaliação</a></div>`
+    : '';
+
+  const content = `
+    <h2 style="text-align: center;">Nova Avaliação de Desempenho</h2>
+    <p>Olá ${colaboradorNome},</p>
+    <p>
+      Uma nova avaliação de desempenho foi criada para você
+      referente ao período <strong>${periodoNome}</strong>.
+    </p>
+    ${prazoTexto}
+    <p>
+      Acesse o painel para responder às perguntas de autoavaliação
+      e acompanhar o andamento do processo.
+    </p>
+    ${botaoLink}
+    <p style="color: #666; font-size: 12px; margin-top: 30px;">
+      Este é um email automático. Por favor, não responda.
+    </p>
+  `;
+
+  return baseTemplate(content);
+};
+
+export const evaluationCreatedManagerTemplate = (
+  gerenteNome: string,
+  colaboradorNome: string,
+  periodoNome: string,
+  linkAvaliacao?: string
+) => {
+  const config = getEmailConfig();
+
+  const botaoLink = linkAvaliacao
+    ? `<div style="text-align: center; margin-top: 20px;"><a href="${config.appUrl}${linkAvaliacao}" class="button">Abrir avaliação do colaborador</a></div>`
+    : '';
+
+  const content = `
+    <h2 style="text-align: center;">Nova Avaliação para seu liderado</h2>
+    <p>Olá ${gerenteNome},</p>
+    <p>
+      Uma nova avaliação de desempenho para o colaborador
+      <strong>${colaboradorNome}</strong> foi criada para o período
+      <strong>${periodoNome}</strong>.
+    </p>
+    <p>
+      Quando a autoavaliação for concluída, você poderá registrar sua
+      avaliação como gestor através do painel.
+    </p>
+    ${botaoLink}
+    <p style="color: #666; font-size: 12px; margin-top: 30px;">
+      Este é um email automático. Por favor, não responda.
+    </p>
+  `;
+
+  return baseTemplate(content);
+};
+
+export const selfEvaluationCompletedTemplate = (
+  gerenteNome: string,
+  colaboradorNome: string,
+  periodoNome: string,
+  linkAvaliacao?: string
+) => {
+  const config = getEmailConfig();
+
+  const botaoLink = linkAvaliacao
+    ? `<div style="text-align: center; margin-top: 20px;"><a href="${config.appUrl}${linkAvaliacao}" class="button">Realizar avaliação como gestor</a></div>`
+    : '';
+
+  const content = `
+    <h2 style="text-align: center;">Autoavaliação concluída</h2>
+    <p>Olá ${gerenteNome},</p>
+    <p>
+      O colaborador <strong>${colaboradorNome}</strong> concluiu a
+      autoavaliação referente ao período <strong>${periodoNome}</strong>.
+    </p>
+    <p>
+      Agora você já pode acessar o sistema para registrar sua
+      avaliação como gestor.
+    </p>
+    ${botaoLink}
+    <p style="color: #666; font-size: 12px; margin-top: 30px;">
+      Este é um email automático. Por favor, não responda.
+    </p>
+  `;
+
+  return baseTemplate(content);
+};
+
+export const evaluationApprovedTemplate = (
+  colaboradorNome: string,
+  periodoNome: string,
+  linkAvaliacao?: string
+) => {
+  const config = getEmailConfig();
+
+  const botaoLink = linkAvaliacao
+    ? `<div style="text-align: center; margin-top: 20px;"><a href="${config.appUrl}${linkAvaliacao}" class="button">Ver detalhes da avaliação</a></div>`
+    : '';
+
+  const content = `
+    <h2 style="text-align: center;">Sua avaliação foi concluída</h2>
+    <p>Olá ${colaboradorNome},</p>
+    <p>
+      A avaliação de desempenho referente ao período
+      <strong>${periodoNome}</strong> foi concluída e aprovada.
+    </p>
+    <p>
+      Você pode acessar o sistema para visualizar o resultado,
+      comentários e pontos de desenvolvimento.
+    </p>
+    ${botaoLink}
+    <p style="color: #666; font-size: 12px; margin-top: 30px;">
+      Este é um email automático. Por favor, não responda.
+    </p>
+  `;
+
+  return baseTemplate(content);
+};
+
 // Template personalizado
 export const newsPostTemplate = (author: string, postTitle: string, excerpt: string, postUrl: string) => {
   const config = getEmailConfig();

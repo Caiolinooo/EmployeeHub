@@ -26,7 +26,7 @@ export function ImportCriteriosButton() {
       setLoading(true);
       setError(null);
       setSuccess(false);
-      setMessage('Importando critérios de avaliação da planilha...');
+      setMessage(t('components.importandoCriteriosDeAvaliacaoDaPlanilha'));
 
       // Call the API to import criteria
       const response = await fetchWithToken('/api/avaliacao/import-criterios', {
@@ -40,7 +40,7 @@ export function ImportCriteriosButton() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao importar critérios');
+        throw new Error(data.error || t('components.erroAoImportarCriterios'));
       }
 
       setSuccess(true);
@@ -48,12 +48,12 @@ export function ImportCriteriosButton() {
       setTotalCount(data.total || 0);
 
       if (data.imported === 0) {
-        setMessage('Todos os critérios já existem no banco de dados.');
+        setMessage(t('components.todosOsCriteriosJaExistemNoBancoDeDados'));
       } else {
-        setMessage(`${data.imported} critérios importados com sucesso de um total de ${data.total} critérios na planilha.`);
+        setMessage(t('components.dataimportedCriteriosImportadosComSucessoDeUmTotal'));
       }
     } catch (err) {
-      console.error('Erro ao importar critérios:', err);
+      console.error(t('components.erroAoImportarCriterios'), err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
       setMessage(null);
     } finally {

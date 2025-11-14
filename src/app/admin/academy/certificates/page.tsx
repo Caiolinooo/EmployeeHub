@@ -1,12 +1,15 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState } from 'react';
 import MainLayout from '@/components/Layout/MainLayout';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import CertificateTemplateEditor from '@/components/Academy/CertificateTemplateEditor';
+import { useI18n } from '@/contexts/I18nContext';
 
 export default function CertificatesAdminPage() {
+  const { t } = useI18n();
+
   const [templates, setTemplates] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -148,7 +151,7 @@ export default function CertificatesAdminPage() {
                 <button disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded">{loading ? 'Processando...' : 'Salvar template (novo)'}</button>
                 {selectedTemplate && (
                   <button type="button" onClick={saveSelectedTemplate} disabled={loading} className="px-4 py-2 bg-emerald-600 text-white rounded">
-                    {loading ? 'Salvando...' : 'Salvar alterações do template selecionado'}
+                    {loading ? 'Salvando...' : t('admin.salvarAlteracoesDoTemplateSelecionado')}
                   </button>
                 )}
               </div>

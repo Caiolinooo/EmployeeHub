@@ -171,7 +171,7 @@ export default function EditorTemplate({ template, onSalvar, onCancelar, modo }:
               type="text"
               value={dados.tags?.join(', ') || ''}
               onChange={(e) => setDados({ ...dados, tags: e.target.value.split(',').map(t => t.trim()) })}
-              placeholder="Separadas por vírgula"
+              placeholder={t('components.separadasPorVirgula')}
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               disabled={modo === 'visualizar'}
             />

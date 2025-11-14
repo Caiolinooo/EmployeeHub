@@ -1,0 +1,110 @@
+﻿
+> painel-abz@0.1.0 build
+> rimraf .next && next build
+
+   Γû▓ Next.js 15.5.4
+   - Environments: .env.local, .env.production, .env
+   - Experiments (use with caution):
+     Γ£ô optimizeCss
+
+   Creating an optimized production build ...
+node.exe : Failed to compile.
+At C:\Program Files\nodejs\npm.ps1:29 char:3
++   & $NODE_EXE $NPM_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Failed to compile.:String) [], RemoteExcep 
+   tion
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+./src/components/ImportCSV/CSVFieldMapping.tsx
+Error:   [31mx[0m Unexpected eof
+     ,-[[36;1;4mD:\Projeto\Finalizados\Painel 
+ABZ-BR-INT\painel-abz\src\components\ImportCSV\CSVFieldMapping.tsx[0m:311:3]
+ [2m309[0m |     </div>
+ [2m310[0m |   );
+ [2m311[0m | }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/ImportCSV/CSVFieldMapping.tsx
+./src/components/ImportCSV/ImportCSVAdvanced.tsx
+./src/app/avaliacao/importacao/page.tsx
+
+./src/components/admin/UnifiedUserManager.tsx
+Error: 
+
+Caused by:
+    0: Failed to read source code from D:\Projeto\Finalizados\Painel 
+ABZ-BR-INT\painel-abz\src\components\admin\UnifiedUserManager.tsx
+    1: stream did not contain valid UTF-8
+
+Import trace for requested module:
+./src/components/admin/UnifiedUserManager.tsx
+./src/app/admin/user-management/page.tsx
+
+./src/components/admin/UserImport/FieldMapping.tsx
+Error:   [31mx[0m Unexpected eof
+     ,-[[36;1;4mD:\Projeto\Finalizados\Painel 
+ABZ-BR-INT\painel-abz\src\components\admin\UserImport\FieldMapping.tsx[0m:379:3]
+ [2m377[0m |     </div>
+ [2m378[0m |   );
+ [2m379[0m | }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/admin/UserImport/FieldMapping.tsx
+./src/components/admin/UserImport/ImportUsers.tsx
+./src/app/admin/user-management/import/page.tsx
+
+./src/components/admin/avaliacao/CreateCriteriosTable.tsx
+Error:   [31mx[0m Expected ',', got '}'
+    ,-[[36;1;4mD:\Projeto\Finalizados\Painel 
+ABZ-BR-INT\painel-abz\src\components\admin\avaliacao\CreateCriteriosTable.tsx[0m:71:1]
+ [2m68[0m |       setLoading(true);
+ [2m69[0m |       setError(null);
+ [2m70[0m |       setSuccess(false);
+ [2m71[0m |       setMessage(t('components.criandoTabelasDoSistemaDeAvaliacao')});
+    : [35;1m                                                                   ^[0m
+ [2m72[0m | 
+ [2m73[0m |       // Chamar a API para criar todas as tabelas
+ [2m73[0m |       const response = await 
+fetchWithToken('/api/avaliacao/setup-tables', {
+    `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/admin/avaliacao/CreateCriteriosTable.tsx
+./src/components/admin/avaliacao/AvaliacaoAdminContent.tsx
+./src/components/admin/avaliacao/AvaliacaoAdminContentWrapper.tsx
+
+./src/app/academy/dashboard/page.tsx
+Error:   [31mx[0m Expected ';', got '$'
+     ,-[[36;1;4mD:\Projeto\Finalizados\Painel 
+ABZ-BR-INT\painel-abz\src\app\academy\dashboard\page.tsx[0m:249:1]
+ [2m246[0m |   const getActivityMessage = (activity: RecentActivity) => {
+ [2m247[0m |     switch (activity.type) {
+ [2m248[0m |       case 'enrollment':
+ [2m249[0m |         return t('academy.voceSeMatriculouEm')${activity.courseTitle}"`;
+     : [35;1m                                              ^[0m
+ [2m250[0m |       case 'completion':
+ [2m251[0m |         return t('academy.voceConcluiu')${activity.courseTitle}"`;
+ [2m252[0m |       case 'progress':
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/academy/dashboard/page.tsx
+
+
+> Build failed because of webpack errors

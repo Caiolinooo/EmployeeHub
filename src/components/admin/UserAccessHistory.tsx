@@ -1,8 +1,9 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiX, FiClock, FiActivity, FiInfo, FiRefreshCw } from 'react-icons/fi';
 import { AccessHistoryEntry } from '@/models/User';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface UserAccessHistoryProps {
   userId: string;
@@ -11,6 +12,7 @@ interface UserAccessHistoryProps {
 }
 
 const UserAccessHistory: React.FC<UserAccessHistoryProps> = ({ userId, userName, onClose }) => {
+  const { t } = useI18n();
   const [history, setHistory] = useState<AccessHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,12 +38,12 @@ const UserAccessHistory: React.FC<UserAccessHistoryProps> = ({ userId, userName,
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
 
       if (!token) {
-        throw new Error('Não autorizado');
+        throw new Error(t('components.naoAutorizado'));
       }
 
       // Adicionar timestamp para evitar cache
       const timestamp = new Date().getTime();
-      console.log(`Buscando histórico para usuário ${userId} com timestamp ${timestamp}`);
+      console.log(t('components.buscandoHistoricoParaUsuarioUseridComTimestampTime'));
 
       // Fazer até 3 tentativas em caso de falha
       let attempts = 0;
@@ -72,30 +74,30 @@ const UserAccessHistory: React.FC<UserAccessHistoryProps> = ({ userId, userName,
 
       if (!response || !response.ok) {
         const errorData = await response?.json().catch(() => ({}));
-        throw new Error(errorData.error || `Falha ao buscar histórico após ${maxAttempts} tentativas`);
+        throw new Error(errorData.error || t('components.falhaAoBuscarHistoricoAposMaxattemptsTentativas'));
       }
 
       const responseText = await response.text();
 
       // Verificar se a resposta está vazia
       if (!responseText || responseText.trim() === '') {
-        console.error('Resposta vazia recebida da API de histórico');
+        console.error(t('components.respostaVaziaRecebidaDaApiDeHistorico'));
         setHistory([]);
-        setError('Nenhum histórico encontrado. A resposta da API está vazia.');
+        setError(t('components.nenhumHistoricoEncontradoARespostaDaApiEstaVazia'));
         setLoading(false);
         return;
       }
 
       try {
         const data = JSON.parse(responseText);
-        console.log('Histórico recebido:', data);
+        console.log(t('components.historicoRecebido'), data);
 
         // Verificar se o histórico existe e está no formato correto
         let accessHistory = data.accessHistory || [];
 
         // Garantir que o histórico seja um array
         if (!Array.isArray(accessHistory)) {
-          console.log('Histórico não é um array, convertendo...');
+          console.log(t('components.historicoNaoEUmArrayConvertendo'));
           try {
             // Tentar converter de string JSON para array
             if (typeof accessHistory === 'string') {
@@ -106,7 +108,7 @@ const UserAccessHistory: React.FC<UserAccessHistoryProps> = ({ userId, userName,
               accessHistory = [];
             }
           } catch (error) {
-            console.error('Erro ao converter histórico:', error);
+            console.error(t('components.erroAoConverterHistorico'), error);
             accessHistory = [];
           }
         }
@@ -115,11 +117,11 @@ const UserAccessHistory: React.FC<UserAccessHistoryProps> = ({ userId, userName,
       } catch (parseError) {
         console.error('Erro ao analisar resposta JSON:', parseError);
         console.log('Texto da resposta:', responseText);
-        setError('Erro ao processar dados de histórico. Formato inválido.');
+        setError(t('components.erroAoProcessarDadosDeHistoricoFormatoInvalido'));
         setHistory([]);
       }
     } catch (error) {
-      console.error('Erro ao obter histórico de acesso:', error);
+      console.error(t('components.erroAoObterHistoricoDeAcesso'), error);
       setError(error instanceof Error ? error.message : 'Erro desconhecido');
     } finally {
       setLoading(false);
@@ -159,9 +161,9 @@ const UserAccessHistory: React.FC<UserAccessHistoryProps> = ({ userId, userName,
       case 'PASSWORD_CHANGED':
         return 'Senha alterada';
       case 'CREATED':
-        return 'Usuário criado';
+        return t('components.usuarioCriado');
       case 'PERMISSIONS_UPDATED':
-        return 'Permissões atualizadas';
+        return t('components.permissoesAtualizadas');
       default:
         return action.replace(/_/g, ' ').toLowerCase();
     }

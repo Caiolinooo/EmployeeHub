@@ -14,7 +14,7 @@ import { useDropzone } from 'react-dropzone';
 import Script from 'next/script';
 
 export default function ConvertOffice365Page() {
-  // const { t } = useI18n(); // Removido - não utilizado
+  const { t } = useI18n();
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +54,7 @@ export default function ConvertOffice365Page() {
     }
 
     if (!scriptLoaded || !window.convertOffice365File) {
-      setError('O script de conversão não foi carregado. Recarregue a página e tente novamente.');
+      setError(t('admin.oScriptDeConversaoNaoFoiCarregadoRecarregueAPagina'));
       return;
     }
 
@@ -87,7 +87,7 @@ export default function ConvertOffice365Page() {
       <Script
         src="/scripts/convert-office365.js"
         onLoad={() => setScriptLoaded(true)}
-        onError={() => setError('Erro ao carregar o script de conversão')}
+        onError={() => setError(t('admin.erroAoCarregarOScriptDeConversao'))}
       />
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">

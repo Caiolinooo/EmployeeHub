@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { canEditAcademy, canModerateAcademy } from '@/lib/permissions';
-import { verifyToken } from '@/lib/auth';
+import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 
 export interface AuthenticatedUser {
   id: string;
@@ -23,6 +23,7 @@ export interface AuthMiddlewareOptions {
 
 /**
  * Middleware de autenticação e autorização para APIs do Academy
+ * Utiliza apenas um método de autenticação consistente (JWT)
  */
 export async function withAcademyAuth(
   request: NextRequest,
@@ -53,26 +54,25 @@ export async function withAcademyAuth(
       };
     }
 
-    const token = authHeader.replace('Bearer ', '');
-
-    // Verificar token (Supabase) e fallback para nosso JWT
-    const { data: { user: spUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
-
-    let resolvedUserId: string | null = null;
-    if (!authError && spUser) {
-      resolvedUserId = spUser.id;
-    } else {
-      const payload = verifyToken(token);
-      if (payload?.userId) {
-        resolvedUserId = payload.userId;
-      }
-    }
-
-    if (!resolvedUserId) {
+    // Extrair token usando método consistente
+    const token = extractTokenFromHeader(authHeader);
+    if (!token) {
       return {
         user: null,
         error: NextResponse.json(
-          { error: 'Token inválido' },
+          { error: 'Formato de token inválido' },
+          { status: 401 }
+        )
+      };
+    }
+
+    // Verificar token usando método padronizado
+    const payload = verifyToken(token);
+    if (!payload || !payload.userId) {
+      return {
+        user: null,
+        error: NextResponse.json(
+          { error: 'Token inválido ou expirado' },
           { status: 401 }
         )
       };
@@ -82,7 +82,7 @@ export async function withAcademyAuth(
     const { data: userData, error: userError } = await supabaseAdmin
       .from('users_unified')
       .select('*')
-      .eq('id', resolvedUserId)
+      .eq('id', payload.userId)
       .single();
 
     if (userError || !userData) {
@@ -95,12 +95,22 @@ export async function withAcademyAuth(
       };
     }
 
-    // Verificar se o usuário está ativo
-    if (!userData.active) {
+    // Verificar se o usuário está ativo e autorizado
+    if (!(userData as any).active) {
       return {
         user: null,
         error: NextResponse.json(
           { error: 'Usuário inativo' },
+          { status: 403 }
+        )
+      };
+    }
+
+    if (!(userData as any).is_authorized) {
+      return {
+        user: null,
+        error: NextResponse.json(
+          { error: 'Usuário não autorizado' },
           { status: 403 }
         )
       };

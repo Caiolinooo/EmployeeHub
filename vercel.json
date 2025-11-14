@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/avaliacao/cron/criar-avaliacoes",
+      "schedule": "0 9 * * *"
+    }
+  ]
+}

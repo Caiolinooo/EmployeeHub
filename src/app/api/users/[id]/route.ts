@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 // GET - Obter um usuário específico
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verificar autenticação
@@ -17,7 +17,7 @@ export async function GET(
 
     if (!token) {
       return NextResponse.json(
-        { error: 'Não autorizado' },
+        { success: false, error: 'Não autorizado' },
         { status: 401 }
       );
     }
@@ -25,66 +25,37 @@ export async function GET(
     const payload = verifyToken(token);
     if (!payload) {
       return NextResponse.json(
-        { error: 'Token inválido ou expirado' },
+        { success: false, error: 'Token inválido ou expirado' },
         { status: 401 }
       );
     }
 
-    // Verificar se o usuário é administrador
-    const { data: requestingUser, error: userError } = await supabaseAdmin
-      .from('users_unified')
-      .select('id, role, first_name, last_name, email, phone_number')
-      .eq('id', payload.userId)
-      .single();
-
-    if (userError || !requestingUser || requestingUser.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Acesso negado. Apenas administradores podem visualizar detalhes de usuários.' },
-        { status: 403 }
-      );
-    }
-
     // Obter o ID do usuário dos parâmetros da rota
-    // Garantir que params seja await antes de acessar suas propriedades
-    // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const userId = await Promise.resolve(params.id);
+    const { id: userId } = await params;
 
-    // Buscar o usuário
+    // Buscar o usuário - dados básicos para qualquer usuário autenticado
     const { data: user, error: fetchError } = await supabaseAdmin
       .from('users_unified')
-      .select('*')
+      .select('id, name, email, first_name, last_name, role, position, department, avatar, drive_photo_url')
       .eq('id', userId)
       .single();
 
     if (fetchError || !user) {
       return NextResponse.json(
-        { error: 'Usuário não encontrado' },
+        { success: false, error: 'Usuário não encontrado' },
         { status: 404 }
       );
     }
 
-    // Mapear os campos para o formato esperado pelo cliente
-    const mappedUser = {
-      id: user.id,
-      phoneNumber: user.phone_number,
-      firstName: user.first_name,
-      lastName: user.last_name,
-      email: user.email,
-      role: user.role,
-      position: user.position,
-      department: user.department,
-      active: user.active,
-      createdAt: user.created_at,
-      updatedAt: user.updated_at,
-      accessHistory: user.access_history,
-      accessPermissions: user.access_permissions
-    };
-
-    return NextResponse.json(mappedUser);
+    // Retornar dados básicos
+    return NextResponse.json({
+      success: true,
+      data: user
+    });
   } catch (error) {
     console.error('Erro ao obter usuário:', error);
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
+      { success: false, error: 'Erro interno do servidor' },
       { status: 500 }
     );
   }
@@ -93,7 +64,7 @@ export async function GET(
 // PUT - Atualizar um usuário
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verificar autenticação
@@ -130,9 +101,7 @@ export async function PUT(
     }
 
     // Obter o ID do usuário dos parâmetros da rota
-    // Garantir que params seja await antes de acessar suas propriedades
-    // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const userId = await Promise.resolve(params.id);
+    const { id: userId } = await params;
 
     // Obter os dados do corpo da requisição
     const body = await request.json();
@@ -284,7 +253,7 @@ export async function PUT(
 // DELETE - Excluir um usuário
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verificar autenticação
@@ -321,9 +290,7 @@ export async function DELETE(
     }
 
     // Obter o ID do usuário dos parâmetros da rota
-    // Garantir que params seja await antes de acessar suas propriedades
-    // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const userId = await Promise.resolve(params.id);
+    const { id: userId } = await params;
 
     // Não permitir excluir o próprio usuário
     if (userId === payload.userId) {
@@ -350,16 +317,34 @@ export async function DELETE(
     // Armazenar informações do usuário para o log
     const userInfo = `${user.first_name} ${user.last_name} (${user.phone_number})`;
 
+    // Remover avaliações onde o usuário é funcionário ou avaliador
+    const { error: deleteAvaliacoesError } = await supabaseAdmin
+      .from('avaliacoes_desempenho')
+      .delete()
+      .or(`funcionario_id.eq.${userId},avaliador_id.eq.${userId}`);
+
+    if (deleteAvaliacoesError) {
+      console.error('Erro ao remover avaliações do usuário:', deleteAvaliacoesError);
+    }
+
+    // Remover mapeamentos de gerentes
+    const { error: deleteMapeamentosError } = await supabaseAdmin
+      .from('avaliacao_colaborador_gerente')
+      .delete()
+      .or(`colaborador_id.eq.${userId},gerente_id.eq.${userId}`);
+
+    if (deleteMapeamentosError) {
+      console.error('Erro ao remover mapeamentos de gerentes:', deleteMapeamentosError);
+    }
+
     // Remover usuário da lista de banidos (se estiver banido)
-    // Isso permite que o usuário se cadastre novamente
     const { error: unbanError } = await supabaseAdmin
       .from('banned_users')
       .delete()
-      .or(`email.eq.${user.email},phone_number.eq.${user.phone_number},cpf.eq.${user.cpf}`);
+      .or(`email.eq.${user.email},phone_number.eq.${user.phone_number}`);
 
     if (unbanError) {
       console.error('Erro ao remover usuário da lista de banidos:', unbanError);
-      // Continuar mesmo se falhar, pois a exclusão ainda deve ocorrer
     } else {
       console.log(`Usuário ${userInfo} removido da lista de banidos (se estava banido)`);
     }

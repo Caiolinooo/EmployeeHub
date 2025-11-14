@@ -245,7 +245,7 @@ export default function HistoricoRelatorios({ historico, onDownload, onRegenerat
                         <button
                           onClick={() => {
                             // Implementar exclusão
-                            console.log('Excluir relatório:', item.id);
+                            console.log(t('components.excluirRelatorio'), item.id);
                           }}
                           className="text-red-600 hover:text-red-900"
                           title={t('common.excluir', 'Excluir')}

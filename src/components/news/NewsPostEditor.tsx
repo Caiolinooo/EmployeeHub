@@ -1,10 +1,11 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FiSave, FiEye, FiCalendar, FiImage, FiLink, FiTag, FiUsers, FiStar, FiX, FiPlus } from 'react-icons/fi';
 import { useACLPermissions } from '@/hooks/useACLPermissions';
 import ReminderManager from '../reminders/ReminderManager';
 import { fetchWithToken } from '@/lib/tokenStorage';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface NewsCategory {
   id: string;
@@ -54,6 +55,7 @@ const NewsPostEditor: React.FC<NewsPostEditorProps> = ({
   onDraftChange,
   containerClassName
 }) => {
+  const { t } = useI18n();
   const [post, setPost] = useState<NewsPost>({
     title: '',
     content: '',
@@ -279,9 +281,9 @@ const NewsPostEditor: React.FC<NewsPostEditorProps> = ({
       {/* Tabs */}
       <div className="flex border-b border-gray-200">
         {[
-          { id: 'content', label: 'Conteúdo', icon: FiEye },
-          { id: 'media', label: 'Mídia & Links', icon: FiImage },
-          { id: 'settings', label: 'Configurações', icon: FiUsers },
+          { id: 'content', label: t('components.conteudo'), icon: FiEye },
+          { id: 'media', label: t('components.midiaLinks'), icon: FiImage },
+          { id: 'settings', label: t('components.configuracoes'), icon: FiUsers },
           { id: 'reminders', label: 'Lembretes', icon: FiCalendar }
         ].map(tab => {
           const Icon = tab.icon;
@@ -316,7 +318,7 @@ const NewsPostEditor: React.FC<NewsPostEditorProps> = ({
                 value={post.title}
                 onChange={(e) => setPost({ ...post, title: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Título do post"
+                placeholder={t('components.tituloDoPost')}
               />
             </div>
 
@@ -344,7 +346,7 @@ const NewsPostEditor: React.FC<NewsPostEditorProps> = ({
                 onChange={(e) => setPost({ ...post, content: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 rows={12}
-                placeholder="Conteúdo completo do post"
+                placeholder={t('components.conteudoCompletoDoPost')}
               />
             </div>
 
@@ -427,7 +429,7 @@ const NewsPostEditor: React.FC<NewsPostEditorProps> = ({
                         setPost({ ...post, media_urls: newUrls });
                       }}
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="URL da mídia"
+                      placeholder={t('components.urlDaMidia')}
                     />
                     <button
                       onClick={() => {
@@ -467,7 +469,7 @@ const NewsPostEditor: React.FC<NewsPostEditorProps> = ({
                         setPost({ ...post, external_links: newLinks });
                       }}
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Título do link"
+                      placeholder={t('components.tituloDoLink')}
                     />
                     <input
                       type="url"
@@ -496,7 +498,7 @@ const NewsPostEditor: React.FC<NewsPostEditorProps> = ({
                     value={newLink.title}
                     onChange={(e) => setNewLink({ ...newLink, title: e.target.value })}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Título do link"
+                    placeholder={t('components.tituloDoLink')}
                   />
                   <input
                     type="url"

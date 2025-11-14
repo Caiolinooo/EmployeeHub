@@ -3,6 +3,23 @@
 -- Execute este SQL no Supabase SQL Editor
 -- ============================================
 
+-- Criar função para executar SQL dinâmico (se não existir)
+CREATE OR REPLACE FUNCTION execute_sql(sql_query TEXT)
+RETURNS TEXT
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    result TEXT;
+BEGIN
+    EXECUTE sql_query;
+    result := 'SQL executed successfully';
+    RETURN result;
+EXCEPTION WHEN OTHERS THEN
+    RETURN 'Error: ' || SQLERRM;
+END;
+$$;
+
 -- PASSO 1: Verificar se as foreign keys já existem
 SELECT
     conname AS constraint_name,
@@ -22,24 +39,36 @@ WHERE conname IN (
 -- ============================================
 
 -- Remover constraints antigas se existirem (só por segurança)
-ALTER TABLE avaliacoes_desempenho
-DROP CONSTRAINT IF EXISTS avaliacoes_desempenho_funcionario_id_fkey;
+DO $$
+BEGIN
+    ALTER TABLE avaliacoes_desempenho
+    DROP CONSTRAINT IF EXISTS avaliacoes_desempenho_funcionario_id_fkey;
+EXCEPTION WHEN OTHERS THEN
+    -- Ignorar erro se constraint não existir
+END;
+$$;
 
-ALTER TABLE avaliacoes_desempenho
-DROP CONSTRAINT IF EXISTS avaliacoes_desempenho_avaliador_id_fkey;
+DO $$
+BEGIN
+    ALTER TABLE avaliacoes_desempenho
+    DROP CONSTRAINT IF EXISTS avaliacoes_desempenho_avaliador_id_fkey;
+EXCEPTION WHEN OTHERS THEN
+    -- Ignorar erro se constraint não existir
+END;
+$$;
 
--- Criar foreign key para funcionario_id
+-- Criar foreign key para funcionario_id (referenciando users_unified)
 ALTER TABLE avaliacoes_desempenho
 ADD CONSTRAINT avaliacoes_desempenho_funcionario_id_fkey
 FOREIGN KEY (funcionario_id)
-REFERENCES funcionarios(id)
+REFERENCES users_unified(id)
 ON DELETE CASCADE;
 
--- Criar foreign key para avaliador_id
+-- Criar foreign key para avaliador_id (referenciando users_unified)
 ALTER TABLE avaliacoes_desempenho
 ADD CONSTRAINT avaliacoes_desempenho_avaliador_id_fkey
 FOREIGN KEY (avaliador_id)
-REFERENCES funcionarios(id)
+REFERENCES users_unified(id)
 ON DELETE SET NULL;
 
 -- ============================================

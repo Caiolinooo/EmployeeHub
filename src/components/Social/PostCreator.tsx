@@ -9,6 +9,7 @@ import {
   AtSymbolIcon
 } from '@heroicons/react/24/outline';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface User {
   id: string;
@@ -39,7 +40,8 @@ interface PostCreatorProps {
 }
 
 const PostCreator: React.FC<PostCreatorProps> = ({ onClose, onPostCreated }) => {
-  const { user, getToken } = useSupabaseAuth();
+  const { user, profile, getToken } = useSupabaseAuth();
+  const { t } = useI18n();
   const [content, setContent] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [loading, setLoading] = useState(false);
@@ -59,7 +61,7 @@ const PostCreator: React.FC<PostCreatorProps> = ({ onClose, onPostCreated }) => 
     try {
       const token = await getToken();
       if (!token) {
-        setError('Erro de autenticação');
+        setError(t('components.erroDeAutenticacao'));
         return;
       }
 
@@ -119,22 +121,23 @@ const PostCreator: React.FC<PostCreatorProps> = ({ onClose, onPostCreated }) => 
         <form onSubmit={handleSubmit} className="p-4">
           {/* User info */}
           <div className="flex items-center space-x-3 mb-4">
-            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-              {user?.profile_photo_url ? (
+            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center overflow-hidden">
+              {(profile as any)?.drive_photo_url || (profile as any)?.avatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={user.profile_photo_url}
-                  alt={`${user.first_name} ${user.last_name}`}
+                  src={(profile as any)?.drive_photo_url || (profile as any)?.avatar}
+                  alt={(profile as any)?.first_name || user?.email || 'Usuário'}
                   className="w-10 h-10 rounded-full object-cover"
                 />
               ) : (
                 <span className="text-white font-medium">
-                  {user?.first_name?.charAt(0) || 'U'}
+                  {(profile as any)?.first_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
                 </span>
               )}
             </div>
             <div>
               <h3 className="font-medium text-gray-900">
-                {user?.first_name} {user?.last_name}
+                {(profile as any)?.first_name} {(profile as any)?.last_name}
               </h3>
               <p className="text-sm text-gray-500">Público</p>
             </div>
@@ -146,7 +149,7 @@ const PostCreator: React.FC<PostCreatorProps> = ({ onClose, onPostCreated }) => 
               value={content}
               onChange={(e) => setContent(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={`No que você está pensando, ${user?.first_name}?`}
+              placeholder={t('components.noQueVoceEstaPensandoUserfirstname', `No que você está pensando${(profile as any)?.first_name ? `, ${(profile as any).first_name}` : ''}?`)}
               className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               rows={4}
               maxLength={2000}

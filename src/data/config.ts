@@ -15,6 +15,7 @@ export interface SiteConfig {
   footerText: string;
   dashboardTitle: string;
   dashboardDescription: string;
+  sidebarTitle?: string;
   googleClientId?: string;
   googleClientSecret?: string;
   googleRedirectUri?: string;
@@ -31,7 +32,8 @@ const siteConfig: SiteConfig = {
   companyName: "ABZ Group",
   contactEmail: "contato@groupabz.com",
   footerText: "© 2024 ABZ Group. Todos os direitos reservados.",
-  dashboardTitle: "Painel de Logística ABZ Group"
+  dashboardTitle: "Painel de Logística ABZ Group",
+  sidebarTitle: "Painel ABZ"
 };
 
 export default siteConfig;

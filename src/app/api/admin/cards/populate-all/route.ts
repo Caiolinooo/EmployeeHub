@@ -18,7 +18,7 @@ export async function POST() {
         color: 'bg-abz-blue',
         hover_color: 'hover:bg-abz-blue-dark',
         external: false,
-        enabled: true,
+        enabled: false,
         order: 1,
         admin_only: false,
         manager_only: false,

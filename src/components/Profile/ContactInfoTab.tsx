@@ -94,7 +94,7 @@ export function ContactInfoTab({ user }: ContactInfoTabProps) {
            toast.error(errorData.error || t('profile.loadError', 'Erro ao carregar telefones'));
         }
       } catch (error) {
-        console.error('Erro geral ao carregar informações de contato:', error);
+        console.error(t('components.erroGeralAoCarregarInformacoesDeContato'), error);
         toast.error(t('profile.loadError', 'Erro ao carregar informações'));
       } finally {
         setIsLoading(false);

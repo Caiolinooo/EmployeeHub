@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useSiteConfig } from '@/contexts/SiteConfigContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface CalendarEvent {
   id: string;
@@ -71,7 +72,7 @@ const GoogleCalendarIntegration: React.FC = () => {
       const data = await response.json();
       setAuthenticated(data.authenticated);
     } catch (error) {
-      console.error('Erro ao verificar status de autenticação:', error);
+      console.error(t('components.erroAoVerificarStatusDeAutenticacao'), error);
     }
   };
 
@@ -121,7 +122,7 @@ const GoogleCalendarIntegration: React.FC = () => {
         window.open(data.authUrl, 'google-auth', 'width=500,height=600');
       }
     } catch (error) {
-      console.error('Erro ao obter URL de autenticação:', error);
+      console.error(t('components.erroAoObterUrlDeAutenticacao'), error);
     }
   };
 
@@ -407,7 +408,7 @@ const GoogleCalendarIntegration: React.FC = () => {
                   value={newEvent.summary}
                   onChange={(e) => setNewEvent({ ...newEvent, summary: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Título do evento"
+                  placeholder={t('components.tituloDoEvento')}
                 />
               </div>
 
@@ -420,7 +421,7 @@ const GoogleCalendarIntegration: React.FC = () => {
                   onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   rows={3}
-                  placeholder="Descrição do evento"
+                  placeholder={t('components.descricaoDoEvento')}
                 />
               </div>
 
@@ -472,7 +473,7 @@ const GoogleCalendarIntegration: React.FC = () => {
                   value={newEvent.attendees}
                   onChange={(e) => setNewEvent({ ...newEvent, attendees: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="E-mails separados por vírgula"
+                  placeholder={t('components.emailsSeparadosPorVirgula')}
                 />
               </div>
             </div>

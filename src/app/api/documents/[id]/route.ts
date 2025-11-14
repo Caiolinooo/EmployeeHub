@@ -7,13 +7,13 @@ export const dynamic = 'force-dynamic';
 // GET - Obter um documento pelo ID
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const { params } = context;
   try {
     // Garantir que params seja await antes de acessar suas propriedades
     // Usar Promise.resolve para garantir que params.id seja tratado como uma Promise
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
 
     const { data: document, error } = await supabaseAdmin
       .from('documents')
@@ -42,11 +42,11 @@ export async function GET(
 export const PUT = withPermission('manager', async (
   request: NextRequest,
   _user: any,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) => {
   const { params } = context;
   try {
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
     const body = await request.json();
     const { title, description, category, language, file, enabled, order } = body;
 
@@ -94,10 +94,10 @@ export const PUT = withPermission('manager', async (
 export const DELETE = withPermission('manager', async (
   request: NextRequest,
   _user: any,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) => {
   try {
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
 
     const { data: existingDocument, error: findError } = await supabaseAdmin
       .from('documents')

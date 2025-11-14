@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -14,6 +14,7 @@ import {
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface Category {
   id: string;
@@ -43,6 +44,7 @@ interface CourseFormData {
 const CreateCoursePage: React.FC = () => {
   const router = useRouter();
   const { user, hasFeature } = useSupabaseAuth();
+  const { t } = useI18n();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -155,13 +157,13 @@ const CreateCoursePage: React.FC = () => {
   };
 
   const validateForm = (): string | null => {
-    if (!formData.title.trim()) return 'Título é obrigatório';
-    if (!formData.description.trim()) return 'Descrição é obrigatória';
+    if (!formData.title.trim()) return t('academy.tituloEObrigatorio');
+    if (!formData.description.trim()) return t('academy.descricaoEObrigatoria');
     // Categoria é opcional no primeiro momento (pode ser atribuída depois)
     // if (!formData.category_id) return 'Categoria é obrigatória';
-    if (!formData.difficulty_level) return 'Nível de dificuldade é obrigatório';
-    if (formData.duration <= 0) return 'Duração deve ser maior que zero';
-    if (!formData.video_url.trim()) return 'URL do vídeo é obrigatória';
+    if (!formData.difficulty_level) return t('academy.nivelDeDificuldadeEObrigatorio');
+    if (formData.duration <= 0) return t('academy.duracaoDeveSerMaiorQueZero');
+    if (!formData.video_url.trim()) return t('academy.urlDoVideoEObrigatoria');
     
     return null;
   };
@@ -330,7 +332,7 @@ const CreateCoursePage: React.FC = () => {
                   value={formData.title}
                   onChange={(e) => handleInputChange('title', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Ex: Introdução ao React.js"
+                  placeholder={t('academy.exIntroducaoAoReactjs')}
                   maxLength={200}
                 />
               </div>
@@ -358,7 +360,7 @@ const CreateCoursePage: React.FC = () => {
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   rows={6}
-                  placeholder="Descrição detalhada do curso, conteúdo abordado, etc."
+                  placeholder={t('academy.descricaoDetalhadaDoCursoConteudoAbordadoEtc')}
                   maxLength={2000}
                 />
                 <div className="text-right text-xs text-gray-500 mt-1">
@@ -517,7 +519,7 @@ const CreateCoursePage: React.FC = () => {
                   onChange={(e) => setNewPrerequisite(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addPrerequisite())}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Digite um pré-requisito e pressione Enter"
+                  placeholder={t('academy.digiteUmPrerequisitoEPressioneEnter')}
                   maxLength={200}
                 />
                 <button

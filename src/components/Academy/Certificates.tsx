@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { 
@@ -12,6 +12,7 @@ import {
   TrophyIcon
 } from '@heroicons/react/24/outline';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface Certificate {
   id: string;
@@ -40,6 +41,7 @@ interface CertificatesProps {
 
 const Certificates: React.FC<CertificatesProps> = ({ className = '' }) => {
   const { user, getToken } = useSupabaseAuth();
+  const { t } = useI18n();
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +59,7 @@ const Certificates: React.FC<CertificatesProps> = ({ className = '' }) => {
     try {
       const token = await getToken();
       if (!token) {
-        setError('Token de autenticação não encontrado');
+        setError(t('components.tokenDeAutenticacaoNaoEncontrado'));
         return;
       }
 
@@ -174,8 +176,8 @@ const Certificates: React.FC<CertificatesProps> = ({ className = '' }) => {
   const getDifficultyLabel = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
       case 'beginner': return 'Iniciante';
-      case 'intermediate': return 'Intermediário';
-      case 'advanced': return 'Avançado';
+      case 'intermediate': return t('components.intermediario');
+      case 'advanced': return t('components.avancado');
       default: return difficulty;
     }
   };

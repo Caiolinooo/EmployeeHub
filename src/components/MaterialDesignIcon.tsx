@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { IconType } from 'react-icons';
+import { useI18n } from '@/contexts/I18nContext';
 
 // Import dinâmico para otimizar bundle size
 const loadIcon = async (iconName: string): Promise<IconType | null> => {
@@ -10,7 +11,7 @@ const loadIcon = async (iconName: string): Promise<IconType | null> => {
     const IconComponent = iconModule[iconName as keyof typeof iconModule] as IconType;
     return IconComponent || null;
   } catch (error) {
-    console.warn(`Erro ao carregar ícone ${iconName}:`, error);
+    console.warn(t('components.erroAoCarregarIconeIconname'), error);
     return null;
   }
 };

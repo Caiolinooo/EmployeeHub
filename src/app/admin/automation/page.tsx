@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useI18n } from '@/contexts/I18nContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import {
   FiArrowLeft,
   FiSettings,
@@ -27,7 +27,7 @@ const AutomationSettings = dynamic(
 export default function AutomationPage() {
   const router = useRouter();
   const { t } = useI18n();
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = useState(true);
@@ -43,7 +43,7 @@ export default function AutomationPage() {
       if (!isAdmin) {
         toast({
           title: 'Acesso Negado',
-          description: 'Você não tem permissão para acessar esta página',
+          description: t('admin.voceNaoTemPermissaoParaAcessarEstaPagina'),
           variant: 'destructive',
           duration: 3000,
         });

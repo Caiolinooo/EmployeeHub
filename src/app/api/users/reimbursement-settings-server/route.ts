@@ -268,12 +268,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Buscar usuário
+    // Buscar usuário - primeiro tentar sem a coluna reimbursement_email_settings
     let data: any = null;
     try {
       let query = supabaseAdmin
         .from('users_unified')
-        .select('id, email, reimbursement_email_settings');
+        .select('id, email');
 
       if (userId) {
         query = query.eq('id', userId);
@@ -282,10 +282,9 @@ export async function GET(request: NextRequest) {
       }
 
       const { data: queryData, error } = await query.single();
-      data = queryData;
 
       if (error) {
-        console.error('Erro ao buscar configurações de email do usuário:', error);
+        console.error('Erro ao buscar usuário:', error);
 
         // Se o usuário não for encontrado, retornar configurações padrão
         if (error.code === 'PGRST116') {
@@ -296,97 +295,50 @@ export async function GET(request: NextRequest) {
             reimbursement_email_settings: {
               enabled: false,
               recipients: []
-            }
-          });
-        }
-
-        // Se o erro for de coluna não existente, tentar adicionar a coluna
-        if (error.code === '42703' && error.message.includes('reimbursement_email_settings')) {
-          console.log('Coluna reimbursement_email_settings não existe, tentando adicionar...');
-
-          // Tentar adicionar a coluna usando a API de setup
-          try {
-            const setupResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}/api/setup-user-reimbursement-column`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              }
-            });
-
-            if (setupResponse.ok) {
-              console.log('Coluna adicionada com sucesso, buscando usuário novamente...');
-
-              // Buscar usuário novamente
-              const retryQuery = supabaseAdmin
-                .from('users_unified')
-                .select('id, email');
-
-              if (userId) {
-                retryQuery.eq('id', userId);
-              } else if (email) {
-                retryQuery.eq('email', email);
-              }
-
-              const { data: retryData, error: retryError } = await retryQuery.single();
-
-              if (!retryError && retryData) {
-                console.log('Usuário encontrado após adicionar coluna:', retryData);
-                return NextResponse.json({
-                  id: retryData.id,
-                  email: retryData.email,
-                  reimbursement_email_settings: {
-                    enabled: false,
-                    recipients: []
-                  }
-                });
-              } else {
-                console.error('Erro ao buscar usuário após adicionar coluna:', retryError);
-              }
-            } else {
-              console.error('Erro ao adicionar coluna:', await setupResponse.text());
-            }
-          } catch (setupError) {
-            console.error('Erro ao chamar API para adicionar coluna:', setupError);
-          }
-
-          // Usar API de fallback como último recurso
-          try {
-            console.log('Tentando usar API de fallback...');
-            const fallbackResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}/api/users/reimbursement-settings-local?${userId ? `userId=${userId}` : `email=${email}`}`, {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json'
-              }
-            });
-
-            if (fallbackResponse.ok) {
-              const fallbackData = await fallbackResponse.json();
-              console.log('Dados obtidos da API de fallback:', fallbackData);
-              return NextResponse.json(fallbackData);
-            } else {
-              console.error('Erro ao usar API de fallback:', await fallbackResponse.text());
-            }
-          } catch (fallbackError) {
-            console.error('Erro ao chamar API de fallback:', fallbackError);
-          }
-
-          // Retornar configurações padrão como último recurso
-          return NextResponse.json({
-            id: userId || null,
-            email: email || 'unknown',
-            reimbursement_email_settings: {
-              enabled: false,
-              recipients: []
             },
-            _note: 'Configurações padrão retornadas devido a erro de coluna não existente'
+            _note: 'Configurações padrão retornadas - usuário não encontrado'
           });
         }
 
-        return NextResponse.json(
-          { error: `Erro ao buscar configurações: ${error.message}` },
-          { status: 500 }
-        );
+        // Retornar configurações padrão para qualquer outro erro
+        console.log('Erro ao buscar usuário, retornando configurações padrão');
+        return NextResponse.json({
+          id: null,
+          email: email || 'unknown',
+          reimbursement_email_settings: {
+            enabled: false,
+            recipients: []
+          },
+          _note: 'Configurações padrão retornadas devido a erro'
+        });
       }
+
+      data = queryData;
+
+      // Tentar buscar configurações da coluna reimbursement_email_settings se existir
+      try {
+        const { data: settingsData, error: settingsError } = await supabaseAdmin
+          .from('users_unified')
+          .select('reimbursement_email_settings')
+          .eq('id', data.id)
+          .single();
+
+        if (!settingsError && settingsData) {
+          data.reimbursement_email_settings = settingsData.reimbursement_email_settings;
+        }
+      } catch (settingsErr) {
+        console.log('Coluna reimbursement_email_settings não existe, usando configurações padrão');
+      }
+
+      // Retornar dados do usuário com configurações padrão se não existirem
+      return NextResponse.json({
+        id: data.id,
+        email: data.email,
+        reimbursement_email_settings: data.reimbursement_email_settings || {
+          enabled: false,
+          recipients: []
+        }
+      });
     } catch (queryError) {
       console.error('Erro ao executar consulta:', queryError);
 

@@ -6,11 +6,11 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Aguardar os parâmetros da rota antes de acessá-los
-    const { id } = params;
+    const { id } = await params;
     const userId = id;
 
     // Verificar autenticação
@@ -80,11 +80,11 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Aguardar os parâmetros da rota antes de acessá-los
-    const { id } = params;
+    const { id } = await params;
 
     // Verificar autenticação
     const authHeader = request.headers.get('authorization');

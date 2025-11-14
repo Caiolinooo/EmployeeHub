@@ -1,8 +1,9 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useRef, useCallback } from 'react';
 import { FiUpload, FiX, FiSearch } from 'react-icons/fi';
 import { IconType } from 'react-icons';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface IconSelectorProps {
   selectedIcon: string;
@@ -30,6 +31,7 @@ export default function IconSelector({
   onCustomIconUpload,
   allowCustomUpload = true
 }: IconSelectorProps) {
+  const { t } = useI18n();
   const [searchTerm, setSearchTerm] = useState('');
   const [showIconGrid, setShowIconGrid] = useState(false);
   const [iconComponents, setIconComponents] = useState<Record<string, IconType>>({});
@@ -55,7 +57,7 @@ export default function IconSelector({
         return IconComponent;
       }
     } catch (error) {
-      console.warn(`Erro ao carregar ícone ${iconName}:`, error);
+      console.warn(t('components.erroAoCarregarIconeIconname'), error);
     }
     
     return null;
@@ -113,7 +115,7 @@ export default function IconSelector({
           onClick={() => setShowIconGrid(!showIconGrid)}
           className="text-xs text-blue-600 hover:text-blue-800"
         >
-          {showIconGrid ? 'Fechar seletor' : 'Mostrar ícones'}
+          {showIconGrid ? 'Fechar seletor' : t('components.mostrarIcones')}
         </button>
       </div>
 
@@ -129,7 +131,7 @@ export default function IconSelector({
               onClick={() => setShowIconGrid(!showIconGrid)}
               className="px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 flex-1"
             >
-              {selectedIcon || 'Selecionar ícone'}
+              {selectedIcon || t('components.selecionarIcone')}
             </button>
 
             {allowCustomUpload && (
@@ -137,7 +139,7 @@ export default function IconSelector({
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 className="ml-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                title="Fazer upload de ícone personalizado"
+                title={t('components.fazerUploadDeIconePersonalizado')}
               >
                 <FiUpload className="h-5 w-5" />
                 <input
@@ -163,7 +165,7 @@ export default function IconSelector({
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar ícones..."
+              placeholder={t('components.buscarIcones')}
               className="flex-1 px-3 py-2 border-none focus:outline-none focus:ring-0"
             />
             {searchTerm && (
