@@ -18,7 +18,7 @@ require('dotenv').config();
 
 // Configuration
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'test-anon-key';
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 const adminToken = process.env.ADMIN_TOKEN || 'admin-token-test';
 
@@ -47,13 +47,16 @@ const TEST_PERIODO = '2025';
 const testResults = {
   passed: 0,
   failed: 0,
-  details: [],
+  details: /** @type {Array<{ test: string; passed: boolean; details: string; timestamp: string }>} */ ([]),
   startTime: null,
   endTime: null
 };
 
 /**
  * Log test result
+ * @param {string} testName
+ * @param {boolean} passed
+ * @param {string} [details='']
  */
 function logTest(testName, passed, details = '') {
   const status = passed ? '✅ PASS' : '❌ FAIL';
@@ -77,7 +80,19 @@ function logTest(testName, passed, details = '') {
 }
 
 /**
+ * Convert an unknown caught value into a useful error message.
+ * @param {unknown} error
+ * @returns {string}
+ */
+function getErrorMessage(error) {
+  return error instanceof Error ? error.message : String(error);
+}
+
+/**
  * Make HTTP request
+ * @param {string} url
+ * @param {RequestInit & { headers?: Record<string, string> }} [options={}]
+ * @returns {Promise<{ ok: boolean; status: number; data: any }>} 
  */
 async function makeRequest(url, options = {}) {
   const defaultOptions = {
@@ -100,10 +115,12 @@ async function makeRequest(url, options = {}) {
       data: data
     };
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+
     return {
       ok: false,
       status: 0,
-      data: { error: error.message }
+      data: { error: message }
     };
   }
 }
@@ -151,7 +168,7 @@ async function testDatabaseViewFunctionality() {
     
     const columnNames = columns.rows.map(col => col.column_name);
     let allFieldsPresent = true;
-    let missingFields = [];
+    let missingFields = /** @type {string[]} */ ([]);
     
     expectedFields.forEach(field => {
       if (columnNames.includes(field)) {
@@ -210,8 +227,9 @@ async function testDatabaseViewFunctionality() {
     return allFieldsPresent && joinWorking;
     
   } catch (error) {
-    console.error('❌ Database view test error:', error.message);
-    logTest('Database View Functionality', false, error.message);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('❌ Database view test error:', message);
+    logTest('Database View Functionality', false, message);
     return false;
   } finally {
     await pgClient.end();
@@ -372,8 +390,9 @@ async function testApiEndpoints() {
     return successCount === totalTests;
     
   } catch (error) {
-    console.error('❌ API testing error:', error.message);
-    logTest('API Endpoints Testing', false, error.message);
+    const message = getErrorMessage(error);
+    console.error('❌ API testing error:', message);
+    logTest('API Endpoints Testing', false, message);
     return false;
   }
 }
@@ -573,8 +592,9 @@ async function testNotificationSystem() {
     return notificationTestsPassed === totalNotificationTests;
     
   } catch (error) {
-    console.error('❌ Notification system testing error:', error.message);
-    logTest('Notification System Testing', false, error.message);
+    const message = getErrorMessage(error);
+    console.error('❌ Notification system testing error:', message);
+    logTest('Notification System Testing', false, message);
     return false;
   }
 }
@@ -687,8 +707,9 @@ async function testFrontendBackendIntegration() {
     }
     
   } catch (error) {
-    console.error('❌ Frontend-backend integration testing error:', error.message);
-    logTest('Frontend-Backend Integration', false, error.message);
+    const message = getErrorMessage(error);
+    console.error('❌ Frontend-backend integration testing error:', message);
+    logTest('Frontend-Backend Integration', false, message);
     return false;
   }
 }
@@ -868,8 +889,9 @@ async function testOriginalIssueResolution() {
     return true;
     
   } catch (error) {
-    console.error('❌ Original issue resolution testing error:', error.message);
-    logTest('Original Issue Resolution', false, error.message);
+    const message = getErrorMessage(error);
+    console.error('❌ Original issue resolution testing error:', message);
+    logTest('Original Issue Resolution', false, message);
     return false;
   }
 }
@@ -935,7 +957,7 @@ async function createTestUsers() {
     
     return true;
   } catch (error) {
-    console.error('❌ Error creating test users:', error.message);
+    console.error('❌ Error creating test users:', getErrorMessage(error));
     return false;
   }
 }
@@ -973,7 +995,7 @@ async function cleanupTestData() {
     
     return true;
   } catch (error) {
-    console.error('❌ Error cleaning up test data:', error.message);
+    console.error('❌ Error cleaning up test data:', getErrorMessage(error));
     return false;
   }
 }
@@ -1067,7 +1089,7 @@ async function runAllTests() {
     return overallSuccess;
     
   } catch (error) {
-    console.error('❌ Fatal error during testing:', error.message);
+    console.error('❌ Fatal error during testing:', getErrorMessage(error));
     return false;
   }
 }

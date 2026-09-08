@@ -72,56 +72,195 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
   }, [userId, notifications, unreadCount, loading, isOpen]);
 
   // Chime curto "ABZ" com WebAudio
-  const playABZChime = () => {
-    try {
-      const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
+  // ============================================================
+// ÁUDIO DE NOTIFICAÇÕES
+// ============================================================
 
-      const now = ctx.currentTime;
-      const master = ctx.createGain();
-      master.gain.setValueAtTime(0.0001, now);
-      master.gain.exponentialRampToValueAtTime(0.15, now + 0.02);
-      master.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
-      master.connect(ctx.destination);
+const audioContextRef = useRef<AudioContext | null>(null);
+const audioUnlockedRef = useRef(false);
 
-      const notes = [
-        { t: 0.00, freq: 440 },
-        { t: 0.28, freq: 494 },
-        { t: 0.56, freq: 659 }
-      ];
+/**
+ * Obtém ou cria o AudioContext.
+ * O contexto só é criado após uma interação do usuário.
+ */
+const getAudioContext = useCallback((): AudioContext | null => {
+  if (typeof window === 'undefined') return null;
 
-      notes.forEach(({ t, freq }) => {
-        const o1 = ctx.createOscillator();
-        const o2 = ctx.createOscillator();
-        const g = ctx.createGain();
-        o1.type = 'sine';
-        o2.type = 'triangle';
-        o1.frequency.setValueAtTime(freq, now + t);
-        o2.frequency.setValueAtTime(freq * 2, now + t);
+  try {
+    const AudioCtx =
+      window.AudioContext ||
+      (window as typeof window & {
+        webkitAudioContext?: typeof AudioContext;
+      }).webkitAudioContext;
 
-        g.gain.setValueAtTime(0.0001, now + t);
-        g.gain.exponentialRampToValueAtTime(0.12, now + t + 0.03);
-        g.gain.exponentialRampToValueAtTime(0.0001, now + t + 0.35);
+    if (!AudioCtx) return null;
 
-        o1.connect(g); o2.connect(g); g.connect(master);
-        o1.start(now + t); o2.start(now + t);
-        o1.stop(now + t + 0.38); o2.stop(now + t + 0.38);
-      });
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioCtx();
+    }
 
-      const oZ = ctx.createOscillator();
-      const gZ = ctx.createGain();
-      oZ.type = 'sine';
-      oZ.frequency.setValueAtTime(740, now + 0.88);
-      oZ.frequency.exponentialRampToValueAtTime(660, now + 1.1);
-      gZ.gain.setValueAtTime(0.0001, now + 0.88);
-      gZ.gain.exponentialRampToValueAtTime(0.08, now + 0.91);
-      gZ.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
-      oZ.connect(gZ); gZ.connect(master);
-      oZ.start(now + 0.88); oZ.stop(now + 1.22);
-    } catch { }
+    return audioContextRef.current;
+  } catch (error) {
+    debugLog('🔊 Erro ao criar AudioContext:', error);
+    return null;
+  }
+});
+
+/**
+ * Libera o áudio após uma interação do usuário.
+ *
+ * Chrome/Edge bloqueiam AudioContext iniciado automaticamente.
+ */
+const unlockAudio = useCallback(async () => {
+  try {
+    const ctx = getAudioContext();
+
+    if (!ctx) return;
+
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
+
+    audioUnlockedRef.current = ctx.state === 'running';
+
+    debugLog('🔊 AudioContext:', ctx.state);
+  } catch (error) {
+    debugLog('🔊 Não foi possível liberar áudio:', error);
+  }
+}, [getAudioContext]);
+
+/**
+ * Libera o áudio quando o usuário interagir com a página.
+ */
+useEffect(() => {
+  const handleUserInteraction = () => {
+    if (!audioUnlockedRef.current) {
+      unlockAudio();
+    }
   };
 
+  window.addEventListener('click', handleUserInteraction, {
+    once: true
+  });
+
+  window.addEventListener('keydown', handleUserInteraction, {
+    once: true
+  });
+
+  window.addEventListener('touchstart', handleUserInteraction, {
+    once: true
+  });
+
+  return () => {
+    window.removeEventListener('click', handleUserInteraction);
+    window.removeEventListener('keydown', handleUserInteraction);
+    window.removeEventListener('touchstart', handleUserInteraction);
+  };
+}, [unlockAudio]);
+
+/**
+ * Chime curto "ABZ" com WebAudio.
+ *
+ * Não tenta iniciar áudio se o navegador ainda não
+ * autorizou o AudioContext.
+ */
+const playABZChime = useCallback(async () => {
+  try {
+    const ctx = audioContextRef.current;
+
+    // O usuário ainda não interagiu com a página.
+    if (!ctx || !audioUnlockedRef.current) {
+      debugLog('🔇 Áudio bloqueado até interação do usuário');
+      return;
+    }
+
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
+
+    if (ctx.state !== 'running') {
+      return;
+    }
+
+    const now = ctx.currentTime;
+
+    const master = ctx.createGain();
+
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.exponentialRampToValueAtTime(0.15, now + 0.02);
+    master.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+
+    master.connect(ctx.destination);
+
+    const notes = [
+      { t: 0.00, freq: 440 },
+      { t: 0.28, freq: 494 },
+      { t: 0.56, freq: 659 }
+    ];
+
+    notes.forEach(({ t, freq }) => {
+      const o1 = ctx.createOscillator();
+      const o2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      o1.type = 'sine';
+      o2.type = 'triangle';
+
+      o1.frequency.setValueAtTime(freq, now + t);
+      o2.frequency.setValueAtTime(freq * 2, now + t);
+
+      gain.gain.setValueAtTime(0.0001, now + t);
+      gain.gain.exponentialRampToValueAtTime(
+        0.12,
+        now + t + 0.03
+      );
+      gain.gain.exponentialRampToValueAtTime(
+        0.0001,
+        now + t + 0.35
+      );
+
+      o1.connect(gain);
+      o2.connect(gain);
+      gain.connect(master);
+
+      o1.start(now + t);
+      o2.start(now + t);
+
+      o1.stop(now + t + 0.38);
+      o2.stop(now + t + 0.38);
+    });
+
+    const oZ = ctx.createOscillator();
+    const gZ = ctx.createGain();
+
+    oZ.type = 'sine';
+
+    oZ.frequency.setValueAtTime(740, now + 0.88);
+    oZ.frequency.exponentialRampToValueAtTime(
+      660,
+      now + 1.1
+    );
+
+    gZ.gain.setValueAtTime(0.0001, now + 0.88);
+    gZ.gain.exponentialRampToValueAtTime(
+      0.08,
+      now + 0.91
+    );
+    gZ.gain.exponentialRampToValueAtTime(
+      0.0001,
+      now + 1.2
+    );
+
+    oZ.connect(gZ);
+    gZ.connect(master);
+
+    oZ.start(now + 0.88);
+    oZ.stop(now + 1.22);
+
+  } catch (error) {
+    debugLog('🔊 Erro ao reproduzir chime:', error);
+  }
+}, []);
   // Aviso sonoro quando contador aumenta
   useEffect(() => {
     if (unreadCount > prevUnreadRef.current) {
@@ -305,8 +444,11 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
 
       {/* Botão de Notificações */}
       <button
-        ref={bellRef}
-        onClick={() => setIsOpen(!isOpen)}
+  ref={bellRef}
+  onClick={async () => {
+    await unlockAudio();
+    setIsOpen(prev => !prev);
+  }}
         className={className || "relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"}
         aria-label={t('components.notificacoes')}
         title={unreadCount > 0 || evaluationPendingCount > 0 ? `${unreadCount} notificações, ${evaluationPendingCount} avaliações pendentes` : t('components.notificacoes')}

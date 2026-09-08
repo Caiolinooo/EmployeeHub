@@ -7,7 +7,8 @@ import {
     FiChevronRight, FiChevronLeft, FiLogIn, FiDollarSign,
     FiTrendingUp, FiFileText, FiBook, FiCalendar, FiMonitor,
     FiSend, FiAlertCircle, FiStar, FiMessageSquare, FiZoomIn,
-    FiPaperclip, FiTrash2, FiCheckSquare, FiSquare, FiInfo
+    FiPaperclip, FiTrash2, FiCheckSquare, FiSquare, FiInfo,
+    FiBox, FiGrid
 } from 'react-icons/fi';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -23,8 +24,9 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
     FiCalendar,
     FiMonitor,
     FiMessageSquare,
+    FiBox,
+    FiGrid,
 };
-
 type Tab = 'home' | 'help' | 'messages';
 type MessageType = 'question' | 'bug' | 'suggestion';
 
