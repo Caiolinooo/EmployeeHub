@@ -251,7 +251,7 @@ export default function AsoAgendamentoDpPanel({
       </div>
 
       <div className={`border border-gray-200 rounded-xl ${GT_PAGE_SCROLLPORT_CLASS}`}>
-        <table className="min-w-full divide-y divide-gray-200 text-left text-xs">
+        <table className="min-w-[860px] w-full divide-y divide-gray-200 text-left text-xs">
           <thead className="bg-gray-50 text-gray-700 font-bold uppercase sticky top-0 z-10">
             <tr>
               <th className="px-4 py-3">Colaborador</th>

@@ -125,7 +125,7 @@ API routes for crew management (colaboradores, documentos, ASO, embarques, tipos
 - Cache in-memory: assinatura inclui `count` + último `updated_at` **e** último `created_at` (insert local sem `updated_at` não pode reusar payload velho). POST/PUT/DELETE embarques chama `invalidateManScheduleCache()` e grava `updated_at`.
 - Grade: `allSchedules` é lista plana (`rotation_start`/`rotation_end`). Save otimista **insere/atualiza uma linha**, nunca `row.rotations`. Coluna ON/DBA/FI/TRE conta colunas visíveis; evento novo ganha de STB sobreposto (`pickOverlappingRotation`: início na coluna, depois data de início mais recente).
 - **Viewport dia/semana**: checkbox `Visualizar por dia` em `GTManScheduleTab` (`localStorage` `gt-man-schedule-viewport-day`). Desligado = colunas sábado–sexta (atual). Ligado = um dia por coluna. Clique na célula passa a `Date` da coluna. Semanas continuam começando sábado. Toolbar em `ManScheduleTimelineNav` (também em `/department/man-schedule`): **mês de referência** cobre o mês inteiro mesmo sem rotações (`buildScheduleColumns`); setas de coluna = uma coluna; setas de mês mudam o mês; **Hoje** restaura o mês atual e a coluna de hoje; pill = `countPobOnCivilDay` (ON exato no dia civil de **hoje**, independente do mês visível). Destaque amarelo só se a coluna de hoje existir na grade.
-- **Scroll da grade**: UI em `src/components/gestao-tripulantes/AGENTS.md` — overflow no wrapper, sticky na coluna NOME, `border-separate`. Aplica à aba GT e a `/department/man-schedule`.
+- **Scroll da grade**: UI em `src/components/gestao-tripulantes/AGENTS.md` — overflow no wrapper (`min-w-0` + `overflow-x-scroll overflow-y-auto`), sticky na coluna NOME, `border-separate`. Aplica à aba GT e a `/department/man-schedule`.
 - **Filtro de data da escala**: UI só aplica `YYYY-MM-DD` completo (ano 1990–2100) via `parseCompleteFilterDate` / `ScheduleDateFilterInput`. Valores parciais do Chrome ao digitar o ano não expandem a timeline. Viewport dia recorta em 400 colunas; semana tem teto de segurança 2000.
 
 ### Schema notes
@@ -239,7 +239,7 @@ API routes for crew management (colaboradores, documentos, ASO, embarques, tipos
   - Permite emissão de lista oficial para assinaturas digitais e opção de lançamento automático em lote do treinamento concluído no prontuário de cada participante selecionado.
 - **Man Schedule — Barra de Rolagem Horizontal Aprimorada e Sincronizada**:
   - CSS customizado `.man-schedule-scroll` (14px de espessura, thumb contrastado `#94a3b8` com track `#f1f5f9`).
-  - Barra de rolagem superior sincronizada (`topScrollRef` via `ResizeObserver` e listener de `scrollLeft`) para navegação horizontal imediata sem necessitar rolar até o rodapé da tabela.
+  - Hook `useManScheduleScrollSync`: `ResizeObserver` na tabela + scrollport; barra superior e grade compartilham `scrollLeft`. Cadeia flex com `min-w-0` para o overflow horizontal existir de fato.
 
 ### Centros de Custo Globais
 

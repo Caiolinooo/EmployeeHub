@@ -15,7 +15,9 @@ import {
     MAN_SCHEDULE_STICKY_NAME_CLASS,
     MAN_SCHEDULE_TABLE_CLASS,
     MAN_SCHEDULE_THEAD_CLASS,
+    MAN_SCHEDULE_TOP_SCROLL_CLASS,
 } from '@/components/gestao-tripulantes/man-schedule-grid-classes';
+import { useManScheduleScrollSync } from '@/components/gestao-tripulantes/use-man-schedule-scroll-sync';
 import {
     DEFAULT_TIPOS_EVENTO_ESCALA,
     hexToRgbNoHash,
@@ -553,47 +555,6 @@ export default function GTManScheduleTab({ onColabClick, kpiFilter = '' }: Props
     const [viewportDay, setViewportDay] = useState(false);
     const [referenceMonth, setReferenceMonth] = useState<ReferenceMonth>(() => civilReferenceMonth());
 
-    const tableContainerRef = useRef<HTMLDivElement>(null);
-    const topScrollRef = useRef<HTMLDivElement>(null);
-    const [tableScrollWidth, setTableScrollWidth] = useState(0);
-    const isSyncingScrollRef = useRef(false);
-
-    useEffect(() => {
-        const el = tableContainerRef.current;
-        if (!el) return;
-        const updateWidth = () => {
-            if (el.scrollWidth && el.scrollWidth !== tableScrollWidth) {
-                setTableScrollWidth(el.scrollWidth);
-            }
-        };
-        updateWidth();
-        const ro = new ResizeObserver(updateWidth);
-        ro.observe(el);
-        return () => ro.disconnect();
-    }, [tableScrollWidth]);
-
-    const handleTopScroll = () => {
-        if (isSyncingScrollRef.current) return;
-        isSyncingScrollRef.current = true;
-        if (tableContainerRef.current && topScrollRef.current) {
-            tableContainerRef.current.scrollLeft = topScrollRef.current.scrollLeft;
-        }
-        requestAnimationFrame(() => {
-            isSyncingScrollRef.current = false;
-        });
-    };
-
-    const handleTableScroll = () => {
-        if (isSyncingScrollRef.current) return;
-        isSyncingScrollRef.current = true;
-        if (tableContainerRef.current && topScrollRef.current) {
-            topScrollRef.current.scrollLeft = tableContainerRef.current.scrollLeft;
-        }
-        requestAnimationFrame(() => {
-            isSyncingScrollRef.current = false;
-        });
-    };
-
     useEffect(() => {
         setViewportDay(readViewportDayPreference());
         const storedMonth = readReferenceMonthPreference();
@@ -1113,6 +1074,14 @@ function parseLocalDate(str: string | null | undefined): Date | null {
         });
     }, [weeks, filterDateStart, filterDateEnd, viewport]);
 
+    const {
+        tableContainerRef,
+        topScrollRef,
+        tableScrollWidth,
+        handleTopScroll,
+        handleTableScroll,
+    } = useManScheduleScrollSync(filteredWeeks.length);
+
     const todayYmd = civilTodayYmd();
     const todayColumnIndex = useMemo(
         () => indexOfCivilDay(filteredWeeks, todayYmd, viewport),
@@ -1445,7 +1414,7 @@ function parseLocalDate(str: string | null | undefined): Date | null {
     const editingLocal = !!(selectedCell?.rotationId && isUuid(selectedCell.rotationId));
 
     return (
-        <div className="flex flex-col h-full min-h-0 w-full border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
+        <div className="flex flex-col h-full min-h-0 min-w-0 w-full border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
             <div className="bg-gray-50/90 px-3 py-2 border-b border-gray-200 shrink-0">
                 <div className="flex items-end gap-2.5 w-full flex-wrap">
                     <div className="min-w-[160px] flex-shrink-0 flex-1 md:flex-initial">
@@ -1588,7 +1557,7 @@ function parseLocalDate(str: string | null | undefined): Date | null {
             <div
                 ref={topScrollRef}
                 onScroll={handleTopScroll}
-                className="overflow-x-auto overflow-y-hidden shrink-0 border-b border-gray-200 bg-slate-50/80 man-schedule-scroll"
+                className={MAN_SCHEDULE_TOP_SCROLL_CLASS}
                 style={{ height: '14px' }}
                 title="Barra de rolagem horizontal rápida do Man Schedule"
             >

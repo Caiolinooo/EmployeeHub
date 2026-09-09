@@ -450,7 +450,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             </div>
           </header>
 
-          <main className="flex-1 min-h-0 flex flex-col overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 md:px-8 md:py-6 touch-scroll">
+          <main className="flex-1 min-h-0 min-w-0 flex flex-col overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 md:px-8 md:py-6 touch-scroll">
             {children}
           </main>
         </div>

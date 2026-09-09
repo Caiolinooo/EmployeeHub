@@ -14,7 +14,7 @@ UI de `/department/e-social` para painel, eventos, revisão, certificados e conf
 
 - Sempre wrap com `MainLayout` (`layout.tsx`).
 - Auth/fetch: `fetchWithToken`. Não trocar por fetch anônimo.
-- Viewport: `GtPageShell` preenche o `<main>` (`flex-1 min-h-0`). Nav/filtros `shrink-0`. Lista `flex-1 min-h-0 overflow-auto`. Sem `p-6` extra em cima do padding do MainLayout.
+- Viewport: `GtPageShell` preenche o `<main>` (`flex-1 min-h-0 min-w-0`). Nav/filtros `shrink-0`. Lista `flex-1 min-h-0 min-w-0 overflow-auto`. Sem `p-6` extra em cima do padding do MainLayout.
 
 ## Work Guidance
 

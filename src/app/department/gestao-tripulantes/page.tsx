@@ -354,7 +354,7 @@ function GestaoTripulantesContent() {
       </div>
 
       {activeTab === 'matrix' && (
-        <div className="flex flex-col flex-1 min-h-0 gap-3 overflow-y-auto lg:overflow-hidden">
+        <div className="flex flex-col flex-1 min-h-0 min-w-0 gap-3 overflow-y-auto lg:overflow-hidden">
           <div className="shrink-0 space-y-3">
             <AsoReviewPanel compact />
             <DashboardCards data={dashboard} activeKpi={kpiFilter} onKpiClick={handleKpiClick} />
@@ -383,14 +383,14 @@ function GestaoTripulantesContent() {
             colaboradores={colaboradores}
             loading={loading}
             onRowClick={handleRowClick}
-            className="flex-1 min-h-0"
+            className="flex-1 min-h-0 min-w-0"
           />
           <GTMatrixLegend />
         </div>
       )}
 
       {activeTab === 'aso-logistica' && (
-        <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+        <div className="flex flex-col flex-1 min-h-0 min-w-0 overflow-hidden">
           <AsoAgendamentoInbox />
         </div>
       )}
@@ -402,7 +402,7 @@ function GestaoTripulantesContent() {
       )}
 
       {scheduleMounted && (
-        <div className={activeTab === 'schedule' ? 'flex flex-col flex-1 min-h-0 w-full overflow-hidden' : 'hidden'}>
+        <div className={activeTab === 'schedule' ? 'flex flex-col flex-1 min-h-0 min-w-0 w-full overflow-hidden' : 'hidden'}>
           <GTManScheduleTab onColabClick={handleRowClick} kpiFilter={kpiFilter} />
         </div>
       )}

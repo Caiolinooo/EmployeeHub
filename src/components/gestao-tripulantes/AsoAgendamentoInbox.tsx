@@ -144,7 +144,7 @@ export default function AsoAgendamentoInbox() {
       </div>
 
       <div className={`bg-white border border-gray-200 rounded-xl ${GT_PAGE_SCROLLPORT_CLASS}`}>
-        <table className="min-w-full text-xs text-left">
+        <table className="min-w-[720px] w-full text-xs text-left">
           <thead className="bg-gray-50 font-bold uppercase text-gray-600 sticky top-0 z-10">
             <tr>
               <th className="px-3 py-2">Colaborador</th>

@@ -446,8 +446,8 @@ export default function ModalAprovacaoFechamento({
               </div>
             </div>
 
-            <div className="border border-gray-200 rounded-xl overflow-hidden max-h-48 overflow-y-auto">
-              <table className="min-w-full divide-y divide-gray-200 text-left text-xs">
+            <div className="border border-gray-200 rounded-xl min-w-0 max-h-48 overflow-auto">
+              <table className="min-w-[720px] w-full divide-y divide-gray-200 text-left text-xs">
                 <thead className="bg-gray-100 text-gray-700 font-semibold sticky top-0">
                   <tr>
                     <th className="px-3 py-2">Matrícula</th>

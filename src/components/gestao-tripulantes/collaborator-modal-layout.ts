@@ -22,11 +22,11 @@ export const COLLABORATOR_MODAL_TAB_BUTTON_CLASS =
   'flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-xs sm:text-sm font-medium transition-colors shrink-0 sm:px-4';
 
 export const COLLABORATOR_MODAL_BODY_CLASS =
-  'collaborator-modal-body custom-scrollbar flex flex-1 min-h-0 flex-col overflow-auto overscroll-contain';
+  'collaborator-modal-body custom-scrollbar flex flex-1 min-h-0 min-w-0 flex-col overflow-auto overscroll-contain';
 
 /** Tab root: fill the body so inner lists/tables can consume leftover height. */
-export const COLLABORATOR_MODAL_TAB_FILL_CLASS = 'flex min-h-0 flex-1 flex-col';
+export const COLLABORATOR_MODAL_TAB_FILL_CLASS = 'flex min-h-0 min-w-0 flex-1 flex-col';
 
 /** Table / card-list scrollport inside a TAB_FILL column. */
 export const COLLABORATOR_MODAL_TABLE_SCROLL_CLASS =
-  'collaborator-modal-table-scroll custom-scrollbar min-h-[8rem] max-h-full flex-1 overflow-auto overscroll-contain';
+  'collaborator-modal-table-scroll custom-scrollbar min-h-[8rem] max-h-full min-w-0 flex-1 overflow-auto overscroll-contain';

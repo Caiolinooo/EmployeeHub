@@ -194,10 +194,11 @@ error, success {
   }
 }
 
-/* Man Schedule: barra de rolagem explícita, contrastada e fácil de arrastar */
+/* Man Schedule: barra de rolagem explícita (não overlay) para pan horizontal */
 .man-schedule-scroll {
   scrollbar-width: auto;
   scrollbar-color: #94a3b8 #f1f5f9;
+  -webkit-overflow-scrolling: touch;
 }
 
 .man-schedule-scroll::-webkit-scrollbar {

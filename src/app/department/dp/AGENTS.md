@@ -28,12 +28,12 @@ UI de `/department/dp` para o DP operar cadastro de colaboradores, fechamento de
 - Novos campos da tabela DP devem existir em `LIST_SELECT` + flatten.
 - Clique na linha de ASO **ou** na lista de colaboradores abre o `CollaboratorModal` do colaborador.
 - **Desligamento**: não há ação na lista. Abrir o modal → botão/aba **Desligamento** (`DesligamentoModal`). API `GET|POST /colaboradores/[id]/desligamento`. Colaborador já inativo com `gt_desligamentos` mostra histórico (não desliga de novo).
-- Viewport: `GtPageShell` preenche o `<main>` do MainLayout (`flex-1 min-h-0`). Header (título + pills de métricas), abas e filtros `shrink-0`; lista de colaboradores e painel ASO `flex-1 min-h-0 overflow-auto`. Sem faixa de KPI cards em todas as abas. Sem scroll duplo da página.
+- Viewport: `GtPageShell` preenche o `<main>` do MainLayout (`flex-1 min-h-0 min-w-0`). Header (título + pills de métricas), abas e filtros `shrink-0`; lista de colaboradores e painel ASO `flex-1 min-h-0 min-w-0 overflow-auto` (`GT_PAGE_SCROLLPORT_CLASS`). Tabela da lista `min-w-[850px]`; ASO `min-w-[860px]` — scroll horizontal no pane, não na página. Sem faixa de KPI cards em todas as abas. Sem scroll duplo da página.
 
 ## Verification
 
 - `/department/dp` mostra sidebar do portal (não tela full-bleed). Sem grid de 4 KPI cards no topo; pills no header (visíveis = linhas da tabela).
-- Lista DP: filtros visíveis; a tabela rola no pane restante (documento não vira o scroll principal).
+- Lista DP: filtros visíveis; a tabela rola no pane restante (documento não vira o scroll principal). Em viewport estreita, a lista/ASO rola no eixo X dentro do pane (`min-w-[850px]` / `min-w-[860px]`).
 - Colunas Cargo, Centro de Custo, Empresa e Escala preenchidas quando o cadastro tem FK.
 - Coluna Status mostra Ativo/Inativo **e** a pílula de embarque da célula de hoje (ON → Embarcado).
 - Aba ASO lista nome/CPF/cargo (não `N/A` em massa); validade em `dd/mm/aaaa`; vencido só se a data local já passou; permite Agendar → logística; marcado após aprovação.
