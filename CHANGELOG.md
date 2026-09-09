@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.74.1] - 2026-09-09
+
+### 🩺 e-Social S-2220: auto-correção de `nmMed` / `TS_nome`
+
+1. **Schema XSD**: OCR colava cargo (`Médica`), quebra de linha e lixo (`à Á`) em `nmMed`. O e-Social rejeitava com `The Pattern constraint failed`. **Validar Auto-Correção** agora sanitiza o nome (`Thalia Leal Dibo`), rebuilda o XML e limpa `protocolo_envio` quando a rejeição foi só de schema (sem recibo).
+2. **Envio**: botão **Enviar ao e-Social** no modal e na lista (status `erro`). Pré-envio usa o mesmo sanitizer. OCR ASO e `POST .../documentos/[id]/esocial` já gravam o nome limpo.
+
 ## [5.74.0] - 2026-09-03
 
 ### 🎓 Matrizes de Treinamento, Lista de Presença e Responsividade Global (Mobile & PC)

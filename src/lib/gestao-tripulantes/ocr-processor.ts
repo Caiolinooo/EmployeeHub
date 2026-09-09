@@ -12,6 +12,7 @@ import {
 } from '@/lib/ocr';
 import { supabaseAdmin } from '@/lib/supabase';
 import { buscarCodigoExame } from '@/lib/e-social/codigos';
+import { sanitizeTsNome } from '@/lib/e-social/ts-nome';
 import {
   cpfsMatch,
   isEsocialQueuedOrBeyond,
@@ -418,7 +419,7 @@ function extrairNomeMedicoDoContexto(texto: string, crmIndice: number, tipo: 'pc
     }
 
     if (linhaLimpa.length > 5 && linhaLimpa.split(' ').length >= 2 && !/\d/.test(linhaLimpa)) {
-      return linhaLimpa;
+      return sanitizeTsNome(linhaLimpa);
     }
   }
 
@@ -428,13 +429,13 @@ function extrairNomeMedicoDoContexto(texto: string, crmIndice: number, tipo: 'pc
     if (pcmsoIdx !== -1) {
       const sub = texto.substring(pcmsoIdx - 50, pcmsoIdx + 200);
       const match = sub.match(regex);
-      if (match) return match[1].trim();
+      if (match) return sanitizeTsNome(match[1].trim());
     }
   }
 
   const medicoMatch = texto.match(regex);
   if (medicoMatch) {
-    return medicoMatch[1].trim();
+    return sanitizeTsNome(medicoMatch[1].trim());
   }
 
   return '';
@@ -927,10 +928,10 @@ export async function extrairDadosASODoTexto(
     tipo_exame,
     resultado,
     data_realizacao,
-    medico_nome: medico_nome || null,
+    medico_nome: sanitizeTsNome(medico_nome) || null,
     medico_crm: medico_crm || null,
     medico_uf: medico_uf || null,
-    medico_pcmso_nome: medico_pcmso_nome || null,
+    medico_pcmso_nome: sanitizeTsNome(medico_pcmso_nome) || null,
     medico_pcmso_crm: medico_pcmso_crm || null,
     medico_pcmso_uf: medico_pcmso_uf || null,
     cnpj_clinica: cnpj_clinica || null,

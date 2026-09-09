@@ -8,7 +8,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-Database-green?style=for-the-badge&logo=supabase)](https://supabase.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
-[![React](https://img.shields.io/badge/React-18.2-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)[![Version](https://img.shields.io/badge/Version-5.74.0-orange?style=for-the-badge)](#)
+[![React](https://img.shields.io/badge/React-18.2-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)[![Version](https://img.shields.io/badge/Version-5.74.1-orange?style=for-the-badge)](#)
 
 **Portal corporativo unificado para gestão de pessoas, processos, comunicação interna e compliance trabalhista.**
 
@@ -24,15 +24,11 @@ O **Painel ABZ** é o núcleo digital da ABZ Group, projetado para centralizar f
 
 ---
 
-## Novidades da Versão [v5.74.0]
+## Novidades da Versão [v5.74.1]
 
 | | Capacidade | Destaque |
 |---|---|---|
-| 🎓 | **Matrizes de Treinamento** | Configuração por cargo/regime, importador XLSX do MIO (Modelo 002), cruzamento na ficha com conformidade percentual e controle ACL/Setores. |
-| 🗑️ | **Edição/Exclusão de Treinamentos** | Remoção e correção total de lançamentos de cursos no prontuário, incluindo no histórico colapsado com auditoria. |
-| 📝 | **Lista de Presença Interna** | Geração formal de listas para assinaturas digitais (`/lista-presenca`) e lançamento em lote imediato nos colaboradores. |
-| 📜 | **Man Schedule (Scroll)** | Barra de rolagem de 14px estilizada no CSS global e barra superior sincronizada em tempo real via ResizeObserver. |
-| 📱 | **Responsividade Global** | Auto-close de menus mobile, padding responsivo, desbloqueio de viewport (`min-h-[320px]`), cards compactos e botões sticky. |
+| 🩺 | **S-2220 `nmMed` / TS_nome** | Auto-correção remove cargo/quebra de linha/lixo OCR no nome do médico, rebuilda XML e permite reenviar evento rejeitado só por schema. |
 
 ---
 
@@ -96,16 +92,17 @@ Funcionalidades de base:
 - **Matriz de Colaboradores** - Tabela interativa com filtros por empresa, embarcacao, cargo, centro de custo, status e documentos
 - **Cadastro Multi-abas** - Formulario de 7 abas (Dados Pessoais, Documentos, Endereco, Contato, Bancarios, Vinculo, e-Social)
 - **Gestao de Documentos** - 14 tipos de documentos com OCR, validacao automatica e notificacoes de vencimento
-- **Pipeline ASO** - Upload PDF -> OCR -> Revisao -> Geracao de evento S-2220
+- **Pipeline ASO** - Upload PDF -> OCR -> Revisao -> Geracao de evento S-2220 (`nmMed` sanitizado para `TS_nome`)
 - **Algoritmo de Back** - Sugestao inteligente de substitutos com 8 criterios ponderados
 - **Historico de Embarques** - Timeline completa com tipos, voos e estatisticas
 - **PoliWeb Scraper** - Importacao automatica de ASOs do sistema ocupacional
 - **Dashboard** - Metricas em tempo real (total, embarcados, disponiveis, documentos vencendo)
 - **API**: 25+ endpoints REST + 13 tabelas no banco (`gt_*`)
 
-### E-Social [v5.18.0]
+### E-Social [v5.74.1]
 Integracao completa com o sistema governamental brasileiro:
 - **13 Eventos Suportados**: S-2200 a S-3000 (cadastramento, contratual, ASO, CAT, ambiental, desligamento)
+- **Auto-correção TS_nome (S-2220)**: `Validar Auto-Correção` e o pré-envio limpam `nmMed`/`nmResp` (OCR com cargo ou quebra de linha) e rebuildam o XML
 - **Ciclo de Vida**: rascunho -> revisao -> aprovacao -> fila -> envio -> processamento
 - **Geracao de XML**: Conforme leiaute oficial S-1.3 com headers, namespaces e IDs
 - **Assinatura Digital**: XML assinado com RSA-SHA256 via xml-crypto e certificados X509

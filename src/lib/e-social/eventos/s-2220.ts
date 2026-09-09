@@ -1,3 +1,5 @@
+import { sanitizeTsNome } from '../ts-nome';
+
 interface IdeEvento {
   indRetif?: number;
   nrRecibo?: string;
@@ -271,7 +273,13 @@ export function gerarS2220(dados: DadosS2220): string {
 
   // medico
   const medicoObj = aso.medico || exMed.medico || {};
-  const nmMed = medicoObj.nmMed || esp.medico || esp.medico_nome || esp.nmMed || esp.medicoNome || '';
+  const nmMedBruto = medicoObj.nmMed
+    || (typeof esp.medico === 'string' ? esp.medico : '')
+    || esp.medico_nome
+    || esp.nmMed
+    || esp.medicoNome
+    || '';
+  const nmMed = sanitizeTsNome(String(nmMedBruto || ''));
   const nrCRM = String(medicoObj.nrCRM || esp.crm || esp.medico_crm || esp.nrCRM || '').replace(/\D/g, '');
   const ufCRM = String(medicoObj.ufCRM || esp.uf || esp.medico_uf || esp.ufCRM || 'RJ').trim().toUpperCase();
 
@@ -285,7 +293,7 @@ export function gerarS2220(dados: DadosS2220): string {
 
   // respMonit (opcional)
   const resp = exMed.respMonit || {};
-  const nmResp = resp.nmResp || esp.medico_pcmso_nome || esp.medicoPcmsoNome;
+  const nmResp = sanitizeTsNome(String(resp.nmResp || esp.medico_pcmso_nome || esp.medicoPcmsoNome || ''));
   if (nmResp) {
     const nrCrmResp = String(resp.nrCRM || esp.medico_pcmso_crm || esp.medicoPcmsoCrm || '').replace(/\D/g, '');
     const ufCrmResp = String(resp.ufCRM || esp.medico_pcmso_uf || esp.medicoPcmsoUf || 'RJ').trim().toUpperCase();

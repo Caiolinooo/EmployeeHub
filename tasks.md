@@ -1,3 +1,13 @@
+## e-Social S-2220 `nmMed` / TS_nome (2026-09-09)
+
+Rejeição XSD: `Thalia Leal Dibo Médica à Á` (OCR colou cargo + lixo + quebra de linha). Auto-correção não sanitizava nome; XML sujo ia de novo.
+
+- [x] `sanitizeTsNome` + auto-corrector + validação XML + geradores S-2220
+- [x] OCR ASO e `POST .../documentos/[id]/esocial` gravam nome limpo
+- [x] Validar Auto-Correção limpa `protocolo_envio` em rejeição só de schema (sem recibo)
+- [x] Enviar visível no status `erro`; testes `ts-nome.test.ts` / `esocialAutoCorrector.test.ts`
+- [ ] Preview: abrir S-2220 do Renan → Validar Auto-Correção → XML `Thalia Leal Dibo` → Enviar
+
 ## QHSE/docs + catálogo vivo de permissões (2026-09-09)
 
 - [x] Fix `Colaborador não encontrado`: `users_unified` sem coluna `cpf`; select seguro (`tax_id`) + match e-mail/telefone/nome único

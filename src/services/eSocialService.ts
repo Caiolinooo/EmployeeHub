@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase';
+import { sanitizeTsNome } from '@/lib/e-social/ts-nome';
 
 export interface ESocialEvento {
   id: string;
@@ -503,7 +504,7 @@ export function generateEventXML(eventoCodigo: string, dadosEvento: any): string
         optTag('matricula', matricula, 2), 1)
     : block('ideTrabalhador',
         optTag('cpfTrab', cpf, 2) +
-        optTag('nmTrab', esp.nome || esp.nmTrab, 2) +
+        optTag('nmTrab', sanitizeTsNome(esp.nome || esp.nmTrab || ''), 2) +
         optTag('nisTrab', esp.nis || esp.nisTrab, 2), 1);
 
   let corpo = '';
@@ -663,12 +664,19 @@ export function generateEventXML(eventoCodigo: string, dadosEvento: any): string
         optTag('resAso', resAsoNum, 3) +
         examesXml +
         block('medico',
-          optTag('nmMed', esp.medico || esp.medico_nome || esp.nmMed || esp.medicoNome || '', 4) +
-          optTag('nrCRM', esp.crm || esp.medico_crm || esp.nrCRM || '', 4) +
-          optTag('ufCRM', esp.uf || esp.medico_uf || esp.ufCRM || '', 4), 3), 2);
+          optTag('nmMed', sanitizeTsNome(
+            (typeof esp.medico === 'string' ? esp.medico : '')
+            || esp.medico_nome
+            || esp.nmMed
+            || esp.medicoNome
+            || (esp.medico && typeof esp.medico === 'object' ? esp.medico.nmMed : '')
+            || '',
+          ), 4) +
+          optTag('nrCRM', String(esp.crm || esp.medico_crm || esp.nrCRM || '').replace(/\D/g, ''), 4) +
+          optTag('ufCRM', String(esp.uf || esp.medico_uf || esp.ufCRM || '').trim().toUpperCase(), 4), 3), 2);
 
       const respMonitBlock = medicoPcmsoNome ? block('respMonit',
-        optTag('nmResp', medicoPcmsoNome, 3) +
+        optTag('nmResp', sanitizeTsNome(medicoPcmsoNome), 3) +
         optTag('nrCRM', medicoPcmsoCrm, 3) +
         optTag('ufCRM', medicoPcmsoUf, 3), 2) : '';
 

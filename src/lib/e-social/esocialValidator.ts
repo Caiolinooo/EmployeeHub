@@ -1,3 +1,5 @@
+import { isValidTsNome, nomesTsDoXml, sanitizeTsNome } from './ts-nome';
+
 export interface ErroValidacao {
   campo: string;
   mensagem: string;
@@ -121,10 +123,22 @@ export function validarDadosEvento(codigoEvento: string, dadosEvento: any): Resu
         camposPendentes.push({ campo: 'resultado', label: 'Resultado do ASO', tipo: 'select', opcoes: [{valor:'1', label:'Apto'}, {valor:'2', label:'Inapto'}] });
       }
 
-      const nmMed = getField(dadosEvento, 'medico_nome') || getField(dadosEvento, 'nmMed') || getField(dadosEvento, 'medicoNome') || getField(dadosEvento, 'medico');
+      const nmMedRaw = getField(dadosEvento, 'medico_nome') || getField(dadosEvento, 'nmMed') || getField(dadosEvento, 'medicoNome') || getField(dadosEvento, 'medico');
+      const nmMed = typeof nmMedRaw === 'string' ? nmMedRaw : (nmMedRaw?.nmMed || '');
       if (!nmMed) {
         erros.push({ campo: 'medico_nome', mensagem: 'Nome do Médico obrigatório', tipo: 'obrigatorio', autocorrigivel: false });
         camposPendentes.push({ campo: 'medico_nome', label: 'Nome do Médico (ASO)', tipo: 'text' });
+      } else if (!isValidTsNome(nmMed)) {
+        const limpo = sanitizeTsNome(nmMed);
+        erros.push({
+          campo: 'medico_nome',
+          mensagem: `Nome do médico fora do TS_nome: "${String(nmMed).replace(/\s+/g, ' ').trim()}"`,
+          tipo: 'formato',
+          autocorrigivel: Boolean(limpo) && isValidTsNome(limpo),
+        });
+        if (!limpo || !isValidTsNome(limpo)) {
+          camposPendentes.push({ campo: 'medico_nome', label: 'Nome do Médico (ASO)', tipo: 'text', dica: 'Somente nome, sem cargo nem quebra de linha' });
+        }
       }
 
       const nrCRM = getField(dadosEvento, 'medico_crm') || getField(dadosEvento, 'nrCRM') || getField(dadosEvento, 'crm');
@@ -337,6 +351,17 @@ export function validarXMLGerado(xml: string, codigoEvento: string): ResultadoVa
     if (!/<medico>/.test(xml)) erros.push({ campo: 'medico', mensagem: 'Falta grupo <medico>', tipo: 'estrutura', autocorrigivel: false });
     if (!/<dtExm>/.test(xml)) erros.push({ campo: 'dtExm', mensagem: 'Falta tag <dtExm> dentro de exames', tipo: 'estrutura', autocorrigivel: false });
     if (!/<nmMed>/.test(xml)) erros.push({ campo: 'nmMed', mensagem: 'Falta tag <nmMed> no XML', tipo: 'estrutura', autocorrigivel: false });
+
+    for (const { tag, valor } of nomesTsDoXml(xml)) {
+      if (!isValidTsNome(valor)) {
+        erros.push({
+          campo: tag,
+          mensagem: `<${tag}> inválido para TS_nome: "${valor.replace(/\s+/g, ' ').trim()}"`,
+          tipo: 'formato',
+          autocorrigivel: true,
+        });
+      }
+    }
     
     // Bug histórico do S-2220
     if (/<aso>\s*<resAso>/.test(xml)) {

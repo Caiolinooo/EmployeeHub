@@ -207,7 +207,7 @@ export default function EventosList({ eventos, loading, onView, onEdit, onSend, 
                         </button>
                       )}
 
-                      {evento.status === 'revisao_aprovado' && onSend && (
+                      {(evento.status === 'revisao_aprovado' || evento.status === 'erro') && onSend && (
                         <button
                           onClick={() => onSend(evento)}
                           className="p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors"

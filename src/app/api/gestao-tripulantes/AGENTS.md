@@ -41,6 +41,7 @@ API routes for crew management (colaboradores, documentos, ASO, embarques, tipos
 - **Sanitização de Datas e Documentos**:
   - Correção automática de séculos históricos de OCR (`18xx` $\rightarrow$ `19xx` para trabalhadores ativos).
   - Isolamento estrito de RG sem sobreposição de substrings com o CPF.
+  - Nome do médico ASO passa por `sanitizeTsNome` (`src/lib/e-social/ts-nome.ts`) antes de gravar `gt_documentos_aso` e de montar S-2220 — sem cargo/quebra de linha no `nmMed`.
 - OCR path (`extrairDadosASODoTexto`): **CPF-only** reassociation. Never silent name/`ilike` moves.
 - If OCR CPF ≠ profile CPF: reassign to `gt_colaboradores` by CPF **or** quarantine (`gt_documentos.colaborador_id` + ASO `colaborador_id` = null, `esocial_status = quarentena`, `identity_match = quarantine`). When OCR cannot extract CPF, quarantine is set immediately to avoid wrong profile assignment.
 - After `esocial_status` in `pendente|enviado|processado`: freeze identity (`identity_match = frozen`); do not reset status to `nao_enviado`.

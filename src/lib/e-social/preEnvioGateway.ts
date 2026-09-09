@@ -2,6 +2,7 @@ import { generateEventXML, validateEventXML } from '@/services/eSocialService';
 import { autoCorrigirDadosEvento, Correcao } from './esocialAutoCorrector';
 import { validarDadosEvento, validarXMLGerado, CampoPendente } from './esocialValidator';
 import { findFullColaboradorByCpf } from '@/lib/gestao-tripulantes/cpf-lookup';
+import { xmlTemNomeTsInvalido } from './ts-nome';
 
 export interface PreEnvioResult {
   pronto: boolean;
@@ -124,12 +125,13 @@ export async function validarEPrepararEnvio(evento: any, tpAmb?: number): Promis
   // Analisa bugs conhecidos que forçam rebuild
   const xmlTemBugAso = xml && codigoEvento === 'S-2220' && /<aso>\s*<resAso>/.test(xml);
   const xmlTemDataInvalida = xml && /\d{4}-(1[3-9]|[2-9]\d)-\d{2}/.test(xml);
+  const xmlTemNomeInvalido = Boolean(xml && xmlTemNomeTsInvalido(xml));
   
   // Se o tpAmb do XML estiver diferente do tpAmb requisitado, força rebuild
   const tagAmbienteEsperada = `<tpAmb>${tpAmb}</tpAmb>`;
   const xmlTemAmbErrado = xml && !xml.includes(tagAmbienteEsperada);
 
-  if (!xml || xmlPrecisaRebuildar || xmlTemBugAso || xmlTemDataInvalida || xmlTemAmbErrado) {
+  if (!xml || xmlPrecisaRebuildar || xmlTemBugAso || xmlTemDataInvalida || xmlTemAmbErrado || xmlTemNomeInvalido) {
     try {
       xml = generateEventXML(codigoEvento, dadosCorrigidos);
       rebuildRealizado = true;

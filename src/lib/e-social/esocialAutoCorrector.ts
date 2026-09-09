@@ -1,3 +1,12 @@
+import {
+  CAMPOS_NOME_MEDICO,
+  CAMPOS_NOME_PCMSO,
+  CAMPOS_NOME_TRAB,
+  coletarNomeMedico,
+  coletarNomePcmso,
+  sanitizeTsNome,
+} from './ts-nome';
+
 export interface Correcao {
   campo: string;
   de: string;
@@ -184,7 +193,58 @@ export function autoCorrigirDadosEvento(codigoEvento: string, dadosEvento: any, 
     aplicarDuplo('matricula_esocial', mat, 'Cópia de matricula para matricula_esocial');
   }
 
-  // 9. Correções específicas S-2220
+  // 9. Nomes TS_nome (nmMed / nmResp / nmTrab) — OCR com cargo, quebra de linha e lixo
+  const escreverNomeAninhado = (obj: any, campo: string, limpo: string, descricao: string) => {
+    if (!obj || typeof obj !== 'object') return;
+    if (obj[campo] !== undefined && obj[campo] !== limpo) {
+      aplicarCorrecao(obj, campo, limpo, descricao);
+    }
+  };
+
+  const aplicarAliasesNome = (aliases: readonly string[], limpo: string, descricao: string) => {
+    for (const alias of aliases) {
+      aplicarDuplo(alias, limpo, descricao);
+    }
+  };
+
+  const nomeMedicoBruto = coletarNomeMedico(dados);
+  const nomeMedicoLimpo = sanitizeTsNome(nomeMedicoBruto);
+  if (nomeMedicoLimpo && nomeMedicoLimpo !== nomeMedicoBruto) {
+    const descMed = 'Sanitização TS_nome do médico (OCR/XSD)';
+    aplicarAliasesNome(CAMPOS_NOME_MEDICO, nomeMedicoLimpo, descMed);
+    if (typeof dados.medico === 'string') aplicarCorrecao(dados, 'medico', nomeMedicoLimpo, descMed);
+    if (typeof dados.dadosEspecificos.medico === 'string') {
+      aplicarCorrecao(dados.dadosEspecificos, 'medico', nomeMedicoLimpo, descMed);
+    }
+    escreverNomeAninhado(dados.medico, 'nmMed', nomeMedicoLimpo, descMed);
+    escreverNomeAninhado(dados.dadosEspecificos.medico, 'nmMed', nomeMedicoLimpo, descMed);
+    escreverNomeAninhado(dados.aso?.medico, 'nmMed', nomeMedicoLimpo, descMed);
+    escreverNomeAninhado(dados.dadosEspecificos.aso?.medico, 'nmMed', nomeMedicoLimpo, descMed);
+    escreverNomeAninhado(dados.exMedOcup?.medico, 'nmMed', nomeMedicoLimpo, descMed);
+    escreverNomeAninhado(dados.exMedOcup?.aso?.medico, 'nmMed', nomeMedicoLimpo, descMed);
+    escreverNomeAninhado(dados.dadosEspecificos.exMedOcup?.medico, 'nmMed', nomeMedicoLimpo, descMed);
+    escreverNomeAninhado(dados.dadosEspecificos.exMedOcup?.aso?.medico, 'nmMed', nomeMedicoLimpo, descMed);
+  }
+
+  const nomePcmsoBruto = coletarNomePcmso(dados);
+  const nomePcmsoLimpo = sanitizeTsNome(nomePcmsoBruto);
+  if (nomePcmsoLimpo && nomePcmsoLimpo !== nomePcmsoBruto) {
+    const descPcmso = 'Sanitização TS_nome do responsável PCMSO (OCR/XSD)';
+    aplicarAliasesNome(CAMPOS_NOME_PCMSO, nomePcmsoLimpo, descPcmso);
+    escreverNomeAninhado(dados.respMonit, 'nmResp', nomePcmsoLimpo, descPcmso);
+    escreverNomeAninhado(dados.dadosEspecificos.respMonit, 'nmResp', nomePcmsoLimpo, descPcmso);
+    escreverNomeAninhado(dados.exMedOcup?.respMonit, 'nmResp', nomePcmsoLimpo, descPcmso);
+  }
+
+  for (const campo of CAMPOS_NOME_TRAB) {
+    const bruto = dados[campo] || dados.dadosEspecificos[campo];
+    if (typeof bruto === 'string') {
+      const limpo = sanitizeTsNome(bruto);
+      if (limpo && limpo !== bruto) aplicarDuplo(campo, limpo, 'Sanitização TS_nome do trabalhador');
+    }
+  }
+
+  // 10. Correções específicas S-2220
   if (codigoEvento === 'S-2220') {
     const tpExame = dados.dadosEspecificos.tipoExame || dados.dadosEspecificos.tpExameOcup;
     if (tpExame && typeof tpExame === 'string') {
@@ -203,7 +263,7 @@ export function autoCorrigirDadosEvento(codigoEvento: string, dadosEvento: any, 
     }
   }
 
-  // 10. Correções específicas S-2200
+  // 11. Correções específicas S-2200
   if (codigoEvento === 'S-2200') {
     const tipoAdm = dados.tipoAdmissao || dados.dadosEspecificos.tipoAdmissao;
     if (!tipoAdm) {

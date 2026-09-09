@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { ESocialEvento } from '@/types/e-social';
 import { useI18n } from '@/contexts/I18nContext';
 import { fetchWithToken } from '@/lib/tokenStorage';
-import { FiX, FiCheck, FiXCircle, FiAlertTriangle, FiRefreshCw, FiCode, FiList, FiCopy, FiCheckCircle } from 'react-icons/fi';
+import { FiX, FiCheck, FiXCircle, FiAlertTriangle, FiRefreshCw, FiCode, FiList, FiCopy, FiCheckCircle, FiSend } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 
 interface EventoRevisaoProps {
@@ -33,6 +33,7 @@ export default function EventoRevisao({ evento, open, onClose, onApprove, onReje
   const [validationResult, setValidationResult] = useState<any>(null);
   const [camposPreenchidos, setCamposPreenchidos] = useState<Record<string, string>>({});
   const [savingCampos, setSavingCampos] = useState(false);
+  const [sending, setSending] = useState(false);
 
   // Logs State
   const [logs, setLogs] = useState<any[]>([]);
@@ -130,8 +131,7 @@ export default function EventoRevisao({ evento, open, onClose, onApprove, onReje
       if (data.pronto) {
         if (data.xml) evento.xml_gerado = data.xml;
         if (data.evento) Object.assign(evento, data.evento);
-        toast.success('Evento validado com sucesso! XML Homologado.');
-        setTimeout(() => window.location.reload(), 1200);
+        toast.success('Evento validado. XML corrigido. Pode transmitir.');
       } else {
         toast.error('O evento possui pendências a serem corrigidas.');
       }
@@ -139,6 +139,33 @@ export default function EventoRevisao({ evento, open, onClose, onApprove, onReje
       setValidationResult({ pronto: false, erros: [err.message || 'Erro de conexão'] });
     } finally {
       setValidating(false);
+    }
+  };
+
+  const handleSend = async (force = false) => {
+    setSending(true);
+    try {
+      const response = await fetchWithToken(
+        `/api/e-social/eventos/${evento.id}/enviar${force ? '?force=true' : ''}`,
+        { method: 'POST' },
+      );
+      const data = await response.json().catch(() => ({}));
+      if (response.ok) {
+        toast.success('Evento transmitido ao e-Social.');
+        setTimeout(() => window.location.reload(), 1200);
+        return;
+      }
+      if (response.status === 400 && data.code === 'HAS_PROTOCOL') {
+        if (confirm('Este evento já possui protocolo de envio. Forçar novo envio com o XML corrigido?')) {
+          await handleSend(true);
+        }
+        return;
+      }
+      toast.error(data.error || 'Erro ao transmitir evento');
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao transmitir evento');
+    } finally {
+      setSending(false);
     }
   };
 
@@ -601,6 +628,16 @@ export default function EventoRevisao({ evento, open, onClose, onApprove, onReje
             </button>
             
             <div className="flex items-center gap-2">
+              {(['erro', 'revisao_aprovado', 'fila_envio'].includes(evento.status) || validationResult?.pronto) && (
+                <button
+                  onClick={() => handleSend(false)}
+                  disabled={sending || validating}
+                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-sm disabled:opacity-50"
+                >
+                  <FiSend size={15} />
+                  {sending ? 'Transmitindo...' : 'Enviar ao e-Social'}
+                </button>
+              )}
               {['pendente_revisao', 'erro', 'rascunho', 'revisao_rejeitado'].includes(evento.status) ? (
                 <>
                   <button
