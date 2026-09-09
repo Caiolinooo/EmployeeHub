@@ -81,7 +81,7 @@ Componentes da Matriz, modal do colaborador e Man Schedule. Lookups profissionai
 - Digitar o ano em Data Início (`2`, `20`, `202`) não congela a UI; a grade só muda com data completa ou picker.
 - Treinamentos: CBSP válido + CBSP vencido/declaração → uma linha primária, Histórico colapsado, resumo sem “1 vencido” falso.
 - Card `total_docs_vencidos` da Matriz não sobe por declaração/certificado antigo se o primário do grupo está válido.
-- USER sem a feature `gestao-tripulantes.documents.edit`/`.delete` não vê os botões de editar/excluir em Treinamentos/ASO/Documentos/Passaportes; ADMIN/MANAGER sempre veem (bypass em `hasFeature`). Ligar a feature em `/admin/users` (checkbox "Gestão de Tripulantes — Cadastro do Colaborador") faz o botão aparecer e o `PUT`/`DELETE` correspondente passar.
+- USER sem feature JSONB **e** sem ACL `gestao-tripulantes.documents.edit`/`.delete` (nem manage/admin) não vê os botões de editar/excluir em Treinamentos/ASO/Documentos/Passaportes. ADMIN/MANAGER sempre veem. Grant via checkbox de feature **ou** árvore ACL em `/admin/users` faz o botão aparecer (`useGtDocumentPermissions` + `GET .../documentos/permissions`) e o `PUT`/`DELETE` passar. Após o admin salvar, o alvo precisa de refresh/re-login ou voltar à aba: o próximo fetch lê DB+ACL (não JWT).
 - ASO com e-Social `enviado`/`processado`: cartão mostra "Já enviado ao e-Social — não editável" em vez dos botões Editar/Excluir.
 - CollaboratorModal: USER ADMIN/MANAGER (ou DP com módulo GT) vê **Desligar**; após confirmar, `ativo=false` no estado local e a aba Desligamento mostra o histórico. Já desligado não abre o wizard de novo.
 - **Matriz de Treinamentos (Visibilidade por ACL e Setor)**:

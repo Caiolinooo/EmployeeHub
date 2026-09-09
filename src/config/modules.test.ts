@@ -8,6 +8,7 @@ import {
   getAclSeedPermissions,
   getCatalogFeaturesForUi,
   getFullPermissionsForRole,
+  getModuleKeyForCatalogFeature,
   getPermissionCatalogModules,
 } from './modules';
 import { SYSTEM_MODULES as SIDEBAR_MODULES } from '../constants/modules';
@@ -91,6 +92,12 @@ describe('live permission catalog', () => {
     assert.equal(keys.has('reimbursement_approval'), true);
     assert.equal(keys.has('news_editor'), true);
     assert.equal(keys.has('ferias.approve'), true);
+  });
+
+  it('maps catalog feature keys back to the owning module', () => {
+    assert.equal(getModuleKeyForCatalogFeature('gestao-tripulantes.documents.delete'), 'gestao-tripulantes');
+    assert.equal(getModuleKeyForCatalogFeature('ferias.approve'), 'ferias');
+    assert.equal(getModuleKeyForCatalogFeature('not-a-real-feature'), null);
   });
 
   it('assigns role defaults from the same catalog', () => {

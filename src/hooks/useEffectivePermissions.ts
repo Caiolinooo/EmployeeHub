@@ -5,6 +5,8 @@ interface EffectivePermissions {
     user_id: string;
     role: string;
     effective_modules: Record<string, boolean>;
+    effective_features?: Record<string, boolean>;
+    acl_permission_names?: string[];
     effective_cards: string[];
     sector_id?: string | null;
     _sources?: any;
@@ -15,8 +17,8 @@ export function useEffectivePermissions() {
     const [permissions, setPermissions] = useState<EffectivePermissions | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Cache key maps to user ID - Version 5 to force refresh on new deploy
-    const cacheKey = user ? `permissions-v5-${user.id}` : null;
+    // Cache key maps to user ID - Version 6 includes effective_features / ACL names
+    const cacheKey = user ? `permissions-v6-${user.id}` : null;
 
     const fetchPermissions = useCallback(async (force = false) => {
         if (!user?.id) {
@@ -39,7 +41,7 @@ export function useEffectivePermissions() {
 
         try {
             console.log('🔍 [useEffectivePermissions] Fetching permissions for user:', user.id);
-            const res = await fetch('/api/user/effective-permissions');
+            const res = await fetch('/api/user/effective-permissions', { cache: 'no-store' });
             if (res.ok) {
                 const data = await res.json();
                 console.log('✅ [useEffectivePermissions] Permissions received:', {
@@ -80,11 +82,15 @@ export function useEffectivePermissions() {
 
         if (typeof window !== 'undefined') {
             window.addEventListener('permissions-updated', handleUpdate);
+            window.addEventListener('visibilitychange', handleUpdate);
+            window.addEventListener('focus', handleUpdate);
         }
 
         return () => {
             if (typeof window !== 'undefined') {
                 window.removeEventListener('permissions-updated', handleUpdate);
+                window.removeEventListener('visibilitychange', handleUpdate);
+                window.removeEventListener('focus', handleUpdate);
             }
         };
     }, [fetchPermissions, cacheKey]);

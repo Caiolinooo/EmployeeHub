@@ -12,7 +12,7 @@ import { Sector } from '@/types/index';
 import { useACLPermissions } from '@/hooks/useACLPermissions';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { QHSE_MODULE_KEY } from '@/lib/document-catalog/permissions';
-import { getFullPermissionsForRole } from '@/config/modules';
+import { getFullPermissionsForRole, getModuleKeyForCatalogFeature } from '@/config/modules';
 import CollaboratorDocumentsCatalog from './CollaboratorDocumentsCatalog';
 import CatalogFeatureToggles from './CatalogFeatureToggles';
 
@@ -55,7 +55,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
   isModal = true
 }) => {
   const { t } = useI18n();
-  const { hasAccess } = useSupabaseAuth();
+  const { hasAccess, user: sessionUser, refreshProfile } = useSupabaseAuth();
   const showQhseSection = hasAccess(QHSE_MODULE_KEY);
   const defaultUser: UserEditorData = {
     phoneNumber: '',
@@ -390,6 +390,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
   };
 
   const handleFeaturePermissionChange = (featureId: string, checked: boolean) => {
+    const moduleKey = getModuleKeyForCatalogFeature(featureId);
     setEditedUser(prev => ({
       ...prev,
       accessPermissions: {
@@ -397,6 +398,10 @@ const UserEditor: React.FC<UserEditorProps> = ({
         features: {
           ...prev.accessPermissions?.features,
           [featureId]: checked
+        },
+        modules: {
+          ...prev.accessPermissions?.modules,
+          ...(checked && moduleKey ? { [moduleKey]: true } : {}),
         }
       }
     }));
@@ -540,6 +545,9 @@ const UserEditor: React.FC<UserEditorProps> = ({
         }
 
         console.log('[UserEditor] Permissões ACL salvas com sucesso no submit');
+        if (sessionUser?.id && editedUser._id === sessionUser.id) {
+          await refreshProfile();
+        }
       } catch (error) {
         console.error('[UserEditor] Erro ao persistir permissões ACL no submit:', error);
       }
@@ -887,25 +895,20 @@ const UserEditor: React.FC<UserEditorProps> = ({
               )}
 
               {(() => {
-                const enabledKeys = availableModules
-                  .filter((module) => {
-                    const hasIndividual = editedUser.accessPermissions?.modules?.[module.id] !== undefined;
-                    const byRole = rolePermissions[editedUser.role]?.modules?.[module.id] || false;
-                    const individual = editedUser.accessPermissions?.modules?.[module.id] || false;
-                    return hasIndividual ? individual : byRole;
-                  })
-                  .map((module) => module.id);
                 const featureValues = {
                   ...(rolePermissions[editedUser.role]?.features || {}),
                   ...(editedUser.accessPermissions?.features || {}),
                 };
                 return (
                   <div className="mt-4">
+                    <p className="text-xs text-slate-500 mb-2">
+                      Features do catálogo ficam visíveis mesmo se o módulo estiver desmarcado.
+                      Ativar uma feature liga o módulo correspondente no save.
+                    </p>
                     <CatalogFeatureToggles
                       values={featureValues}
                       onChange={handleFeaturePermissionChange}
                       disabled={editedUser.role === 'ADMIN'}
-                      enabledModuleKeys={enabledKeys}
                     />
                   </div>
                 );

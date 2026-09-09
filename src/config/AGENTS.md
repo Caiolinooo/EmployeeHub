@@ -32,7 +32,9 @@ Ao criar módulo novo:
 
 - `npx tsx --test src/config/modules.test.ts`
 - `/admin/users` Módulos do Sistema inclui `gestao-tripulantes`, `e-social`, `dp`, `epi`, `ferias`, `kpi`
-- Features do módulo habilitado aparecem sem hardcode GT-only
+- Features do catálogo aparecem no UserEditor mesmo com o módulo desmarcado; ligar a feature liga o módulo
+- `hasFeature` / `GET /api/user/effective-permissions` tratam nome ACL = feature key (JSONB nulo não esconde o grant)
+- `npx tsx --test src/lib/effective-feature.test.ts` — USER + ACL `gestao-tripulantes.documents.delete` sem JSONB = canDelete
 - `GET /api/acl/init` lista resources do catálogo; GT `documents.edit` / e-social `view` permanecem
 
 ## Child DOX Index

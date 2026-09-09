@@ -1,4 +1,5 @@
 import { checkAclPermission } from '@/lib/auth';
+import { hasEffectiveFeature } from '@/lib/effective-feature';
 
 export interface GtDocumentPermissionUser {
   id: string;
@@ -16,7 +17,10 @@ function hasFeature(
   user: GtDocumentPermissionUser,
   feature: 'gestao-tripulantes.documents.edit' | 'gestao-tripulantes.documents.delete',
 ): boolean {
-  return user.access_permissions?.features?.[feature] === true;
+  return hasEffectiveFeature(
+    { role: user.role, features: user.access_permissions?.features },
+    feature,
+  );
 }
 
 async function hasGtAcl(

@@ -708,6 +708,15 @@ export function getAclResourceLabel(resource: string): string {
   return resource.charAt(0).toUpperCase() + resource.slice(1);
 }
 
+export function getModuleKeyForCatalogFeature(featureKey: string): string | null {
+  for (const mod of SYSTEM_MODULES) {
+    if (mod.features?.some((feature) => feature.key === featureKey)) {
+      return mod.key;
+    }
+  }
+  return null;
+}
+
 export function getCatalogFeaturesForUi(): Array<ModuleFeatureDefinition & { moduleKey: string; moduleLabel: string }> {
   const out: Array<ModuleFeatureDefinition & { moduleKey: string; moduleLabel: string }> = [];
   for (const mod of SYSTEM_MODULES) {

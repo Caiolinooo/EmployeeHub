@@ -208,11 +208,6 @@ const RolePermissionsEditor: React.FC<RolePermissionsEditorProps> = ({ onClose }
         <CatalogFeatureToggles
           values={safeFeatures}
           onChange={handleFeatureChange}
-          enabledModuleKeys={
-            Object.entries(currentPermissions.modules || {})
-              .filter(([, enabled]) => enabled)
-              .map(([id]) => id)
-          }
         />
       </div>
 

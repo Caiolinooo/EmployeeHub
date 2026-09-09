@@ -5,6 +5,15 @@
 - [ ] Preview Vercel: UserEditor Janaina (e outros) mostra docs, não 404; `POST /api/acl/init` semeia epi/kpi/dp/reimbursement
 - [ ] Conferir UserEditor Módulos do Sistema inclui GT, e-social, dp, epi, ferias, kpi
 
+## Aplicar permissão (ACL + feature) na UI (2026-09-09)
+
+Janaina (USER / Treinamento): ACL `gestao-tripulantes.documents.delete` gravada; `access_permissions.features` nulo; hook só lia JSONB → botão sumia.
+
+- [x] `hasEffectiveFeature` + `GET /api/user/effective-permissions` (`effective_features`, `acl_permission_names`)
+- [x] `hasFeature` no contexto lê ACL; `useGtDocumentPermissions` confirma em `GET .../documentos/permissions`
+- [x] UserEditor mostra features mesmo com módulo off; ligar feature liga o módulo
+- [ ] Preview: Janaina (re-login ou hard refresh) vê Excluir em Treinamentos; DELETE 200; outras features ACL também aparecem
+
 ---
 
 ## Desligamento / rescisão DP (2026-09-02)

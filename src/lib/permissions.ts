@@ -1,4 +1,5 @@
 import { getFullPermissionsForRole } from '@/config/modules';
+import { hasEffectiveFeature } from '@/lib/effective-feature';
 
 // Utilities for Academy and Social permissions
 
@@ -95,6 +96,7 @@ export interface AppUserLike {
   role?: string;
   access_permissions?: AccessPermissions;
   accessPermissions?: AccessPermissions;
+  acl_permission_names?: string[];
 }
 
 /**
@@ -106,12 +108,15 @@ export function hasFeaturePermission(
 ): boolean {
   if (!user) return false;
 
-  // Admins have all permissions
-  if (user.role === 'ADMIN') return true;
-
-  // Check in access_permissions.features (support both camelCase and snake_case)
   const permissions = user.access_permissions || user.accessPermissions;
-  return !!permissions?.features?.[feature];
+  return hasEffectiveFeature(
+    {
+      role: user.role,
+      features: permissions?.features,
+      aclNames: user.acl_permission_names,
+    },
+    String(feature),
+  );
 }
 
 /**
