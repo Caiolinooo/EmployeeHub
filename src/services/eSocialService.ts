@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase';
+import { alinharDataExamePtBr, normalizeEsocialDate } from '@/lib/e-social/esocial-date';
 import { sanitizeTsNome } from '@/lib/e-social/ts-nome';
 
 export interface ESocialEvento {
@@ -413,44 +414,8 @@ function optTag(t: string, val: any, indent = 0): string {
   return tag(t, e(String(val)), indent);
 }
 
-/**
- * Normaliza qualquer formato de data para YYYY-MM-DD (ISO 8601 / XSD date).
- * Aceita: DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD, ISO timestamps.
- * Rejeita datas inválidas (ex: mês 13) e retorna string vazia.
- */
-function normalizeDate(raw: string | undefined | null): string {
-  if (!raw) return '';
-  const s = String(raw).trim();
-
-  // Já está no formato correto YYYY-MM-DD — valida e devolve
-  const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (isoMatch) {
-    const [, y, m, d] = isoMatch;
-    if (Number(m) >= 1 && Number(m) <= 12 && Number(d) >= 1 && Number(d) <= 31) {
-      return `${y}-${m}-${d}`;
-    }
-    // Mês/dia inválido — tenta inverter (YYYY-DD-MM -> YYYY-MM-DD)
-    if (Number(d) >= 1 && Number(d) <= 12 && Number(m) >= 1 && Number(m) <= 31) {
-      return `${y}-${d}-${m}`;
-    }
-    return ''; // irrecuperável
-  }
-
-  // DD/MM/YYYY ou DD-MM-YYYY
-  const brMatch = s.match(/^(\d{2})[\/-](\d{2})[\/-](\d{4})/);
-  if (brMatch) {
-    const [, d, m, y] = brMatch;
-    if (Number(m) >= 1 && Number(m) <= 12 && Number(d) >= 1 && Number(d) <= 31) {
-      return `${y}-${m}-${d}`;
-    }
-    return '';
-  }
-
-  // ISO timestamp (2026-06-09T...) — extrai só a data
-  const tsMatch = s.match(/^(\d{4}-\d{2}-\d{2})T/);
-  if (tsMatch) return normalizeDate(tsMatch[1]);
-
-  return '';
+function normalizeDate(raw: string | undefined | null, ancora?: string): string {
+  return ancora ? alinharDataExamePtBr(raw, ancora) : normalizeEsocialDate(raw);
 }
 
 export function generateEventXML(eventoCodigo: string, dadosEvento: any): string {
@@ -605,7 +570,7 @@ export function generateEventXML(eventoCodigo: string, dadosEvento: any): string
         
         for (const ex of listExames) {
           const cod = ex.codProc || ex.procRealizado || getCodProcFromNome(ex.nome);
-          const dt = normalizeDate(ex.data || ex.dtExm || defaultDate);
+          const dt = normalizeDate(ex.data || ex.dtExm || defaultDate, defaultDate);
           const key = `${dt}-${cod}`;
           
           let ordExameVal = calculatedOrdExame;

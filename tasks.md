@@ -1,3 +1,12 @@
+## e-Social S-2220 datas PT-BR (2026-09-09)
+
+`dtAso=2026-08-10` e alguns `dtExm=2026-10-08` (slash EN MM/DD vs PT-BR DD/MM). Usuário corrige o evento no Supabase; o código não pode repetir o swap.
+
+- [x] `esocial-date.ts`: parse sempre DD/MM; alinha exame a `dtAso` se for swap ou MM/DD do mesmo dia
+- [x] Geradores S-2220, auto-corrector, pré-envio (patch XML + hidrata exames), OCR ASO
+- [x] Testes `esocial-date.test.ts`
+- [ ] Evento atual: corrigir XML/dados no Supabase (fora do app); Validar Auto-Correção em eventos novos
+
 ## e-Social S-2220 `nmMed` / TS_nome (2026-09-09)
 
 Rejeição XSD: `Thalia Leal Dibo Médica à Á` (OCR colou cargo + lixo + quebra de linha). Auto-correção não sanitizava nome; XML sujo ia de novo.

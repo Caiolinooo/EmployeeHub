@@ -8,7 +8,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-Database-green?style=for-the-badge&logo=supabase)](https://supabase.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
-[![React](https://img.shields.io/badge/React-18.2-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)[![Version](https://img.shields.io/badge/Version-5.74.1-orange?style=for-the-badge)](#)
+[![React](https://img.shields.io/badge/React-18.2-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)[![Version](https://img.shields.io/badge/Version-5.74.2-orange?style=for-the-badge)](#)
 
 **Portal corporativo unificado para gestão de pessoas, processos, comunicação interna e compliance trabalhista.**
 
@@ -24,10 +24,11 @@ O **Painel ABZ** é o núcleo digital da ABZ Group, projetado para centralizar f
 
 ---
 
-## Novidades da Versão [v5.74.1]
+## Novidades da Versão [v5.74.2]
 
 | | Capacidade | Destaque |
 |---|---|---|
+| 📅 | **S-2220 datas PT-BR** | `dtExm` sempre DD/MM; swap `2026-10-08` vs `dtAso` `2026-08-10` some no Validar Auto-Correção e na geração do XML. |
 | 🩺 | **S-2220 `nmMed` / TS_nome** | Auto-correção remove cargo/quebra de linha/lixo OCR no nome do médico, rebuilda XML e permite reenviar evento rejeitado só por schema. |
 
 ---
@@ -99,9 +100,10 @@ Funcionalidades de base:
 - **Dashboard** - Metricas em tempo real (total, embarcados, disponiveis, documentos vencendo)
 - **API**: 25+ endpoints REST + 13 tabelas no banco (`gt_*`)
 
-### E-Social [v5.74.1]
+### E-Social [v5.74.2]
 Integracao completa com o sistema governamental brasileiro:
 - **13 Eventos Suportados**: S-2200 a S-3000 (cadastramento, contratual, ASO, CAT, ambiental, desligamento)
+- **Datas PT-BR (S-2220)**: exames e ASO sempre DD/MM, mesmo se o laudo misturar MM/DD inglês; `dtExm` invertido alinha em `dtAso`
 - **Auto-correção TS_nome (S-2220)**: `Validar Auto-Correção` e o pré-envio limpam `nmMed`/`nmResp` (OCR com cargo ou quebra de linha) e rebuildam o XML
 - **Ciclo de Vida**: rascunho -> revisao -> aprovacao -> fila -> envio -> processamento
 - **Geracao de XML**: Conforme leiaute oficial S-1.3 com headers, namespaces e IDs

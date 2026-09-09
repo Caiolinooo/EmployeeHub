@@ -1,3 +1,4 @@
+import { alinharDataExamePtBr, normalizeEsocialDate } from '../esocial-date';
 import { sanitizeTsNome } from '../ts-nome';
 
 interface IdeEvento {
@@ -106,25 +107,8 @@ function buildTag(tag: string, value: string | number | undefined | null, indent
   return `${spaces}<${tag}>${xmlEncode(String(value))}</${tag}>\n`;
 }
 
-function normalizeDate(raw: string | undefined | null): string {
-  if (!raw) return '';
-  const s = String(raw).trim();
-  const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (isoMatch) {
-    const [, y, m, d] = isoMatch;
-    if (Number(m) >= 1 && Number(m) <= 12 && Number(d) >= 1 && Number(d) <= 31) return `${y}-${m}-${d}`;
-    if (Number(d) >= 1 && Number(d) <= 12 && Number(m) >= 1 && Number(m) <= 31) return `${y}-${d}-${m}`;
-    return '';
-  }
-  const brMatch = s.match(/^(\d{2})[\/-](\d{2})[\/-](\d{4})/);
-  if (brMatch) {
-    const [, d, m, y] = brMatch;
-    if (Number(m) >= 1 && Number(m) <= 12 && Number(d) >= 1 && Number(d) <= 31) return `${y}-${m}-${d}`;
-    return '';
-  }
-  const tsMatch = s.match(/^(\d{4}-\d{2}-\d{2})T/);
-  if (tsMatch) return normalizeDate(tsMatch[1]);
-  return '';
+function normalizeDate(raw: string | undefined | null, ancora?: string): string {
+  return ancora ? alinharDataExamePtBr(raw, ancora) : normalizeEsocialDate(raw);
 }
 
 export function gerarS2220(dados: DadosS2220): string {
@@ -229,7 +213,7 @@ export function gerarS2220(dados: DadosS2220): string {
     const seenExames = new Set<string>();
     for (const exame of rawExames) {
       const cod = (exame.codProc || exame.procRealizado || getCodProcFromNome(exame.nome || ''));
-      const dt = normalizeDate(exame.data || exame.dtExm || dtAsoFinal) || dtAsoFinal;
+      const dt = normalizeDate(exame.data || exame.dtExm || dtAsoFinal, dtAsoFinal) || dtAsoFinal;
       const key = `${dt}-${cod}`;
       if (!seenExames.has(key)) {
         seenExames.add(key);

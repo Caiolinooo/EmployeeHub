@@ -12,6 +12,7 @@ import {
 } from '@/lib/ocr';
 import { supabaseAdmin } from '@/lib/supabase';
 import { buscarCodigoExame } from '@/lib/e-social/codigos';
+import { alinharDataExamePtBr, normalizeEsocialDate } from '@/lib/e-social/esocial-date';
 import { sanitizeTsNome } from '@/lib/e-social/ts-nome';
 import {
   cpfsMatch,
@@ -34,21 +35,6 @@ export async function processarDocumentoOCR(
   return processarDocumentoOCRGlobal(arquivoUrl, tipoDocumento as OCRTipoDocumento, profileCpf);
 }
 
-const MESES_BR: Record<string, string> = {
-  'JAN': '01', 'JANEIRO': '01',
-  'FEV': '02', 'FEVEREIRO': '02',
-  'MAR': '03', 'MARCO': '03', 'MARÇO': '03',
-  'ABR': '04', 'ABRIL': '04',
-  'MAI': '05', 'MAIO': '05',
-  'JUN': '06', 'JUNHO': '06',
-  'JUL': '07', 'JULHO': '07',
-  'AGO': '08', 'AGOSTO': '08',
-  'SET': '09', 'SETEMBRO': '09',
-  'OUT': '10', 'OUTUBRO': '10',
-  'NOV': '11', 'NOVEMBRO': '11',
-  'DEZ': '12', 'DEZEMBRO': '12',
-};
-
 const PALAVRAS_DATA_PROXIMA = [
   'conclusao', 'conclusão', 'realizacao', 'realização',
   'realizado', 'realizada', 'data', 'exame', 'clinico', 'clínico',
@@ -56,11 +42,8 @@ const PALAVRAS_DATA_PROXIMA = [
 ];
 
 function converterDataTexto(dia: string, mesStr: string, ano: string): string | null {
-  const cleanMes = mesStr.toUpperCase().replace(/\./g, '').trim();
-  const mes = MESES_BR[cleanMes];
-  if (!mes) return null;
-  const d = dia.padStart(2, '0');
-  return `${ano}-${mes}-${d}`;
+  const converted = normalizeEsocialDate(`${dia} ${mesStr} ${ano}`);
+  return converted || null;
 }
 
 function extrairDataDoTexto(texto: string): string | null {
@@ -72,10 +55,8 @@ function extrairDataDoTexto(texto: string): string | null {
       // dd/mm/aaaa
       const m1 = linha.match(/(\d{2})\/(\d{2})\/(\d{4})/);
       if (m1) {
-        const [_, d, mes, a] = m1;
-        if (parseInt(d) >= 1 && parseInt(d) <= 31 && parseInt(mes) >= 1 && parseInt(mes) <= 12) {
-          return `${a}-${mes}-${d}`;
-        }
+        const iso = normalizeEsocialDate(m1[0]);
+        if (iso) return iso;
       }
       // dd de MÊS de aaaa / dd MÊS aaaa
       const m2 = linha.match(/(\d{1,2})\s*(?:DE\s+)?([A-Za-zÀ-ÖØ-öø-ÿçãõ]+)\.?\s*(?:DE\s+)?(\d{4})/i);
@@ -96,7 +77,8 @@ function extrairDataDoTexto(texto: string): string | null {
     if (validas.length > 0) {
       validas.sort((a, b) => b.a - a.a || b.mes - a.mes || b.d - a.d);
       const best = validas[0];
-      return `${best.a}-${best.mes.toString().padStart(2, '0')}-${best.d.toString().padStart(2, '0')}`;
+      return normalizeEsocialDate(`${best.d.toString().padStart(2, '0')}/${best.mes.toString().padStart(2, '0')}/${best.a}`)
+        || `${best.a}-${best.mes.toString().padStart(2, '0')}-${best.d.toString().padStart(2, '0')}`;
     }
   }
 
@@ -254,11 +236,7 @@ function toIsoDateOcr(value: unknown): string | null {
   if (value == null) return null;
   const s = String(value).trim();
   if (!s) return null;
-  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
-  const br = s.match(/^(\d{2})[\/.\-](\d{2})[\/.\-](\d{4})$/);
-  if (br) return `${br[3]}-${br[2]}-${br[1]}`;
-  return null;
+  return normalizeEsocialDate(s) || null;
 }
 
 /**
@@ -640,7 +618,8 @@ function extrairExamesDoTexto(texto: string, dataAso: string | null): { nome: st
           anoClean = '20' + anoClean;
         }
         
-        const dataFormatada = `${anoClean}-${mes}-${dia}`;
+        const dataBruta = `${dia}/${mes}/${anoClean}`;
+        const dataFormatada = alinharDataExamePtBr(dataBruta, dataAso) || normalizeEsocialDate(dataBruta);
         
         if (procNome.length > 3 && procNome.split(' ').some(w => w.length > 2)) {
           exames.push({
@@ -814,11 +793,8 @@ export async function extrairDadosASODoTexto(
   // 3. Data de Realização
   let data_realizacao: string | null = dadosExtraidos?.data_realizacao || null;
 
-  if (data_realizacao && data_realizacao.includes('/')) {
-    const parts = data_realizacao.split('/');
-    if (parts.length === 3) {
-      data_realizacao = `${parts[2]}-${parts[1]}-${parts[0]}`;
-    }
+  if (data_realizacao) {
+    data_realizacao = normalizeEsocialDate(data_realizacao) || data_realizacao;
   }
 
   if (!data_realizacao) {
@@ -904,8 +880,14 @@ export async function extrairDadosASODoTexto(
   if (Array.isArray(exames_realizados)) {
     for (const ex of exames_realizados) {
       const codProc = await buscarCodigoExame(ex.nome);
+      const dataAlinhada = alinharDataExamePtBr(ex.data || ex.dtExm, data_realizacao)
+        || normalizeEsocialDate(ex.data || ex.dtExm)
+        || data_realizacao
+        || ex.data;
       examesComCodigos.push({
         ...ex,
+        data: dataAlinhada,
+        dtExm: dataAlinhada,
         codProc: codProc || '9999'
       });
     }

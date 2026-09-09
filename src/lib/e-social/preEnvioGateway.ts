@@ -2,6 +2,11 @@ import { generateEventXML, validateEventXML } from '@/services/eSocialService';
 import { autoCorrigirDadosEvento, Correcao } from './esocialAutoCorrector';
 import { validarDadosEvento, validarXMLGerado, CampoPendente } from './esocialValidator';
 import { findFullColaboradorByCpf } from '@/lib/gestao-tripulantes/cpf-lookup';
+import {
+  corrigirXmlDatasS2220PtBr,
+  hidratarExamesDoXmlS2220,
+  xmlTemDtExmInvertida,
+} from './esocial-date';
 import { xmlTemNomeTsInvalido } from './ts-nome';
 
 export interface PreEnvioResult {
@@ -102,6 +107,10 @@ export async function validarEPrepararEnvio(evento: any, tpAmb?: number): Promis
     dadosOriginais.dadosEspecificos.matricula = mat;
   }
 
+  if (codigoEvento === 'S-2220') {
+    hidratarExamesDoXmlS2220(dadosOriginais, evento.xml_gerado);
+  }
+
   // 1. Auto-Correção
   const { dadosCorrigidos, correcoes, xmlPrecisaRebuildar } = autoCorrigirDadosEvento(codigoEvento, dadosOriginais, tpAmb);
 
@@ -126,12 +135,13 @@ export async function validarEPrepararEnvio(evento: any, tpAmb?: number): Promis
   const xmlTemBugAso = xml && codigoEvento === 'S-2220' && /<aso>\s*<resAso>/.test(xml);
   const xmlTemDataInvalida = xml && /\d{4}-(1[3-9]|[2-9]\d)-\d{2}/.test(xml);
   const xmlTemNomeInvalido = Boolean(xml && xmlTemNomeTsInvalido(xml));
+  const xmlTemDataExameInvertida = Boolean(xml && codigoEvento === 'S-2220' && xmlTemDtExmInvertida(xml));
   
   // Se o tpAmb do XML estiver diferente do tpAmb requisitado, força rebuild
   const tagAmbienteEsperada = `<tpAmb>${tpAmb}</tpAmb>`;
   const xmlTemAmbErrado = xml && !xml.includes(tagAmbienteEsperada);
 
-  if (!xml || xmlPrecisaRebuildar || xmlTemBugAso || xmlTemDataInvalida || xmlTemAmbErrado || xmlTemNomeInvalido) {
+  if (!xml || xmlPrecisaRebuildar || xmlTemBugAso || xmlTemDataInvalida || xmlTemAmbErrado || xmlTemNomeInvalido || xmlTemDataExameInvertida) {
     try {
       xml = generateEventXML(codigoEvento, dadosCorrigidos);
       rebuildRealizado = true;
@@ -143,6 +153,19 @@ export async function validarEPrepararEnvio(evento: any, tpAmb?: number): Promis
         camposPendentes: [],
         dadosCorrigidos
       };
+    }
+  }
+
+  if (xml && codigoEvento === 'S-2220') {
+    const patched = corrigirXmlDatasS2220PtBr(xml);
+    if (patched.alterado) {
+      xml = patched.xml;
+      correcoes.push({
+        campo: 'dtExm',
+        de: 'ISO invertido ou MM/DD',
+        para: 'YYYY-MM-DD a partir de DD/MM (PT-BR)',
+        descricao: 'Datas de exame alinhadas ao padrão brasileiro / dtAso',
+      });
     }
   }
 

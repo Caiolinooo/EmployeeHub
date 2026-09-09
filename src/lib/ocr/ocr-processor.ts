@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase';
+import { normalizeEsocialDate } from '@/lib/e-social/esocial-date';
 import { normalizeCpf } from '@/lib/utils/identity';
 import type { OCRTipoDocumento, OCRExtractResult, OCRConfig } from '@/types/ocr';
 import {
@@ -94,9 +95,10 @@ export function extrairDadosTexto(
     const validas = datasEncontradas
       .map(m => m[0])
       .filter(dStr => {
-        const parts = dStr.split(/[\/\.\-]/);
-        const d = parseInt(parts[0], 10), me = parseInt(parts[1], 10), a = parseInt(parts[2], 10);
-        return d >= 1 && d <= 31 && me >= 1 && me <= 12 && a >= 2020 && a <= 2030;
+        const iso = normalizeEsocialDate(dStr);
+        if (!iso) return false;
+        const year = Number(iso.slice(0, 4));
+        return year >= 2020 && year <= 2030;
       });
     if (validas.length > 0) {
       dataRealizacaoTemp = validas[validas.length - 1];
@@ -142,9 +144,10 @@ export function extrairDadosTexto(
     dados.resultado = extrairResultadoInteligente(texto);
 
     if (dataRealizacaoTemp) {
-      dados.data_realizacao = dataRealizacaoTemp;
+      dados.data_realizacao = normalizeEsocialDate(dataRealizacaoTemp) || dataRealizacaoTemp;
     } else if (datasEncontradas.length > 0) {
-      dados.data_realizacao = datasEncontradas[datasEncontradas.length - 1][0];
+      dados.data_realizacao = normalizeEsocialDate(datasEncontradas[datasEncontradas.length - 1][0])
+        || datasEncontradas[datasEncontradas.length - 1][0];
     }
 
     // Médicos e CRMs (Examinador e PCMSO)
@@ -768,7 +771,7 @@ Dada a extração bruta de texto (OCR) de um ASO, seu trabalho é identificar co
   "data_nascimento": "Data de nascimento do colaborador no formato YYYY-MM-DD",
   "tipo_exame": "Selecione estritamente uma das opções: 'admissional', 'periodico', 'demissional', 'retorno', 'mudanca_funcao'",
   "resultado": "Selecione estritamente uma das opções: 'apto', 'inapto', 'apto_condicional'",
-  "data_realizacao": "Data de emissão/conclusão do ASO no formato YYYY-MM-DD",
+  "data_realizacao": "Data de emissão/conclusão do ASO no formato YYYY-MM-DD (sempre a partir de DD/MM/AAAA brasileiro)",
   "medico_examinador_nome": "Nome do médico que assina/examina",
   "medico_examinador_crm": "Apenas números do CRM do médico examinador",
   "medico_examinador_uf": "UF do CRM do médico examinador (ex: RJ, SP, etc)",
@@ -780,7 +783,7 @@ Dada a extração bruta de texto (OCR) de um ASO, seu trabalho é identificar co
   "exames_realizados": [
     {
       "nome": "Nome do exame (ex: ELETROCARDIOGRAMA, GLICOSE, etc)",
-      "data": "Data do exame no formato YYYY-MM-DD"
+      "data": "Data do exame no formato YYYY-MM-DD (sempre a partir de DD/MM/AAAA brasileiro; 10/08/2026 = 2026-08-10, nunca 2026-10-08)"
     }
   ]
 }
@@ -793,7 +796,7 @@ Atenção especial (Regras de Negócio):
 5. Data de nascimento: Procure especificamente por rótulos como DN, DATA NASCIMENTO, NASCIMENTO, NASC:, etc. Não retorne a data de realização do exame como data de nascimento.
 6. Diferencie o Médico Examinador (quem assina/carimba o exame atual) do Médico Coordenador (responsável pelo PCMSO).
 7. Exames: Liste TODOS os procedimentos/exames clínicos realizados no paciente, com suas respectivas datas. Se houver "EXAME CLINICO - ASO", adicione na lista.
-8. Datas: Retorne todas as datas estritamente no formato YYYY-MM-DD.
+8. Datas: Sempre interprete números como DD/MM/AAAA (padrão brasileiro), mesmo que o laudo misture formato inglês (MM/DD). 10/08/2026 e 08/10/2026 no mesmo ASO de 10 de agosto viram 2026-08-10. Nunca use Date.parse americano. Retorne YYYY-MM-DD.
 9. Evite deduções incertas. Não duplique dados e não preencha campos de clínica com informações da empresa contratante.
 
 Retorne APENAS o objeto JSON válido, sem explicações, sem blocos de código markdown.`;

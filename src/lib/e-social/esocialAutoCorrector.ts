@@ -1,4 +1,10 @@
 import {
+  alinharCamposDataExame,
+  listarExamesEvento,
+  normalizeEsocialDate,
+  resolverAncoraS2220,
+} from './esocial-date';
+import {
   CAMPOS_NOME_MEDICO,
   CAMPOS_NOME_PCMSO,
   CAMPOS_NOME_TRAB,
@@ -25,27 +31,8 @@ function deepClone(obj: any): any {
 }
 
 function normalizarData(dataStr: string): string | null {
-  if (!dataStr) return null;
-  // Se for timestamp ISO ou similar (YYYY-MM-DDTHH:mm:ss)
-  if (dataStr.includes('T')) {
-    const parts = dataStr.split('T')[0];
-    if (parts.length === 10) return parts;
-  }
-  // Se for DD/MM/YYYY
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dataStr)) {
-    const [d, m, y] = dataStr.split('/');
-    return `${y}-${m}-${d}`;
-  }
-  // Se for YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dataStr)) {
-    const parts = dataStr.split('-');
-    // Inverter mês e dia se mês > 12 e dia <= 12
-    if (parseInt(parts[1], 10) > 12 && parseInt(parts[2], 10) <= 12) {
-      return `${parts[0]}-${parts[2]}-${parts[1]}`;
-    }
-    return dataStr;
-  }
-  return null;
+  const norm = normalizeEsocialDate(dataStr);
+  return norm || null;
 }
 
 function normalizarEnum(valor: any, map: Record<string, number>): number | null {
@@ -246,6 +233,23 @@ export function autoCorrigirDadosEvento(codigoEvento: string, dadosEvento: any, 
 
   // 10. Correções específicas S-2220
   if (codigoEvento === 'S-2220') {
+    const ancora = resolverAncoraS2220(dados);
+    if (ancora) {
+      for (const exame of listarExamesEvento(dados)) {
+        const antes = JSON.stringify([exame.data, exame.dtExm, exame.dtExame, exame.data_exame]);
+        if (alinharCamposDataExame(exame, ancora)) {
+          const depois = String(exame.dtExm || exame.data || ancora);
+          correcoes.push({
+            campo: 'dtExm',
+            de: antes,
+            para: depois,
+            descricao: 'Data de exame alinhada ao PT-BR (DD/MM) / dtAso',
+          });
+          xmlPrecisaRebuildar = true;
+        }
+      }
+    }
+
     const tpExame = dados.dadosEspecificos.tipoExame || dados.dadosEspecificos.tpExameOcup;
     if (tpExame && typeof tpExame === 'string') {
       const norm = normalizarEnum(tpExame, TIPO_EXAME_MAP);

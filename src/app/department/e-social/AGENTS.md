@@ -21,11 +21,13 @@ UI de `/department/e-social` para painel, eventos, revisão, certificados e conf
 - Header + `ESocialNavigation` + filtros ficam visíveis; a tabela/lista de eventos rola no espaço restante.
 - Não voltar ao modelo documento-rola-tudo (`flex-1 p-6` + `space-y-6` sem `min-h-0`).
 - Schema `nmMed` / `TS_nome`: **Validar Auto-Correção** ou **Enviar ao e-Social** (modal e lista, status `erro`) sanitiza nome OCR e rebuilda XML. Contrato em `src/lib/e-social/AGENTS.md`.
+- Datas S-2220: o mesmo botão alinha `dtExm` invertido (`2026-10-08` vs `dtAso` `2026-08-10`) para PT-BR (DD/MM).
 
 ## Verification
 
 - `/department/e-social` e `/department/e-social/eventos`: documento não é o scroll principal; filtros visíveis; lista rola no pane restante (`[data-testid=gt-page-shell]`).
 - S-2220 rejeitado por `nmMed` / Pattern: Validar Auto-Correção deixa `<nmMed>` só com o nome (sem cargo/quebra de linha); Enviar retransmite.
+- S-2220 com `dtExm` invertido: Validar Auto-Correção deixa todos os `<dtExm>` iguais ao `<dtAso>` quando for swap DD/MM.
 
 ## Child DOX Index
 

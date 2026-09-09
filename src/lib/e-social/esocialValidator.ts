@@ -1,3 +1,4 @@
+import { xmlTemDtExmInvertida } from './esocial-date';
 import { isValidTsNome, nomesTsDoXml, sanitizeTsNome } from './ts-nome';
 
 export interface ErroValidacao {
@@ -366,6 +367,15 @@ export function validarXMLGerado(xml: string, codigoEvento: string): ResultadoVa
     // Bug histórico do S-2220
     if (/<aso>\s*<resAso>/.test(xml)) {
       erros.push({ campo: 'aso', mensagem: '<dtAso> deve vir antes de <resAso> em <aso>', tipo: 'estrutura', autocorrigivel: true });
+    }
+
+    if (xmlTemDtExmInvertida(xml)) {
+      erros.push({
+        campo: 'dtExm',
+        mensagem: '<dtExm> com dia/mês invertido (MM/DD ou ISO trocado) em relação a <dtAso>. Use sempre PT-BR (DD/MM).',
+        tipo: 'valor_invalido',
+        autocorrigivel: true,
+      });
     }
   } else if (codigoEvento === 'S-2240') {
     if (!/<cpfTrab>/.test(xml)) erros.push({ campo: 'cpfTrab', mensagem: 'Falta CPF', tipo: 'estrutura', autocorrigivel: false });

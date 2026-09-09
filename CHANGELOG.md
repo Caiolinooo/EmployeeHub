@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.74.2] - 2026-09-09
+
+### 📅 e-Social S-2220: datas sempre PT-BR (DD/MM)
+
+1. **Swap dia/mês**: exames no mesmo ASO vinham uns como `2026-08-10` e outros como `2026-10-08` (leitura MM/DD inglesa de `10/08/2026`). O e-Social rejeitava. Parse agora é sempre DD/MM; `dtExm` que é inversão de `dtAso` alinha em `dtAso`. Nomes de mês PT e EN (`10 de agosto` / `August 10`) viram o mesmo ISO.
+2. **Validar Auto-Correção / pré-envio**: corrige `dados_evento` e o XML gerado. OCR de ASO usa o mesmo alinhamento. Evento já gravado no Supabase o usuário corrige na base; eventos novos não repetem o erro.
+
 ## [5.74.1] - 2026-09-09
 
 ### 🩺 e-Social S-2220: auto-correção de `nmMed` / `TS_nome`
