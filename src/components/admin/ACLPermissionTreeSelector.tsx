@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiChevronDown, FiChevronRight, FiCheck, FiX, FiShield, FiKey } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
+import { getAclResourceLabel } from '@/config/modules';
 
 interface ACLPermission {
   id: string;
@@ -65,27 +66,11 @@ const ACLPermissionTreeSelector: React.FC<ACLPermissionTreeSelectorProps> = ({
   // Construir árvore de permissões por recurso
   const buildTree = (perms: ACLPermission[]): PermissionTreeNode[] => {
     const resourceMap = new Map<string, PermissionTreeNode>();
-    const resourceLabels: Record<string, string> = {
-      'news': 'Notícias',
-      'comments': 'Comentários',
-      'notifications': 'Notificações',
-      'reminders': 'Lembretes',
-      'admin': 'Administração',
-      'users': 'Usuários',
-      'reports': 'Relatórios',
-      'ferias': 'Férias',
-      'contratos': 'Contratos',
-      'lista-presenca': 'Lista de Presença',
-      'reimbursement': 'Reembolso',
-      'gestao-tripulantes': 'Gestão de Tripulantes',
-      'e-social': 'e-Social'
-    };
-
     perms.forEach(perm => {
       if (!resourceMap.has(perm.resource)) {
         resourceMap.set(perm.resource, {
           key: perm.resource,
-          name: resourceLabels[perm.resource] || (perm.resource.charAt(0).toUpperCase() + perm.resource.slice(1)),
+          name: getAclResourceLabel(perm.resource),
           children: [],
           permissions: []
         });

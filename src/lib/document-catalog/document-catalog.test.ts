@@ -9,6 +9,14 @@ import {
 } from './qhse';
 import { normalizePersonName } from './names';
 import {
+  CATALOG_USER_SELECT,
+  catalogUserSelectIsSafe,
+  digitsOrNull,
+  phonesMatch,
+  pickUniqueNameMatch,
+  taxIdOrFilter,
+} from './identity-match';
+import {
   DOCUMENT_CATALOG_SOURCE_IDS,
   isDocumentCatalogSourceId,
   type CatalogDocument,
@@ -35,6 +43,42 @@ describe('document-catalog identity', () => {
   it('normalizes names for attendance matching', () => {
     assert.equal(normalizePersonName('José da Silva'), normalizePersonName('JOSE DA SILVA'));
     assert.equal(normalizePersonName('  Ana   Souza  '), 'ana souza');
+  });
+
+  it('never selects cpf / full_name / phone on users_unified', () => {
+    assert.equal(catalogUserSelectIsSafe(CATALOG_USER_SELECT), true);
+    assert.equal(catalogUserSelectIsSafe('id, email, cpf, tax_id'), false);
+    assert.ok(CATALOG_USER_SELECT.includes('tax_id'));
+    assert.ok(CATALOG_USER_SELECT.includes('phone_number'));
+    assert.equal(/\bcpf\b/.test(CATALOG_USER_SELECT), false);
+  });
+
+  it('matches tax_id in digits and masked form', () => {
+    assert.equal(digitsOrNull('123.456.789-09'), '12345678909');
+    assert.ok(taxIdOrFilter('12345678909').includes('tax_id.eq.12345678909'));
+    assert.ok(taxIdOrFilter('12345678909').includes('tax_id.eq.123.456.789-09'));
+  });
+
+  it('matches phones by digits or last 8', () => {
+    assert.equal(phonesMatch('22999487751', '(22) 99948-7751'), true);
+    assert.equal(phonesMatch('22999487751', '999487751'), true);
+    assert.equal(phonesMatch('22999487751', '1133334444'), false);
+  });
+
+  it('accepts a unique corroborated name and rejects ambiguous names', () => {
+    const unique = pickUniqueNameMatch(
+      [{ nome: 'Janaina Anjos da Silva' }, { nome: 'Maria Souza' }],
+      (row) => row.nome,
+      'Janaina Anjos'
+    );
+    assert.equal(unique?.nome, 'Janaina Anjos da Silva');
+
+    const ambiguous = pickUniqueNameMatch(
+      [{ nome: 'Janaina Anjos Lima' }, { nome: 'Janaina Anjos Costa' }],
+      (row) => row.nome,
+      'Janaina Anjos'
+    );
+    assert.equal(ambiguous, null);
   });
 });
 

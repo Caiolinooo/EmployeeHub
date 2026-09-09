@@ -1,3 +1,12 @@
+## QHSE/docs + catálogo vivo de permissões (2026-09-09)
+
+- [x] Fix `Colaborador não encontrado`: `users_unified` sem coluna `cpf`; select seguro (`tax_id`) + match e-mail/telefone/nome único
+- [x] Módulos do Sistema / ACL / features leem `src/config/modules.ts` (sem lista morta)
+- [ ] Preview Vercel: UserEditor Janaina (e outros) mostra docs, não 404; `POST /api/acl/init` semeia epi/kpi/dp/reimbursement
+- [ ] Conferir UserEditor Módulos do Sistema inclui GT, e-social, dp, epi, ferias, kpi
+
+---
+
 ## Desligamento / rescisão DP (2026-09-02)
 
 Fluxo de processo no portal (não é cálculo trabalhista certificado). Abrir o colaborador no `CollaboratorModal` (lista DP já faz isso na linha).

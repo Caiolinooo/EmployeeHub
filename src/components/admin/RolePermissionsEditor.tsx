@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiUsers, FiSave, FiRefreshCw, FiCheck, FiX, FiSettings } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
+import CatalogFeatureToggles from './CatalogFeatureToggles';
 
 interface Module {
   id: string;
@@ -199,79 +200,20 @@ const RolePermissionsEditor: React.FC<RolePermissionsEditorProps> = ({ onClose }
         </div>
       </div>
 
-      {/* Permissões Especiais */}
       <div className="mb-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-3">Permissões Especiais</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-3">Permissões específicas por módulo</h3>
         <p className="text-sm text-gray-500 mb-4">
-          Configure permissões especiais para funcionalidades específicas.
+          Features JSONB do catálogo vivo. Novo módulo no registro do portal aparece aqui automaticamente.
         </p>
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 border rounded-lg">
-            <div>
-              <div className="font-medium text-gray-900">Aprovar Reembolsos</div>
-              <div className="text-sm text-gray-500">Permite aprovar ou rejeitar solicitações de reembolso</div>
-            </div>
-            <input
-              type="checkbox"
-              checked={safeFeatures.reimbursement_approval || false}
-              onChange={(e) => handleFeatureChange('reimbursement_approval', e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-3 border rounded-lg">
-            <div>
-              <div className="font-medium text-gray-900">Visualizar Reembolsos</div>
-              <div className="text-sm text-gray-500">Permite visualizar solicitações de reembolso</div>
-            </div>
-            <input
-              type="checkbox"
-              checked={safeFeatures.reimbursement_view || false}
-              onChange={(e) => handleFeatureChange('reimbursement_view', e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-3 border rounded-lg">
-            <div>
-              <div className="font-medium text-gray-900">Editar Configurações de Reembolso</div>
-              <div className="text-sm text-gray-500">Permite editar configurações do sistema de reembolso</div>
-            </div>
-            <input
-              type="checkbox"
-              checked={safeFeatures.reimbursement_edit || false}
-              onChange={(e) => handleFeatureChange('reimbursement_edit', e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-3 border rounded-lg">
-            <div>
-              <div className="font-medium text-gray-900">Editor de Notícias</div>
-              <div className="text-sm text-gray-500">Permite criar e editar notícias</div>
-            </div>
-            <input
-              type="checkbox"
-              checked={safeFeatures.news_editor || false}
-              onChange={(e) => handleFeatureChange('news_editor', e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-3 border rounded-lg">
-            <div>
-              <div className="font-medium text-gray-900">Gerente de Notícias</div>
-              <div className="text-sm text-gray-500">Permite gerenciar, publicar e excluir notícias</div>
-            </div>
-            <input
-              type="checkbox"
-              checked={safeFeatures.news_manager || false}
-              onChange={(e) => handleFeatureChange('news_manager', e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-          </div>
-        </div>
+        <CatalogFeatureToggles
+          values={safeFeatures}
+          onChange={handleFeatureChange}
+          enabledModuleKeys={
+            Object.entries(currentPermissions.modules || {})
+              .filter(([, enabled]) => enabled)
+              .map(([id]) => id)
+          }
+        />
       </div>
 
       {/* Botões de Ação */}

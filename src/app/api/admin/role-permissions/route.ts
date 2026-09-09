@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { getFullPermissionsForRole } from '@/config/modules';
+import { getCatalogFeatureDefaultsForRole, getFullPermissionsForRole } from '@/config/modules';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,11 +16,7 @@ export async function GET() {
     roles.forEach(role => {
       formattedPermissions[role] = {
         modules: getFullPermissionsForRole(role),
-        features: {
-          reimbursement_approval: role === 'ADMIN' || role === 'MANAGER',
-          reimbursement_view: true,
-          reimbursement_edit: role === 'ADMIN' || role === 'MANAGER'
-        }
+        features: getCatalogFeatureDefaultsForRole(role)
       };
     });
 

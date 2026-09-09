@@ -1,3 +1,5 @@
+import { getFullPermissionsForRole } from '@/config/modules';
+
 // Utilities for Academy and Social permissions
 
 export interface PermissionFeatures {
@@ -496,15 +498,7 @@ export const DEFAULT_PERMISSIONS_BY_ROLE: Record<string, {
   features: Partial<PermissionFeatures>;
 }> = {
   ADMIN: {
-    modules: {
-      dashboard: true, noticias: true, calendario: true, 'ia-assistant': true,
-      ponto: true, contracheque: true, reembolso: true, kpi: true,
-      avaliacao: true, epi: true, ferias: true, 'lista-presenca': true,
-      contratos: true, academy: true, biblioteca: true, ajuda: true,
-      compras: true, poliweb: true, 'man-schedule': true, chat: true,
-      wkradar: true, admin: true, 'integracao-erp': true,
-      'gestao-tripulantes': true, 'e-social': true
-    },
+    modules: getFullPermissionsForRole('ADMIN'),
     features: {
       academy_editor: true, academy_moderator: true,
       social_editor: true, social_moderator: true,
@@ -535,15 +529,7 @@ export const DEFAULT_PERMISSIONS_BY_ROLE: Record<string, {
     }
   },
   MANAGER: {
-    modules: {
-      dashboard: true, noticias: true, calendario: true, 'ia-assistant': true,
-      ponto: true, contracheque: true, reembolso: true, kpi: false,
-      avaliacao: true, epi: true, ferias: true, 'lista-presenca': true,
-      contratos: true, academy: true, biblioteca: true, ajuda: true,
-      compras: true, poliweb: true, 'man-schedule': false, chat: true,
-      wkradar: false, admin: false, 'integracao-erp': false,
-      'gestao-tripulantes': true, 'e-social': false
-    },
+    modules: getFullPermissionsForRole('MANAGER'),
     features: {
       academy_editor: false, academy_moderator: true,
       social_editor: false, social_moderator: true,
@@ -569,15 +555,7 @@ export const DEFAULT_PERMISSIONS_BY_ROLE: Record<string, {
     }
   },
   USER: {
-    modules: {
-      dashboard: true, noticias: true, calendario: true, 'ia-assistant': true,
-      ponto: true, contracheque: true, reembolso: true, kpi: false,
-      avaliacao: false, epi: true, ferias: true, 'lista-presenca': true,
-      contratos: true, academy: true, biblioteca: true, ajuda: true,
-      compras: false, poliweb: true, 'man-schedule': false, chat: true,
-      wkradar: false, admin: false, 'integracao-erp': false,
-      'gestao-tripulantes': false, 'e-social': false
-    },
+    modules: getFullPermissionsForRole('USER'),
     features: {
       academy_editor: false, academy_moderator: false,
       social_editor: false, social_moderator: false,
