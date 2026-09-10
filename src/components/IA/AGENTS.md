@@ -14,6 +14,8 @@ Componentes React do Companion FAB / chat IA (`AnimatedABZLogo`, mascote, bolhas
 - `companion-mascot-rive-probe.ts` — HEAD probe de `/rive/companion-mascot.riv`
 - `companion-logo-motion.ts` — float/aura/radar por status (calm amplitudes)
 - `AICompanionWidget.tsx` — FAB + session UI; status semantics for mascot
+- `chatMarkdown.tsx` — renderer Markdown das bolhas IA (GFM tables, blockquotes, listas, headings; só React nodes)
+- `MessageBubble.tsx` — bolha do Assistant `/ia` (usa `chatMarkdown`)
 
 ## Local Contracts
 
@@ -29,6 +31,8 @@ Componentes React do Companion FAB / chat IA (`AnimatedABZLogo`, mascote, bolhas
 - `prefers-reduced-motion` → estático
 - Tamanhos FAB 60 / header 36 / hero 80
 - Não quebrar FAB `fixed`, session provider ou `portal-action-bus`
+- **Markdown das bolhas** (`renderChatMarkdown`): tabelas GFM (`| col |` + delimiter row) → `<table>` real com `overflow-x-auto`; `> ` → callout; listas bullet/numeradas com hanging indent (níveis por indentação; `- **Título**: desc` vira linha estruturada); headings `#`–`####`; `---` → hr; código fenced/inline mantido; links sanitizados (http/https/mailto/relativo) — **nunca** `dangerouslySetInnerHTML`
+- Bolhas **não** usam `prose` (Tailwind typography) — o renderer controla toda a tipografia; bolha Assistant `w-fit max-w-full min-w-0` para tabelas rolarem dentro
 
 ## Work Guidance
 

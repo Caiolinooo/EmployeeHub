@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.75.0] - 2026-09-10
+
+### Departamento Pessoal, fechamento NxN e matrícula e-Social
+
+1. **Cadastro DP do zero**: `/department/dp/novo` (e GT `/novo`) criam colaborador em `gt_colaboradores` via `POST /api/gestao-tripulantes/colaboradores`. Sem tabela paralela. A ficha (Dados Pessoais → Editar) altera qualquer campo do cadastro (`PUT`). Gate ADMIN/MANAGER/SUPERADMIN ou setor DP/RH + módulo `gestao-tripulantes`. CPF Módulo 11; CPF duplicado = 409; `matricula_esocial` vazio copia `matricula`.
+2. **Fechamento fidedigno**: motor `fechamento-calculo.ts` compara embarque N / folga N com dt início e dt fim. Dobra = excedente a bordo; FI = evento + déficit sem duplicar; exporta também folga e STB. Mesmos números na UI, `GET /relatorio-mensal` (`calculosFolha`) e XLSX (aba Ciclos NxN). Sem dt fim não inventa janela.
+3. **e-Social matrícula**: campo sempre visível em `EventoRevisao`. `POST /api/e-social/corrigir-matricula` grava evento + XML + cadastro GT. Evento processado com recibo fica travado.
+
 ## [5.74.2] - 2026-09-09
 
 ### 📅 e-Social S-2220: datas sempre PT-BR (DD/MM)

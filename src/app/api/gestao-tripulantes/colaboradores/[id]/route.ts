@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { autoGenerateESocialEvents } from '@/services/eSocialAutoService';
-import { isValidCpf, normalizeCpf } from '@/lib/utils/identity';
+import { findColaboradorByCpf } from '@/lib/gestao-tripulantes/cpf-lookup';
 import { loadColaboradorDetail, parseIncludeParam } from '@/lib/gestao-tripulantes/colaborador-get';
-import { persistirCamposEscala } from '@/lib/gestao-tripulantes/regime-escala';
+import { montarPayloadCadastro } from '@/lib/gestao-tripulantes/colaborador-cadastro';
+import {
+  MENSAGEM_CADASTRO_NEGADO,
+  podeMutarCadastroColaborador,
+} from '@/lib/gestao-tripulantes/colaborador-cadastro-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,82 +69,24 @@ export async function PUT(
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
+    const podeMutar = await podeMutarCadastroColaborador(payload.userId, payload.role);
+    if (!podeMutar) {
+      return NextResponse.json({ error: MENSAGEM_CADASTRO_NEGADO }, { status: 403 });
+    }
+
     const { id } = await context.params;
     const body = await request.json();
-
-    // Persist every editable gt_colaboradores column. Skip PK/system/view/e-Social tracking.
-    const ALLOWED_COLAB_FIELDS = new Set([
-      'nome_completo', 'cpf', 'rg', 'orgao_emissor', 'data_emissao_rg',
-      'data_nascimento', 'sexo', 'genero', 'estado_civil', 'peso', 'altura',
-      'raca_cor', 'escolaridade', 'deficiencia', 'deficiencia_cid',
-      'nacionalidade', 'naturalidade', 'naturalidade_uf', 'pais_nascimento',
-      'nome_mae', 'nome_pai', 'email', 'telefone', 'foto_url',
-      'endereco_logradouro', 'endereco_numero', 'endereco_complemento',
-      'endereco_bairro', 'endereco_cidade', 'endereco_uf', 'endereco_cep',
-      'dados_bancarios', 'pis_pasep', 'ctps', 'ctps_serie', 'ctps_uf',
-      'cnh', 'cnh_categoria', 'cnh_validade', 'cnh_uf',
-      'titulo_eleitor', 'titulo_eleitor_zona', 'titulo_eleitor_sessao',
-      'certidao_tipo', 'certidao_numero', 'certidao_cartorio',
-      'matricula', 'matricula_esocial', 'departamento',
-      'cargo_id', 'centro_custo_id', 'empresa_id', 'embarcacao_atual_id',
-      'data_admissao', 'data_demissao', 'motivo_demissao',
-      'salario', 'tipo_salario', 'forma_pagamento', 'sindicato', 'cbo',
-      'jornada_semanal', 'jornada_mensal', 'tipo_contrato', 'prazo_contrato',
-      'categoria_contrato', 'tipo_trabalho', 'tipo_mao_de_obra', 'regime_trabalho',
-      'escala_embarque', 'escala_folga', 'status_embarque', 'standby', 'ativo',
-      'data_ultimo_embarque', 'data_ultimo_desembarque', 'data_proximo_embarque',
-      'dados_saude', 'tipo_admissao', 'natureza_atividade', 'tipo_jornada', 'tipo_lotacao',
-    ]);
-
-    const BOOLEAN_FIELDS = new Set(['standby', 'ativo']);
-    const NUMBER_FIELDS = new Set(['peso', 'altura', 'salario', 'escala_embarque', 'escala_folga']);
-
-    const updateData: Record<string, any> = { updated_at: new Date().toISOString() };
-
-    if ('cpf' in body) {
-      const rawCpf = body.cpf == null ? '' : String(body.cpf);
-      if (!rawCpf.trim()) {
-        return NextResponse.json({ error: 'CPF é obrigatório' }, { status: 400 });
-      }
-      if (!isValidCpf(rawCpf)) {
-        return NextResponse.json({ error: 'CPF inválido' }, { status: 400 });
-      }
-      updateData.cpf = normalizeCpf(rawCpf);
+    const montado = montarPayloadCadastro(body as Record<string, unknown>, 'update');
+    if (!montado.ok) {
+      return NextResponse.json({ error: montado.error }, { status: montado.status });
     }
 
-    if ('nome_completo' in body) {
-      const nome = body.nome_completo == null ? '' : String(body.nome_completo).trim();
-      if (!nome) {
-        return NextResponse.json({ error: 'Nome completo é obrigatório' }, { status: 400 });
-      }
-      updateData.nome_completo = nome;
-    }
+    const updateData: Record<string, unknown> = { ...montado.data };
 
-    for (const [key, value] of Object.entries(body)) {
-      if (!ALLOWED_COLAB_FIELDS.has(key) || key === 'cpf' || key === 'nome_completo') continue;
-
-      if (BOOLEAN_FIELDS.has(key)) {
-        if (typeof value === 'boolean') updateData[key] = value;
-        else if (value === 'true' || value === 'false') updateData[key] = value === 'true';
-        else if (value == null || value === '') updateData[key] = false;
-        else updateData[key] = Boolean(value);
-        continue;
-      }
-
-      if (NUMBER_FIELDS.has(key)) {
-        if (value == null || value === '') { updateData[key] = null; continue; }
-        const n = Number(value);
-        if (Number.isNaN(n)) {
-          return NextResponse.json({ error: `Campo ${key} deve ser numérico` }, { status: 400 });
-        }
-        updateData[key] = n;
-        continue;
-      }
-
-      if (typeof value === 'string' && value.trim() === '') {
-        updateData[key] = null;
-      } else {
-        updateData[key] = value;
+    if (typeof updateData.cpf === 'string' && updateData.cpf) {
+      const existing = await findColaboradorByCpf(updateData.cpf);
+      if (existing && existing.id !== id) {
+        return NextResponse.json({ error: 'CPF já cadastrado para outro colaborador' }, { status: 409 });
       }
     }
 
@@ -164,17 +110,6 @@ export async function PUT(
         return NextResponse.json({ error: `${nameKey.replace('_nome', '')} não encontrado: ${body[nameKey]}` }, { status: 400 });
       }
       updateData[idKey] = row.id;
-    }
-
-    if ('regime_trabalho' in updateData) {
-      const persistido = persistirCamposEscala({
-        regime_trabalho: updateData.regime_trabalho,
-        escala_embarque: 'escala_embarque' in updateData ? updateData.escala_embarque : body.escala_embarque,
-        escala_folga: 'escala_folga' in updateData ? updateData.escala_folga : body.escala_folga,
-      });
-      updateData.regime_trabalho = persistido.regime_trabalho;
-      updateData.escala_embarque = persistido.escala_embarque;
-      updateData.escala_folga = persistido.escala_folga;
     }
 
     const { data: updated, error: updateError } = await supabaseAdmin
@@ -224,6 +159,11 @@ export async function DELETE(
     const payload = verifyToken(token);
     if (!payload) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+    }
+
+    const podeMutar = await podeMutarCadastroColaborador(payload.userId, payload.role);
+    if (!podeMutar) {
+      return NextResponse.json({ error: MENSAGEM_CADASTRO_NEGADO }, { status: 403 });
     }
 
     const { id } = await context.params;

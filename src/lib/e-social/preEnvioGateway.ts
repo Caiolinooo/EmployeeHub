@@ -7,7 +7,10 @@ import {
   hidratarExamesDoXmlS2220,
   xmlTemDtExmInvertida,
 } from './esocial-date';
+import { resolverMatricula } from './esocial-matricula';
 import { xmlTemNomeTsInvalido } from './ts-nome';
+
+export { resolverMatricula } from './esocial-matricula';
 
 export interface PreEnvioResult {
   pronto: boolean;
@@ -18,16 +21,6 @@ export interface PreEnvioResult {
   dadosCorrigidos?: any;
 }
 
-export function resolverMatricula(evento: any): string {
-  if (!evento) return '';
-  const raw = evento.dados_evento?.dadosEspecificos || evento.dados_evento || {};
-  return raw.matricula_esocial
-    || evento.dados_evento?.matricula_esocial
-    || raw.matricula
-    || evento.dados_evento?.matricula
-    || evento.matricula
-    || '';
-}
 
 export async function validarEPrepararEnvio(evento: any, tpAmb?: number): Promise<PreEnvioResult> {
   const codigoEvento = evento.evento_codigo;
@@ -83,6 +76,7 @@ export async function validarEPrepararEnvio(evento: any, tpAmb?: number): Promis
             dadosOriginais.matricula = mat;
             dadosOriginais.matricula_esocial = mat;
             dadosOriginais.dadosEspecificos.matricula = mat;
+            dadosOriginais.dadosEspecificos.matricula_esocial = mat;
           }
         }
         if ((!dadosOriginais.cnpj || dadosOriginais.cnpj === '17784306000189') && colab.empresa_cnpj) {
@@ -105,6 +99,7 @@ export async function validarEPrepararEnvio(evento: any, tpAmb?: number): Promis
     dadosOriginais.matricula = mat;
     dadosOriginais.matricula_esocial = mat;
     dadosOriginais.dadosEspecificos.matricula = mat;
+    dadosOriginais.dadosEspecificos.matricula_esocial = mat;
   }
 
   if (codigoEvento === 'S-2220') {

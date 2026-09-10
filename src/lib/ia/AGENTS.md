@@ -25,6 +25,7 @@ Ferramentas LLM do portal (`tools.ts`, cliente Microsoft Graph, geradores Excel/
 ### Anti-alucinação (obrigatório)
 
 - Companion + `context-builder`: NUNCA inventar números/status/valores; sempre chamar tool antes de afirmar fatos do portal
+- **Sem tool de logs/schema de BD**: prompts (`COMPANION_SYSTEM` em `/api/ia/companion` + `buildSystemPrompt` em `context-builder.ts`) proíbem fabricar logs/migrations/DDL — sem tool correspondente, a IA diz que não tem acesso
 - Resultados de tools passam por `formatToolResultForLLM` (`_summary` + cap ~10k; e-mail/Teams ~28k) no loop `chatCompletion` / stream
 - Loop sync: até **12** rodadas de tools; stream: até **10** (sem abort prematuro em rodada 3 sem texto)
 
@@ -77,7 +78,7 @@ Ferramentas LLM do portal (`tools.ts`, cliente Microsoft Graph, geradores Excel/
 - **Widget data binding**: `normalizeWidgetData` / `adaptToolResultToWidget` em `kpi-board-shared.ts` — coerção de shapes LLM (`label`/`value`/`assunto`/`labels+datasets`) → metric/list/chart/table; empty-state textual (não só ícones em branco)
 - GET `/api/ia/kpi-boards?resolve=1` (botão Atualizar): executa `dataSource.tool` allowlisted, opcional `dataSource.path` (ex. `comunicacao.email_sinais`); **prefere resultado da tool** sobre snapshot vazio
 - Companion `/api/ia/companion` devolve `dashboard` normalizado; FAB renderiza `GenerativeDashboard` na bolha
-- Companion UI: mensagens da IA via `renderChatMarkdown` (`src/components/IA/chatMarkdown.tsx`, shared com `MessageBubble`); user = plain text
+- Companion UI: mensagens da IA via `renderChatMarkdown` (`src/components/IA/chatMarkdown.tsx`, shared com `MessageBubble`); user = plain text; renderer suporta tabelas GFM, blockquotes, listas estruturadas e headings (só React nodes, sem HTML cru)
 
 ### Fase 3 tools (non-admin + write)
 

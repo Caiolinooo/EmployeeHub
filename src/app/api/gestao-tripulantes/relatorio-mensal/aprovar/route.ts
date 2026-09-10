@@ -197,10 +197,14 @@ export async function POST(request: NextRequest) {
               <h4 style="margin: 0 0 8px 0; color: #002060;">Resumo Consolidado:</h4>
               <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
                 <li><strong>Total de Colaboradores:</strong> ${reportResult.totaisConsolidados.totalColaboradores}</li>
-                <li><strong>ON (A bordo):</strong> ${reportResult.totaisConsolidados.totalON} períodos/semanas</li>
-                <li><strong>DBA (Dobra):</strong> ${reportResult.totaisConsolidados.totalDBA} períodos/semanas</li>
-                <li><strong>FI (Folga Indenizada):</strong> ${reportResult.totaisConsolidados.totalFI} períodos/semanas</li>
-                <li><strong>TRE (Treinamento Indenizado):</strong> ${reportResult.totaisConsolidados.totalTRE} períodos/semanas</li>
+                <li><strong>ON (A bordo):</strong> ${reportResult.totaisConsolidados.totalON} dias</li>
+                <li><strong>DBA (Dobra):</strong> ${reportResult.totaisConsolidados.totalDBA} dias</li>
+                <li><strong>FI (Folga Indenizada):</strong> ${reportResult.totaisConsolidados.totalFI} dias</li>
+                <li><strong>Folga:</strong> ${reportResult.totaisConsolidados.totalFOLGA} dias</li>
+                <li><strong>STB (StandBy):</strong> ${reportResult.totaisConsolidados.totalSTB} dias</li>
+                <li><strong>TRE (Treinamento):</strong> ${reportResult.totaisConsolidados.totalTRE} dias</li>
+                <li><strong>FER (Férias):</strong> ${reportResult.totaisConsolidados.totalFER} dias</li>
+                <li><strong>Alertas de escala/soma:</strong> ${reportResult.totaisConsolidados.colaboradoresComAlerta}</li>
               </ul>
             </div>
 

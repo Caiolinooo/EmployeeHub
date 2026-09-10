@@ -1,3 +1,34 @@
+## Cadastro DP do zero + edição total (2026-09-10)
+
+DP precisa criar funcionário e alterar qualquer dado do cadastro no banco interno já usado (`gt_colaboradores`), sem tabela paralela — base da próxima fase DP/folha.
+
+- [x] Payload compartilhado `colaborador-cadastro.ts` (CPF Módulo 11, `matricula_esocial`, escala sem 14x14 default)
+- [x] Gate `podeMutarCadastroColaborador` em POST/PUT/DELETE `/colaboradores`
+- [x] Form `ColaboradorCadastroForm` em `/department/dp/novo`, GT `/novo` e aba Dados Pessoais
+- [x] Lista DP: botão **Novo colaborador**
+- [x] Testes `colaborador-cadastro.test.ts`
+- [ ] Preview: criar colaborador no DP, reabrir ficha e editar banco/PIS/salário/regime
+
+## Fechamento DP — cálculo NxN fidedigno (2026-09-10)
+
+Relatório ao DP precisava de Dobra/FI/folga/STB reais (comparativo escala + dt início/dt fim), não só contagem de células.
+
+- [x] Motor `fechamento-calculo.ts`: NxN, DBA, FI déficit, folga, STB, checks escala/soma
+- [x] API `GET /relatorio-mensal` + `calculosFolha` (rubricas de dias para folha futura)
+- [x] XLSX (colunas + aba Ciclos NxN) e e-mail ao DP com os mesmos totais
+- [x] UI modal GT + aba Fechamento DP
+- [x] Testes `fechamento-calculo.test.ts`
+- [ ] Preview: abrir fechamento de um mês com embarques 14x14 e conferir ON/DBA/FI/folga/STB vs dt início/dt fim
+
+## e-Social matrícula editável (2026-09-09)
+
+Editor sumiu salvo erro de contrato; envio ia com matrícula velha (`matricula_esocial`).
+
+- [x] `EventoRevisao`: campo sempre visível; gravar recompila XML
+- [x] `POST /corrigir-matricula` volta a gravar cadastro GT
+- [x] `DadosPessoaisTab`: campo `matricula_esocial`
+- [ ] Preview: abrir evento em erro → alterar matrícula → Gravar → XML e cadastro iguais → Enviar
+
 ## e-Social S-2220 datas PT-BR (2026-09-09)
 
 `dtAso=2026-08-10` e alguns `dtExm=2026-10-08` (slash EN MM/DD vs PT-BR DD/MM). Usuário corrige o evento no Supabase; o código não pode repetir o swap.

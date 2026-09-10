@@ -19,7 +19,7 @@ UI de `/department/dp` para o DP operar cadastro de colaboradores, fechamento de
 - Janela vencendo = antecedência admin (padrão 60 dias), não hardcoded 30.
 - DP escolhe data sugerida (escala STB preferida) e assina (`useSignature`); cria `solicitado` para a logística. Status `marcado` / `reprovado` (com motivo) aparecem na mesma aba.
 - Status VENCIDO/VENCENDO vem de `alerta` calculado por data civil local (`YYYY-MM-DD`), não de `new Date(iso)` UTC.
-- Fechamento: preview de totais via `relatorio-mensal`; aprovação em `ModalAprovacaoFechamento` com `useSignature().requestSignature` (modal global) e ator via `useSupabaseAuth` (não `AuthContext` legado). Lista nominada = exatamente essas pessoas, qualquer role; sem nomes, um ADMIN/MANAGER assina e conclui.
+- Fechamento: preview de totais via `relatorio-mensal` (ON, DBA, FI, Folga, STB, TRE/FER, alertas NxN + `calculosFolha`); aprovação em `ModalAprovacaoFechamento` com `useSignature().requestSignature` (modal global) e ator via `useSupabaseAuth` (não `AuthContext` legado). Lista nominada = exatamente essas pessoas, qualquer role; sem nomes, um ADMIN/MANAGER assina e conclui. Números vêm de `fechamento-calculo.ts` (dt início/dt fim, sem inventar janela).
 - Header: pills compactas (não grid de KPI). Colaboradores = `filteredColabs.length` visíveis + ativos na folha + carregados na consulta (não o total bruto como se fosse a tabela). ASO = vencidos + janela de antecedência. Sem cards decorativos “Escalas & Fechamento” / “e-Social Integrado”.
 - Lista: `GET /colaboradores?limit=5000`; se `pagination.total` > linhas carregadas, pill “Lista incompleta” + `console.warn`. Filtros Empresa/Embarcação/Cargo (`SearchableCreatableSelect`): Enter com texto seleciona o primeiro resultado real, não “Todas…”. Enter com campo vazio continua limpando o filtro. Busca por CPF ignora pontuação-só (não casa todos os CPFs).
 
@@ -27,6 +27,8 @@ UI de `/department/dp` para o DP operar cadastro de colaboradores, fechamento de
 
 - Novos campos da tabela DP devem existir em `LIST_SELECT` + flatten.
 - Clique na linha de ASO **ou** na lista de colaboradores abre o `CollaboratorModal` do colaborador.
+- **Cadastro do zero**: botão **Novo colaborador** no header → `/department/dp/novo` (`ColaboradorCadastroForm` + `POST /colaboradores`). Mesma tabela `gt_colaboradores`. GT reusa o form em `/department/gestao-tripulantes/novo`.
+- **Editar qualquer dado**: linha/Editar abre o modal; aba Dados Pessoais → Editar monta o form completo (pessoais, docs, banco, vínculo, e-Social) via `PUT /colaboradores/[id]`.
 - **Desligamento**: não há ação na lista. Abrir o modal → botão/aba **Desligamento** (`DesligamentoModal`). API `GET|POST /colaboradores/[id]/desligamento`. Colaborador já inativo com `gt_desligamentos` mostra histórico (não desliga de novo).
 - Viewport: `GtPageShell` preenche o `<main>` do MainLayout (`flex-1 min-h-0 min-w-0`). Header (título + pills de métricas), abas e filtros `shrink-0`; lista de colaboradores e painel ASO `flex-1 min-h-0 min-w-0 overflow-auto` (`GT_PAGE_SCROLLPORT_CLASS`). Tabela da lista `min-w-[850px]`; ASO `min-w-[860px]` — scroll horizontal no pane, não na página. Sem faixa de KPI cards em todas as abas. Sem scroll duplo da página.
 
@@ -37,8 +39,9 @@ UI de `/department/dp` para o DP operar cadastro de colaboradores, fechamento de
 - Colunas Cargo, Centro de Custo, Empresa e Escala preenchidas quando o cadastro tem FK.
 - Coluna Status mostra Ativo/Inativo **e** a pílula de embarque da célula de hoje (ON → Embarcado).
 - Aba ASO lista nome/CPF/cargo (não `N/A` em massa); validade em `dd/mm/aaaa`; vencido só se a data local já passou; permite Agendar → logística; marcado após aprovação.
-- Aba Fechamento mostra totais ON/DBA/FI/TRE do mês selecionado. Assinar abre o SignatureModal global; cancelar não quebra; sem assinatura cadastrada o cadastro no próprio modal precede o POST.
+- Aba Fechamento mostra totais ON/DBA/FI/Folga/STB/TRE/FER e alertas NxN do mês selecionado. Assinar abre o SignatureModal global; cancelar não quebra; sem assinatura cadastrada o cadastro no próprio modal precede o POST.
 - Clique na linha do colaborador → `CollaboratorModal` → Desligar / aba Desligamento. A lista DP não tem botão próprio de rescisão.
+- Header DP tem **Novo colaborador** → `/department/dp/novo`. Salvar volta para `/department/dp`. Editar no modal cobre banco/PIS/CTPS/salário/contrato, não só identidade.
 
 ## Child DOX Index
 

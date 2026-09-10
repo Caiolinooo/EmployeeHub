@@ -322,7 +322,7 @@ export default function ModalAprovacaoFechamento({
 
           {/* Cards de KPIs Consolidados (Cálculo Diário) */}
           {previewData?.totaisConsolidados && (
-            <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
               <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl">
                 <span className="text-[11px] font-semibold text-slate-500 uppercase block">Tripulantes</span>
                 <span className="text-xl font-black text-slate-900">
@@ -331,39 +331,55 @@ export default function ModalAprovacaoFechamento({
                 <span className="text-[10px] text-slate-400 block mt-0.5">Total filtrado</span>
               </div>
               <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl">
-                <span className="text-[11px] font-semibold text-emerald-700 uppercase block">Dias ON (A Bordo)</span>
+                <span className="text-[11px] font-semibold text-emerald-700 uppercase block">Dias ON</span>
                 <span className="text-xl font-black text-emerald-800">
                   {previewData.totaisConsolidados.totalON} <span className="text-xs font-normal">dias</span>
                 </span>
-                <span className="text-[10px] text-emerald-600/70 block mt-0.5">Embarque regular</span>
+                <span className="text-[10px] text-emerald-600/70 block mt-0.5">A bordo regular</span>
               </div>
               <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl">
-                <span className="text-[11px] font-semibold text-amber-700 uppercase block">Dias DBA (Dobra)</span>
+                <span className="text-[11px] font-semibold text-amber-700 uppercase block">Dias DBA</span>
                 <span className="text-xl font-black text-amber-800">
                   {previewData.totaisConsolidados.totalDBA} <span className="text-xs font-normal">dias</span>
                 </span>
-                <span className="text-[10px] text-amber-600/70 block mt-0.5">Extensão de escala</span>
+                <span className="text-[10px] text-amber-600/70 block mt-0.5">Dobra (excede NxN)</span>
               </div>
               <div className="bg-blue-50 border border-blue-200 p-3 rounded-xl">
-                <span className="text-[11px] font-semibold text-blue-700 uppercase block">Dias FI (Folga Ind.)</span>
+                <span className="text-[11px] font-semibold text-blue-700 uppercase block">Dias FI</span>
                 <span className="text-xl font-black text-blue-800">
                   {previewData.totaisConsolidados.totalFI} <span className="text-xs font-normal">dias</span>
                 </span>
-                <span className="text-[10px] text-blue-600/70 block mt-0.5">Indenização folga</span>
+                <span className="text-[10px] text-blue-600/70 block mt-0.5">Folga indenizada</span>
+              </div>
+              <div className="bg-sky-50 border border-sky-200 p-3 rounded-xl">
+                <span className="text-[11px] font-semibold text-sky-700 uppercase block">Dias Folga</span>
+                <span className="text-xl font-black text-sky-800">
+                  {previewData.totaisConsolidados.totalFOLGA ?? 0} <span className="text-xs font-normal">dias</span>
+                </span>
+                <span className="text-[10px] text-sky-600/70 block mt-0.5">Descanso do ciclo</span>
+              </div>
+              <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-xl">
+                <span className="text-[11px] font-semibold text-yellow-800 uppercase block">Dias STB</span>
+                <span className="text-xl font-black text-yellow-900">
+                  {previewData.totaisConsolidados.totalSTB ?? 0} <span className="text-xs font-normal">dias</span>
+                </span>
+                <span className="text-[10px] text-yellow-700/70 block mt-0.5">StandBy</span>
               </div>
               <div className="bg-purple-50 border border-purple-200 p-3 rounded-xl">
-                <span className="text-[11px] font-semibold text-purple-700 uppercase block">Dias TRE (Treinamento)</span>
+                <span className="text-[11px] font-semibold text-purple-700 uppercase block">TRE / FER</span>
                 <span className="text-xl font-black text-purple-800">
-                  {previewData.totaisConsolidados.totalTRE} <span className="text-xs font-normal">dias</span>
+                  {previewData.totaisConsolidados.totalTRE ?? 0}
+                  <span className="text-xs font-normal"> / </span>
+                  {previewData.totaisConsolidados.totalFER ?? 0}
                 </span>
-                <span className="text-[10px] text-purple-600/70 block mt-0.5">Capacitação</span>
+                <span className="text-[10px] text-purple-600/70 block mt-0.5">Treino / férias</span>
               </div>
-              <div className="bg-violet-50 border border-violet-200 p-3 rounded-xl">
-                <span className="text-[11px] font-semibold text-violet-700 uppercase block">Dias FER (Férias)</span>
-                <span className="text-xl font-black text-violet-800">
-                  {previewData.totaisConsolidados.totalFER ?? 0} <span className="text-xs font-normal">dias</span>
+              <div className={`border p-3 rounded-xl ${(previewData.totaisConsolidados.colaboradoresComAlerta ?? 0) > 0 ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'}`}>
+                <span className="text-[11px] font-semibold uppercase block text-slate-600">Check escala</span>
+                <span className="text-xl font-black text-slate-900">
+                  {previewData.totaisConsolidados.colaboradoresComAlerta ?? 0}
                 </span>
-                <span className="text-[10px] text-violet-600/70 block mt-0.5">Descanso anual</span>
+                <span className="text-[10px] text-slate-500 block mt-0.5">Com alerta NxN</span>
               </div>
             </div>
           )}
@@ -446,8 +462,8 @@ export default function ModalAprovacaoFechamento({
               </div>
             </div>
 
-            <div className="border border-gray-200 rounded-xl min-w-0 max-h-48 overflow-auto">
-              <table className="min-w-[720px] w-full divide-y divide-gray-200 text-left text-xs">
+            <div className="border border-gray-200 rounded-xl min-w-0 max-h-56 overflow-auto">
+              <table className="min-w-[1100px] w-full divide-y divide-gray-200 text-left text-xs">
                 <thead className="bg-gray-100 text-gray-700 font-semibold sticky top-0">
                   <tr>
                     <th className="px-3 py-2">Matrícula</th>
@@ -457,29 +473,36 @@ export default function ModalAprovacaoFechamento({
                     <th className="px-3 py-2">Centro de Custo</th>
                     <th className="px-3 py-2">Embarcação</th>
                     <th className="px-3 py-2 text-center">Escala</th>
-                    <th className="px-3 py-2 text-center bg-emerald-100/50">Dias ON</th>
-                    <th className="px-3 py-2 text-center bg-amber-100/50">Dias DBA</th>
-                    <th className="px-3 py-2 text-center bg-blue-100/50">Dias FI</th>
-                    <th className="px-3 py-2 text-center bg-purple-100/50">Dias TRE</th>
-                    <th className="px-3 py-2 text-center bg-violet-100/50">Dias FER</th>
+                    <th className="px-3 py-2 text-center bg-emerald-100/50">ON</th>
+                    <th className="px-3 py-2 text-center bg-amber-100/50">DBA</th>
+                    <th className="px-3 py-2 text-center bg-blue-100/50">FI</th>
+                    <th className="px-3 py-2 text-center bg-sky-100/50">Folga</th>
+                    <th className="px-3 py-2 text-center bg-yellow-100/50">STB</th>
+                    <th className="px-3 py-2 text-center bg-purple-100/50">TRE</th>
+                    <th className="px-3 py-2 text-center bg-violet-100/50">FER</th>
+                    <th className="px-3 py-2 text-center">Check</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
                   {isLoading ? (
                     <tr>
-                      <td colSpan={12} className="px-4 py-8 text-center text-gray-500">
+                      <td colSpan={15} className="px-4 py-8 text-center text-gray-500">
                         <FiRefreshCw className="animate-spin inline w-4 h-4 mr-1 text-abz-blue" />
-                        Calculando totais diários da escala...
+                        Calculando comparativo NxN (dt início / dt fim)...
                       </td>
                     </tr>
                   ) : filteredColabs.length === 0 ? (
                     <tr>
-                      <td colSpan={12} className="px-4 py-6 text-center text-gray-500">
+                      <td colSpan={15} className="px-4 py-6 text-center text-gray-500">
                         Nenhum registro encontrado para este filtro.
                       </td>
                     </tr>
                   ) : (
-                    filteredColabs.map((c: any, idx: number) => (
+                    filteredColabs.map((c: any, idx: number) => {
+                      const escalaOk = c.checagens?.escala_ok !== false;
+                      const somaOk = c.checagens?.soma_ok !== false;
+                      const checkOk = escalaOk && somaOk;
+                      return (
                       <tr key={c.cpf || idx} className="hover:bg-gray-50">
                         <td className="px-3 py-2 font-mono font-bold text-gray-800">{c.matricula || '-'}</td>
                         <td className="px-3 py-2 font-medium text-gray-900">{c.nome}</td>
@@ -497,14 +520,29 @@ export default function ModalAprovacaoFechamento({
                         <td className="px-3 py-2 text-center font-bold text-blue-700 bg-blue-50/30">
                           {c.total_dias_fi ?? c.total_fi ?? 0}
                         </td>
+                        <td className="px-3 py-2 text-center font-bold text-sky-700 bg-sky-50/30">
+                          {c.total_dias_folga ?? 0}
+                        </td>
+                        <td className="px-3 py-2 text-center font-bold text-yellow-800 bg-yellow-50/30">
+                          {c.total_dias_stb ?? 0}
+                        </td>
                         <td className="px-3 py-2 text-center font-bold text-purple-700 bg-purple-50/30">
                           {c.total_dias_tre ?? c.total_tre ?? 0}
                         </td>
                         <td className="px-3 py-2 text-center font-bold text-violet-700 bg-violet-50/30">
                           {c.total_dias_fer ?? c.total_fer ?? 0}
                         </td>
+                        <td className="px-3 py-2 text-center">
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${checkOk ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}
+                            title={(c.checagens?.alertas || []).join(' | ') || undefined}
+                          >
+                            {checkOk ? 'OK' : 'Alerta'}
+                          </span>
+                        </td>
                       </tr>
-                    ))
+                      );
+                    })
                   )}
                 </tbody>
               </table>

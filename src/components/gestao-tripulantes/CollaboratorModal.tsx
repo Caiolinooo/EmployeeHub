@@ -94,6 +94,7 @@ interface CollaboratorDetail {
   endereco_uf: string;
   endereco_cep: string;
   matricula: string;
+  matricula_esocial?: string | null;
   cargo_id?: string | null;
   cargo_nome: string;
   empresa_id?: string | null;

@@ -22,7 +22,11 @@ import {
   idsComPrimarioVencido,
   type DocumentoAgrupavel,
 } from '@/lib/gestao-tripulantes/documento-historico';
-import { persistirCamposEscala } from '@/lib/gestao-tripulantes/regime-escala';
+import { montarPayloadCadastro } from '@/lib/gestao-tripulantes/colaborador-cadastro';
+import {
+  MENSAGEM_CADASTRO_NEGADO,
+  podeMutarCadastroColaborador,
+} from '@/lib/gestao-tripulantes/colaborador-cadastro-auth';
 
 const DOC_PENDENCY_SELECT =
   'id, colaborador_id, tipo_documento, subtipo, titulo, descricao, origem, numero_documento, numero_rastreio, data_emissao, data_validade, status_validacao, created_at';
@@ -355,100 +359,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { nome_completo, cpf } = body;
+    const podeMutar = await podeMutarCadastroColaborador(payload.userId, payload.role);
+    if (!podeMutar) {
+      return NextResponse.json({ error: MENSAGEM_CADASTRO_NEGADO }, { status: 403 });
+    }
 
-    if (!nome_completo || !cpf) {
-      return NextResponse.json({ error: 'Nome completo e CPF são obrigatórios' }, { status: 400 });
+    const body = await request.json();
+    const montado = montarPayloadCadastro(body as Record<string, unknown>, 'create');
+    if (!montado.ok) {
+      return NextResponse.json({ error: montado.error }, { status: montado.status });
+    }
+
+    const existing = await findColaboradorByCpf(String(montado.data.cpf));
+    if (existing) {
+      return NextResponse.json({ error: 'CPF já cadastrado para outro colaborador' }, { status: 409 });
     }
 
     const { data: newColaborador, error: createError } = await supabaseAdmin
       .from('gt_colaboradores')
-      .insert({
-        nome_completo, cpf,
-        rg: body.rg || null,
-        orgao_emissor: body.orgao_emissor || null,
-        data_emissao_rg: body.data_emissao_rg || null,
-        data_nascimento: body.data_nascimento || null,
-        sexo: body.sexo || null,
-        genero: body.genero || null,
-        estado_civil: body.estado_civil || null,
-        peso: body.peso || null,
-        altura: body.altura || null,
-        raca_cor: body.raca_cor || null,
-        escolaridade: body.escolaridade || null,
-        deficiencia: body.deficiencia || null,
-        deficiencia_cid: body.deficiencia_cid || null,
-        nacionalidade: body.nacionalidade || 'BRASILEIRA',
-        naturalidade: body.naturalidade || null,
-        naturalidade_uf: body.naturalidade_uf || null,
-        pais_nascimento: body.pais_nascimento || 'Brasil',
-        nome_mae: body.nome_mae || null,
-        nome_pai: body.nome_pai || null,
-        email: body.email || null,
-        telefone: body.telefone || null,
-        endereco_logradouro: body.endereco_logradouro || null,
-        endereco_numero: body.endereco_numero || null,
-        endereco_complemento: body.endereco_complemento || null,
-        endereco_bairro: body.endereco_bairro || null,
-        endereco_cidade: body.endereco_cidade || null,
-        endereco_uf: body.endereco_uf || null,
-        endereco_cep: body.endereco_cep || null,
-        dados_bancarios: body.dados_bancarios || null,
-        pis_pasep: body.pis_pasep || null,
-        ctps: body.ctps || null,
-        ctps_serie: body.ctps_serie || null,
-        ctps_uf: body.ctps_uf || null,
-        cnh: body.cnh || null,
-        cnh_categoria: body.cnh_categoria || null,
-        cnh_validade: body.cnh_validade || null,
-        cnh_uf: body.cnh_uf || null,
-        titulo_eleitor: body.titulo_eleitor || null,
-        titulo_eleitor_zona: body.titulo_eleitor_zona || null,
-        titulo_eleitor_sessao: body.titulo_eleitor_sessao || null,
-        certidao_tipo: body.certidao_tipo || null,
-        certidao_numero: body.certidao_numero || null,
-        certidao_cartorio: body.certidao_cartorio || null,
-        matricula: body.matricula || null,
-        departamento: body.departamento || null,
-        cargo_id: body.cargo_id || null,
-        centro_custo_id: body.centro_custo_id || null,
-        empresa_id: body.empresa_id || null,
-        embarcacao_atual_id: body.embarcacao_atual_id || null,
-        data_admissao: body.data_admissao || null,
-        data_demissao: body.data_demissao || null,
-        motivo_demissao: body.motivo_demissao || null,
-        salario: body.salario || null,
-        tipo_salario: body.tipo_salario || null,
-        forma_pagamento: body.forma_pagamento || null,
-        sindicato: body.sindicato || null,
-        cbo: body.cbo || null,
-        jornada_semanal: body.jornada_semanal || null,
-        jornada_mensal: body.jornada_mensal || null,
-        tipo_contrato: body.tipo_contrato || null,
-        prazo_contrato: body.prazo_contrato || null,
-        categoria_contrato: body.categoria_contrato || null,
-        tipo_trabalho: body.tipo_trabalho || null,
-        tipo_mao_de_obra: body.tipo_mao_de_obra || null,
-        ...persistirCamposEscala({
-          regime_trabalho: body.regime_trabalho,
-          escala_embarque: body.escala_embarque,
-          escala_folga: body.escala_folga,
-        }),
-        status_embarque: body.status_embarque || 'desembarcado',
-        dados_saude: body.dados_saude || null,
-        tipo_admissao: body.tipo_admissao || null,
-        natureza_atividade: body.natureza_atividade || null,
-        tipo_jornada: body.tipo_jornada || null,
-        tipo_lotacao: body.tipo_lotacao || null,
-        origem: 'manual',
-      })
+      .insert(montado.data)
       .select('*')
       .single();
 
     if (createError) {
       console.error('Erro ao criar colaborador:', createError);
-      return NextResponse.json({ error: 'Erro ao criar colaborador' }, { status: 500 });
+      if (createError.code === '23505') {
+        return NextResponse.json({ error: 'CPF já cadastrado para outro colaborador' }, { status: 409 });
+      }
+      return NextResponse.json({ error: createError.message || 'Erro ao criar colaborador' }, { status: 500 });
     }
 
     if (newColaborador && newColaborador.id) {

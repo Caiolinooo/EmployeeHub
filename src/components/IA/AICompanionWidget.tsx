@@ -283,7 +283,7 @@ export default function AICompanionWidget() {
                   {msg.sender === 'user' ? (
                     <div className="whitespace-pre-wrap">{msg.text}</div>
                   ) : (
-                    <div className="prose prose-sm max-w-none prose-p:my-1 prose-li:my-0 prose-headings:my-1.5 text-xs text-gray-800">
+                    <div className="text-xs leading-relaxed text-gray-800 min-w-0">
                       {renderChatMarkdown(stripReasoningBlocks(msg.text))}
                     </div>
                   )}

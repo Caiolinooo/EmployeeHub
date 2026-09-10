@@ -1,9 +1,20 @@
 import { supabaseAdmin } from '@/lib/supabase';
-import { normalizeCpf, mapDbTipoToCodigo } from '@/lib/gestao-tripulantes/escala-tipos';
-import { isRotacaoPrevista } from '@/lib/gestao-tripulantes/embarque-status';
+import { normalizeCpf } from '@/lib/gestao-tripulantes/escala-tipos';
 import { extractEscalaDias } from '@/lib/gestao-tripulantes/regime-escala';
+import {
+  calcularFechamentoColaborador,
+  montarRubricasFolha,
+  somarTotaisFechamento,
+  statusSemanaFechamento,
+  type CalculoFechamentoColaborador,
+  type ChecagensFechamento,
+  type CicloEmbarqueCalculo,
+  type RubricasDiasFechamento,
+  type TotaisConsolidadosFechamento,
+} from '@/lib/gestao-tripulantes/fechamento-calculo';
 
 export { extractEscalaDias };
+export type { RubricasDiasFechamento, TotaisConsolidadosFechamento };
 
 export interface AprovadorRegistro {
   nome: string;
@@ -25,6 +36,7 @@ export interface RelatorioEscalaOptions {
   cargo?: string;
   statusAtivo?: 'ativos' | 'inativos' | 'todos';
   busca?: string;
+  colaboradorId?: string;
   aprovador?: AprovadorRegistro;
   aprovadores?: AprovadorRegistro[];
 }
@@ -39,27 +51,33 @@ export interface ColaboradorTotaisEscala {
   empresa: string;
   embarcacao: string;
   regime_escala: string;
+  escala_embarque: number;
+  escala_folga: number;
   total_dias_on: number;
   total_dias_dba: number;
   total_dias_fi: number;
+  total_dias_fi_evento: number;
+  total_dias_fi_deficit: number;
   total_dias_tre: number;
   total_dias_fer?: number;
+  total_dias_stb: number;
+  total_dias_folga: number;
+  embarques: CicloEmbarqueCalculo[];
+  checagens: ChecagensFechamento;
   semanas: Record<string, string>;
 }
 
 export interface RelatorioEscalaResult {
   buffer: Buffer;
-  totaisConsolidados: {
-    totalColaboradores: number;
-    totalON: number; // total de dias ON
-    totalDBA: number; // total de dias DBA
-    totalFI: number; // total de dias FI
-    totalTRE: number; // total de dias TRE
-    totalFER?: number; // total de dias Férias
-  };
+  totaisConsolidados: TotaisConsolidadosFechamento;
   colaboradoresTotais: ColaboradorTotaisEscala[];
+  calculosFolha: RubricasDiasFechamento[];
   semanas: string[];
 }
+
+const ID_COLS = 8;
+const METRIC_COLS = 9;
+const FIXED_COLS = ID_COLS + METRIC_COLS;
 
 function parseLocalDate(str: string | null | undefined): Date | null {
   if (!str || typeof str !== 'string' || str.trim() === '') return null;
@@ -84,23 +102,12 @@ function formatCpfDisplay(cpf: string): string {
   return cpf;
 }
 
-function fimEmbarqueParaDobra(
-  h: { data_desembarque?: string | null; data_prevista_desembarque?: string | null },
-  hStart: Date,
-  maxDiasRegulares: number,
-  aplicaDobraAutomatica: boolean,
-): Date | null {
-  if (h.data_desembarque) return parseLocalDate(h.data_desembarque);
-  if (h.data_prevista_desembarque) return parseLocalDate(h.data_prevista_desembarque);
-  // No-rotation / empty regime: do not invent a 14-day ON window.
-  if (aplicaDobraAutomatica && maxDiasRegulares > 0) {
-    return new Date(hStart.getTime() + maxDiasRegulares * 86400000);
-  }
-  return new Date(hStart.getTime());
+function labelCheck(ok: boolean): string {
+  return ok ? 'OK' : 'ALERTA';
 }
 
 export async function gerarRelatorioEscalaMensal(
-  options: RelatorioEscalaOptions = {}
+  options: RelatorioEscalaOptions = {},
 ): Promise<RelatorioEscalaResult> {
   const xlsxMod = (await import('xlsx-js-style')) as { utils?: unknown; default?: { utils?: unknown } };
   const XLSX = (xlsxMod.utils ? xlsxMod : (xlsxMod as any).default) as typeof import('xlsx-js-style');
@@ -124,7 +131,6 @@ export async function gerarRelatorioEscalaMensal(
   dtInicio.setHours(0, 0, 0, 0);
   dtFim.setHours(23, 59, 59, 999);
 
-  // 1. Geração de Semanas de Cronograma
   const snapToSaturday = (d: Date) => {
     const res = new Date(d);
     const day = res.getDay();
@@ -151,7 +157,6 @@ export async function gerarRelatorioEscalaMensal(
     curWeek.setDate(curWeek.getDate() + 7);
   }
 
-  // 2. Buscar Dados no Banco (Colaboradores, Histórico de Eventos de Escala e Afastamentos/Férias)
   const [{ data: colabs }, { data: embarques }, { data: afastamentosRows }] = await Promise.all([
     supabaseAdmin
       .from('gt_colaboradores')
@@ -182,30 +187,32 @@ export async function gerarRelatorioEscalaMensal(
   const hist = embarques || [];
   const afastamentos = afastamentosRows || [];
 
-  // Aplicar filtros especificados
   if (options.empresa) {
     const emp = options.empresa.toLowerCase().trim();
-    colaboradores = colaboradores.filter(c => ((c.empresa as any)?.nome || '').toLowerCase().trim() === emp);
+    colaboradores = colaboradores.filter((c) => ((c.empresa as any)?.nome || '').toLowerCase().trim() === emp);
   }
   if (options.embarcacao) {
     const emb = options.embarcacao.toLowerCase().trim();
-    colaboradores = colaboradores.filter(c => ((c.embarcacao_atual as any)?.nome || '').toLowerCase().trim() === emb);
+    colaboradores = colaboradores.filter((c) => ((c.embarcacao_atual as any)?.nome || '').toLowerCase().trim() === emb);
   }
   if (options.cargo) {
     const car = options.cargo.toLowerCase().trim();
-    colaboradores = colaboradores.filter(c => ((c.cargo as any)?.nome || '').toLowerCase().trim() === car);
+    colaboradores = colaboradores.filter((c) => ((c.cargo as any)?.nome || '').toLowerCase().trim() === car);
   }
   if (options.statusAtivo === 'ativos') {
-    colaboradores = colaboradores.filter(c => c.ativo !== false);
+    colaboradores = colaboradores.filter((c) => c.ativo !== false);
   } else if (options.statusAtivo === 'inativos') {
-    colaboradores = colaboradores.filter(c => c.ativo === false);
+    colaboradores = colaboradores.filter((c) => c.ativo === false);
+  }
+  if (options.colaboradorId) {
+    colaboradores = colaboradores.filter((c) => c.id === options.colaboradorId);
   }
   if (options.busca) {
     const q = options.busca.toLowerCase().trim();
-    colaboradores = colaboradores.filter(c => 
-      (c.nome_completo || '').toLowerCase().includes(q) ||
-      (c.cpf || '').includes(q) ||
-      (c.matricula || '').toLowerCase().includes(q)
+    colaboradores = colaboradores.filter((c) =>
+      (c.nome_completo || '').toLowerCase().includes(q)
+      || (c.cpf || '').includes(q)
+      || (c.matricula || '').toLowerCase().includes(q),
     );
   }
 
@@ -223,217 +230,75 @@ export async function gerarRelatorioEscalaMensal(
     afastPorColab.set(a.colaborador_id, arr);
   }
 
-  let totalConsolDiasON = 0;
-  let totalConsolDiasDBA = 0;
-  let totalConsolDiasFI = 0;
-  let totalConsolDiasTRE = 0;
-  let totalConsolDiasFER = 0;
-
   const colabTotais: ColaboradorTotaisEscala[] = [];
+  const calculosFolha: RubricasDiasFechamento[] = [];
+  const calculos: CalculoFechamentoColaborador[] = [];
 
-  // ----------------------------------------------------
-  // MOTOR DE CÁLCULO DIÁRIO DE DIAS EMBARCADOS, DOBRAS (DBA), FI, TRE E FÉRIAS
-  // ----------------------------------------------------
   for (const c of colaboradores) {
     const cpfNorm = normalizeCpf(c.cpf || '');
     const cHist = histPorColab.get(c.id) || [];
     const cAfast = afastPorColab.get(c.id) || [];
+    const calc = calcularFechamentoColaborador(c, cHist, cAfast, { dataInicio: dtInicio, dataFim: dtFim });
+    calculos.push(calc);
 
-    // Limite regular da escala de embarque (NxN). sem_escala/administrativo/onshore → 0, sem DBA auto.
-    const {
-      diasEmbarque: maxDiasRegulares,
-      label: regimeEscalaLabel,
-      aplicaDobraAutomatica,
-    } = extractEscalaDias(c);
-
-    let diasON = 0;
-    let diasDBA = 0;
-    let diasFI = 0;
-    let diasTRE = 0;
-    let diasFER = 0;
-
-    // Iteração diária estrita dentro do período do fechamento
-    const dayIter = new Date(dtInicio);
-    while (dayIter <= dtFim) {
-      const currentDayTime = dayIter.getTime();
-      let statusDoDia = '';
-
-      // 1. Verificar se o colaborador está em Afastamento / Férias neste dia
-      for (const af of cAfast) {
-        if (!af.data_inicio) continue;
-        const afStart = parseLocalDate(af.data_inicio);
-        if (!afStart) continue;
-        const afEnd = af.data_fim ? parseLocalDate(af.data_fim) : (af.data_prevista_retorno ? parseLocalDate(af.data_prevista_retorno) : null);
-        if (!afEnd) continue;
-        afEnd.setHours(23, 59, 59, 999);
-
-        if (currentDayTime >= afStart.getTime() && currentDayTime <= afEnd.getTime()) {
-          const tipoAf = String(af.tipo_afastamento || '').toLowerCase();
-          if (tipoAf === 'ferias' || tipoAf === 'férias') {
-            statusDoDia = 'FER';
-          } else {
-            statusDoDia = 'AFAST';
-          }
-          break;
-        }
-      }
-
-      // 2. Se não estiver afastado/férias, verificar embarques
-      if (!statusDoDia) {
-        for (const h of cHist) {
-          if (!h.data_embarque) continue;
-          const hStart = parseLocalDate(h.data_embarque);
-          if (!hStart) continue;
-          const hEnd = fimEmbarqueParaDobra(h, hStart, maxDiasRegulares, aplicaDobraAutomatica);
-          if (!hEnd) continue;
-          hEnd.setHours(23, 59, 59, 999);
-
-          if (currentDayTime >= hStart.getTime() && currentDayTime <= hEnd.getTime()) {
-            const cod = mapDbTipoToCodigo(h.tipo).toUpperCase();
-            const diasCorridosEmbarque = Math.floor((currentDayTime - hStart.getTime()) / 86400000) + 1;
-
-            if (cod === 'DBA' || cod === 'DOBRA') {
-              // Evento explicitamente cadastrado como dobra: todos os dias são DBA
-              statusDoDia = 'DBA';
-            } else if (cod === 'FI' || cod === 'FOLGA_INDENIZADA') {
-              statusDoDia = 'FI';
-            } else if (cod === 'TRE' || cod === 'TF' || cod === 'TREINAMENTO') {
-              statusDoDia = 'TRE';
-            } else if (cod === 'STB' || cod === 'STANDBY') {
-              statusDoDia = 'STB';
-            } else if (cod === 'OFFC' || cod === 'OFF-C' || cod === 'TROCA_TURMA') {
-              statusDoDia = 'OFF-C';
-            } else {
-              // Rotação NxN: overflow contínuo vira DBA. Sem escala → nunca tratar como 14x14.
-              if (aplicaDobraAutomatica && maxDiasRegulares > 0 && diasCorridosEmbarque > maxDiasRegulares) {
-                statusDoDia = 'DBA';
-              } else if (isRotacaoPrevista(h.tipo, h.observacoes)) {
-                statusDoDia = 'ON*';
-              } else {
-                statusDoDia = 'ON';
-              }
-            }
-            break;
-          }
-        }
-      }
-
-      if (statusDoDia === 'ON') diasON++;
-      else if (statusDoDia === 'DBA') diasDBA++;
-      else if (statusDoDia === 'FI') diasFI++;
-      else if (statusDoDia === 'TRE') diasTRE++;
-      else if (statusDoDia === 'FER') diasFER++;
-
-      dayIter.setDate(dayIter.getDate() + 1);
-    }
-
-    // Mapa Semanal para visualização da grade no Excel
     const semanasMap: Record<string, string> = {};
     for (const w of weeks) {
-      const wStart = new Date(w.date);
-      wStart.setHours(0, 0, 0, 0);
-      const wEnd = new Date(wStart);
-      wEnd.setDate(wEnd.getDate() + 6);
-      wEnd.setHours(23, 59, 59, 999);
-
-      let weekStatus = '';
-
-      // Verificar afastamento na semana
-      for (const af of cAfast) {
-        if (!af.data_inicio) continue;
-        const afStart = parseLocalDate(af.data_inicio);
-        if (!afStart) continue;
-        const afEnd = af.data_fim ? parseLocalDate(af.data_fim) : (af.data_prevista_retorno ? parseLocalDate(af.data_prevista_retorno) : null);
-        if (!afEnd) continue;
-        afEnd.setHours(23, 59, 59, 999);
-
-        if (wStart <= afEnd && wEnd >= afStart) {
-          const tipoAf = String(af.tipo_afastamento || '').toLowerCase();
-          weekStatus = tipoAf === 'ferias' || tipoAf === 'férias' ? 'FER' : 'AFAST';
-          break;
-        }
-      }
-
-      if (!weekStatus) {
-        for (const h of cHist) {
-          if (!h.data_embarque) continue;
-          const hStart = parseLocalDate(h.data_embarque);
-          if (!hStart) continue;
-          const hEnd = fimEmbarqueParaDobra(h, hStart, maxDiasRegulares, aplicaDobraAutomatica);
-          if (!hEnd) continue;
-          hEnd.setHours(23, 59, 59, 999);
-
-          if (wStart <= hEnd && wEnd >= hStart) {
-            const cod = mapDbTipoToCodigo(h.tipo).toUpperCase();
-            if (cod === 'DBA' || cod === 'DOBRA') {
-              weekStatus = 'DBA';
-            } else if (cod === 'FI') {
-              weekStatus = 'FI';
-            } else if (cod === 'TRE' || cod === 'TF') {
-              weekStatus = 'TRE';
-            } else if (cod === 'STB') {
-              weekStatus = 'STB';
-            } else if (cod === 'OFFC' || cod === 'OFF-C') {
-              weekStatus = 'OFF-C';
-            } else {
-              const diasDesdeInicio = Math.floor((wStart.getTime() - hStart.getTime()) / 86400000) + 1;
-              if (aplicaDobraAutomatica && maxDiasRegulares > 0 && diasDesdeInicio > maxDiasRegulares) {
-                weekStatus = 'DBA';
-              } else if (isRotacaoPrevista(h.tipo, h.observacoes)) {
-                weekStatus = 'ON*';
-              } else {
-                weekStatus = 'ON';
-              }
-            }
-            break;
-          }
-        }
-      }
-
-      semanasMap[w.dateStr] = weekStatus;
+      semanasMap[w.dateStr] = statusSemanaFechamento(calc.statusPorDia, w.date);
     }
-
-    totalConsolDiasON += diasON;
-    totalConsolDiasDBA += diasDBA;
-    totalConsolDiasFI += diasFI;
-    totalConsolDiasTRE += diasTRE;
-    totalConsolDiasFER += diasFER;
 
     const ccObj = c.centro_custo as any;
     const ccLabel = ccObj ? `${ccObj.codigo ? `${ccObj.codigo} - ` : ''}${ccObj.nome || ''}` : 'NÃO DEFINIDO';
+    const nome = (c.nome_completo || '').toUpperCase();
+    const cargo = ((c.cargo as any)?.nome || 'SEM CARGO').toUpperCase();
+    const centroCusto = ccLabel.toUpperCase();
 
     colabTotais.push({
       matricula: c.matricula || '-',
       cpf: cpfNorm,
       cpf_formatado: formatCpfDisplay(cpfNorm),
-      nome: (c.nome_completo || '').toUpperCase(),
-      cargo: ((c.cargo as any)?.nome || 'SEM CARGO').toUpperCase(),
-      centro_custo: ccLabel.toUpperCase(),
+      nome,
+      cargo,
+      centro_custo: centroCusto,
       empresa: ((c.empresa as any)?.nome || 'ABZ').toUpperCase(),
       embarcacao: ((c.embarcacao_atual as any)?.nome || options.embarcacao || 'TODAS').toUpperCase(),
-      regime_escala: regimeEscalaLabel,
-      total_dias_on: diasON,
-      total_dias_dba: diasDBA,
-      total_dias_fi: diasFI,
-      total_dias_tre: diasTRE,
-      total_dias_fer: diasFER,
+      regime_escala: calc.regime_escala,
+      escala_embarque: calc.dias_embarque_escala,
+      escala_folga: calc.dias_folga_escala,
+      total_dias_on: calc.dias_on,
+      total_dias_dba: calc.dias_dba,
+      total_dias_fi: calc.dias_fi,
+      total_dias_fi_evento: calc.dias_fi_evento,
+      total_dias_fi_deficit: calc.dias_fi_deficit,
+      total_dias_tre: calc.dias_tre,
+      total_dias_fer: calc.dias_fer,
+      total_dias_stb: calc.dias_stb,
+      total_dias_folga: calc.dias_folga,
+      embarques: calc.embarques,
+      checagens: calc.checagens,
       semanas: semanasMap,
     });
+
+    calculosFolha.push(montarRubricasFolha(
+      { matricula: c.matricula || '-', cpf: cpfNorm, nome, cargo, centro_custo: centroCusto },
+      calc,
+    ));
   }
 
-  // ----------------------------------------------------
-  // CONSTRUÇÃO E FORMATAÇÃO VISUAL DO WORKBOOK XLSX
-  // ----------------------------------------------------
+  const totaisConsolidados: TotaisConsolidadosFechamento = {
+    totalColaboradores: colabTotais.length,
+    ...somarTotaisFechamento(calculos),
+  };
+
   const wb = XLSX.utils.book_new();
-  const totalCols = weeks.length + 13;
+  const totalCols = weeks.length + FIXED_COLS;
 
   const headerTitle = [
-    `RELATÓRIO OFICIAL DE FECHAMENTO DE ESCALAS — DEPARTAMENTO PESSOAL & FOLHA`,
+    'RELATÓRIO OFICIAL DE FECHAMENTO DE ESCALAS — DEPARTAMENTO PESSOAL & FOLHA',
     ...Array(totalCols - 1).fill(''),
   ];
 
   const filtroSub = [
-    `Período de Fechamento: ${options.mesAno || `${options.dataInicio || ''} a ${options.dataFim || ''}`}  |  Embarcação: ${options.embarcacao || 'Todas'}  |  Empresa: ${options.empresa || 'Todas'}  |  Emissão: ${new Date().toLocaleString('pt-BR')}`,
+    `Período: ${options.mesAno || `${options.dataInicio || ''} a ${options.dataFim || ''}`}  |  Comparativo NxN por dt início/dt fim  |  Embarcação: ${options.embarcacao || 'Todas'}  |  Empresa: ${options.empresa || 'Todas'}  |  Emissão: ${new Date().toLocaleString('pt-BR')}`,
     ...Array(totalCols - 1).fill(''),
   ];
 
@@ -449,20 +314,19 @@ export async function gerarRelatorioEscalaMensal(
     'DIAS ON',
     'DIAS DBA',
     'DIAS FI',
+    'DIAS FOLGA',
+    'DIAS STB',
     'DIAS TRE',
     'DIAS FER',
-    ...weeks.map(w => w.label),
+    'CHECK ESCALA',
+    'CHECK SOMA',
+    ...weeks.map((w) => w.label),
   ];
 
-  const wsData: any[][] = [
-    headerTitle,
-    filtroSub,
-    [], // Linha 3: em branco
-    colHeaders, // Linha 4: cabeçalhos
-  ];
+  const wsData: any[][] = [headerTitle, filtroSub, [], colHeaders];
 
   for (const c of colabTotais) {
-    const row = [
+    wsData.push([
       c.matricula,
       c.nome,
       c.cpf_formatado,
@@ -474,15 +338,17 @@ export async function gerarRelatorioEscalaMensal(
       c.total_dias_on,
       c.total_dias_dba,
       c.total_dias_fi,
+      c.total_dias_folga,
+      c.total_dias_stb,
       c.total_dias_tre,
       c.total_dias_fer ?? 0,
-      ...weeks.map(w => c.semanas[w.dateStr] || '-'),
-    ];
-    wsData.push(row);
+      labelCheck(c.checagens.escala_ok),
+      labelCheck(c.checagens.soma_ok),
+      ...weeks.map((w) => c.semanas[w.dateStr] || '-'),
+    ]);
   }
 
-  // Linha de Totais Consolidados (soma diária total)
-  const totalRow = [
+  wsData.push([
     'TOTAL GERAL CONSOLIDADO (DIAS)',
     `${colabTotais.length} Colaboradores`,
     '',
@@ -491,16 +357,18 @@ export async function gerarRelatorioEscalaMensal(
     '',
     '',
     '',
-    totalConsolDiasON,
-    totalConsolDiasDBA,
-    totalConsolDiasFI,
-    totalConsolDiasTRE,
-    totalConsolDiasFER,
+    totaisConsolidados.totalON,
+    totaisConsolidados.totalDBA,
+    totaisConsolidados.totalFI,
+    totaisConsolidados.totalFOLGA,
+    totaisConsolidados.totalSTB,
+    totaisConsolidados.totalTRE,
+    totaisConsolidados.totalFER,
+    `${totaisConsolidados.colaboradoresComAlerta} alerta(s)`,
+    '',
     ...weeks.map(() => ''),
-  ];
-  wsData.push(totalRow);
+  ]);
 
-  // Lista de aprovadores para chancela e auditoria digital
   const listaAprovadores: AprovadorRegistro[] = options.aprovadores && options.aprovadores.length > 0
     ? options.aprovadores
     : (options.aprovador ? [options.aprovador] : []);
@@ -509,54 +377,45 @@ export async function gerarRelatorioEscalaMensal(
   if (listaAprovadores.length > 0) {
     wsData.push([]);
     wsData.push(['AUTENTICAÇÃO & ASSINATURAS DIGITAIS DE FECHAMENTO — AUDITORIA CRIPTOGRÁFICA', ...Array(totalCols - 1).fill('')]);
-    
     for (const apr of listaAprovadores) {
       wsData.push([
         `✓ Assinado Digitalmente por: ${apr.nome} ${apr.cargo ? `(${apr.cargo})` : ''} | CPF: ${apr.cpf || 'N/A'} | Data/Hora: ${apr.dataHora} | IP: ${apr.ip || '127.0.0.1'} | Hash: ${apr.assinaturaHash || 'N/A'}`,
-        ...Array(totalCols - 1).fill('')
+        ...Array(totalCols - 1).fill(''),
       ]);
     }
   }
 
   const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-  // Definir larguras de colunas ideais
   ws['!cols'] = [
-    { wch: 14 }, // Matrícula
-    { wch: 34 }, // Nome
-    { wch: 18 }, // CPF
-    { wch: 28 }, // Cargo
-    { wch: 28 }, // Centro de Custo
-    { wch: 18 }, // Empresa
-    { wch: 18 }, // Embarcação
-    { wch: 16 }, // Regime/Escala
-    { wch: 12 }, // DIAS ON
-    { wch: 12 }, // DIAS DBA
-    { wch: 12 }, // DIAS FI
-    { wch: 12 }, // DIAS TRE
-    { wch: 12 }, // DIAS FER
+    { wch: 14 },
+    { wch: 34 },
+    { wch: 18 },
+    { wch: 28 },
+    { wch: 28 },
+    { wch: 18 },
+    { wch: 18 },
+    { wch: 16 },
+    { wch: 12 },
+    { wch: 12 },
+    { wch: 12 },
+    { wch: 12 },
+    { wch: 12 },
+    { wch: 12 },
+    { wch: 12 },
+    { wch: 14 },
+    { wch: 12 },
     ...weeks.map(() => ({ wch: 12 })),
   ];
 
-  // Definir alturas das linhas
-  const rowHeights = [
-    { hpt: 32 }, // Título
-    { hpt: 20 }, // Subtítulo
-    { hpt: 8 },  // Linha em branco
-    { hpt: 26 }, // Cabeçalhos de coluna
-  ];
-  for (let i = 0; i < colabTotais.length; i++) {
-    rowHeights.push({ hpt: 20 });
-  }
-  rowHeights.push({ hpt: 24 }); // Linha de total
+  const rowHeights = [{ hpt: 32 }, { hpt: 20 }, { hpt: 8 }, { hpt: 26 }];
+  for (let i = 0; i < colabTotais.length; i++) rowHeights.push({ hpt: 20 });
+  rowHeights.push({ hpt: 24 });
   ws['!rows'] = rowHeights;
 
-  // Mesclagens de células para títulos e rodapé
   const merges: any[] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } }, // Título principal mesclado
-    { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols - 1 } }, // Subtítulo mesclado
+    { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols - 1 } },
   ];
-
   if (listaAprovadores.length > 0) {
     merges.push({ s: { r: signatureStartRow, c: 0 }, e: { r: signatureStartRow, c: totalCols - 1 } });
     for (let idx = 0; idx < listaAprovadores.length; idx++) {
@@ -565,7 +424,6 @@ export async function gerarRelatorioEscalaMensal(
   }
   ws['!merges'] = merges;
 
-  // Bordas e estilos de cores
   const defaultBorder = {
     top: { style: 'thin', color: { rgb: 'D0D7DE' } },
     bottom: { style: 'thin', color: { rgb: 'D0D7DE' } },
@@ -579,9 +437,22 @@ export async function gerarRelatorioEscalaMensal(
     FI: { bg: 'CFE2F3', text: '0B5394' },
     TRE: { bg: 'EFEFEF', text: '434343' },
     STB: { bg: 'FFF2CC', text: '7F6000' },
+    FOLGA: { bg: 'DEEBF7', text: '1F4E79' },
     'OFF-C': { bg: 'F4CCCC', text: '990000' },
     FER: { bg: 'D9D2E9', text: '351C75' },
     AFAST: { bg: 'F4CCCC', text: '990000' },
+    OK: { bg: 'D9EAD3', text: '274E13' },
+    ALERTA: { bg: 'F4CCCC', text: '990000' },
+  };
+
+  const metricFill: Record<number, { bg: string; text: string }> = {
+    8: { bg: 'E2EFDA', text: '274E13' },
+    9: { bg: 'FCE5CD', text: '783F04' },
+    10: { bg: 'CFE2F3', text: '0B5394' },
+    11: { bg: 'DEEBF7', text: '1F4E79' },
+    12: { bg: 'FFF2CC', text: '7F6000' },
+    13: { bg: 'EFEFEF', text: '434343' },
+    14: { bg: 'D9D2E9', text: '351C75' },
   };
 
   const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:Z100');
@@ -596,55 +467,36 @@ export async function gerarRelatorioEscalaMensal(
       };
 
       if (R === 0) {
-        // Título Principal
         cellStyle.font = { bold: true, color: { rgb: 'FFFFFF' }, sz: 12, name: 'Segoe UI' };
         cellStyle.fill = { fgColor: { rgb: '002060' } };
         cellStyle.alignment = { vertical: 'center', horizontal: 'center' };
       } else if (R === 1) {
-        // Subtítulo
         cellStyle.font = { italic: true, color: { rgb: '334155' }, sz: 9, name: 'Segoe UI' };
         cellStyle.fill = { fgColor: { rgb: 'F1F5F9' } };
         cellStyle.alignment = { vertical: 'center', horizontal: 'center' };
       } else if (R === 3) {
-        // Cabeçalhos de colunas
-        cellStyle.font = { bold: true, color: { rgb: C < 8 ? 'FFFFFF' : (C < 13 ? '002060' : '000000') }, sz: 9, name: 'Segoe UI' };
-        cellStyle.fill = { fgColor: { rgb: C < 8 ? '002060' : (C < 13 ? 'BDD7EE' : 'E2EFDA') } };
+        cellStyle.font = { bold: true, color: { rgb: C < ID_COLS ? 'FFFFFF' : (C < FIXED_COLS ? '002060' : '000000') }, sz: 9, name: 'Segoe UI' };
+        cellStyle.fill = { fgColor: { rgb: C < ID_COLS ? '002060' : (C < FIXED_COLS ? 'BDD7EE' : 'E2EFDA') } };
         cellStyle.border = defaultBorder;
       } else if (R === 4 + colabTotais.length) {
-        // Linha de Totais Gerais
         cellStyle.font = { bold: true, color: { rgb: '002060' }, sz: 10, name: 'Segoe UI' };
         cellStyle.fill = { fgColor: { rgb: 'D9E1F2' } };
         cellStyle.border = defaultBorder;
       } else if (R > 3 && R < 4 + colabTotais.length) {
-        // Linhas de dados de colaboradores
         cellStyle.font = { sz: 9, name: 'Segoe UI' };
         cellStyle.border = defaultBorder;
-        if (C === 8) {
-          // DIAS ON
-          cellStyle.fill = { fgColor: { rgb: 'E2EFDA' } };
-          cellStyle.font = { bold: true, color: { rgb: '274E13' } };
-        } else if (C === 9) {
-          // DIAS DBA
-          cellStyle.fill = { fgColor: { rgb: 'FCE5CD' } };
-          cellStyle.font = { bold: true, color: { rgb: '783F04' } };
-        } else if (C === 10) {
-          // DIAS FI
-          cellStyle.fill = { fgColor: { rgb: 'CFE2F3' } };
-          cellStyle.font = { bold: true, color: { rgb: '0B5394' } };
-        } else if (C === 11) {
-          // DIAS TRE
-          cellStyle.fill = { fgColor: { rgb: 'EFEFEF' } };
-          cellStyle.font = { bold: true, color: { rgb: '434343' } };
-        } else if (C === 12) {
-          // DIAS FER
-          cellStyle.fill = { fgColor: { rgb: 'D9D2E9' } };
-          cellStyle.font = { bold: true, color: { rgb: '351C75' } };
-        } else if (C >= 13 && typeof cell.v === 'string' && colorMap[cell.v]) {
+        const metric = metricFill[C];
+        if (metric) {
+          cellStyle.fill = { fgColor: { rgb: metric.bg } };
+          cellStyle.font = { bold: true, color: { rgb: metric.text } };
+        } else if (C >= ID_COLS && C < FIXED_COLS && typeof cell.v === 'string' && colorMap[cell.v]) {
+          cellStyle.fill = { fgColor: { rgb: colorMap[cell.v].bg } };
+          cellStyle.font = { color: { rgb: colorMap[cell.v].text }, bold: true, sz: 9 };
+        } else if (C >= FIXED_COLS && typeof cell.v === 'string' && colorMap[cell.v]) {
           cellStyle.fill = { fgColor: { rgb: colorMap[cell.v].bg } };
           cellStyle.font = { color: { rgb: colorMap[cell.v].text }, bold: true, sz: 9 };
         }
       } else if (R >= signatureStartRow) {
-        // Linhas de Chancelas Digitais
         cellStyle.font = { sz: 8, color: { rgb: '0F5132' }, name: 'Segoe UI' };
         cellStyle.fill = { fgColor: { rgb: 'D1E7DD' } };
         cellStyle.alignment = { vertical: 'center', horizontal: 'left' };
@@ -655,19 +507,87 @@ export async function gerarRelatorioEscalaMensal(
   }
 
   XLSX.utils.book_append_sheet(wb, ws, 'Fechamento DP');
+
+  const cicloHeaders = [
+    'MATRÍCULA',
+    'NOME',
+    'CPF',
+    'REGIME',
+    'ESCALA EMB',
+    'ESCALA FOLGA',
+    'DT INÍCIO',
+    'DT FIM',
+    'DIAS TOTAIS',
+    'ON NO PERÍODO',
+    'DBA NO PERÍODO',
+    'FOLGA ESPERADA',
+    'FOLGA REAL',
+    'FI DÉFICIT',
+    'CHECK ESCALA',
+    'CHECK SOMA',
+    'ALERTAS',
+  ];
+  const cicloData: any[][] = [
+    ['CICLOS COMPARATIVOS NxN — dt início e dt fim de cada embarque', ...Array(cicloHeaders.length - 1).fill('')],
+    cicloHeaders,
+  ];
+  for (const c of colabTotais) {
+    if (c.embarques.length === 0) {
+      cicloData.push([
+        c.matricula,
+        c.nome,
+        c.cpf_formatado,
+        c.regime_escala,
+        c.escala_embarque,
+        c.escala_folga,
+        '',
+        '',
+        0,
+        c.total_dias_on,
+        c.total_dias_dba,
+        c.escala_folga,
+        c.total_dias_folga,
+        c.total_dias_fi_deficit,
+        labelCheck(c.checagens.escala_ok),
+        labelCheck(c.checagens.soma_ok),
+        c.checagens.alertas.join(' | ') || 'sem embarque com dt início e dt fim',
+      ]);
+      continue;
+    }
+    for (const emb of c.embarques) {
+      cicloData.push([
+        c.matricula,
+        c.nome,
+        c.cpf_formatado,
+        c.regime_escala,
+        c.escala_embarque,
+        c.escala_folga,
+        emb.data_inicio,
+        emb.data_fim,
+        emb.dias_totais,
+        emb.dias_on,
+        emb.dias_dba,
+        emb.dias_folga_esperada,
+        emb.dias_folga_real,
+        emb.dias_fi_deficit,
+        labelCheck(emb.escala_ok),
+        labelCheck(emb.soma_ok),
+        emb.alertas.join(' | '),
+      ]);
+    }
+  }
+  const wsCiclos = XLSX.utils.aoa_to_sheet(cicloData);
+  wsCiclos['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: cicloHeaders.length - 1 } }];
+  wsCiclos['!cols'] = cicloHeaders.map((h) => ({ wch: Math.max(14, h.length + 2) }));
+  XLSX.utils.book_append_sheet(wb, wsCiclos, 'Ciclos NxN');
+
   const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
 
   return {
     buffer: Buffer.from(buffer),
-    totaisConsolidados: {
-      totalColaboradores: colabTotais.length,
-      totalON: totalConsolDiasON,
-      totalDBA: totalConsolDiasDBA,
-      totalFI: totalConsolDiasFI,
-      totalTRE: totalConsolDiasTRE,
-      totalFER: totalConsolDiasFER,
-    },
+    totaisConsolidados,
     colaboradoresTotais: colabTotais,
-    semanas: weeks.map(w => w.dateStr),
+    calculosFolha,
+    semanas: weeks.map((w) => w.dateStr),
   };
 }

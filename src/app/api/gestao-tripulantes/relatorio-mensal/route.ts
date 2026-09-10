@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
     const cargo = searchParams.get('cargo') || undefined;
     const statusAtivo = (searchParams.get('statusAtivo') as any) || 'ativos';
     const busca = searchParams.get('busca') || undefined;
+    const colaboradorId = searchParams.get('colaboradorId') || undefined;
     const download = searchParams.get('download') === 'true';
 
     // 1. Buscar configuração de aprovadores obrigatórios
@@ -64,6 +65,7 @@ export async function GET(request: NextRequest) {
       cargo,
       statusAtivo,
       busca,
+      colaboradorId,
       aprovadores: assinaturasColetadas.length > 0 ? assinaturasColetadas : (registroExistente?.aprovado_por_nome ? [{
         nome: registroExistente.aprovado_por_nome,
         cpf: registroExistente.aprovado_por_cpf,
@@ -89,11 +91,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       mesAno,
+      periodo: {
+        dataInicio: dataInicio || undefined,
+        dataFim: dataFim || undefined,
+      },
+      regra: 'comparativo_nxn_dt_inicio_dt_fim',
       registro: registroExistente || null,
       aprovadoresObrigatorios,
       assinaturasColetadas,
       totaisConsolidados: reportResult.totaisConsolidados,
       colaboradoresTotais: reportResult.colaboradoresTotais,
+      calculosFolha: reportResult.calculosFolha,
       semanas: reportResult.semanas,
     });
   } catch (error: any) {

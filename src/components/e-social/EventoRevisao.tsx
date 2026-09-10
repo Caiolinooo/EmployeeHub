@@ -42,6 +42,17 @@ export default function EventoRevisao({ evento, open, onClose, onApprove, onReje
 
   useEffect(() => {
     if (open && evento?.id) {
+      const atual =
+        evento.matricula
+        || evento.colaborador_matricula
+        || (evento.dados_evento as any)?.matricula_esocial
+        || (evento.dados_evento as any)?.matricula
+        || (evento.dados_evento as any)?.dadosEspecificos?.matricula_esocial
+        || (evento.dados_evento as any)?.dadosEspecificos?.matricula
+        || '';
+      setMatriculaCorreta(String(atual));
+      setCorrectError(null);
+      setCorrectSuccess(false);
       loadLogs();
     }
   }, [open, evento?.id]);
@@ -110,7 +121,9 @@ export default function EventoRevisao({ evento, open, onClose, onApprove, onReje
         throw new Error(data.error || 'Erro ao corrigir matrícula');
       }
       setCorrectSuccess(true);
-      toast.success('Matrícula corrigida com sucesso!');
+      if (data.evento) Object.assign(evento, data.evento);
+      else evento.matricula = matriculaCorreta.trim();
+      toast.success('Matrícula gravada. XML recompilado.');
       setTimeout(() => {
         window.location.reload();
       }, 1500);
@@ -194,8 +207,11 @@ export default function EventoRevisao({ evento, open, onClose, onApprove, onReje
   const isMatriculaError = evento.status === 'erro' && (
     errorMsg.toLowerCase().includes('não foi localizado o contrato de trabalho') ||
     errorMsg.toLowerCase().includes('contrato de trabalho não localizado') ||
-    errorMsg.toLowerCase().includes('não localizado o contrato de trabalho')
+    errorMsg.toLowerCase().includes('não localizado o contrato de trabalho') ||
+    errorMsg.toLowerCase().includes('matrícula') ||
+    errorMsg.toLowerCase().includes('matricula')
   );
+  const podeEditarMatricula = evento.status !== 'processado' || !evento.numero_recibo;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
@@ -291,59 +307,59 @@ export default function EventoRevisao({ evento, open, onClose, onApprove, onReje
                 </div>
               )}
 
-              {/* Erro de Matrícula e Correção Assistida */}
-              {isMatriculaError && (
-                <div className="bg-amber-50 border border-amber-300 rounded-xl p-5 space-y-3">
-                  <div className="flex items-center gap-2 text-amber-800 font-bold text-sm">
-                    <FiAlertTriangle size={18} className="text-amber-600 animate-pulse" />
-                    <span>Erro Crítico: Matrícula Rejeitada pelo e-Social</span>
-                  </div>
-                  <p className="text-xs text-amber-800 leading-relaxed">
-                    O governo retornou o erro indicando que este CPF não possui a matrícula <strong>{evento.matricula || 'enviada'}</strong> cadastrada no e-Social.
-                    <br /><br />
-                    <strong>Como resolver:</strong>
-                    <ol className="list-decimal list-inside mt-1 space-y-1">
-                      <li>Acesse o portal do e-Social usando seu certificado.</li>
-                      <li>Vá em <strong>Empregado &gt; Gestão de Empregados</strong> e filtre pelo CPF <strong>{evento.cpf_trabalhador}</strong>.</li>
-                      <li>Copie o número da matrícula que consta no portal (ex: <code>17784306000189.000541</code>).</li>
-                      <li>Insira o valor correto abaixo e clique em Corrigir.</li>
-                    </ol>
-                  </p>
-                  
-                  <div className="flex gap-2 items-end pt-2">
-                    <div className="flex-1">
-                      <label className="block text-xs font-semibold text-amber-800 mb-1">Matrícula Correta (do portal e-Social)</label>
-                      <input
-                        type="text"
-                        className="w-full px-3 py-2 border border-amber-300 rounded-lg text-sm focus:ring-amber-500 focus:border-amber-500 bg-white"
-                        placeholder="Ex: 17784306000189.000541"
-                        value={matriculaCorreta}
-                        onChange={(e) => setMatriculaCorreta(e.target.value)}
-                        disabled={correcting || correctSuccess}
-                      />
-                    </div>
-                    <button
-                      onClick={handleCorrectMatricula}
-                      disabled={!matriculaCorreta.trim() || correcting || correctSuccess}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition-colors cursor-pointer shadow-sm"
-                    >
-                      {correcting ? (
-                        <FiRefreshCw className="animate-spin" />
-                      ) : correctSuccess ? (
-                        <FiCheck />
-                      ) : null}
-                      {correcting ? 'Corrigindo...' : correctSuccess ? 'Corrigido!' : 'Corrigir e Recompilar XML'}
-                    </button>
-                  </div>
-
-                  {correctError && (
-                    <p className="text-xs text-red-600 font-medium">{correctError}</p>
-                  )}
-                  {correctSuccess && (
-                    <p className="text-xs text-emerald-600 font-medium">Sucesso! A matrícula foi atualizada no colaborador e o XML foi regenerado.</p>
-                  )}
+              {/* Matrícula sempre editável (exceto evento processado com recibo) */}
+              <div className={`border rounded-xl p-5 space-y-3 ${isMatriculaError ? 'bg-amber-50 border-amber-300' : 'bg-white border-slate-200'}`}>
+                <div className={`flex items-center gap-2 font-bold text-sm ${isMatriculaError ? 'text-amber-800' : 'text-slate-800'}`}>
+                  {isMatriculaError ? (
+                    <FiAlertTriangle size={18} className="text-amber-600" />
+                  ) : null}
+                  <span>{isMatriculaError ? 'Matrícula rejeitada pelo e-Social — corrija para reenviar' : 'Matrícula e-Social'}</span>
                 </div>
-              )}
+                {isMatriculaError && (
+                  <p className="text-xs text-amber-800 leading-relaxed">
+                    O governo não localizou o contrato com a matrícula <strong>{evento.matricula || 'enviada'}</strong> neste CPF.
+                    Copie a matrícula do portal e-Social (Empregado &gt; Gestão de Empregados) e grave abaixo.
+                  </p>
+                )}
+                <p className="text-xs text-slate-500">
+                  Altere aqui para o XML e o cadastro GT usarem a matrícula oficial no envio.
+                </p>
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Matrícula do vínculo</label>
+                    <input
+                      type="text"
+                      data-testid="esocial-matricula-input"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:ring-blue-500 focus:border-blue-500 bg-white disabled:bg-slate-100"
+                      placeholder="Ex: 17784306000189.000649"
+                      value={matriculaCorreta}
+                      onChange={(e) => setMatriculaCorreta(e.target.value)}
+                      disabled={!podeEditarMatricula || correcting || correctSuccess}
+                    />
+                  </div>
+                  <button
+                    onClick={handleCorrectMatricula}
+                    disabled={!podeEditarMatricula || !matriculaCorreta.trim() || correcting || correctSuccess}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition-colors cursor-pointer shadow-sm"
+                  >
+                    {correcting ? (
+                      <FiRefreshCw className="animate-spin" />
+                    ) : correctSuccess ? (
+                      <FiCheck />
+                    ) : null}
+                    {correcting ? 'Gravando...' : correctSuccess ? 'Gravada!' : 'Gravar e recompilar XML'}
+                  </button>
+                </div>
+                {correctError && (
+                  <p className="text-xs text-red-600 font-medium">{correctError}</p>
+                )}
+                {correctSuccess && (
+                  <p className="text-xs text-emerald-600 font-medium">Matrícula gravada no evento, no XML e no cadastro do colaborador.</p>
+                )}
+                {!podeEditarMatricula && (
+                  <p className="text-xs text-slate-500">Evento processado com recibo — matrícula travada.</p>
+                )}
+              </div>
 
               {/* UI de Validação & Auto-Correção */}
               {validationResult && (
@@ -429,8 +445,8 @@ export default function EventoRevisao({ evento, open, onClose, onApprove, onReje
                   <p className="font-mono font-bold text-slate-800 text-sm mt-0.5">{evento.cpf_trabalhador || '-'}</p>
                 </div>
                 <div>
-                  <span className="text-slate-400 block font-medium">Matrícula</span>
-                  <p className="font-mono font-bold text-slate-800 text-sm mt-0.5">{evento.colaborador_matricula || evento.matricula || '-'}</p>
+                  <span className="text-slate-400 block font-medium">Matrícula atual</span>
+                  <p className="font-mono font-bold text-slate-800 text-sm mt-0.5">{evento.matricula || evento.colaborador_matricula || '-'}</p>
                 </div>
                 <div>
                   <span className="text-slate-400 block font-medium">Módulo de Origem</span>

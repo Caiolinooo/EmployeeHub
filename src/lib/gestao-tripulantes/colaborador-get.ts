@@ -40,6 +40,7 @@ const PROFILE_SELECT = `
   categoria_contrato, tipo_trabalho, tipo_mao_de_obra, regime_trabalho,
   escala_embarque, escala_folga, departamento, motivo_demissao,
   tipo_admissao, natureza_atividade, tipo_jornada, tipo_lotacao, matricula_esocial,
+  dados_bancarios, dados_saude,
   cargo:gt_cargos(nome, nivel, ordem_exibicao),
   empresa:gt_empresas(nome, cnpj),
   embarcacao_atual:gt_embarcacoes!embarcacao_atual_id(nome, imo),

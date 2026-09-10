@@ -28,12 +28,12 @@ export default function MessageBubble({ message, isStreaming }: Props) {
         </div>
       )}
       <div className="max-w-[85%] w-full flex flex-col items-start">
-        <div className={`rounded-2xl px-4 py-3 w-fit ${
+        <div className={`rounded-2xl px-4 py-3 w-fit max-w-full min-w-0 ${
           isUser
             ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-br-md shadow-md ml-auto'
             : 'bg-white text-gray-800 rounded-bl-md shadow-sm border border-gray-100'
         }`}>
-          <div className="text-sm leading-relaxed">
+          <div className="text-sm leading-relaxed min-w-0">
             {isUser ? cleanContent : renderChatMarkdown(cleanContent)}
             {isStreaming && <span className="inline-block w-2 h-4 bg-blue-500 ml-0.5 animate-pulse rounded-sm align-middle" />}
           </div>

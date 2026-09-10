@@ -71,7 +71,16 @@ API routes for crew management (colaboradores, documentos, ASO, embarques, tipos
 - Ordem: inativa colaborador (`ativo=false`, `data_demissao`) → insert `gt_desligamentos` (`iniciado`) → folha **fail-soft** → dispara `autoGenerateESocialEvents`. Folha/e-Social nunca derrubam o GT.
 - Folha: localiza/cria `payroll_employees` pelo CPF; reusa `payroll_sheets` do mês (ou cria draft); lança `payroll_sheet_items` com valor 0 (DP calcula). Rubricas 301/302 (seed) + 303–307 (`scripts/seed-payroll-data.sql` e migration `20260902_000002`, skip se `payroll_codes` não existir).
 - Prazo de pagamento: 10 dias corridos (Lei 13.467/2017) em `prazo_pagamento`. Aviso sugerido: 30 + 3/ano, máx. 90.
-- UI: aba/botão no `CollaboratorModal` + `DesligamentoModal`. Não editar `dp/page.tsx` — a lista DP já abre o modal na linha.
+- UI: aba/botão no `CollaboratorModal` + `DesligamentoModal`. Lista DP abre o modal na linha; **não** tem botão próprio de rescisão. Cadastro do zero / edição de ficha **pode** alterar `dp/page.tsx` e `/department/dp/novo`.
+
+### Cadastro de colaborador (`gt_colaboradores`)
+
+- Fonte única: tabela `gt_colaboradores` via `POST|PUT|DELETE /api/gestao-tripulantes/colaboradores`. Sem store paralelo no DP.
+- Payload compartilhado: `montarPayloadCadastro` / `validarCadastroMinimo` (`colaborador-cadastro.ts`). Whitelist de colunas editáveis; ignora PK/sistema/`mio_*`/`esocial_*`/`deleted_at`.
+- Auth mutação: `podeMutarCadastroColaborador` = mesmo gate do desligamento (ADMIN/MANAGER/SUPERADMIN **ou** setor DP/RH + módulo GT). GET autenticado continua aberto a quem já lê a lista.
+- Create: CPF Módulo 11 (`isValidCpf` + `normalizeCpf`); 409 se CPF já existe; `origem=manual`; `matricula_esocial` vazio copia `matricula`. Enrich `mio_cache` só em background (nunca live MIO).
+- Update: parcial; CPF/nome só validados se enviados; FKs por `cargo_nome`/`empresa_nome`/etc. se o id não vier; `persistirCamposEscala` (não inventa 14x14).
+- Soft-delete (`deleted_at`) usa o mesmo gate.
 
 ### Employee Record Hub (`/api/employee-hub`)
 - Single point of truth for employee data, combining personal details, document counts, ASOs, embarques, e-Social event timeline, afastamentos, acidentes (CAT), and trainings.
@@ -181,6 +190,7 @@ API routes for crew management (colaboradores, documentos, ASO, embarques, tipos
 - Edit mode (`DadosPessoaisTab`) renders inputs/selects for identity (nome, CPF, RG, matrícula, nascimento, nacionalidade, naturalidade, filiação, estado civil, email, telefone) and professional fields (cargo/empresa/embarcação/centro de custo via `SearchableCreatableSelect` + POST create, admissão, próximo embarque, status, standby, **regime de trabalho**) plus address.
 - **Regime**: first-class `sem_escala` | `administrativo` | `onshore` | `14x14` | `28x28` | `15x15` | `30x30` | `60x60` (`regime-escala.ts`). Empty/null/no-rotation **never** coerce to 14x14. No-rotation persists `escala_embarque`/`escala_folga` = 0. PUT uses `persistirCamposEscala`.
 - CPF: client + PUT validate with `isValidCpf` (Módulo 11); persist digits-only via `normalizeCpf`. Invalid/empty CPF → 400, never silently dropped.
+- `matricula` e `matricula_esocial` são editáveis no PUT (whitelist). UI em `DadosPessoaisTab`. Sem `matricula_esocial`, o save copia `matricula`.
 - `PUT /api/gestao-tripulantes/colaboradores/[id]` whitelists every editable `gt_colaboradores` column (not PK/system/`mio_*`/e-Social tracking). View aliases (`cargo_nome`…) resolve to FKs instead of being ignored.
 - Modal fetch: keep previous `data` on error; ignore abort; do not replace loaded content with skeleton; tab error boundary isolates Treinamentos crashes.
 
@@ -201,20 +211,23 @@ API routes for crew management (colaboradores, documentos, ASO, embarques, tipos
 ### Fechamento Mensal de Escalas & Despacho ao Departamento Pessoal (DP)
 
 - **Workflow de Fechamento e Auditoria (`gt_relatorios_aprovacoes`)**:
-  - `GET /api/gestao-tripulantes/relatorio-mensal?mesAno=YYYY-MM`: preview consolidado (`totalColaboradores`, `totalON`, `totalDBA`, `totalFI`, `totalTRE`, `totalFER`), `aprovadoresObrigatorios`, `assinaturasColetadas` e registro.
-  - `GET /api/gestao-tripulantes/relatorio-mensal?mesAno=YYYY-MM&download=true`: XLSX oficial (Matrícula, Cargo, Centro de Custo, Regime/Escala, ON, DBA, FI, TRE, FER).
+  - `GET /api/gestao-tripulantes/relatorio-mensal?mesAno=YYYY-MM`: preview consolidado (`totalColaboradores`, `totalON`, `totalDBA`, `totalFI`, `totalFOLGA`, `totalSTB`, `totalTRE`, `totalFER`, `colaboradoresComAlerta`), `calculosFolha` (rubricas de dias para folha), `colaboradoresTotais` (embarques + checagens), `aprovadoresObrigatorios`, `assinaturasColetadas` e registro. Filtro opcional `colaboradorId`. Motor: `fechamento-calculo.ts`.
+  - `GET /api/gestao-tripulantes/relatorio-mensal?mesAno=YYYY-MM&download=true`: XLSX oficial com ON, DBA, FI, FOLGA, STB, TRE, FER, check escala/soma + aba **Ciclos NxN** (dt início/dt fim de cada embarque).
   - `POST /api/gestao-tripulantes/relatorio-mensal/aprovar`: autenticado. **Lista nominada** = só quem está nela pode assinar (**qualquer role**, match por user id depois e-mail). ADMIN fora da lista → 403. **Lista vazia** = fallback ADMIN/MANAGER (nunca USER, nunca espera para sempre). Exige `signature_url`. Carimbo SHA-256 `GT_FECHAMENTO:mesAno:nome:cpf:data:ip`. Sem `full_name`/`cpf` em `users_unified` — usar `first_name`+`last_name` e `tax_id`.
   - **100% das assinaturas**: lista vazia → primeira assinatura de gestor/admin conclui e libera e-mail ao DP. Lista com N nomes → exatamente esses N, independente de cargo; extras não contam; e-mail XLSX só em 100%. `fechamento-assinatura.ts` (`podeAssinarFechamento` / `autorizacaoAssinarFechamento`).
   - `GET /api/gestao-tripulantes/cron/relatorio-mensal`: data de corte e pendências.
   - `GET|PUT /api/gestao-tripulantes/relatorio-mensal/config`: dia de corte, e-mails DP/CC, aprovadores, auto-envio, templates. PUT só ADMIN/MANAGER, persistência via `updateConfig` (erro do Supabase volta 500). GET devolve `availableUsers`/`availableManagers` via `listarCandidatosAprovadores()` (portal ativos + `gt_colaboradores` ativos com e-mail). `PUT /configuracoes` só grava chaves gerais — nunca `gt_fechamento_mensal_config`. `listarGestoresPortal()` permanece para ASO logística.
   - UI: admin `WorkflowFechamentoTab`; DP/GT `ModalAprovacaoFechamento` — só o `SignatureModal` global (não montar segundo). Sem assinatura, o modal de cadastro roda e só então o POST. Erros da API vão para o usuário (`error` string), nunca exception crua. Modal lê o ator com `useSupabaseAuth` (não `AuthContext` legado).
 
-### Regras Contábeis de Cômputo de Dobra (DBA) e Escalas
+### Regras Contábeis de Cômputo de Dobra (DBA), FI e Escalas
+- Motor único: `src/lib/gestao-tripulantes/fechamento-calculo.ts`. UI, `GET /relatorio-mensal`, XLSX e e-mail ao DP usam os mesmos números (`calculosFolha`).
+- Comparativo NxN: embarque N deve folgar N (`14x14`, `28x28`, …). Sempre `data_embarque` + `data_desembarque` (ou prevista). Sem dt fim o embarque **não** entra no automático e gera alerta — nunca inventar janela.
 - A escala vem de `extractEscalaDias` em `regime-escala.ts` (`escala_embarque`, `escala_folga`, `regime_trabalho`):
-  - **NxN** (`14x14`, `28x28`, `15x15`, `30x30`, `60x60`): se ultrapassar os dias regulares contínuos, o excedente é `DBA` (ex: 28x28 e 30d a bordo → 28 ON + 2 DBA).
-  - **`sem_escala` / `administrativo` / `onshore`** (e vazio/null): **não** viram 14x14. Dias = 0. `aplicaDobraAutomatica = false`. Evento explícito `dba`/`dobra` ainda conta DBA; não inventar janela ON de 14 dias se faltar desembarque.
-  - Eventos FI / TRE / STB / OFF-C mantêm a classificação do tipo.
+  - **NxN**: dias a bordo acima da escala = `DBA` (ex: 28x28 e 30d a bordo → 28 ON + 2 DBA). Folga real até o próximo embarque < escala = `FI` déficit.
+  - **`sem_escala` / `administrativo` / `onshore`** (e vazio/null): **não** viram 14x14. Dias = 0. `aplicaDobraAutomatica = false`. Evento explícito `dba`/`dobra` ainda conta DBA.
+  - Eventos FI / TRE / STB / OFF-C mantêm a classificação do tipo. STB no intervalo de descanso conta STB, não folga.
   - Afastamentos e férias (`gt_afastamentos` / `/ferias`) entram como `FER` e não se sobrepõem ao cômputo ON/DBA.
+  - Check escala = ciclo bateu N embarque + N folga. Check soma = ON + DBA = intervalo dt início/dt fim.
 - **Man Schedule / matriz**: administrativos/onshore existem **sem** rotação ON/STB. A grade não inventa dias ON. A pílula de status continua a célula de hoje (`embarque-status.ts`).
 - **MIO pull**: `mesclarRegimeMio` — override local (incl. `sem_escala`) não é sobrescrito. MIO vazio → `sem_escala`; MIO onshore → `onshore`. Nunca gravar 14x14 como default. Nunca PUT de volta ao MIO.
 
@@ -252,6 +265,7 @@ API routes for crew management (colaboradores, documentos, ASO, embarques, tipos
 
 ## Verification
 
+- Cadastro: `npx tsx --test src/lib/gestao-tripulantes/colaborador-cadastro.test.ts`. POST sem CPF válido / sem gate DP → 400/403. `matricula_esocial` vazio copia `matricula`.
 - `GET /colaboradores/[id]` should log `[GT GET /colaboradores/<id>] <N>ms` with two waves; opening the modal must not fire two GETs 1ms apart.
 - Man Schedule grid must not fetch `/api/man-schedule/realtime` until the tab is selected; switching away keeps the mounted cache.
 - Upload ASO with matching CPF → OCR `identity_match=match` → send e-Social allowed.
@@ -279,6 +293,7 @@ API routes for crew management (colaboradores, documentos, ASO, embarques, tipos
 - Man Schedule checkbox “Visualizar por dia” renders one column per day; unchecked keeps Saturday weeks. Toolbar Hoje restores the current month and today’s column; month arrows change the reference month (grid covers that month even with no rotations). Pill interpolates `{count}` as civil-today POB (`countPobOnCivilDay`), independent of the reference month.
 - `GET /api/gestao-tripulantes/dashboard`: `total_colaboradores` ignora inativos e CC inativo; `total_embarcados` = ON exato hoje (`embarque-status.ts`); `total_docs_vencidos` conta só o primário por grupo.
 - Fechamento: `POST .../relatorio-mensal/aprovar` com lista nominada espera só quem está nela (USER incluso; ADMIN fora → 403). Lista vazia + 1 assinatura ADMIN/MANAGER → `aprovado`/`enviado`. `GET .../config` `availableUsers`/`availableManagers` = usuários ativos com e-mail. `npx tsx --test src/lib/gestao-tripulantes/fechamento-assinatura.test.ts`.
+- Cálculo DP: 14x14 com 16d a bordo → 14 ON + 2 DBA; retorno 6d depois → 8 FI. Sem dt fim → 0 automático + alerta. `GET /relatorio-mensal` devolve os mesmos totais do XLSX (`calculosFolha.rubricas`). `npx tsx --test src/lib/gestao-tripulantes/fechamento-calculo.test.ts`.
 - `GET /documentos/alertas` lista título/tipo/aba; `npx tsx scripts/verify-docs-alertas.ts` → `DOCS_ALERTAS_VERIFY_OK`.
 - Typing year digits in Man Schedule Data Início does not rebuild the grid until a complete 1990–2100 date.
 - Clique no card Embarcados filtra `GET /colaboradores?kpi=embarcados` ao mesmo conjunto. Linhas ON hoje devolvem `status_embarque=embarcado` (não Folga stale). `npx tsx --test src/lib/gestao-tripulantes/embarque-status.test.ts`.

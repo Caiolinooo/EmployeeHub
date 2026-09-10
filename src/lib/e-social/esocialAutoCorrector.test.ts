@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { autoCorrigirDadosEvento } from './esocialAutoCorrector';
 import { gerarS2220 } from './eventos/s-2220';
+import { resolverMatricula } from './esocial-matricula';
 import { isValidTsNome } from './ts-nome';
 
 describe('autoCorrigirDadosEvento S-2220 nmMed', () => {
@@ -42,5 +43,17 @@ describe('autoCorrigirDadosEvento S-2220 nmMed', () => {
     assert.ok(match);
     assert.equal(match[1], 'Thalia Leal Dibo');
     assert.equal(isValidTsNome(match[1]), true);
+  });
+});
+
+describe('resolverMatricula', () => {
+  it('prefers event column over stale dados', () => {
+    assert.equal(
+      resolverMatricula({
+        matricula: '17784306000189.000649',
+        dados_evento: { matricula: 'velha', dadosEspecificos: { matricula_esocial: 'ainda-mais-velha' } },
+      }),
+      '17784306000189.000649',
+    );
   });
 });

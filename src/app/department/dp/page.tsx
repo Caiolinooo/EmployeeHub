@@ -13,7 +13,7 @@ import SearchableCreatableSelect from '@/components/gestao-tripulantes/Searchabl
 import { toast } from 'react-hot-toast';
 import {
   FiUsers, FiCalendar, FiAlertTriangle, FiSearch, FiEdit2, FiRefreshCw, FiSend,
-  FiBriefcase, FiShield,
+  FiBriefcase, FiShield, FiPlus,
 } from 'react-icons/fi';
 import { formatRegimeDisplay } from '@/lib/gestao-tripulantes/regime-escala';
 
@@ -56,6 +56,9 @@ interface FechamentoTotais {
   totalFI: number;
   totalTRE: number;
   totalFER?: number;
+  totalSTB?: number;
+  totalFOLGA?: number;
+  colaboradoresComAlerta?: number;
 }
 
 function formatRegime(c: ColaboradorItem): string {
@@ -378,6 +381,14 @@ export default function DepartamentoPessoalPage() {
           </button>
 
           <button
+            onClick={() => router.push('/department/dp/novo')}
+            className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition shadow-sm"
+          >
+            <FiPlus className="w-3.5 h-3.5" />
+            Novo colaborador
+          </button>
+
+          <button
             onClick={() => setIsFechamentoModalOpen(true)}
             className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-abz-blue hover:bg-blue-700 rounded-xl transition shadow-sm"
           >
@@ -619,7 +630,7 @@ export default function DepartamentoPessoalPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
             <div className="p-3 rounded-xl border border-gray-200 bg-slate-50">
               <span className="text-[10px] font-bold text-gray-500 uppercase block">Colaboradores</span>
               <span className="text-xl font-black text-gray-900">
@@ -644,10 +655,28 @@ export default function DepartamentoPessoalPage() {
                 {fechamentoLoading ? '…' : (fechamentoTotais?.totalFI ?? '—')}
               </span>
             </div>
+            <div className="p-3 rounded-xl border border-sky-100 bg-sky-50">
+              <span className="text-[10px] font-bold text-sky-700 uppercase block">Dias Folga</span>
+              <span className="text-xl font-black text-sky-900">
+                {fechamentoLoading ? '…' : (fechamentoTotais?.totalFOLGA ?? '—')}
+              </span>
+            </div>
+            <div className="p-3 rounded-xl border border-yellow-100 bg-yellow-50">
+              <span className="text-[10px] font-bold text-yellow-800 uppercase block">Dias STB</span>
+              <span className="text-xl font-black text-yellow-900">
+                {fechamentoLoading ? '…' : (fechamentoTotais?.totalSTB ?? '—')}
+              </span>
+            </div>
             <div className="p-3 rounded-xl border border-indigo-100 bg-indigo-50">
               <span className="text-[10px] font-bold text-indigo-700 uppercase block">TRE / FER</span>
               <span className="text-xl font-black text-indigo-900">
                 {fechamentoLoading ? '…' : `${fechamentoTotais?.totalTRE ?? 0} / ${fechamentoTotais?.totalFER ?? 0}`}
+              </span>
+            </div>
+            <div className="p-3 rounded-xl border border-red-100 bg-red-50">
+              <span className="text-[10px] font-bold text-red-700 uppercase block">Alertas NxN</span>
+              <span className="text-xl font-black text-red-900">
+                {fechamentoLoading ? '…' : (fechamentoTotais?.colaboradoresComAlerta ?? 0)}
               </span>
             </div>
           </div>
@@ -655,9 +684,12 @@ export default function DepartamentoPessoalPage() {
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-2 text-slate-700">
             <p className="font-bold text-slate-900">Regras Contábeis do Fechamento DP:</p>
             <ul className="list-disc list-inside space-y-1">
-              <li><strong>Cômputo Diário</strong>: Cada dia no período selecionado é verificado individualmente.</li>
-              <li><strong>Dobras Automáticas</strong>: Calculadas com base no regime NxN do colaborador (ex: 14x14, 28x28). Quem está em Sem escala / Administrativo / Onshore não entra nessa regra. Evento explícito DBA continua DBA.</li>
-              <li><strong>Multi-Assinaturas Obrigatórias</strong>: O e-mail oficial para o DP só é despachado quando todos os integrantes configurados realizarem a assinatura digital com hash criptográfico.</li>
+              <li><strong>Comparativo NxN</strong>: embarque 14 deve folgar 14 (28x28 e demais iguais). Cálculo usa dt início e dt fim de cada embarque.</li>
+              <li><strong>Dobra (DBA)</strong>: dias a bordo acima da escala regular. Sem dt fim o embarque não entra no automático.</li>
+              <li><strong>FI</strong>: folga não gozada (retorno antecipado) + eventos FI da escala, sem duplicar.</li>
+              <li><strong>Folga / STB</strong>: intervalo entre embarques; StandBy marcado conta STB, não folga.</li>
+              <li><strong>Check soma</strong>: ON + DBA = intervalo dt início/dt fim de cada ciclo.</li>
+              <li><strong>Multi-Assinaturas</strong>: e-mail ao DP só sai com 100% das assinaturas da lista nominada.</li>
             </ul>
           </div>
         </div>
