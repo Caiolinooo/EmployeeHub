@@ -8,6 +8,8 @@ export interface RotationLike {
   start: string | null;
   end: string | null;
   type: string;
+  /** 'local' = lançamento manual; beats 'mio' on exact ties (same start date). */
+  origem?: string | null;
 }
 
 export function parseCivilDate(str: string | null | undefined): Date | null {
@@ -54,7 +56,9 @@ export function rotationOverlapsPeriod(
 
 /**
  * Among overlapping events, prefer: starts in this column, then the latest
- * start date (the new launch), then a more specific type, then persisted id.
+ * start date (the new launch), then a more specific type, then the manual
+ * launch (origem='local' — the operator's adjustment must stay visible over
+ * the MIO row it overrides), then persisted id.
  */
 export function pickOverlappingRotation(
   rotations: RotationLike[],
@@ -73,6 +77,7 @@ export function pickOverlappingRotation(
       (startsInPeriod ? 1_000_000 : 0) +
       civilYmdNumber(r.start) * 10 +
       (isSpecificTipo(r.type) ? 5 : 0) +
+      (r.origem === 'local' ? 6 : 0) +
       (r.id ? 1 : 0);
     if (score > bestScore) {
       bestScore = score;

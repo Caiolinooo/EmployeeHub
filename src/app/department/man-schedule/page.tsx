@@ -40,6 +40,7 @@ import {
     shiftReferenceMonth,
     type ReferenceMonth,
 } from '@/lib/gestao-tripulantes/man-schedule-reference-month';
+import { pickOverlappingRotation, type RotationLike } from '@/lib/gestao-tripulantes/escala-contagem';
 
 interface CrewSchedule {
     id: string;
@@ -53,7 +54,12 @@ interface CrewSchedule {
     embarque_status: string | null;
     local_embarque: string;
     rotation_type: string;
+    origem?: 'mio' | 'local';
 }
+
+type ScheduleRotation = RotationLike & {
+    exibir_dia_inicio?: boolean;
+};
 
 interface ApiMeta {
     vessels: string[];
@@ -188,7 +194,7 @@ export default function ManSchedulePage() {
 
     // ─── Build dynamic rows grouped by position ───
     const positionGroups = useMemo(() => {
-        const byPosition: Record<string, { name: string; cpf: string; rotations: { start: string | null; end: string | null; type: string; exibir_dia_inicio?: boolean }[] }[]> = {};
+        const byPosition: Record<string, { name: string; cpf: string; rotations: ScheduleRotation[] }[]> = {};
 
         for (const s of filteredSchedules) {
             const pos = normalizePosition(s.position) || 'SEM CARGO';
@@ -197,14 +203,14 @@ export default function ManSchedulePage() {
             const existing = byPosition[pos].find(c => c.cpf === s.cpf);
             if (existing) {
                 if (s.rotation_start || s.rotation_end) {
-                    existing.rotations.push({ start: s.rotation_start, end: s.rotation_end, type: s.rotation_type || 'normal', exibir_dia_inicio: (s as any).exibir_dia_inicio });
+                    existing.rotations.push({ start: s.rotation_start, end: s.rotation_end, type: s.rotation_type || 'normal', exibir_dia_inicio: (s as any).exibir_dia_inicio, origem: (s as any).origem });
                 }
             } else {
                 byPosition[pos].push({
                     name: s.full_name,
                     cpf: s.cpf,
                     rotations: (s.rotation_start || s.rotation_end)
-                        ? [{ start: s.rotation_start, end: s.rotation_end, type: s.rotation_type || 'normal', exibir_dia_inicio: (s as any).exibir_dia_inicio }]
+                        ? [{ start: s.rotation_start, end: s.rotation_end, type: s.rotation_type || 'normal', exibir_dia_inicio: (s as any).exibir_dia_inicio, origem: (s as any).origem }]
                         : []
                 });
             }
@@ -341,36 +347,16 @@ function parseLocalDate(str: string | null | undefined): Date | null {
     };
 
     // ─── Check exact rotation status for the week ───
-    const getWeekRotationMeta = (weekDate: Date, rotations: { start: string | null; end: string | null; type?: string; exibir_dia_inicio?: boolean }[]): { status: string; dayLabel?: string } => {
+    const getWeekRotationMeta = (weekDate: Date, rotations: ScheduleRotation[]): { status: string; dayLabel?: string } => {
         const wStart = new Date(weekDate);
         wStart.setHours(0, 0, 0, 0);
         const wEnd = new Date(wStart);
         wEnd.setDate(wEnd.getDate() + 6);
         wEnd.setHours(23, 59, 59, 999);
 
-        let bestRot: any = null;
-        let bestScore = -1;
-
-        for (const r of rotations) {
-            if (!r.start) continue;
-            const rStart = parseLocalDate(r.start);
-            if (!rStart) continue;
-
-            const rEnd = r.end ? parseLocalDate(r.end) : new Date(rStart.getTime() + 90 * 24 * 60 * 60 * 1000);
-            if (!rEnd) continue;
-            rEnd.setHours(23, 59, 59, 999);
-
-            const overlaps = wStart <= rEnd && wEnd >= rStart;
-            if (overlaps) {
-                const startsInWeek = rStart >= wStart && rStart <= wEnd;
-                const isSpecific = r.type && r.type !== 'normal';
-                const score = (startsInWeek ? 1000 : 10) + (isSpecific ? 50 : 0);
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestRot = r;
-                }
-            }
-        }
+        // Mesma regra da aba GT: início na coluna, início mais recente,
+        // tipo específico e lançamento manual (origem='local') vencem empates.
+        const bestRot = pickOverlappingRotation(rotations, wStart, wEnd) as ScheduleRotation | null;
 
         if (!bestRot) return { status: '' };
 
@@ -386,7 +372,8 @@ function parseLocalDate(str: string | null | undefined): Date | null {
                     const prevWeek = new Date(wStart);
                     prevWeek.setDate(prevWeek.getDate() - 7);
                     const prevMeta = getWeekRotationMeta(prevWeek, rotations);
-                    const isFirstWeek = !prevMeta.status || prevMeta.status !== bestRot.type?.toUpperCase();
+                    // Compara códigos de exibição (ON/OFF-C/...), nunca tipo cru vs display.
+                    const isFirstWeek = !prevMeta.status || prevMeta.status !== scheduleDisplayCode(bestRot.type || 'normal');
                     if (isFirstWeek) {
                         dayLabel = `d.${parsed.getDate()}`;
                     }
@@ -398,7 +385,7 @@ function parseLocalDate(str: string | null | undefined): Date | null {
         return { status, dayLabel };
     };
 
-    const getWeekStatus = (weekDate: Date, rotations: { start: string | null; end: string | null; type?: string; exibir_dia_inicio?: boolean }[]) => {
+    const getWeekStatus = (weekDate: Date, rotations: ScheduleRotation[]) => {
         return getWeekRotationMeta(weekDate, rotations).status;
     };
 
@@ -442,7 +429,7 @@ function parseLocalDate(str: string | null | undefined): Date | null {
                     right: { style: "thin", color: { rgb: "000000" } } 
                 };
 
-                let cellStyle: any = {
+                const cellStyle: any = {
                     alignment: { vertical: "center", horizontal: "center", wrapText: true }
                 };
 

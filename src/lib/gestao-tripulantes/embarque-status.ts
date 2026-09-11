@@ -14,6 +14,7 @@ export interface EscalaEventoDia {
   data_desembarque: string | null;
   data_prevista_desembarque?: string | null;
   observacoes?: string | null;
+  origem?: string | null;
 }
 
 const OPEN_END_FALLBACK_DAYS = 90;
@@ -94,6 +95,7 @@ export interface PobRotationLike {
   start?: string | null;
   end?: string | null;
   observacoes?: string | null;
+  origem?: string | null;
 }
 
 function eventCoversCivilDay(ev: EscalaEventoDia, ymd: string): boolean {
@@ -117,7 +119,20 @@ function isSpecificRotationTipo(tipo: string | null | undefined): boolean {
   return codigo !== 'normal' && codigo !== '';
 }
 
-/** Same scoring idea as Man Schedule cell pick: start-on-day, then specific tipo, then persisted id. */
+/** FER/AFAST dominate the day pick: quem está de folga/afastado nunca vira POB. */
+function isAfastamentoRotationTipo(tipo: string | null | undefined): boolean {
+  const codigo = mapDbTipoToCodigo(tipo);
+  return codigo === 'ferias' || codigo === 'afastamento';
+}
+
+/**
+ * Same scoring idea as Man Schedule cell pick, with safety tiers:
+ * 1) FER/AFAST dominate (never outvoted by an overlapping rotation);
+ * 2) start-on-day;
+ * 3) manual launch (`origem='local'`) beats the MIO row it overrides;
+ * 4) specific tipo (OFF-C, STB, DBA, ON*...);
+ * 5) persisted id.
+ */
 export function pickEventForCivilDay(
   events: EscalaEventoDia[],
   ymd: string,
@@ -128,7 +143,12 @@ export function pickEventForCivilDay(
     if (!eventCoversCivilDay(ev, ymd)) continue;
     const start = parseYmdLocal(ev.data_embarque);
     const startsToday = start ? ymdOf(start) === ymd : false;
-    const score = (startsToday ? 1000 : 10) + (isSpecificRotationTipo(ev.tipo) ? 50 : 0) + (ev.id ? 5 : 0);
+    const score =
+      (isAfastamentoRotationTipo(ev.tipo) ? 5000 : 0) +
+      (startsToday ? 1000 : 10) +
+      (ev.origem === 'local' ? 60 : 0) +
+      (isSpecificRotationTipo(ev.tipo) ? 50 : 0) +
+      (ev.id ? 5 : 0);
     if (score > bestScore) {
       bestScore = score;
       best = ev;
@@ -156,6 +176,7 @@ export function countPobOnCivilDay(
       data_embarque: r.start ?? null,
       data_desembarque: r.end ?? null,
       observacoes: r.observacoes ?? null,
+      origem: r.origem ?? null,
     }));
     if (isEmbarcadoPobDayCode(dayCodeForCivilDay(events, ymd))) n += 1;
   }

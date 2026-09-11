@@ -55,7 +55,9 @@ export default function ModalAprovacaoFechamento({
   filters = {},
   onSuccess,
 }: ModalAprovacaoFechamentoProps) {
-  const currentMonthStr = new Date().toISOString().slice(0, 7);
+  // Mês civil local (BRT): toISOString() viraria o mês em 21h do fim de mês.
+  const _now = new Date();
+  const currentMonthStr = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}`;
   const [mesAno, setMesAno] = useState(initialMesAno || currentMonthStr);
   const [isLoading, setIsLoading] = useState(false);
   const [isApproving, setIsApproving] = useState(false);

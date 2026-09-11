@@ -147,7 +147,7 @@ export async function GET(request: NextRequest) {
 
         // ---- Stage 1: cheap freshness probe of gt_* (canonical, not mio_cache blobs)
         const probeStart = Date.now();
-        const [{ count: embCount }, { data: embUpdated }, { data: embCreated }, { count: colCount }] = await Promise.all([
+        const [{ count: embCount }, { data: embUpdated }, { data: embCreated }, { count: colCount }, { count: afastCount, data: afastUpdated }] = await Promise.all([
             supabaseAdmin
                 .from('gt_historico_embarques')
                 .select('id', { count: 'exact', head: true })
@@ -168,11 +168,18 @@ export async function GET(request: NextRequest) {
                 .from('gt_colaboradores')
                 .select('id', { count: 'exact', head: true })
                 .is('deleted_at', null),
+            supabaseAdmin
+                .from('gt_afastamentos')
+                .select('updated_at', { count: 'exact' })
+                .is('deleted_at', null)
+                .order('updated_at', { ascending: false, nullsFirst: false })
+                .limit(1),
         ]);
         timings.probe = Date.now() - probeStart;
         const stampUpdated = embUpdated?.[0]?.updated_at || embUpdated?.[0]?.created_at || 'none';
         const stampCreated = embCreated?.[0]?.created_at || 'none';
-        const mioSignature = `gt_emb:${embCount ?? 0}:${stampUpdated}:${stampCreated}:g${manScheduleCacheGeneration()}|gt_col:${colCount ?? 0}`;
+        const stampAfast = afastUpdated?.[0]?.updated_at || 'none';
+        const mioSignature = `gt_emb:${embCount ?? 0}:${stampUpdated}:${stampCreated}:g${manScheduleCacheGeneration()}|gt_col:${colCount ?? 0}|gt_afast:${afastCount ?? 0}:${stampAfast}`;
 
         // ---- Stage 2: in-memory cache (same TTL; lazy-load UI unchanged)
         const cachedEntry = resultCache.get(janelaParam);

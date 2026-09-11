@@ -19,7 +19,8 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const mesAno = searchParams.get('mesAno') || new Date().toISOString().slice(0, 7);
+    // BRT = UTC-3 (sem DST): âncora -3h evita virar o mês cedo demais no fim do dia.
+    const mesAno = searchParams.get('mesAno') || new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString().slice(0, 7);
     const dataInicio = searchParams.get('dataInicio') || undefined;
     const dataFim = searchParams.get('dataFim') || undefined;
     const empresa = searchParams.get('empresa') || undefined;

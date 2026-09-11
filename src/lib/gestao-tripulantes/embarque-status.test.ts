@@ -178,4 +178,20 @@ describe('countPobOnCivilDay', () => {
   it('formats civil today as YYYY-MM-DD in local time', () => {
     assert.equal(civilTodayYmd(new Date(2026, 8, 1, 23, 30, 0)), '2026-09-01');
   });
+
+  it('manual ON beats MIO OFF-C starting the same day (POB pick)', () => {
+    const events = [
+      { id: 'offc-mio', tipo: 'offc', data_embarque: '2026-10-17', data_desembarque: '2026-10-31', origem: 'mio' },
+      { id: 'on-local', tipo: 'normal', data_embarque: '2026-10-17', data_desembarque: '2026-10-31', origem: 'local' },
+    ];
+    assert.equal(dayCodeForCivilDay(events, '2026-10-20'), 'ON');
+  });
+
+  it('FER/AFAST dominate the day pick even over a manual ON overlap', () => {
+    const events = [
+      { id: 'fer', tipo: 'ferias', data_embarque: '2026-10-17', data_desembarque: '2026-10-31' },
+      { id: 'on-local', tipo: 'normal', data_embarque: '2026-10-17', data_desembarque: '2026-10-31', origem: 'local' },
+    ];
+    assert.equal(dayCodeForCivilDay(events, '2026-10-20'), 'FER');
+  });
 });

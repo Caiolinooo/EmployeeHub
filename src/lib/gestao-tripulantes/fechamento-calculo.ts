@@ -332,11 +332,15 @@ function findAfastamentoDoDia(afastamentos: AfastamentoCalculo[], day: Date): St
   for (const af of afastamentos) {
     const start = parseCivilDate(af.data_inicio);
     if (!start) continue;
+    // Afastamento aberto (sem data_fim/previsão): janela de 90d, mesma regra
+    // do overlay da grade (embarque-status.ts) — senão o DP conta ON para
+    // quem está de licença/férias sem retorno definido.
     const end = parseCivilDate(af.data_fim) || parseCivilDate(af.data_prevista_retorno);
-    if (!end) continue;
+    const b = end
+      ? startOfCivilDay(end).getTime()
+      : start.getTime() + 90 * 24 * 60 * 60 * 1000;
     const a = startOfCivilDay(start);
-    const b = startOfCivilDay(end);
-    if (t >= a.getTime() && t <= b.getTime()) {
+    if (t >= a.getTime() && t <= b) {
       return isFeriasTipo(af.tipo_afastamento) ? 'FER' : 'AFAST';
     }
   }
@@ -449,7 +453,16 @@ export function calcularFechamentoColaborador(
     }
   }
 
-  const aBordo = usable.filter((item) => item.aBordo);
+  // Colapsa ciclos idênticos (mesmo período e tipo) — linhas duplicadas do
+  // mesmo embarque geravam déficit FI fantasma e ciclo NxN repetido por cópia.
+  const seenCiclos = new Set<string>();
+  const aBordo = usable.filter((item) => {
+    if (!item.aBordo) return false;
+    const key = `${item.start.getTime()}|${item.end.getTime()}|${item.codigo}`;
+    if (seenCiclos.has(key)) return false;
+    seenCiclos.add(key);
+    return true;
+  });
   const ciclos: CicloEmbarqueCalculo[] = [];
   const alertas: string[] = [];
 

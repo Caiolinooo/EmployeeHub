@@ -29,7 +29,7 @@ export async function PUT(
 
     const { data: existing, error: findErr } = await supabaseAdmin
       .from('gt_historico_embarques')
-      .select('id, origem, deleted_at')
+      .select('id, tipo, data_embarque, data_desembarque, local_embarque, local_desembarque, observacoes, exibir_dia_inicio, origem, mio_embarque_id, deleted_at')
       .eq('id', id)
       .maybeSingle();
 
@@ -37,10 +37,52 @@ export async function PUT(
       return NextResponse.json({ error: 'Evento de escala não encontrado' }, { status: 404 });
     }
 
+    if (
+      body.data_embarque !== undefined &&
+      body.data_desembarque !== undefined &&
+      String(body.data_desembarque).slice(0, 10) < String(body.data_embarque).slice(0, 10)
+    ) {
+      return NextResponse.json(
+        { error: 'Data de desembarque não pode ser anterior à data de embarque.' },
+        { status: 400 }
+      );
+    }
+
+    // Dirty check: salvar sem mudar nada NÃO vira origem='local' — a linha MIO
+    // continua sincronizável. Só consideramos ajuste manual quando um campo
+    // de fato diverge.
+    const nextTipo = body.tipo !== undefined ? mapCodigoToDbTipo(String(body.tipo)) : existing.tipo;
+    const nextVals = {
+      tipo: nextTipo,
+      data_embarque: body.data_embarque !== undefined ? body.data_embarque : existing.data_embarque,
+      data_desembarque: body.data_desembarque !== undefined ? body.data_desembarque : existing.data_desembarque,
+      local_embarque: body.local_embarque !== undefined ? body.local_embarque || '' : existing.local_embarque || '',
+      local_desembarque: body.local_desembarque !== undefined ? body.local_desembarque || '' : existing.local_desembarque || '',
+      observacoes: body.observacoes !== undefined ? body.observacoes || '' : existing.observacoes || '',
+      exibir_dia_inicio: body.exibir_dia_inicio !== undefined ? Boolean(body.exibir_dia_inicio) : existing.exibir_dia_inicio !== false,
+    };
+    const existingExibir = existing.exibir_dia_inicio !== false; // null → default true
+    const dirty =
+      nextVals.tipo !== existing.tipo ||
+      String(nextVals.data_embarque || '').slice(0, 10) !== String(existing.data_embarque || '').slice(0, 10) ||
+      String(nextVals.data_desembarque || '').slice(0, 10) !== String(existing.data_desembarque || '').slice(0, 10) ||
+      nextVals.local_embarque !== (existing.local_embarque || '') ||
+      nextVals.local_desembarque !== (existing.local_desembarque || '') ||
+      nextVals.observacoes !== (existing.observacoes || '') ||
+      nextVals.exibir_dia_inicio !== existingExibir;
+
+    if (!dirty) {
+      return NextResponse.json({ success: true, data: existing, unchanged: true });
+    }
+
     const updates: Record<string, unknown> = {
       origem: 'local',
       updated_at: new Date().toISOString(),
     };
+
+    if (body.tipo !== undefined) {
+      updates.tipo = mapCodigoToDbTipo(String(body.tipo));
+    }
 
     if (body.tipo !== undefined) {
       updates.tipo = mapCodigoToDbTipo(String(body.tipo));

@@ -88,6 +88,7 @@ interface RotationCell {
     observacoes?: string | null;
     local_embarque?: string;
     exibir_dia_inicio?: boolean;
+    origem?: 'mio' | 'local';
 }
 
 interface Props {
@@ -513,6 +514,7 @@ export default function GTManScheduleTab({ onColabClick, kpiFilter = '' }: Props
         date: Date;
         status: string;
         rotationId?: string;
+        rotationType?: string;
         vessel: string;
     } | null>(null);
     const [formTipo, setFormTipo] = useState('normal');
@@ -751,7 +753,9 @@ function parseLocalDate(str: string | null | undefined): Date | null {
         defaultEnd.setDate(defaultEnd.getDate() + 14);
         const formattedEnd = formatLocalYmd(defaultEnd);
 
-        setSelectedCell({ cpf, name, date, status, rotationId: rotId, vessel: currentVessel });
+        const mappedTipo = matchingRotation?.type || (status ? resolveTipo(status)?.codigo : null) || 'normal';
+
+        setSelectedCell({ cpf, name, date, status, rotationId: rotId, rotationType: mappedTipo || undefined, vessel: currentVessel });
 
         if (!modalPos && typeof window !== 'undefined') {
             setModalPos({
@@ -760,7 +764,6 @@ function parseLocalDate(str: string | null | undefined): Date | null {
             });
         }
 
-        const mappedTipo = matchingRotation?.type || (status ? resolveTipo(status)?.codigo : null) || 'normal';
         setFormTipo(mappedTipo);
         setFormExibirDia(matchingRotation?.exibir_dia_inicio !== undefined ? Boolean(matchingRotation.exibir_dia_inicio) : true);
 
@@ -780,6 +783,13 @@ function parseLocalDate(str: string | null | undefined): Date | null {
 
     const handleSaveEvent = async () => {
         if (!selectedCell) return;
+        // Férias/afastamentos vêm de gt_afastamentos — não são linhas de embarque;
+        // PUT/DELETE /embarques/<id> daria 404. São gerenciados no módulo de Férias/DP.
+        if (selectedCell.rotationType === 'ferias' || selectedCell.rotationType === 'afastamento') {
+            toast.error('Férias e afastamentos são gerenciados pelo módulo de Férias/DP e não podem ser editados na grade.');
+            setSelectedCell(null);
+            return;
+        }
         const editingId = selectedCell.rotationId && isUuid(selectedCell.rotationId)
             ? selectedCell.rotationId
             : null;
@@ -849,6 +859,11 @@ function parseLocalDate(str: string | null | undefined): Date | null {
 
     const handleDeleteEvent = async () => {
         if (!selectedCell?.rotationId) return;
+        if (selectedCell.rotationType === 'ferias' || selectedCell.rotationType === 'afastamento') {
+            toast.error('Férias e afastamentos são gerenciados pelo módulo de Férias/DP e não podem ser excluídos na grade.');
+            setSelectedCell(null);
+            return;
+        }
         const rotIdToDelete = selectedCell.rotationId;
         const cellCpf = selectedCell.cpf;
 
@@ -1011,6 +1026,7 @@ function parseLocalDate(str: string | null | undefined): Date | null {
                 observacoes: s.observacoes || null,
                 local_embarque: s.local_embarque || '',
                 exibir_dia_inicio: Boolean(s.exibir_dia_inicio),
+                origem: s.origem,
             };
 
             const existing = byPosition[pos].find((c) => c.cpf === s.cpf);

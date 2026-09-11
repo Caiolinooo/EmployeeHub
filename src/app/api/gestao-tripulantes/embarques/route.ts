@@ -36,6 +36,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Campos obrigatórios ausentes' }, { status: 400 });
     }
 
+    // Intervalo invertido some da grade e conta 1 dia no fechamento — rejeitar.
+    if (String(data_desembarque).slice(0, 10) < String(data_embarque).slice(0, 10)) {
+      return NextResponse.json(
+        { error: 'Data de desembarque não pode ser anterior à data de embarque.' },
+        { status: 400 }
+      );
+    }
+
     const colab = await findColaboradorByCpf(String(colaborador_cpf));
     if (!colab) {
       return NextResponse.json(
@@ -60,6 +68,61 @@ export async function POST(request: NextRequest) {
       created_at: now,
       updated_at: now,
     };
+
+    // Idempotência: um evento por colaborador + período exato. Retentar o mesmo
+    // save atualiza o registro existente (e colapsa duplicatas antigas) em vez
+    // de empilhar linhas idênticas que inflam o fechamento NxN.
+    const dia = (v: unknown) => String(v ?? '').slice(0, 10);
+    const { data: duplicates, error: dupErr } = await supabaseAdmin
+      .from('gt_historico_embarques')
+      .select('id, origem, created_at')
+      .eq('colaborador_id', colab.id)
+      .eq('data_embarque', dia(data_embarque))
+      .eq('data_desembarque', dia(data_desembarque))
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false });
+
+    if (dupErr) {
+      console.error('Erro ao verificar duplicados de embarque:', dupErr);
+    } else if (duplicates && duplicates.length > 0) {
+      const keep = duplicates[0];
+      let collapsed = 0;
+      if (duplicates.length > 1) {
+        // Colapsa só linhas locais — linhas MIO são da sincronização e podem voltar.
+        const staleIds = duplicates.slice(1).filter((d) => d.origem === 'local').map((d) => d.id);
+        if (staleIds.length > 0) {
+          const { error: delErr } = await supabaseAdmin
+            .from('gt_historico_embarques')
+            .update({ deleted_at: now, updated_at: now })
+            .in('id', staleIds);
+          if (delErr) console.error('Erro ao colapsar duplicados de embarque:', delErr);
+          else collapsed = staleIds.length;
+        }
+      }
+      const { data: updated, error: updErr } = await supabaseAdmin
+        .from('gt_historico_embarques')
+        .update({
+          tipo: dbTipo,
+          local_embarque: local_embarque || '',
+          local_desembarque: local_desembarque || '',
+          observacoes: observacoes || '',
+          exibir_dia_inicio: row.exibir_dia_inicio,
+          origem: 'local',
+          updated_at: now,
+        })
+        .eq('id', keep.id)
+        .select('*')
+        .single();
+      if (updErr) {
+        console.error('Erro ao atualizar embarque duplicado:', updErr);
+        return NextResponse.json(
+          { error: updErr.message || 'Erro ao atualizar evento de escala' },
+          { status: 500 }
+        );
+      }
+      if (collapsed > 0) invalidateManScheduleCache();
+      return NextResponse.json({ success: true, data: updated, merged: true });
+    }
 
     let { data, error } = await supabaseAdmin
       .from('gt_historico_embarques')

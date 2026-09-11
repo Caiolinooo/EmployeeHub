@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.75.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.76.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -16,11 +16,11 @@ Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](
 
 ---
 
-## Nesta versão (5.75.0)
+## Nesta versão (5.76.0)
 
-- **DP cadastra do zero** em `/department/dp/novo` e altera qualquer campo de `gt_colaboradores` (mesmo banco, sem tabela paralela). Gate ADMIN/MANAGER ou setor DP/RH + módulo Gestão de Tripulantes. CPF Módulo 11; `matricula_esocial` vazio copia `matricula`.
-- **Fechamento NxN** usa dt início + dt fim de cada embarque. Dobra, FI, folga e STB iguais na UI, `GET /relatorio-mensal` e no XLSX (aba Ciclos NxN). Sem dt fim não inventa janela.
-- **e-Social matrícula** sempre editável na revisão do evento. Gravar atualiza XML + cadastro GT.
+- **Man Schedule salva e mostra**: marcação manual vence o evento MIO de datas idênticas (antes: save gravava, mas a linha MIO sombreava a célula — "marcação sumia ao salvar"). Retentativas não criam mais eventos duplicados (POST idempotente + limpeza das duplicatas legadas).
+- **Fechamento DP confiável**: sem FI fantasma de ciclos duplicados; afastamento sem data de retorno conta FER/AFAST (janela 90d), não ON; mês de referência em BRT nos defaults (modal, rota, cron).
+- **Grade íntegra**: FER/AFAST não são editáveis pela grade; datas invertidas rejeitadas; save sem mudança não dessincroniza a linha MIO; cache do realtime reage a mudanças de afastamento do DP.
 
 ---
 

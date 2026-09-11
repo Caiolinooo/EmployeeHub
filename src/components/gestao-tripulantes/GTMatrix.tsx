@@ -117,7 +117,11 @@ export default function GTMatrix({ colaboradores, loading, onRowClick, className
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('pt-BR');
+    // DATE columns chegam como YYYY-MM-DD; new Date() interpreta como UTC e
+    // retrocede um dia no fuso BRT. Parse civil mantém o dia exato.
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(dateStr).trim());
+    if (!m) return dateStr;
+    return `${m[3].slice(0, 2).padStart(2, '0')}/${m[2]}/${m[1]}`;
   };
 
   return (

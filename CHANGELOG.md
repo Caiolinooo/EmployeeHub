@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.76.0] - 2026-09-11
+
+### 🗓️ Man Schedule: marcações invisíveis corrigidas + auditoria do módulo
+
+1. **Marcação que sumia ao salvar**: ON lançado sobre um evento MIO com datas idênticas (ex.: OFF-C 17/10→31/10) ficava invisível — o desempate de sobreposição dava +5 ao tipo específico e a linha MIO vencia em todas as colunas, embora o save gravasse no banco. Agora o lançamento manual (`origem='local'`) vence empate de data idêntica em `pickOverlappingRotation`; FER/AFAST dominam a escolha do dia civil (nunca viram POB); `/department/man-schedule` reusa o mesmo seletor (o copião antigo deixava tipo específico ganhar de início mais recente).
+2. **POST `/embarques` idempotente**: retentar o mesmo save atualiza o evento (colaborador + período exato) em vez de empilhar linhas idênticas. Colapsa só linhas locais — linhas MIO não são tombadas. Legado limpo: `node scripts/dedupe-embarques-locais.js` removeu 26 linhas duplicadas de 14 grupos (duplicatas inflamavam FI/folga indenizada e a aba Ciclos NxN do fechamento).
+3. **Fechamento DP**: ciclos idênticos colapsados antes do loop NxN (sem FI fantasma por cópia); afastamento aberto (sem `data_fim`/previsão) entra como FER/AFAST pela janela de 90d — igual ao overlay da grade — em vez de contar ON para quem está de licença; mês de referência default em BRT no modal, na rota e no cron (não vira mais o mês às 21h do fim de mês).
+4. **Célula FER/AFAST na grade** não abre mais o editor de embarque (PUT/DELETE `/embarques/<id de gt_afastamentos>` dava 404 silencioso). Toast orienta resolver no módulo de Férias/DP.
+5. **Integridade de datas e cache**: `data_desembarque < data_embarque` = 400 no POST e no PUT; "Próximo Embarque" da Matriz não retrocede mais um dia (parse UTC→BRT); save sem mudança real não converte linha MIO em `origem='local'` (continua sincronizável); assinatura de cache do realtime inclui probe de `gt_afastamentos` (mudanças do DP aparecem sem esperar o TTL); `cron/relatorio-mensal` exige `CRON_SECRET` (branch de auth estava vazia).
+6. **Time de agentes Claude Code** em `.claude/agents/`: 8 subagentes do projeto (`abz-tech-lead`, `abz-architect`, `abz-dev-frontend`, `abz-dev-backend`, `abz-qa`, `abz-bughunter`, `abz-reviewer`, `abz-security`) + skill `/sobe-o-git` (verifica → versiona → changelog → commit/push).
+
 ## [5.75.0] - 2026-09-10
 
 ### Departamento Pessoal, fechamento NxN e matrícula e-Social
