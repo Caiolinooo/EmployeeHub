@@ -10,6 +10,7 @@ import ESocialNavigation from '@/components/e-social/ESocialNavigation';
 import ImportadorTabelas from '@/components/e-social/ImportadorTabelas';
 import { toast } from 'react-hot-toast';
 import { FiSave, FiRefreshCw } from 'react-icons/fi';
+import GtPageShell, { GT_PAGE_SCROLLPORT_CLASS } from '@/components/gestao-tripulantes/GtPageShell';
 
 export default function ESocialConfiguracoesPage() {
   const { user, isLoading: authLoading } = useSupabaseAuth();
@@ -94,27 +95,31 @@ export default function ESocialConfiguracoesPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 p-6">
-        <div className="max-w-3xl mx-auto space-y-4">
-          <div className="flex items-center justify-between">
+      <GtPageShell>
+        <div className="flex flex-col flex-1 min-h-0 w-full max-w-3xl mx-auto gap-4">
+          <div className="flex items-center justify-between shrink-0">
             <div>
               <h1 className="text-2xl font-bold text-gray-800">{t('eSocial.configuracoes', 'Configurações')}</h1>
               <p className="text-sm text-gray-500">{t('eSocial.config.title', 'Configurações do ambiente de transmissão')}</p>
             </div>
           </div>
-          <ESocialNavigation />
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-16 bg-gray-100 animate-pulse rounded-lg" />
-          ))}
+          <div className="shrink-0">
+            <ESocialNavigation />
+          </div>
+          <div className={`${GT_PAGE_SCROLLPORT_CLASS} space-y-4`}>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-16 bg-gray-100 animate-pulse rounded-lg" />
+            ))}
+          </div>
         </div>
-      </div>
+      </GtPageShell>
     );
   }
 
   return (
-    <div className="flex-1 p-6">
-      <div className="max-w-3xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
+    <GtPageShell>
+      <div className="flex flex-col flex-1 min-h-0 w-full max-w-3xl mx-auto gap-4">
+        <div className="flex items-center justify-between shrink-0">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">{t('eSocial.configuracoes', 'Configurações')}</h1>
             <p className="text-sm text-gray-500">{t('eSocial.config.title', 'Configurações do ambiente de transmissão')}</p>
@@ -129,10 +134,12 @@ export default function ESocialConfiguracoesPage() {
         </div>
 
         {/* Sub-Navigation Tabs */}
-        <ESocialNavigation />
+        <div className="shrink-0">
+          <ESocialNavigation />
+        </div>
 
         {/* Sub-tabs pills */}
-        <div className="flex border-b border-slate-150 mb-6 gap-6">
+        <div className="flex border-b border-slate-150 gap-6 shrink-0">
           <button
             onClick={() => setSubTab('transmissao')}
             className={`pb-2.5 px-1 font-semibold text-sm transition-all duration-200 border-b-2 ${
@@ -155,6 +162,7 @@ export default function ESocialConfiguracoesPage() {
           </button>
         </div>
 
+        <div className={GT_PAGE_SCROLLPORT_CLASS}>
         {subTab === 'transmissao' ? (
           <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 space-y-6">
             <h2 className="text-lg font-semibold text-gray-800">{t('eSocial.config.ambiente', 'Ambiente de Transmissão')}</h2>
@@ -291,7 +299,8 @@ export default function ESocialConfiguracoesPage() {
         ) : (
           <ImportadorTabelas />
         )}
+        </div>
       </div>
-    </div>
+    </GtPageShell>
   );
 }

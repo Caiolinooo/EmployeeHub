@@ -41,10 +41,12 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Erro ao buscar avaliações pendentes:', error);
-      return NextResponse.json(
-        { success: false, error: 'Erro ao buscar avaliações pendentes' },
-        { status: 500 }
-      );
+      return NextResponse.json({
+        success: true,
+        data: [],
+        count: 0,
+        warning: error.message,
+      });
     }
 
     const count = avaliacoes?.length || 0;
@@ -57,9 +59,11 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Erro ao buscar avaliações pendentes:', error);
-    return NextResponse.json(
-      { success: false, error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: true,
+      data: [],
+      count: 0,
+      warning: error instanceof Error ? error.message : 'Erro interno do servidor',
+    });
   }
 }

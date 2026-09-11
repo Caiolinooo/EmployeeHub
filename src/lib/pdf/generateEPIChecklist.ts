@@ -33,7 +33,25 @@ export async function generateEPIChecklist(
     });
 }
 
-export async function generateFichaEPI(data: FichaData) {
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+    if (typeof Buffer !== 'undefined') return Buffer.from(buffer).toString('base64');
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+    }
+    return btoa(binary);
+}
+
+async function fetchImageAsDataUrl(url: string): Promise<string | null> {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const mime = response.headers.get('content-type') || 'image/png';
+    return `data:${mime};base64,${arrayBufferToBase64(await response.arrayBuffer())}`;
+}
+
+export async function generateFichaEPI(data: FichaData, options?: { save?: boolean }): Promise<jsPDF> {
     const { employeeName, employeePosition, employeeProject, registrations, signatureUrl, signatureDate } = data;
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
@@ -260,16 +278,12 @@ export async function generateFichaEPI(data: FichaData) {
         } else {
             // Always render the real signature image
             try {
-                const response = await fetch(signatureUrl);
-                const blob = await response.blob();
-                const base64Data = await new Promise<string>((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result as string);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(blob);
-                });
-
-                doc.addImage(base64Data, 'PNG', margin, finalY + 2, 50, 20);
+                const base64Data = await fetchImageAsDataUrl(signatureUrl);
+                if (base64Data) {
+                    doc.addImage(base64Data, 'PNG', margin, finalY + 2, 50, 20);
+                } else {
+                    doc.text('(Assinatura indisponível)', margin, finalY + 8);
+                }
             } catch (e) {
                 console.error('Error loading signature image:', e);
                 doc.text('(Erro ao carregar imagem da assinatura)', margin, finalY + 8);
@@ -288,9 +302,17 @@ export async function generateFichaEPI(data: FichaData) {
     }
     doc.setTextColor(0, 0, 0);
 
-    // Save
     const filename = `Ficha_EPI_${employeeName.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
-    doc.save(filename);
+    if (options?.save !== false) {
+        doc.save(filename);
+    }
+    return doc;
+}
+
+export async function generateFichaEPIBytes(data: FichaData): Promise<{ bytes: Uint8Array; filename: string }> {
+    const doc = await generateFichaEPI(data, { save: false });
+    const filename = `Ficha_EPI_${data.employeeName.replace(/\s+/g, '_')}.pdf`;
+    return { bytes: new Uint8Array(doc.output('arraybuffer')), filename };
 }
 
 // ==================== HELPER ====================

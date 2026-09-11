@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { generateEventXML, validateEventXML, validateEventData, updateEvento, logEnvio } from '@/services/eSocialService';
 import { cpfsMatch, normalizeCpf } from '@/lib/gestao-tripulantes/cpf';
+import { sanitizeTsNome } from '@/lib/e-social/ts-nome';
 
 export const dynamic = 'force-dynamic';
 
@@ -245,8 +246,17 @@ export async function POST(
       }, { status: 400 });
     }
 
-    if (!cpfDocumento && !cpfPerfil) {
-      return NextResponse.json({ error: 'CPF não disponível no ASO nem no perfil do colaborador.' }, { status: 400 });
+    // Gate duro: sem CPF extraído pelo OCR não há prova de identidade — nunca enviar.
+    // (Impede que um ASO trocado seja lançado com o CPF do perfil onde foi upado.)
+    if (!cpfDocumento) {
+      return NextResponse.json({
+        error: 'Execute o OCR / identidade não verificada: este ASO não tem CPF extraído e não pode ser enviado ao E-Social.',
+        code: 'ASO_CPF_NAO_EXTRAIDO',
+      }, { status: 409 });
+    }
+
+    if (!cpfPerfil) {
+      return NextResponse.json({ error: 'CPF não disponível no perfil do colaborador.' }, { status: 400 });
     }
 
     // Fetch CNPJ of the collaborator's employer company
@@ -278,10 +288,10 @@ export async function POST(
           tipo_exame: asoData.tipo_exame || 'periodico',
           data_realizacao: asoData.data_realizacao || doc.data_emissao,
           resultado: asoData.resultado || 'apto',
-          medico_nome: asoData.medico_nome,
+          medico_nome: sanitizeTsNome(asoData.medico_nome || '') || null,
           medico_crm: asoData.medico_crm,
           medico_uf: asoData.medico_uf,
-          medico_pcmso_nome: asoData.medico_pcmso_nome,
+          medico_pcmso_nome: sanitizeTsNome(asoData.medico_pcmso_nome || '') || null,
           medico_pcmso_crm: asoData.medico_pcmso_crm,
           medico_pcmso_uf: asoData.medico_pcmso_uf,
           exames_realizados: asoData.exames_realizados,
@@ -319,10 +329,10 @@ export async function POST(
           tipoExame: asoData.tipo_exame || 'periodico',
           dataRealizacao: asoData.data_realizacao || doc.data_emissao,
           resultado: asoData.resultado || 'apto',
-          medico_nome: asoData.medico_nome || '',
+          medico_nome: sanitizeTsNome(asoData.medico_nome || ''),
           medico_crm: asoData.medico_crm || '',
           medico_uf: asoData.medico_uf || '',
-          medico_pcmso_nome: asoData.medico_pcmso_nome || '',
+          medico_pcmso_nome: sanitizeTsNome(asoData.medico_pcmso_nome || ''),
           medico_pcmso_crm: asoData.medico_pcmso_crm || '',
           medico_pcmso_uf: asoData.medico_pcmso_uf || '',
           exames_realizados: asoData.exames_realizados || [],

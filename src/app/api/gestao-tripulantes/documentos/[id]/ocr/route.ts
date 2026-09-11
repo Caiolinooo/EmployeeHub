@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { processarDocumentoOCR, processarImagensPreRenderizadas, extrairDadosTexto } from '@/lib/ocr';
-import { extrairDadosASODoTexto, aplicarGateIdentidadeDocumento } from '@/lib/gestao-tripulantes/ocr-processor';
+import { extrairDadosASODoTexto, aplicarGateIdentidadeDocumento, persistirCamposOcrDocumento } from '@/lib/gestao-tripulantes/ocr-processor';
 import type { OCRTipoDocumento } from '@/types/ocr';
 
 export const dynamic = 'force-dynamic';
@@ -47,16 +47,30 @@ export async function POST(
       .update({ ocr_status: 'processando', updated_at: new Date().toISOString() })
       .eq('id', id);
 
+    // Buscar CPF do perfil do colaborador para guiar a reconciliação contextual
+    let profileCpf: string | null = null;
+    if (documento.colaborador_id) {
+      const { data: colab } = await supabaseAdmin
+        .from('gt_colaboradores')
+        .select('cpf')
+        .eq('id', documento.colaborador_id)
+        .maybeSingle();
+      if (colab?.cpf) {
+        profileCpf = colab.cpf.replace(/\D/g, '');
+      }
+    }
+
     // Verificar se o cliente enviou imagens pré-renderizadas, texto extraído, ou se usa processamento server-side
     let result;
     try {
       const body = await request.json();
       const clientImages: string[] | undefined = body?.images;
-      const clientText: string | undefined = body?.text;
+      const clientTextRaw: string | undefined = body?.text;
+      const clientText = typeof clientTextRaw === 'string' ? clientTextRaw.trim() : '';
 
-      if (clientText) {
+      if (clientText.length >= 30) {
         console.log(`[OCR/Route] Recebido texto extraído diretamente do cliente (${clientText.length} caracteres).`);
-        const dadosRegex = extrairDadosTexto(clientText, documento.tipo_documento as OCRTipoDocumento);
+        const dadosRegex = extrairDadosTexto(clientText, documento.tipo_documento as OCRTipoDocumento, profileCpf);
         result = {
           success: true,
           data: {
@@ -66,24 +80,26 @@ export async function POST(
           }
         };
       } else if (clientImages && Array.isArray(clientImages) && clientImages.length > 0) {
-        // NOVO FLUXO: Imagens renderizadas pelo navegador → direto para LLM Vision
         console.log(`[OCR/Route] Recebidas ${clientImages.length} imagens pré-renderizadas do cliente.`);
         result = await processarImagensPreRenderizadas(
           clientImages,
-          documento.tipo_documento as OCRTipoDocumento
+          documento.tipo_documento as OCRTipoDocumento,
+          profileCpf
         );
       } else {
         // FLUXO LEGADO: Processamento server-side (pdf-parse, etc.)
         result = await processarDocumentoOCR(
           documento.arquivo_url,
-          documento.tipo_documento as OCRTipoDocumento
+          documento.tipo_documento as OCRTipoDocumento,
+          profileCpf
         );
       }
     } catch {
       // Se o body não for JSON válido (ex: POST sem body), usar fluxo legado
       result = await processarDocumentoOCR(
         documento.arquivo_url,
-        documento.tipo_documento as OCRTipoDocumento
+        documento.tipo_documento as OCRTipoDocumento,
+        profileCpf
       );
     }
 
@@ -153,6 +169,7 @@ export async function POST(
           identity_match: asoRow?.identity_match ?? null,
           cpf_documento: asoRow?.cpf_documento ?? null,
         };
+        await persistirCamposOcrDocumento(id, 'aso', result.data.dadosExtraidos, result.data.texto);
       } catch (asoErr) {
         console.error('Erro ao processar dados de ASO:', asoErr);
       }

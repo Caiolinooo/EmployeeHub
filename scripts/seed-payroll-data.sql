@@ -38,7 +38,12 @@ INSERT INTO payroll_codes (code, type, name, description, calculation_type, lega
 
 -- Outros
 ('301', 'outros', 'Aviso Prévio', 'Aviso prévio indenizado', 'fixed', null, false, true),
-('302', 'outros', 'Multa 40% FGTS', 'Multa rescisória do FGTS', 'percentage', null, false, true)
+('302', 'outros', 'Multa 40% FGTS', 'Multa rescisória do FGTS', 'percentage', null, false, true),
+('303', 'provento', 'Saldo de Salário', 'Saldo de salário dos dias trabalhados no mês da rescisão', 'fixed', null, false, true),
+('304', 'provento', '13º Salário Proporcional', 'Décimo terceiro proporcional na rescisão', 'fixed', null, false, true),
+('305', 'provento', 'Férias Proporcionais + 1/3', 'Férias proporcionais acrescidas do terço constitucional', 'fixed', null, false, true),
+('306', 'provento', 'Férias Vencidas + 1/3', 'Férias vencidas acrescidas do terço constitucional', 'fixed', null, false, true),
+('307', 'outros', 'Multa 20% FGTS', 'Multa rescisória do FGTS no acordo mútuo (art. 484-A CLT)', 'percentage', null, false, true)
 
 ON CONFLICT (code, type) DO UPDATE SET
   name = EXCLUDED.name,

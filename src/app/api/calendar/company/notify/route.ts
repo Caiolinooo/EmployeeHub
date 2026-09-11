@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { parseIcs } from '@/lib/ics';
 import { sendEmail } from '@/lib/email-service';
+import { dedupeSimilarCalendarEvents } from '@/lib/calendar-event-dedupe';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
     const res = await fetch(icsUrl, { cache: 'no-store' });
     if (!res.ok) return NextResponse.json({ error: `Falha ao baixar ICS (${res.status})` }, { status: 502 });
     const icsText = await res.text();
-    const events = await parseIcs(icsText);
+    const events = dedupeSimilarCalendarEvents(await parseIcs(icsText)).events;
 
     const upcoming = events.filter(evt => {
       const start = new Date(evt.start);

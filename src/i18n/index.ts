@@ -1,5 +1,8 @@
 import enUS from './locales/en-US';
 import ptBR from './locales/pt-BR';
+import { interpolateTranslationParams } from './interpolate';
+
+export { interpolateTranslationParams } from './interpolate';
 
 export type Locale = 'en-US' | 'pt-BR';
 
@@ -64,17 +67,5 @@ export function getTranslation(locale: Locale, key: string, defaultValue?: strin
     }
   }
 
-  // If we have a result and params, perform interpolation
-  if (result && params) {
-    Object.keys(params).forEach(paramKey => {
-      const value = String(params[paramKey]);
-      // Replace {{key}}
-      result = result.replace(new RegExp(`{{${paramKey}}}`, 'g'), value);
-      // Replace {key} (alternative syntax)
-      result = result.replace(new RegExp(`{${paramKey}}`, 'g'), value);
-    });
-    return result;
-  }
-
-  return result || defaultValue || key;
+  return interpolateTranslationParams(result || defaultValue || key, params);
 }

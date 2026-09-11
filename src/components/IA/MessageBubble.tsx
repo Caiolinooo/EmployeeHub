@@ -3,61 +3,11 @@
 import React from 'react';
 import type { IAChatMessage } from '@/types/ia';
 import GenerativeDashboard from './GenerativeDashboard';
+import { renderChatMarkdown, stripReasoningBlocks } from './chatMarkdown';
 
 interface Props {
   message: IAChatMessage;
   isStreaming?: boolean;
-}
-
-function processInline(text: string): React.ReactNode {
-  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith('**') && part.endsWith('**'))
-      return <strong key={i}>{part.slice(2, -2)}</strong>;
-    if (part.startsWith('*') && part.endsWith('*'))
-      return <em key={i}>{part.slice(1, -1)}</em>;
-    if (part.startsWith('`') && part.endsWith('`'))
-      return <code key={i} className="bg-gray-100 text-pink-600 px-1 rounded text-sm font-mono">{part.slice(1, -1)}</code>;
-    return part;
-  });
-}
-
-function renderContent(text: string): React.ReactNode {
-  const parts = text.split(/(```[\s\S]*?```)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith('```') && part.endsWith('```')) {
-      const code = part.slice(3, -3);
-      const nl = code.indexOf('\n');
-      const content = nl > 0 ? code.slice(nl + 1) : code;
-      return (
-        <pre key={i} className="bg-gray-900 text-gray-100 rounded-lg p-3 my-2 overflow-x-auto text-sm">
-          <code>{content}</code>
-        </pre>
-      );
-    }
-    return part.split('\n').map((line, j) => {
-      if (line.startsWith('### ')) return <h4 key={`${i}-${j}`} className="font-semibold text-sm mt-2 mb-1">{processInline(line.slice(4))}</h4>;
-      if (line.startsWith('## ')) return <h3 key={`${i}-${j}`} className="font-bold mt-2 mb-1">{processInline(line.slice(3))}</h3>;
-      if (line.match(/^[\-\*]\s/)) return <li key={`${i}-${j}`} className="ml-4 list-disc">{processInline(line.slice(2))}</li>;
-      if (!line.trim()) return <br key={`${i}-${j}`} />;
-      return <p key={`${i}-${j}`} className="mb-1">{processInline(line)}</p>;
-    });
-  });
-}
-
-function stripReasoningBlocks(text: string): string {
-  if (!text) return '';
-  let cleaned = text;
-  cleaned = cleaned.replace(/<thought>[\s\S]*?<\/thought>/gi, '');
-  cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, '');
-  cleaned = cleaned.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '');
-  cleaned = cleaned.replace(/<thought>[\s\S]*$/gi, '');
-  cleaned = cleaned.replace(/<think>[\s\S]*$/gi, '');
-  cleaned = cleaned.replace(/<reasoning>[\s\S]*$/gi, '');
-  cleaned = cleaned.replace(/<\/?thought>/gi, '');
-  cleaned = cleaned.replace(/<\/?think>/gi, '');
-  cleaned = cleaned.replace(/<\/?reasoning>/gi, '');
-  return cleaned.trim();
 }
 
 export default function MessageBubble({ message, isStreaming }: Props) {
@@ -78,13 +28,13 @@ export default function MessageBubble({ message, isStreaming }: Props) {
         </div>
       )}
       <div className="max-w-[85%] w-full flex flex-col items-start">
-        <div className={`rounded-2xl px-4 py-3 w-fit ${
+        <div className={`rounded-2xl px-4 py-3 w-fit max-w-full min-w-0 ${
           isUser
             ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-br-md shadow-md ml-auto'
             : 'bg-white text-gray-800 rounded-bl-md shadow-sm border border-gray-100'
         }`}>
-          <div className="text-sm leading-relaxed">
-            {isUser ? cleanContent : renderContent(cleanContent)}
+          <div className="text-sm leading-relaxed min-w-0">
+            {isUser ? cleanContent : renderChatMarkdown(cleanContent)}
             {isStreaming && <span className="inline-block w-2 h-4 bg-blue-500 ml-0.5 animate-pulse rounded-sm align-middle" />}
           </div>
         </div>

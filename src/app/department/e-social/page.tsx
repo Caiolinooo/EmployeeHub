@@ -13,6 +13,7 @@ import ESocialNavigation from '@/components/e-social/ESocialNavigation';
 import ImportarASOModal from '@/components/e-social/ImportarASOModal';
 import NovoEventoModal from '@/components/e-social/NovoEventoModal';
 import NovoColaboradorModal from '@/components/e-social/NovoColaboradorModal';
+import GtPageShell from '@/components/gestao-tripulantes/GtPageShell';
 import { toast } from 'react-hot-toast';
 import { FiRefreshCw, FiCpu, FiPlus, FiUserPlus } from 'react-icons/fi';
 
@@ -29,6 +30,7 @@ export default function ESocialDashboardPage() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isNewEventModalOpen, setIsNewEventModalOpen] = useState(false);
   const [isNewColabModalOpen, setIsNewColabModalOpen] = useState(false);
+  const [isConsolidating, setIsConsolidating] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -54,6 +56,24 @@ export default function ESocialDashboardPage() {
     }
   };
 
+  const handleConsolidate = async () => {
+    try {
+      setIsConsolidating(true);
+      const res = await fetchWithToken('/api/e-social/consolidar', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || 'Módulos sincronizados com sucesso!');
+        loadData();
+      } else {
+        toast.error(data.error || 'Erro ao sincronizar eventos');
+      }
+    } catch {
+      toast.error('Erro ao conectar com o servidor');
+    } finally {
+      setIsConsolidating(false);
+    }
+  };
+
   useEffect(() => {
     if (user) loadData();
   }, [user]);
@@ -61,17 +81,26 @@ export default function ESocialDashboardPage() {
   if (authLoading || !user) return null;
 
   return (
-    <div className="flex-1 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <GtPageShell>
+      <div className="flex flex-col flex-1 min-h-0 w-full max-w-7xl mx-auto gap-4">
         
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">{t('eSocial.title', 'e-Social')}</h1>
             <p className="text-sm text-gray-500">{t('eSocial.subtitle', 'Gestão de eventos e integrações e-Social')}</p>
           </div>
           
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={handleConsolidate}
+              disabled={isConsolidating}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-all disabled:opacity-50"
+              title="Consolidar e sincronizar admissões, ASOs, afastamentos, acidentes e desligamentos de todos os módulos"
+            >
+              <FiRefreshCw size={15} className={isConsolidating ? 'animate-spin' : ''} />
+              Sincronizar Módulos
+            </button>
             <button
               onClick={() => setIsImportModalOpen(true)}
               className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-all"
@@ -104,15 +133,20 @@ export default function ESocialDashboardPage() {
         </div>
 
         {/* Sub-Navigation Tabs */}
-        <ESocialNavigation />
+        <div className="shrink-0">
+          <ESocialNavigation />
+        </div>
 
         {/* Dashboard Cards */}
-        <DashboardESocial data={resumo} loading={loading} />
+        <div className="shrink-0">
+          <DashboardESocial data={resumo} loading={loading} />
+        </div>
 
         {/* Recent Events List */}
-        <div>
-          <h2 className="text-lg font-semibold text-gray-800 mb-3">{t('eSocial.eventosList.title', 'Eventos Recentes')}</h2>
+        <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <h2 className="text-lg font-semibold text-gray-800 mb-3 shrink-0">{t('eSocial.eventosList.title', 'Eventos Recentes')}</h2>
           <EventosList
+            className="flex-1 min-h-0"
             eventos={recentes}
             loading={loading}
             onView={(e) => setViewEvento(e)}
@@ -162,6 +196,6 @@ export default function ESocialDashboardPage() {
         onClose={() => setIsNewColabModalOpen(false)}
         onSuccess={loadData}
       />
-    </div>
+    </GtPageShell>
   );
 }

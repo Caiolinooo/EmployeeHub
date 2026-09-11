@@ -1,0 +1,162 @@
+{
+  "version": 2,
+  "source": "body RGBA (clean) + face crop overlays from speak/idle",
+  "bodySize": 128,
+  "faceSize": 64,
+  "faceOverlay": {
+    "x": 0.234375,
+    "y": 0.125,
+    "w": 0.453125,
+    "h": 0.46875
+  },
+  "blink": {
+    "idleMsMin": 2800,
+    "idleMsMax": 6200,
+    "holdMs": 140
+  },
+  "useFaceOverlay": false,
+  "lipSync": {
+    "visemes": [
+      "viseme_a",
+      "viseme_e",
+      "viseme_i",
+      "viseme_u",
+      "face_neutral"
+    ],
+    "fps": 2.5,
+    "faceCrossfadeMs": 280,
+    "tweak": "Face overlay OFF by default (bodies include faces). Lip-sync only if MASCOT_USE_FACE_OVERLAY + status=speaking (~2–3 Hz)."
+  },
+  "statuses": {
+    "idle": {
+      "frames": [
+        "idle_stand",
+        "idle_wave",
+        "idle_alt",
+        "idle_stand"
+      ],
+      "fps": 0.85,
+      "crossfadeMs": 320,
+      "face": "none"
+    },
+    "listening": {
+      "frames": [
+        "listen_ear",
+        "listen_tilt",
+        "listen_point",
+        "listen_ear"
+      ],
+      "fps": 1.0,
+      "crossfadeMs": 300,
+      "face": "none"
+    },
+    "speaking": {
+      "frames": [
+        "speak_open",
+        "speak_grin",
+        "speak_active",
+        "speak_gesture"
+      ],
+      "fps": 1.6,
+      "crossfadeMs": 280,
+      "face": "none"
+    },
+    "executing": {
+      "frames": [
+        "think_chin",
+        "exec_bulb",
+        "exec_type_a",
+        "exec_type_b",
+        "exec_point",
+        "exec_read",
+        "exec_stretch"
+      ],
+      "fps": 1.4,
+      "crossfadeMs": 300,
+      "face": "none"
+    }
+  },
+  "body": [
+    {
+      "id": "idle_stand",
+      "path": "/images/companion-mascot/body/idle_stand.png"
+    },
+    {
+      "id": "idle_wave",
+      "path": "/images/companion-mascot/body/idle_wave.png"
+    },
+    {
+      "id": "idle_alt",
+      "path": "/images/companion-mascot/body/idle_alt.png"
+    },
+    {
+      "id": "listen_ear",
+      "path": "/images/companion-mascot/body/listen_ear.png"
+    },
+    {
+      "id": "think_chin",
+      "path": "/images/companion-mascot/body/think_chin.png"
+    },
+    {
+      "id": "speak_open",
+      "path": "/images/companion-mascot/body/speak_open.png"
+    },
+    {
+      "id": "speak_grin",
+      "path": "/images/companion-mascot/body/speak_grin.png"
+    },
+    {
+      "id": "speak_gesture",
+      "path": "/images/companion-mascot/body/speak_gesture.png"
+    },
+    {
+      "id": "speak_active",
+      "path": "/images/companion-mascot/body/speak_active.png"
+    },
+    {
+      "id": "exec_bulb",
+      "path": "/images/companion-mascot/body/exec_bulb.png"
+    },
+    {
+      "id": "exec_type_a",
+      "path": "/images/companion-mascot/body/exec_type_a.png"
+    },
+    {
+      "id": "exec_type_b",
+      "path": "/images/companion-mascot/body/exec_type_b.png"
+    }
+  ],
+  "face": [
+    {
+      "id": "face_neutral",
+      "path": "/images/companion-mascot/face/face_neutral.png",
+      "role": "rest"
+    },
+    {
+      "id": "face_blink",
+      "path": "/images/companion-mascot/face/face_blink.png",
+      "role": "blink"
+    },
+    {
+      "id": "viseme_a",
+      "path": "/images/companion-mascot/face/viseme_a.png",
+      "role": "viseme"
+    },
+    {
+      "id": "viseme_e",
+      "path": "/images/companion-mascot/face/viseme_e.png",
+      "role": "viseme"
+    },
+    {
+      "id": "viseme_i",
+      "path": "/images/companion-mascot/face/viseme_i.png",
+      "role": "viseme"
+    },
+    {
+      "id": "viseme_u",
+      "path": "/images/companion-mascot/face/viseme_u.png",
+      "role": "viseme"
+    }
+  ],
+  "notes": "Tweak lipSync.visemes / faceOverlay / statuses in frames.json or companion-mascot-frames.ts"
+}

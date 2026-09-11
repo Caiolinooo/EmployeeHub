@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { mioClient } from '@/lib/mio/client';
+import { runMioPull } from '@/lib/mio/pull-context';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
     let totalMio: number | null = null;
     let erroMio: string | null = null;
     try {
-      const integrantes = await mioClient.getIntegrantes();
+      const integrantes = await runMioPull(() => mioClient.getIntegrantes());
       totalMio = Array.isArray(integrantes) ? integrantes.length : null;
     } catch (e: any) {
       erroMio = e?.message || String(e);

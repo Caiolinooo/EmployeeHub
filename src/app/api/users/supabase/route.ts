@@ -250,7 +250,7 @@ export async function GET(request: NextRequest) {
       // Executar a consulta principal
       const { data, error } = await supabaseAdmin
         .from('users_unified')
-        .select('id, first_name, last_name, email, phone_number, role, position, department, sector_id, active, created_at, updated_at, access_permissions')
+        .select('id, first_name, last_name, email, phone_number, role, position, department, sector_id, active, created_at, updated_at, access_permissions, startup_splash_enabled, startup_splash_url, startup_sound_enabled, startup_sound_url')
         .order('created_at', { ascending: false });
 
       // Log do resultado da consulta
@@ -320,6 +320,10 @@ export async function GET(request: NextRequest) {
           department: user.department || '',
           sector_id: user.sector_id || null,
           active: user.active !== undefined ? user.active : true,
+          startup_splash_enabled: user.startup_splash_enabled || false,
+          startup_splash_url: user.startup_splash_url || '',
+          startup_sound_enabled: user.startup_sound_enabled || false,
+          startup_sound_url: user.startup_sound_url || '',
           createdAt: user.created_at || new Date().toISOString(),
           updatedAt: user.updated_at || new Date().toISOString(),
           accessPermissions: accessPermissions

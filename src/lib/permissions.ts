@@ -1,3 +1,6 @@
+import { getFullPermissionsForRole } from '@/config/modules';
+import { hasEffectiveFeature } from '@/lib/effective-feature';
+
 // Utilities for Academy and Social permissions
 
 export interface PermissionFeatures {
@@ -65,7 +68,10 @@ export interface PermissionFeatures {
   'gestao-tripulantes.view'?: boolean;
   'gestao-tripulantes.manage'?: boolean;
   'gestao-tripulantes.admin'?: boolean;
+  'gestao-tripulantes.matrizes.manage'?: boolean;
+  'gestao-tripulantes.matrizes.view'?: boolean;
   'gestao-tripulantes.documents.edit'?: boolean;
+  'gestao-tripulantes.documents.delete'?: boolean;
   'gestao-tripulantes.documents.ocr'?: boolean;
   'gestao-tripulantes.back.suggest'?: boolean;
   'gestao-tripulantes.poliweb.scrape'?: boolean;
@@ -90,6 +96,7 @@ export interface AppUserLike {
   role?: string;
   access_permissions?: AccessPermissions;
   accessPermissions?: AccessPermissions;
+  acl_permission_names?: string[];
 }
 
 /**
@@ -101,12 +108,15 @@ export function hasFeaturePermission(
 ): boolean {
   if (!user) return false;
 
-  // Admins have all permissions
-  if (user.role === 'ADMIN') return true;
-
-  // Check in access_permissions.features (support both camelCase and snake_case)
   const permissions = user.access_permissions || user.accessPermissions;
-  return !!permissions?.features?.[feature];
+  return hasEffectiveFeature(
+    {
+      role: user.role,
+      features: permissions?.features,
+      aclNames: user.acl_permission_names,
+    },
+    String(feature),
+  );
 }
 
 /**
@@ -331,7 +341,10 @@ export const PERMISSIONS = {
     VIEW: 'gestao-tripulantes.view',
     MANAGE: 'gestao-tripulantes.manage',
     ADMIN: 'gestao-tripulantes.admin',
+    MATRIZES_MANAGE: 'gestao-tripulantes.matrizes.manage',
+    MATRIZES_VIEW: 'gestao-tripulantes.matrizes.view',
     DOCUMENTS_EDIT: 'gestao-tripulantes.documents.edit',
+    DOCUMENTS_DELETE: 'gestao-tripulantes.documents.delete',
     DOCUMENTS_OCR: 'gestao-tripulantes.documents.ocr',
     BACK_SUGGEST: 'gestao-tripulantes.back.suggest',
     POLIWEB_SCRAPE: 'gestao-tripulantes.poliweb.scrape',
@@ -435,6 +448,10 @@ export const PERMISSION_DESCRIPTIONS = {
     title: 'Editar Documentos',
     description: 'Pode fazer upload e editar documentos'
   },
+  'gestao-tripulantes.documents.delete': {
+    title: 'Excluir Documentos',
+    description: 'Pode excluir treinamentos, ASOs, documentos e passaportes do cadastro'
+  },
   'gestao-tripulantes.documents.ocr': {
     title: 'Executar OCR',
     description: 'Pode executar OCR em documentos'
@@ -486,15 +503,7 @@ export const DEFAULT_PERMISSIONS_BY_ROLE: Record<string, {
   features: Partial<PermissionFeatures>;
 }> = {
   ADMIN: {
-    modules: {
-      dashboard: true, noticias: true, calendario: true, 'ia-assistant': true,
-      ponto: true, contracheque: true, reembolso: true, kpi: true,
-      avaliacao: true, epi: true, ferias: true, 'lista-presenca': true,
-      contratos: true, academy: true, biblioteca: true, ajuda: true,
-      compras: true, poliweb: true, 'man-schedule': true, chat: true,
-      wkradar: true, admin: true, 'integracao-erp': true,
-      'gestao-tripulantes': true, 'e-social': true
-    },
+    modules: getFullPermissionsForRole('ADMIN'),
     features: {
       academy_editor: true, academy_moderator: true,
       social_editor: true, social_moderator: true,
@@ -518,22 +527,14 @@ export const DEFAULT_PERMISSIONS_BY_ROLE: Record<string, {
       'ferias.read': true, 'ferias.create': true, 'ferias.approve': true, 'ferias.manage': true, 'ferias.admin': true,
       'lista-presenca.read': true, 'lista-presenca.create': true, 'lista-presenca.manage': true, 'lista-presenca.admin': true,
       'gestao-tripulantes.view': true, 'gestao-tripulantes.manage': true, 'gestao-tripulantes.admin': true,
-      'gestao-tripulantes.documents.edit': true, 'gestao-tripulantes.documents.ocr': true,
+      'gestao-tripulantes.documents.edit': true, 'gestao-tripulantes.documents.delete': true, 'gestao-tripulantes.documents.ocr': true,
       'gestao-tripulantes.back.suggest': true, 'gestao-tripulantes.poliweb.scrape': true,
       'gestao-tripulantes.notifications.manage': true,
       'esocial.view': true, 'esocial.prepare': true, 'esocial.review': true, 'esocial.send': true, 'esocial.admin': true
     }
   },
   MANAGER: {
-    modules: {
-      dashboard: true, noticias: true, calendario: true, 'ia-assistant': true,
-      ponto: true, contracheque: true, reembolso: true, kpi: false,
-      avaliacao: true, epi: true, ferias: true, 'lista-presenca': true,
-      contratos: true, academy: true, biblioteca: true, ajuda: true,
-      compras: true, poliweb: true, 'man-schedule': false, chat: true,
-      wkradar: false, admin: false, 'integracao-erp': false,
-      'gestao-tripulantes': true, 'e-social': false
-    },
+    modules: getFullPermissionsForRole('MANAGER'),
     features: {
       academy_editor: false, academy_moderator: true,
       social_editor: false, social_moderator: true,
@@ -554,20 +555,12 @@ export const DEFAULT_PERMISSIONS_BY_ROLE: Record<string, {
       'ferias.read': true, 'ferias.create': true, 'ferias.approve': true, 'ferias.manage': false, 'ferias.admin': false,
       'lista-presenca.read': true, 'lista-presenca.create': true, 'lista-presenca.manage': true, 'lista-presenca.admin': false,
       'gestao-tripulantes.view': true, 'gestao-tripulantes.manage': true,
-      'gestao-tripulantes.documents.edit': true, 'gestao-tripulantes.back.suggest': true,
+      'gestao-tripulantes.documents.edit': true, 'gestao-tripulantes.documents.delete': true, 'gestao-tripulantes.back.suggest': true,
       'esocial.view': true
     }
   },
   USER: {
-    modules: {
-      dashboard: true, noticias: true, calendario: true, 'ia-assistant': true,
-      ponto: true, contracheque: true, reembolso: true, kpi: false,
-      avaliacao: false, epi: true, ferias: true, 'lista-presenca': true,
-      contratos: true, academy: true, biblioteca: true, ajuda: true,
-      compras: false, poliweb: true, 'man-schedule': false, chat: true,
-      wkradar: false, admin: false, 'integracao-erp': false,
-      'gestao-tripulantes': false, 'e-social': false
-    },
+    modules: getFullPermissionsForRole('USER'),
     features: {
       academy_editor: false, academy_moderator: false,
       social_editor: false, social_moderator: false,

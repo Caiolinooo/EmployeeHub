@@ -1,11 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FiUpload, FiDownload, FiSend, FiHeart, FiAlertCircle, FiCheckCircle, FiClock } from 'react-icons/fi';
+import { FiUpload, FiDownload, FiSend, FiHeart, FiAlertCircle, FiCheckCircle, FiClock, FiEye, FiFileText, FiEdit2, FiTrash2, FiX, FiSave } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import { toast } from 'react-hot-toast';
 import { cpfsMatch, formatCpf, isEsocialGlobalVisible, normalizeCpf } from '@/lib/gestao-tripulantes/cpf';
+import { enviarOcrDocumento } from '@/components/gestao-tripulantes/ocr-client';
+import AsoOcrDetailsModal from '@/components/gestao-tripulantes/AsoOcrDetailsModal';
+import { classificarValidadeCivil, documentoPertenceAba } from '@/lib/gestao-tripulantes/validade-civil';
+import {
+  COLLABORATOR_MODAL_TAB_FILL_CLASS,
+  COLLABORATOR_MODAL_TABLE_SCROLL_CLASS,
+} from '@/components/gestao-tripulantes/collaborator-modal-layout';
+import { useGtDocumentPermissions } from '@/components/gestao-tripulantes/use-gt-document-permissions';
 
 interface Document {
   id: string;
@@ -13,8 +21,8 @@ interface Document {
   titulo: string;
   numero_documento: string;
   orgao_emissor: string;
-  data_emissao: string;
-  data_validade: string;
+  data_emissao: string | null;
+  data_validade: string | null;
   status_validacao: string;
   ocr_status: string;
   arquivo_url: string;
@@ -55,6 +63,7 @@ interface Props {
   documentos: Document[];
   esocialAsos?: any[];
   onRefresh?: () => void;
+  highlightDocId?: string | null;
 }
 
 const TIPO_EXAME_COLORS: Record<string, string> = {
@@ -175,41 +184,104 @@ function isDraftStatus(status: string): boolean {
   return !isEsocialGlobalVisible(status);
 }
 
-/**
- * Extrai texto no navegador e envia ao servidor (sem canvas no Vercel).
- */
-async function renderizarEEnviarOCR(
-  docId: string,
-  arquivoUrl: string,
-  onProgress?: (msg: string) => void
-): Promise<Response> {
-  const { extractTextFromPdfOrImageClient } = await import('@/lib/ocr/pdf-to-images-client');
-  const text = await extractTextFromPdfOrImageClient(arquivoUrl, onProgress);
-
-  return await fetchWithToken(`/api/gestao-tripulantes/documentos/${docId}/ocr`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text }),
-  });
+export function isAsoLockedForEdit(status?: string | null): boolean {
+  const normalized = (status || '').toLowerCase();
+  return normalized === 'enviado' || normalized === 'processado';
 }
 
-export default function ASOTab({ colaboradorId, colaboradorCpf, documentos, esocialAsos = [], onRefresh }: Props) {
+function toDateInput(value?: string | null): string {
+  if (!value) return '';
+  return value.slice(0, 10);
+}
+
+export default function ASOTab({ colaboradorId, colaboradorCpf, documentos, esocialAsos = [], onRefresh, highlightDocId }: Props) {
   const { t } = useI18n();
+  const { canEdit, canDelete } = useGtDocumentPermissions();
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState<string | null>(null);
   const [runningOcr, setRunningOcr] = useState<string | null>(null);
   const [ocrProgress, setOcrProgress] = useState('');
+  const [selectedAsoForDetails, setSelectedAsoForDetails] = useState<any | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingAso, setEditingAso] = useState<Document | null>(null);
+  const [savingAso, setSavingAso] = useState(false);
+  const [asoEditForm, setAsoEditForm] = useState({
+    tipo_exame: '',
+    resultado: '',
+    data_realizacao: '',
+    data_emissao: '',
+    data_validade: '',
+    medico_nome: '',
+    medico_crm: '',
+    nome_clinica: '',
+  });
 
-  const asos = documentos.filter(d => d.tipo_documento === 'aso');
+  const rawAsos = documentos.filter(d => documentoPertenceAba(d.tipo_documento, 'aso'));
   const profileCpf = normalizeCpf(colaboradorCpf || '');
+
+  // Deduplicação e Agrupamento dos ASOs por documento/data de realização
+  const dedupedMap = new Map<string, Document>();
+  rawAsos.forEach((doc) => {
+    const dRealiz = (doc.aso_data?.data_realizacao || doc.data_emissao || '').trim();
+    const dValid = (doc.data_validade || '').trim();
+    const normTitle = (doc.titulo || '')
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .replace(/(\.pdf|\.jpg|\.png|_rotated|\(1\)|\(2\))/gi, '')
+      .trim();
+    const cleanUrl = (doc.arquivo_url || '').split('?')[0];
+
+    const key = cleanUrl ? `url_${cleanUrl}` : `${normTitle}_${dRealiz || 'SEM_DATA'}_${dValid || 'SEM_VALID'}`;
+
+    const existing = dedupedMap.get(key);
+    if (!existing) {
+      dedupedMap.set(key, doc);
+    } else {
+      const existingScore =
+        (existing.aso_data?.esocial_evento_ref?.numero_recibo || existing.aso_data?.esocial_status === 'processado' ? 1000 : 0) +
+        (existing.aso_data?.esocial_status === 'enviado' ? 500 : 0) +
+        (existing.ocr_status === 'concluido' ? 50 : 0) +
+        (existing.ocr_dados_extraidos ? 20 : 0);
+
+      const currentScore =
+        (doc.aso_data?.esocial_evento_ref?.numero_recibo || doc.aso_data?.esocial_status === 'processado' ? 1000 : 0) +
+        (doc.aso_data?.esocial_status === 'enviado' ? 500 : 0) +
+        (doc.ocr_status === 'concluido' ? 50 : 0) +
+        (doc.ocr_dados_extraidos ? 20 : 0);
+
+      const winner = currentScore > existingScore ? doc : existing;
+      const loser = currentScore > existingScore ? existing : doc;
+
+      const merged = {
+        ...winner,
+        aso_data: {
+          ...(loser.aso_data || {}),
+          ...(winner.aso_data || {}),
+          esocial_evento_ref: winner.aso_data?.esocial_evento_ref || loser.aso_data?.esocial_evento_ref || null,
+        },
+        ocr_dados_extraidos: winner.ocr_dados_extraidos || loser.ocr_dados_extraidos || null,
+        data_validade: winner.data_validade || loser.data_validade || null,
+      };
+      dedupedMap.set(key, merged);
+    }
+  });
+
+  // Ordenação cronológica (do mais recente para o mais antigo)
+  const asos = Array.from(dedupedMap.values()).sort((a, b) => {
+    const dateA = a.aso_data?.data_realizacao || a.data_emissao || '';
+    const dateB = b.aso_data?.data_realizacao || b.data_emissao || '';
+    return dateB.localeCompare(dateA);
+  });
 
   const getOcrIdentity = (doc: Document) => {
     const cpfDoc = normalizeCpf(doc.aso_data?.cpf_documento || doc.ocr_dados_extraidos?.cpf || '');
     const nomeOcr = doc.ocr_dados_extraidos?.nome_completo || '';
     const match = doc.aso_data?.identity_match;
+    // Prova real de identidade exige CPF extraído batendo com o perfil —
+    // identity_match='match' legado SEM CPF não é prova (docs antigos).
     const matchesProfile = cpfDoc.length === 11 && profileCpf.length === 11
       ? cpfsMatch(cpfDoc, profileCpf)
-      : match === 'match';
+      : false;
     return { cpfDoc, nomeOcr, match, matchesProfile };
   };
 
@@ -244,11 +316,24 @@ export default function ASOTab({ colaboradorId, colaboradorCpf, documentos, esoc
   };
 
   const linkedDocIds = new Set(asos.map(d => d.id));
+  const linkedRecibos = new Set(
+    asos
+      .map(d => d.aso_data?.esocial_numero_recibo || d.aso_data?.esocial_evento_ref?.numero_recibo)
+      .filter(Boolean)
+  );
+  const linkedDates = new Set(
+    asos
+      .map(d => d.aso_data?.data_realizacao || d.data_emissao)
+      .filter(Boolean)
+  );
+
   const unlinkedEsocialAsos = (esocialAsos || []).filter(evt => {
     const docId = evt.entidade_origem_id || evt.dados_evento?.documento_id || evt.dados_evento?.documentoId;
-    const status = evt.status || '';
-    // Global e-Social events: show when sent/processed (or keep pending visibility as draft-like)
-    return !linkedDocIds.has(docId);
+    if (docId && linkedDocIds.has(docId)) return false;
+    if (evt.numero_recibo && linkedRecibos.has(evt.numero_recibo)) return false;
+    const evtDate = getEventField(evt, 'data_realizacao');
+    if (evtDate && linkedDates.has(evtDate)) return false;
+    return true;
   });
 
   const formatDate = (d: string | null | undefined) => {
@@ -295,13 +380,24 @@ export default function ASOTab({ colaboradorId, colaboradorCpf, documentos, esoc
       setRunningOcr(docId);
       setOcrProgress('Preparando...');
 
-      const res = await renderizarEEnviarOCR(docId, arquivoUrl, setOcrProgress);
+      const res = await enviarOcrDocumento(docId, arquivoUrl, setOcrProgress);
 
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || 'Erro ao processar OCR');
       }
-      toast.success('Processamento OCR executado com sucesso!');
+      const json = await res.json();
+      // Contrato de integridade: OCR sem CPF extraído ⇒ documento vai para QUARENTENA.
+      // O usuário precisa saber disso — não pode parecer que tudo ficou normal.
+      const gate = json?.data?.identity_gate as { identity_match?: string | null; cpf_documento?: string | null } | undefined;
+      if (gate?.identity_match === 'quarantine') {
+        toast.error(
+          '⚠️ Documento enviado para QUARENTENA: CPF não extraído / identidade não verificada. Resolva em Auditoria > Quarentena.',
+          { duration: 8000 }
+        );
+      } else {
+        toast.success('Processamento OCR executado com sucesso!');
+      }
       onRefresh?.();
     } catch (err: any) {
       toast.error(err.message || 'Erro ao processar OCR');
@@ -315,6 +411,10 @@ export default function ASOTab({ colaboradorId, colaboradorCpf, documentos, esoc
     const { cpfDoc, matchesProfile, match } = getOcrIdentity(doc);
     if (match === 'quarantine' || doc.aso_data?.esocial_status === 'quarentena') {
       toast.error('ASO em quarentena de identidade — não pode enviar ao e-Social.');
+      return;
+    }
+    if (!cpfDoc) {
+      toast.error('Execute o OCR / identidade não verificada: CPF do documento não extraído.');
       return;
     }
     if (cpfDoc && profileCpf && !matchesProfile) {
@@ -340,14 +440,91 @@ export default function ASOTab({ colaboradorId, colaboradorCpf, documentos, esoc
     }
   };
 
+  const openAsoEdit = (doc: Document) => {
+    const meta = doc.aso_data || {};
+    setEditingAso(doc);
+    setAsoEditForm({
+      tipo_exame: meta.tipo_exame || '',
+      resultado: meta.resultado || '',
+      data_realizacao: toDateInput(meta.data_realizacao),
+      data_emissao: toDateInput(doc.data_emissao),
+      data_validade: toDateInput(doc.data_validade),
+      medico_nome: meta.medico_nome || '',
+      medico_crm: meta.medico_crm || '',
+      nome_clinica: meta.nome_clinica || '',
+    });
+  };
+
+  const handleSaveAsoEdit = async () => {
+    if (!editingAso) return;
+    try {
+      setSavingAso(true);
+      const res = await fetchWithToken(`/api/gestao-tripulantes/documentos/${editingAso.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          data_emissao: asoEditForm.data_emissao || null,
+          data_validade: asoEditForm.data_validade || null,
+          aso: {
+            tipo_exame: asoEditForm.tipo_exame || null,
+            resultado: asoEditForm.resultado || null,
+            data_realizacao: asoEditForm.data_realizacao || null,
+            medico_nome: asoEditForm.medico_nome || null,
+            medico_crm: asoEditForm.medico_crm || null,
+            nome_clinica: asoEditForm.nome_clinica || null,
+          },
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || 'Falha ao salvar ASO');
+      toast.success('ASO atualizado');
+      setEditingAso(null);
+      onRefresh?.();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Erro ao salvar ASO');
+    } finally {
+      setSavingAso(false);
+    }
+  };
+
+  const handleDeleteAso = async (doc: Document) => {
+    if (isAsoLockedForEdit(doc.aso_data?.esocial_status)) {
+      toast.error('ASO já enviado ao e-Social — não editável');
+      return;
+    }
+    if (!confirm('Excluir este ASO do cadastro?')) return;
+    try {
+      setDeletingId(doc.id);
+      const res = await fetchWithToken(`/api/gestao-tripulantes/documentos/${doc.id}`, { method: 'DELETE' });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || 'Falha ao excluir');
+      toast.success('ASO excluído');
+      onRefresh?.();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Erro ao excluir ASO');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const renderAsoCard = (doc: Document, section: 'available' | 'draft') => {
     const meta = doc.aso_data || {};
     const eSocialStatus = meta.esocial_status || 'nao_enviado';
+    const locked = isAsoLockedForEdit(eSocialStatus);
     const { cpfDoc, nomeOcr, match, matchesProfile } = getOcrIdentity(doc);
+    const semCpfExtraido = cpfDoc.length !== 11; // sem prova de identidade
     const identityBlocked =
       match === 'quarantine' ||
       eSocialStatus === 'quarentena' ||
+      semCpfExtraido ||
       (cpfDoc.length === 11 && profileCpf.length === 11 && !matchesProfile);
+    // Motivo do bloqueio — aviso exigido pelo contrato de integridade
+    const motivoBloqueio =
+      match === 'quarantine' || eSocialStatus === 'quarentena'
+        ? 'Identidade em quarentena — resolva na Auditoria antes de enviar'
+        : semCpfExtraido
+          ? 'Execute o OCR / identidade não verificada'
+          : 'Bloqueado: CPF OCR ≠ perfil';
 
     // Cross-reference: evento e-Social deste ASO (recibo/protocolo/processamento)
     const esocialRef: EsocialRefData | null =
@@ -365,7 +542,7 @@ export default function ASOTab({ colaboradorId, colaboradorCpf, documentos, esoc
       : (doc.titulo?.startsWith('ASO -') ? 'ASO' : doc.titulo);
 
     return (
-      <div key={doc.id} className="p-5 hover:bg-gray-50 transition-colors">
+      <div id={`gt-doc-${doc.id}`} key={doc.id} className={`p-5 hover:bg-gray-50 transition-colors ${highlightDocId === doc.id ? 'ring-2 ring-red-400 bg-red-50/40' : ''}`}>
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-2 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
@@ -463,12 +640,24 @@ export default function ASOTab({ colaboradorId, colaboradorCpf, documentos, esoc
           </div>
 
           <div className="flex flex-col items-end gap-2 flex-shrink-0">
-            <StatusBadge status={doc.status_validacao} />
+            <StatusBadge status={classificarValidadeCivil(doc.data_validade) === 'sem_validade' ? (doc.status_validacao || 'pendente') : classificarValidadeCivil(doc.data_validade)} />
+
+            <button
+              onClick={() => setSelectedAsoForDetails(doc)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-blue-600 transition shadow-sm"
+            >
+              <FiEye className="w-3.5 h-3.5 text-blue-600" />
+              Visualizar OCR & Dados
+            </button>
 
             {doc.arquivo_url && (
-              <a href={doc.arquivo_url} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600">
-                <FiDownload className="w-3 h-3" /> PDF
+              <a
+                href={doc.arquivo_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition"
+              >
+                <FiDownload className="w-3 h-3 text-blue-600" /> Baixar PDF
               </a>
             )}
 
@@ -484,15 +673,51 @@ export default function ASOTab({ colaboradorId, colaboradorCpf, documentos, esoc
             )}
 
             {eSocialStatus === 'nao_enviado' && doc.ocr_status === 'concluido' && (
-              <button
-                onClick={() => handleSendESocial(doc)}
-                disabled={sending === doc.id || identityBlocked}
-                title={identityBlocked ? 'Bloqueado: CPF OCR ≠ perfil' : undefined}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 transition"
-              >
-                <FiSend className="w-3 h-3" />
-                {sending === doc.id ? 'Enviando...' : t('gestaoTripulantes.aso.sendESocial')}
-              </button>
+              <>
+                <button
+                  onClick={() => handleSendESocial(doc)}
+                  disabled={sending === doc.id || identityBlocked}
+                  title={identityBlocked ? motivoBloqueio : undefined}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm"
+                >
+                  <FiSend className="w-3 h-3" />
+                  {sending === doc.id ? 'Enviando...' : t('gestaoTripulantes.aso.sendESocial')}
+                </button>
+                {identityBlocked && !sending && (
+                  <p className="flex items-center gap-1 max-w-[180px] text-right text-[10px] font-semibold text-red-600">
+                    <FiAlertCircle className="w-3 h-3 shrink-0" />
+                    {motivoBloqueio}
+                  </p>
+                )}
+              </>
+            )}
+
+            {locked ? (
+              <p className="max-w-[180px] text-right text-[10px] font-semibold text-slate-500">
+                Já enviado ao e-Social — não editável
+              </p>
+            ) : (
+              <>
+                {canEdit && (
+                  <button
+                    onClick={() => openAsoEdit(doc)}
+                    className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50"
+                    title="Editar ASO"
+                  >
+                    <FiEdit2 className="w-3 h-3" /> Editar
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    onClick={() => handleDeleteAso(doc)}
+                    disabled={deletingId === doc.id}
+                    className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50"
+                    title="Excluir ASO"
+                  >
+                    <FiTrash2 className="w-3 h-3" /> Excluir
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -503,8 +728,8 @@ export default function ASOTab({ colaboradorId, colaboradorCpf, documentos, esoc
   const totalCount = asos.length + unlinkedEsocialAsos.length;
 
   return (
-    <div className="divide-y divide-gray-100">
-      <div className="p-4 flex items-center justify-between bg-gray-50/70">
+    <div className={`${COLLABORATOR_MODAL_TAB_FILL_CLASS} divide-y divide-gray-100`}>
+      <div className="p-4 flex items-center justify-between bg-gray-50/70 shrink-0">
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <FiHeart className="text-red-500" />
           <span>
@@ -526,7 +751,7 @@ export default function ASOTab({ colaboradorId, colaboradorCpf, documentos, esoc
           <p className="text-gray-400 text-sm">{t('gestaoTripulantes.aso.noAso')}</p>
         </div>
       ) : (
-        <div className="divide-y divide-gray-100">
+        <div className={`${COLLABORATOR_MODAL_TABLE_SCROLL_CLASS} divide-y divide-gray-100`}>
           {availableAsos.length > 0 && (
             <div>
               <div className="px-5 py-2 bg-green-50/80 border-b border-green-100">
@@ -642,11 +867,148 @@ export default function ASOTab({ colaboradorId, colaboradorCpf, documentos, esoc
 
                   <div className="flex flex-col items-end gap-2 flex-shrink-0">
                     <StatusBadge status={statusValidadeStr} />
+
+                    <button
+                      onClick={() => setSelectedAsoForDetails({
+                        id: evt.id,
+                        titulo: `ASO e-Social (S-2220) — ${formatDate(dataRealizacao)}`,
+                        tipo_documento: 'aso',
+                        data_emissao: dataRealizacao,
+                        data_validade: dataValidade,
+                        ocr_status: 'concluido',
+                        ocr_dados_extraidos: evt.dados_evento,
+                        aso_data: {
+                          tipo_exame: tipo,
+                          resultado: res,
+                          data_realizacao: dataRealizacao,
+                          medico_nome: medicoNome,
+                          medico_crm: medicoCrm,
+                          medico_uf: medicoUf,
+                          nome_clinica: clinica,
+                          esocial_status: isGlobal ? 'processado' : eventStatus,
+                          esocial_numero_recibo: evt.numero_recibo,
+                          esocial_protocolo: evt.protocolo_envio,
+                          esocial_data_envio: evt.data_envio,
+                          esocial_evento_ref: evt,
+                        }
+                      })}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-blue-600 transition shadow-sm"
+                    >
+                      <FiEye className="w-3.5 h-3.5 text-blue-600" />
+                      Visualizar Dados
+                    </button>
                   </div>
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {selectedAsoForDetails && (
+        <AsoOcrDetailsModal
+          isOpen={!!selectedAsoForDetails}
+          onClose={() => setSelectedAsoForDetails(null)}
+          documento={selectedAsoForDetails}
+          colaboradorCpf={colaboradorCpf}
+        />
+      )}
+
+      {editingAso && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden my-auto">
+            <div className="bg-gradient-to-r from-rose-700 to-red-800 px-6 py-4 flex items-center justify-between text-white">
+              <div className="flex items-center gap-2">
+                <FiEdit2 className="w-5 h-5" />
+                <h3 className="font-bold text-base">Editar ASO</h3>
+              </div>
+              <button onClick={() => setEditingAso(null)} className="p-1 hover:bg-white/20 rounded-lg transition">
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-3 max-h-[75vh] overflow-y-auto">
+              <label className="block text-xs font-bold text-gray-700 uppercase">Tipo de exame</label>
+              <select
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                value={asoEditForm.tipo_exame}
+                onChange={(e) => setAsoEditForm((f) => ({ ...f, tipo_exame: e.target.value }))}
+              >
+                <option value="">—</option>
+                <option value="admissional">Admissional</option>
+                <option value="periodico">Periódico</option>
+                <option value="demissional">Demissional</option>
+                <option value="retorno">Retorno</option>
+                <option value="mudanca_funcao">Mudança de função</option>
+              </select>
+              <label className="block text-xs font-bold text-gray-700 uppercase">Resultado</label>
+              <select
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                value={asoEditForm.resultado}
+                onChange={(e) => setAsoEditForm((f) => ({ ...f, resultado: e.target.value }))}
+              >
+                <option value="">—</option>
+                <option value="apto">Apto</option>
+                <option value="inapto">Inapto</option>
+                <option value="apto_condicional">Apto condicional</option>
+              </select>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Realização</label>
+                  <input
+                    type="date"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    value={asoEditForm.data_realizacao}
+                    onChange={(e) => setAsoEditForm((f) => ({ ...f, data_realizacao: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Validade</label>
+                  <input
+                    type="date"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    value={asoEditForm.data_validade}
+                    onChange={(e) => setAsoEditForm((f) => ({ ...f, data_validade: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <input
+                type="date"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                value={asoEditForm.data_emissao}
+                onChange={(e) => setAsoEditForm((f) => ({ ...f, data_emissao: e.target.value }))}
+              />
+              <input
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                placeholder="Médico"
+                value={asoEditForm.medico_nome}
+                onChange={(e) => setAsoEditForm((f) => ({ ...f, medico_nome: e.target.value }))}
+              />
+              <input
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                placeholder="CRM"
+                value={asoEditForm.medico_crm}
+                onChange={(e) => setAsoEditForm((f) => ({ ...f, medico_crm: e.target.value }))}
+              />
+              <input
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                placeholder="Clínica"
+                value={asoEditForm.nome_clinica}
+                onChange={(e) => setAsoEditForm((f) => ({ ...f, nome_clinica: e.target.value }))}
+              />
+            </div>
+            <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
+              <button onClick={() => setEditingAso(null)} className="px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg">
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveAsoEdit}
+                disabled={savingAso}
+                className="flex items-center gap-1.5 px-4 py-2 text-sm text-white bg-rose-700 rounded-lg disabled:opacity-50"
+              >
+                <FiSave className="w-4 h-4" /> {savingAso ? 'Salvando…' : 'Salvar'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { getFullPermissionsForRole } from '@/config/modules';
+import { mergeEffectiveFeatures } from '@/lib/effective-feature';
 
 export const dynamic = 'force-dynamic';
 
@@ -173,7 +174,10 @@ export async function GET(request: NextRequest) {
         }
 
         // Layer 3: User Individual Override (highest priority)
-        const userPermissions = profile.access_permissions as { modules?: Record<string, boolean> } | null;
+        const userPermissions = profile.access_permissions as {
+            modules?: Record<string, boolean>;
+            features?: Record<string, boolean | undefined>;
+        } | null;
         if (userPermissions?.modules) {
             effectiveModules = { ...effectiveModules, ...userPermissions.modules };
         }
@@ -181,6 +185,7 @@ export async function GET(request: NextRequest) {
         // Layer 4: ACL Permissions (from user_acl_permissions + role_acl_permissions)
         // If user has ANY ACL permission for a resource (e.g. ferias.read), enable that module
         let aclModulesApplied: string[] = [];
+        let aclPermissionNames: string[] = [];
         try {
             const userAclPromise = supabaseAdmin
                 .from('user_acl_permissions')
@@ -209,6 +214,7 @@ export async function GET(request: NextRequest) {
                     .eq('enabled', true);
 
                 if (aclPerms) {
+                    aclPermissionNames = [...new Set(aclPerms.map((perm) => perm.name).filter(Boolean))];
                     const uniqueResources = [...new Set(aclPerms.map(p => p.resource))];
                     uniqueResources.forEach(resource => {
                         if (!effectiveModules[resource]) {
@@ -233,12 +239,16 @@ export async function GET(request: NextRequest) {
             console.warn('[effective-permissions] ACL tables not available, skipping Layer 4:', aclError);
         }
 
+        const effectiveFeatures = mergeEffectiveFeatures(userPermissions?.features, aclPermissionNames);
+
         // Build final response
         const response = {
             user_id: userId,
             role: profile.role,
             sector_id: profile.sector_id,
             effective_modules: effectiveModules,
+            effective_features: effectiveFeatures,
+            acl_permission_names: aclPermissionNames,
             effective_cards: effectiveCards,
             // Source info for debugging
             _debug: {
@@ -252,7 +262,9 @@ export async function GET(request: NextRequest) {
                 sector_modules_raw: sectorRawModules,
                 sector_modules_count: Object.keys(effectiveModules).length,
                 effective_modules_keys: Object.keys(effectiveModules),
-                acl_modules_applied: aclModulesApplied
+                acl_modules_applied: aclModulesApplied,
+                acl_permission_names: aclPermissionNames,
+                effective_features_keys: Object.keys(effectiveFeatures)
             }
         };
 
@@ -268,7 +280,11 @@ export async function GET(request: NextRequest) {
             has_ajuda: !!effectiveModules['ajuda']
         });
 
-        return NextResponse.json(response);
+        return NextResponse.json(response, {
+            headers: {
+                'Cache-Control': 'no-store, max-age=0',
+            },
+        });
 
     } catch (error: any) {
         console.error('Error calculating effective permissions:', error);

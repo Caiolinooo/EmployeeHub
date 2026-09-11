@@ -25,6 +25,10 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const approverId = searchParams.get('approverId');
+        const history = searchParams.get('history') === '1' || searchParams.get('history') === 'true';
+        const status = searchParams.get('status') || undefined;
+        const yearParam = searchParams.get('year');
+        const year = yearParam ? parseInt(yearParam, 10) : undefined;
 
         if (!approverId) {
             return NextResponse.json({ error: 'Missing approverId' }, { status: 400 });
@@ -58,10 +62,15 @@ export async function GET(request: Request) {
 
         const isApprover = (isApproverQuery.data && isApproverQuery.data.length > 0) || targetHasAcl;
 
-        const data = await getPendingLeaveRequestsForApprover(approverId, targetHasAcl);
+        const data = await getPendingLeaveRequestsForApprover(approverId, targetHasAcl, {
+            includeHistory: history,
+            status,
+            year: year && !Number.isNaN(year) ? year : undefined,
+        });
 
         return NextResponse.json({
             isApprover,
+            history,
             requests: data
         });
     } catch (error) {

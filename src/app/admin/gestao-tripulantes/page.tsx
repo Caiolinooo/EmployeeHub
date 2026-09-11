@@ -1,16 +1,23 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   FiSave, FiRefreshCw, FiToggleLeft, FiSliders, FiDatabase,
   FiBell, FiCamera, FiCpu, FiSettings, FiLayout, FiChevronDown, FiChevronRight,
   FiAnchor, FiGlobe, FiBriefcase, FiPlay, FiCheckCircle, FiAlertTriangle, FiClock,
-  FiCalendar, FiDownload
+  FiCalendar, FiDownload, FiFolder, FiCheckSquare, FiActivity
 } from 'react-icons/fi';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import TiposEventoEscalaAdmin from '@/components/gestao-tripulantes/admin/TiposEventoEscalaAdmin';
 import AuditoriaDocumentosTab from '@/components/gestao-tripulantes/admin/AuditoriaDocumentosTab';
 import ExportarTab from '@/components/gestao-tripulantes/admin/ExportarTab';
+import CentrosCustoAdminTab from '@/components/gestao-tripulantes/admin/CentrosCustoAdminTab';
+import WorkflowFechamentoTab, {
+  type WorkflowFechamentoHandle,
+} from '@/components/gestao-tripulantes/admin/WorkflowFechamentoTab';
+import AsoAgendamentoConfigTab from '@/components/gestao-tripulantes/admin/AsoAgendamentoConfigTab';
+import MatrizTreinamentoConfigTab from '@/components/gestao-tripulantes/admin/MatrizTreinamentoConfigTab';
+import { FiAward } from 'react-icons/fi';
 
 function MioSyncButton() {
   const [syncing, setSyncing] = useState(false);
@@ -80,7 +87,7 @@ const defaultConfig: ConfigValues = {
   poliweb_username: '',
   poliweb_password: '',
   poliweb_habilitado: false,
-  notif_aso_dias_aviso: 30,
+  notif_aso_dias_aviso: 60,
   notif_treinamento_dias_aviso: 15,
   notif_canal_inapp: true,
   notif_canal_email: false,
@@ -113,6 +120,8 @@ export default function GestaoTripulantesAdminPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('geral');
+  const fechamentoRef = useRef<WorkflowFechamentoHandle>(null);
+  const TABS_COM_SALVAR_PROPRIO = new Set(['fechamento', 'aso_agendamento', 'auditoria', 'exportar', 'centros_custo', 'escala', 'matriz_treinamentos']);
   const [isTestingConexao, setIsTestingConexao] = useState(false);
   const [isScraping, setIsScraping] = useState(false);
   const [cronLogs, setCronLogs] = useState<any[]>([]);
@@ -144,8 +153,8 @@ export default function GestaoTripulantesAdminPage() {
       if (data.success && data.data) {
         setCronLogs(data.data);
       }
-    } catch (err) {
-      console.error('Erro ao buscar logs de cron:', err);
+    } catch {
+      /* fail-soft */
     }
   };
 
@@ -159,15 +168,21 @@ export default function GestaoTripulantesAdminPage() {
     setIsTestingConexao(true);
     setTestResult(null);
     try {
-      const res = await fetchWithToken('/api/gestao-tripulantes/poliweb', {
+      const res = await fetchWithToken('/api/gestao-tripulantes/poliweb/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ acao: 'testar_conexao' }),
+        body: JSON.stringify({
+          username: config.poliweb_username,
+          password: config.poliweb_password,
+        }),
       });
       const data = await res.json();
-      setTestResult({ success: data.success, message: data.message || 'Conexão concluída' });
+      setTestResult({
+        success: data.success,
+        message: data.success ? 'Conexão estabelecida com sucesso!' : (data.error || 'Falha na conexão'),
+      });
     } catch {
-      setTestResult({ success: false, message: 'Falha ao testar conexão com o servidor PoliWeb' });
+      setTestResult({ success: false, message: 'Erro ao testar conexão' });
     } finally {
       setIsTestingConexao(false);
     }
@@ -177,18 +192,11 @@ export default function GestaoTripulantesAdminPage() {
     setIsScraping(true);
     setScrapeResult(null);
     try {
-      const res = await fetchWithToken('/api/gestao-tripulantes/poliweb', {
+      const res = await fetchWithToken('/api/gestao-tripulantes/poliweb/scrape', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ acao: 'scraping' }),
       });
       const data = await res.json();
-      if (data.success) {
-        setScrapeResult(data.data);
-        fetchCronLogs();
-      } else {
-        setScrapeResult({ error: data.error || 'Erro na importação' });
-      }
+      setScrapeResult(data);
     } catch {
       setScrapeResult({ error: 'Erro ao executar sincronização manual' });
     } finally {
@@ -206,7 +214,11 @@ export default function GestaoTripulantesAdminPage() {
       const res = await fetchWithToken('/api/gestao-tripulantes/configuracoes');
       const data = await res.json();
       if (data.success && data.data) {
-        setConfig(prev => ({ ...prev, ...data.data }));
+        const next: ConfigValues = { ...defaultConfig };
+        for (const key of Object.keys(defaultConfig)) {
+          if (data.data[key] !== undefined) next[key] = data.data[key];
+        }
+        setConfig(next);
       }
     } catch (err) {
       console.error('Erro ao carregar configurações:', err);
@@ -217,6 +229,19 @@ export default function GestaoTripulantesAdminPage() {
   };
 
   const handleSave = async () => {
+    if (activeTab === 'fechamento') {
+      const result = await fechamentoRef.current?.save();
+      if (result) {
+        if (result.ok) {
+          setSuccess(result.message);
+          setError(null);
+          setTimeout(() => setSuccess(null), 3000);
+        } else {
+          setError(result.message);
+        }
+      }
+      return;
+    }
     setIsSaving(true);
     setSuccess(null);
     setError(null);
@@ -245,8 +270,12 @@ export default function GestaoTripulantesAdminPage() {
   };
 
   const tabs = [
+    { id: 'matriz_treinamentos', label: 'Matriz de Treinamentos', icon: FiAward },
     { id: 'auditoria', label: 'Auditoria Documentos', icon: FiAlertTriangle },
     { id: 'exportar', label: 'Exportar', icon: FiDownload },
+    { id: 'centros_custo', label: 'Centros de Custo', icon: FiFolder },
+    { id: 'fechamento', label: 'Fechamento DP', icon: FiCheckSquare },
+    { id: 'aso_agendamento', label: 'Agendamento ASO', icon: FiActivity },
     { id: 'geral', label: 'Configuração Geral', icon: FiSettings },
     { id: 'escala', label: 'Marcadores Escala', icon: FiCalendar },
     { id: 'mio', label: 'Integração MIO', icon: FiDatabase },
@@ -267,19 +296,26 @@ export default function GestaoTripulantesAdminPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+    <div className="flex flex-col min-h-0 flex-1 h-full gap-6">
+      <div className="shrink-0 flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Gestão de Tripulantes</h1>
           <p className="text-sm text-gray-500">Configurações administrativas do módulo</p>
         </div>
         <div className="flex gap-2 mt-4 md:mt-0">
           <button
-            onClick={fetchConfig}
+            onClick={() => {
+              if (activeTab === 'fechamento') {
+                void fechamentoRef.current?.reload();
+                return;
+              }
+              void fetchConfig();
+            }}
             className="flex items-center px-3 py-2 text-sm border rounded-md text-gray-600 hover:bg-gray-50"
           >
             <FiRefreshCw className="mr-2" /> Recarregar
           </button>
+          {!TABS_COM_SALVAR_PROPRIO.has(activeTab) || activeTab === 'fechamento' ? (
           <button
             onClick={handleSave}
             disabled={isSaving}
@@ -292,26 +328,27 @@ export default function GestaoTripulantesAdminPage() {
             )}
             Salvar
           </button>
+          ) : null}
         </div>
       </div>
 
       {success && (
-        <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-md">{success}</div>
+        <div className="shrink-0 p-4 bg-green-50 border border-green-200 text-green-700 rounded-md">{success}</div>
       )}
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-md">{error}</div>
+        <div className="shrink-0 p-4 bg-red-50 border border-red-200 text-red-700 rounded-md">{error}</div>
       )}
 
-      <div className="bg-white rounded-lg shadow-md">
-        <div className="border-b overflow-x-auto">
-          <nav className="flex">
+      <div className="bg-white rounded-lg shadow-md flex-1 min-h-0 flex flex-col">
+        <div className="shrink-0 border-b overflow-x-auto no-scrollbar">
+          <nav className="flex min-w-max">
             {tabs.map(tab => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  className={`flex items-center px-3.5 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'border-abz-blue text-abz-blue'
                       : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -325,9 +362,13 @@ export default function GestaoTripulantesAdminPage() {
           </nav>
         </div>
 
-        <div className="p-6">
+        <div className="p-3 sm:p-6 flex-1 min-h-0 overflow-auto touch-scroll">
+          {activeTab === 'matriz_treinamentos' && <MatrizTreinamentoConfigTab />}
           {activeTab === 'auditoria' && <AuditoriaDocumentosTab />}
           {activeTab === 'exportar' && <ExportarTab />}
+          {activeTab === 'centros_custo' && <CentrosCustoAdminTab />}
+          {activeTab === 'fechamento' && <WorkflowFechamentoTab ref={fechamentoRef} />}
+          {activeTab === 'aso_agendamento' && <AsoAgendamentoConfigTab />}
 
           {activeTab === 'escala' && <TiposEventoEscalaAdmin />}
 
@@ -422,7 +463,7 @@ export default function GestaoTripulantesAdminPage() {
                   {/* Histórico de Execuções MIO */}
                   <div className="border-t pt-6">
                     <h3 className="text-sm font-semibold text-gray-900 mb-3">Histórico de Sincronizações</h3>
-                    {cronLogs.filter((l: any) => l.tipo === 'sync_mio').length === 0 ? (
+                    {(!cronLogs || cronLogs.filter((l: any) => l.tipo === 'sync_mio').length === 0) ? (
                       <p className="text-sm text-gray-500 italic">Nenhuma sincronização executada ainda.</p>
                     ) : (
                       <div className="overflow-x-auto">
@@ -568,14 +609,14 @@ export default function GestaoTripulantesAdminPage() {
                               <p>ASOs encontrados na clínica: <strong>{scrapeResult.total_encontrados}</strong></p>
                               <p>Importados com sucesso: <strong className="text-green-700">{scrapeResult.total_importados}</strong></p>
                               <p>Ignorados (já importados) ou com erros: <strong>{scrapeResult.total_encontrados - scrapeResult.total_importados}</strong></p>
-                              {scrapeResult.erros && scrapeResult.erros.length > 0 && (
+                              {scrapeResult.erros && (scrapeResult.erros?.length ?? 0) > 0 && (
                                 <details className="mt-2 text-red-700">
                                   <summary className="cursor-pointer font-medium">Visualizar Erros ({scrapeResult.total_erros})</summary>
                                   <ul className="list-disc list-inside mt-1 space-y-1 pl-1">
-                                    {scrapeResult.erros.slice(0, 5).map((e: string, i: number) => (
+                                    {(scrapeResult.erros || []).slice(0, 5).map((e: string, i: number) => (
                                       <li key={i}>{e}</li>
                                     ))}
-                                    {scrapeResult.erros.length > 5 && <li>E mais {scrapeResult.erros.length - 5}...</li>}
+                                    {(scrapeResult.erros?.length ?? 0) > 5 && <li>E mais {(scrapeResult.erros?.length ?? 0) - 5}...</li>}
                                   </ul>
                                 </details>
                               )}
@@ -589,7 +630,7 @@ export default function GestaoTripulantesAdminPage() {
                   {/* Histórico de Execuções */}
                   <div className="border-t pt-6">
                     <h3 className="text-sm font-semibold text-gray-900 mb-3">Histórico de Execuções (Scraping)</h3>
-                    {cronLogs.length === 0 ? (
+                    {(!cronLogs || cronLogs.length === 0) ? (
                       <p className="text-sm text-gray-500 italic">Nenhum log de execução encontrado.</p>
                     ) : (
                       <div className="overflow-x-auto">
@@ -649,11 +690,12 @@ export default function GestaoTripulantesAdminPage() {
           {activeTab === 'notificacoes' && (
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Dias de Aviso - ASO</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Dias de antecedência — ASO (alerta e sugestão de data)</label>
+                <p className="text-xs text-gray-500 mb-1">Padrão 60. Também editável na aba Agendamento ASO (fonte: gt_aso_agendamento_config).</p>
                 <input
                   type="number"
                   value={config.notif_aso_dias_aviso}
-                  onChange={e => updateField('notif_aso_dias_aviso', parseInt(e.target.value) || 30)}
+                  onChange={e => updateField('notif_aso_dias_aviso', parseInt(e.target.value) || 60)}
                   min={1}
                   max={365}
                   className="w-32 px-3 py-2 border rounded-md text-sm focus:ring-abz-blue focus:border-abz-blue"

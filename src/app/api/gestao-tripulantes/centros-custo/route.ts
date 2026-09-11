@@ -57,18 +57,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
+    const role = String(payload.role || '').toUpperCase();
+    if (role !== 'ADMIN' && role !== 'MANAGER' && role !== 'ADMINISTRADOR' && role !== 'SUPERADMIN') {
+      return NextResponse.json({ error: 'Acesso negado. Apenas ADMIN/MANAGER.' }, { status: 403 });
+    }
+
     const body = await request.json();
-    const { nome, codigo } = body;
+    const nome = String(body.nome || '').trim();
+    let codigo = String(body.codigo || '').trim();
 
     if (!nome) {
       return NextResponse.json({ error: 'Nome do centro de custo é obrigatório' }, { status: 400 });
+    }
+
+    if (!codigo) {
+      codigo = nome
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 20);
+      codigo = codigo ? `CC-${codigo}` : `CC-${Date.now().toString(36).toUpperCase()}`;
     }
 
     const { data, error } = await supabaseAdmin
       .from('gt_centros_custo')
       .insert({
         nome,
-        codigo: codigo || null,
+        codigo,
         ativo: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()

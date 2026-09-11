@@ -1,35 +1,48 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import MainLayout from '@/components/Layout/MainLayout';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { FiInfo } from 'react-icons/fi';
+import { FiCalendar, FiClock, FiInfo, FiMapPin, FiRefreshCw } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
-import { MIOCalendarEvent } from '@/types/mio';
 import { fetchWithToken } from '@/lib/tokenStorage';
-
+import { dedupeSimilarCalendarEvents } from '@/lib/calendar-event-dedupe';
 
 interface CompanyEvent {
   id: string;
   summary: string;
   description?: string;
   location?: string;
+  url?: string;
   start: string;
   end?: string;
   allDay?: boolean;
+  attendees?: Array<{ email?: string; name?: string }>;
 }
 
-// Define the structure for a holiday
 interface Holiday {
-  date: string; // Format: YYYY-MM-DD
+  date: string;
   name: string;
   type: string;
   description?: string;
-  source?: string;
 }
 
-// Define Macaé holidays
+interface CalendarListItem {
+  key: string;
+  date: string;
+  start: string;
+  allDay?: boolean;
+  name: string;
+  type: string;
+  description?: string;
+  location?: string;
+  url?: string;
+  source: 'holiday' | 'company';
+  color: string;
+  attendees?: Array<{ email?: string; name?: string }>;
+}
+
 const MACAE_HOLIDAYS: Omit<Holiday, 'date'>[] = [
   { name: 'São Jorge', type: 'MUNICIPAL', description: 'Feriado Municipal de Macaé' },
   { name: 'São João Batista', type: 'MUNICIPAL', description: 'Feriado Municipal de Macaé' },
@@ -37,9 +50,8 @@ const MACAE_HOLIDAYS: Omit<Holiday, 'date'>[] = [
   { name: 'Consciência Negra', type: 'MUNICIPAL', description: 'Feriado Municipal/Estadual (RJ)' },
 ];
 
-// Define UK holidays
 const UK_HOLIDAYS: Omit<Holiday, 'date'>[] = [
-  { name: 'New Year\'s Day', type: 'UK', description: 'UK Bank Holiday' },
+  { name: "New Year's Day", type: 'UK', description: 'UK Bank Holiday' },
   { name: 'Good Friday', type: 'UK', description: 'UK Bank Holiday' },
   { name: 'Easter Monday', type: 'UK', description: 'UK Bank Holiday' },
   { name: 'Early May Bank Holiday', type: 'UK', description: 'UK Bank Holiday' },
@@ -49,36 +61,6 @@ const UK_HOLIDAYS: Omit<Holiday, 'date'>[] = [
   { name: 'Boxing Day', type: 'UK', description: 'UK Bank Holiday' },
 ];
 
-// Helpers
-const getMacaeHolidayDate = (holidayName: string, year: number): string | null => {
-  switch (holidayName) {
-    case 'São Jorge': return `${year}-04-23`;
-    case 'São João Batista': return `${year}-06-24`;
-    case 'Aniversário de Macaé': return `${year}-07-29`;
-    case 'Consciência Negra': return `${year}-11-20`;
-    default: return null;
-  }
-};
-
-const getUKHolidayDate = (holidayName: string, year: number): string | null => {
-  switch (holidayName) {
-    case 'New Year\'s Day': return `${year}-01-01`;
-    case 'Good Friday': return year === 2024 ? '2024-03-29' : year === 2025 ? '2025-04-18' : `${year}-04-10`;
-    case 'Easter Monday': return year === 2024 ? '2024-04-01' : year === 2025 ? '2025-04-21' : `${year}-04-13`;
-    case 'Early May Bank Holiday': return `${year}-05-06`;
-    case 'Spring Bank Holiday': return `${year}-05-27`;
-    case 'Summer Bank Holiday': return `${year}-08-26`;
-    case 'Christmas Day': return `${year}-12-25`;
-    case 'Boxing Day': return `${year}-12-26`;
-    default: return null;
-  }
-};
-
-// APIs
-const BRASIL_API_URL = 'https://brasilapi.com.br/api/feriados/v1/';
-const SCRAPE_API_URL = '/api/scrape-holidays';
-
-// Static Fallback
 const BRAZILIAN_HOLIDAYS: Record<number, Holiday[]> = {
   2024: [
     { date: '2024-01-01', name: 'Confraternização Universal', type: 'NATIONAL', description: 'Feriado Nacional' },
@@ -91,7 +73,7 @@ const BRAZILIAN_HOLIDAYS: Record<number, Holiday[]> = {
     { date: '2024-10-12', name: 'Nossa Senhora Aparecida', type: 'NATIONAL', description: 'Feriado Nacional' },
     { date: '2024-11-02', name: 'Finados', type: 'NATIONAL', description: 'Feriado Nacional' },
     { date: '2024-11-15', name: 'Proclamação da República', type: 'NATIONAL', description: 'Feriado Nacional' },
-    { date: '2024-12-25', name: 'Natal', type: 'NATIONAL', description: 'Feriado Nacional' }
+    { date: '2024-12-25', name: 'Natal', type: 'NATIONAL', description: 'Feriado Nacional' },
   ],
   2025: [
     { date: '2025-01-01', name: 'Confraternização Universal', type: 'NATIONAL', description: 'Feriado Nacional' },
@@ -104,16 +86,93 @@ const BRAZILIAN_HOLIDAYS: Record<number, Holiday[]> = {
     { date: '2025-10-12', name: 'Nossa Senhora Aparecida', type: 'NATIONAL', description: 'Feriado Nacional' },
     { date: '2025-11-02', name: 'Finados', type: 'NATIONAL', description: 'Feriado Nacional' },
     { date: '2025-11-15', name: 'Proclamação da República', type: 'NATIONAL', description: 'Feriado Nacional' },
-    { date: '2025-12-25', name: 'Natal', type: 'NATIONAL', description: 'Feriado Nacional' }
-  ]
+    { date: '2025-12-25', name: 'Natal', type: 'NATIONAL', description: 'Feriado Nacional' },
+  ],
+  2026: [
+    { date: '2026-01-01', name: 'Confraternização Universal', type: 'NATIONAL', description: 'Feriado Nacional' },
+    { date: '2026-02-17', name: 'Carnaval', type: 'NATIONAL', description: 'Feriado Nacional' },
+    { date: '2026-04-03', name: 'Sexta-feira Santa', type: 'NATIONAL', description: 'Feriado Nacional' },
+    { date: '2026-04-21', name: 'Tiradentes', type: 'NATIONAL', description: 'Feriado Nacional' },
+    { date: '2026-05-01', name: 'Dia do Trabalho', type: 'NATIONAL', description: 'Feriado Nacional' },
+    { date: '2026-06-04', name: 'Corpus Christi', type: 'NATIONAL', description: 'Feriado Nacional' },
+    { date: '2026-09-07', name: 'Independência do Brasil', type: 'NATIONAL', description: 'Feriado Nacional' },
+    { date: '2026-10-12', name: 'Nossa Senhora Aparecida', type: 'NATIONAL', description: 'Feriado Nacional' },
+    { date: '2026-11-02', name: 'Finados', type: 'NATIONAL', description: 'Feriado Nacional' },
+    { date: '2026-11-15', name: 'Proclamação da República', type: 'NATIONAL', description: 'Feriado Nacional' },
+    { date: '2026-11-20', name: 'Consciência Negra', type: 'NATIONAL', description: 'Feriado Nacional' },
+    { date: '2026-12-25', name: 'Natal', type: 'NATIONAL', description: 'Feriado Nacional' },
+  ],
 };
 
+function toLocalYmd(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function eventStartYmd(start: string): string {
+  return String(start || '').slice(0, 10);
+}
+
+function formatEventClock(start: string, allDay: boolean | undefined, locale: string): string | null {
+  if (allDay) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(start)) return null;
+  const d = new Date(start);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+}
+
+function listItemSourceLabel(
+  ev: CalendarListItem,
+  t: (key: string) => string,
+): string {
+  switch (ev.source) {
+    case 'company':
+      return t('calendario.companyEvents');
+    case 'holiday':
+      return ev.type === 'MUNICIPAL'
+        ? t('calendario.municipalHoliday')
+        : t('calendario.nationalHoliday');
+    default: {
+      const _exhaustive: never = ev.source;
+      return _exhaustive;
+    }
+  }
+}
+
+function getMacaeHolidayDate(holidayName: string, year: number): string | null {
+  switch (holidayName) {
+    case 'São Jorge': return `${year}-04-23`;
+    case 'São João Batista': return `${year}-06-24`;
+    case 'Aniversário de Macaé': return `${year}-07-29`;
+    case 'Consciência Negra': return `${year}-11-20`;
+    default: return null;
+  }
+}
+
+function getUKHolidayDate(holidayName: string, year: number): string | null {
+  switch (holidayName) {
+    case "New Year's Day": return `${year}-01-01`;
+    case 'Good Friday': return year === 2024 ? '2024-03-29' : year === 2025 ? '2025-04-18' : year === 2026 ? '2026-04-03' : `${year}-04-10`;
+    case 'Easter Monday': return year === 2024 ? '2024-04-01' : year === 2025 ? '2025-04-21' : year === 2026 ? '2026-04-06' : `${year}-04-13`;
+    case 'Early May Bank Holiday': return `${year}-05-04`;
+    case 'Spring Bank Holiday': return `${year}-05-25`;
+    case 'Summer Bank Holiday': return `${year}-08-31`;
+    case 'Christmas Day': return `${year}-12-25`;
+    case 'Boxing Day': return `${year}-12-26`;
+    default: return null;
+  }
+}
+
+const BRASIL_API_URL = 'https://brasilapi.com.br/api/feriados/v1/';
+const SCRAPE_API_URL = '/api/scrape-holidays';
+
 async function fetchBrasilApiHolidays(year: number): Promise<Holiday[]> {
-  const url = `${BRASIL_API_URL}${year}`;
-  const response = await fetch(url);
+  const response = await fetch(`${BRASIL_API_URL}${year}`);
   if (!response.ok) throw new Error(`Status ${response.status}`);
   const data = await response.json();
-  return data.map((h: any) => ({
+  return data.map((h: { date: string; name: string; type: string }) => ({
     date: h.date,
     name: h.name,
     type: h.type.toUpperCase(),
@@ -121,8 +180,7 @@ async function fetchBrasilApiHolidays(year: number): Promise<Holiday[]> {
 }
 
 async function fetchScrapedHolidays(year: number): Promise<Holiday[]> {
-  const url = `${SCRAPE_API_URL}?year=${year}`;
-  const response = await fetch(url);
+  const response = await fetch(`${SCRAPE_API_URL}?year=${year}`);
   if (!response.ok) throw new Error(`Status ${response.status}`);
   const result = await response.json();
   if (!result.success) throw new Error('Unsuccessful');
@@ -132,32 +190,17 @@ async function fetchScrapedHolidays(year: number): Promise<Holiday[]> {
 export default function CalendarioPage() {
   const { t, locale } = useI18n();
   const [allHolidays, setAllHolidays] = useState<Holiday[]>([]);
-  const [mioEvents, setMioEvents] = useState<MIOCalendarEvent[]>([]);
   const [companyEvents, setCompanyEvents] = useState<CompanyEvent[]>([]);
-  const [companyConfig, setCompanyConfig] = useState({ marker_color: '#6339F5' });
+  const [companyDuplicatesHidden, setCompanyDuplicatesHidden] = useState(0);
+  const [companyConfig, setCompanyConfig] = useState({ marker_color: '#2563eb' });
   const [viewDate, setViewDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const currentYear = viewDate.getFullYear();
+  const selectedYmd = toLocalYmd(selectedDate);
 
-  // Load MIO Events
-  useEffect(() => {
-    const loadMio = async () => {
-      try {
-        const res = await fetchWithToken('/api/mio/calendar');
-        const data = await res.json();
-        if (data.success && Array.isArray(data.events)) {
-          setMioEvents(data.events);
-        }
-      } catch (err) {
-        console.error('MIO Calendar Error:', err);
-      }
-    };
-    loadMio();
-  }, [currentYear]);
-
-  // Load Company Config
   useEffect(() => {
     const loadConfig = async () => {
       try {
@@ -166,31 +209,34 @@ export default function CalendarioPage() {
           const data = await res.json();
           if (data.marker_color) setCompanyConfig({ marker_color: data.marker_color });
         }
-      } catch (err) {
-        console.error('Company Config Error:', err);
+      } catch {
+        // settings opcional
       }
     };
     loadConfig();
   }, []);
 
-  // Load Company Events
   useEffect(() => {
     const loadCompanyEvents = async () => {
       try {
-        // Fetch 365 days to cover the whole year!
-        const res = await fetchWithToken('/api/calendar/company/events?rangeDays=365');
+        const from = `${currentYear}-01-01`;
+        const to = `${currentYear}-12-31`;
+        const res = await fetchWithToken(`/api/calendar/company/events?from=${from}&to=${to}`);
         const data = await res.json();
-        if (data.events) {
+        if (Array.isArray(data.events)) {
           setCompanyEvents(data.events);
+          setCompanyDuplicatesHidden(
+            typeof data.duplicatesHidden === 'number' ? data.duplicatesHidden : 0,
+          );
         }
-      } catch (err) {
-        console.error('Company Events Error:', err);
+      } catch {
+        setCompanyEvents([]);
+        setCompanyDuplicatesHidden(0);
       }
     };
     loadCompanyEvents();
   }, [currentYear]);
 
-  // Load Holidays
   useEffect(() => {
     const loadHolidays = async () => {
       setLoading(true);
@@ -199,7 +245,7 @@ export default function CalendarioPage() {
       try {
         if (locale === 'en-US') {
           const uk: Holiday[] = [];
-          UK_HOLIDAYS.forEach(h => {
+          UK_HOLIDAYS.forEach((h) => {
             const d = getUKHolidayDate(h.name, currentYear);
             if (d) uk.push({ ...h, date: d });
           });
@@ -211,25 +257,24 @@ export default function CalendarioPage() {
             try {
               national = await fetchScrapedHolidays(currentYear);
             } catch {
-              national = BRAZILIAN_HOLIDAYS[currentYear] || BRAZILIAN_HOLIDAYS[2024];
+              national = BRAZILIAN_HOLIDAYS[currentYear] || BRAZILIAN_HOLIDAYS[2026] || [];
             }
           }
         }
 
         const holidaysMap = new Map<string, Holiday>();
-        national.forEach(h => holidaysMap.set(h.date + h.name, h));
+        national.forEach((h) => holidaysMap.set(`${h.date}${h.name}`, h));
 
         if (locale === 'pt-BR') {
-          MACAE_HOLIDAYS.forEach(h => {
+          MACAE_HOLIDAYS.forEach((h) => {
             const d = getMacaeHolidayDate(h.name, currentYear);
-            if (d) holidaysMap.set(d + h.name, { ...h, date: d });
+            if (d) holidaysMap.set(`${d}${h.name}`, { ...h, date: d });
           });
         }
 
-        const sorted = Array.from(holidaysMap.values()).sort((a, b) => a.date.localeCompare(b.date));
-        setAllHolidays(sorted);
-      } catch (e: any) {
-        setError(e.message);
+        setAllHolidays(Array.from(holidaysMap.values()).sort((a, b) => a.date.localeCompare(b.date)));
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : t('calendario.couldNotLoadHolidays'));
         setAllHolidays([]);
       } finally {
         setLoading(false);
@@ -238,48 +283,39 @@ export default function CalendarioPage() {
     loadHolidays();
   }, [currentYear, locale, t]);
 
-  const handleActiveStartDateChange = ({ activeStartDate }: { activeStartDate: Date | null }) => {
-    if (activeStartDate && (activeStartDate.getFullYear() !== viewDate.getFullYear() || activeStartDate.getMonth() !== viewDate.getMonth())) {
-      setViewDate(activeStartDate);
-    }
-  };
+  const companyDedupe = useMemo(
+    () => dedupeSimilarCalendarEvents(companyEvents),
+    [companyEvents],
+  );
+  const uniqueCompanyEvents = companyDedupe.events;
 
-  const getEventsForDate = (date: Date) => {
-    const dStr = date.toISOString().split('T')[0];
-    const holidays = allHolidays.filter(h => h.date === dStr);
-    const mio = mioEvents.filter(e => e.start.startsWith(dStr));
-    const company = companyEvents.filter(e => e.start.startsWith(dStr));
-    return { holidays, mio, company };
-  };
+  const getEventsForDate = useCallback((date: Date) => {
+    const dStr = toLocalYmd(date);
+    const holidays = allHolidays.filter((h) => h.date === dStr);
+    const company = uniqueCompanyEvents.filter((e) => eventStartYmd(e.start) === dStr);
+    return { holidays, company };
+  }, [allHolidays, uniqueCompanyEvents]);
 
   const tileContent = ({ date, view }: { date: Date; view: string }) => {
     if (view !== 'month') return null;
-    const { holidays, mio, company } = getEventsForDate(date);
-    if (!holidays.length && !mio.length && !company.length) return null;
+    const { holidays, company } = getEventsForDate(date);
+    if (!holidays.length && !company.length) return null;
 
     return (
-      <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex justify-center gap-1 flex-wrap max-w-full px-1">
+      <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex justify-center gap-1 flex-wrap max-w-full px-1">
         {holidays.length > 0 && (
-          <div
-            className={`h-1.5 w-1.5 rounded-full ${holidays.some(h => h.type === 'MUNICIPAL') ? 'bg-orange-500' : 'bg-blue-500'}`}
-            title={holidays.map(h => h.name).join(', ')}
-          ></div>
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${holidays.some((h) => h.type === 'MUNICIPAL') ? 'bg-amber-500' : 'bg-sky-500'}`}
+            title={holidays.map((h) => h.name).join(', ')}
+          />
         )}
-        {mio.map(e => (
-          <div
-            key={e.id}
-            className="h-1.5 w-1.5 rounded-full"
-            style={{ backgroundColor: e.color || '#6339F5' }}
-            title={`${e.title}\n${e.description || ''}`}
-          ></div>
-        ))}
-        {company.map(e => (
-          <div
+        {company.map((e) => (
+          <span
             key={e.id}
             className="h-1.5 w-1.5 rounded-full"
             style={{ backgroundColor: companyConfig.marker_color }}
-            title={`${e.summary}\n${e.description || ''}`}
-          ></div>
+            title={e.summary}
+          />
         ))}
       </div>
     );
@@ -287,135 +323,262 @@ export default function CalendarioPage() {
 
   const tileClassName = ({ date, view }: { date: Date; view: string }) => {
     if (view !== 'month') return null;
-    const { holidays, mio, company } = getEventsForDate(date);
-    return (holidays.length || mio.length || company.length) ? 'relative font-semibold' : null;
+    const classes = ['relative'];
+    const { holidays, company } = getEventsForDate(date);
+    if (holidays.length || company.length) classes.push('font-semibold');
+    if (toLocalYmd(date) === selectedYmd) classes.push('calendar-day-selected');
+    return classes.join(' ');
   };
 
-  const eventsThisMonth = useMemo(() => {
+  const eventsThisMonth = useMemo<CalendarListItem[]>(() => {
     const m = viewDate.getMonth();
     const y = viewDate.getFullYear();
 
-    const hList = allHolidays.filter(h => {
-      const [hy, hm, hd] = h.date.split('-').map(Number);
-      const d = new Date(Date.UTC(hy, hm - 1, hd));
-      return d.getUTCMonth() === m && d.getUTCFullYear() === y;
-    }).map(h => ({ ...h, source: 'holiday', color: h.type === 'MUNICIPAL' ? '#f97316' : '#3b82f6' }));
+    const hList: CalendarListItem[] = allHolidays
+      .filter((h) => {
+        const [hy, hm] = h.date.split('-').map(Number);
+        return hy === y && hm === m + 1;
+      })
+      .map((h) => ({
+        key: `h-${h.date}-${h.name}`,
+        date: h.date,
+        start: h.date,
+        allDay: true,
+        name: h.name,
+        type: h.type,
+        description: h.description,
+        source: 'holiday' as const,
+        color: h.type === 'MUNICIPAL' ? '#f59e0b' : '#0ea5e9',
+      }));
 
-    const mList = mioEvents.filter(e => {
-      const d = new Date(e.start);
-      return d.getMonth() === m && d.getFullYear() === y;
-    }).map(e => ({
-      date: e.start.split('T')[0],
-      name: e.title,
-      type: e.type.toUpperCase(),
-      description: e.description,
-      source: 'mio',
-      color: e.color
-    }));
+    const cList: CalendarListItem[] = uniqueCompanyEvents
+      .filter((e) => {
+        const ymd = eventStartYmd(e.start);
+        const [ey, em] = ymd.split('-').map(Number);
+        return ey === y && em === m + 1;
+      })
+      .map((e) => ({
+        key: `c-${e.id}`,
+        date: eventStartYmd(e.start),
+        start: e.start,
+        allDay: e.allDay,
+        name: e.summary,
+        type: 'EMPRESA',
+        description: e.description,
+        location: e.location,
+        url: e.url,
+        source: 'company' as const,
+        color: companyConfig.marker_color,
+        attendees: e.attendees,
+      }));
 
-    const cList = companyEvents.filter(e => {
-      const d = new Date(e.start);
-      return d.getMonth() === m && d.getFullYear() === y;
-    }).map(e => ({
-      date: e.start.split('T')[0],
-      name: e.summary,
-      type: 'EMPRESA',
-      description: e.description,
-      source: 'company',
-      color: companyConfig.marker_color
-    }));
-
-    const combined = [...hList, ...mList, ...cList];
-    const uniqueEventsMap = new Map();
-    combined.forEach(ev => {
-      uniqueEventsMap.set(`${ev.date}-${ev.name}-${ev.type}`, ev);
+    const merged = dedupeSimilarCalendarEvents([...hList, ...cList]);
+    return Array.from(merged.events).sort((a, b) => {
+      const byDate = a.date.localeCompare(b.date);
+      if (byDate !== 0) return byDate;
+      return a.start.localeCompare(b.start);
     });
+  }, [allHolidays, uniqueCompanyEvents, viewDate, companyConfig.marker_color]);
 
-    return Array.from(uniqueEventsMap.values()).sort((a, b) => a.date.localeCompare(b.date));
-  }, [allHolidays, mioEvents, companyEvents, viewDate, companyConfig.marker_color]);
+  const displayDuplicatesHidden = useMemo(() => {
+    const m = viewDate.getMonth();
+    const y = viewDate.getFullYear();
+    const holidayCount = allHolidays.filter((h) => {
+      const [hy, hm] = h.date.split('-').map(Number);
+      return hy === y && hm === m + 1;
+    }).length;
+    const companyCount = uniqueCompanyEvents.filter((e) => {
+      const ymd = eventStartYmd(e.start);
+      const [ey, em] = ymd.split('-').map(Number);
+      return ey === y && em === m + 1;
+    }).length;
+    return Math.max(0, holidayCount + companyCount - eventsThisMonth.length);
+  }, [allHolidays, uniqueCompanyEvents, eventsThisMonth, viewDate]);
+
+  const duplicatesHidden =
+    Math.max(companyDuplicatesHidden, companyDedupe.hidden) + displayDuplicatesHidden;
+
+  const selectedDayEvents = useMemo(
+    () => eventsThisMonth.filter((ev) => ev.date === selectedYmd),
+    [eventsThisMonth, selectedYmd],
+  );
+
+  const monthLabel = viewDate.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
 
   return (
     <MainLayout>
-      <h1 className="text-3xl font-bold text-abz-text-black mb-2">{t('calendario.title')}</h1>
-      <p className="text-gray-600 mb-6">{t('calendario.description')}</p>
-
-      {error && !loading && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-800 text-sm rounded-md flex items-center gap-2">
-          <FiInfo /> <span>{error}</span>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white p-4 sm:p-6 rounded-lg shadow-md">
-          {loading && <p className="text-center text-gray-500 mb-4">{t('calendario.loading')}</p>}
-          <Calendar
-            onActiveStartDateChange={handleActiveStartDateChange}
-            activeStartDate={viewDate}
-            tileContent={tileContent}
-            tileClassName={tileClassName}
-            locale={locale}
-            className="w-full border-none custom-calendar-styling"
-            showNeighboringMonth={false}
-          />
-          <div className="flex justify-center gap-4 mt-4 text-xs text-gray-600">
-            <div className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-blue-500"></span> Feriado Nacional</div>
-            <div className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-orange-500"></span> Feriado Municipal</div>
-            <div className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ backgroundColor: '#4169E1' }}></span> Embarque</div>
-            <div className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ backgroundColor: '#FFD700' }}></span> Curso</div>
-            <div className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ backgroundColor: companyConfig.marker_color }}></span> Eventos Empresa</div>
+      <div className="flex flex-col min-h-0 flex-1 h-full gap-6">
+        <div className="shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-gray-200 shadow-xs">
+          <div className="flex items-center gap-3">
+            <span className="p-2.5 bg-blue-50 text-abz-blue rounded-xl">
+              <FiCalendar className="w-6 h-6" />
+            </span>
+            <div>
+              <h1 className="text-2xl font-black text-gray-900">{t('calendario.title')}</h1>
+              <p className="text-sm text-gray-500">{t('calendario.description')}</p>
+            </div>
           </div>
         </div>
 
-        <div className="lg:col-span-1 bg-white p-4 sm:p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold text-abz-text-black mb-4 border-b pb-2">
-            Eventos de {new Date(currentYear, viewDate.getMonth()).toLocaleDateString(locale, { month: 'long', year: 'numeric' })}
-          </h2>
+        {error && !loading && (
+          <div className="shrink-0 p-3 bg-red-50 border border-red-200 text-red-800 text-sm rounded-xl flex items-center gap-2">
+            <FiInfo className="shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
 
-          {!loading && eventsThisMonth.length === 0 && <p className="text-gray-500 text-sm italic">{t('calendario.noEventsThisMonth')}</p>}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0 overflow-auto lg:overflow-hidden">
+          <div className="lg:col-span-2 bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-xs overflow-auto min-h-0">
+            {loading && (
+              <p className="text-center text-gray-500 text-sm mb-4 flex items-center justify-center gap-2">
+                <FiRefreshCw className="animate-spin" />
+                {t('calendario.loading')}
+              </p>
+            )}
+            <Calendar
+              onChange={(value) => {
+                const next = Array.isArray(value) ? value[0] : value;
+                if (next instanceof Date) {
+                  setSelectedDate(next);
+                  setViewDate(next);
+                }
+              }}
+              value={selectedDate}
+              onActiveStartDateChange={({ activeStartDate }) => {
+                if (
+                  activeStartDate &&
+                  (activeStartDate.getFullYear() !== viewDate.getFullYear() ||
+                    activeStartDate.getMonth() !== viewDate.getMonth())
+                ) {
+                  setViewDate(activeStartDate);
+                }
+              }}
+              activeStartDate={viewDate}
+              tileContent={tileContent}
+              tileClassName={tileClassName}
+              locale={locale}
+              className="w-full border-none portal-calendar"
+              showNeighboringMonth={false}
+            />
 
-          <ul className="space-y-3 overflow-y-auto max-h-96 pr-2">
-            {eventsThisMonth.map((ev, idx) => {
-              const [Y, M, D] = ev.date.split('-').map(Number);
-              const dObj = new Date(Date.UTC(Y, M - 1, D));
-              const isMio = ev.source === 'mio';
-              const isCompany = ev.source === 'company';
-              const borderColor = ev.color || '#ccc';
-              const bgColor = isMio || isCompany ? `${ev.color}15` : (ev.type === 'MUNICIPAL' ? '#fff7ed' : '#eff6ff');
+            <div className="flex flex-wrap justify-center gap-4 mt-6 pt-4 border-t border-gray-100 text-xs font-medium text-gray-600">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-sky-500" />
+                {t('calendario.nationalHoliday')}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-amber-500" />
+                {t('calendario.municipalHoliday')}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: companyConfig.marker_color }} />
+                {t('calendario.companyEvents')}
+              </span>
+            </div>
+          </div>
 
-              return (
-                <li key={`${ev.date}-${idx}`} className="text-sm border-l-4 pl-3 p-2 rounded-r-md" style={{ borderLeftColor: borderColor, backgroundColor: bgColor }}>
-                  <span className="font-semibold block text-abz-text-dark">
-                    {dObj.toLocaleDateString(locale, { day: '2-digit', timeZone: 'UTC' })} - {ev.name}
-                  </span>
-                  <span className="text-xs text-gray-600">({ev.type})</span>
-                  {ev.description && <p className="text-xs text-gray-500 mt-0.5">{ev.description}</p>}
-                </li>
-              );
-            })}
-          </ul>
+          <div className="lg:col-span-1 bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-xs flex flex-col min-h-[28rem] lg:min-h-0">
+            <h2 className="text-lg font-bold text-gray-900 mb-1 capitalize">
+              {t('calendario.holidaysInMonth')} {monthLabel}
+            </h2>
+            <p className="text-xs text-gray-500 mb-4">
+              {t('calendario.sharedOnlyHint')}
+              {duplicatesHidden > 0 && (
+                <span className="block mt-1 text-gray-400">
+                  {t('calendario.duplicatesHiddenHint', { count: duplicatesHidden })}
+                </span>
+              )}
+            </p>
+
+            {selectedDayEvents.length > 0 && (
+              <div className="mb-4 p-3 rounded-xl bg-blue-50/80 border border-blue-100">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-blue-700 mb-2">
+                  {selectedDate.toLocaleDateString(locale, { day: '2-digit', month: 'long' })}
+                </p>
+                <ul className="space-y-1.5">
+                  {selectedDayEvents.map((ev) => (
+                    <li key={`sel-${ev.key}`} className="text-sm font-semibold text-gray-900">
+                      {ev.name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {!loading && eventsThisMonth.length === 0 && (
+              <p className="text-gray-500 text-sm italic">{t('calendario.noEventsThisMonth')}</p>
+            )}
+
+            <ul className="space-y-2 overflow-y-auto flex-1 pr-1">
+              {eventsThisMonth.map((ev) => {
+                const isSelected = ev.date === selectedYmd;
+                const day = ev.date.slice(8, 10);
+                const clock = formatEventClock(ev.start, ev.allDay, locale);
+                return (
+                  <li
+                    key={ev.key}
+                    className={`text-sm border-l-4 pl-3 py-2.5 pr-2 rounded-r-xl transition ${
+                      isSelected ? 'bg-blue-50 ring-1 ring-blue-100' : 'bg-gray-50'
+                    }`}
+                    style={{ borderLeftColor: ev.color }}
+                  >
+                    <span className="font-bold block text-gray-900">
+                      {day} — {ev.name}
+                    </span>
+                    <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                      {listItemSourceLabel(ev, t)}
+                    </span>
+                    {clock && (
+                      <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                        <FiClock className="w-3 h-3" /> {clock}
+                      </p>
+                    )}
+                    {ev.location && (
+                      <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                        <FiMapPin className="w-3 h-3" /> {ev.location}
+                      </p>
+                    )}
+                    {ev.description && <p className="text-xs text-gray-500 mt-0.5">{ev.description}</p>}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </div>
       </div>
 
       <style jsx global>{`
-        .custom-calendar-styling .react-calendar { border: none; font-family: inherit; }
-        .custom-calendar-styling .react-calendar__navigation button { color: #0D1B42; min-width: 44px; background: none; font-size: 1rem; font-weight: 600; padding: 8px 0; }
-        .custom-calendar-styling .react-calendar__navigation button:disabled { background-color: #f0f0f0; color: #aaa; }
-        .custom-calendar-styling .react-calendar__navigation button:enabled:hover, .custom-calendar-styling .react-calendar__navigation button:enabled:focus { background-color: #E0F2FE; }
-        .custom-calendar-styling .react-calendar__month-view__weekdays { text-align: center; text-transform: uppercase; font-weight: bold; font-size: 0.75em; padding-bottom: 0.5em; color: #6339F5; }
-        .custom-calendar-styling .react-calendar__month-view__weekdays__weekday { padding: 0.5em; }
-        .custom-calendar-styling .react-calendar__month-view__days__day--weekend { color: #d10000; }
-        .custom-calendar-styling .react-calendar__month-view__days__day--neighboringMonth { color: #999; }
-        .custom-calendar-styling .react-calendar__tile { max-width: 100%; padding: 10px 6px; background: none; text-align: center; line-height: 1.5; font-size: 0.875rem; height: 60px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
-        .custom-calendar-styling .react-calendar__tile:disabled { background-color: #f0f0f0; color: #aaa; }
-        .custom-calendar-styling .react-calendar__tile:enabled:hover, .custom-calendar-styling .react-calendar__tile:enabled:focus { background-color: #E0F2FE; border-radius: 4px; }
-        .custom-calendar-styling .react-calendar__tile--now { background: #FFF3E0; font-weight: bold; border-radius: 4px; }
-        .custom-calendar-styling .react-calendar__tile--now:enabled:hover, .custom-calendar-styling .react-calendar__tile--now:enabled:focus { background: #FFE0B2; }
-        .custom-calendar-styling .react-calendar__tile--active { background: #6339F5; color: white; border-radius: 4px; }
-        .custom-calendar-styling .react-calendar__tile--active:enabled:hover, .custom-calendar-styling .react-calendar__tile--active:enabled:focus { background: #5127d4; }
-        .custom-calendar-styling .react-calendar__tile.relative abbr { position: relative; z-index: 1; padding-bottom: 2px; }
+        .portal-calendar.react-calendar { width: 100%; border: none; font-family: inherit; background: transparent; }
+        .portal-calendar .react-calendar__navigation { margin-bottom: 0.75rem; }
+        .portal-calendar .react-calendar__navigation button {
+          color: #111827; min-width: 44px; background: none; font-size: 1rem; font-weight: 800; padding: 10px 0; border-radius: 0.75rem;
+        }
+        .portal-calendar .react-calendar__navigation button:disabled { background-color: #f9fafb; color: #9ca3af; }
+        .portal-calendar .react-calendar__navigation button:enabled:hover,
+        .portal-calendar .react-calendar__navigation button:enabled:focus { background-color: #eff6ff; }
+        .portal-calendar .react-calendar__month-view__weekdays {
+          text-align: center; text-transform: uppercase; font-weight: 700; font-size: 0.7rem; letter-spacing: 0.04em; color: #2563eb; padding-bottom: 0.5em;
+        }
+        .portal-calendar .react-calendar__month-view__weekdays__weekday { padding: 0.5em; }
+        .portal-calendar .react-calendar__month-view__weekdays__weekday abbr { text-decoration: none; }
+        .portal-calendar .react-calendar__month-view__days__day--weekend { color: #dc2626; }
+        .portal-calendar .react-calendar__tile {
+          max-width: 100%; padding: 12px 6px; background: none; text-align: center; line-height: 1.4;
+          font-size: 0.875rem; height: 64px; display: flex; flex-direction: column; justify-content: flex-start; align-items: center;
+          border-radius: 0.75rem;
+        }
+        .portal-calendar .react-calendar__tile:enabled:hover,
+        .portal-calendar .react-calendar__tile:enabled:focus { background-color: #eff6ff; }
+        .portal-calendar .react-calendar__tile--now { background: #fff7ed; font-weight: 700; }
+        .portal-calendar .react-calendar__tile--now:enabled:hover { background: #ffedd5; }
+        .portal-calendar .react-calendar__tile--active,
+        .portal-calendar .calendar-day-selected {
+          background: #2563eb !important; color: white !important;
+        }
+        .portal-calendar .react-calendar__tile--active:enabled:hover,
+        .portal-calendar .calendar-day-selected:enabled:hover { background: #1d4ed8 !important; }
+        .portal-calendar .react-calendar__tile.relative abbr { position: relative; z-index: 1; }
       `}</style>
-
-
     </MainLayout>
   );
 }

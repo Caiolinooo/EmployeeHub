@@ -1,7 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Locale, locales, getTranslation } from '@/i18n';
+import { Locale, locales } from '@/i18n';
+import { interpolateTranslationParams } from '@/i18n/interpolate';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 interface I18nContextType {
@@ -232,7 +233,7 @@ export function I18nProvider({ children }: I18nProviderProps) {
 
     if (typeof arg2 === 'string') {
       defaultValue = arg2;
-    } else if (typeof arg2 === 'object') {
+    } else if (arg2 && typeof arg2 === 'object' && !Array.isArray(arg2)) {
       params = arg2;
       defaultValue = arg3;
     }
@@ -249,15 +250,10 @@ export function I18nProvider({ children }: I18nProviderProps) {
       }
 
       if (value === undefined || value === null) {
-        return defaultVal || key;
+        return interpolateTranslationParams(defaultVal || key, params);
       }
 
-      if (params) {
-        Object.entries(params).forEach(([k, v]) => {
-          value = String(value).replace(`{{${k}}}`, String(v));
-        });
-      }
-      return String(value);
+      return interpolateTranslationParams(String(value), params);
     };
 
     return getDynamicTranslation(locale, key, defaultValue, params);

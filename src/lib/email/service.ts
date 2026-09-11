@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import type { SendMailOptions } from 'nodemailer';
 import {
   clearResolvedEmailAuthCache,
   emailTlsOptions,
@@ -38,20 +39,21 @@ export const sendEmail = async ({
   to: string | string[];
   subject: string;
   html: string;
-  attachments?: unknown[];
+  attachments?: SendMailOptions['attachments'];
 }) => {
   try {
     const auth = await resolveEmailAuth();
     const transport = await getTransporter();
     const from = await resolveEmailFrom('Portal ABZ');
-    const info = await transport.sendMail({
+    const mailOptions: SendMailOptions = {
       from,
       to,
       subject,
       html,
       attachments,
       replyTo: auth.replyTo,
-    });
+    };
+    const info = await transport.sendMail(mailOptions);
     console.log('Email sent:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {

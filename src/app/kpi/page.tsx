@@ -1,301 +1,296 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { FiTrendingUp, FiTrendingDown, FiMinus, FiDownload, FiRefreshCw, FiFilter, FiActivity, FiCheckCircle, FiAlertTriangle, FiClock, FiUsers, FiBarChart2, FiFileText, FiSettings } from 'react-icons/fi';
+import {
+  FiRefreshCw,
+  FiBarChart2,
+  FiLayout,
+  FiAlertTriangle,
+  FiTrash2,
+} from 'react-icons/fi';
 import MainLayout from '@/components/Layout/MainLayout';
-import { AutonomousKPIRenderer } from '@/components/KPI/AutonomousKPIRenderer';
-import { KPIAutonomousHeader } from '@/components/KPI/KPIAutonomousHeader';
-import { useKPIAutonomous } from '@/hooks/useKPIAutonomous';
-import { useAutonomousConfig } from '@/hooks/useAutonomousConfig';
-
-interface KPICard {
-  key: string;
-  label: string;
-  value: number | string;
-  target?: number;
-  unit: string;
-  trend: 'up' | 'down' | 'stable';
-  change?: number;
-  department?: string;
-  category: 'performance' | 'solutions' | 'agent';
-}
-
-interface AgentAction {
-  id: string;
-  action_type: string;
-  action_description: string;
-  channels_used: string[];
-  success: boolean;
-  created_at: string;
-}
+import KpiBoardRenderer from '@/components/KPI/KpiBoardRenderer';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { portalActionBus, type AICommandPayload } from '@/lib/ia/portal-action-bus';
+import {
+  ACTIVE_BOARD_STORAGE_KEY,
+  type KpiBoardRow,
+  type KpiBoardSpec,
+} from '@/lib/ia/kpi-board-shared';
 
 export default function KPIDashboardPage() {
-  const [kpis, setKpis] = useState<KPICard[]>([]);
-  const [agentActions, setAgentActions] = useState<AgentAction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [exporting, setExporting] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string>('todos');
-  const [selectedDepartment, setSelectedDepartment] = useState<string>('todos');
-  const [period, setPeriod] = useState<string>('month');
+  const { user, profile, getToken, isLoading: authLoading } = useSupabaseAuth();
+  const userId = user?.id || profile?.id || '';
 
-  // Autonomous agent hooks
-  const { config, updateConfig, resetToDefault } = useAutonomousConfig();
-  const { isRunning, status, start, stop, pause, resume, manualOverride } = useKPIAutonomous({
-    userId: typeof window !== 'undefined' ? localStorage.getItem('abz_user_id') || '' : '',
-    sectorId: typeof window !== 'undefined' ? localStorage.getItem('abz_sector_id') || '' : '',
-    config,
-    autoStart: false,
-  });
+  const [boards, setBoards] = useState<KpiBoardRow[]>([]);
+  const [activeBoard, setActiveBoard] = useState<KpiBoardRow | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const getAuthHeaders = useCallback(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('abzToken') || localStorage.getItem('token') : null;
+    const token = getToken?.() || (typeof window !== 'undefined'
+      ? localStorage.getItem('abzToken') || localStorage.getItem('token')
+      : null);
     return {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
-  }, []);
+  }, [getToken]);
 
-  const fetchKPIs = useCallback(async () => {
+  const loadBoards = useCallback(async () => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
+    setError(null);
     try {
-      const res = await fetch(`/api/ia/dashboard?type=kpi&period=${period}&department=${selectedDepartment}`, {
-        headers: getAuthHeaders(),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        // Transform dashboard KPIs into our format
-        const dashKpis: KPICard[] = (data.data?.kpis || []).map((k: any) => ({
-          key: k.label?.toLowerCase().replace(/\s/g, '_') || 'unknown',
-          label: k.label,
-          value: k.value,
-          target: k.target,
-          unit: typeof k.value === 'number' && k.value <= 100 ? '%' : '',
-          trend: k.trend || 'stable',
-          change: k.change,
-          category: 'performance',
-        }));
-        setKpis(dashKpis);
+      const preferredId =
+        typeof window !== 'undefined'
+          ? localStorage.getItem(ACTIVE_BOARD_STORAGE_KEY)
+          : null;
+
+      const listRes = await fetch('/api/ia/kpi-boards', { headers: getAuthHeaders() });
+      if (!listRes.ok) {
+        const errBody = await listRes.json().catch(() => ({}));
+        throw new Error(errBody.error || 'Falha ao listar quadros');
+      }
+      const listData = await listRes.json();
+      const list: KpiBoardRow[] = listData.boards || [];
+      setBoards(list);
+
+      const targetId =
+        preferredId ||
+        list.find((b) => b.is_active)?.id ||
+        list[0]?.id ||
+        null;
+
+      if (!targetId) {
+        setActiveBoard(null);
+        setLoading(false);
+        return;
+      }
+
+      const boardRes = await fetch(
+        `/api/ia/kpi-boards?id=${encodeURIComponent(targetId)}&resolve=1`,
+        { headers: getAuthHeaders() }
+      );
+      if (!boardRes.ok) {
+        // Preferred id stale — try active
+        const activeRes = await fetch('/api/ia/kpi-boards?active=1&resolve=1', {
+          headers: getAuthHeaders(),
+        });
+        if (activeRes.ok) {
+          const activeData = await activeRes.json();
+          setActiveBoard(activeData.board || null);
+          if (activeData.board?.id) {
+            try {
+              localStorage.setItem(ACTIVE_BOARD_STORAGE_KEY, activeData.board.id);
+            } catch { /* ignore */ }
+          } else {
+            try {
+              localStorage.removeItem(ACTIVE_BOARD_STORAGE_KEY);
+            } catch { /* ignore */ }
+          }
+        } else {
+          setActiveBoard(null);
+          try {
+            localStorage.removeItem(ACTIVE_BOARD_STORAGE_KEY);
+          } catch { /* ignore */ }
+        }
+      } else {
+        const boardData = await boardRes.json();
+        setActiveBoard(boardData.board || null);
       }
     } catch (err) {
-      console.error('[KPI] Error fetching KPIs:', err);
+      console.error('[KPI] load boards:', err);
+      setError(err instanceof Error ? err.message : 'Erro ao carregar quadro');
     }
     setLoading(false);
-  }, [period, selectedDepartment, getAuthHeaders]);
-
-  const fetchAgentActions = useCallback(async () => {
-    try {
-      const res = await fetch('/api/ia/knowledge-base?action=stats', {
-        headers: getAuthHeaders(),
-      });
-      if (res.ok) {
-        // We'll also fetch agent actions via the dashboard
-      }
-    } catch (err) {
-      console.error('[KPI] Error fetching agent actions:', err);
-    }
-  }, [getAuthHeaders]);
+  }, [userId, getAuthHeaders]);
 
   useEffect(() => {
-    fetchKPIs();
-    fetchAgentActions();
-  }, [fetchKPIs, fetchAgentActions]);
+    if (!authLoading) loadBoards();
+  }, [authLoading, loadBoards]);
 
-  const handleExport = async (format: 'pdf' | 'xlsx') => {
-    setExporting(true);
-    try {
-      const res = await fetch(`/api/ia/dashboard?type=kpi&format=${format}&period=${period}`, {
-        headers: getAuthHeaders(),
-      });
-      if (res.ok) {
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `kpi-report-${new Date().toISOString().split('T')[0]}.${format}`;
-        a.click();
-        URL.revokeObjectURL(url);
+  // Companion OPEN_KPI_BOARD + custom event
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { boardId?: string } | undefined;
+      if (detail?.boardId) {
+        try {
+          localStorage.setItem(ACTIVE_BOARD_STORAGE_KEY, detail.boardId);
+        } catch { /* ignore */ }
       }
+      void loadBoards();
+    };
+    const onBus = (cmd: AICommandPayload) => {
+      if (cmd.action === 'OPEN_KPI_BOARD') {
+        void loadBoards();
+      }
+    };
+    window.addEventListener('abz-kpi-board-open', onOpen);
+    const unsub = portalActionBus.subscribe(onBus);
+    return () => {
+      window.removeEventListener('abz-kpi-board-open', onOpen);
+      unsub();
+    };
+  }, [loadBoards]);
+
+  const selectBoard = async (boardId: string) => {
+    try {
+      localStorage.setItem(ACTIVE_BOARD_STORAGE_KEY, boardId);
+      await fetch('/api/ia/kpi-boards', {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ id: boardId, setActive: true }),
+      });
+      await loadBoards();
     } catch (err) {
-      console.error('[KPI] Export error:', err);
-    }
-    setExporting(false);
-  };
-
-  const handleRefresh = useCallback(() => {
-    fetchKPIs();
-    fetchAgentActions();
-  }, [fetchKPIs, fetchAgentActions]);
-
-  const getTrendIcon = (trend: string) => {
-    switch (trend) {
-      case 'up': return <FiTrendingUp className="w-4 h-4 text-emerald-500" />;
-      case 'down': return <FiTrendingDown className="w-4 h-4 text-red-500" />;
-      default: return <FiMinus className="w-4 h-4 text-gray-400" />;
+      console.error('[KPI] select board:', err);
     }
   };
 
-  const getGapColor = (value: number, target?: number) => {
-    if (!target) return 'text-gray-700';
-    const pct = (typeof value === 'number' ? value : 0) / target;
-    if (pct >= 1) return 'text-emerald-600';
-    if (pct >= 0.8) return 'text-amber-600';
-    return 'text-red-600';
+  const deleteBoard = async (board: KpiBoardRow) => {
+    const ok = window.confirm(
+      `Excluir o quadro "${board.title}"?\nEsta ação não pode ser desfeita pelo Companion (soft-delete).`
+    );
+    if (!ok) return;
+
+    setDeletingId(board.id);
+    setError(null);
+    try {
+      const res = await fetch(
+        `/api/ia/kpi-boards?id=${encodeURIComponent(board.id)}`,
+        { method: 'DELETE', headers: getAuthHeaders() }
+      );
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(body.error || 'Falha ao excluir quadro');
+      }
+
+      if (typeof window !== 'undefined') {
+        const preferred = localStorage.getItem(ACTIVE_BOARD_STORAGE_KEY);
+        if (preferred === board.id || activeBoard?.id === board.id) {
+          try {
+            localStorage.removeItem(ACTIVE_BOARD_STORAGE_KEY);
+          } catch { /* ignore */ }
+          setActiveBoard(null);
+        }
+      }
+
+      await loadBoards();
+    } catch (err) {
+      console.error('[KPI] delete board:', err);
+      setError(err instanceof Error ? err.message : 'Erro ao excluir quadro');
+    } finally {
+      setDeletingId(null);
+    }
   };
-
-  const getGapBar = (value: number, target?: number) => {
-    if (!target) return 100;
-    return Math.min((typeof value === 'number' ? value : 0) / target * 100, 100);
-  };
-
-  const filteredKpis = kpis.filter(k => {
-    if (selectedCategory !== 'todos' && k.category !== selectedCategory) return false;
-    return true;
-  });
-
-  const categories = [
-    { key: 'todos', label: 'Todos', icon: FiBarChart2 },
-    { key: 'performance', label: 'Performance', icon: FiActivity },
-    { key: 'solutions', label: 'Soluções', icon: FiCheckCircle },
-    { key: 'agent', label: 'Agente IA', icon: FiSettings },
-  ];
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-gray-50">
-        {/* Autonomous Agent Header */}
-        <KPIAutonomousHeader
-          config={config}
-          isRunning={isRunning}
-          status={status}
-          onStart={start}
-          onStop={stop}
-          onPause={pause}
-          onResume={resume}
-          onConfigChange={updateConfig}
-          onRefresh={handleRefresh}
-          onExport={handleExport}
-        />
-
-        {/* Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {/* Autonomous KPI Renderer */}
-          <AutonomousKPIRenderer
-            userId={typeof window !== 'undefined' ? localStorage.getItem('abz_user_id') || '' : ''}
-            sectorId={typeof window !== 'undefined' ? localStorage.getItem('abz_sector_id') || '' : ''}
-            config={config}
-            showControls={true}
-          />
-
-          {/* Legacy KPI Grid (fallback/complementary view) */}
-          {kpis.length > 0 && (
-            <div className="mt-8">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-4">
-                <FiBarChart2 className="w-5 h-5 text-blue-600" />
-                KPIs Detalhados
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredKpis.map((kpi) => (
-                  <div
-                    key={kpi.key}
-                    className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow"
-                  >
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-                        {kpi.label}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        {getTrendIcon(kpi.trend)}
-                        {kpi.change !== undefined && (
-                          <span className={`text-xs font-medium ${
-                            kpi.trend === 'up' ? 'text-emerald-600' : kpi.trend === 'down' ? 'text-red-600' : 'text-gray-500'
-                          }`}>
-                            {kpi.change > 0 ? '+' : ''}{kpi.change}%
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Value */}
-                    <div className="flex items-baseline gap-1 mb-1">
-                      <span className={`text-3xl font-bold ${getGapColor(typeof kpi.value === 'number' ? kpi.value : 0, kpi.target)}`}>
-                        {typeof kpi.value === 'number' ? kpi.value.toLocaleString('pt-BR') : kpi.value}
-                      </span>
-                      <span className="text-sm text-gray-400">{kpi.unit}</span>
-                    </div>
-
-                    {/* Target */}
-                    {kpi.target && (
-                      <p className="text-xs text-gray-400 mb-3">
-                        Meta: {kpi.target}{kpi.unit}
-                      </p>
-                    )}
-
-                    {/* Progress Bar */}
-                    {kpi.target && typeof kpi.value === 'number' && (
-                      <div className="w-full bg-gray-100 rounded-full h-2 mt-2">
-                        <div
-                          className={`h-2 rounded-full transition-all duration-700 ${
-                            getGapBar(kpi.value, kpi.target) >= 100 ? 'bg-emerald-500' :
-                            getGapBar(kpi.value, kpi.target) >= 80 ? 'bg-amber-500' : 'bg-red-500'
-                          }`}
-                          style={{ width: `${getGapBar(kpi.value, kpi.target)}%` }}
-                        ></div>
-                      </div>
-                    )}
-
-                    {/* Department Badge */}
-                    {kpi.department && (
-                      <div className="mt-3">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-full">
-                          <FiUsers className="w-3 h-3" />
-                          {kpi.department}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ))}
+      <div className="flex flex-col min-h-0 flex-1 h-full bg-gradient-to-b from-slate-50 to-gray-100">
+        <div className="shrink-0 border-b border-gray-200/80 bg-white/80 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#005B96]/10 flex items-center justify-center">
+                <FiLayout className="w-5 h-5 text-[#005B96]" />
               </div>
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900 tracking-tight">
+                  KPI — Quadro Branco
+                </h1>
+                <p className="text-xs text-gray-500">
+                  Widgets allowlisted montados pelo Companion · sem JS livre
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => loadBoards()}
+              disabled={loading}
+              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            >
+              <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              Atualizar
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 min-h-0 overflow-auto max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          {boards.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {boards.map((b) => (
+                <div
+                  key={b.id}
+                  className={`inline-flex items-center gap-1 rounded-lg border transition-colors ${
+                    activeBoard?.id === b.id
+                      ? 'bg-[#005B96] text-white border-[#005B96]'
+                      : 'bg-white text-gray-600 border-gray-200'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => selectBoard(b.id)}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-l-lg ${
+                      activeBoard?.id === b.id
+                        ? 'hover:bg-[#004a7a]'
+                        : 'hover:border-[#005B96]/40 hover:text-[#005B96]'
+                    }`}
+                  >
+                    {b.title}
+                  </button>
+                  <button
+                    type="button"
+                    title={`Excluir "${b.title}"`}
+                    aria-label={`Excluir quadro ${b.title}`}
+                    disabled={deletingId === b.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void deleteBoard(b);
+                    }}
+                    className={`px-2 py-1.5 rounded-r-lg disabled:opacity-50 ${
+                      activeBoard?.id === b.id
+                        ? 'text-white/80 hover:bg-rose-600 hover:text-white'
+                        : 'text-gray-400 hover:bg-rose-50 hover:text-rose-600'
+                    }`}
+                  >
+                    <FiTrash2 className={`w-3.5 h-3.5 ${deletingId === b.id ? 'animate-pulse' : ''}`} />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
 
-          {/* Agent Activity Section */}
-          {agentActions.length > 0 && (
-            <div className="mt-8">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-4">
-                <FiActivity className="w-5 h-5 text-purple-600" />
-                Atividade do Agente IA
-              </h2>
-              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <div className="divide-y divide-gray-100">
-                  {agentActions.slice(0, 10).map(action => (
-                    <div key={action.id} className="flex items-center justify-between px-6 py-3 hover:bg-gray-50">
-                      <div className="flex items-center gap-3">
-                        {action.success ? (
-                          <FiCheckCircle className="w-5 h-5 text-emerald-500" />
-                        ) : (
-                          <FiAlertTriangle className="w-5 h-5 text-red-500" />
-                        )}
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
-                            {action.action_description || action.action_type}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(action.created_at).toLocaleString('pt-BR')}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex gap-1">
-                        {(action.channels_used || []).map(ch => (
-                          <span key={ch} className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded-full">
-                            {ch}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+          {authLoading || loading ? (
+            <div className="bg-white rounded-xl border border-gray-100 p-12 text-center text-sm text-gray-500">
+              Carregando quadro…
+            </div>
+          ) : error ? (
+            <div className="bg-rose-50 border border-rose-100 rounded-xl p-6 flex items-start gap-3 text-rose-800">
+              <FiAlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-sm">Não foi possível carregar o quadro</p>
+                <p className="text-xs mt-1 opacity-80">{error}</p>
               </div>
+            </div>
+          ) : activeBoard ? (
+            <KpiBoardRenderer
+              boardId={activeBoard.id}
+              title={activeBoard.title}
+              spec={activeBoard.spec as KpiBoardSpec}
+              revision={activeBoard.revision}
+            />
+          ) : (
+            <div className="bg-white rounded-xl border border-dashed border-gray-200 p-10 text-center">
+              <FiBarChart2 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+              <h2 className="text-base font-semibold text-gray-800">Nenhum quadro ainda</h2>
+              <p className="text-sm text-gray-500 mt-2 max-w-md mx-auto">
+                Peça ao Companion: “monte um quadro KPI com minhas pendências e abra no KPI”
+                ou “crie um quadro branco com métricas de férias e reembolso”.
+              </p>
             </div>
           )}
         </div>

@@ -16,9 +16,9 @@ const CertificatesPage: React.FC = () => {
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex flex-col min-h-0 flex-1 h-full max-w-7xl mx-auto w-full">
         {/* Header */}
-        <div className="mb-8">
+        <div className="shrink-0 mb-6">
           <button
             onClick={() => router.push('/academy')}
             className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
@@ -39,7 +39,9 @@ const CertificatesPage: React.FC = () => {
         </div>
 
         {/* Componente de certificados */}
-        <Certificates />
+        <div className="flex-1 min-h-0 overflow-auto">
+          <Certificates />
+        </div>
       </div>
     </MainLayout>
   );

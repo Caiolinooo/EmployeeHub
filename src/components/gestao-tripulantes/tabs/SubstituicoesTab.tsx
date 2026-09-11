@@ -3,6 +3,10 @@
 import React from 'react';
 import { FiRepeat, FiCalendar, FiArrowRight, FiUser } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
+import {
+  COLLABORATOR_MODAL_TAB_FILL_CLASS,
+  COLLABORATOR_MODAL_TABLE_SCROLL_CLASS,
+} from '@/components/gestao-tripulantes/collaborator-modal-layout';
 
 interface Substitution {
   id: string;
@@ -47,9 +51,9 @@ export default function SubstituicoesTab({ colaboradorId, substituicoes }: Props
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className={`${COLLABORATOR_MODAL_TAB_FILL_CLASS} p-6 space-y-6`}>
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 shrink-0">
         <div className="bg-purple-50 rounded-xl p-4 text-center">
           <p className="text-2xl font-bold text-purple-700">{substituicoes.length}</p>
           <p className="text-xs text-purple-600 mt-1">Total de Substituições</p>
@@ -63,7 +67,7 @@ export default function SubstituicoesTab({ colaboradorId, substituicoes }: Props
       </div>
 
       {/* List */}
-      <div className="space-y-3">
+      <div className={`${COLLABORATOR_MODAL_TABLE_SCROLL_CLASS} space-y-3`}>
         {substituicoes.map(sub => (
           <div key={sub.id} className="border border-gray-100 rounded-xl p-4 hover:shadow-sm transition-shadow bg-white">
             <div className="flex items-center gap-3">

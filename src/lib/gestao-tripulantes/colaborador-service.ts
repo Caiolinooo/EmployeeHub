@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import type { GTColaborador } from '@/types/gestao-tripulantes';
+import { persistirCamposEscala } from '@/lib/gestao-tripulantes/regime-escala';
 
 export interface ColaboradorFilters {
   search?: string;
@@ -197,6 +198,17 @@ export async function createColaborador(
       }
     }
 
+    if (payload.regime_trabalho != null || payload.escala_embarque != null || payload.escala_folga != null) {
+      const persistido = persistirCamposEscala({
+        regime_trabalho: payload.regime_trabalho,
+        escala_embarque: payload.escala_embarque,
+        escala_folga: payload.escala_folga,
+      });
+      payload.regime_trabalho = persistido.regime_trabalho;
+      payload.escala_embarque = persistido.escala_embarque;
+      payload.escala_folga = persistido.escala_folga;
+    }
+
     const { data: novo, error } = await supabase
       .from('gt_colaboradores')
       .insert(payload)
@@ -229,6 +241,22 @@ export async function updateColaborador(
     delete (updateData as any).id;
     delete (updateData as any).created_at;
     delete (updateData as any).deleted_at;
+
+    if ('regime_trabalho' in updateData) {
+      const escalaPatch = updateData as {
+        regime_trabalho?: string | null;
+        escala_embarque?: string | number | null;
+        escala_folga?: string | number | null;
+      };
+      const persistido = persistirCamposEscala({
+        regime_trabalho: escalaPatch.regime_trabalho,
+        escala_embarque: escalaPatch.escala_embarque,
+        escala_folga: escalaPatch.escala_folga,
+      });
+      (updateData as Record<string, unknown>).regime_trabalho = persistido.regime_trabalho;
+      (updateData as Record<string, unknown>).escala_embarque = persistido.escala_embarque;
+      (updateData as Record<string, unknown>).escala_folga = persistido.escala_folga;
+    }
 
     const { data: updated, error } = await supabase
       .from('gt_colaboradores')

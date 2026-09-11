@@ -171,7 +171,7 @@ async function carregarLookups(): Promise<{
   ]);
   const map = <T extends { id: string; nome?: string | null }>(rows: T[] | null | undefined, nameKey = 'nome') => {
     const m = new Map<string, string>();
-    for (const r of rows ?? []) m.set(r.id, r[nameKey] || '');
+    for (const r of rows ?? []) m.set(r.id, (r as Record<string, string | null | undefined>)[nameKey] || '');
     return m;
   };
   return {
@@ -282,7 +282,7 @@ export interface BuildZipResult {
 
 function preencherTemplate(
   template: string,
-  vars: Record<(typeof TEMPLATE_PLACEHOLDERS)[number], string>,
+  vars: Partial<Record<(typeof TEMPLATE_PLACEHOLDERS)[number], string>>,
   docVars?: Partial<Record<(typeof TEMPLATE_PLACEHOLDERS)[number], string>>
 ): string[] {
   const merged = { ...vars, ...(docVars ?? {}) };

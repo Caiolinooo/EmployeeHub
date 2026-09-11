@@ -1,0 +1,299 @@
+{
+  "mode": "after2",
+  "email": "hudna.mendonca@groupabz.com",
+  "pages": {
+    "standalone-desktop": {
+      "viewport": {
+        "w": 1440,
+        "h": 900
+      },
+      "docOverflowX": false,
+      "scrollport": {
+        "clientWidth": 1184,
+        "scrollWidth": 1184,
+        "hasHScroll": false
+      },
+      "tableWidth": 1184,
+      "dataRows": 1,
+      "dataCols": 12,
+      "topBar": {
+        "clientWidth": 1184,
+        "scrollWidth": 1184,
+        "hasHScroll": false,
+        "height": 14
+      },
+      "stickyName": {
+        "position": "sticky",
+        "left": "0px"
+      },
+      "chain": [
+        {
+          "tag": "div",
+          "testid": "man-schedule-scroll",
+          "cls": "man-schedule-scroll flex-1 min-h-0 overflow-auto overscroll-contain relative isolate w-ful",
+          "rectW": 1184,
+          "clientW": 1184,
+          "scrollW": 1184,
+          "overflowX": "auto",
+          "minW": "auto",
+          "display": "block"
+        },
+        {
+          "tag": "div",
+          "testid": "gt-page-shell",
+          "cls": "flex flex-col flex-1 min-h-0 overflow-y-auto lg:overflow-hidden bg-white -mx-3 -my-3 sm:-m",
+          "rectW": 1184,
+          "clientW": 1184,
+          "scrollW": 1184,
+          "overflowX": "hidden",
+          "minW": "auto",
+          "display": "flex"
+        },
+        {
+          "tag": "main",
+          "cls": "flex-1 min-h-0 flex flex-col overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 md:px-8 md:py-6 tou",
+          "rectW": 1184,
+          "clientW": 1184,
+          "scrollW": 1184,
+          "overflowX": "auto",
+          "minW": "auto",
+          "display": "flex"
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex flex-col min-h-0 h-dvh transition-all duration-300 md:ml-64",
+          "rectW": 1184,
+          "clientW": 1184,
+          "scrollW": 1184,
+          "overflowX": "visible",
+          "minW": "0px",
+          "display": "flex"
+        },
+        {
+          "tag": "div",
+          "cls": "h-dvh bg-gray-50 flex font-sans overflow-hidden",
+          "rectW": 1440,
+          "clientW": 1440,
+          "scrollW": 1440,
+          "overflowX": "hidden",
+          "minW": "0px",
+          "display": "flex"
+        }
+      ]
+    },
+    "gt-tab-desktop": {
+      "viewport": {
+        "w": 1440,
+        "h": 900
+      },
+      "docOverflowX": false,
+      "scrollport": {
+        "clientWidth": 1118,
+        "scrollWidth": 1724,
+        "hasHScroll": true
+      },
+      "tableWidth": 1724,
+      "dataRows": 40,
+      "dataCols": 30,
+      "topBar": {
+        "clientWidth": 1118,
+        "scrollWidth": 1724,
+        "hasHScroll": true,
+        "height": 14
+      },
+      "stickyName": {
+        "position": "sticky",
+        "left": "0px"
+      },
+      "chain": [
+        {
+          "tag": "div",
+          "testid": "man-schedule-scroll",
+          "cls": "man-schedule-scroll flex-1 min-h-0 overflow-auto overscroll-contain relative isolate w-ful",
+          "rectW": 1118,
+          "clientW": 1118,
+          "scrollW": 1724,
+          "overflowX": "auto",
+          "minW": "auto",
+          "display": "block"
+        },
+        {
+          "tag": "div",
+          "cls": "flex flex-col h-full min-h-0 w-full border border-gray-200 rounded-xl overflow-hidden bg-w",
+          "rectW": 1120,
+          "clientW": 1118,
+          "scrollW": 1118,
+          "overflowX": "hidden",
+          "minW": "auto",
+          "display": "flex"
+        },
+        {
+          "tag": "div",
+          "cls": "flex flex-col flex-1 min-h-0 w-full overflow-hidden",
+          "rectW": 1120,
+          "clientW": 1120,
+          "scrollW": 1120,
+          "overflowX": "hidden",
+          "minW": "auto",
+          "display": "flex"
+        },
+        {
+          "tag": "div",
+          "testid": "gt-page-shell",
+          "cls": "flex flex-col flex-1 min-h-0 overflow-y-auto lg:overflow-hidden gap-3",
+          "rectW": 1120,
+          "clientW": 1120,
+          "scrollW": 1120,
+          "overflowX": "hidden",
+          "minW": "auto",
+          "display": "flex"
+        },
+        {
+          "tag": "main",
+          "cls": "flex-1 min-h-0 flex flex-col overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 md:px-8 md:py-6 tou",
+          "rectW": 1184,
+          "clientW": 1184,
+          "scrollW": 1184,
+          "overflowX": "auto",
+          "minW": "auto",
+          "display": "flex"
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex flex-col min-h-0 h-dvh transition-all duration-300 md:ml-64",
+          "rectW": 1184,
+          "clientW": 1184,
+          "scrollW": 1184,
+          "overflowX": "visible",
+          "minW": "0px",
+          "display": "flex"
+        },
+        {
+          "tag": "div",
+          "cls": "h-dvh bg-gray-50 flex font-sans overflow-hidden",
+          "rectW": 1440,
+          "clientW": 1440,
+          "scrollW": 1440,
+          "overflowX": "hidden",
+          "minW": "0px",
+          "display": "flex"
+        }
+      ],
+      "interactions": {
+        "afterTableScroll": {
+          "table": 413,
+          "top": 413
+        },
+        "stickyDeltaAt400": 0,
+        "afterTopScroll": {
+          "table": 606,
+          "top": 606
+        },
+        "stickyDeltaAt800": 0
+      }
+    },
+    "standalone-mobile": {
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "docOverflowX": false,
+      "scrollport": {
+        "clientWidth": 390,
+        "scrollWidth": 765,
+        "hasHScroll": true
+      },
+      "tableWidth": 765,
+      "dataRows": 1,
+      "dataCols": 12,
+      "topBar": {
+        "clientWidth": 390,
+        "scrollWidth": 765,
+        "hasHScroll": true,
+        "height": 14
+      },
+      "stickyName": {
+        "position": "sticky",
+        "left": "0px"
+      },
+      "chain": [
+        {
+          "tag": "div",
+          "testid": "man-schedule-scroll",
+          "cls": "man-schedule-scroll flex-1 min-h-0 overflow-auto overscroll-contain relative isolate w-ful",
+          "rectW": 390,
+          "clientW": 390,
+          "scrollW": 765,
+          "overflowX": "auto",
+          "minW": "auto",
+          "display": "block"
+        },
+        {
+          "tag": "div",
+          "testid": "gt-page-shell",
+          "cls": "flex flex-col flex-1 min-h-0 overflow-y-auto lg:overflow-hidden bg-white -mx-3 -my-3 sm:-m",
+          "rectW": 390,
+          "clientW": 390,
+          "scrollW": 451,
+          "overflowX": "auto",
+          "minW": "auto",
+          "display": "flex"
+        },
+        {
+          "tag": "main",
+          "cls": "flex-1 min-h-0 flex flex-col overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 md:px-8 md:py-6 tou",
+          "rectW": 390,
+          "clientW": 390,
+          "scrollW": 390,
+          "overflowX": "auto",
+          "minW": "auto",
+          "display": "flex"
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex flex-col min-h-0 h-dvh transition-all duration-300 md:ml-64",
+          "rectW": 390,
+          "clientW": 390,
+          "scrollW": 390,
+          "overflowX": "visible",
+          "minW": "0px",
+          "display": "flex"
+        },
+        {
+          "tag": "div",
+          "cls": "h-dvh bg-gray-50 flex font-sans overflow-hidden",
+          "rectW": 390,
+          "clientW": 390,
+          "scrollW": 390,
+          "overflowX": "hidden",
+          "minW": "0px",
+          "display": "flex"
+        }
+      ],
+      "interactions": {
+        "afterTableScroll": {
+          "table": 375,
+          "top": 375
+        },
+        "stickyDeltaAt400": 0,
+        "afterTopScroll": {
+          "table": 375,
+          "top": 375
+        },
+        "stickyDeltaAt800": 0
+      }
+    }
+  },
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "[2026-09-03T17:26:53.215Z] ❌ [useEffectivePermissions] Failed to fetch permissions: 401 Unauthorized",
+    "[2026-09-03T17:27:03.157Z] fetchWithToken: Erro ao fazer requisição para /api/man-schedule/realtime: TypeError: Failed to fetch\n    at fetchWithToken (webpack-internal:///(app-pages-browser)/./src/lib",
+    "[2026-09-03T17:27:03.158Z] fetchWithToken: Erro ao fazer requisição para /api/notifications?user_id=4b72ad5d-4451-41c2-a834-02ff128a8bcb&limit=20&page=1: TypeError: Failed to fetch\n    at fetchWithTok",
+    "[2026-09-03T17:27:03.159Z] fetchWithToken: Erro ao fazer requisição para /api/man-schedule/realtime: TypeError: Failed to fetch\n    at fetchWithToken (webpack-internal:///(app-pages-browser)/./src/lib",
+    "[2026-09-03T17:27:03.160Z] Erro ao carregar módulos ACL: TypeError: Failed to fetch\n    at SupabaseAuthProvider.useEffect.loadAclModules (webpack-internal:///(app-pages-browser)/./src/contexts/Supabas",
+    "[2026-09-03T17:27:03.160Z] fetchWithToken: Erro ao fazer requisição para /api/man-schedule/realtime: TypeError: Failed to fetch\n    at fetchWithToken (webpack-internal:///(app-pages-browser)/./src/lib",
+    "[2026-09-03T17:27:03.161Z] fetchWithToken: Erro ao fazer requisição para /api/man-schedule/realtime: TypeError: Failed to fetch\n    at fetchWithToken (webpack-internal:///(app-pages-browser)/./src/lib",
+    "[2026-09-03T17:27:03.162Z] Error fetching schedules: TypeError: Failed to fetch\n    at fetchWithToken (webpack-internal:///(app-pages-browser)/./src/lib/tokenStorage.ts:332:32)\n    at ManSchedulePage.",
+    "[2026-09-03T17:27:03.163Z] Erro ao buscar notificações: TypeError: Failed to fetch\n    at fetchWithToken (webpack-internal:///(app-pages-browser)/./src/lib/tokenStorage.ts:332:32)\n    at useNotificati"
+  ]
+}

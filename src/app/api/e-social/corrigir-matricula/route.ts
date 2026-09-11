@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
-import { generateEventXML, validateEventXML, updateEvento, logEnvio, STATUS_EVENTO } from '@/services/eSocialService';
+import { findColaboradorByCpf } from '@/lib/gestao-tripulantes/cpf-lookup';
+import { generateEventXML, validateEventXML, logEnvio } from '@/services/eSocialService';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,8 +47,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Evento não encontrado' }, { status: 404 });
     }
 
-    // 4. Update gt_colaboradores.matricula_esocial
-    // Removido: O funcionário só será atualizado quando a matrícula retornar SUCESSO do e-Social no consultar-lote.
+    if (evento.status === 'processado' && evento.numero_recibo) {
+      return NextResponse.json(
+        { error: 'Evento já processado com recibo. Não altere a matrícula neste registro.' },
+        { status: 409 },
+      );
+    }
+
+    // 4. Atualiza gt_colaboradores para o próximo envio (S-2220) usar a mesma matrícula
+    if (evento.cpf_trabalhador) {
+      const colab = await findColaboradorByCpf(evento.cpf_trabalhador);
+      if (colab) {
+        const { error: colabErr } = await supabaseAdmin
+          .from('gt_colaboradores')
+          .update({
+            matricula: cleanMatricula,
+            matricula_esocial: cleanMatricula,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', colab.id);
+        if (colabErr) {
+          console.warn('[CorrigirMatricula] falha ao gravar cadastro GT:', colabErr.message);
+        }
+      }
+    }
 
     // 5. Build updated payload for event
     const novosDados = {

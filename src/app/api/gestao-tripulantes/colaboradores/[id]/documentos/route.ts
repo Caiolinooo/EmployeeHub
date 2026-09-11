@@ -71,9 +71,42 @@ export async function GET(
       }
     }
 
+    // Dedup ASOs: colapsa duplicatas e preserva exames históricos distintos
+    const asoMap = new Map<string, any>();
+    const nonAsoDocs: any[] = [];
+
+    documentosComAso.forEach((d: any) => {
+      if (d.tipo_documento === 'aso') {
+        const dRealiz = d.aso_data?.data_realizacao || d.data_emissao || 'SEM_DATA';
+        const dValid = d.data_validade || 'SEM_VALIDADE';
+        const key = `${dRealiz}_${dValid}`;
+        
+        const existing = asoMap.get(key);
+        if (!existing) {
+          asoMap.set(key, d);
+        } else {
+          const existingScore = (existing.aso_data?.esocial_status === 'processado' ? 1000 : 0) + (existing.ocr_status === 'concluido' ? 50 : 0);
+          const currentScore = (d.aso_data?.esocial_status === 'processado' ? 1000 : 0) + (d.ocr_status === 'concluido' ? 50 : 0);
+          if (currentScore > existingScore) {
+            asoMap.set(key, d);
+          }
+        }
+      } else {
+        nonAsoDocs.push(d);
+      }
+    });
+
+    const uniqueAsos = Array.from(asoMap.values()).sort((a, b) => {
+      const dateA = a.aso_data?.data_realizacao || a.data_emissao || '';
+      const dateB = b.aso_data?.data_realizacao || b.data_emissao || '';
+      return dateB.localeCompare(dateA);
+    });
+
+    const finalDocs = [...uniqueAsos, ...nonAsoDocs];
+
     return NextResponse.json({
       success: true,
-      data: documentosComAso
+      data: finalDocs
     });
   } catch (error) {
     console.error('Erro na API documentos:', error);
@@ -99,21 +132,32 @@ export async function POST(
 
     const { id } = await context.params;
     const body = await request.json();
-    const { tipo_documento, titulo, numero_documento, data_emissao, data_validade, arquivo_url, descricao } = body;
+    const {
+      tipo_documento,
+      subtipo,
+      titulo,
+      numero_documento,
+      orgao_emissor,
+      data_emissao,
+      data_validade,
+      arquivo_url,
+      descricao,
+      treinamento_data
+    } = body;
 
     if (!tipo_documento || !titulo) {
       return NextResponse.json({ error: 'Tipo do documento e titulo são obrigatórios' }, { status: 400 });
     }
 
-    // Validação dura: emissão + validade obrigatórias (quarentena é exceção)
+    // Validação de integridade
     const emQuarentena = body.quarentena === true;
     const validacao = validarDatasObrigatorias(
-      { data_emissao, data_validade },
-      { permitirQuarentena: emQuarentena }
+      { data_emissao, data_validade, tipo_documento },
+      { permitirQuarentena: emQuarentena, permitirSemValidade: true, tipoDocumento: tipo_documento }
     );
     if (!validacao.ok) {
       return NextResponse.json({
-        error: 'Documento incompleto: integridade exige data de emissão e data de validade',
+        error: 'Documento incompleto: ' + validacao.errors.join(', '),
         detalhes: validacao.errors,
       }, { status: 422 });
     }
@@ -124,17 +168,21 @@ export async function POST(
       tipo_documento,
       titulo,
       numero_documento,
+      data_emissao,
+      data_validade,
     });
     if (duplicado) {
       const updateData: Record<string, any> = {
+        subtipo: subtipo ?? duplicado.subtipo ?? null,
         numero_documento: numero_documento ?? duplicado.numero_documento ?? null,
+        orgao_emissor: orgao_emissor ?? duplicado.orgao_emissor ?? null,
         data_emissao: data_emissao ?? duplicado.data_emissao ?? null,
         data_validade: data_validade ?? duplicado.data_validade ?? null,
         arquivo_url: arquivo_url ?? duplicado.arquivo_url ?? null,
         descricao: descricao ?? duplicado.descricao ?? null,
         updated_at: new Date().toISOString(),
       };
-      updateData.status_validacao = calcularStatusValidacaoPorValidade(updateData.data_validade);
+      updateData.status_validacao = calcularStatusValidacaoPorValidade(updateData.data_validade, { tipoDocumento: tipo_documento });
       let numero_rastreio = duplicado.numero_rastreio;
       if (!numero_rastreio) {
         numero_rastreio = await garantirNumeroRastreioUnico(tipo_documento, id);
@@ -151,6 +199,20 @@ export async function POST(
         console.error('Erro ao atualizar documento duplicado:', updError);
         return NextResponse.json({ error: 'Erro ao atualizar documento existente' }, { status: 500 });
       }
+
+      if (treinamento_data && typeof treinamento_data === 'object') {
+        await supabaseAdmin
+          .from('gt_documentos_treinamento')
+          .upsert({
+            documento_id: duplicado.id,
+            colaborador_id: id,
+            nome_curso: treinamento_data.nome_curso || titulo,
+            instituicao: treinamento_data.instituicao || orgao_emissor,
+            carga_horaria: treinamento_data.carga_horaria ? Number(treinamento_data.carga_horaria) : null,
+            tipo_curso: treinamento_data.tipo_curso || null,
+          }, { onConflict: 'documento_id' });
+      }
+
       return NextResponse.json({
         success: true,
         data: updated,
@@ -166,15 +228,17 @@ export async function POST(
       .insert({
         colaborador_id: id,
         tipo_documento,
+        subtipo: subtipo || null,
         titulo,
         numero_documento: numero_documento || null,
+        orgao_emissor: orgao_emissor || null,
         data_emissao: data_emissao || null,
         data_validade: data_validade || null,
         arquivo_url: arquivo_url || null,
         descricao: descricao || null,
         numero_rastreio,
         identity_match: 'match',
-        status_validacao: calcularStatusValidacaoPorValidade(data_validade),
+        status_validacao: calcularStatusValidacaoPorValidade(data_validade, { tipoDocumento: tipo_documento }),
         ocr_status: 'pendente',
         status_revisao: 'nao_necessita',
         notificado_vencimento: false,
@@ -186,6 +250,19 @@ export async function POST(
     if (createError) {
       console.error('Erro ao criar documento:', createError);
       return NextResponse.json({ error: 'Erro ao criar documento' }, { status: 500 });
+    }
+
+    if (treinamento_data && typeof treinamento_data === 'object' && documento) {
+      await supabaseAdmin
+        .from('gt_documentos_treinamento')
+        .upsert({
+          documento_id: documento.id,
+          colaborador_id: id,
+          nome_curso: treinamento_data.nome_curso || titulo,
+          instituicao: treinamento_data.instituicao || orgao_emissor,
+          carga_horaria: treinamento_data.carga_horaria ? Number(treinamento_data.carga_horaria) : null,
+          tipo_curso: treinamento_data.tipo_curso || null,
+        }, { onConflict: 'documento_id' });
     }
 
     return NextResponse.json({

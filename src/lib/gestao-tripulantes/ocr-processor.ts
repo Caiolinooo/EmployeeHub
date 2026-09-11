@@ -1,6 +1,19 @@
-import { processarDocumentoOCR as processarDocumentoOCRGlobal } from '@/lib/ocr';
+import {
+  processarDocumentoOCR as processarDocumentoOCRGlobal,
+  validarCPF,
+  validarCNPJ,
+  repararCPFOptico,
+  extrairCPFInteligente,
+  extrairResultadoInteligente,
+  extrairDataNascimentoInteligente,
+  extrairRGInteligente,
+  extrairMedicoECRMInteligente,
+  extrairCNPJInteligente,
+} from '@/lib/ocr';
 import { supabaseAdmin } from '@/lib/supabase';
 import { buscarCodigoExame } from '@/lib/e-social/codigos';
+import { alinharDataExamePtBr, normalizeEsocialDate } from '@/lib/e-social/esocial-date';
+import { sanitizeTsNome } from '@/lib/e-social/ts-nome';
 import {
   cpfsMatch,
   isEsocialQueuedOrBeyond,
@@ -8,6 +21,7 @@ import {
   type AsoIdentityMatch,
 } from '@/lib/gestao-tripulantes/cpf';
 import { findColaboradorByCpf, getColaboradorCpfNormalized } from '@/lib/gestao-tripulantes/cpf-lookup';
+import { calcularStatusValidacaoPorValidade } from '@/lib/gestao-tripulantes/documento-integrity';
 import type { TipoDocumento } from '@/types/gestao-tripulantes';
 import type { OCRExtractResult, OCRTipoDocumento } from '@/types/ocr';
 
@@ -15,25 +29,11 @@ export type { OCRExtractResult };
 
 export async function processarDocumentoOCR(
   arquivoUrl: string,
-  tipoDocumento: TipoDocumento
+  tipoDocumento: TipoDocumento,
+  profileCpf?: string | null
 ): Promise<OCRExtractResult> {
-  return processarDocumentoOCRGlobal(arquivoUrl, tipoDocumento as OCRTipoDocumento);
+  return processarDocumentoOCRGlobal(arquivoUrl, tipoDocumento as OCRTipoDocumento, profileCpf);
 }
-
-const MESES_BR: Record<string, string> = {
-  'JAN': '01', 'JANEIRO': '01',
-  'FEV': '02', 'FEVEREIRO': '02',
-  'MAR': '03', 'MARCO': '03', 'MARÇO': '03',
-  'ABR': '04', 'ABRIL': '04',
-  'MAI': '05', 'MAIO': '05',
-  'JUN': '06', 'JUNHO': '06',
-  'JUL': '07', 'JULHO': '07',
-  'AGO': '08', 'AGOSTO': '08',
-  'SET': '09', 'SETEMBRO': '09',
-  'OUT': '10', 'OUTUBRO': '10',
-  'NOV': '11', 'NOVEMBRO': '11',
-  'DEZ': '12', 'DEZEMBRO': '12',
-};
 
 const PALAVRAS_DATA_PROXIMA = [
   'conclusao', 'conclusão', 'realizacao', 'realização',
@@ -42,11 +42,8 @@ const PALAVRAS_DATA_PROXIMA = [
 ];
 
 function converterDataTexto(dia: string, mesStr: string, ano: string): string | null {
-  const cleanMes = mesStr.toUpperCase().replace(/\./g, '').trim();
-  const mes = MESES_BR[cleanMes];
-  if (!mes) return null;
-  const d = dia.padStart(2, '0');
-  return `${ano}-${mes}-${d}`;
+  const converted = normalizeEsocialDate(`${dia} ${mesStr} ${ano}`);
+  return converted || null;
 }
 
 function extrairDataDoTexto(texto: string): string | null {
@@ -58,10 +55,8 @@ function extrairDataDoTexto(texto: string): string | null {
       // dd/mm/aaaa
       const m1 = linha.match(/(\d{2})\/(\d{2})\/(\d{4})/);
       if (m1) {
-        const [_, d, mes, a] = m1;
-        if (parseInt(d) >= 1 && parseInt(d) <= 31 && parseInt(mes) >= 1 && parseInt(mes) <= 12) {
-          return `${a}-${mes}-${d}`;
-        }
+        const iso = normalizeEsocialDate(m1[0]);
+        if (iso) return iso;
       }
       // dd de MÊS de aaaa / dd MÊS aaaa
       const m2 = linha.match(/(\d{1,2})\s*(?:DE\s+)?([A-Za-zÀ-ÖØ-öø-ÿçãõ]+)\.?\s*(?:DE\s+)?(\d{4})/i);
@@ -82,7 +77,8 @@ function extrairDataDoTexto(texto: string): string | null {
     if (validas.length > 0) {
       validas.sort((a, b) => b.a - a.a || b.mes - a.mes || b.d - a.d);
       const best = validas[0];
-      return `${best.a}-${best.mes.toString().padStart(2, '0')}-${best.d.toString().padStart(2, '0')}`;
+      return normalizeEsocialDate(`${best.d.toString().padStart(2, '0')}/${best.mes.toString().padStart(2, '0')}/${best.a}`)
+        || `${best.a}-${best.mes.toString().padStart(2, '0')}-${best.d.toString().padStart(2, '0')}`;
     }
   }
 
@@ -236,6 +232,68 @@ export async function persistirNumeroProprioRastreio(
   return true;
 }
 
+function toIsoDateOcr(value: unknown): string | null {
+  if (value == null) return null;
+  const s = String(value).trim();
+  if (!s) return null;
+  return normalizeEsocialDate(s) || null;
+}
+
+/**
+ * Copies OCR-extracted fields onto gt_documentos without overwriting
+ * values already filled (manual edit or previous OCR).
+ */
+export async function persistirCamposOcrDocumento(
+  documentoId: string,
+  tipoDocumento: string | null | undefined,
+  dados: Record<string, any> | null | undefined,
+  texto?: string
+): Promise<void> {
+  const { data: atual } = await supabaseAdmin
+    .from('gt_documentos')
+    .select('numero_documento, orgao_emissor, data_emissao, data_validade, tipo_documento')
+    .eq('id', documentoId)
+    .maybeSingle();
+  if (!atual) return;
+
+  const tipo = String(tipoDocumento || atual.tipo_documento || '').toLowerCase();
+  const d = dados || {};
+  let numero =
+    d.numero_documento || d.numero_passaporte || d.numero_cnh || null;
+  if (!numero && texto) {
+    numero = extrairNumeroDocumentoDoTexto(texto, tipo);
+  }
+  const orgao = d.orgao_emissor || d.authority || d.pais_emissor || d.instituicao || null;
+  const emissao = toIsoDateOcr(d.data_emissao || d.data_realizacao || d.date_of_issue);
+  const validade = toIsoDateOcr(d.data_validade || d.date_of_expiry || d.validade);
+
+  const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (!atual.numero_documento && numero) {
+    update.numero_documento = String(numero).trim();
+  }
+  if (!atual.orgao_emissor && orgao) {
+    update.orgao_emissor = String(orgao).trim().slice(0, 80);
+  }
+  if (!atual.data_emissao && emissao) update.data_emissao = emissao;
+  if (!atual.data_validade && validade) update.data_validade = validade;
+
+  const validadeFinal = (update.data_validade as string | undefined) ?? atual.data_validade;
+  update.status_validacao = calcularStatusValidacaoPorValidade(validadeFinal, { tipoDocumento: tipo });
+
+  if (Object.keys(update).length <= 2 && !update.numero_documento && !update.orgao_emissor) {
+    // only updated_at + status — still persist status if validade already existed
+    if (!validadeFinal) return;
+  }
+
+  const { error } = await supabaseAdmin
+    .from('gt_documentos')
+    .update(update)
+    .eq('id', documentoId);
+  if (error) {
+    console.warn('[OCR] falha ao persistir campos extraídos:', error.message);
+  }
+}
+
 function normalizarCRM(raw: string): string {
   let crm = raw.trim();
   crm = crm.replace(/\s+/g, '');
@@ -339,7 +397,7 @@ function extrairNomeMedicoDoContexto(texto: string, crmIndice: number, tipo: 'pc
     }
 
     if (linhaLimpa.length > 5 && linhaLimpa.split(' ').length >= 2 && !/\d/.test(linhaLimpa)) {
-      return linhaLimpa;
+      return sanitizeTsNome(linhaLimpa);
     }
   }
 
@@ -349,13 +407,13 @@ function extrairNomeMedicoDoContexto(texto: string, crmIndice: number, tipo: 'pc
     if (pcmsoIdx !== -1) {
       const sub = texto.substring(pcmsoIdx - 50, pcmsoIdx + 200);
       const match = sub.match(regex);
-      if (match) return match[1].trim();
+      if (match) return sanitizeTsNome(match[1].trim());
     }
   }
 
   const medicoMatch = texto.match(regex);
   if (medicoMatch) {
-    return medicoMatch[1].trim();
+    return sanitizeTsNome(medicoMatch[1].trim());
   }
 
   return '';
@@ -560,7 +618,8 @@ function extrairExamesDoTexto(texto: string, dataAso: string | null): { nome: st
           anoClean = '20' + anoClean;
         }
         
-        const dataFormatada = `${anoClean}-${mes}-${dia}`;
+        const dataBruta = `${dia}/${mes}/${anoClean}`;
+        const dataFormatada = alinharDataExamePtBr(dataBruta, dataAso) || normalizeEsocialDate(dataBruta);
         
         if (procNome.length > 3 && procNome.split(' ').some(w => w.length > 2)) {
           exames.push({
@@ -610,11 +669,35 @@ export async function extrairDadosASODoTexto(
   colaboradorId: string,
   dataEmissao?: string | null
 ): Promise<void> {
-  // Hard identity gate: CPF-only (never silent name-only moves).
-  // Mismatch → reassign by CPF or quarantine (clear wrong link). Never leave on wrong person.
+  // Hard identity gate com auto-reparo óptico e validação matemática de Módulo 11
   let colaboradorIdFinal: string | null = colaboradorId;
-  const cpfExtraidoRaw = dadosExtraidos?.cpf ? normalizeCpf(String(dadosExtraidos.cpf)) : '';
-  const cpfExtraido = cpfExtraidoRaw.length === 11 ? cpfExtraidoRaw : null;
+  const profileCpf = colaboradorId ? await getColaboradorCpfNormalized(colaboradorId) : null;
+
+  // 1. Extração / Normalização de CPF com suporte a Módulo 11 e Profile CPF
+  let cpfExtraido: string | null = null;
+  let cpfFoiReparado = false;
+
+  if (dadosExtraidos?.cpf) {
+    const rawClean = normalizeCpf(String(dadosExtraidos.cpf));
+    if (validarCPF(rawClean)) {
+      cpfExtraido = rawClean;
+    } else {
+      const rep = repararCPFOptico(rawClean, profileCpf);
+      if (rep && validarCPF(rep.cpf)) {
+        cpfExtraido = rep.cpf;
+        cpfFoiReparado = rep.corrigido;
+      }
+    }
+  }
+
+  if (!cpfExtraido && texto) {
+    const info = extrairCPFInteligente(texto, profileCpf);
+    if (info.cpf && validarCPF(info.cpf)) {
+      cpfExtraido = info.cpf;
+      cpfFoiReparado = info.corrigido;
+    }
+  }
+
   let identityMatch: AsoIdentityMatch = cpfExtraido ? 'unknown' : 'unknown';
 
   // Preserve esocial_status if already queued/sent — freeze identity after queue
@@ -633,11 +716,14 @@ export async function extrairDadosASODoTexto(
       `[OCR/Identity] Documento ${documentoId} já em e-Social (${existingAso?.esocial_status}) — identidade congelada.`
     );
   } else if (cpfExtraido) {
-    const profileCpf = await getColaboradorCpfNormalized(colaboradorId);
-
     if (profileCpf && cpfsMatch(cpfExtraido, profileCpf)) {
       identityMatch = 'match';
       colaboradorIdFinal = colaboradorId;
+      if (cpfFoiReparado) {
+        console.log(
+          `[OCR/Identity] ASO ${documentoId}: CPF reparado com sucesso via Módulo 11 para match com perfil (${cpfExtraido}).`
+        );
+      }
     } else {
       const colabCorreto = await findColaboradorByCpf(cpfExtraido);
 
@@ -658,9 +744,9 @@ export async function extrairDadosASODoTexto(
         identityMatch = 'match';
         colaboradorIdFinal = colaboradorId;
       } else {
-        // CPF OCR exists but no matching colaborador — or profile mismatch without target
+        // CPF OCR existe mas não há colaborador cadastrado correspondente
         console.warn(
-          `[OCR/Identity] ASO ${documentoId}: CPF OCR ${cpfExtraido} sem colaborador válido. Quarentena.`
+          `[OCR/Identity] ASO ${documentoId}: CPF OCR ${cpfExtraido} sem colaborador correspondente. Quarentena.`
         );
         identityMatch = 'quarantine';
         colaboradorIdFinal = null;
@@ -674,7 +760,7 @@ export async function extrairDadosASODoTexto(
       }
     }
   } else {
-    // No CPF from OCR — quarantine to prevent wrong-profile assignment
+    // Nenhum CPF extraído ou reparado com sucesso -> Quarentena
     identityMatch = 'quarantine';
     colaboradorIdFinal = null;
     console.warn(
@@ -689,7 +775,7 @@ export async function extrairDadosASODoTexto(
       .eq('id', documentoId);
   }
 
-  // 1. Type of exam
+  // 1. Tipo de exame
   let tipo_exame = dadosExtraidos?.tipo_exame || 'periodico';
   if (!dadosExtraidos?.tipo_exame) {
     if (/admissional/i.test(texto)) tipo_exame = 'admissional';
@@ -698,17 +784,17 @@ export async function extrairDadosASODoTexto(
     else if (/mudança\s+de\s+função|mudanca\s+de\s+funcao/i.test(texto)) tipo_exame = 'mudanca_funcao';
   }
 
-  // 2. Result
-  const resultado = dadosExtraidos?.resultado || extrairResultado(texto);
+  // 2. Resultado com heurística de caixas de seleção
+  let resultado = dadosExtraidos?.resultado;
+  if (!resultado || resultado === 'inapto') {
+    resultado = extrairResultadoInteligente(texto);
+  }
 
-  // 3. Date
+  // 3. Data de Realização
   let data_realizacao: string | null = dadosExtraidos?.data_realizacao || null;
 
-  if (data_realizacao && data_realizacao.includes('/')) {
-    const parts = data_realizacao.split('/');
-    if (parts.length === 3) {
-      data_realizacao = `${parts[2]}-${parts[1]}-${parts[0]}`;
-    }
+  if (data_realizacao) {
+    data_realizacao = normalizeEsocialDate(data_realizacao) || data_realizacao;
   }
 
   if (!data_realizacao) {
@@ -719,24 +805,53 @@ export async function extrairDadosASODoTexto(
     data_realizacao = dataEmissao;
   }
 
-  // 4. Doctors (Examiner and PCMSO Coordinator)
+  // 4. Médicos (Examinador e Coordenador PCMSO)
+  const medicosInfo = extrairMedicoECRMInteligente(texto);
   const crmsEncontrados = extrairCRMsDoTexto(texto);
   const dadosMedicos = extrairDadosDosMedicos(texto, crmsEncontrados);
 
-  let medico_nome = dadosExtraidos?.medico_examinador_nome || dadosExtraidos?.medico || dadosMedicos.medico_nome || '';
-  let medico_crm = dadosExtraidos?.medico_examinador_crm || dadosExtraidos?.medico_crm || dadosMedicos.medico_crm || '';
-  let medico_uf = dadosExtraidos?.medico_examinador_uf || dadosMedicos.medico_uf || 'RJ';
-  
-  let medico_pcmso_nome = dadosExtraidos?.medico_pcmso_nome || dadosMedicos.medico_pcmso_nome || '';
-  let medico_pcmso_crm = dadosExtraidos?.medico_pcmso_crm || dadosMedicos.medico_pcmso_crm || '';
-  let medico_pcmso_uf = dadosExtraidos?.medico_pcmso_uf || dadosMedicos.medico_pcmso_uf || 'RJ';
+  let medico_nome =
+    dadosExtraidos?.medico_examinador_nome ||
+    dadosExtraidos?.medico ||
+    medicosInfo.medicoExaminador?.nome ||
+    dadosMedicos.medico_nome ||
+    '';
+  let medico_crm =
+    dadosExtraidos?.medico_examinador_crm ||
+    dadosExtraidos?.medico_crm ||
+    medicosInfo.medicoExaminador?.crm ||
+    dadosMedicos.medico_crm ||
+    '';
+  let medico_uf =
+    dadosExtraidos?.medico_examinador_uf ||
+    medicosInfo.medicoExaminador?.uf ||
+    dadosMedicos.medico_uf ||
+    'RJ';
 
-  // 5. Clinic info
-  let cnpj_clinica = dadosExtraidos?.cnpj_clinica || '';
+  let medico_pcmso_nome =
+    dadosExtraidos?.medico_pcmso_nome ||
+    medicosInfo.medicoPcmso?.nome ||
+    dadosMedicos.medico_pcmso_nome ||
+    '';
+  let medico_pcmso_crm =
+    dadosExtraidos?.medico_pcmso_crm ||
+    medicosInfo.medicoPcmso?.crm ||
+    dadosMedicos.medico_pcmso_crm ||
+    '';
+  let medico_pcmso_uf =
+    dadosExtraidos?.medico_pcmso_uf ||
+    medicosInfo.medicoPcmso?.uf ||
+    dadosMedicos.medico_pcmso_uf ||
+    'RJ';
+
+  // 5. Informações da clínica
+  let cnpj_clinica = dadosExtraidos?.cnpj_clinica || extrairCNPJInteligente(texto) || '';
   let nome_clinica = dadosExtraidos?.nome_clinica || '';
 
   if (!cnpj_clinica) {
-    const cnpjMatch = texto.match(/(?:CNPJ|C\.N\.P\.J)\s*[:|I\s-]*\s*(\d{2}\s*\.\s*\d{3}\s*\.\s*\d{3}\s*\/\s*\d{4}\s*-\s*\d{2}|\d{14})/i);
+    const cnpjMatch = texto.match(
+      /(?:CNPJ|C\.N\.P\.J)\s*[:|I\s-]*\s*(\d{2}\s*\.\s*\d{3}\s*\.\s*\d{3}\s*\/\s*\d{4}\s*-\s*\d{2}|\d{14})/i
+    );
     if (cnpjMatch) {
       cnpj_clinica = cnpjMatch[1].replace(/[^\d]/g, '');
     }
@@ -746,14 +861,16 @@ export async function extrairDadosASODoTexto(
     if (/policlínica|policlinica/i.test(texto)) {
       nome_clinica = 'Policlínica';
     } else {
-      const clinicaMatch = texto.match(/(?:Clínica|Clinica|Centro\s+Médico|Laboratório|Laboratorio)\s*:?\s*([A-Za-zÀ-ÖØ-öø-ÿ\s]+)/i);
+      const clinicaMatch = texto.match(
+        /(?:Clínica|Clinica|Centro\s+Médico|Laboratório|Laboratorio)\s*:?\s*([A-Za-zÀ-ÖØ-öø-ÿ\s]+)/i
+      );
       if (clinicaMatch) {
         nome_clinica = clinicaMatch[1].trim().split('\n')[0];
       }
     }
   }
 
-  // 6. Complementary exams
+  // 6. Exames complementares
   let exames_realizados = dadosExtraidos?.exames_realizados;
   if (!exames_realizados || !Array.isArray(exames_realizados) || exames_realizados.length === 0) {
     exames_realizados = extrairExamesDoTexto(texto, data_realizacao);
@@ -763,8 +880,14 @@ export async function extrairDadosASODoTexto(
   if (Array.isArray(exames_realizados)) {
     for (const ex of exames_realizados) {
       const codProc = await buscarCodigoExame(ex.nome);
+      const dataAlinhada = alinharDataExamePtBr(ex.data || ex.dtExm, data_realizacao)
+        || normalizeEsocialDate(ex.data || ex.dtExm)
+        || data_realizacao
+        || ex.data;
       examesComCodigos.push({
         ...ex,
+        data: dataAlinhada,
+        dtExm: dataAlinhada,
         codProc: codProc || '9999'
       });
     }
@@ -787,10 +910,10 @@ export async function extrairDadosASODoTexto(
     tipo_exame,
     resultado,
     data_realizacao,
-    medico_nome: medico_nome || null,
+    medico_nome: sanitizeTsNome(medico_nome) || null,
     medico_crm: medico_crm || null,
     medico_uf: medico_uf || null,
-    medico_pcmso_nome: medico_pcmso_nome || null,
+    medico_pcmso_nome: sanitizeTsNome(medico_pcmso_nome) || null,
     medico_pcmso_crm: medico_pcmso_crm || null,
     medico_pcmso_uf: medico_pcmso_uf || null,
     cnpj_clinica: cnpj_clinica || null,
@@ -864,19 +987,40 @@ export async function aplicarGateIdentidadeDocumento(
     if (numeroProprio) {
       await persistirNumeroProprioRastreio(documentoId, numeroProprio);
     }
+    await persistirCamposOcrDocumento(
+      documentoId,
+      existingDoc?.tipo_documento,
+      dadosExtraidos,
+      texto
+    );
   } catch (rastreioErr) {
     console.warn('[OCR/Rastreio] falha ao extrair/persistir número próprio do documento:', rastreioErr);
   }
 
-  let cpfExtraidoRaw = dadosExtraidos?.cpf ? normalizeCpf(String(dadosExtraidos.cpf)) : '';
-  if (cpfExtraidoRaw.length !== 11 && texto) {
-    // Fallback: first CPF-shaped token in the OCR text
-    const m =
-      texto.match(/\d{3}\.?\d{3}\.?\d{3}-?\d{2}/) ||
-      null;
-    if (m) cpfExtraidoRaw = normalizeCpf(m[0]);
+  const profileCpf = colaboradorId ? await getColaboradorCpfNormalized(colaboradorId) : null;
+  let cpfExtraido: string | null = null;
+  let cpfFoiReparado = false;
+
+  if (dadosExtraidos?.cpf) {
+    const rawClean = normalizeCpf(String(dadosExtraidos.cpf));
+    if (validarCPF(rawClean)) {
+      cpfExtraido = rawClean;
+    } else {
+      const rep = repararCPFOptico(rawClean, profileCpf);
+      if (rep && validarCPF(rep.cpf)) {
+        cpfExtraido = rep.cpf;
+        cpfFoiReparado = rep.corrigido;
+      }
+    }
   }
-  const cpfExtraido = cpfExtraidoRaw.length === 11 ? cpfExtraidoRaw : null;
+
+  if (!cpfExtraido && texto) {
+    const info = extrairCPFInteligente(texto, profileCpf);
+    if (info.cpf && validarCPF(info.cpf)) {
+      cpfExtraido = info.cpf;
+      cpfFoiReparado = info.corrigido;
+    }
+  }
 
   let identityMatch: AsoIdentityMatch;
 
@@ -884,19 +1028,20 @@ export async function aplicarGateIdentidadeDocumento(
     // Already orphan/quarantined — keep quarantined until admin resolves
     identityMatch = 'quarantine';
   } else if (!cpfExtraido) {
+    // Passaporte, visto, certificados etc. frequentemente não imprimem CPF.
+    // Não quarentenar: o doc permanece no colaborador atual para edição manual.
     console.warn(
-      `[OCR/Identity] Documento ${documentoId}: CPF não extraído pelo OCR. Quarentena para revisão manual.`
+      `[OCR/Identity] Documento ${documentoId}: CPF não extraído. identity_match=unknown (sem quarentena).`
     );
-    identityMatch = 'quarantine';
-    await supabaseAdmin
-      .from('gt_documentos')
-      .update({ colaborador_id: null, updated_at: new Date().toISOString() })
-      .eq('id', documentoId);
+    identityMatch = 'unknown';
   } else {
-    const profileCpf = await getColaboradorCpfNormalized(colaboradorId);
-
     if (profileCpf && cpfsMatch(cpfExtraido, profileCpf)) {
       identityMatch = 'match';
+      if (cpfFoiReparado) {
+        console.log(
+          `[OCR/Identity] Documento ${documentoId}: CPF reparado com sucesso via Módulo 11 para match com perfil (${cpfExtraido}).`
+        );
+      }
     } else {
       const colabCorreto = await findColaboradorByCpf(cpfExtraido);
 

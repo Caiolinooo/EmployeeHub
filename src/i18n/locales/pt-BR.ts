@@ -582,7 +582,24 @@ export default {
     perfilNaoEncontradoFacaLoginNovamente: 'Perfil não encontrado. Faça login novamente.',
     nomeESobrenomeSaoObrigatorios: 'Nome e sobrenome são obrigatórios',
     usuario: 'Usuário',
-    naoInformado: 'Não informado'
+    naoInformado: 'Não informado',
+    documents: 'Documentos',
+    qhse: 'QHSE / EPI',
+    signature: 'Assinatura',
+  },
+  documentCatalog: {
+    title: 'Documentos do colaborador',
+    subtitle: 'GT, QHSE/EPI, listas de presença assinadas e outros módulos — reconhecidos automaticamente por CPF, usuário e e-mail.',
+    qhseTitle: 'QHSE / EPI',
+    qhseSubtitle: 'Ficha de EPI (AN-HSE-005), entregas e listas de presença QHSE. Exames ocupacionais (ASO/laudo) ficam na aba ASO.',
+    qhseEmpty: 'Nenhum documento QHSE/EPI encontrado para este colaborador.',
+    all: 'Todos',
+    loading: 'Carregando documentos...',
+    empty: 'Nenhum documento encontrado para este colaborador.',
+    error: 'Erro ao carregar documentos',
+    signed: 'Assinado',
+    download: 'Baixar',
+    openModule: 'Abrir módulo',
   },
   validation: {
     suggestions: 'Sugestões',
@@ -673,6 +690,8 @@ export default {
     gestaoTripulantes: 'Gestão de Tripulantes'
   },
   cards: {
+    dp: 'Departamento Pessoal',
+    dpDesc: 'Gestão completa de colaboradores, escalas, fechamento de folha e DP',
     contratos: 'Contratos',
     contratosDesc: 'Gerenciamento de documentos e assinaturas eletrônicas',
     wkradar: 'WK Radar',
@@ -829,14 +848,18 @@ export default {
   },
   calendario: {
     title: 'Calendário de Feriados',
-    description: 'Feriados Nacionais e Municipais (Macaé, RJ)',
-    loading: 'Carregando feriados...',
+    description: 'Feriados oficiais e eventos do calendário compartilhado da empresa',
+    loading: 'Carregando calendário...',
     loadingHolidays: 'Carregando...',
     couldNotLoadHolidays: 'Não foi possível carregar feriados.',
     noHolidaysThisMonth: 'Nenhum feriado neste mês.',
-    nationalHoliday: 'Feriado Nacional / Outro',
+    noEventsThisMonth: 'Nenhum evento neste mês.',
+    nationalHoliday: 'Feriado Nacional',
     municipalHoliday: 'Feriado Municipal (Macaé)',
-    holidaysInMonth: 'Feriados em',
+    companyEvents: 'Calendário compartilhado',
+    sharedOnlyHint: 'Somente feriados oficiais e eventos do calendário compartilhado.',
+    duplicatesHiddenHint: '{{count}} duplicata(s) semelhante(s) oculta(s)',
+    holidaysInMonth: 'Eventos de',
     failedToFetchBrasilApi: 'Falha ao buscar na BrasilAPI',
     tryingAlternative: 'Tentando alternativa...',
     failedToFetchFromAllSources: 'Falha ao buscar feriados de todas as fontes.'
@@ -3892,10 +3915,23 @@ export default {
     exportedSuccess: 'Planilha exportada com sucesso!',
     dateStart: 'Data Inicio',
     dateEnd: 'Data Fim',
+    viewByDay: 'Visualizar por dia',
     legendOn: 'Embarcado',
     legendOffC: 'Troca de Turma',
     legendFi: 'Folga Indenizada',
     legendDba: 'Dobra',
+    todayPob: 'Hoje: {count}P a bordo',
+    todayPobHint: 'Pessoas com ON hoje (sem asterisco)',
+    today: 'Hoje',
+    currentWeek: 'Ir para hoje',
+    goToCurrentMonth: 'Voltar ao mês atual e ir para hoje',
+    prevDay: 'Dia anterior',
+    nextDay: 'Próximo dia',
+    prevWeeks: 'Semana anterior',
+    nextWeeks: 'Próxima semana',
+    prevMonth: 'Mês anterior',
+    nextMonth: 'Próximo mês',
+    referenceMonth: 'Mês de referência',
     legendStb: 'StandBy'
   },
   contrato: {
@@ -4363,7 +4399,9 @@ export default {
       substitutions: 'Substituições', close: 'Fechar', edit: 'Editar',
       save: 'Salvar', cancel: 'Cancelar', suggestBack: 'Sugerir Back',
       uploadDocument: 'Upload Documento', notify: 'Notificar',
-      loading: 'Carregando perfil...', notFound: 'Colaborador não encontrado'
+      loading: 'Carregando perfil...', notFound: 'Colaborador não encontrado',
+      otherModulesDocs: 'Documentos de outros módulos',
+      qhse: 'QHSE / EPI'
     },
     personalData: {
       fullName: 'Nome Completo', cpf: 'CPF', rg: 'RG', birthDate: 'Data de Nascimento',
@@ -4452,8 +4490,18 @@ export default {
       sendError: 'Erro ao enviar notificação', history: 'Histórico de Notificações'
     },
     dashboard: {
-      totalCollaborators: 'Total de Tripulantes', onboardNow: 'Embarcados Agora',
-      availableBackup: 'Disponíveis p/ Back', expiredDocs: 'Documentos Vencidos'
+      totalCollaborators: 'Total de Tripulantes (ativos)', onboardNow: 'Embarcados Agora',
+      availableBackup: 'Disponíveis p/ Back', expiredDocs: 'Documentos Vencidos',
+      kpiClick: 'Clique para filtrar', kpiActive: 'Filtro ativo — clique para limpar',
+      kpiHintTotal: 'Clique para listar todos os tripulantes ativos',
+      kpiHintEmbarcados: 'Clique para listar quem está ON hoje (sem ON* / *)',
+      kpiHintDisponiveis: 'Clique para listar disponíveis para back',
+      kpiHintDocs: 'Clique para listar quem tem documentos vencidos',
+      kpiBannerEmbarcados: 'Lista filtrada: embarcados agora (código ON hoje, sem asterisco)',
+      kpiBannerDisponiveis: 'Lista filtrada: disponíveis para back',
+      kpiBannerDocs: 'Lista filtrada: documentos vencidos',
+      kpiBannerTotal: 'Lista: todos os tripulantes ativos',
+      kpiClear: 'Limpar filtro'
     },
     upload: {
       uploading: 'Enviando...', success: 'Arquivo enviado com sucesso',

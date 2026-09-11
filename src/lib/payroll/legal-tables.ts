@@ -116,7 +116,11 @@ export const PAYROLL_CODES = {
     '127': { name: 'Reflexo DSR s/adicional noturno', type: 'formula' },
     '131': { name: 'Adicional Noturno 20%', type: 'percentage', value: 20 },
     '138': { name: 'Dobra', type: 'percentage', value: 100 },
-    '213': { name: 'Adicional de Periculosidade 30%', type: 'percentage', value: 30 }
+    '213': { name: 'Adicional de Periculosidade 30%', type: 'percentage', value: 30 },
+    '303': { name: 'Saldo de Salário', type: 'fixed' },
+    '304': { name: '13º Salário Proporcional', type: 'fixed' },
+    '305': { name: 'Férias Proporcionais + 1/3', type: 'fixed' },
+    '306': { name: 'Férias Vencidas + 1/3', type: 'fixed' }
   },
 
   // Descontos
@@ -136,7 +140,8 @@ export const PAYROLL_CODES = {
   OUTROS: {
     '119': { name: 'FGTS 8%', type: 'legal', legalType: 'fgts' },
     '301': { name: 'Aviso Prévio', type: 'fixed' },
-    '302': { name: 'Multa 40% FGTS', type: 'percentage', value: 40 }
+    '302': { name: 'Multa 40% FGTS', type: 'percentage', value: 40 },
+    '307': { name: 'Multa 20% FGTS', type: 'percentage', value: 20 }
   }
 };
 

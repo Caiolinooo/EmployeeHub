@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
-import { createLeaveRequest, getUserLeaveRequests } from '@/services/leaveService';
-import { supabaseAdmin } from '@/lib/supabase';
+import { createLeaveRequest, getUserLeaveRequests, getUserLeaveRequestsFiltered } from '@/services/leaveService';
 
 export const dynamic = 'force-dynamic';
-import { sendGlobalNotification } from '@/lib/global-notifications';
-import { sendEmail } from '@/lib/email-service';
 import { notifyLeaveRequestCreated } from '@/services/leaveNotifications';
 import { extractTokenFromHeader, verifyToken, checkAclPermission } from '@/lib/auth';
 import { validateLeaveAdvanceNoticeAsync, getAdvanceNoticeDays } from '@/lib/leaveConfig';
+import { normalizeLeaveStatus } from '@/lib/leaveExport';
 
 function getAuthPayload(request: Request) {
     const authHeader = request.headers.get('authorization') || undefined;
@@ -25,6 +23,8 @@ export async function GET(request: Request) {
 
         const { searchParams } = new URL(request.url);
         const userId = searchParams.get('userId');
+        const statusParam = searchParams.get('status');
+        const yearParam = searchParams.get('year');
 
         if (!userId) {
             return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
@@ -38,7 +38,16 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'Você não tem permissão para ver solicitações de outro usuário' }, { status: 403 });
         }
 
-        const data = await getUserLeaveRequests(userId);
+        const status = normalizeLeaveStatus(statusParam) || statusParam || undefined;
+        const year = yearParam ? parseInt(yearParam, 10) : undefined;
+        const hasFilters = (status && status !== 'ALL') || (year && !Number.isNaN(year));
+
+        const data = hasFilters
+            ? await getUserLeaveRequestsFiltered(userId, {
+                status: status === 'ALL' ? undefined : status,
+                year: year && !Number.isNaN(year) ? year : undefined,
+            })
+            : await getUserLeaveRequests(userId);
         return NextResponse.json(data);
     } catch (error) {
         console.error('Error GET /api/leave/requests:', error);

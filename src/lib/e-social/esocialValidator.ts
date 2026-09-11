@@ -1,4 +1,5 @@
-import { ESocialEvento } from '@/types/e-social';
+import { xmlTemDtExmInvertida } from './esocial-date';
+import { isValidTsNome, nomesTsDoXml, sanitizeTsNome } from './ts-nome';
 
 export interface ErroValidacao {
   campo: string;
@@ -39,9 +40,10 @@ function validarCamposComuns(dados: any, erros: ErroValidacao[], camposPendentes
     erros.push({ campo: 'tpAmb', mensagem: 'Ambiente deve ser 1 ou 2', tipo: 'valor_invalido', autocorrigivel: true });
   }
 
-  const nrInsc = getField(dados, 'nrInsc') || getField(dados, 'cnpj');
+  const nrInsc = getField(dados, 'nrInsc') || getField(dados, 'cnpj') || getField(dados, 'cnpj_empregador');
   if (!nrInsc) {
     erros.push({ campo: 'nrInsc', mensagem: 'CNPJ do Empregador (nrInsc) obrigatório', tipo: 'obrigatorio', autocorrigivel: true });
+    camposPendentes.push({ campo: 'cnpj', label: 'CNPJ do Empregador', tipo: 'text', dica: '14 dígitos' });
   } else if (String(nrInsc).replace(/\D/g, '').length < 8) {
     erros.push({ campo: 'nrInsc', mensagem: 'CNPJ do Empregador incompleto', tipo: 'formato', autocorrigivel: true });
   }
@@ -72,20 +74,23 @@ export function validarDadosEvento(codigoEvento: string, dadosEvento: any): Resu
         erros.push({ campo: 'matricula', mensagem: 'Matrícula e-Social obrigatória', tipo: 'obrigatorio', autocorrigivel: false });
         camposPendentes.push({ campo: 'matricula', label: 'Matrícula e-Social', tipo: 'text' });
       }
-      const dataAdmissao = getField(dadosEvento, 'dataAdmissao') || getField(dadosEvento, 'dtAdm');
+      const dataAdmissao = getField(dadosEvento, 'dataAdmissao') || getField(dadosEvento, 'data_admissao') || getField(dadosEvento, 'dtAdm') || getField(dadosEvento, 'dtAdmissao');
       if (!dataAdmissao) {
         erros.push({ campo: 'dataAdmissao', mensagem: 'Data de Admissão obrigatória', tipo: 'obrigatorio', autocorrigivel: true });
         camposPendentes.push({ campo: 'dataAdmissao', label: 'Data de Admissão', tipo: 'date' });
       }
-      if (!getField(dadosEvento, 'tipoAdmissao')) {
+      const tipoAdmissao = getField(dadosEvento, 'tipoAdmissao') || getField(dadosEvento, 'tpAdmissao') || '1';
+      if (!tipoAdmissao) {
         erros.push({ campo: 'tipoAdmissao', mensagem: 'Tipo de Admissão obrigatório', tipo: 'obrigatorio', autocorrigivel: false });
         camposPendentes.push({ campo: 'tipoAdmissao', label: 'Tipo de Admissão', tipo: 'select', opcoes: [{valor:'1', label:'Admissão'}, {valor:'2', label:'Transferência'}, {valor:'3', label:'Readaptação'}] });
       }
-      if (!getField(dadosEvento, 'cargo')) {
+      const cargo = getField(dadosEvento, 'cargo') || getField(dadosEvento, 'cargo_nome') || getField(dadosEvento, 'funcao');
+      if (!cargo) {
         erros.push({ campo: 'cargo', mensagem: 'Cargo obrigatório', tipo: 'obrigatorio', autocorrigivel: false });
         camposPendentes.push({ campo: 'cargo', label: 'Cargo', tipo: 'text' });
       }
-      if (!getField(dadosEvento, 'codCBO')) {
+      const cbo = getField(dadosEvento, 'codCBO') || getField(dadosEvento, 'cbo') || getField(dadosEvento, 'cargo_cbo');
+      if (!cbo) {
         erros.push({ campo: 'codCBO', mensagem: 'CBO obrigatório', tipo: 'obrigatorio', autocorrigivel: false });
         camposPendentes.push({ campo: 'codCBO', label: 'CBO', tipo: 'text' });
       }
@@ -119,10 +124,22 @@ export function validarDadosEvento(codigoEvento: string, dadosEvento: any): Resu
         camposPendentes.push({ campo: 'resultado', label: 'Resultado do ASO', tipo: 'select', opcoes: [{valor:'1', label:'Apto'}, {valor:'2', label:'Inapto'}] });
       }
 
-      const nmMed = getField(dadosEvento, 'medico_nome') || getField(dadosEvento, 'nmMed') || getField(dadosEvento, 'medicoNome') || getField(dadosEvento, 'medico');
+      const nmMedRaw = getField(dadosEvento, 'medico_nome') || getField(dadosEvento, 'nmMed') || getField(dadosEvento, 'medicoNome') || getField(dadosEvento, 'medico');
+      const nmMed = typeof nmMedRaw === 'string' ? nmMedRaw : (nmMedRaw?.nmMed || '');
       if (!nmMed) {
         erros.push({ campo: 'medico_nome', mensagem: 'Nome do Médico obrigatório', tipo: 'obrigatorio', autocorrigivel: false });
         camposPendentes.push({ campo: 'medico_nome', label: 'Nome do Médico (ASO)', tipo: 'text' });
+      } else if (!isValidTsNome(nmMed)) {
+        const limpo = sanitizeTsNome(nmMed);
+        erros.push({
+          campo: 'medico_nome',
+          mensagem: `Nome do médico fora do TS_nome: "${String(nmMed).replace(/\s+/g, ' ').trim()}"`,
+          tipo: 'formato',
+          autocorrigivel: Boolean(limpo) && isValidTsNome(limpo),
+        });
+        if (!limpo || !isValidTsNome(limpo)) {
+          camposPendentes.push({ campo: 'medico_nome', label: 'Nome do Médico (ASO)', tipo: 'text', dica: 'Somente nome, sem cargo nem quebra de linha' });
+        }
       }
 
       const nrCRM = getField(dadosEvento, 'medico_crm') || getField(dadosEvento, 'nrCRM') || getField(dadosEvento, 'crm');
@@ -304,9 +321,10 @@ export function validarXMLGerado(xml: string, codigoEvento: string): ResultadoVa
     erros.push({ campo: 'ideEmpregador', mensagem: 'Grupo <ideEmpregador> incompleto', tipo: 'estrutura', autocorrigivel: false });
   }
 
-  // Check valid dates format YYYY-MM-DD
+  // Check valid dates format YYYY-MM-DD (excluding dtBase which is a month number 1-12)
   const dateTags = xml.match(/<(dt[A-Z][a-zA-Z0-9]+|data[a-zA-Z0-9]+)>([^<]+)<\//g) || [];
   for (const tag of dateTags) {
+    if (tag.startsWith('<dtBase>')) continue;
     const valueMatch = tag.match(/>([^<]+)</);
     if (valueMatch && valueMatch[1]) {
       const val = valueMatch[1];
@@ -334,10 +352,30 @@ export function validarXMLGerado(xml: string, codigoEvento: string): ResultadoVa
     if (!/<medico>/.test(xml)) erros.push({ campo: 'medico', mensagem: 'Falta grupo <medico>', tipo: 'estrutura', autocorrigivel: false });
     if (!/<dtExm>/.test(xml)) erros.push({ campo: 'dtExm', mensagem: 'Falta tag <dtExm> dentro de exames', tipo: 'estrutura', autocorrigivel: false });
     if (!/<nmMed>/.test(xml)) erros.push({ campo: 'nmMed', mensagem: 'Falta tag <nmMed> no XML', tipo: 'estrutura', autocorrigivel: false });
+
+    for (const { tag, valor } of nomesTsDoXml(xml)) {
+      if (!isValidTsNome(valor)) {
+        erros.push({
+          campo: tag,
+          mensagem: `<${tag}> inválido para TS_nome: "${valor.replace(/\s+/g, ' ').trim()}"`,
+          tipo: 'formato',
+          autocorrigivel: true,
+        });
+      }
+    }
     
     // Bug histórico do S-2220
-    if (/<aso>\\s*<resAso>/.test(xml)) {
+    if (/<aso>\s*<resAso>/.test(xml)) {
       erros.push({ campo: 'aso', mensagem: '<dtAso> deve vir antes de <resAso> em <aso>', tipo: 'estrutura', autocorrigivel: true });
+    }
+
+    if (xmlTemDtExmInvertida(xml)) {
+      erros.push({
+        campo: 'dtExm',
+        mensagem: '<dtExm> com dia/mês invertido (MM/DD ou ISO trocado) em relação a <dtAso>. Use sempre PT-BR (DD/MM).',
+        tipo: 'valor_invalido',
+        autocorrigivel: true,
+      });
     }
   } else if (codigoEvento === 'S-2240') {
     if (!/<cpfTrab>/.test(xml)) erros.push({ campo: 'cpfTrab', mensagem: 'Falta CPF', tipo: 'estrutura', autocorrigivel: false });

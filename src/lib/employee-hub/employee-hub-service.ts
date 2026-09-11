@@ -5,14 +5,28 @@
  */
 
 import { supabaseAdmin } from '@/lib/supabase';
-import { normalizeCpf } from '@/lib/gestao-tripulantes/cpf';
+import { formatCpf, normalizeCpf } from '@/lib/gestao-tripulantes/cpf';
+import { listarDocumentosAlertas } from '@/lib/gestao-tripulantes/documentos-alertas';
+import { marcarPapeisConformidade } from '@/lib/gestao-tripulantes/validade-civil';
+import {
+  agruparDocumentosPorTipo,
+  contarDocsPorStatusPrimario,
+} from '@/lib/gestao-tripulantes/documento-historico';
+import { overlayStatusEscalaHoje } from '@/lib/gestao-tripulantes/dashboard-service';
+import {
+  resolvePortalUser,
+  type PortalUser,
+} from '@/lib/employee-hub/portal-user';
 
 // ────────────────────────────────────────────────────────────────
 // Types
 // ────────────────────────────────────────────────────────────────
 export interface EmployeeFullRecord {
   colaborador: any;
+  portalUser: PortalUser | null;
   documentsSummary: DocumentsSummary;
+  documentos: any[];
+  documentosAlertas: any[];
   latestAso: any | null;
   esocialTimeline: EsocialTimelineEntry[];
   esocialSummary: EsocialSummary;
@@ -20,6 +34,8 @@ export interface EmployeeFullRecord {
   afastamentos: any[];
   acidentes: any[];
   treinamentos: any[];
+  ferias: any[];
+  reembolsos: any[];
 }
 
 export interface DocumentsSummary {
@@ -77,24 +93,64 @@ export async function getEmployeeFullRecord(colaboradorId: string): Promise<Empl
   if (colabErr || !colab) return null;
 
   const cpf = normalizeCpf(colab.cpf || '');
+  const email = String(colab.email || '').trim().toLowerCase();
 
-  // Parallel queries
-  const [docsSummary, latestAso, timeline, embarques, afastamentos, acidentes, treinamentos] =
+  // Wave 1: GT data + portal identity (tax_id / email). Férias/reembolsos need the resolved user.
+  const [docsPack, latestAso, timeline, embarques, afastamentos, acidentes, treinamentos, portalResolution, live] =
     await Promise.all([
-      getDocumentsSummary(colaboradorId),
+      getDocumentsPack(colaboradorId),
       getLatestAso(colaboradorId),
       getEsocialTimeline(cpf),
       getEmbarques(colaboradorId),
       getAfastamentos(colaboradorId),
       getAcidentes(colaboradorId),
       getTreinamentos(colaboradorId),
+      resolvePortalUser({
+        colaboradorId: colab.id as string,
+        userId: colab.user_id as string | null,
+        cpf,
+        email,
+        nome: colab.nome_completo as string | null,
+      }),
+      overlayStatusEscalaHoje([
+        {
+          id: colab.id as string,
+          status_embarque: colab.status_embarque as string | null,
+          standby: colab.standby as boolean | null,
+        },
+      ]),
     ]);
+
+  const portalUser = portalResolution.user;
+  if (portalUser && !colab.user_id) {
+    colab.user_id = portalUser.id;
+  }
+
+  const moduleUserIds = portalResolution.moduleUserIds.length
+    ? portalResolution.moduleUserIds
+    : portalUser?.id
+      ? [portalUser.id]
+      : [];
+
+  const [ferias, reembolsos] = await Promise.all([
+    getFerias(moduleUserIds),
+    getReembolsos(moduleUserIds, cpf),
+  ]);
+
+  if (!live.error && live.rows[0]) {
+    colab.status_embarque = live.rows[0].status_embarque;
+    colab.standby = live.rows[0].standby;
+    colab.escala_codigo_hoje = live.rows[0].escala_codigo_hoje;
+  }
 
   const esocialSummary = buildEsocialSummary(timeline);
 
   return {
     colaborador: colab,
-    documentsSummary: docsSummary,
+    portalUser,
+    documentsSummary: docsPack.summary,
+    documentos: docsPack.documentos,
+    documentosAlertas: docsPack.alertas,
     latestAso,
     esocialTimeline: timeline,
     esocialSummary,
@@ -102,21 +158,79 @@ export async function getEmployeeFullRecord(colaboradorId: string): Promise<Empl
     afastamentos,
     acidentes,
     treinamentos,
+    ferias,
+    reembolsos,
   };
+}
+
+async function safeSelect<T = any>(run: () => PromiseLike<{ data: T[] | null; error: any }>): Promise<T[]> {
+  try {
+    const { data, error } = await run();
+    if (error) return [];
+    return data || [];
+  } catch {
+    return [];
+  }
+}
+
+async function getFerias(userIds: string[]): Promise<any[]> {
+  if (!userIds.length) return [];
+  return safeSelect(() =>
+    supabaseAdmin
+      .from('leave_requests')
+      .select('id, user_id, start_date, end_date, status, justification, created_at')
+      .in('user_id', userIds)
+      .order('created_at', { ascending: false })
+      .limit(20),
+  );
+}
+
+async function getReembolsos(userIds: string[], cpf: string): Promise<any[]> {
+  const select = 'id, user_id, status, valor_total, created_at';
+  if (userIds.length) {
+    const byUser = await safeSelect(() =>
+      supabaseAdmin
+        .from('Reimbursement')
+        .select(select)
+        .in('user_id', userIds)
+        .order('created_at', { ascending: false })
+        .limit(20),
+    );
+    if (byUser.length) return byUser;
+  }
+  if (cpf.length === 11) {
+    const masked = formatCpf(cpf);
+    const byCpf = await safeSelect(() =>
+      supabaseAdmin
+        .from('Reimbursement')
+        .select(select)
+        .or(`cpf.eq.${cpf},cpf.eq.${masked}`)
+        .order('created_at', { ascending: false })
+        .limit(20),
+    );
+    if (byCpf.length) return byCpf;
+  }
+  return [];
 }
 
 // ────────────────────────────────────────────────────────────────
 // Documents summary
 // ────────────────────────────────────────────────────────────────
-async function getDocumentsSummary(colaboradorId: string): Promise<DocumentsSummary> {
+async function getDocumentsPack(colaboradorId: string): Promise<{
+  summary: DocumentsSummary;
+  documentos: any[];
+  alertas: any[];
+}> {
   const { data: docs } = await supabaseAdmin
     .from('gt_documentos')
-    .select('id, tipo_documento, status_validacao')
+    .select('id, colaborador_id, tipo_documento, subtipo, titulo, descricao, numero_documento, origem, data_emissao, data_validade, status_validacao, created_at')
     .eq('colaborador_id', colaboradorId)
     .is('deleted_at', null);
 
+  const raw = docs || [];
+  const marked = marcarPapeisConformidade(raw);
   const result: DocumentsSummary = {
-    total: 0,
+    total: raw.length,
     validos: 0,
     vencidos: 0,
     vencendo: 0,
@@ -124,21 +238,25 @@ async function getDocumentsSummary(colaboradorId: string): Promise<DocumentsSumm
     byType: {},
   };
 
-  if (!docs) return result;
-  result.total = docs.length;
-
-  for (const doc of docs) {
+  for (const doc of marked) {
     const tipo = doc.tipo_documento || 'outro';
     result.byType[tipo] = (result.byType[tipo] || 0) + 1;
-    switch (doc.status_validacao) {
-      case 'valido': result.validos++; break;
-      case 'vencido': result.vencidos++; break;
-      case 'vencendo': result.vencendo++; break;
-      case 'pendente': result.pendentes++; break;
-    }
   }
 
-  return result;
+  const counts = contarDocsPorStatusPrimario(raw);
+  result.validos = counts.qtd_docs_validos;
+  result.vencidos = counts.qtd_docs_vencidos;
+  result.vencendo = counts.qtd_docs_vencendo;
+  for (const g of agruparDocumentosPorTipo(raw)) {
+    if (g.primary.status_validacao === 'pendente') result.pendentes += 1;
+  }
+
+  const alertasRes = await listarDocumentosAlertas({ colaboradorIds: [colaboradorId] });
+  return {
+    summary: result,
+    documentos: marked.map((d) => ({ ...d, papel_conformidade: d.papel })),
+    alertas: [...alertasRes.vencidos_vigentes, ...alertasRes.vencendo_vigentes, ...alertasRes.vencidos_historico],
+  };
 }
 
 // ────────────────────────────────────────────────────────────────
@@ -318,5 +436,7 @@ export async function searchEmployees(params: {
   }
 
   const { data } = await query.limit(params.limit || 20);
-  return data || [];
+  const rows = (data || []) as Array<{ id: string; status_embarque?: string | null; standby?: boolean | null }>;
+  const overlay = await overlayStatusEscalaHoje(rows);
+  return overlay.error ? rows : overlay.rows;
 }

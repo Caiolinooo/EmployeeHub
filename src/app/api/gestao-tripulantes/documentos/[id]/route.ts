@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { authenticateUser } from '@/lib/api-auth';
+import { canDeleteGtDocuments, canEditGtDocuments } from '@/lib/gestao-tripulantes/documento-permissions';
 import { buscarCodigoExame } from '@/lib/e-social/codigos';
 import {
   garantirNumeroRastreioUnico,
@@ -70,33 +72,35 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const authHeader = request.headers.get('authorization') || undefined;
-    const token = extractTokenFromHeader(authHeader);
-    if (!token) {
-      return NextResponse.json({ error: 'Token de autorização necessário' }, { status: 401 });
-    }
-
-    const payload = verifyToken(token);
-    if (!payload) {
-      return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+    const { user, error: authError } = await authenticateUser(request);
+    if (authError) return authError;
+    if (!user || !(await canEditGtDocuments(user))) {
+      return NextResponse.json({ error: 'Sem permissão para editar documentos do cadastro' }, { status: 403 });
     }
 
     const { id } = await context.params;
     const body = await request.json();
 
-    const { aso, ...docFields } = body;
+    const { aso, treinamento_data, ...docFields } = body;
     const updateData: Record<string, any> = { ...docFields, updated_at: new Date().toISOString() };
     delete updateData.id;
     delete updateData.created_at;
     delete updateData.deleted_at;
     delete updateData.colaborador_id;
-    delete updateData.numero_rastreio; // rastreio é gerido pelo sistema, não editável
+    delete updateData.numero_rastreio;
     delete updateData.arquivo_hash;
+
+    for (const key of ['numero_documento', 'orgao_emissor', 'data_emissao', 'data_validade', 'titulo', 'descricao', 'subtipo']) {
+      if (key in updateData && typeof updateData[key] === 'string') {
+        const trimmed = updateData[key].trim();
+        updateData[key] = trimmed === '' ? null : (key.startsWith('data_') ? trimmed.slice(0, 10) : trimmed);
+      }
+    }
 
     // ---- Validação dura de integridade -------------------------------------
     const { data: atual, error: fetchErr } = await supabaseAdmin
       .from('gt_documentos')
-      .select('data_emissao, data_validade, numero_rastreio, tipo_documento, identity_match')
+      .select('data_emissao, data_validade, numero_rastreio, tipo_documento, identity_match, colaborador_id')
       .eq('id', id)
       .maybeSingle();
 
@@ -110,11 +114,16 @@ export async function PUT(
     const efetivo = {
       data_emissao: 'data_emissao' in updateData ? updateData.data_emissao : atual.data_emissao,
       data_validade: 'data_validade' in updateData ? updateData.data_validade : atual.data_validade,
+      tipo_documento: atual.tipo_documento,
     };
-    const validacao = validarDatasObrigatorias(efetivo, { permitirQuarentena: emQuarentena });
+    const validacao = validarDatasObrigatorias(efetivo, {
+      permitirQuarentena: emQuarentena,
+      permitirSemValidade: true,
+      tipoDocumento: atual.tipo_documento,
+    });
     if (!validacao.ok) {
       return NextResponse.json({
-        error: 'Documento incompleto: integridade exige data de emissão e data de validade',
+        error: 'Documento incompleto: ' + validacao.errors.join(', '),
         detalhes: validacao.errors,
       }, { status: 422 });
     }
@@ -123,7 +132,7 @@ export async function PUT(
       delete updateData.status_validacao;
     }
     if (efetivo.data_validade !== undefined) {
-      updateData.status_validacao = calcularStatusValidacaoPorValidade(efetivo.data_validade);
+      updateData.status_validacao = calcularStatusValidacaoPorValidade(efetivo.data_validade, { tipoDocumento: atual.tipo_documento });
     }
 
     // Garante numero_rastreio único em qualquer edição
@@ -174,6 +183,24 @@ export async function PUT(
       }
     }
 
+    // If Treinamento data was provided, upsert into gt_documentos_treinamento
+    if (treinamento_data && typeof treinamento_data === 'object') {
+      const { error: treErr } = await supabaseAdmin
+        .from('gt_documentos_treinamento')
+        .upsert({
+          documento_id: id,
+          colaborador_id: atual.colaborador_id,
+          nome_curso: treinamento_data.nome_curso || data.titulo,
+          instituicao: treinamento_data.instituicao || data.orgao_emissor,
+          carga_horaria: treinamento_data.carga_horaria ? Number(treinamento_data.carga_horaria) : null,
+          tipo_curso: treinamento_data.tipo_curso || null,
+        }, { onConflict: 'documento_id' });
+
+      if (treErr) {
+        console.error('Erro ao atualizar dados do treinamento:', treErr);
+      }
+    }
+
     return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('Erro ao atualizar documento:', error);
@@ -186,15 +213,10 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const authHeader = request.headers.get('authorization') || undefined;
-    const token = extractTokenFromHeader(authHeader);
-    if (!token) {
-      return NextResponse.json({ error: 'Token de autorização necessário' }, { status: 401 });
-    }
-
-    const payload = verifyToken(token);
-    if (!payload) {
-      return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+    const { user, error: authError } = await authenticateUser(request);
+    if (authError) return authError;
+    if (!user || !(await canDeleteGtDocuments(user))) {
+      return NextResponse.json({ error: 'Sem permissão para excluir documentos do cadastro' }, { status: 403 });
     }
 
     const { id } = await context.params;

@@ -24,22 +24,76 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const codigo = searchParams.get('codigo');
     const modulo_origem = searchParams.get('modulo_origem');
-    const cpf_trabalhador = searchParams.get('cpf_trabalhador') || searchParams.get('funcionario_id');
+    const cpfParam = searchParams.get('cpf') || searchParams.get('cpf_trabalhador') || searchParams.get('funcionario_id');
+    const searchParam = searchParams.get('search') || searchParams.get('busca') || searchParams.get('q');
     const cnpj_empregador = searchParams.get('cnpj_empregador');
     const competencia = searchParams.get('competencia');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.max(1, parseInt(searchParams.get('limit') || '50'));
+    const offsetParam = searchParams.get('offset');
+    const offset = offsetParam !== null ? Math.max(0, parseInt(offsetParam)) : (page - 1) * limit;
 
     let query = supabaseAdmin
       .from('esocial_eventos')
       .select('*, esocial_eventos_catalogo!evento_codigo(nome)', { count: 'exact' });
 
-    if (status) query = query.eq('status', status);
-    if (codigo) query = query.eq('evento_codigo', codigo);
+    // Status filtering (support groups and single status)
+    if (status) {
+      if (status === 'enviados' || status === 'transmitidos') {
+        query = query.or('status.in.(enviado,processado,sucesso,transmitido),numero_recibo.not.is.null,protocolo_envio.not.is.null');
+      } else if (status === 'pendencias' || status === 'fila') {
+        query = query.in('status', ['rascunho', 'pendente_revisao', 'revisao_aprovado', 'fila_envio']).is('numero_recibo', null);
+      } else if (status === 'revisao') {
+        query = query.eq('status', 'pendente_revisao').is('numero_recibo', null);
+      } else if (status === 'erro') {
+        query = query.in('status', ['erro', 'devolvido', 'revisao_rejeitado']).is('numero_recibo', null);
+      } else {
+        query = query.eq('status', status);
+      }
+    }
+
+    // Code filtering (e.g., '2220' or 'S-2220')
+    if (codigo) {
+      const formattedCode = codigo.toUpperCase().startsWith('S-') ? codigo.toUpperCase() : `S-${codigo.toUpperCase()}`;
+      query = query.or(`evento_codigo.eq.${formattedCode},evento_codigo.ilike.%${codigo}%`);
+    }
+
     if (modulo_origem) query = query.eq('modulo_origem', modulo_origem);
-    if (cpf_trabalhador) query = query.eq('cpf_trabalhador', cpf_trabalhador);
-    if (cnpj_empregador) query = query.eq('cnpj_empregador', cnpj_empregador);
+    if (cnpj_empregador) query = query.eq('cnpj_empregador', cnpj_empregador.replace(/\D/g, ''));
     if (competencia) query = query.eq('dados_evento->>competencia', competencia);
+
+    // Filter by specific CPF or general search term (worker name, CPF with/without mask)
+    const effectiveSearch = (cpfParam || searchParam || '').trim();
+    if (effectiveSearch) {
+      const cleanSearchDigits = effectiveSearch.replace(/\D/g, '');
+      const searchConditions: string[] = [];
+
+      if (cleanSearchDigits.length >= 3) {
+        searchConditions.push(`cpf_trabalhador.ilike.%${cleanSearchDigits}%`);
+      }
+      searchConditions.push(`matricula.ilike.%${effectiveSearch}%`);
+
+      // If search has alphabetic characters, search worker names in gt_colaboradores first
+      if (/[a-zA-Z]/.test(effectiveSearch)) {
+        const { data: matchedColabs } = await supabaseAdmin
+          .from('gt_colaboradores')
+          .select('cpf')
+          .ilike('nome_completo', `%${effectiveSearch}%`)
+          .limit(50);
+
+        if (matchedColabs && matchedColabs.length > 0) {
+          const matchedCpfs = matchedColabs
+            .map(c => String(c.cpf || '').replace(/\D/g, ''))
+            .filter(Boolean);
+
+          matchedCpfs.forEach(c => searchConditions.push(`cpf_trabalhador.eq.${c}`));
+        }
+      }
+
+      if (searchConditions.length > 0) {
+        query = query.or(searchConditions.join(','));
+      }
+    }
 
     query = query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
 
@@ -50,10 +104,56 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Erro ao listar eventos' }, { status: 500 });
     }
 
-    const eventos = (data || []).map((item: any) => ({
-      ...item,
-      evento_nome: item.esocial_eventos_catalogo?.nome || null,
-    }));
+    // 1. Collect CPFs and Colaborador IDs to resolve worker identity in batch
+    const rawCpfs = (data || []).map((i: any) => i.cpf_trabalhador).filter(Boolean);
+    const cleanCpfs = Array.from(new Set(rawCpfs.map((c: string) => String(c).replace(/\D/g, ''))));
+    
+    const colabMapByCpf = new Map<string, any>();
+    if (cleanCpfs.length > 0) {
+      const allCpfVariants = cleanCpfs.flatMap(c => [
+        c,
+        c.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+      ]);
+      const { data: colabs } = await supabaseAdmin
+        .from('gt_colaboradores')
+        .select('id, nome_completo, cpf, matricula, matricula_esocial, foto_url, mio_data, gt_cargos:cargo_id(nome)')
+        .in('cpf', allCpfVariants);
+
+      if (colabs) {
+        for (const colab of colabs) {
+          const normCpf = String(colab.cpf || '').replace(/\D/g, '');
+          if (normCpf) colabMapByCpf.set(normCpf, colab);
+        }
+      }
+    }
+
+    const eventos = (data || []).map((item: any) => {
+      const cleanCpf = item.cpf_trabalhador ? String(item.cpf_trabalhador).replace(/\D/g, '') : '';
+      const colab = cleanCpf ? colabMapByCpf.get(cleanCpf) : null;
+      
+      const nomeEspecifico = item.dados_evento?.dadosEspecificos?.nome 
+        || item.dados_evento?.trabalhador?.nome 
+        || item.dados_evento?.nome
+        || null;
+
+      const cargoEspecifico = item.dados_evento?.dadosEspecificos?.cargo
+        || item.dados_evento?.cargo
+        || null;
+
+      const resolvedStatus = item.numero_recibo 
+        ? 'processado' 
+        : (item.protocolo_envio && (item.status === 'erro' || item.status === 'rascunho') ? 'enviado' : item.status);
+
+      return {
+        ...item,
+        status: resolvedStatus,
+        evento_nome: item.esocial_eventos_catalogo?.nome || null,
+        colaborador_nome: colab?.nome_completo || nomeEspecifico || null,
+        colaborador_cargo: colab?.gt_cargos?.nome || colab?.mio_data?.cargo || colab?.mio_data?.cargo_funcao || cargoEspecifico || null,
+        colaborador_matricula: colab?.matricula_esocial || colab?.matricula || item.matricula || null,
+        colaborador_foto: colab?.foto_url || null,
+      };
+    });
 
     // Fetch dashboard summary using admin client
     const { data: dashboardData } = await supabaseAdmin
@@ -61,12 +161,17 @@ export async function GET(request: NextRequest) {
       .select('*')
       .maybeSingle();
 
+    const totalCount = count || 0;
+    const totalPages = Math.ceil(totalCount / limit);
+
     return NextResponse.json({
       success: true,
       eventos,
-      total: count || 0,
+      total: totalCount,
+      page,
       limit,
       offset,
+      totalPages,
       resumo: dashboardData || null,
     });
   } catch (error) {

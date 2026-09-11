@@ -1,0 +1,72 @@
+{
+  "source": "public/images/companion-mascot/body/idle_stand.png",
+  "canvas": {
+    "w": 128,
+    "h": 128
+  },
+  "opaque_bbox": {
+    "x0": 4,
+    "y0": 0,
+    "x1": 91,
+    "y1": 128
+  },
+  "method": "color+spatial alpha cutouts from idle_stand (best-effort prep for human Rive Editor bones \u2014 NOT a finished rig)",
+  "layers": {
+    "book_core": {
+      "file": "book_core.png",
+      "opaque_bbox": {
+        "x0": 4,
+        "y0": 0,
+        "x1": 91,
+        "y1": 128
+      },
+      "opaque_pixels": 7588
+    },
+    "arm_left": {
+      "file": "arm_left.png",
+      "opaque_bbox": {
+        "x0": 5,
+        "y0": 28,
+        "x1": 48,
+        "y1": 87
+      },
+      "opaque_pixels": 1070
+    },
+    "arm_right": {
+      "file": "arm_right.png",
+      "opaque_bbox": {
+        "x0": 48,
+        "y0": 29,
+        "x1": 89,
+        "y1": 87
+      },
+      "opaque_pixels": 513
+    },
+    "leg_left": {
+      "file": "leg_left.png",
+      "opaque_bbox": {
+        "x0": 10,
+        "y0": 79,
+        "x1": 45,
+        "y1": 128
+      },
+      "opaque_pixels": 673
+    },
+    "leg_right": {
+      "file": "leg_right.png",
+      "opaque_bbox": {
+        "x0": 45,
+        "y0": 79,
+        "x1": 78,
+        "y1": 128
+      },
+      "opaque_pixels": 555
+    }
+  },
+  "bone_hint": [
+    "root \u2192 spine (book_core pivot at center)",
+    "spine \u2192 arm_L / arm_R (stick limbs; optional hand tips)",
+    "spine \u2192 leg_L / leg_R",
+    "Keep face painted on book_core \u2014 do NOT reintroduce face overlays"
+  ]
+}

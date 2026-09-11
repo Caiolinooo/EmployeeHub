@@ -10,6 +10,7 @@ import EventoRevisao from '@/components/e-social/EventoRevisao';
 import ESocialNavigation from '@/components/e-social/ESocialNavigation';
 import { toast } from 'react-hot-toast';
 import { FiRefreshCw, FiClock } from 'react-icons/fi';
+import GtPageShell, { GT_PAGE_SCROLLPORT_CLASS } from '@/components/gestao-tripulantes/GtPageShell';
 
 export default function ESocialRevisaoPage() {
   const { user, isLoading: authLoading } = useSupabaseAuth();
@@ -95,11 +96,11 @@ export default function ESocialRevisaoPage() {
   if (authLoading || !user) return null;
 
   return (
-    <div className="flex-1 p-6">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <GtPageShell>
+      <div className="flex flex-col flex-1 min-h-0 w-full max-w-5xl mx-auto gap-4">
         
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between shrink-0">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">{t('eSocial.revisaoTitle', 'Fila de Revisão')}</h1>
             <p className="text-sm text-gray-500">{t('eSocial.revisao.title', 'Eventos aguardando homologação ou correção')}</p>
@@ -114,11 +115,13 @@ export default function ESocialRevisaoPage() {
         </div>
 
         {/* Sub-Navigation Tabs */}
-        <ESocialNavigation />
+        <div className="shrink-0">
+          <ESocialNavigation />
+        </div>
 
         {/* List */}
         {loading ? (
-          <div className="space-y-3">
+          <div className={`${GT_PAGE_SCROLLPORT_CLASS} space-y-3`}>
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="h-20 bg-gray-100 animate-pulse rounded-lg" />
             ))}
@@ -129,7 +132,7 @@ export default function ESocialRevisaoPage() {
             <p className="text-gray-500">{t('eSocial.revisao.noPending', 'Nenhum evento pendente de revisão')}</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className={`${GT_PAGE_SCROLLPORT_CLASS} space-y-3`}>
             {eventos.map((evento) => (
               <div
                 key={evento.id}
@@ -169,6 +172,6 @@ export default function ESocialRevisaoPage() {
           loading={reviewLoading}
         />
       )}
-    </div>
+    </GtPageShell>
   );
 }

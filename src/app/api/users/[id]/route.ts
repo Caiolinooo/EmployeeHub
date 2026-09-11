@@ -36,7 +36,7 @@ export async function GET(
     // Buscar o usuário - dados básicos para qualquer usuário autenticado
     const { data: user, error: fetchError } = await supabaseAdmin
       .from('users_unified')
-      .select('id, name, email, first_name, last_name, role, position, department, sector_id, phone_number, avatar, drive_photo_url')
+      .select('id, name, email, first_name, last_name, role, position, department, sector_id, phone_number, avatar, drive_photo_url, startup_splash_enabled, startup_splash_url, startup_sound_enabled, startup_sound_url')
       .eq('id', userId)
       .single();
 
@@ -60,7 +60,11 @@ export async function GET(
       sector_id: user.sector_id,
       avatar: user.avatar,
       drive_photo_url: user.drive_photo_url,
-      phoneNumber: user.phone_number as string // Explicit cast to silence linter if type definition is lagging
+      phoneNumber: user.phone_number as string,
+      startup_splash_enabled: user.startup_splash_enabled || false,
+      startup_splash_url: user.startup_splash_url || '',
+      startup_sound_enabled: user.startup_sound_enabled || false,
+      startup_sound_url: user.startup_sound_url || ''
     };
 
     // Retornar dados básicos
@@ -134,7 +138,15 @@ export async function PUT(
       sector_id,
       active,
       accessPermissions,
-      password
+      password,
+      startup_splash_enabled,
+      startup_splash_url,
+      startup_sound_enabled,
+      startup_sound_url,
+      startupSplashEnabled,
+      startupSplashUrl,
+      startupSoundEnabled,
+      startupSoundUrl
     } = body;
 
     console.log('Campo phoneNumber extraído:', phoneNumber);
@@ -174,6 +186,21 @@ export async function PUT(
       sector_id,
       updated_at: now
     };
+
+    if (startup_splash_enabled !== undefined || startupSplashEnabled !== undefined) {
+      updateData.startup_splash_enabled = startup_splash_enabled !== undefined ? !!startup_splash_enabled : !!startupSplashEnabled;
+    }
+    if (startup_splash_url !== undefined || startupSplashUrl !== undefined) {
+      const url = startup_splash_url !== undefined ? startup_splash_url : startupSplashUrl;
+      updateData.startup_splash_url = url ? url : null;
+    }
+    if (startup_sound_enabled !== undefined || startupSoundEnabled !== undefined) {
+      updateData.startup_sound_enabled = startup_sound_enabled !== undefined ? !!startup_sound_enabled : !!startupSoundEnabled;
+    }
+    if (startup_sound_url !== undefined || startupSoundUrl !== undefined) {
+      const url = startup_sound_url !== undefined ? startup_sound_url : startupSoundUrl;
+      updateData.startup_sound_url = url ? url : null;
+    }
 
     console.log('Dados preparados para atualização:', JSON.stringify(updateData, null, 2));
 

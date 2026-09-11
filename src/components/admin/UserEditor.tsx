@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { FiSave, FiX, FiUser, FiMail, FiPhone, FiBriefcase, FiUsers, FiPlus, FiTrash2, FiDollarSign, FiShield } from 'react-icons/fi';
+import { FiSave, FiX, FiUser, FiMail, FiPhone, FiBriefcase, FiUsers, FiPlus, FiTrash2, FiDollarSign, FiShield, FiImage, FiVolume2, FiUpload } from 'react-icons/fi';
 import { AccessPermissions } from '@/models/User';
 import ServerUserReimbursementSettings from './ServerUserReimbursementSettings';
 import ReimbursementPermissionsEditor from './ReimbursementPermissionsEditor';
@@ -10,6 +10,11 @@ import { useI18n } from '@/contexts/I18nContext';
 import { supabase } from '@/lib/supabase';
 import { Sector } from '@/types/index';
 import { useACLPermissions } from '@/hooks/useACLPermissions';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { QHSE_MODULE_KEY } from '@/lib/document-catalog/permissions';
+import { getFullPermissionsForRole, getModuleKeyForCatalogFeature } from '@/config/modules';
+import CollaboratorDocumentsCatalog from './CollaboratorDocumentsCatalog';
+import CatalogFeatureToggles from './CatalogFeatureToggles';
 
 // Interface para o usuário no editor
 export interface UserEditorData {
@@ -22,6 +27,10 @@ export interface UserEditorData {
   position?: string;
   department?: string;
   sector_id?: string;
+  startup_splash_enabled?: boolean;
+  startup_splash_url?: string;
+  startup_sound_enabled?: boolean;
+  startup_sound_url?: string;
   accessPermissions?: AccessPermissions;
   reimbursement_email_settings?: {
     enabled: boolean;
@@ -46,6 +55,8 @@ const UserEditor: React.FC<UserEditorProps> = ({
   isModal = true
 }) => {
   const { t } = useI18n();
+  const { hasAccess, user: sessionUser, refreshProfile } = useSupabaseAuth();
+  const showQhseSection = hasAccess(QHSE_MODULE_KEY);
   const defaultUser: UserEditorData = {
     phoneNumber: '',
     firstName: '',
@@ -54,15 +65,12 @@ const UserEditor: React.FC<UserEditorProps> = ({
     role: 'USER',
     position: '',
     department: '',
+    startup_splash_enabled: false,
+    startup_splash_url: '',
+    startup_sound_enabled: false,
+    startup_sound_url: '',
     accessPermissions: {
-      modules: {
-        dashboard: true, noticias: true, calendario: true, 'ia-assistant': true,
-        ponto: true, contracheque: true, reembolso: true, kpi: false,
-        avaliacao: false, epi: true, ferias: true, 'lista-presenca': true,
-        contratos: true, academy: true, biblioteca: true, ajuda: true,
-        compras: false, poliweb: true, 'man-schedule': false, chat: true,
-        wkradar: false, admin: false, 'integracao-erp': false
-      },
+      modules: getFullPermissionsForRole('USER'),
       features: {}
     },
     reimbursement_email_settings: {
@@ -93,6 +101,24 @@ const UserEditor: React.FC<UserEditorProps> = ({
   // State for available sectors
   const [availableSectors, setAvailableSectors] = useState<Sector[]>([]);
 
+  // Sincronizar editedUser quando a prop user mudar
+  useEffect(() => {
+    if (user) {
+      setEditedUser({
+        ...defaultUser,
+        ...user,
+        startup_splash_enabled: user.startup_splash_enabled !== undefined ? user.startup_splash_enabled : false,
+        startup_splash_url: user.startup_splash_url || '',
+        startup_sound_enabled: user.startup_sound_enabled !== undefined ? user.startup_sound_enabled : false,
+        startup_sound_url: user.startup_sound_url || '',
+        accessPermissions: user.accessPermissions || defaultUser.accessPermissions,
+        reimbursement_email_settings: user.reimbursement_email_settings || defaultUser.reimbursement_email_settings
+      });
+    } else {
+      setEditedUser(defaultUser);
+    }
+  }, [user]);
+
   // DEBUG: Log initial user prop
   useEffect(() => {
     console.log('[DEBUG UserEditor] Initial user prop:', {
@@ -100,7 +126,11 @@ const UserEditor: React.FC<UserEditorProps> = ({
       sector_id: user?.sector_id,
       department: user?.department,
       firstName: user?.firstName,
-      lastName: user?.lastName
+      lastName: user?.lastName,
+      startup_splash_enabled: user?.startup_splash_enabled,
+      startup_splash_url: user?.startup_splash_url,
+      startup_sound_enabled: user?.startup_sound_enabled,
+      startup_sound_url: user?.startup_sound_url
     });
   }, [user]);
 
@@ -359,10 +389,113 @@ const UserEditor: React.FC<UserEditorProps> = ({
     }));
   };
 
+  const handleFeaturePermissionChange = (featureId: string, checked: boolean) => {
+    const moduleKey = getModuleKeyForCatalogFeature(featureId);
+    setEditedUser(prev => ({
+      ...prev,
+      accessPermissions: {
+        ...prev.accessPermissions,
+        features: {
+          ...prev.accessPermissions?.features,
+          [featureId]: checked
+        },
+        modules: {
+          ...prev.accessPermissions?.modules,
+          ...(checked && moduleKey ? { [moduleKey]: true } : {}),
+        }
+      }
+    }));
+  };
+
   // Validar email
   const validateEmail = (email: string): boolean => {
     const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     return re.test(email);
+  };
+
+  const [uploadingSplash, setUploadingSplash] = useState(false);
+  const [uploadingSound, setUploadingSound] = useState(false);
+
+  const handleUploadSplash = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingSplash(true);
+      const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', 'splash');
+      if (editedUser._id) {
+        formData.append('userId', editedUser._id);
+      }
+
+      const res = await fetch('/api/admin/users/upload-startup-asset', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Erro no upload da imagem');
+      }
+
+      setEditedUser((prev) => ({
+        ...prev,
+        startup_splash_url: data.url,
+        startup_splash_enabled: true,
+      }));
+    } catch (err: any) {
+      console.error('Erro no upload de splash:', err);
+      alert(err.message || 'Erro ao carregar foto do splash');
+    } finally {
+      setUploadingSplash(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleUploadSound = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingSound(true);
+      const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', 'sound');
+      if (editedUser._id) {
+        formData.append('userId', editedUser._id);
+      }
+
+      const res = await fetch('/api/admin/users/upload-startup-asset', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Erro no upload do áudio');
+      }
+
+      setEditedUser((prev) => ({
+        ...prev,
+        startup_sound_url: data.url,
+        startup_sound_enabled: true,
+      }));
+    } catch (err: any) {
+      console.error('Erro no upload de som:', err);
+      alert(err.message || 'Erro ao carregar arquivo de áudio');
+    } finally {
+      setUploadingSound(false);
+      e.target.value = '';
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -412,6 +545,9 @@ const UserEditor: React.FC<UserEditorProps> = ({
         }
 
         console.log('[UserEditor] Permissões ACL salvas com sucesso no submit');
+        if (sessionUser?.id && editedUser._id === sessionUser.id) {
+          await refreshProfile();
+        }
       } catch (error) {
         console.error('[UserEditor] Erro ao persistir permissões ACL no submit:', error);
       }
@@ -642,6 +778,18 @@ const UserEditor: React.FC<UserEditorProps> = ({
           </div>
         </div>
 
+        {!isNewUser && editedUser._id && showQhseSection && (
+          <div className="mb-6 p-4 border border-amber-200 rounded-lg bg-amber-50/40">
+            <CollaboratorDocumentsCatalog userId={editedUser._id} onlyQhse />
+          </div>
+        )}
+
+        {!isNewUser && editedUser._id && (
+          <div className="mb-6 p-4 border border-gray-200 rounded-lg">
+            <CollaboratorDocumentsCatalog userId={editedUser._id} hideQhse />
+          </div>
+        )}
+
         {/* Permissões de acesso */}
         <div className="mb-6">
           <div className="flex items-center space-x-4 mb-4">
@@ -746,6 +894,26 @@ const UserEditor: React.FC<UserEditorProps> = ({
                 </div>
               )}
 
+              {(() => {
+                const featureValues = {
+                  ...(rolePermissions[editedUser.role]?.features || {}),
+                  ...(editedUser.accessPermissions?.features || {}),
+                };
+                return (
+                  <div className="mt-4">
+                    <p className="text-xs text-slate-500 mb-2">
+                      Features do catálogo ficam visíveis mesmo se o módulo estiver desmarcado.
+                      Ativar uma feature liga o módulo correspondente no save.
+                    </p>
+                    <CatalogFeatureToggles
+                      values={featureValues}
+                      onChange={handleFeaturePermissionChange}
+                      disabled={editedUser.role === 'ADMIN'}
+                    />
+                  </div>
+                );
+              })()}
+
               {/* Permissões específicas de reembolso */}
               <ReimbursementPermissionsEditor
                 permissions={editedUser.accessPermissions || { modules: {}, features: {} }}
@@ -828,18 +996,147 @@ const UserEditor: React.FC<UserEditorProps> = ({
           </div>
         )}
 
-        {/* Botões de ação */}
-        <div className="flex justify-end space-x-3 border-t pt-4">
+        {/* Configurações de Inicialização Personalizada (Splash & Áudio) */}
+        <div className="mb-6 border border-indigo-100 rounded-xl p-5 bg-gradient-to-br from-indigo-50/50 via-white to-blue-50/40 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="p-2 bg-indigo-100 text-indigo-700 rounded-lg">
+              <FiImage className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-gray-900">Tela de Inicialização & Áudio (Splash Screen)</h3>
+              <p className="text-xs text-gray-500">Defina uma foto de splash e um áudio de abertura personalizados para este usuário ao entrar no portal.</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            {/* Splash Image */}
+            <div className="border border-gray-200 rounded-xl p-4 bg-white shadow-xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <FiImage className="text-indigo-600" />
+                    Splash Screen (Foto)
+                  </span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={!!editedUser.startup_splash_enabled}
+                      onChange={(e) => setEditedUser(prev => ({ ...prev, startup_splash_enabled: e.target.checked }))}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                  </label>
+                </div>
+
+                {editedUser.startup_splash_url ? (
+                  <div className="relative mb-3 group rounded-lg overflow-hidden border border-gray-200 bg-gray-900 aspect-video flex items-center justify-center">
+                    <img
+                      src={editedUser.startup_splash_url}
+                      alt="Preview Splash"
+                      className="max-h-full max-w-full object-contain"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setEditedUser(prev => ({ ...prev, startup_splash_url: '', startup_splash_enabled: false }))}
+                      className="absolute top-2 right-2 p-1.5 bg-red-600/80 hover:bg-red-700 text-white rounded-md transition shadow"
+                      title="Remover foto"
+                    >
+                      <FiTrash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 mb-3 text-center bg-gray-50 flex flex-col items-center justify-center min-h-[110px]">
+                    <FiImage className="w-8 h-8 text-gray-300 mb-1" />
+                    <span className="text-xs text-gray-400">Nenhuma foto de splash enviada</span>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="w-full flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition shadow-xs">
+                  <FiUpload className="w-4 h-4 text-indigo-600" />
+                  <span>{uploadingSplash ? 'Enviando imagem...' : editedUser.startup_splash_url ? 'Substituir Imagem' : 'Enviar Foto do Splash'}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleUploadSplash}
+                    disabled={uploadingSplash}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* Startup Sound */}
+            <div className="border border-gray-200 rounded-xl p-4 bg-white shadow-xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <FiVolume2 className="text-indigo-600" />
+                    Som de Início (Áudio)
+                  </span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={!!editedUser.startup_sound_enabled}
+                      onChange={(e) => setEditedUser(prev => ({ ...prev, startup_sound_enabled: e.target.checked }))}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                  </label>
+                </div>
+
+                {editedUser.startup_sound_url ? (
+                  <div className="mb-3 p-2 bg-slate-50 border border-gray-200 rounded-lg flex flex-col gap-2">
+                    <audio controls className="w-full h-8" src={editedUser.startup_sound_url} />
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setEditedUser(prev => ({ ...prev, startup_sound_url: '', startup_sound_enabled: false }))}
+                        className="text-xs text-red-600 hover:text-red-800 flex items-center gap-1 font-medium"
+                      >
+                        <FiTrash2 className="w-3.5 h-3.5" />
+                        Remover áudio
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 mb-3 text-center bg-gray-50 flex flex-col items-center justify-center min-h-[110px]">
+                    <FiVolume2 className="w-8 h-8 text-gray-300 mb-1" />
+                    <span className="text-xs text-gray-400">Nenhum som de início enviado</span>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="w-full flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition shadow-xs">
+                  <FiUpload className="w-4 h-4 text-indigo-600" />
+                  <span>{uploadingSound ? 'Enviando áudio...' : editedUser.startup_sound_url ? 'Substituir Áudio' : 'Enviar Arquivo de Áudio'}</span>
+                  <input
+                    type="file"
+                    accept="audio/*"
+                    onChange={handleUploadSound}
+                    disabled={uploadingSound}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Botões de ação (Sticky) */}
+        <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm border-t p-3 sm:p-4 mt-6 z-20 flex justify-end space-x-3 rounded-b-xl shadow-xs">
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue"
+            className="px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue transition"
           >
             {t('common.cancel')}
           </button>
           <button
             type="submit"
-            className="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-abz-blue hover:bg-abz-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue"
+            className="flex items-center px-5 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-abz-blue hover:bg-abz-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-abz-blue transition"
           >
             <FiSave className="mr-2" />
             {t('common.save')}
@@ -852,8 +1149,8 @@ const UserEditor: React.FC<UserEditorProps> = ({
   // Renderizar como modal ou como componente normal
   if (isModal) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-auto">
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-2 sm:p-4">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-4xl w-full max-h-[96dvh] sm:max-h-[90vh] overflow-auto">
           {renderContent()}
         </div>
       </div>

@@ -31,7 +31,7 @@ export function gerarS2210(dados: DadosS2210): string {
   xml += '    </ideEvento>\n';
   xml += '    <ideEmpregador>\n';
   xml += buildTag('tpInsc', ideEmpregador.tpInsc, 4);
-  xml += buildTag('nrInsc', ideEmpregador.tpInsc === 1 ? ideEmpregador.nrInsc.replace(/\\D/g, '').substring(0, 8) : ideEmpregador.nrInsc, 4);
+  xml += buildTag('nrInsc', ideEmpregador.tpInsc === 1 ? ideEmpregador.nrInsc.replace(/\D/g, '').substring(0, 8) : ideEmpregador.nrInsc, 4);
   xml += '    </ideEmpregador>\n';
   xml += '    <ideVinculo>\n';
   xml += buildTag('cpfTrab', ideVinculo.cpfTrab, 4);

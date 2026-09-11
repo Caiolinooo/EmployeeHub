@@ -56,6 +56,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
+    const role = String(payload.role || '').toUpperCase();
+    if (role !== 'ADMIN' && role !== 'MANAGER' && role !== 'ADMINISTRADOR' && role !== 'SUPERADMIN') {
+      return NextResponse.json({ error: 'Acesso negado. Apenas ADMIN/MANAGER.' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { nome, descricao, nivel, ordem_exibicao } = body;
 

@@ -292,6 +292,8 @@ export interface MSGraphUser {
 
 export interface MSGraphEmail {
   id: string;
+  conversationId?: string;
+  internetMessageId?: string;
   subject: string;
   from: {
     emailAddress: {
@@ -300,9 +302,25 @@ export interface MSGraphEmail {
     };
   };
   receivedDateTime: string;
+  sentDateTime?: string;
+  createdDateTime?: string;
+  lastModifiedDateTime?: string;
   bodyPreview?: string;
+  body?: string;
+  bodyType?: string;
   isRead: boolean;
+  isDraft?: boolean;
   hasAttachments: boolean;
+  importance?: string;
+  categories?: string[];
+  flag?: { flagStatus?: string };
+  parentFolderId?: string;
+  webLink?: string;
+  inferenceClassification?: string;
+  toRecipients?: Array<{ emailAddress: { name?: string; address: string } }>;
+  ccRecipients?: Array<{ emailAddress: { name?: string; address: string } }>;
+  bccRecipients?: Array<{ emailAddress: { name?: string; address: string } }>;
+  replyTo?: Array<{ emailAddress: { name?: string; address: string } }>;
 }
 
 export interface MSGraphCalendarEvent {
@@ -326,12 +344,15 @@ export interface MSGraphCalendarEvent {
     };
   };
   isAllDay: boolean;
+  bodyPreview?: string;
 }
 
 export interface MSGraphChat {
   id: string;
   topic?: string;
   lastMessagePreview?: string;
+  chatType?: string;
+  lastUpdatedDateTime?: string;
   members: Array<{
     displayName: string;
     email: string;

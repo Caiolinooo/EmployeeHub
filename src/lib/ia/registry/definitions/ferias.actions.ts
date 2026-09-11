@@ -53,10 +53,10 @@ const approveFeriasAction: IAAction = {
       }
 
       // Verificar se já está pendente
-      if (solicitacao.status !== 'pending') {
+      if (solicitacao.status !== 'PENDING_LEADER' && solicitacao.status !== 'PENDING_MANAGER') {
         return {
           success: false,
-          message: `Esta solicitação já foi ${solicitacao.status === 'approved' ? 'aprovada' : 'reprovada'}`,
+          message: `Esta solicitação não está pendente (status: ${solicitacao.status})`,
         };
       }
 
@@ -70,14 +70,14 @@ const approveFeriasAction: IAAction = {
         }
       }
 
+      const nextStatus =
+        solicitacao.status === 'PENDING_LEADER' ? 'PENDING_MANAGER' : 'APPROVED';
+
       // Aprovar
       const { error: updateError } = await supabaseAdmin
         .from('leave_requests')
         .update({
-          status: 'approved',
-          approved_by: context.userId,
-          approved_at: new Date().toISOString(),
-          manager_comment: comentario || null,
+          status: nextStatus,
           updated_at: new Date().toISOString(),
         })
         .eq('id', solicitacao_id);
@@ -166,10 +166,10 @@ const rejectFeriasAction: IAAction = {
         };
       }
 
-      if (solicitacao.status !== 'pending') {
+      if (solicitacao.status !== 'PENDING_LEADER' && solicitacao.status !== 'PENDING_MANAGER') {
         return {
           success: false,
-          message: `Esta solicitação já foi ${solicitacao.status === 'approved' ? 'aprovada' : 'reprovada'}`,
+          message: `Esta solicitação não está pendente (status: ${solicitacao.status})`,
         };
       }
 
@@ -185,10 +185,8 @@ const rejectFeriasAction: IAAction = {
       const { error: updateError } = await supabaseAdmin
         .from('leave_requests')
         .update({
-          status: 'rejected',
-          approved_by: context.userId,
-          approved_at: new Date().toISOString(),
-          manager_comment: motivo,
+          status: 'REJECTED',
+          rejection_reason: motivo,
           updated_at: new Date().toISOString(),
         })
         .eq('id', solicitacao_id);
@@ -288,7 +286,7 @@ const solicitarFeriasAction: IAAction = {
           start_date: data_inicio,
           end_date: data_fim,
           reason: motivo || 'Férias programadas',
-          status: 'pending',
+          status: 'PENDING_LEADER',
         });
 
       if (insertError) {

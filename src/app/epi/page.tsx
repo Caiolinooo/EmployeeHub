@@ -176,9 +176,9 @@ export default function EPIPage() {
     return (
         <MainLayout>
             <ErrorBoundary>
-                <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 w-full max-w-full overflow-hidden">
+                <div className="flex flex-col min-h-0 flex-1 h-full w-full max-w-full overflow-hidden">
                     {/* Header */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div className="shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                         <div className="flex items-center gap-3">
                             <div className="p-3 bg-yellow-100 rounded-lg">
                                 <FiShield className="w-6 h-6 text-yellow-600" />
@@ -216,7 +216,7 @@ export default function EPIPage() {
                     </div>
 
                     {/* Stats Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div className="shrink-0 grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                         <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -254,7 +254,7 @@ export default function EPIPage() {
 
                     {/* Error Message */}
                     {error && (
-                        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="shrink-0 mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                             <div className="flex items-center gap-2 text-red-700">
                                 <FiAlertCircle className="w-5 h-5" />
                                 <span>{error}</span>
@@ -263,8 +263,8 @@ export default function EPIPage() {
                     )}
 
                     {/* Tabs */}
-                    <div className="bg-white rounded-lg shadow w-full">
-                        <div className="border-b border-gray-200 overflow-x-auto w-full scrollbar-hide">
+                    <div className="bg-white rounded-lg shadow w-full flex-1 min-h-0 flex flex-col">
+                        <div className="shrink-0 border-b border-gray-200 overflow-x-auto w-full scrollbar-hide">
                             <nav className="flex -mb-px">
                                 <button
                                     onClick={() => { setActiveTab('list'); setShowForm(false); }}
@@ -304,7 +304,7 @@ export default function EPIPage() {
                             </nav>
                         </div>
 
-                        <div className="p-3 sm:p-6 w-full max-w-full overflow-hidden">
+                        <div className="p-3 sm:p-6 w-full max-w-full flex-1 min-h-0 overflow-auto">
                             {isLoading ? (
                                 <div className="flex items-center justify-center py-12">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500"></div>

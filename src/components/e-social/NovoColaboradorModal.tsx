@@ -4,6 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { FiX } from 'react-icons/fi';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import toast from 'react-hot-toast';
+import SearchableCreatableSelect from '@/components/gestao-tripulantes/SearchableCreatableSelect';
+import {
+  createGtLookupOption,
+  toLookupOptions,
+  type GtLookupKind,
+} from '@/components/gestao-tripulantes/createGtLookupOption';
 
 type TabId = 'dados-pessoais' | 'documentos' | 'endereco' | 'contato' | 'dados-bancarios' | 'vinculo' | 'esocial';
 
@@ -66,6 +72,39 @@ export default function NovoColaboradorModal({ isOpen, onClose, onSuccess }: Pro
   if (!isOpen) return null;
 
   const set = (field: string, value: any) => setForm(p => ({ ...p, [field]: value }));
+
+  const handleCreateLookup = async (
+    kind: GtLookupKind,
+    label: string,
+    setter: React.Dispatch<React.SetStateAction<Option[]>>,
+  ) => {
+    try {
+      const created = await createGtLookupOption(kind, label);
+      setter(prev => (prev.some(o => o.id === created.id) ? prev : [...prev, { id: created.id, nome: created.nome, codigo: created.codigo }]));
+      toast.success(`«${created.label}» adicionado`);
+      return created;
+    } catch (err: any) {
+      toast.error(err.message || 'Falha ao adicionar');
+      throw err;
+    }
+  };
+
+  const lookupSelect = (
+    field: string,
+    options: Option[],
+    kind: GtLookupKind,
+    setter: React.Dispatch<React.SetStateAction<Option[]>>,
+  ) => (
+    <SearchableCreatableSelect
+      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+      options={toLookupOptions(options, kind, form[field] ? { id: form[field], label: form[field] } : undefined)}
+      value={form[field] || ''}
+      onChange={id => set(field, id)}
+      allowCreate
+      onCreate={label => handleCreateLookup(kind, label, setter)}
+      placeholder="Buscar ou adicionar..."
+    />
+  );
 
   const handleOcrDocument = async (tipo: string) => {
     const input = document.createElement('input');

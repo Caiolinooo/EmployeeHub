@@ -429,8 +429,8 @@ export default function ReimbursementDashboard() {
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="flex flex-col min-h-0 flex-1">
+      <div className="shrink-0 flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-gray-800">{t('reimbursement.tabs.dashboard')}</h2>
         <button
           onClick={handleCreateReimbursement}
@@ -442,7 +442,7 @@ export default function ReimbursementDashboard() {
       </div>
 
       {/* Filtros e pesquisa */}
-      <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+      <div className="shrink-0 bg-white p-4 rounded-lg shadow-sm mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center">
             <div className="relative flex-grow">
@@ -497,7 +497,7 @@ export default function ReimbursementDashboard() {
       </div>
 
       {/* Tabela de solicitações */}
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm overflow-hidden flex-1 min-h-0 flex flex-col">
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-abz-blue"></div>
@@ -569,9 +569,9 @@ export default function ReimbursementDashboard() {
             </button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="flex-1 min-h-0 overflow-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 sticky top-0 z-10">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('reimbursement.form.protocol')}
@@ -636,7 +636,7 @@ export default function ReimbursementDashboard() {
 
       {/* Paginação */}
       {!loading && !error && reimbursements.length > 0 && (
-        <div className="mt-4 flex items-center justify-between">
+        <div className="shrink-0 mt-4 flex items-center justify-between">
           <div className="text-sm text-gray-700">
             {t('common.showing')} <span className="font-medium">{(page - 1) * limit + 1}</span> {t('common.to')}{' '}
             <span className="font-medium">{Math.min(page * limit, totalCount)}</span> {t('common.of')}{' '}

@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { FiCalendar, FiPlus, FiClock, FiCheckCircle, FiXCircle, FiX, FiAlertCircle, FiUser, FiInfo, FiList, FiInbox, FiSearch, FiEye, FiTrash2, FiDownload, FiFileText } from 'react-icons/fi';
-import * as XLSX from 'xlsx-js-style';
+import Link from 'next/link';
+import { FiCalendar, FiPlus, FiClock, FiCheckCircle, FiXCircle, FiX, FiAlertCircle, FiUser, FiInfo, FiList, FiInbox, FiSearch, FiEye, FiTrash2, FiDownload, FiFileText, FiEdit3 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useSignature } from '@/contexts/SignatureContext';
 import { LeaveRequest } from '@/services/leaveService';
 import MainLayout from '@/components/Layout/MainLayout';
 import { format, parseISO } from 'date-fns';
@@ -16,6 +17,15 @@ import {
     formatDatePTBR,
     LEAVE_ADVANCE_NOTICE_DAYS as FALLBACK_ADVANCE_DAYS
 } from '@/lib/leaveConfig';
+import {
+    downloadLeaveCsv,
+    downloadLeaveExcel,
+    extractLeaveYears,
+    filterLeavesByYearAndStatus,
+} from '@/lib/leaveExport';
+
+/** sessionStorage: dismiss soft signature prompt for this browser tab/session */
+const FERIAS_SIG_PROMPT_DISMISS_KEY = 'ferias_signature_prompt_dismissed';
 
 interface UnifiedUser {
     id: string;
@@ -30,15 +40,52 @@ interface RequestWithUser extends LeaveRequest {
     sector?: { name: string };
 }
 
+type SignaturePromptPending =
+    | { type: 'create' }
+    | { type: 'pdf'; req: LeaveRequest | RequestWithUser };
+
+function isSignaturePromptDismissed(): boolean {
+    if (typeof window === 'undefined') return false;
+    try {
+        return sessionStorage.getItem(FERIAS_SIG_PROMPT_DISMISS_KEY) === '1';
+    } catch {
+        return false;
+    }
+}
+
+function dismissSignaturePrompt(): void {
+    if (typeof window === 'undefined') return;
+    try {
+        sessionStorage.setItem(FERIAS_SIG_PROMPT_DISMISS_KEY, '1');
+    } catch {
+        /* ignore quota / private mode */
+    }
+}
+
+/** Interpreta erro HTTP do download de PDF de férias para toast claro. */
+async function leavePdfDownloadError(res: Response, fallback: string): Promise<string> {
+    const errData = await res.json().catch(() => ({} as { error?: string }));
+    if (errData?.error) return errData.error;
+    if (res.status === 401) return 'Sessão expirada. Faça login novamente para baixar o formulário.';
+    if (res.status === 403) return 'Você não tem permissão para baixar este formulário.';
+    if (res.status === 404) return 'Solicitação não encontrada ou dados do colaborador indisponíveis.';
+    if (res.status >= 500) return 'Erro no servidor ao gerar o PDF. Tente novamente em instantes.';
+    return fallback;
+}
+
 export default function FeriasPage() {
-    const { user, getToken } = useSupabaseAuth();
+    const { user, profile, getToken } = useSupabaseAuth();
+    const { hasSignature, isLoading: signatureLoading, requestSignature } = useSignature();
     const [activeTab, setActiveTab] = useState<'my_leaves' | 'approvals' | 'all_requests'>('my_leaves');
     const [isApprover, setIsApprover] = useState(false);
     const [hasFeriasAdmin, setHasFeriasAdmin] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const [sigPromptDismissed, setSigPromptDismissed] = useState(false);
+    const [signaturePromptPending, setSignaturePromptPending] = useState<SignaturePromptPending | null>(null);
 
     useEffect(() => {
         setMounted(true);
+        setSigPromptDismissed(isSignaturePromptDismissed());
         if (typeof window !== 'undefined') {
             const params = new URLSearchParams(window.location.search);
             const tabParam = params.get('tab');
@@ -55,6 +102,8 @@ export default function FeriasPage() {
     // ==========================================
     const [requests, setRequests] = useState<LeaveRequest[]>([]);
     const [loading, setLoading] = useState(true);
+    const [myStatusFilter, setMyStatusFilter] = useState<string>('ALL');
+    const [myYearFilter, setMyYearFilter] = useState<string>('ALL');
     const [showModal, setShowModal] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [formData, setFormData] = useState<{
@@ -73,7 +122,12 @@ export default function FeriasPage() {
     // APPROVER STATES (Approvals)
     // ==========================================
     const [approvals, setApprovals] = useState<LeaveRequest[]>([]);
+    const [teamHistory, setTeamHistory] = useState<LeaveRequest[]>([]);
+    const [approvalsView, setApprovalsView] = useState<'pending' | 'history'>('pending');
+    const [teamStatusFilter, setTeamStatusFilter] = useState<string>('ALL');
+    const [teamYearFilter, setTeamYearFilter] = useState<string>('ALL');
     const [loadingApprovals, setLoadingApprovals] = useState(false);
+    const [loadingTeamHistory, setLoadingTeamHistory] = useState(false);
     const [processingId, setProcessingId] = useState<string | null>(null);
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [rejectingRequest, setRejectingRequest] = useState<LeaveRequest | null>(null);
@@ -85,11 +139,115 @@ export default function FeriasPage() {
     const [allRequests, setAllRequests] = useState<RequestWithUser[]>([]);
     const [loadingAllRequests, setLoadingAllRequests] = useState(false);
     const [allRequestsFilter, setAllRequestsFilter] = useState<string>('ALL');
+    const [allRequestsYear, setAllRequestsYear] = useState<string>('ALL');
     const [allRequestsSearch, setAllRequestsSearch] = useState('');
     const [selectedAllReq, setSelectedAllReq] = useState<RequestWithUser | null>(null);
     const [isAllReqModalOpen, setIsAllReqModalOpen] = useState(false);
     const [allReqActionReason, setAllReqActionReason] = useState('');
     const [allReqModalProcessing, setAllReqModalProcessing] = useState(false);
+    const [downloadingPdfId, setDownloadingPdfId] = useState<string | null>(null);
+
+    const needsSignaturePrompt = !signatureLoading && !hasSignature && !sigPromptDismissed;
+
+    const openCreateModal = useCallback(() => {
+        setShowModal(true);
+    }, []);
+
+    const runPdfDownload = useCallback(async (req: LeaveRequest | RequestWithUser) => {
+        try {
+            setDownloadingPdfId(req.id);
+            const token = getToken();
+            if (!token) {
+                toast.error('Sessão expirada. Faça login novamente para baixar o formulário.');
+                return;
+            }
+            const res = await fetch(`/api/leave/${req.id}/pdf`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (!res.ok) {
+                throw new Error(await leavePdfDownloadError(res, 'Falha ao gerar formulário preenchido'));
+            }
+
+            const contentType = res.headers.get('content-type') || '';
+            if (!contentType.includes('application/pdf')) {
+                throw new Error('Resposta inválida do servidor (esperado PDF). Tente novamente.');
+            }
+
+            const blob = await res.blob();
+            if (!blob.size) {
+                throw new Error('PDF vazio recebido do servidor. Tente novamente.');
+            }
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            const nameHint = ('user' in req && req.user?.name)
+                ? req.user.name.replace(/[^\w\s-]/g, '').slice(0, 24).trim().replace(/\s+/g, '_')
+                : req.id.slice(0, 8);
+            link.download = `Formulario_Ferias_${nameHint || req.id.slice(0, 8)}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            toast.success('Formulário preenchido baixado!');
+        } catch (error: any) {
+            console.error('Error downloading comprovante:', error);
+            toast.error(error.message || 'Erro ao baixar formulário');
+        } finally {
+            setDownloadingPdfId(null);
+        }
+    }, [getToken]);
+
+    const proceedAfterSignaturePrompt = useCallback(async (pending: SignaturePromptPending) => {
+        if (pending.type === 'create') {
+            openCreateModal();
+            return;
+        }
+        await runPdfDownload(pending.req);
+    }, [openCreateModal, runPdfDownload]);
+
+    const handleDismissSignaturePrompt = useCallback(() => {
+        dismissSignaturePrompt();
+        setSigPromptDismissed(true);
+        const pending = signaturePromptPending;
+        setSignaturePromptPending(null);
+        if (pending) void proceedAfterSignaturePrompt(pending);
+    }, [signaturePromptPending, proceedAfterSignaturePrompt]);
+
+    const handleRegisterSignatureFromPrompt = useCallback(async () => {
+        const pending = signaturePromptPending;
+        setSignaturePromptPending(null);
+        const result = await requestSignature({
+            title: 'Cadastrar assinatura',
+            description: 'Cadastre sua assinatura digital para formulários de férias e outros documentos do portal.',
+        });
+        if (pending) {
+            await proceedAfterSignaturePrompt(pending);
+        }
+        if (result) {
+            toast.success('Assinatura pronta para uso nos formulários.');
+        }
+    }, [signaturePromptPending, requestSignature, proceedAfterSignaturePrompt]);
+
+    const handleOpenNovaSolicitacao = useCallback(() => {
+        if (needsSignaturePrompt) {
+            setSignaturePromptPending({ type: 'create' });
+            return;
+        }
+        openCreateModal();
+    }, [needsSignaturePrompt, openCreateModal]);
+
+    const handleBannerRegisterSignature = useCallback(async () => {
+        await requestSignature({
+            title: 'Cadastrar assinatura',
+            description: 'Cadastre sua assinatura digital para formulários de férias e outros documentos do portal.',
+        });
+    }, [requestSignature]);
+
+    const handleDismissBanner = useCallback(() => {
+        dismissSignaturePrompt();
+        setSigPromptDismissed(true);
+    }, []);
 
     // ==========================================
     // LEAVE CONFIG (carregado do banco via API)
@@ -178,7 +336,13 @@ export default function FeriasPage() {
         if (hasFeriasAdmin && user?.id) {
             loadAllRequests();
         }
-    }, [hasFeriasAdmin, allRequestsFilter]);
+    }, [hasFeriasAdmin, allRequestsFilter, allRequestsYear]);
+
+    useEffect(() => {
+        if (approvalsView === 'history' && isApprover && user?.id) {
+            loadTeamHistory();
+        }
+    }, [approvalsView, isApprover, teamStatusFilter, teamYearFilter, user?.id]);
 
     const loadPermissions = async () => {
         try {
@@ -239,6 +403,8 @@ export default function FeriasPage() {
             setLoadingAllRequests(true);
             const queryParams = new URLSearchParams();
             if (allRequestsFilter !== 'ALL') queryParams.append('status', allRequestsFilter);
+            if (allRequestsYear !== 'ALL') queryParams.append('year', allRequestsYear);
+            queryParams.append('limit', '500');
             const token = getToken();
             const res = await fetch(`/api/admin/leave-requests?${queryParams.toString()}`, {
                 headers: token ? { 'Authorization': `Bearer ${token}` } : {}
@@ -251,6 +417,29 @@ export default function FeriasPage() {
             toast.error('Erro ao carregar solicitações.');
         } finally {
             setLoadingAllRequests(false);
+        }
+    };
+
+    const loadTeamHistory = async () => {
+        try {
+            setLoadingTeamHistory(true);
+            const queryParams = new URLSearchParams();
+            queryParams.append('approverId', user?.id || '');
+            queryParams.append('history', '1');
+            if (teamStatusFilter !== 'ALL') queryParams.append('status', teamStatusFilter);
+            if (teamYearFilter !== 'ALL') queryParams.append('year', teamYearFilter);
+            const token = getToken();
+            const res = await fetch(`/api/admin/leave-approvals?${queryParams.toString()}`, {
+                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+            });
+            if (!res.ok) throw new Error('Failed to load team history');
+            const data = await res.json();
+            setTeamHistory(data.requests || []);
+        } catch (error) {
+            console.error('Error loading team history:', error);
+            toast.error('Erro ao carregar histórico da equipe');
+        } finally {
+            setLoadingTeamHistory(false);
         }
     };
 
@@ -532,48 +721,63 @@ export default function FeriasPage() {
         }
     };
 
-    const filteredAllRequests = allRequests.filter(req => {
-        if (!allRequestsSearch) return true;
-        const lowSearch = allRequestsSearch.toLowerCase();
-        return (
-            req.user?.name?.toLowerCase().includes(lowSearch) ||
-            req.user?.sector?.name?.toLowerCase().includes(lowSearch) ||
-            req.status.toLowerCase().includes(lowSearch)
-        );
-    });
+    const filteredAllRequests = filterLeavesByYearAndStatus(
+        allRequests.filter(req => {
+            if (!allRequestsSearch) return true;
+            const lowSearch = allRequestsSearch.toLowerCase();
+            return (
+                req.user?.name?.toLowerCase().includes(lowSearch) ||
+                req.user?.sector?.name?.toLowerCase().includes(lowSearch) ||
+                req.status.toLowerCase().includes(lowSearch)
+            );
+        }),
+        'ALL', // year already applied server-side
+        'ALL'  // status already applied server-side
+    );
 
-    const allRequestsTableRef = useRef<HTMLTableElement>(null);
+    const filteredMyRequests = filterLeavesByYearAndStatus(requests, myYearFilter, myStatusFilter);
+    const myYears = extractLeaveYears(requests);
+    const allYears = extractLeaveYears(allRequests.length ? allRequests : requests);
+    const teamYears = extractLeaveYears(teamHistory.length ? teamHistory : approvals);
+    const filteredTeamHistory = filterLeavesByYearAndStatus(teamHistory, 'ALL', 'ALL');
 
-    const exportAllRequestsToExcel = () => {
-        if (!allRequestsTableRef.current) return;
-        const wb = XLSX.utils.table_to_book(allRequestsTableRef.current, { sheet: 'Férias' });
-        const ws = wb.Sheets['Férias'];
-        const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:Z100');
-        for (let R = range.s.r; R <= range.e.r; R++) {
-            for (let C = range.s.c; C <= range.e.c; C++) {
-                const addr = XLSX.utils.encode_cell({ r: R, c: C });
-                if (!ws[addr]) continue;
-                ws[addr].s = {
-                    font: { name: 'Calibri', sz: 11 },
-                    alignment: { vertical: 'center', wrapText: true },
-                    border: {
-                        top: { style: 'thin', color: { rgb: 'CCCCCC' } },
-                        bottom: { style: 'thin', color: { rgb: 'CCCCCC' } },
-                        left: { style: 'thin', color: { rgb: 'CCCCCC' } },
-                        right: { style: 'thin', color: { rgb: 'CCCCCC' } }
-                    }
-                };
-                if (R === 0) {
-                    ws[addr].s.font = { name: 'Calibri', sz: 11, bold: true };
-                    ws[addr].s.fill = { fgColor: { rgb: 'E8EDF5' } };
-                }
-            }
+    const exportMyRequests = (format: 'xlsx' | 'csv' = 'xlsx') => {
+        if (filteredMyRequests.length === 0) {
+            toast.error('Nenhum registro para exportar');
+            return;
         }
-        ws['!cols'] = [
-            { wch: 30 }, { wch: 20 }, { wch: 25 }, { wch: 18 }, { wch: 22 }
-        ];
-        XLSX.writeFile(wb, `Ferias_Solicitacoes_${new Date().toISOString().slice(0, 10)}.xlsx`);
-        toast.success('Planilha exportada com sucesso!');
+        const rows = filteredMyRequests.map((r) => ({
+            ...r,
+            user: { name: profile?.first_name || '', email: user?.email || '', sector: undefined },
+        }));
+        if (format === 'csv') {
+            downloadLeaveCsv(rows, 'Minhas_Ferias', { includeCollaborator: false });
+        } else {
+            downloadLeaveExcel(rows, 'Minhas_Ferias', { includeCollaborator: false });
+        }
+        toast.success(format === 'csv' ? 'CSV exportado!' : 'Planilha exportada!');
+    };
+
+    const exportAllRequestsToExcel = (format: 'xlsx' | 'csv' = 'xlsx') => {
+        if (filteredAllRequests.length === 0) {
+            toast.error('Nenhum registro para exportar');
+            return;
+        }
+        if (format === 'csv') {
+            downloadLeaveCsv(filteredAllRequests, 'Ferias_Solicitacoes');
+        } else {
+            downloadLeaveExcel(filteredAllRequests, 'Ferias_Solicitacoes');
+        }
+        toast.success(format === 'csv' ? 'CSV exportado!' : 'Planilha exportada!');
+    };
+
+    const exportTeamHistory = () => {
+        if (filteredTeamHistory.length === 0) {
+            toast.error('Nenhum registro para exportar');
+            return;
+        }
+        downloadLeaveExcel(filteredTeamHistory, 'Ferias_Equipe');
+        toast.success('Planilha exportada!');
     };
 
     // ==========================================
@@ -581,34 +785,15 @@ export default function FeriasPage() {
     // ==========================================
 
     /**
-     * Faz download do comprovante de uma solicitação de férias específica.
+     * Download do formulário/comprovante preenchido (PDF) da solicitação.
+     * Soft-gate: se o usuário não tem assinatura e não dispensou o prompt nesta sessão, pede cadastro antes.
      */
-    const handleDownloadComprovante = async (req: LeaveRequest) => {
-        try {
-            const token = getToken();
-            const res = await fetch(`/api/leave/${req.id}/pdf`, {
-                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-            });
-
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData?.error || 'Falha ao gerar comprovante');
-            }
-
-            const blob = await res.blob();
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `Comprovante_Ferias_${req.id.slice(0, 8)}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
-            toast.success('Comprovante baixado com sucesso!');
-        } catch (error: any) {
-            console.error('Error downloading comprovante:', error);
-            toast.error(error.message || 'Erro ao baixar comprovante');
+    const handleDownloadComprovante = async (req: LeaveRequest | RequestWithUser) => {
+        if (needsSignaturePrompt) {
+            setSignaturePromptPending({ type: 'pdf', req });
+            return;
         }
+        await runPdfDownload(req);
     };
 
     /**
@@ -617,16 +802,27 @@ export default function FeriasPage() {
     const handleDownloadFormulario = async () => {
         try {
             const token = getToken();
+            if (!token) {
+                toast.error('Sessão expirada. Faça login novamente para baixar o formulário.');
+                return;
+            }
             const res = await fetch('/api/leave/form-pdf', {
-                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                headers: { Authorization: `Bearer ${token}` }
             });
 
             if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData?.error || 'Falha ao gerar formulário');
+                throw new Error(await leavePdfDownloadError(res, 'Falha ao gerar formulário'));
+            }
+
+            const contentType = res.headers.get('content-type') || '';
+            if (!contentType.includes('application/pdf')) {
+                throw new Error('Resposta inválida do servidor (esperado PDF). Tente novamente.');
             }
 
             const blob = await res.blob();
+            if (!blob.size) {
+                throw new Error('PDF vazio recebido do servidor. Tente novamente.');
+            }
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
@@ -683,10 +879,10 @@ export default function FeriasPage() {
 
     return (
         <MainLayout>
-            <div className="p-6 max-w-5xl mx-auto space-y-6">
+            <div className="flex flex-col min-h-0 flex-1 h-full max-w-5xl mx-auto w-full">
 
                 {/* Header & Tabs */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-200 pb-4">
+                <div className="shrink-0 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-200 pb-4">
                     <div>
                         <div className="flex items-center gap-3 mb-4 md:mb-6">
                             <div className="bg-blue-100 p-3 rounded-xl border border-blue-200">
@@ -698,10 +894,10 @@ export default function FeriasPage() {
                             </div>
                         </div>
 
-                        <div className="flex bg-gray-100 p-1 rounded-xl w-fit">
+                        <div className="flex bg-gray-100 p-1 rounded-xl max-w-full overflow-x-auto no-scrollbar">
                             <button
                                 onClick={() => setActiveTab('my_leaves')}
-                                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === 'my_leaves' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all whitespace-nowrap ${activeTab === 'my_leaves' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
                             >
                                 <FiList />
                                 Minhas Solicitações
@@ -710,12 +906,12 @@ export default function FeriasPage() {
                             {isApprover && (
                                 <button
                                     onClick={() => setActiveTab('approvals')}
-                                    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === 'approvals' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all whitespace-nowrap ${activeTab === 'approvals' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
                                 >
                                     <FiInbox />
                                     Aprovações da Equipe
                                     {approvals.length > 0 && (
-                                        <span className="ml-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                                        <span className="ml-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                                             {approvals.length}
                                         </span>
                                     )}
@@ -725,7 +921,7 @@ export default function FeriasPage() {
                             {hasFeriasAdmin && (
                                 <button
                                     onClick={() => setActiveTab('all_requests')}
-                                    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === 'all_requests' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all whitespace-nowrap ${activeTab === 'all_requests' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
                                 >
                                     <FiEye />
                                     Todas as Solicitações
@@ -735,44 +931,128 @@ export default function FeriasPage() {
                     </div>
 
                     {activeTab === 'my_leaves' && (
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 w-full sm:w-auto">
                             <button
                                 onClick={handleDownloadFormulario}
-                                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-blue-200 text-blue-700 font-medium rounded-xl hover:bg-blue-50 transition-all shadow-sm active:scale-95"
+                                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-blue-200 text-blue-700 text-xs sm:text-sm font-medium rounded-xl hover:bg-blue-50 transition-all shadow-sm active:scale-95"
                                 title="Baixar formulário em branco para preenchimento manual"
                             >
-                                <FiFileText className="w-5 h-5" />
-                                <span className="hidden sm:inline">Formulário</span>
+                                <FiFileText className="w-4 h-4 sm:w-5 sm:h-5" />
+                                <span>Formulário</span>
                             </button>
                             <button
-                                onClick={() => setShowModal(true)}
-                                className="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-all shadow-sm active:scale-95"
+                                onClick={handleOpenNovaSolicitacao}
+                                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded-xl hover:bg-blue-700 transition-all shadow-sm active:scale-95"
                             >
-                                <FiPlus className="w-5 h-5" />
+                                <FiPlus className="w-4 h-4 sm:w-5 sm:h-5" />
                                 Nova Solicitação
                             </button>
                         </div>
                     )}
                 </div>
 
+                {/* Soft prompt: assinatura não cadastrada (dismissível nesta sessão) */}
+                {needsSignaturePrompt && (
+                    <div className="shrink-0 mt-4 mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+                        <div className="flex gap-3 items-start">
+                            <FiEdit3 className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                            <div className="text-sm text-amber-900">
+                                <p className="font-semibold">Cadastre sua assinatura digital</p>
+                                <p className="text-amber-800/90 mt-0.5">
+                                    Ela será usada nos formulários de férias (PDF) e outros documentos do portal.{' '}
+                                    <Link href="/profile" className="underline font-medium hover:text-amber-950">
+                                        Ver no perfil
+                                    </Link>
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <button
+                                type="button"
+                                onClick={handleDismissBanner}
+                                className="px-3 py-2 text-sm text-amber-800 hover:bg-amber-100 rounded-lg transition-colors"
+                            >
+                                Agora não
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => void handleBannerRegisterSignature()}
+                                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
+                            >
+                                <FiEdit3 className="w-4 h-4" />
+                                Cadastrar assinatura
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* TAB CONTENT: MY LEAVES */}
                 {activeTab === 'my_leaves' && (
-                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 flex flex-col min-h-0 flex-1 pt-4">
+                        {/* Histórico: filtros status + ano + exportação */}
+                        <div className="shrink-0 bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between mb-4">
+                            <div className="flex flex-wrap gap-2 items-center">
+                                <select
+                                    value={myStatusFilter}
+                                    onChange={(e) => setMyStatusFilter(e.target.value)}
+                                    className="border border-gray-300 rounded-lg text-sm px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                                    aria-label="Filtrar por status"
+                                >
+                                    <option value="ALL">Todos os status</option>
+                                    <option value="PENDING_LEADER">Aguardando Líder</option>
+                                    <option value="PENDING_MANAGER">Aguardando Gerente</option>
+                                    <option value="APPROVED">Aprovadas</option>
+                                    <option value="REJECTED">Rejeitadas</option>
+                                    <option value="CANCELLED">Canceladas</option>
+                                </select>
+                                <select
+                                    value={myYearFilter}
+                                    onChange={(e) => setMyYearFilter(e.target.value)}
+                                    className="border border-gray-300 rounded-lg text-sm px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                                    aria-label="Filtrar por ano"
+                                >
+                                    <option value="ALL">Todos os anos (histórico)</option>
+                                    {myYears.map((y) => (
+                                        <option key={y} value={String(y)}>{y}</option>
+                                    ))}
+                                </select>
+                                <span className="text-xs text-gray-500">{filteredMyRequests.length} registro(s)</span>
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => exportMyRequests('xlsx')}
+                                    disabled={filteredMyRequests.length === 0}
+                                    className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+                                >
+                                    <FiDownload /> Exportar XLSX
+                                </button>
+                                <button
+                                    onClick={() => exportMyRequests('csv')}
+                                    disabled={filteredMyRequests.length === 0}
+                                    className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+                                >
+                                    CSV
+                                </button>
+                            </div>
+                        </div>
+
                         {loading ? (
-                            <div className="py-12 flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
-                        ) : requests.length === 0 ? (
-                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 flex flex-col items-center justify-center text-center">
+                            <div className="py-12 flex justify-center flex-1 min-h-0"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
+                        ) : filteredMyRequests.length === 0 ? (
+                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 flex flex-col items-center justify-center text-center flex-1 min-h-0">
                                 <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
                                     <FiCalendar className="w-8 h-8 text-blue-300" />
                                 </div>
                                 <h3 className="text-lg font-semibold text-gray-800 mb-2">Nenhuma solicitação de férias</h3>
                                 <p className="text-gray-500 max-w-sm mb-6">
-                                    Você ainda não possui nenhuma solicitação registrada. Clique no botão "Nova Solicitação" para criar sua primeira.
+                                    {requests.length === 0
+                                        ? 'Você ainda não possui nenhuma solicitação registrada. Clique no botão "Nova Solicitação" para criar sua primeira.'
+                                        : 'Nenhum registro corresponde aos filtros. Ajuste status ou ano para ver o histórico.'}
                                 </p>
                             </div>
                         ) : (
-                            <div className="grid gap-4">
-                                {requests.map((request) => {
+                            <div className="grid gap-4 flex-1 min-h-0 overflow-auto">
+                                {filteredMyRequests.map((request) => {
                                     const statusStyle = getStatusBadgeOptions(request.status);
                                     return (
                                         <div key={request.id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
@@ -811,11 +1091,12 @@ export default function FeriasPage() {
                                                         </p>
                                                         <button
                                                             onClick={() => handleDownloadComprovante(request)}
-                                                            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
-                                                            title="Baixar comprovante desta solicitação em PDF"
+                                                            disabled={downloadingPdfId === request.id}
+                                                            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors disabled:opacity-50"
+                                                            title="Baixar formulário preenchido desta solicitação em PDF"
                                                         >
                                                             <FiDownload className="w-3.5 h-3.5" />
-                                                            Comprovante
+                                                            {downloadingPdfId === request.id ? 'Gerando…' : 'Formulário PDF'}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -848,8 +1129,95 @@ export default function FeriasPage() {
 
                 {/* TAB CONTENT: APPROVALS */}
                 {activeTab === 'approvals' && isApprover && (
-                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        {loadingApprovals ? (
+                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 flex flex-col min-h-0 flex-1 pt-4">
+                        <div className="shrink-0 bg-white p-3 rounded-xl shadow-sm border border-gray-200 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between mb-4">
+                            <div className="flex bg-gray-100 p-1 rounded-lg w-fit">
+                                <button
+                                    onClick={() => setApprovalsView('pending')}
+                                    className={`px-3 py-1.5 text-sm font-medium rounded-md ${approvalsView === 'pending' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'}`}
+                                >
+                                    Pendentes
+                                </button>
+                                <button
+                                    onClick={() => setApprovalsView('history')}
+                                    className={`px-3 py-1.5 text-sm font-medium rounded-md ${approvalsView === 'history' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'}`}
+                                >
+                                    Histórico da equipe
+                                </button>
+                            </div>
+                            {approvalsView === 'history' && (
+                                <div className="flex flex-wrap gap-2 items-center">
+                                    <select
+                                        value={teamStatusFilter}
+                                        onChange={(e) => setTeamStatusFilter(e.target.value)}
+                                        className="border border-gray-300 rounded-lg text-sm px-3 py-2"
+                                    >
+                                        <option value="ALL">Todos os status</option>
+                                        <option value="APPROVED">Aprovadas</option>
+                                        <option value="REJECTED">Rejeitadas</option>
+                                        <option value="CANCELLED">Canceladas</option>
+                                        <option value="PENDING_LEADER">Pend. Líder</option>
+                                        <option value="PENDING_MANAGER">Pend. Gerente</option>
+                                    </select>
+                                    <select
+                                        value={teamYearFilter}
+                                        onChange={(e) => setTeamYearFilter(e.target.value)}
+                                        className="border border-gray-300 rounded-lg text-sm px-3 py-2"
+                                    >
+                                        <option value="ALL">Todos os anos</option>
+                                        {teamYears.map((y) => (
+                                            <option key={y} value={String(y)}>{y}</option>
+                                        ))}
+                                    </select>
+                                    <button
+                                        onClick={exportTeamHistory}
+                                        disabled={filteredTeamHistory.length === 0}
+                                        className="flex items-center gap-1.5 bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+                                    >
+                                        <FiDownload /> Exportar
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {approvalsView === 'history' ? (
+                            loadingTeamHistory ? (
+                                <div className="py-12 flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
+                            ) : filteredTeamHistory.length === 0 ? (
+                                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center text-gray-500">
+                                    Nenhum registro no histórico da equipe para os filtros selecionados.
+                                </div>
+                            ) : (
+                                <div className="grid gap-4 flex-1 min-h-0 overflow-auto">
+                                    {filteredTeamHistory.map((request) => (
+                                        <div key={request.id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                                                <div>
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        {getAllReqStatusBadge(request.status)}
+                                                        <span className="text-xs text-gray-400">
+                                                            {new Date(request.created_at).toLocaleDateString('pt-BR')}
+                                                        </span>
+                                                    </div>
+                                                    <h3 className="font-semibold text-gray-800">{request.user?.name || 'Desconhecido'}</h3>
+                                                    <p className="text-sm text-gray-500">
+                                                        {formatDate(request.start_date)} até {formatDate(request.end_date)}
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleDownloadComprovante(request)}
+                                                    disabled={downloadingPdfId === request.id}
+                                                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 disabled:opacity-50"
+                                                >
+                                                    <FiFileText />
+                                                    {downloadingPdfId === request.id ? 'Gerando…' : 'Baixar formulário'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )
+                        ) : loadingApprovals ? (
                             <div className="py-12 flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
                         ) : approvals.length === 0 ? (
                             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 flex flex-col items-center justify-center text-center">
@@ -862,7 +1230,7 @@ export default function FeriasPage() {
                                 </p>
                             </div>
                         ) : (
-                            <div className="grid gap-4">
+                            <div className="grid gap-4 flex-1 min-h-0 overflow-auto">
                                 {approvals.map((request) => (
                                     <div key={request.id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>
@@ -931,6 +1299,14 @@ export default function FeriasPage() {
 
                                             <div className="flex flex-row md:flex-col gap-2 shrink-0 md:min-w-[140px]">
                                                 <button
+                                                    onClick={() => handleDownloadComprovante(request)}
+                                                    disabled={downloadingPdfId === request.id}
+                                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white border border-blue-200 text-blue-700 text-sm font-medium rounded-xl hover:bg-blue-50 transition-colors disabled:opacity-50"
+                                                >
+                                                    <FiFileText />
+                                                    Formulário
+                                                </button>
+                                                <button
                                                     onClick={() => handleApprove(request)}
                                                     disabled={processingId === request.id}
                                                     className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50"
@@ -966,56 +1342,80 @@ export default function FeriasPage() {
 
                 {/* TAB CONTENT: ALL REQUESTS (Admin) */}
                 {activeTab === 'all_requests' && hasFeriasAdmin && (
-                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 flex flex-col min-h-0 flex-1 pt-4">
                         {/* Filters */}
-                        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-4 items-center justify-between mb-4">
-                            <div className="flex gap-2 bg-gray-100 p-1 rounded-lg self-start md:self-auto overflow-x-auto w-full md:w-auto">
-                                {[
-                                    { id: 'ALL', label: 'Todas' },
-                                    { id: 'PENDING_LEADER', label: 'Pendentes Líder' },
-                                    { id: 'PENDING_MANAGER', label: 'Pendentes Gerente' },
-                                    { id: 'APPROVED', label: 'Aprovadas' },
-                                    { id: 'REJECTED', label: 'Rejeitadas' }
-                                ].map(tab => (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => setAllRequestsFilter(tab.id)}
-                                        className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${allRequestsFilter === tab.id
-                                                ? 'bg-white text-blue-600 shadow-sm'
-                                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
-                                            }`}
-                                    >
-                                        {tab.label}
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="flex gap-3 items-center w-full md:w-auto">
-                                <div className="relative flex-1 md:w-64">
-                                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        placeholder="Buscar por nome..."
-                                        value={allRequestsSearch}
-                                        onChange={(e) => setAllRequestsSearch(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-                                    />
+                        <div className="shrink-0 bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-4 mb-4">
+                            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                                <div className="flex gap-2 bg-gray-100 p-1 rounded-lg self-start md:self-auto overflow-x-auto w-full md:w-auto">
+                                    {[
+                                        { id: 'ALL', label: 'Todas' },
+                                        { id: 'PENDING_LEADER', label: 'Pendentes Líder' },
+                                        { id: 'PENDING_MANAGER', label: 'Pendentes Gerente' },
+                                        { id: 'APPROVED', label: 'Aprovadas' },
+                                        { id: 'REJECTED', label: 'Rejeitadas' },
+                                        { id: 'CANCELLED', label: 'Canceladas' },
+                                    ].map(tab => (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => setAllRequestsFilter(tab.id)}
+                                            className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${allRequestsFilter === tab.id
+                                                    ? 'bg-white text-blue-600 shadow-sm'
+                                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+                                                }`}
+                                        >
+                                            {tab.label}
+                                        </button>
+                                    ))}
                                 </div>
-                                <button
-                                    onClick={exportAllRequestsToExcel}
-                                    disabled={filteredAllRequests.length === 0}
-                                    className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition font-medium text-sm flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    <FiDownload />
-                                    Exportar XLSX
-                                </button>
+                                <div className="flex gap-3 items-center w-full md:w-auto flex-wrap">
+                                    <select
+                                        value={allRequestsYear}
+                                        onChange={(e) => setAllRequestsYear(e.target.value)}
+                                        className="border border-gray-300 rounded-lg text-sm px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                                        aria-label="Filtrar por ano"
+                                    >
+                                        <option value="ALL">Todos os anos</option>
+                                        {allYears.map((y) => (
+                                            <option key={y} value={String(y)}>{y}</option>
+                                        ))}
+                                    </select>
+                                    <div className="relative flex-1 md:w-56">
+                                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                        <input
+                                            type="text"
+                                            placeholder="Buscar por nome..."
+                                            value={allRequestsSearch}
+                                            onChange={(e) => setAllRequestsSearch(e.target.value)}
+                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={() => exportAllRequestsToExcel('xlsx')}
+                                        disabled={filteredAllRequests.length === 0}
+                                        className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition font-medium text-sm flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <FiDownload />
+                                        Exportar XLSX
+                                    </button>
+                                    <button
+                                        onClick={() => exportAllRequestsToExcel('csv')}
+                                        disabled={filteredAllRequests.length === 0}
+                                        className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+                                    >
+                                        CSV
+                                    </button>
+                                </div>
                             </div>
+                            <p className="text-xs text-gray-500">
+                                {filteredAllRequests.length} solicitação(ões) — clique em Detalhes para ver o formulário preenchido e baixar o PDF.
+                            </p>
                         </div>
 
                         {/* Data Table */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                            <div className="overflow-x-auto">
-                                <table ref={allRequestsTableRef} className="w-full min-w-[800px]">
-                                    <thead className="bg-gray-50 border-b">
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-1 min-h-0 flex flex-col">
+                            <div className="flex-1 min-h-0 overflow-auto">
+                                <table className="w-full min-w-[800px]">
+                                    <thead className="bg-gray-50 border-b sticky top-0 z-10">
                                         <tr>
                                             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Colaborador / Setor</th>
                                             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Período Principal</th>
@@ -1084,6 +1484,59 @@ export default function FeriasPage() {
                 )}
 
                 {/* MODALS RENDERED VIA PORTAL TO PREVENT Z-INDEX ISOLATION AND 'WHITE LINE' GLITCHES */}
+
+                {/* Soft gate: cadastrar assinatura (NÃO é o SignatureModal — só CTA que chama requestSignature) */}
+                {signaturePromptPending && mounted && createPortal(
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-2 sm:p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in">
+                        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md animate-in zoom-in-95 overflow-hidden">
+                            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-amber-50/80">
+                                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                    <FiEdit3 className="text-amber-600" />
+                                    Assinatura digital
+                                </h3>
+                                <button
+                                    type="button"
+                                    onClick={handleDismissSignaturePrompt}
+                                    className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors"
+                                    aria-label="Fechar"
+                                >
+                                    <FiX className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <div className="px-5 py-5 space-y-3 text-sm text-gray-700">
+                                <p>
+                                    Você ainda não possui assinatura cadastrada. Cadastre agora para que os formulários de férias (PDF) usem sua assinatura.
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                    Pode continuar sem cadastrar nesta sessão; o aviso não bloqueia o módulo.
+                                    Também disponível em{' '}
+                                    <Link href="/profile" className="text-blue-600 underline font-medium">
+                                        Perfil → Assinatura
+                                    </Link>
+                                    .
+                                </p>
+                            </div>
+                            <div className="px-5 py-4 border-t border-gray-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 bg-gray-50/50">
+                                <button
+                                    type="button"
+                                    onClick={handleDismissSignaturePrompt}
+                                    className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
+                                >
+                                    Continuar sem assinatura
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => void handleRegisterSignatureFromPrompt()}
+                                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                                >
+                                    <FiEdit3 className="w-4 h-4" />
+                                    Cadastrar assinatura
+                                </button>
+                            </div>
+                        </div>
+                    </div>,
+                    document.body
+                )}
 
                 {/* 1. Modal Nova Solicitação */}
                 {showModal && mounted && createPortal(
@@ -1347,37 +1800,93 @@ export default function FeriasPage() {
                                         </div>
                                         <div>
                                             <h4 className="font-semibold text-gray-800">{selectedAllReq.user?.name || 'Não identificado'}</h4>
+                                            <p className="text-sm text-gray-500">{selectedAllReq.user?.email || '—'}</p>
                                             <p className="text-sm text-gray-500">{selectedAllReq.user?.sector?.name || 'Sem setor'}</p>
                                         </div>
                                     </div>
                                     {getAllReqStatusBadge(selectedAllReq.status)}
                                 </div>
 
-                                <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 mb-4">
-                                    <h5 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">Períodos de Gozo</h5>
-                                    {selectedAllReq.periods && selectedAllReq.periods.length > 0 ? (
-                                        <div className="space-y-2">
-                                            {selectedAllReq.periods.map((p, idx) => (
-                                                <div key={idx} className="flex justify-between items-center bg-white border border-gray-200 p-3 rounded-md shadow-sm">
-                                                    <span className="font-medium text-gray-700 text-sm">Período {idx + 1}</span>
-                                                    <span className="text-gray-600 font-mono text-sm">{p.start_date} até {p.end_date} • <span className="text-blue-600 font-bold">{p.duration} dias</span></span>
-                                                </div>
-                                            ))}
+                                {/* Prévia do formulário preenchido (mesmo conteúdo do PDF) */}
+                                <div className="rounded-xl border-2 border-blue-100 bg-blue-50/40 p-4 mb-4">
+                                    <div className="flex items-start justify-between gap-3 mb-3">
+                                        <div>
+                                            <h5 className="text-sm font-bold text-blue-900 uppercase tracking-wider flex items-center gap-2">
+                                                <FiFileText className="text-blue-600" />
+                                                Formulário de Férias (preenchido)
+                                            </h5>
+                                            <p className="text-xs text-blue-700/80 mt-1">
+                                                Dados da solicitação prontos para download em PDF no padrão ABZ.
+                                            </p>
                                         </div>
-                                    ) : (
-                                        <div className="flex justify-between items-center bg-white border border-gray-200 p-3 rounded-md shadow-sm">
-                                            <span className="font-medium text-gray-700 text-sm">Período Único</span>
-                                            <span className="text-gray-600 font-mono text-sm">{selectedAllReq.start_date} até {selectedAllReq.end_date}</span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {selectedAllReq.justification && (
-                                    <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100 mb-4">
-                                        <h5 className="text-sm font-semibold text-blue-800 uppercase tracking-wider mb-2">Observações</h5>
-                                        <p className="text-sm text-gray-700 italic border-l-2 border-blue-300 pl-3">"{selectedAllReq.justification}"</p>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDownloadComprovante(selectedAllReq)}
+                                            disabled={downloadingPdfId === selectedAllReq.id || allReqModalProcessing}
+                                            className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 shadow-sm disabled:opacity-50"
+                                        >
+                                            <FiDownload />
+                                            {downloadingPdfId === selectedAllReq.id ? 'Gerando…' : 'Baixar PDF'}
+                                        </button>
                                     </div>
-                                )}
+                                    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                                        <div className="bg-white/80 rounded-lg border border-blue-100 p-3">
+                                            <dt className="text-xs font-semibold text-gray-500 uppercase">Colaborador</dt>
+                                            <dd className="font-medium text-gray-900 mt-0.5">{selectedAllReq.user?.name || '—'}</dd>
+                                        </div>
+                                        <div className="bg-white/80 rounded-lg border border-blue-100 p-3">
+                                            <dt className="text-xs font-semibold text-gray-500 uppercase">Status</dt>
+                                            <dd className="mt-0.5">{getAllReqStatusBadge(selectedAllReq.status)}</dd>
+                                        </div>
+                                        <div className="bg-white/80 rounded-lg border border-blue-100 p-3 sm:col-span-2">
+                                            <dt className="text-xs font-semibold text-gray-500 uppercase mb-2">Períodos de gozo</dt>
+                                            <dd>
+                                                {selectedAllReq.periods && selectedAllReq.periods.length > 0 ? (
+                                                    <ul className="space-y-1">
+                                                        {selectedAllReq.periods.map((p, idx) => (
+                                                            <li key={idx} className="font-mono text-gray-800">
+                                                                {idx + 1}. {p.start_date} → {p.end_date}
+                                                                {p.duration != null ? ` (${p.duration} dias)` : ''}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                ) : (
+                                                    <span className="font-mono text-gray-800">
+                                                        {selectedAllReq.start_date} → {selectedAllReq.end_date}
+                                                    </span>
+                                                )}
+                                            </dd>
+                                        </div>
+                                        <div className="bg-white/80 rounded-lg border border-blue-100 p-3">
+                                            <dt className="text-xs font-semibold text-gray-500 uppercase">Abono pecuniário</dt>
+                                            <dd className="font-medium text-gray-900 mt-0.5">{selectedAllReq.pecuniary_allowance ? 'Sim' : 'Não'}</dd>
+                                        </div>
+                                        <div className="bg-white/80 rounded-lg border border-blue-100 p-3">
+                                            <dt className="text-xs font-semibold text-gray-500 uppercase">Adiantamento 13º</dt>
+                                            <dd className="font-medium text-gray-900 mt-0.5">{selectedAllReq.advance_13th_salary ? 'Sim' : 'Não'}</dd>
+                                        </div>
+                                        <div className="bg-white/80 rounded-lg border border-blue-100 p-3">
+                                            <dt className="text-xs font-semibold text-gray-500 uppercase">Solicitado em</dt>
+                                            <dd className="font-medium text-gray-900 mt-0.5">{formatAllReqDate(selectedAllReq.created_at)}</dd>
+                                        </div>
+                                        <div className="bg-white/80 rounded-lg border border-blue-100 p-3">
+                                            <dt className="text-xs font-semibold text-gray-500 uppercase">Atualizado em</dt>
+                                            <dd className="font-medium text-gray-900 mt-0.5">{formatAllReqDate(selectedAllReq.updated_at)}</dd>
+                                        </div>
+                                        {selectedAllReq.justification && (
+                                            <div className="bg-white/80 rounded-lg border border-blue-100 p-3 sm:col-span-2">
+                                                <dt className="text-xs font-semibold text-gray-500 uppercase">Observações</dt>
+                                                <dd className="text-gray-800 mt-1 italic">{selectedAllReq.justification}</dd>
+                                            </div>
+                                        )}
+                                        {selectedAllReq.rejection_reason && (
+                                            <div className="bg-red-50 rounded-lg border border-red-100 p-3 sm:col-span-2">
+                                                <dt className="text-xs font-semibold text-red-700 uppercase">Motivo da rejeição</dt>
+                                                <dd className="text-red-800 mt-1">{selectedAllReq.rejection_reason}</dd>
+                                            </div>
+                                        )}
+                                    </dl>
+                                </div>
 
                                 {(selectedAllReq.status === 'PENDING_LEADER' || selectedAllReq.status === 'PENDING_MANAGER') && (
                                     <div className="border-t border-gray-200 pt-4 mt-4">
@@ -1409,6 +1918,16 @@ export default function FeriasPage() {
                                     className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
                                 >
                                     Fechar
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => handleDownloadComprovante(selectedAllReq)}
+                                    disabled={downloadingPdfId === selectedAllReq.id || allReqModalProcessing}
+                                    className="px-3 sm:px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
+                                >
+                                    <FiDownload />
+                                    {downloadingPdfId === selectedAllReq.id ? 'Gerando…' : 'Baixar formulário PDF'}
                                 </button>
 
                                 <button

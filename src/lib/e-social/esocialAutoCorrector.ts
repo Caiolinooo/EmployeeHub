@@ -1,3 +1,18 @@
+import {
+  alinharCamposDataExame,
+  listarExamesEvento,
+  normalizeEsocialDate,
+  resolverAncoraS2220,
+} from './esocial-date';
+import {
+  CAMPOS_NOME_MEDICO,
+  CAMPOS_NOME_PCMSO,
+  CAMPOS_NOME_TRAB,
+  coletarNomeMedico,
+  coletarNomePcmso,
+  sanitizeTsNome,
+} from './ts-nome';
+
 export interface Correcao {
   campo: string;
   de: string;
@@ -16,27 +31,8 @@ function deepClone(obj: any): any {
 }
 
 function normalizarData(dataStr: string): string | null {
-  if (!dataStr) return null;
-  // Se for timestamp ISO ou similar (YYYY-MM-DDTHH:mm:ss)
-  if (dataStr.includes('T')) {
-    const parts = dataStr.split('T')[0];
-    if (parts.length === 10) return parts;
-  }
-  // Se for DD/MM/YYYY
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dataStr)) {
-    const [d, m, y] = dataStr.split('/');
-    return `${y}-${m}-${d}`;
-  }
-  // Se for YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dataStr)) {
-    const parts = dataStr.split('-');
-    // Inverter mês e dia se mês > 12 e dia <= 12
-    if (parseInt(parts[1], 10) > 12 && parseInt(parts[2], 10) <= 12) {
-      return `${parts[0]}-${parts[2]}-${parts[1]}`;
-    }
-    return dataStr;
-  }
-  return null;
+  const norm = normalizeEsocialDate(dataStr);
+  return norm || null;
 }
 
 function normalizarEnum(valor: any, map: Record<string, number>): number | null {
@@ -51,16 +47,32 @@ const TIPO_EXAME_MAP: Record<string, number> = {
   'periodico': 1,
   'periódico': 1,
   'retorno': 2,
+  'retorno ao trabalho': 2,
   'mudanca': 3,
   'mudança': 3,
-  'demissional': 4
+  'mudanca de funcao': 3,
+  'mudança de função': 3,
+  'mudanca de risco': 3,
+  'mudança de risco': 3,
+  'pontual': 4,
+  'monitoracao pontual': 4,
+  'monitoração pontual': 4,
+  'demissional': 9,
+  '0': 0,
+  '1': 1,
+  '2': 2,
+  '3': 3,
+  '4': 4,
+  '9': 9
 };
 
 const RESULTADO_ASO_MAP: Record<string, number> = {
   'apto': 1,
-  'apto com restricao': 2,
-  'apto com restrição': 2,
-  'inapto': 3
+  'apto com restricao': 1,
+  'apto com restrição': 1,
+  'inapto': 2,
+  '1': 1,
+  '2': 2
 };
 
 const UFS_VALIDAS = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'];
@@ -85,8 +97,9 @@ export function autoCorrigirDadosEvento(codigoEvento: string, dadosEvento: any, 
   };
 
   const aplicarDuplo = (campo: string, novoValor: any, descricao: string) => {
-    if (dados[campo] !== undefined) aplicarCorrecao(dados, campo, novoValor, descricao);
-    if (dados.dadosEspecificos[campo] !== undefined) aplicarCorrecao(dados.dadosEspecificos, campo, novoValor, descricao);
+    aplicarCorrecao(dados, campo, novoValor, descricao);
+    if (!dados.dadosEspecificos) dados.dadosEspecificos = {};
+    aplicarCorrecao(dados.dadosEspecificos, campo, novoValor, descricao);
   };
 
   // 1. Correção de CPF
@@ -99,13 +112,19 @@ export function autoCorrigirDadosEvento(codigoEvento: string, dadosEvento: any, 
   });
 
   // 2. Correção de CNPJ
-  ['cnpj', 'nrInsc'].forEach(c => {
-    const val = dados[c] || dados.dadosEspecificos[c];
-    if (val && typeof val === 'string' && /\D/.test(val)) {
-      const clean = val.replace(/\D/g, '');
-      aplicarDuplo(c, clean, 'Formatação de CNPJ');
-    }
-  });
+  const cnpjAtual = dados.cnpj || dados.nrInsc || dados.dadosEspecificos.cnpj || dados.dadosEspecificos.nrInsc;
+  if (!cnpjAtual) {
+    aplicarDuplo('cnpj', '17784306000189', 'CNPJ Padrão do Empregador');
+    aplicarDuplo('nrInsc', '17784306000189', 'CNPJ Padrão do Empregador');
+  } else {
+    ['cnpj', 'nrInsc'].forEach(c => {
+      const val = dados[c] || dados.dadosEspecificos[c];
+      if (val && typeof val === 'string' && /\D/.test(val)) {
+        const clean = val.replace(/\D/g, '');
+        aplicarDuplo(c, clean, 'Formatação de CNPJ');
+      }
+    });
+  }
 
   // 3. Correção de Datas
   const corrigirData = (obj: any, campo: string) => {
@@ -161,8 +180,76 @@ export function autoCorrigirDadosEvento(codigoEvento: string, dadosEvento: any, 
     aplicarDuplo('matricula_esocial', mat, 'Cópia de matricula para matricula_esocial');
   }
 
-  // 9. Correções específicas S-2220
+  // 9. Nomes TS_nome (nmMed / nmResp / nmTrab) — OCR com cargo, quebra de linha e lixo
+  const escreverNomeAninhado = (obj: any, campo: string, limpo: string, descricao: string) => {
+    if (!obj || typeof obj !== 'object') return;
+    if (obj[campo] !== undefined && obj[campo] !== limpo) {
+      aplicarCorrecao(obj, campo, limpo, descricao);
+    }
+  };
+
+  const aplicarAliasesNome = (aliases: readonly string[], limpo: string, descricao: string) => {
+    for (const alias of aliases) {
+      aplicarDuplo(alias, limpo, descricao);
+    }
+  };
+
+  const nomeMedicoBruto = coletarNomeMedico(dados);
+  const nomeMedicoLimpo = sanitizeTsNome(nomeMedicoBruto);
+  if (nomeMedicoLimpo && nomeMedicoLimpo !== nomeMedicoBruto) {
+    const descMed = 'Sanitização TS_nome do médico (OCR/XSD)';
+    aplicarAliasesNome(CAMPOS_NOME_MEDICO, nomeMedicoLimpo, descMed);
+    if (typeof dados.medico === 'string') aplicarCorrecao(dados, 'medico', nomeMedicoLimpo, descMed);
+    if (typeof dados.dadosEspecificos.medico === 'string') {
+      aplicarCorrecao(dados.dadosEspecificos, 'medico', nomeMedicoLimpo, descMed);
+    }
+    escreverNomeAninhado(dados.medico, 'nmMed', nomeMedicoLimpo, descMed);
+    escreverNomeAninhado(dados.dadosEspecificos.medico, 'nmMed', nomeMedicoLimpo, descMed);
+    escreverNomeAninhado(dados.aso?.medico, 'nmMed', nomeMedicoLimpo, descMed);
+    escreverNomeAninhado(dados.dadosEspecificos.aso?.medico, 'nmMed', nomeMedicoLimpo, descMed);
+    escreverNomeAninhado(dados.exMedOcup?.medico, 'nmMed', nomeMedicoLimpo, descMed);
+    escreverNomeAninhado(dados.exMedOcup?.aso?.medico, 'nmMed', nomeMedicoLimpo, descMed);
+    escreverNomeAninhado(dados.dadosEspecificos.exMedOcup?.medico, 'nmMed', nomeMedicoLimpo, descMed);
+    escreverNomeAninhado(dados.dadosEspecificos.exMedOcup?.aso?.medico, 'nmMed', nomeMedicoLimpo, descMed);
+  }
+
+  const nomePcmsoBruto = coletarNomePcmso(dados);
+  const nomePcmsoLimpo = sanitizeTsNome(nomePcmsoBruto);
+  if (nomePcmsoLimpo && nomePcmsoLimpo !== nomePcmsoBruto) {
+    const descPcmso = 'Sanitização TS_nome do responsável PCMSO (OCR/XSD)';
+    aplicarAliasesNome(CAMPOS_NOME_PCMSO, nomePcmsoLimpo, descPcmso);
+    escreverNomeAninhado(dados.respMonit, 'nmResp', nomePcmsoLimpo, descPcmso);
+    escreverNomeAninhado(dados.dadosEspecificos.respMonit, 'nmResp', nomePcmsoLimpo, descPcmso);
+    escreverNomeAninhado(dados.exMedOcup?.respMonit, 'nmResp', nomePcmsoLimpo, descPcmso);
+  }
+
+  for (const campo of CAMPOS_NOME_TRAB) {
+    const bruto = dados[campo] || dados.dadosEspecificos[campo];
+    if (typeof bruto === 'string') {
+      const limpo = sanitizeTsNome(bruto);
+      if (limpo && limpo !== bruto) aplicarDuplo(campo, limpo, 'Sanitização TS_nome do trabalhador');
+    }
+  }
+
+  // 10. Correções específicas S-2220
   if (codigoEvento === 'S-2220') {
+    const ancora = resolverAncoraS2220(dados);
+    if (ancora) {
+      for (const exame of listarExamesEvento(dados)) {
+        const antes = JSON.stringify([exame.data, exame.dtExm, exame.dtExame, exame.data_exame]);
+        if (alinharCamposDataExame(exame, ancora)) {
+          const depois = String(exame.dtExm || exame.data || ancora);
+          correcoes.push({
+            campo: 'dtExm',
+            de: antes,
+            para: depois,
+            descricao: 'Data de exame alinhada ao PT-BR (DD/MM) / dtAso',
+          });
+          xmlPrecisaRebuildar = true;
+        }
+      }
+    }
+
     const tpExame = dados.dadosEspecificos.tipoExame || dados.dadosEspecificos.tpExameOcup;
     if (tpExame && typeof tpExame === 'string') {
       const norm = normalizarEnum(tpExame, TIPO_EXAME_MAP);
@@ -177,6 +264,18 @@ export function autoCorrigirDadosEvento(codigoEvento: string, dadosEvento: any, 
       if (norm !== null) {
         aplicarCorrecao(dados.dadosEspecificos, dados.dadosEspecificos.resultado ? 'resultado' : 'resAso', norm, 'Conversão Resultado ASO');
       }
+    }
+  }
+
+  // 11. Correções específicas S-2200
+  if (codigoEvento === 'S-2200') {
+    const tipoAdm = dados.tipoAdmissao || dados.dadosEspecificos.tipoAdmissao;
+    if (!tipoAdm) {
+      aplicarDuplo('tipoAdmissao', '1', 'Tipo de Admissão Padrão (1 - Admissão)');
+    }
+    const cbo = dados.codCBO || dados.cbo || dados.dadosEspecificos.codCBO || dados.dadosEspecificos.cbo;
+    if (!cbo) {
+      aplicarDuplo('codCBO', '215105', 'CBO Padrão Marítimo (2151-05)');
     }
   }
 

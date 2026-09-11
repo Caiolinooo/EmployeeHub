@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getAclResourceLabel } from '@/config/modules';
 
 export const dynamic = 'force-dynamic';
 
@@ -168,20 +169,6 @@ function organizeHierarchy(permissions: any[]) {
   return rootPermissions;
 }
 
-// Função para obter label amigável do recurso
 function getResourceLabel(resource: string) {
-  const labels: { [key: string]: string } = {
-    'news': 'Notícias',
-    'comments': 'Comentários',
-    'notifications': 'Notificações',
-    'reminders': 'Lembretes',
-    'admin': 'Administração',
-    'users': 'Usuários',
-    'reports': 'Relatórios',
-    'ferias': 'Férias',
-    'contratos': 'Contratos',
-    'lista-presenca': 'Lista de Presença'
-  };
-  
-  return labels[resource] || resource.charAt(0).toUpperCase() + resource.slice(1);
+  return getAclResourceLabel(resource);
 }

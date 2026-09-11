@@ -12,6 +12,11 @@ export interface AllUser {
   department?: string;
   sector_id?: string;
   active: boolean;
+  startup_splash_enabled?: boolean;
+  startup_splash_url?: string;
+  startup_sound_enabled?: boolean;
+  startup_sound_url?: string;
+  accessPermissions?: any;
   createdAt: string;
   updatedAt: string;
 }
@@ -26,12 +31,17 @@ export function useAllUsers() {
     setError(null);
     try {
       const token = localStorage.getItem('token') || localStorage.getItem('abzToken');
-      const res = await fetch('/api/users', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      const res = await fetch(`/api/users?_=${Date.now()}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        cache: 'no-store'
+      });
       if (!res.ok) throw new Error('Erro ao carregar usuarios');
       const data = await res.json();
       setUsers(data as AllUser[]);
+      return data as AllUser[];
     } catch (e: any) {
       setError(e?.message || 'Erro desconhecido');
+      return [];
     } finally {
       setLoading(false);
     }
@@ -39,6 +49,6 @@ export function useAllUsers() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  return { users, loading, error, refresh };
+  return { users, setUsers, loading, error, refresh };
 }
 

@@ -4,7 +4,7 @@ import { normalizeCpf, formatCpf, maskCpf, formatBirthDate } from '@/lib/utils/i
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiUser, FiMail, FiPhone, FiSettings, FiUpload, FiImage, FiTrash2, FiEdit, FiSave, FiLock, FiDollarSign, FiKey } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiSettings, FiUpload, FiImage, FiTrash2, FiEdit, FiSave, FiLock, FiDollarSign, FiKey, FiFileText, FiShield } from 'react-icons/fi';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import MainLayout from '@/components/Layout/MainLayout';
 import ServerUserReimbursementSettings from '@/components/admin/ServerUserReimbursementSettings';
@@ -19,9 +19,12 @@ import UserProfileView from '@/components/Profile/UserProfileView';
 import UserAvatar from '@/components/UserAvatar';
 import PasskeyManagement from '@/components/Profile/PasskeyManagement';
 import SignatureTab from '@/components/Profile/SignatureTab';
+import CollaboratorDocumentsCatalog from '@/components/admin/CollaboratorDocumentsCatalog';
+import { QHSE_MODULE_KEY } from '@/lib/document-catalog/permissions';
 
 export default function ProfilePage() {
-  const { user, profile, isLoading, refreshProfile } = useSupabaseAuth();
+  const { user, profile, isLoading, refreshProfile, hasAccess } = useSupabaseAuth();
+  const showQhseTab = hasAccess(QHSE_MODULE_KEY);
   const { t } = useI18n();
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
@@ -404,6 +407,26 @@ export default function ProfilePage() {
                     </div>
                   </button>
                   <button
+                    onClick={() => setActiveTab('documents')}
+                    className={`px-4 md:px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap focus:outline-none ${activeTab === 'documents' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <FiFileText className="w-4 h-4" />
+                      {t('profile.documents', 'Documentos')}
+                    </div>
+                  </button>
+                  {showQhseTab && (
+                    <button
+                      onClick={() => setActiveTab('qhse')}
+                      className={`px-4 md:px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap focus:outline-none ${activeTab === 'qhse' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <FiShield className="w-4 h-4" />
+                        {t('profile.qhse', 'QHSE / EPI')}
+                      </div>
+                    </button>
+                  )}
+                  <button
                     onClick={() => setActiveTab('passkeys')}
                     className={`px-4 md:px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap focus:outline-none ${activeTab === 'passkeys' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
                   >
@@ -429,6 +452,12 @@ export default function ProfilePage() {
                   {activeTab === 'password' && <ChangePasswordTab />}
                   {activeTab === 'notifications' && <NotificationPreferencesPanel />}
                   {activeTab === 'signature' && <SignatureTab />}
+                  {activeTab === 'documents' && user?.id && (
+                    <CollaboratorDocumentsCatalog userId={user.id} hideQhse />
+                  )}
+                  {activeTab === 'qhse' && showQhseTab && user?.id && (
+                    <CollaboratorDocumentsCatalog userId={user.id} onlyQhse />
+                  )}
                   {activeTab === 'passkeys' && <PasskeyManagement />}
                   {activeTab === 'admin_reimbursement' && <ServerUserReimbursementSettings userId={user?.id || ''} />}
                 </div>

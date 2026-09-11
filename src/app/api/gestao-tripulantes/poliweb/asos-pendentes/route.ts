@@ -1,10 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { buscarASOsPendentes } from '@/lib/gestao-tripulantes/poliweb-scraper';
-import { importarEProcessarASOs } from '@/lib/gestao-tripulantes/poliweb-service';
+import { importarEProcessarASOs, listarASOsPendentesRevisao } from '@/lib/gestao-tripulantes/poliweb-service';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
+
+function asosPayload(
+  data: unknown[],
+  options: {
+    ok: boolean;
+    warning?: string;
+    message?: string;
+    extra?: Record<string, unknown>;
+  }
+) {
+  return NextResponse.json({
+    ok: options.ok,
+    success: options.ok,
+    data,
+    warning: options.warning,
+    error: options.ok ? undefined : options.warning,
+    message: options.message,
+    ...options.extra,
+  });
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,48 +39,46 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
-    const result = await buscarASOsPendentes();
-    if (!result.success) {
-      const isConfigError = result.error?.includes('configurado') || result.error?.includes('habilitado') || result.error?.includes('Credenciais');
-      return NextResponse.json(
-        {
-          error: result.error || 'Erro ao buscar ASOs pendentes',
-          configured: false,
-          hint: isConfigError ? 'Configure o PoliWeb no painel admin > Gestão de Tripulantes > Configurações > Aba PoliWeb' : undefined,
-        },
-        { status: isConfigError ? 503 : 500 }
-      );
+    const sync = request.nextUrl.searchParams.get('sync') === '1';
+    let warning: string | undefined;
+
+    if (sync) {
+      const result = await buscarASOsPendentes();
+      if (!result.success) {
+        const isConfigError =
+          result.error?.includes('configurado') ||
+          result.error?.includes('habilitado') ||
+          result.error?.includes('Credenciais');
+        warning = result.error || 'Erro ao buscar ASOs pendentes';
+        const pending = await listarASOsPendentesRevisao();
+        return asosPayload(pending, {
+          ok: false,
+          warning,
+          extra: {
+            configured: !isConfigError,
+            hint: isConfigError
+              ? 'Configure o PoliWeb no painel admin > Gestão de Tripulantes > Configurações > Aba PoliWeb'
+              : undefined,
+          },
+        });
+      }
+
+      if (result.data && result.data.length > 0) {
+        await importarEProcessarASOs(result.data);
+      }
     }
 
-    if (!result.data || result.data.length === 0) {
-      return NextResponse.json({
-        success: true,
-        data: {
-          importados: [],
-          total_encontrados: 0,
-          total_importados: 0,
-          total_erros: 0
-        },
-        message: 'Nenhum ASO pendente encontrado'
-      });
-    }
-
-    const importResult = await importarEProcessarASOs(result.data);
-
-    return NextResponse.json({
-      success: importResult.success,
-      data: {
-        importados: importResult.importados,
-        erros: importResult.erros.length > 0 ? importResult.erros : undefined,
-        total_encontrados: importResult.totalEncontrados,
-        total_importados: importResult.totalImportados,
-        total_erros: importResult.totalErros
-      },
-      message: `${importResult.totalImportados} ASO(s) importado(s) com sucesso`
+    const pending = await listarASOsPendentesRevisao();
+    return asosPayload(pending, {
+      ok: true,
+      warning,
+      message: pending.length === 0 ? 'Nenhum ASO pendente encontrado' : undefined,
     });
   } catch (error) {
-    console.error('Erro na API PoliWeb ASOs pendentes:', error);
     const msg = error instanceof Error ? error.message : 'Erro interno do servidor';
-    return NextResponse.json({ error: msg }, { status: 500 });
+    if (!msg.includes('Timeout')) {
+      console.error('Erro na API PoliWeb ASOs pendentes:', error);
+    }
+    return asosPayload([], { ok: false, warning: msg });
   }
 }

@@ -108,6 +108,7 @@ export interface MIOTreinamento {
     observacoes?: string;
     contem_anexo?: string;
     anexo_url?: string;
+    hiperlink_externo?: string;
 }
 
 export interface MIOASO {
@@ -120,7 +121,8 @@ export interface MIOASO {
     medico?: string;
     crm?: string;
     observacoes?: string;
-    status: 'valido' | 'vencido' | 'a_vencer';
+    status: 'valido' | 'vencido' | 'a_vencer' | 'n_a' | string;
+    hiperlink_externo?: unknown;
 }
 
 export interface MIOEmbarque {
@@ -149,36 +151,6 @@ export interface MIOEmbarque {
     nr_rtpe?: string;
     nr_rtpd?: string;
     nr_projeto?: string;
-}
-
-export interface MIOASO {
-    id: string | number;
-    cpf: string;
-    tipo_exame: 'admissional' | 'periodico' | 'demissional' | 'retorno_trabalho' | 'mudanca_funcao';
-    data_realizacao: string;
-    data_validade: string;
-    resultado: 'apto' | 'inapto';
-    medico?: string;
-    crm?: string;
-    observacoes?: string;
-    status: 'valido' | 'vencido' | 'a_vencer';
-}
-
-// --------------------------------------------------------
-// Módulo LGP (Logística de Pessoas)
-// --------------------------------------------------------
-
-export interface MIOEmbarque {
-    id: string | number;
-    cpf: string;
-    data_embarque: string; // Previsão ou Real
-    data_desembarque_prevista?: string;
-    data_desembarque_real?: string;
-    local_embarque?: string;
-    plataforma_unidade?: string;
-    status: 'programado' | 'embarcado' | 'desembarcado' | 'cancelado';
-    voo_ida?: string;
-    voo_volta?: string;
 }
 
 // --------------------------------------------------------

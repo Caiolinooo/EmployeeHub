@@ -23,7 +23,9 @@ import {
     FiDatabase,
     FiActivity,
     FiClipboard,
-    FiCpu
+    FiCpu,
+    FiBriefcase,
+    FiUsers
 } from 'react-icons/fi';
 import { IconType } from 'react-icons';
 
@@ -47,6 +49,7 @@ export const MODULE_ICONS: Record<string, IconType> = {
     'epi': FiShield,
     'ferias': FiCalendar,
     'lista-presenca': FiCheckCircle,
+    'contratos': FiFileText,
 
     // Content
     'manual': FiBook,
@@ -61,6 +64,10 @@ export const MODULE_ICONS: Record<string, IconType> = {
     // Department
     'compras': FiShoppingCart,
     'poliweb': FiClipboard,
+    'man-schedule': FiCalendar,
+    'gestao-tripulantes': FiUsers,
+    'e-social': FiBriefcase,
+    'dp': FiBriefcase,
 };
 
 // Default Icon

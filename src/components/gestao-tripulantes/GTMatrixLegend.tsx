@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useI18n } from '@/contexts/I18nContext';
+import { cn } from '@/lib/utils';
 
 const LEGEND_ITEMS = [
   { color: 'bg-green-500', border: 'border-green-500', labelKey: 'gestaoTripulantes.legend.onboard' },
@@ -10,11 +11,11 @@ const LEGEND_ITEMS = [
   { color: 'bg-red-500', border: 'border-red-500', labelKey: 'gestaoTripulantes.legend.onLeave' },
 ];
 
-export default function GTMatrixLegend() {
+export default function GTMatrixLegend({ className }: { className?: string }) {
   const { t } = useI18n();
 
   return (
-    <div className="flex items-center gap-4 text-xs px-4 py-2 bg-white rounded-xl shadow-sm border border-gray-100">
+    <div className={cn('flex items-center gap-4 text-xs px-4 py-2 bg-white rounded-xl shadow-sm border border-gray-100 shrink-0', className)}>
       <span className="text-gray-500 font-medium mr-1">{t('gestaoTripulantes.status.embarcado')}:</span>
       {LEGEND_ITEMS.map(item => (
         <div key={item.labelKey} className="flex items-center gap-1.5">

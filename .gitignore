@@ -52,6 +52,7 @@ _extract_pdf.py
 _scan_secrets.py
 _redact_secrets.py
 _rescan.py
+scratch/
 
 # History-purge workdir / patches (may contain secret remnants in diffs)
 .git-purge-work/

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -18,6 +18,8 @@ import {
   FiX,
   FiRefreshCw,
   FiUserCheck,
+  FiImage,
+  FiVolume2
   // FiSettings // Removido - não utilizado
 } from 'react-icons/fi';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -43,6 +45,15 @@ interface User {
   active: boolean;
   createdAt: string;
   updatedAt: string;
+  startup_splash_enabled?: boolean;
+  startup_splash_url?: string;
+  startup_sound_enabled?: boolean;
+  startup_sound_url?: string;
+  accessPermissions?: any;
+  reimbursement_email_settings?: {
+    enabled: boolean;
+    recipients: string[];
+  };
 }
 
 export default function UsersPage() {
@@ -91,8 +102,13 @@ export default function UsersPage() {
     setLoading(true);
     setError(null);
     try {
-      await refresh();
-      return;
+      const freshUsers = await refresh();
+      if (Array.isArray(freshUsers)) {
+        setUsers(freshUsers as any);
+        setFilteredUsers(freshUsers as any);
+      }
+    } catch (err: any) {
+      console.error('Erro ao buscar usuários:', err);
     } finally {
       setLoading(false);
     }
@@ -218,7 +234,7 @@ export default function UsersPage() {
 
       // Fechar o editor e recarregar a lista
       setShowEditor(false);
-      fetchUsers();
+      await fetchUsers();
     } catch (error) {
       console.error(t('admin.erroAoSalvarUsuario'), error);
       alert(error instanceof Error ? error.message : 'Erro desconhecido');
@@ -236,7 +252,8 @@ export default function UsersPage() {
         throw new Error(t('admin.naoAutorizado'));
       }
 
-      const response = await fetch(`/api/users/${selectedUser._id}`, {
+      const deletedId = selectedUser._id;
+      const response = await fetch(`/api/users/${deletedId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -248,9 +265,13 @@ export default function UsersPage() {
         throw new Error(errorData.error || t('admin.erroAoExcluirUsuario'));
       }
 
+      // Atualização otimista imediata do estado
+      setUsers(prev => prev.filter(u => u._id !== deletedId));
+      setFilteredUsers(prev => prev.filter(u => u._id !== deletedId));
       // Fechar o modal e recarregar a lista
       setShowDeleteConfirm(false);
-      fetchUsers();
+      setSelectedUser(null);
+      await fetchUsers();
     } catch (error) {
       console.error(t('admin.erroAoExcluirUsuario'), error);
       alert(error instanceof Error ? error.message : 'Erro desconhecido');
@@ -291,8 +312,8 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
+    <div className="flex flex-col min-h-0 flex-1 h-full">
+      <div className="shrink-0 flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-abz-blue flex items-center">
           <FiUsers className="mr-2" /> {t('userEditor.usersSection', 'Gerenciamento de Usuários')}
         </h1>
@@ -315,7 +336,7 @@ export default function UsersPage() {
       </div>
 
       {/* Barra de pesquisa */}
-      <div className="mb-6">
+      <div className="shrink-0 mb-6">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <FiSearch className="h-5 w-5 text-gray-400" />
@@ -331,7 +352,7 @@ export default function UsersPage() {
       </div>
 
       {/* Conteúdo principal */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-lg shadow overflow-hidden flex-1 min-h-0 flex flex-col">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-abz-blue"></div>
@@ -361,9 +382,9 @@ export default function UsersPage() {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="flex-1 min-h-0 overflow-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 sticky top-0 z-10">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Usuário
@@ -404,6 +425,34 @@ export default function UsersPage() {
                             {user.position && user.department && ' - '}
                             {user.position && `${user.position}`}
                           </div>
+                          {(user.startup_splash_url || user.startup_sound_url) && (
+                            <div className="flex items-center gap-1.5 mt-1">
+                              {user.startup_splash_url && (
+                                <span
+                                  className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                                    user.startup_splash_enabled
+                                      ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                                      : 'bg-gray-100 text-gray-400 line-through'
+                                  }`}
+                                  title={user.startup_splash_enabled ? 'Splash Screen Ativo' : 'Splash Screen Desativado'}
+                                >
+                                  <FiImage className="w-3 h-3" /> Splash
+                                </span>
+                              )}
+                              {user.startup_sound_url && (
+                                <span
+                                  className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                                    user.startup_sound_enabled
+                                      ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                                      : 'bg-gray-100 text-gray-400 line-through'
+                                  }`}
+                                  title={user.startup_sound_enabled ? 'Som de Início Ativo' : 'Som de Início Desativado'}
+                                >
+                                  <FiVolume2 className="w-3 h-3" /> Áudio
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -502,16 +551,14 @@ export default function UsersPage() {
             role: selectedUser.role,
             position: selectedUser.position,
             department: selectedUser.department,
-            sector_id: selectedUser.sector_id
-          } : {
-            phoneNumber: '',
-            firstName: '',
-            lastName: '',
-            email: '',
-            role: 'USER',
-            position: '',
-            department: ''
-          }}
+            sector_id: selectedUser.sector_id,
+            startup_splash_enabled: selectedUser.startup_splash_enabled,
+            startup_splash_url: selectedUser.startup_splash_url,
+            startup_sound_enabled: selectedUser.startup_sound_enabled,
+            startup_sound_url: selectedUser.startup_sound_url,
+            accessPermissions: selectedUser.accessPermissions,
+            reimbursement_email_settings: selectedUser.reimbursement_email_settings
+          } : undefined}
           onSave={handleSaveUser}
           onCancel={() => setShowEditor(false)}
           isNew={isNewUser}

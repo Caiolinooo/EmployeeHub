@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyRequestToken } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
+import { displayNameFromUser } from '@/lib/gestao-tripulantes/fechamento-assinatura';
 import { AccessToken, AgentDispatchClient, RoomServiceClient } from 'livekit-server-sdk';
 
 export const dynamic = 'force-dynamic';
@@ -18,11 +19,11 @@ export async function GET(request: NextRequest) {
     // 2. Buscar dados complementares do usuário para personalizar
     const { data: profile } = await supabaseAdmin
       .from('users_unified')
-      .select('full_name')
+      .select('first_name, last_name, name, email')
       .eq('id', userId)
       .single();
 
-    const userName = profile?.full_name || 'Usuário';
+    const userName = displayNameFromUser(profile || {});
 
     // 3. Verificar variáveis de ambiente do LiveKit
     const apiKey = process.env.LIVEKIT_API_KEY;

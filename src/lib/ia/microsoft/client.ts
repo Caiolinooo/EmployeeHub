@@ -9,10 +9,53 @@ import type {
   MSGraphChat,
   MSGraphTeamsMessage 
 } from '@/types/ia-global';
+import {
+  GRAPH_EMAIL_SELECT_LIST,
+  GRAPH_EMAIL_SELECT_WITH_BODY,
+  stripHtmlToText,
+} from '../graph-comms-format';
 
 const MS_CLIENT_ID = process.env.MS_GRAPH_CLIENT_ID || '';
 const MS_CLIENT_SECRET = process.env.MS_GRAPH_CLIENT_SECRET || '';
 const MS_TENANT_ID = process.env.MS_GRAPH_TENANT_ID || 'common';
+
+/** Mapeia message Graph bruto → MSGraphEmail (campos completos para enrichers). */
+function mapRawMessageToEmail(m: any, includeBody = false): MSGraphEmail {
+  const bodyContent = includeBody ? m.body?.content : undefined;
+  const bodyType = includeBody ? m.body?.contentType : undefined;
+  const preview =
+    includeBody && bodyContent
+      ? stripHtmlToText(bodyContent, 2000) || m.bodyPreview
+      : m.bodyPreview;
+
+  return {
+    id: m.id,
+    conversationId: m.conversationId,
+    internetMessageId: m.internetMessageId,
+    subject: m.subject,
+    from: m.from,
+    receivedDateTime: m.receivedDateTime,
+    sentDateTime: m.sentDateTime,
+    createdDateTime: m.createdDateTime,
+    lastModifiedDateTime: m.lastModifiedDateTime,
+    bodyPreview: preview,
+    body: bodyContent,
+    bodyType,
+    isRead: m.isRead,
+    isDraft: m.isDraft,
+    hasAttachments: m.hasAttachments,
+    importance: m.importance,
+    categories: m.categories,
+    flag: m.flag,
+    parentFolderId: m.parentFolderId,
+    webLink: m.webLink,
+    inferenceClassification: m.inferenceClassification,
+    toRecipients: m.toRecipients,
+    ccRecipients: m.ccRecipients,
+    bccRecipients: m.bccRecipients,
+    replyTo: m.replyTo,
+  };
+}
 
 interface TokenCache {
   accessToken: string;
@@ -57,13 +100,19 @@ async function getAppAccessToken(): Promise<string> {
   return appTokenCache.accessToken;
 }
 
+/** Cap absoluto para evitar timeouts / payloads gigantes no agente IA */
+export const GRAPH_HARD_CAP = 1000;
+/** Tamanho de página Graph (máx. prático por request) */
+const GRAPH_PAGE_SIZE = 100;
+
 /**
  * Faz chamada genérica para Microsoft Graph
  */
 async function graphCall<T>(
   endpoint: string,
   method: string = 'GET',
-  body?: unknown
+  body?: unknown,
+  extraHeaders?: Record<string, string>
 ): Promise<T> {
   const token = await getAppAccessToken();
   
@@ -72,6 +121,7 @@ async function graphCall<T>(
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
+      ...extraHeaders,
     },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -82,6 +132,60 @@ async function graphCall<T>(
   }
 
   return response.json();
+}
+
+/**
+ * Segue @odata.nextLink até atingir maxItems (extração completa sob demanda).
+ */
+async function graphCallPaginated<T = any>(
+  initialEndpoint: string,
+  maxItems: number,
+  extraHeaders?: Record<string, string>
+): Promise<T[]> {
+  const cap = Math.min(Math.max(1, maxItems), GRAPH_HARD_CAP);
+  const results: T[] = [];
+  let nextUrl: string | null = null;
+  let relativeEndpoint: string | null = initialEndpoint;
+
+  while (results.length < cap && (relativeEndpoint || nextUrl)) {
+    const token = await getAppAccessToken();
+    const url: string = nextUrl
+      ? nextUrl
+      : `https://graph.microsoft.com/v1.0${relativeEndpoint}`;
+
+    const response: Response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        ...extraHeaders,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Graph API error (${response.status}): ${error}`);
+    }
+
+    const data: { value?: T[]; '@odata.nextLink'?: string } = await response.json();
+    const page: T[] = data.value || [];
+    results.push(...page);
+
+    nextUrl = data['@odata.nextLink'] || null;
+    relativeEndpoint = null;
+
+    if (!nextUrl || page.length === 0) break;
+  }
+
+  return results.slice(0, cap);
+}
+
+/** Normaliza limite pedido pelo LLM (ex.: "tudo" → hard cap). */
+export function resolveGraphLimit(limite?: number | null, fallback = 50): number {
+  if (limite == null || Number.isNaN(Number(limite))) return fallback;
+  const n = Number(limite);
+  if (n <= 0) return GRAPH_HARD_CAP; // 0 / negativo = "trazer tudo" até o cap
+  return Math.min(n, GRAPH_HARD_CAP);
 }
 
 // =====================================================
@@ -188,22 +292,17 @@ export async function listUsers(limit: number = 100): Promise<MSGraphUser[]> {
 // =====================================================
 
 /**
- * Lista e-mails de um usuário
+ * Lista e-mails de um usuário (paginado conforme limite solicitado)
  */
 export async function listEmails(userId: string, top: number = 10): Promise<MSGraphEmail[]> {
   try {
-    const data = await graphCall<any>(
-      `/users/${userId}/messages?$top=${top}&$select=id,subject,from,receivedDateTime,bodyPreview,isRead,hasAttachments`
+    const limit = resolveGraphLimit(top, 10);
+    const pageTop = Math.min(limit, GRAPH_PAGE_SIZE);
+    const rows = await graphCallPaginated<any>(
+      `/users/${userId}/messages?$top=${pageTop}&$select=${GRAPH_EMAIL_SELECT_LIST}&$orderby=receivedDateTime desc`,
+      limit
     );
-    return (data.value || []).map((m: any) => ({
-      id: m.id,
-      subject: m.subject,
-      from: m.from,
-      receivedDateTime: m.receivedDateTime,
-      bodyPreview: m.bodyPreview,
-      isRead: m.isRead,
-      hasAttachments: m.hasAttachments,
-    }));
+    return rows.map((m: any) => mapRawMessageToEmail(m, false));
   } catch (error) {
     console.error('[MS Graph] Error listing emails:', error);
     return [];
@@ -211,20 +310,14 @@ export async function listEmails(userId: string, top: number = 10): Promise<MSGr
 }
 
 /**
- * Lê um e-mail específico
+ * Lê um e-mail específico (inclui corpo completo)
  */
-export async function getEmail(userId: string, messageId: string): Promise<MSGraphEmail | null> {
+export async function getEmail(userId: string, messageId: string): Promise<(MSGraphEmail & { body?: string; bodyType?: string }) | null> {
   try {
-    const data = await graphCall<any>(`/users/${userId}/messages/${messageId}`);
-    return {
-      id: data.id,
-      subject: data.subject,
-      from: data.from,
-      receivedDateTime: data.receivedDateTime,
-      bodyPreview: data.bodyPreview,
-      isRead: data.isRead,
-      hasAttachments: data.hasAttachments,
-    };
+    const data = await graphCall<any>(
+      `/users/${userId}/messages/${messageId}?$select=${GRAPH_EMAIL_SELECT_WITH_BODY}`
+    );
+    return mapRawMessageToEmail(data, true);
   } catch (error) {
     return null;
   }
@@ -270,7 +363,7 @@ export async function sendEmail(
 // =====================================================
 
 /**
- * Lista eventos do calendário
+ * Lista eventos do calendário (paginado conforme limite / período solicitado)
  */
 export async function listCalendarEvents(
   userId: string,
@@ -278,15 +371,21 @@ export async function listCalendarEvents(
   endDate?: string,
   top: number = 50
 ): Promise<MSGraphCalendarEvent[]> {
-  let query = `/users/${userId}/calendar/events?$top=${top}&$select=id,subject,start,end,location,organizer,isAllDay`;
-  
+  const limit = resolveGraphLimit(top, 50);
+  const pageTop = Math.min(limit, GRAPH_PAGE_SIZE);
+  let query = `/users/${userId}/calendar/events?$top=${pageTop}&$select=id,subject,start,end,location,organizer,isAllDay,bodyPreview&$orderby=start/dateTime`;
+
   if (startDate && endDate) {
     query += `&$filter=start/dateTime ge '${startDate}' and end/dateTime le '${endDate}'`;
+  } else if (startDate) {
+    query += `&$filter=start/dateTime ge '${startDate}'`;
+  } else if (endDate) {
+    query += `&$filter=end/dateTime le '${endDate}'`;
   }
 
   try {
-    const data = await graphCall<any>(query);
-    return (data.value || []).map((e: any) => ({
+    const rows = await graphCallPaginated<any>(query, limit);
+    return rows.map((e: any) => ({
       id: e.id,
       subject: e.subject,
       start: e.start,
@@ -294,6 +393,7 @@ export async function listCalendarEvents(
       location: e.location,
       organizer: e.organizer,
       isAllDay: e.isAllDay,
+      bodyPreview: e.bodyPreview,
     }));
   } catch (error) {
     console.error('[MS Graph] Error listing calendar events:', error);
@@ -395,16 +495,32 @@ export async function deleteCalendarEvent(userId: string, eventId: string): Prom
 // =====================================================
 
 /**
- * Lista chats do Teams
+ * Lista chats do Teams de um usuário (app permissions: Chat.Read.All)
  */
 export async function listTeamsChats(userId: string): Promise<MSGraphChat[]> {
   try {
-    const data = await graphCall<any>(`/chats?$expand=members&$top=50`);
-    return (data.value || []).map((c: any) => ({
+    const limit = resolveGraphLimit(50, 50);
+    const pageTop = Math.min(limit, GRAPH_PAGE_SIZE);
+    // Preferir escopo do usuário; fallback para /chats se a app tiver permissão ampla
+    let rows: any[] = [];
+    try {
+      rows = await graphCallPaginated<any>(
+        `/users/${userId}/chats?$expand=members&$top=${pageTop}&$select=id,topic,chatType,lastUpdatedDateTime`,
+        limit
+      );
+    } catch {
+      rows = await graphCallPaginated<any>(
+        `/chats?$expand=members&$top=${pageTop}`,
+        Math.min(limit, 50)
+      );
+    }
+    return rows.map((c: any) => ({
       id: c.id,
       topic: c.topic,
       lastMessagePreview: c.lastMessagePreview,
       members: c.members || [],
+      chatType: c.chatType,
+      lastUpdatedDateTime: c.lastUpdatedDateTime,
     }));
   } catch (error) {
     console.error('[MS Graph] Error listing Teams chats:', error);
@@ -413,17 +529,99 @@ export async function listTeamsChats(userId: string): Promise<MSGraphChat[]> {
 }
 
 /**
+ * Pesquisa mensagens em chats do Teams por texto / período.
+ */
+export async function searchTeamsMessages(
+  userId: string,
+  options?: {
+    consulta?: string;
+    limite?: number;
+    maxChats?: number;
+  }
+): Promise<Array<{
+  chatId: string;
+  chatTopic?: string;
+  chatType?: string;
+  id: string;
+  bodyPreview: string;
+  body?: { contentType?: string; content?: string };
+  from?: any;
+  createdDateTime?: string;
+  importance?: string;
+  messageType?: string;
+  webUrl?: string;
+}>> {
+  const limit = resolveGraphLimit(options?.limite, 40);
+  const maxChats = Math.min(options?.maxChats || 12, 25);
+  const needle = (options?.consulta || '').toLowerCase().trim();
+  const chats = await listTeamsChats(userId);
+  const results: Array<{
+    chatId: string;
+    chatTopic?: string;
+    chatType?: string;
+    id: string;
+    bodyPreview: string;
+    body?: { contentType?: string; content?: string };
+    from?: any;
+    createdDateTime?: string;
+    importance?: string;
+    messageType?: string;
+    webUrl?: string;
+  }> = [];
+
+  for (const chat of chats.slice(0, maxChats)) {
+    if (results.length >= limit) break;
+    const messages = await listChatMessages(chat.id, 30);
+    for (const m of messages) {
+      const bodyContent =
+        typeof m.body === 'string'
+          ? m.body
+          : (m.body as any)?.content
+            ? String((m.body as any).content)
+            : '';
+      const preview = stripHtmlToText(bodyContent, 2000) || '';
+      if (needle && !preview.toLowerCase().includes(needle)) continue;
+
+      results.push({
+        chatId: chat.id,
+        chatTopic: chat.topic,
+        chatType: chat.chatType,
+        id: m.id,
+        bodyPreview: preview.slice(0, 500),
+        body: typeof m.body === 'object' ? (m.body as any) : { contentType: 'text', content: bodyContent },
+        from: m.from,
+        createdDateTime: m.createdDateTime,
+        importance: (m as any).importance,
+        messageType: (m as any).messageType,
+        webUrl: (m as any).webUrl,
+      });
+      if (results.length >= limit) break;
+    }
+  }
+
+  return results;
+}
+
+/**
  * Lista mensagens de um chat
  */
 export async function listChatMessages(chatId: string, top: number = 20): Promise<MSGraphTeamsMessage[]> {
   try {
-    const data = await graphCall<any>(`/chats/${chatId}/messages?$top=${top}`);
-    return (data.value || []).map((m: any) => ({
+    const limit = resolveGraphLimit(top, 20);
+    const pageTop = Math.min(limit, GRAPH_PAGE_SIZE);
+    const rows = await graphCallPaginated<any>(
+      `/chats/${chatId}/messages?$top=${pageTop}&$select=id,body,from,createdDateTime,importance,messageType,webUrl`,
+      limit
+    );
+    return rows.map((m: any) => ({
       id: m.id,
       body: m.body,
       from: m.from,
       createdDateTime: m.createdDateTime,
-    }));
+      importance: m.importance,
+      messageType: m.messageType,
+      webUrl: m.webUrl,
+    } as MSGraphTeamsMessage & { importance?: string; messageType?: string; webUrl?: string }));
   } catch (error) {
     console.error('[MS Graph] Error listing chat messages:', error);
     return [];
@@ -534,8 +732,12 @@ export async function getPresences(userIds: string[]): Promise<Record<string, an
 // =====================================================
 export async function listContacts(userId: string, top = 20): Promise<any[]> {
   try {
-    const data = await graphCall<any>(`/users/${userId}/contacts?$top=${top}&$select=id,displayName,emailAddresses,businessPhones,companyName,jobTitle`);
-    return data.value || [];
+    const limit = resolveGraphLimit(top, 20);
+    const pageTop = Math.min(limit, GRAPH_PAGE_SIZE);
+    return await graphCallPaginated(
+      `/users/${userId}/contacts?$top=${pageTop}&$select=id,displayName,emailAddresses,businessPhones,companyName,jobTitle`,
+      limit
+    );
   } catch { return []; }
 }
 
@@ -544,8 +746,12 @@ export async function listContacts(userId: string, top = 20): Promise<any[]> {
 // =====================================================
 export async function listGroups(top = 50): Promise<any[]> {
   try {
-    const data = await graphCall<any>(`/groups?$top=${top}&$select=id,displayName,description,groupTypes,mail,membershipRule`);
-    return data.value || [];
+    const limit = resolveGraphLimit(top, 50);
+    const pageTop = Math.min(limit, GRAPH_PAGE_SIZE);
+    return await graphCallPaginated(
+      `/groups?$top=${pageTop}&$select=id,displayName,description,groupTypes,mail,membershipRule`,
+      limit
+    );
   } catch { return []; }
 }
 export async function getGroupMembers(groupId: string): Promise<any[]> {
@@ -582,14 +788,22 @@ export async function listAdminUnits(top = 50): Promise<any[]> {
 // =====================================================
 export async function listSecurityAlerts(top = 20): Promise<any[]> {
   try {
-    const data = await graphCall<any>(`/security/alerts_v2?$top=${top}&$orderby=createdDateTime desc`);
-    return data.value || [];
+    const limit = resolveGraphLimit(top, 20);
+    const pageTop = Math.min(limit, GRAPH_PAGE_SIZE);
+    return await graphCallPaginated(
+      `/security/alerts_v2?$top=${pageTop}&$orderby=createdDateTime desc`,
+      limit
+    );
   } catch { return []; }
 }
 export async function getSecurityIncidents(top = 10): Promise<any[]> {
   try {
-    const data = await graphCall<any>(`/security/incidents?$top=${top}&$orderby=createdDateTime desc`);
-    return data.value || [];
+    const limit = resolveGraphLimit(top, 10);
+    const pageTop = Math.min(limit, GRAPH_PAGE_SIZE);
+    return await graphCallPaginated(
+      `/security/incidents?$top=${pageTop}&$orderby=createdDateTime desc`,
+      limit
+    );
   } catch { return []; }
 }
 
@@ -598,14 +812,22 @@ export async function getSecurityIncidents(top = 10): Promise<any[]> {
 // =====================================================
 export async function getAuditLogs(top = 20): Promise<any[]> {
   try {
-    const data = await graphCall<any>(`/auditLogs/directoryAudits?$top=${top}&$orderby=activityDateTime desc`);
-    return data.value || [];
+    const limit = resolveGraphLimit(top, 20);
+    const pageTop = Math.min(limit, GRAPH_PAGE_SIZE);
+    return await graphCallPaginated(
+      `/auditLogs/directoryAudits?$top=${pageTop}&$orderby=activityDateTime desc`,
+      limit
+    );
   } catch { return []; }
 }
 export async function getSignInLogs(top = 20): Promise<any[]> {
   try {
-    const data = await graphCall<any>(`/auditLogs/signIns?$top=${top}&$orderby=createdDateTime desc`);
-    return data.value || [];
+    const limit = resolveGraphLimit(top, 20);
+    const pageTop = Math.min(limit, GRAPH_PAGE_SIZE);
+    return await graphCallPaginated(
+      `/auditLogs/signIns?$top=${pageTop}&$orderby=createdDateTime desc`,
+      limit
+    );
   } catch { return []; }
 }
 
@@ -614,8 +836,12 @@ export async function getSignInLogs(top = 20): Promise<any[]> {
 // =====================================================
 export async function listApplications(top = 50): Promise<any[]> {
   try {
-    const data = await graphCall<any>(`/applications?$top=${top}&$select=id,displayName,appId,signInAudience,createdDateTime`);
-    return data.value || [];
+    const limit = resolveGraphLimit(top, 50);
+    const pageTop = Math.min(limit, GRAPH_PAGE_SIZE);
+    return await graphCallPaginated(
+      `/applications?$top=${pageTop}&$select=id,displayName,appId,signInAudience,createdDateTime`,
+      limit
+    );
   } catch { return []; }
 }
 
@@ -624,8 +850,12 @@ export async function listApplications(top = 50): Promise<any[]> {
 // =====================================================
 export async function listDevices(top = 50): Promise<any[]> {
   try {
-    const data = await graphCall<any>(`/devices?$top=${top}&$select=id,displayName,operatingSystem,operatingSystemVersion,isCompliant,isManaged`);
-    return data.value || [];
+    const limit = resolveGraphLimit(top, 50);
+    const pageTop = Math.min(limit, GRAPH_PAGE_SIZE);
+    return await graphCallPaginated(
+      `/devices?$top=${pageTop}&$select=id,displayName,operatingSystem,operatingSystemVersion,isCompliant,isManaged`,
+      limit
+    );
   } catch { return []; }
 }
 
@@ -703,8 +933,12 @@ export async function listTeamChannels(teamId: string): Promise<any[]> {
 }
 export async function listChannelMessages(teamId: string, channelId: string, top = 20): Promise<any[]> {
   try {
-    const data = await graphCall<any>(`/teams/${teamId}/channels/${channelId}/messages?$top=${top}`);
-    return data.value || [];
+    const limit = resolveGraphLimit(top, 20);
+    const pageTop = Math.min(limit, GRAPH_PAGE_SIZE);
+    return await graphCallPaginated(
+      `/teams/${teamId}/channels/${channelId}/messages?$top=${pageTop}`,
+      limit
+    );
   } catch { return []; }
 }
 
@@ -738,32 +972,48 @@ export async function getServiceIssues(): Promise<any[]> {
 // Advanced Mail Search
 // =====================================================
 
+export interface SearchEmailsOptions {
+  from?: string;
+  to?: string;
+  subject?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  folder?: string;
+  hasAttachments?: boolean;
+  isRead?: boolean;
+  /** Quantidade desejada. 0/negativo = tudo até GRAPH_HARD_CAP. */
+  top?: number;
+  /** Inclui corpo completo de cada mensagem (mais lento / pesado). */
+  includeBody?: boolean;
+}
+
 /**
- * Busca avançada de e-mails com filtros OData
+ * Busca avançada de e-mails com filtros OData + paginação.
+ * Extrai conforme a solicitação: filtros de remetente/assunto/data/pasta e limite flexível.
  */
 export async function searchEmails(
   userId: string,
   query?: string,
-  options?: {
-    from?: string;
-    subject?: string;
-    dateFrom?: string;
-    dateTo?: string;
-    folder?: string;
-    hasAttachments?: boolean;
-    isRead?: boolean;
-    top?: number;
-  }
+  options?: SearchEmailsOptions
 ): Promise<MSGraphEmail[]> {
   try {
-    const top = options?.top || 50;
+    const top = resolveGraphLimit(options?.top, 50);
+    const pageTop = Math.min(top, GRAPH_PAGE_SIZE);
+    const selectFields = options?.includeBody
+      ? GRAPH_EMAIL_SELECT_WITH_BODY
+      : GRAPH_EMAIL_SELECT_LIST;
+
     const filters: string[] = [];
+    const escapeOData = (v: string) => v.replace(/'/g, "''");
 
     if (options?.from) {
-      filters.push(`from/emailAddress/address eq '${options.from}'`);
+      filters.push(`from/emailAddress/address eq '${escapeOData(options.from)}'`);
+    }
+    if (options?.to) {
+      filters.push(`toRecipients/any(r:r/emailAddress/address eq '${escapeOData(options.to)}')`);
     }
     if (options?.subject) {
-      filters.push(`contains(subject, '${options.subject}')`);
+      filters.push(`contains(subject, '${escapeOData(options.subject)}')`);
     }
     if (options?.dateFrom) {
       filters.push(`receivedDateTime ge ${options.dateFrom}T00:00:00Z`);
@@ -778,32 +1028,35 @@ export async function searchEmails(
       filters.push(`isRead eq ${options.isRead}`);
     }
 
-    let endpoint = `/users/${userId}/messages?$top=${top}&$select=id,subject,from,receivedDateTime,bodyPreview,isRead,hasAttachments&$orderby=receivedDateTime desc`;
+    const basePath = options?.folder
+      ? `/users/${userId}/mailFolders/${options.folder}/messages`
+      : `/users/${userId}/messages`;
 
-    if (filters.length > 0) {
-      endpoint += `&$filter=${filters.join(' and ')}`;
+    let endpoint: string;
+    let extraHeaders: Record<string, string> | undefined;
+
+    // $search não combina bem com $filter/$orderby — prioriza busca textual quando sem filtros estruturados de subject
+    if (query && !options?.subject && filters.length === 0) {
+      endpoint = `${basePath}?$top=${pageTop}&$search="${encodeURIComponent(query)}"&$select=${selectFields}`;
+      extraHeaders = { ConsistencyLevel: 'eventual' };
+    } else if (query && !options?.subject && filters.length > 0) {
+      // Combina: $search + filtros via KQL no search quando possível; senão filter-only
+      const kqlParts = [query];
+      if (options?.from) kqlParts.push(`from:${options.from}`);
+      if (options?.dateFrom) kqlParts.push(`received>=${options.dateFrom}`);
+      if (options?.dateTo) kqlParts.push(`received<=${options.dateTo}`);
+      if (options?.hasAttachments) kqlParts.push('hasAttachments:true');
+      endpoint = `${basePath}?$top=${pageTop}&$search="${encodeURIComponent(kqlParts.join(' '))}"&$select=${selectFields}`;
+      extraHeaders = { ConsistencyLevel: 'eventual' };
+    } else {
+      endpoint = `${basePath}?$top=${pageTop}&$select=${selectFields}&$orderby=receivedDateTime desc`;
+      if (filters.length > 0) {
+        endpoint += `&$filter=${filters.join(' and ')}`;
+      }
     }
 
-    // Se tiver query textual, usar $search ao invés de $filter para subject/body
-    if (query && !options?.subject) {
-      endpoint = `/users/${userId}/messages?$top=${top}&$search="${encodeURIComponent(query)}"&$select=id,subject,from,receivedDateTime,bodyPreview,isRead,hasAttachments`;
-    }
-
-    const folder = options?.folder;
-    if (folder) {
-      endpoint = endpoint.replace(`/users/${userId}/messages`, `/users/${userId}/mailFolders/${folder}/messages`);
-    }
-
-    const data = await graphCall<any>(endpoint);
-    return (data.value || []).map((m: any) => ({
-      id: m.id,
-      subject: m.subject,
-      from: m.from,
-      receivedDateTime: m.receivedDateTime,
-      bodyPreview: m.bodyPreview,
-      isRead: m.isRead,
-      hasAttachments: m.hasAttachments,
-    }));
+    const rows = await graphCallPaginated<any>(endpoint, top, extraHeaders);
+    return rows.map((m: any) => mapRawMessageToEmail(m, !!options?.includeBody));
   } catch (error) {
     console.error('[MS Graph] Error searching emails:', error);
     return [];
@@ -925,6 +1178,8 @@ export async function createToDoTask(
 
 // Exporta o cliente
 export const msGraphClient = {
+  // Limits
+  GRAPH_HARD_CAP, resolveGraphLimit,
   // Users
   getUser, searchUsers, getUserManager, getDirectReports, listUsers,
   // Mail
@@ -938,7 +1193,7 @@ export const msGraphClient = {
   // Directory
   getOrganization, listDomains, listAdminUnits,
   // Teams
-  listTeamsChats, listChatMessages, sendTeamsMessage, listTeamChannels, listChannelMessages,
+  listTeamsChats, listChatMessages, sendTeamsMessage, listTeamChannels, listChannelMessages, searchTeamsMessages,
   // Calls/Meetings
   listOnlineMeetings,
   // Files

@@ -34,3 +34,5 @@ CREATE TABLE IF NOT EXISTS gt_acidentes (
 
 CREATE INDEX IF NOT EXISTS idx_gt_acidentes_colaborador_id ON gt_acidentes(colaborador_id);
 CREATE INDEX IF NOT EXISTS idx_gt_acidentes_esocial_status ON gt_acidentes(esocial_status);
+
+ALTER TABLE gt_acidentes ENABLE ROW LEVEL SECURITY;

@@ -42,6 +42,10 @@ export interface ESocialEvento {
     // Joined
     evento_nome?: string;
     evento_grupo?: string;
+    colaborador_nome?: string;
+    colaborador_cargo?: string;
+    colaborador_matricula?: string;
+    colaborador_foto?: string;
 }
 
 export interface ESocialCertificado {

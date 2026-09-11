@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase';
+import { overlayStatusEscalaHoje } from '@/lib/gestao-tripulantes/dashboard-service';
 
 interface CandidatoBack {
   colaborador_id: string;
@@ -35,17 +36,27 @@ export async function sugerirBack(params: SugerirBackParams): Promise<CandidatoB
     return [];
   }
 
-  const { data: candidatos, error: errCand } = await supabaseAdmin
+  const { data: candidatosRaw, error: errCand } = await supabaseAdmin
     .from('gt_vw_colaboradores_completo')
     .select('*')
     .neq('id', colaborador_embarcado_id)
-    .is('deleted_at', null)
-    .or(`status_embarque.eq.standby,status_embarque.eq.folga,status_embarque.eq.desembarcado`);
+    .is('deleted_at', null);
 
-  if (errCand || !candidatos) {
+  if (errCand || !candidatosRaw) {
     console.error('Erro ao buscar candidatos:', errCand);
     return [];
   }
+
+  const overlay = await overlayStatusEscalaHoje(
+    (candidatosRaw as Array<{ id: string; status_embarque?: string | null; standby?: boolean | null }>).map((c) => ({
+      ...c,
+      id: c.id,
+    })),
+  );
+  const candidatos = (overlay.error ? candidatosRaw : overlay.rows).filter((c) => {
+    const st = String((c as { status_embarque?: string }).status_embarque || '');
+    return st === 'standby' || st === 'folga' || st === 'desembarcado';
+  });
 
   const { data: substituicoes } = await supabaseAdmin
     .from('gt_historico_substituicoes')

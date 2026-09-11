@@ -176,16 +176,25 @@ export default function AdminLeaveRequestsPage() {
     const handleDownloadComprovante = async (req: RequestWithUser) => {
         try {
             const token = getToken();
+            if (!token) {
+                toast.error('Sessão expirada. Faça login novamente para baixar o formulário.');
+                return;
+            }
             const res = await fetch(`/api/leave/${req.id}/pdf`, {
-                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                headers: { Authorization: `Bearer ${token}` }
             });
 
             if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData?.error || 'Falha ao gerar comprovante');
+                const errData = await res.json().catch(() => ({} as { error?: string }));
+                if (errData?.error) throw new Error(errData.error);
+                if (res.status === 401) throw new Error('Sessão expirada. Faça login novamente.');
+                if (res.status === 403) throw new Error('Sem permissão para baixar este formulário.');
+                if (res.status === 404) throw new Error('Solicitação não encontrada ou dados do colaborador indisponíveis.');
+                throw new Error('Falha ao gerar comprovante');
             }
 
             const blob = await res.blob();
+            if (!blob.size) throw new Error('PDF vazio recebido do servidor.');
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
@@ -228,8 +237,8 @@ export default function AdminLeaveRequestsPage() {
     };
 
     return (
-        <div className="p-6 max-w-7xl mx-auto space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div className="flex flex-col min-h-0 flex-1 h-full max-w-7xl mx-auto w-full">
+            <div className="shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div className="flex items-center gap-3">
                     <FiCalendar className="w-8 h-8 text-blue-600" />
                     <div>
@@ -247,7 +256,7 @@ export default function AdminLeaveRequestsPage() {
             </div>
 
             {/* Filters */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="shrink-0 bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-4 items-center justify-between mb-4">
                 <div className="flex gap-2 bg-gray-100 p-1 rounded-lg self-start md:self-auto overflow-x-auto w-full md:w-auto">
                     {[
                         { id: 'ALL', label: 'Todas' },
@@ -292,10 +301,10 @@ export default function AdminLeaveRequestsPage() {
             </div>
 
             {/* Data Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="overflow-x-auto">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-1 min-h-0 flex flex-col">
+                <div className="flex-1 min-h-0 overflow-auto">
                     <table ref={tableRef} className="w-full min-w-[800px]">
-                        <thead className="bg-gray-50 border-b">
+                        <thead className="bg-gray-50 border-b sticky top-0 z-10">
                             <tr>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Colaborador / Setor</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Período Principal</th>
@@ -464,9 +473,9 @@ export default function AdminLeaveRequestsPage() {
                                     type="button"
                                     onClick={() => handleDownloadComprovante(selectedReq)}
                                     disabled={isProcessing}
-                                    className="w-full sm:w-auto inline-flex justify-center items-center rounded-md border border-blue-200 shadow-sm px-4 py-2 bg-blue-50 text-base font-medium text-blue-700 hover:bg-blue-100 focus:outline-none sm:text-sm disabled:opacity-50"
+                                    className="w-full sm:w-auto inline-flex justify-center items-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:text-sm disabled:opacity-50"
                                 >
-                                    <FiDownload className="mr-2" /> Comprovante (PDF)
+                                    <FiDownload className="mr-2" /> Baixar formulário PDF (preenchido)
                                 </button>
 
                                 <button

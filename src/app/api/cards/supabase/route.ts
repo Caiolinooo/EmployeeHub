@@ -32,7 +32,8 @@ const ICON_MAP: Record<string, string> = {
   'integracao-erp': 'FiDatabase',
   'contratos': 'FiFileText',
   'gestao-tripulantes': 'FiUsers',
-  'e-social': 'FiBriefcase'
+  'e-social': 'FiBriefcase',
+  'dp': 'FiBriefcase'
 };
 
 // Helper to merge cards

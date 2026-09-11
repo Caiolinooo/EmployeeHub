@@ -213,14 +213,14 @@ async function calculateKPIValue(kpiKey: string, department?: string, sector?: s
       }
 
       case 'vacation_pending_rate': {
-        // % de férias pendentes
+        // % de férias pendentes (líder ou gerente)
         const { count: total } = await supabaseAdmin
           .from('leave_requests')
           .select('*', { count: 'exact', head: true });
         const { count: pending } = await supabaseAdmin
           .from('leave_requests')
           .select('*', { count: 'exact', head: true })
-          .eq('status', 'PENDING_LEADER');
+          .in('status', ['PENDING_LEADER', 'PENDING_MANAGER']);
         if (!total || total === 0) return 0;
         return Math.round(((pending || 0) / total) * 100);
       }
@@ -233,10 +233,31 @@ async function calculateKPIValue(kpiKey: string, department?: string, sector?: s
         const { count: approved } = await supabaseAdmin
           .from('Reimbursement')
           .select('*', { count: 'exact', head: true })
-          .eq('status', 'pago');
+          .in('status', ['aprovado', 'pago', 'APPROVED']);
         if (!total || total === 0) return 0;
         return Math.round(((approved || 0) / total) * 100);
       }
+
+      case 'reimbursement_pending_count': {
+        const { count: pending } = await supabaseAdmin
+          .from('Reimbursement')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'pendente');
+        return pending || 0;
+      }
+
+      case 'purchase_pending_count': {
+        const { count: pending } = await supabaseAdmin
+          .from('purchase_requests')
+          .select('*', { count: 'exact', head: true })
+          .in('status', ['pending', 'PENDING', 'aguardando', 'em_aprovacao']);
+        return pending || 0;
+      }
+
+      case 'email_unread_related':
+      case 'teams_pending_signals':
+        // Calculados via scan Graph em buscar_kpis_sistema / collectKpiCommunicationSignals
+        return null;
 
       default:
         return null;
@@ -272,10 +293,12 @@ async function getAffectedUsers(kpiKey: string, department?: string): Promise<st
  */
 function generateSuggestedAction(kpiKey: string, gap: number, priority: string): string {
   const actions: Record<string, string> = {
-    evaluation_completion: 'Enviar lembrete para avaliações pendentes',
+    evaluation_completion: 'Enviar lembrete para avaliações pendentes e revisar e-mails/Teams sobre prazos',
     evaluation_avg_score: 'Agendar reunião de feedback com colaboradores de menor pontuação',
-    vacation_pending_rate: 'Revisar e aprovar férias pendentes',
-    reimbursement_approval_rate: 'Processar reembolsos em espera',
+    vacation_pending_rate: 'Revisar e aprovar férias pendentes; checar e-mails/Teams de solicitação',
+    reimbursement_approval_rate: 'Processar reembolsos em espera; verificar conversas de aprovação',
+    reimbursement_pending_count: 'Triar reembolsos pendentes e responder threads de e-mail/Teams',
+    purchase_pending_count: 'Avançar RQFs pendentes e alinhar com compradores no Teams',
   };
   return actions[kpiKey] || `Investigar KPI ${kpiKey} (gap: ${gap.toFixed(1)}%)`;
 }

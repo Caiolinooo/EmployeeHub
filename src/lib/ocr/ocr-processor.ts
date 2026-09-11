@@ -1,11 +1,40 @@
 import { supabaseAdmin } from '@/lib/supabase';
+import { normalizeEsocialDate } from '@/lib/e-social/esocial-date';
 import { normalizeCpf } from '@/lib/utils/identity';
 import type { OCRTipoDocumento, OCRExtractResult, OCRConfig } from '@/types/ocr';
+import {
+  validarCPF,
+  validarCNPJ,
+  repararCPFOptico,
+  extrairCPFInteligente,
+  extrairResultadoInteligente,
+  extrairDataNascimentoInteligente,
+  extrairRGInteligente,
+  extrairMedicoECRMInteligente,
+  extrairCNPJInteligente,
+} from './ocr-repair';
+import {
+  deveExtrairEstruturaComLlm,
+  textoOcrSuficiente,
+  visaoLlmCompativel,
+} from './ocr-routing';
 import fs from 'fs';
 import path from 'path';
 
+export {
+  OCR_TEXTO_MINIMO,
+  textoOcrSuficiente,
+  visaoLlmCompativel,
+  deveExtrairEstruturaComLlm,
+} from './ocr-routing';
+export type { VisaoLlmConfig } from './ocr-routing';
+
 let configCache: { data: OCRConfig; time: number } | null = null;
 const CONFIG_TTL = 60000;
+
+function isAmbienteServerless(): boolean {
+  return !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+}
 
 async function getOCRConfigFromDB(): Promise<OCRConfig> {
   if (configCache && Date.now() - configCache.time < CONFIG_TTL) {
@@ -28,131 +57,173 @@ async function getOCRConfigFromDB(): Promise<OCRConfig> {
   return fallback;
 }
 
-export function extrairDadosTexto(texto: string, tipoDocumento?: OCRTipoDocumento): Record<string, any> {
+export function extrairDadosTexto(
+  texto: string,
+  tipoDocumento?: OCRTipoDocumento,
+  profileCpf?: string | null
+): Record<string, any> {
   const dados: Record<string, any> = {};
   const upper = texto.toUpperCase();
 
-  // Priority 1: CPF explicitly labeled in the document
-  const cpfLabeledPatterns = [
-    /(?:CPF\s*(?:do\s+)?(?:Trabalhador|Empregado|Funcionário|Funcionario|Paciente)?)\s*[:\-\s/|I]\s*(\d{3})[.\s]?(\d{3})[.\s]?(\d{3})[.\s\-]?(\d{2})/i,
-    /(?:C\.?\s*P\.?\s*F\.?\s*(?:\/\s*M\.?\s*F\.?)?)\s*[:\-\s|I]\s*(\d{3})[.\s]?(\d{3})[.\s]?(\d{3})[.\s\-]?(\d{2})/i,
-    /(?:CPF)\s*(\d{3})[.\s]?(\d{3})[.\s]?(\d{3})[.\s\-]?(\d{2})/i,
-  ];
-  let cpfMatch: RegExpMatchArray | null = null;
-  for (const pattern of cpfLabeledPatterns) {
-    cpfMatch = texto.match(pattern);
-    if (cpfMatch) break;
+  // 1. Extração Inteligente de CPF com Validação de Módulo 11 e Auto-Reparo Óptico
+  const cpfInfo = extrairCPFInteligente(texto, profileCpf);
+  if (cpfInfo.cpf) {
+    dados.cpf = cpfInfo.cpf;
+    dados._cpf_corrigido = cpfInfo.corrigido;
+    dados._cpf_confianca = cpfInfo.confianca;
   }
-  // Fallback: generic 11-digit CPF pattern
-  if (!cpfMatch) {
-    cpfMatch = texto.match(/(\d{3})[.\s]?(\d{3})[.\s]?(\d{3})[.\s\-]?(\d{2})/);
-  }
-  if (cpfMatch) dados.cpf = normalizeCpf(`${cpfMatch[1]}${cpfMatch[2]}${cpfMatch[3]}${cpfMatch[4]}`);
 
-  const rgLabeled = upper.match(/(?:RG|IDENTIDADE|REGISTRO\s*GERAL)[:\s]*(\d{1,2}[.\s]?\d{3}[.\s]?\d{3}[.\s-]?\d{0,2})/i);
-  if (rgLabeled) {
-    dados.rg = rgLabeled[1].replace(/[.\s-]/g, '');
-  } else {
-    const rgPlain = texto.match(/(\d{1,2})[.\s]?(\d{3})[.\s]?(\d{3})[.\s-]?(\d{0,2})/);
-    if (rgPlain) {
-      const cleanedRg = rgPlain[0].replace(/[.\s-]/g, '');
-      const cleanedCpf = dados.cpf ? normalizeCpf(dados.cpf) : '';
-      if (!cleanedCpf || !cleanedCpf.includes(cleanedRg)) {
-        dados.rg = cleanedRg;
-      }
+  // 2. Extração Inteligente de RG (sem sobreposição com CPF)
+  const rgVal = extrairRGInteligente(texto, dados.cpf);
+  if (rgVal) {
+    dados.rg = rgVal;
+  }
+
+  // 3. Nome do Colaborador
+  const nomeMatch = upper.match(/(?:NOME|NOME\s*COMPLETO|TRABALHADOR|PACIENTE)[:\s.\-|]*([A-ZÀ-Ú\x20\t]{3,60})/);
+  if (nomeMatch) {
+    const nomeLimpo = nomeMatch[1].trim().replace(/\s+(?:CPF|RG|DN|EMPRESA|FUNÇÃO|CARGO|SETOR).*$/i, '').trim();
+    if (nomeLimpo.length >= 3) {
+      dados.nome_completo = nomeLimpo;
     }
   }
 
-  const nomeMatch = upper.match(/(?:NOME|NOME\s*COMPLETO)[:\s]*([A-ZÀ-Ú\x20\t]+)/);
-  if (nomeMatch) dados.nome_completo = nomeMatch[1].trim();
-
-  // Try targeted match for date of birth first (DN or NASCIMENTO prefixes)
-  const dnMatch = texto.match(/(?:DN|NASC|NASCIMENTO|NASC\.?|NASCIDO\s*EM)[:\s-]*(\d{2})[\/\-](\d{2})[\/\-](\d{4})/i);
-  if (dnMatch) {
-    dados.data_nascimento = `${dnMatch[3]}-${dnMatch[2]}-${dnMatch[1]}`;
-  } else {
-    // Non-prefix fallback, but verify it doesn't match common exam years like 2024 if it's birthday
-    const dataNasc = texto.match(/(\d{2})[\/\-](\d{2})[\/\-](\d{4})/);
-    if (dataNasc) {
-      const year = parseInt(dataNasc[3]);
-      // A birthday should be earlier than 2015 for active workers
-      if (year < 2015) {
-        dados.data_nascimento = `${dataNasc[3]}-${dataNasc[2]}-${dataNasc[1]}`;
-      }
+  // 4. Data de Realização preliminar para evitar conflito com Data de Nascimento
+  let dataRealizacaoTemp: string | null = null;
+  const datasEncontradas = [...texto.matchAll(/(\d{2})[\/\.\-](\d{2})[\/\.\-](\d{4})/g)];
+  if (datasEncontradas.length > 0) {
+    const validas = datasEncontradas
+      .map(m => m[0])
+      .filter(dStr => {
+        const iso = normalizeEsocialDate(dStr);
+        if (!iso) return false;
+        const year = Number(iso.slice(0, 4));
+        return year >= 2020 && year <= 2030;
+      });
+    if (validas.length > 0) {
+      dataRealizacaoTemp = validas[validas.length - 1];
     }
   }
 
-  const maeMatch = upper.match(/(?:FILIAÇÃO|MÃE|MAE)[:\s]*([A-ZÀ-Ú\s]+)/);
-  if (maeMatch) dados.nome_mae = maeMatch[1].trim();
+  // 5. Data de Nascimento Segura com Correção de Século
+  const dnVal = extrairDataNascimentoInteligente(texto, dataRealizacaoTemp);
+  if (dnVal) {
+    dados.data_nascimento = dnVal;
+  }
 
-  const paiMatch = upper.match(/(?:PAI)[:\s]*([A-ZÀ-Ú\s]+)/);
-  if (paiMatch) dados.nome_pai = paiMatch[1].trim();
+  // 6. Filiação
+  const maeMatch = upper.match(/(?:FILIAÇÃO|MÃE|MAE)[:\s.\-|]*([A-ZÀ-Ú\s]{3,60})/);
+  if (maeMatch) {
+    dados.nome_mae = maeMatch[1].trim().replace(/\s+(?:PAI|CPF|RG|NATURALIDADE).*$/i, '').trim();
+  }
 
-  const ctpsMatch = upper.match(/CTPS[:\s]*(\d+)/);
+  const paiMatch = upper.match(/(?:PAI)[:\s.\-|]*([A-ZÀ-Ú\s]{3,60})/);
+  if (paiMatch) {
+    dados.nome_pai = paiMatch[1].trim().replace(/\s+(?:MÃE|MAE|CPF|RG|NATURALIDADE).*$/i, '').trim();
+  }
+
+  // 7. Documentos complementares
+  const ctpsMatch = upper.match(/CTPS[:\s.\-|]*(\d+)/);
   if (ctpsMatch) dados.ctps = ctpsMatch[1];
 
-  const cnhMatch = upper.match(/CNH[:\s]*(\d+)/);
+  const cnhMatch = upper.match(/CNH[:\s.\-|]*(\d+)/);
   if (cnhMatch) dados.numero_cnh = cnhMatch[1];
 
-  const pisMatch = upper.match(/PIS[:\s]*(\d+)/);
+  const pisMatch = upper.match(/PIS[:\s.\-|]*(\d+)/);
   if (pisMatch) dados.pis_pasep = pisMatch[1];
 
-  const ruaMatch = upper.match(/(?:RUA|AVENIDA|AV|TRAVESSA|PRACA|ESTRADA)[:\s]*([A-ZÀ-Ú\s0-9,]+)/);
+  const ruaMatch = upper.match(/(?:RUA|AVENIDA|AV|TRAVESSA|PRACA|ESTRADA)[:\s.\-|]*([A-ZÀ-Ú\s0-9,]+)/);
   if (ruaMatch) dados.endereco_logradouro = ruaMatch[1].trim();
 
   const cepMatch = texto.match(/(\d{5})-?(\d{3})/);
   if (cepMatch) dados.endereco_cep = `${cepMatch[1]}-${cepMatch[2]}`;
 
+  // 8. Regras específicas para ASO
   if (tipoDocumento === 'aso') {
-    if (/inapto/i.test(texto) && !/nao\s+aplicav|não\s+aplicáv|em\s+caso\s+de\s+inapti/i.test(texto)) {
-      dados.resultado = 'inapto';
-    } else if (/apto\s+condicional/i.test(texto)) {
-      dados.resultado = 'apto_condicional';
-    } else if (/apto/i.test(texto)) {
-      dados.resultado = 'apto';
+    // Resultado Apto vs Inapto com Heurística de Checkbox
+    dados.resultado = extrairResultadoInteligente(texto);
+
+    if (dataRealizacaoTemp) {
+      dados.data_realizacao = normalizeEsocialDate(dataRealizacaoTemp) || dataRealizacaoTemp;
+    } else if (datasEncontradas.length > 0) {
+      dados.data_realizacao = normalizeEsocialDate(datasEncontradas[datasEncontradas.length - 1][0])
+        || datasEncontradas[datasEncontradas.length - 1][0];
     }
 
-    const datasEncontradas = [...texto.matchAll(/\d{2}\/\d{2}\/\d{4}/g)];
-    if (datasEncontradas.length > 0) {
-      const validas = datasEncontradas
-        .map(m => ({ d: m[0], val: m[0] }))
-        .filter(m => {
-          const [dia, mes, ano] = m.d.split('/');
-          const d = parseInt(dia), me = parseInt(mes), a = parseInt(ano);
-          return d >= 1 && d <= 31 && me >= 1 && me <= 12 && a >= 2020 && a <= 2030;
-        });
-      if (validas.length > 0) {
-        const ultima = validas[validas.length - 1];
-        dados.data_realizacao = ultima.d;
-      } else {
-        dados.data_realizacao = datasEncontradas[datasEncontradas.length - 1][0];
-      }
+    // Médicos e CRMs (Examinador e PCMSO)
+    const medicos = extrairMedicoECRMInteligente(texto);
+    if (medicos.medicoExaminador?.nome) {
+      dados.medico = medicos.medicoExaminador.nome;
+    } else if (medicos.medicoPcmso?.nome && !dados.medico) {
+      dados.medico = medicos.medicoPcmso.nome;
     }
 
-    const medicoMatch = texto.match(/(?:Dr\.?\s*[ºª]?\s*|Dra\.?\s*[ºª]?\s*|Médico\s+Examinador[\s:]*)([A-Za-zÀ-ÖØ-öø-ÿçãõ\s]{10,60})(?:\r?\n|CRM)/i);
-    if (medicoMatch) dados.medico = medicoMatch[1].trim();
-
-    const crmMatch = texto.match(/(?:CRM|C\.R\.M\.|RM|IM)\s*(?:-?\s*[A-Z]{2})?\s*[:|I\-\s]*\s*([\d][\d.\s-]{4,}\d)/i);
-    if (crmMatch) {
-      dados.medico_crm = crmMatch[1].replace(/[.\s-]/g, '');
+    if (medicos.medicoExaminador?.crm) {
+      dados.medico_crm = medicos.medicoExaminador.crm;
+    } else if (medicos.medicoPcmso?.crm && !dados.medico_crm) {
+      dados.medico_crm = medicos.medicoPcmso.crm;
     }
 
-    const cnpjMatch = texto.match(/(?:CNPJ|C\.N\.P\.J)\s*[:|I\s-]*\s*(\d{2}\s*\.\s*\d{3}\s*\.\s*\d{3}\s*\/\s*\d{4}\s*-\s*\d{2}|\d{14})/i);
-    if (cnpjMatch) dados.cnpj_clinica = cnpjMatch[1].replace(/[^\d]/g, '');
+    if (medicos.medicoPcmso?.nome) dados.medico_pcmso_nome = medicos.medicoPcmso.nome;
+    if (medicos.medicoPcmso?.crm) dados.medico_pcmso_crm = medicos.medicoPcmso.crm;
+    if (medicos.medicoPcmso?.uf) dados.medico_pcmso_uf = medicos.medicoPcmso.uf;
+
+    // CNPJ e Nome da Clínica
+    const cnpj = extrairCNPJInteligente(texto);
+    if (cnpj) dados.cnpj_clinica = cnpj;
+
     const clinicaMatch = texto.match(/(?:Clínica|Clinica|Centro\s+Médico|Laboratório|Laboratorio)\s*:?\s*([A-Za-zÀ-ÖØ-öø-ÿ\s]{4,60})/i);
     if (clinicaMatch) dados.nome_clinica = clinicaMatch[1].trim();
   }
 
+  // 9. Passaporte — número, órgão, emissão, validade
   if (tipoDocumento === 'passaporte') {
-    const passaporteMatch = texto.match(/[A-Z]{2}\d{6,7}/);
-    if (passaporteMatch) dados.numero_passaporte = passaporteMatch[0];
+    const passaporteMatch =
+      texto.match(/(?:PASSPORT\s*(?:NO\.?|NUMBER|#)|N[ºo°.]?\s*(?:DO\s+)?PASSAPORTE)\s*[:\-]?\s*([A-Z]{1,2}\d{5,9}|[A-Z0-9]{6,12})/i)
+      || texto.match(/\b([A-Z]{2}\d{6,7})\b/);
+    if (passaporteMatch) dados.numero_passaporte = passaporteMatch[1].replace(/\s+/g, '');
+    dados.numero_documento = dados.numero_documento || dados.numero_passaporte;
+
+    const authMatch = texto.match(/(?:AUTHORITY|ÓRGÃO\s*EMISSOR|ORGAO\s*EMISSOR|ISSUING\s*AUTHORITY)\s*[:\-]?\s*([A-ZÀ-Úa-zà-ú0-9 ./-]{2,40})/i);
+    if (authMatch) dados.orgao_emissor = authMatch[1].trim();
+
+    const issueMatch = texto.match(/(?:DATE\s*OF\s*ISSUE|DATA\s*(?:DE\s*)?EMISS[AÃ]O)\s*[:\-]?\s*(\d{2}[\/.\-]\d{2}[\/.\-]\d{4}|\d{4}[\/.\-]\d{2}[\/.\-]\d{2})/i);
+    if (issueMatch) dados.data_emissao = issueMatch[1];
+
+    const expiryMatch = texto.match(/(?:DATE\s*OF\s*EXPIRY|DATE\s*OF\s*EXPIRATION|DATA\s*(?:DE\s*)?VALIDADE|VALID\s*UNTIL)\s*[:\-]?\s*(\d{2}[\/.\-]\d{2}[\/.\-]\d{4}|\d{4}[\/.\-]\d{2}[\/.\-]\d{2})/i);
+    if (expiryMatch) dados.data_validade = expiryMatch[1];
   }
 
+  // 10. CNH
   if (tipoDocumento === 'cnh') {
     if (!dados.numero_cnh) {
-      const cnhNum = texto.match(/\d{11}/);
-      if (cnhNum) dados.numero_cnh = cnhNum[0];
+      const cnhNum = texto.match(/(?:REGISTRO|N[ºo°.]?\s*(?:DE\s*)?REGISTRO|CNH)\s*[:\-]?\s*(\d{9,11})/i)
+        || texto.match(/\b(\d{11})\b/);
+      if (cnhNum) dados.numero_cnh = cnhNum[1];
     }
+    dados.numero_documento = dados.numero_documento || dados.numero_cnh;
+    const catMatch = texto.match(/(?:CAT(?:EGORIA)?)\s*[:\-]?\s*([A-E]{1,4})/i);
+    if (catMatch) dados.categoria_cnh = catMatch[1].toUpperCase();
+    const cnhVal = texto.match(/(?:VALIDADE|VENCIMENTO)\s*[:\-]?\s*(\d{2}[\/.\-]\d{2}[\/.\-]\d{4})/i);
+    if (cnhVal) dados.data_validade = cnhVal[1];
+  }
+
+  // 11. Demais tipos: número rotulado + datas genéricas
+  if (!dados.numero_documento && tipoDocumento && tipoDocumento !== 'aso') {
+    const genNum = texto.match(/\bN[ºo°.]?\s*(?:[UÚ]MERO\s*)?(?:DO\s+|DA\s+|DE\s+)?(?:DOCUMENTO|CERTIFICADO|REGISTRO|RG)\s*[:\-]?\s*([A-Z0-9][A-Z0-9\/\-. ]{2,24})/i);
+    if (genNum) dados.numero_documento = genNum[1].trim();
+  }
+  if (!dados.orgao_emissor) {
+    const orgMatch = texto.match(/(?:ÓRGÃO\s*EMISSOR|ORGAO\s*EMISSOR|INSTITUI[CÇ][AÃ]O|EMITIDO\s*POR)\s*[:\-]?\s*([A-ZÀ-Úa-zà-ú0-9 ./-]{3,50})/i);
+    if (orgMatch) dados.orgao_emissor = orgMatch[1].trim();
+  }
+  if (!dados.data_emissao) {
+    const emMatch = texto.match(/(?:DATA\s*(?:DE\s*)?EMISS[AÃ]O|EMITIDO\s*EM)\s*[:\-]?\s*(\d{2}[\/.\-]\d{2}[\/.\-]\d{4})/i);
+    if (emMatch) dados.data_emissao = emMatch[1];
+  }
+  if (!dados.data_validade) {
+    const vaMatch = texto.match(/(?:DATA\s*(?:DE\s*)?VALIDADE|V[ÁA]LIDO\s*AT[ÉE]|VENCIMENTO)\s*[:\-]?\s*(\d{2}[\/.\-]\d{2}[\/.\-]\d{4})/i);
+    if (vaMatch) dados.data_validade = vaMatch[1];
   }
 
   return dados;
@@ -266,86 +337,99 @@ async function detectarExtensao(buffer: Buffer, extIndicada: string): Promise<st
  * Retorna um array de buffers PNG, um por página.
  */
 async function converterPDFParaImagens(pdfBuffer: Buffer): Promise<Buffer[]> {
-  const pdfjsVersion = '4.4.168';
-  const cdnWorkerUrl = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.mjs`;
+  try {
+    // @ts-ignore
+    const pdfjsModule = await import('pdfjs-dist/legacy/build/pdf.mjs').catch(() => import('pdfjs-dist'));
+    const pdfjs = (pdfjsModule as any).getDocument ? pdfjsModule : ((pdfjsModule as any).default || pdfjsModule);
 
-  const pdfjsModule = await import('pdfjs-dist');
-  const pdfjs = (pdfjsModule as any).getDocument ? pdfjsModule : ((pdfjsModule as any).default || pdfjsModule);
-  pdfjs.GlobalWorkerOptions.workerSrc = cdnWorkerUrl;
+    const canvasModule = await import('canvas');
+    const canvas = (canvasModule as any).createCanvas ? canvasModule : ((canvasModule as any).default || canvasModule);
 
-  const canvasModule = await import('canvas');
-  const canvas = (canvasModule as any).createCanvas ? canvasModule : ((canvasModule as any).default || canvasModule);
-
-  class SimpleCanvasFactory {
-    create(width: number, height: number) {
-      const c = canvas.createCanvas(width, height);
-      return { canvas: c, context: c.getContext('2d') };
-    }
-    reset(canvasAndContext: any, width: number, height: number) {
-      canvasAndContext.canvas.width = width;
-      canvasAndContext.canvas.height = height;
-      canvasAndContext.context = canvasAndContext.canvas.getContext('2d');
-    }
-    destroy(canvasAndContext: any) {
-      if (canvasAndContext.canvas) {
-        canvasAndContext.canvas.width = 0;
-        canvasAndContext.canvas.height = 0;
-        canvasAndContext.canvas = null;
+    // pdf.js 4.x: pass CanvasFactory *class*, not a canvasFactory instance
+    // (deprecated: `canvasFactory`-instance option).
+    class NodeCanvasFactory {
+      constructor(_opts?: { ownerDocument?: unknown; enableHWA?: boolean }) {}
+      _createCanvas(width: number, height: number) {
+        return canvas.createCanvas(width, height);
       }
-      canvasAndContext.context = null;
+      create(width: number, height: number) {
+        const c = this._createCanvas(width, height);
+        return { canvas: c, context: c.getContext('2d') };
+      }
+      reset(canvasAndContext: { canvas: any }, width: number, height: number) {
+        canvasAndContext.canvas.width = width;
+        canvasAndContext.canvas.height = height;
+      }
+      destroy(canvasAndContext: { canvas: any; context: any }) {
+        if (canvasAndContext.canvas) {
+          canvasAndContext.canvas.width = 0;
+          canvasAndContext.canvas.height = 0;
+          canvasAndContext.canvas = null;
+        }
+        canvasAndContext.context = null;
+      }
     }
+
+    const docData = new Uint8Array(pdfBuffer);
+    const pdfDoc = await pdfjs.getDocument({
+      data: docData,
+      CanvasFactory: NodeCanvasFactory,
+      disableFontFace: true,
+    }).promise;
+
+    const factory: InstanceType<typeof NodeCanvasFactory> =
+      pdfDoc.canvasFactory || new NodeCanvasFactory();
+    const imagens: Buffer[] = [];
+    const MAX_PAGINAS = 5;
+
+    for (let i = 1; i <= Math.min(pdfDoc.numPages, MAX_PAGINAS); i++) {
+      const page = await pdfDoc.getPage(i);
+      const viewport = page.getViewport({ scale: 2.0 });
+      const canvasAndContext = factory.create(viewport.width, viewport.height);
+      if (canvasAndContext.context) {
+        canvasAndContext.context.imageSmoothingEnabled = true;
+      }
+
+      await page.render({ canvasContext: canvasAndContext.context as any, viewport }).promise;
+
+      const pageBuffer = canvasAndContext.canvas.toBuffer('image/png');
+      imagens.push(pageBuffer);
+      factory.destroy(canvasAndContext);
+      console.log(`[OCR/PDF→IMG] Página ${i}/${Math.min(pdfDoc.numPages, MAX_PAGINAS)} convertida para PNG (${pageBuffer.length} bytes).`);
+    }
+
+    return imagens;
+  } catch (err: any) {
+    console.warn('[OCR/PDF→IMG] Falha ao converter PDF para imagens no Node:', err.message);
+    return [];
   }
-
-  const docData = new Uint8Array(pdfBuffer);
-  const pdfDoc = await pdfjs.getDocument({ data: docData, CanvasFactory: SimpleCanvasFactory, workerSrc: cdnWorkerUrl }).promise;
-
-  const imagens: Buffer[] = [];
-  const MAX_PAGINAS = 5;
-
-  for (let i = 1; i <= Math.min(pdfDoc.numPages, MAX_PAGINAS); i++) {
-    const page = await pdfDoc.getPage(i);
-    const viewport = page.getViewport({ scale: 2.0 });
-    const nodeCanvas = canvas.createCanvas(viewport.width, viewport.height);
-    const context = nodeCanvas.getContext('2d');
-    context.imageSmoothingEnabled = true;
-
-    await page.render({ canvasContext: context as any, viewport, CanvasFactory: SimpleCanvasFactory }).promise;
-
-    const pageBuffer = nodeCanvas.toBuffer('image/png');
-    imagens.push(pageBuffer);
-    console.log(`[OCR/PDF→IMG] Página ${i}/${Math.min(pdfDoc.numPages, MAX_PAGINAS)} convertida para PNG (${pageBuffer.length} bytes).`);
-  }
-
-  return imagens;
 }
 
 /**
  * Extrai texto de um PDF digitalizado enviando-o ao LLM com visão.
  * Converte PDF em imagens PNG antes de enviar (compatível com llama.cpp e outros).
- * Retorna null se o LLM não suportar visão.
+ * Retorna null se o LLM não suportar visão ou se o provider não casar com o modelo.
  */
-async function extrairTextoViaLLMVisao(buffer: Buffer, mimeType: string = 'application/pdf'): Promise<string | null> {
+async function extrairTextoViaLLMVisao(
+  buffer: Buffer,
+  mimeType: string = 'application/pdf',
+  imagensPreConvertidas?: Buffer[]
+): Promise<string | null> {
   const { getIAConfig } = await import('@/lib/ia/client');
   const config = await getIAConfig();
-  if (!config || !config.ativo) {
-    throw new Error('IA não está configurada ou inativa');
-  }
-
-  const isLlamaCpp = config.provider === 'llamacpp';
-  const modelLower = (config.model_default || '').toLowerCase();
-  const visionModels = ['gpt-4o', 'gpt-4v', 'gpt-4-turbo', 'claude-3', 'claude-4', 'sonnet', 'haiku', 'opus', 'gemini', 'llava', 'bakllava', 'moondream', 'minicpm-v', 'qwen-vl', 'internvl'];
-  const isLikelyVision = isLlamaCpp || visionModels.some(m => modelLower.includes(m));
-
-  if (!isLikelyVision) {
-    console.log(`[OCR/LLM-Visão] Modelo "${config.model_default}" (provider: ${config.provider}) não parece suportar visão. Pulando.`);
+  if (!visaoLlmCompativel(config)) {
+    console.log(
+      `[OCR/LLM-Visão] Pulando visão: provider "${config?.provider || '?'}" ` +
+      `+ modelo "${config?.model_default || '?'}" incompatível (ex.: llamacpp+gemini).`
+    );
     return null;
   }
 
   const isPDF = mimeType === 'application/pdf' || buffer.subarray(0, 4).toString() === '%PDF';
 
-  let imageBuffers: Buffer[] = [];
+  let imageBuffers: Buffer[] = imagensPreConvertidas?.length ? imagensPreConvertidas : [];
 
-  if (isPDF) {
+  if (imageBuffers.length === 0 && isPDF) {
     try {
       console.log('[OCR/LLM-Visão] PDF detectado, convertendo páginas para imagens PNG...');
       imageBuffers = await converterPDFParaImagens(buffer);
@@ -355,12 +439,12 @@ async function extrairTextoViaLLMVisao(buffer: Buffer, mimeType: string = 'appli
       }
       console.log(`[OCR/LLM-Visão] ${imageBuffers.length} página(s) convertida(s) para PNG.`);
     } catch (convertErr: any) {
-      console.warn(`[OCR/LLM-Visão] Falha ao converter PDF para imagens: ${convertErr.message}. Tentando envio direto do PDF...`);
-      imageBuffers = [];
+      console.warn(`[OCR/LLM-Visão] Falha ao converter PDF para imagens: ${convertErr.message}.`);
+      return null;
     }
   }
 
-  if (!isPDF || imageBuffers.length === 0) {
+  if (imageBuffers.length === 0) {
     imageBuffers = [buffer];
   }
 
@@ -385,69 +469,90 @@ Retorne APENAS o texto extraído, sem explicações, sem formatação markdown.`
     });
   }
 
-  const formats = [
-    {
-      name: isLlamaCpp ? 'llamacpp_image_url' : 'image_url_doc',
-      content: contentParts,
-    },
-  ];
+  const formatName = `${config!.provider}_image_url`;
 
-  for (const format of formats) {
-    try {
-      console.log(`[OCR/LLM-Visão] Enviando ${imageBuffers.length} imagem(ns) ao LLM com formato "${format.name}" (modelo: ${config.model_default}, provider: ${config.provider})...`);
+  try {
+    console.log(
+      `[OCR/LLM-Visão] Enviando ${imageBuffers.length} imagem(ns) ao LLM com formato "${formatName}" ` +
+      `(modelo: ${config!.model_default}, provider: ${config!.provider})...`
+    );
 
-      const messages = [
-        { role: 'system' as const, content: systemPrompt },
-        { role: 'user' as const, content: format.content },
-      ];
+    const messages = [
+      { role: 'system' as const, content: systemPrompt },
+      { role: 'user' as const, content: contentParts },
+    ];
 
-      const response = await fetch(`${config.endpoint}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${config.api_key}`,
-        },
-        body: JSON.stringify({
-          model: config.model_default,
-          messages,
-          max_tokens: config.max_tokens || 4096,
-          temperature: 0.1,
-        }),
-      });
+    const response = await fetch(`${config!.endpoint}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${config!.api_key}`,
+      },
+      body: JSON.stringify({
+        model: config!.model_default,
+        messages,
+        max_tokens: config!.max_tokens || 4096,
+        temperature: 0.1,
+      }),
+    });
 
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => 'Sem detalhes');
-        console.warn(`[OCR/LLM-Visão] Formato "${format.name}" retornou ${response.status}: ${errorText.substring(0, 300)}`);
-        continue;
-      }
-
-      const data = await response.json();
-      let content = data.choices?.[0]?.message?.content || '';
-
-      if (content.includes('<think>')) {
-        content = content.substring(content.indexOf('</think>') + 8).trim();
-      }
-      content = content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-
-      if (content.length >= 10) {
-        console.log(`[OCR/LLM-Visão] Formato "${format.name}" extraiu ${content.length} caracteres.`);
-        return content;
-      }
-      console.warn(`[OCR/LLM-Visão] Formato "${format.name}" retornou texto muito curto (${content.length} chars).`);
-    } catch (err: any) {
-      console.warn(`[OCR/LLM-Visão] Formato "${format.name}" falhou: ${err.message}`);
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Sem detalhes');
+      console.warn(`[OCR/LLM-Visão] Formato "${formatName}" retornou ${response.status}: ${errorText.substring(0, 300)}`);
+      return null;
     }
+
+    const data = await response.json();
+    let content = data.choices?.[0]?.message?.content || '';
+
+    if (content.includes('<think>')) {
+      content = content.substring(content.indexOf('</think>') + 8).trim();
+    }
+    content = content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+
+    if (content.length >= 10) {
+      console.log(`[OCR/LLM-Visão] Formato "${formatName}" extraiu ${content.length} caracteres.`);
+      return content;
+    }
+    console.warn(`[OCR/LLM-Visão] Formato "${formatName}" retornou texto muito curto (${content.length} chars).`);
+  } catch (err: any) {
+    console.warn(`[OCR/LLM-Visão] Formato "${formatName}" falhou: ${err.message}`);
   }
 
-  console.log('[OCR/LLM-Visão] Nenhum formato funcionou.');
+  console.log('[OCR/LLM-Visão] Visão LLM não retornou texto utilizável.');
   return null;
 }
 
+async function ocrImagensComTesseract(
+  imagens: Buffer[],
+  idioma: string
+): Promise<{ texto: string; confianca: number } | null> {
+  if (!imagens.length) return null;
+  const textPages: string[] = [];
+  let totalConfidence = 0;
+  let confidenceCount = 0;
+
+  for (let i = 0; i < imagens.length; i++) {
+    const pageOcr = await processarComTesseract(imagens[i], idioma);
+    if (pageOcr && textoOcrSuficiente(pageOcr.texto, 5)) {
+      console.log(
+        `[OCR/Tesseract] Página ${i + 1}/${imagens.length} extraiu ${pageOcr.texto.length} caracteres (confiança ${Math.round(pageOcr.confianca)}).`
+      );
+      textPages.push(pageOcr.texto);
+      totalConfidence += pageOcr.confianca;
+      confidenceCount++;
+    }
+  }
+
+  if (confidenceCount === 0) return null;
+  return { texto: textPages.join('\n\n'), confianca: Math.round(totalConfidence / confidenceCount) };
+}
+
 async function ocrPdfDigitalizado(buffer: Buffer, idioma: string = 'por'): Promise<{ texto: string; confianca: number }> {
-  // 1) pdf-parse com render customizado — funciona em qualquer ambiente
+  // 1) pdf-parse com render customizado — camada de texto residual
   try {
     // @ts-ignore
-    const pdfParseModule = await import('pdf-parse');
+    const pdfParseModule = await import('pdf-parse/lib/pdf-parse.js').catch(() => import('pdf-parse'));
     const pdfParse = typeof pdfParseModule === 'function' ? pdfParseModule : (pdfParseModule.default || pdfParseModule);
 
     const customRenderPage = (pageData: any) => {
@@ -470,86 +575,66 @@ async function ocrPdfDigitalizado(buffer: Buffer, idioma: string = 'por'): Promi
     const data = await pdfParse(buffer, { pagerender: customRenderPage });
     const texto = (data.text || '').trim();
 
-    if (texto.length >= 10) {
+    if (textoOcrSuficiente(texto)) {
       console.log(`[OCR/PDF] pdf-parse (render custom) extraiu ${texto.length} caracteres.`);
       return { texto, confianca: 95 };
     }
-    console.log('[OCR/PDF] pdf-parse retornou texto insuficiente (' + texto.length + ' chars), tentando próxima estratégia...');
+    console.log('[OCR/PDF] pdf-parse retornou texto insuficiente (' + texto.length + ' chars), tentando OCR local...');
   } catch (error: any) {
     console.warn(`[OCR/PDF] Falha no pdf-parse customizado: ${error.message}`);
   }
 
-  // 2) LLM com visão — converte PDF em imagens e envia ao LLM
+  const serverless = isAmbienteServerless();
+  let imagens: Buffer[] = [];
+  let localResult: { texto: string; confianca: number } | null = null;
+
+  // 2) Converter PDF → PNG UMA vez, depois Tesseract (antes de qualquer visão LLM)
+  if (!serverless) {
+    try {
+      imagens = await converterPDFParaImagens(buffer);
+      localResult = await ocrImagensComTesseract(imagens, idioma);
+      if (localResult && textoOcrSuficiente(localResult.texto)) {
+        console.log(`[OCR/PDF] Tesseract extraiu ${localResult.texto.length} caracteres do PDF digitalizado.`);
+        return localResult;
+      }
+    } catch (localError: any) {
+      console.warn(`[OCR/PDF] Fallback local (pdfjs+tesseract) falhou: ${localError.message}`);
+    }
+  }
+
+  // 3) Visão LLM só se OCR local fraco E provider/modelo realmente compatíveis
   try {
-    const texto = await extrairTextoViaLLMVisao(buffer, 'application/pdf');
-    if (texto && texto.trim().length >= 10) {
-      console.log(`[OCR/PDF] LLM visão extraiu ${texto.length} caracteres do PDF digitalizado.`);
-      return { texto, confianca: 90 };
+    const { getIAConfig } = await import('@/lib/ia/client');
+    const iaConfig = await getIAConfig();
+    if (!visaoLlmCompativel(iaConfig)) {
+      console.log(
+        `[OCR/PDF] Visão LLM pulada: provider "${iaConfig?.provider || '?'}" ` +
+        `+ modelo "${iaConfig?.model_default || '?'}" incompatível ou sem endpoint.`
+      );
+    } else {
+      const texto = await extrairTextoViaLLMVisao(buffer, 'application/pdf', imagens);
+      if (texto && textoOcrSuficiente(texto)) {
+        console.log(`[OCR/PDF] LLM visão extraiu ${texto.length} caracteres do PDF digitalizado.`);
+        return { texto, confianca: 90 };
+      }
     }
   } catch (llmError: any) {
     console.warn(`[OCR/PDF] LLM visão falhou: ${llmError.message}`);
   }
 
-  // 3) pdfjs-dist + canvas → Tesseract (fallback local sem IA)
-  // Nota: Tesseract.js usa WASM e não funciona em serverless (Vercel). Pular nesses ambientes.
-  const isServerless = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
-  if (!isServerless) {
-    try {
-      const imagens = await converterPDFParaImagens(buffer);
-
-      const textPages: string[] = [];
-      let totalConfidence = 0;
-      let confidenceCount = 0;
-
-      for (let i = 0; i < imagens.length; i++) {
-        let pageTexto = '';
-        let pageConfianca = 0;
-
-        const pageOcr = await processarComTesseract(imagens[i], idioma);
-        if (pageOcr && pageOcr.texto.length >= 5) {
-          pageTexto = pageOcr.texto;
-          pageConfianca = pageOcr.confianca;
-        }
-
-        if (pageTexto) {
-          textPages.push(pageTexto);
-          totalConfidence += pageConfianca;
-          confidenceCount++;
-        }
-      }
-
-      if (confidenceCount > 0) {
-        return { texto: textPages.join('\n\n'), confianca: Math.round(totalConfidence / confidenceCount) };
-      }
-    } catch (localError: any) {
-      console.warn(`[OCR/PDF] Fallback local (pdfjs+tesseract) falhou: ${localError.message}`);
-    }
-
-    // 4) Último recurso: Tesseract direto no buffer
-    try {
-      const ocrResult = await processarComTesseract(buffer, idioma);
-      if (ocrResult && ocrResult.texto.trim().length >= 5) {
-        console.log(`[OCR/PDF] Tesseract direto no buffer extraiu ${ocrResult.texto.length} caracteres.`);
-        return ocrResult;
-      }
-    } catch (tessError: any) {
-      console.warn(`[OCR/PDF] Tesseract direto falhou: ${tessError.message}`);
-    }
+  if (localResult && localResult.texto.trim()) {
+    return localResult;
   }
 
-  throw new Error(
-    'Não foi possível extrair texto do PDF digitalizado. ' +
-    'O documento pode ser uma imagem escaneada sem texto selecionável. ' +
-    'Verifique se a IA (LLM com visão) está configurada no painel admin, ' +
-    'ou envie um PDF com camada de texto selecionável.'
-  );
+  console.warn('[OCR/PDF] Não foi possível extrair texto do PDF digitalizado. Documento permanece editável.');
+  return { texto: '', confianca: 0 };
 }
 
 async function processarPDF(buffer: Buffer, idioma: string = 'por'): Promise<{ texto: string; confianca: number }> {
   let digitalTexto = '';
   try {
     // @ts-ignore
-    const pdfParseModule = await import('pdf-parse');
+    const pdfParseModule = await import('pdf-parse/lib/pdf-parse.js').catch(() => import('pdf-parse'));
     const pdfParse = typeof pdfParseModule === 'function' ? pdfParseModule : (pdfParseModule.default || pdfParseModule);
     const data = await pdfParse(buffer);
     digitalTexto = data.text || '';
@@ -660,27 +745,24 @@ async function processarComTesseract(
   idioma: string = 'por'
 ): Promise<{ texto: string; confianca: number } | null> {
   try {
-    const Tesseract = await import('tesseract.js');
-    const { data } = await Tesseract.recognize(buffer, idioma, {
-      logger: () => {},
-    });
-    return { texto: limparTextoOCR(data.text), confianca: data.confidence };
+    const TesseractModule = await import('tesseract.js');
+    const Tesseract = (TesseractModule as any).default || TesseractModule;
+    if (typeof Tesseract.recognize === 'function') {
+      const { data } = await Tesseract.recognize(buffer, idioma, {
+        logger: () => {},
+      });
+      return { texto: limparTextoOCR(data.text), confianca: data.confidence };
+    }
+    return null;
   } catch (error) {
     console.error('[OCR Tesseract] Erro:', error);
     return null;
   }
 }
 
-async function extrairDadosComLLM(texto: string, tipoDocumento: OCRTipoDocumento): Promise<Record<string, any> | null> {
-  try {
-    const { getIAConfig, chatCompletion } = await import('@/lib/ia/client');
-    const config = await getIAConfig();
-    if (!config || !config.ativo) {
-      console.log('[OCR/LLM] Nenhuma configuração ativa de IA encontrada no banco.');
-      return null;
-    }
-
-    const systemPrompt = `Você é um extrator de dados estruturados especializado em Atestados de Saúde Ocupacional (ASO) no padrão brasileiro e-Social.
+function promptExtracaoLLM(tipoDocumento: OCRTipoDocumento): string {
+  if (tipoDocumento === 'aso') {
+    return `Você é um extrator de dados estruturados especializado em Atestados de Saúde Ocupacional (ASO) no padrão brasileiro e-Social.
 Dada a extração bruta de texto (OCR) de um ASO, seu trabalho é identificar com máxima precisão os seguintes campos em formato JSON:
 {
   "cpf": "somente números do CPF do colaborador",
@@ -689,7 +771,7 @@ Dada a extração bruta de texto (OCR) de um ASO, seu trabalho é identificar co
   "data_nascimento": "Data de nascimento do colaborador no formato YYYY-MM-DD",
   "tipo_exame": "Selecione estritamente uma das opções: 'admissional', 'periodico', 'demissional', 'retorno', 'mudanca_funcao'",
   "resultado": "Selecione estritamente uma das opções: 'apto', 'inapto', 'apto_condicional'",
-  "data_realizacao": "Data de emissão/conclusão do ASO no formato YYYY-MM-DD",
+  "data_realizacao": "Data de emissão/conclusão do ASO no formato YYYY-MM-DD (sempre a partir de DD/MM/AAAA brasileiro)",
   "medico_examinador_nome": "Nome do médico que assina/examina",
   "medico_examinador_crm": "Apenas números do CRM do médico examinador",
   "medico_examinador_uf": "UF do CRM do médico examinador (ex: RJ, SP, etc)",
@@ -701,7 +783,7 @@ Dada a extração bruta de texto (OCR) de um ASO, seu trabalho é identificar co
   "exames_realizados": [
     {
       "nome": "Nome do exame (ex: ELETROCARDIOGRAMA, GLICOSE, etc)",
-      "data": "Data do exame no formato YYYY-MM-DD"
+      "data": "Data do exame no formato YYYY-MM-DD (sempre a partir de DD/MM/AAAA brasileiro; 10/08/2026 = 2026-08-10, nunca 2026-10-08)"
     }
   ]
 }
@@ -714,19 +796,85 @@ Atenção especial (Regras de Negócio):
 5. Data de nascimento: Procure especificamente por rótulos como DN, DATA NASCIMENTO, NASCIMENTO, NASC:, etc. Não retorne a data de realização do exame como data de nascimento.
 6. Diferencie o Médico Examinador (quem assina/carimba o exame atual) do Médico Coordenador (responsável pelo PCMSO).
 7. Exames: Liste TODOS os procedimentos/exames clínicos realizados no paciente, com suas respectivas datas. Se houver "EXAME CLINICO - ASO", adicione na lista.
-8. Datas: Retorne todas as datas estritamente no formato YYYY-MM-DD.
+8. Datas: Sempre interprete números como DD/MM/AAAA (padrão brasileiro), mesmo que o laudo misture formato inglês (MM/DD). 10/08/2026 e 08/10/2026 no mesmo ASO de 10 de agosto viram 2026-08-10. Nunca use Date.parse americano. Retorne YYYY-MM-DD.
 9. Evite deduções incertas. Não duplique dados e não preencha campos de clínica com informações da empresa contratante.
 
 Retorne APENAS o objeto JSON válido, sem explicações, sem blocos de código markdown.`;
+  }
+
+  return `Você extrai dados estruturados de um documento do tipo "${tipoDocumento}".
+Dado o texto OCR, retorne APENAS um JSON válido com estes campos (use null se o campo não existir no documento):
+{
+  "cpf": "somente dígitos do CPF, se impresso",
+  "nome_completo": "nome da pessoa titular",
+  "numero_documento": "número próprio impresso (passaporte, CNH, certificado, RG, visto…)",
+  "orgao_emissor": "órgão/autoridade/instituição/país emissor",
+  "data_emissao": "YYYY-MM-DD",
+  "data_validade": "YYYY-MM-DD",
+  "numero_passaporte": "número do passaporte se aplicável (ex: FG123456)",
+  "numero_cnh": "número de registro da CNH se aplicável",
+  "categoria_cnh": "categoria da CNH se aplicável (A, B, AB…)",
+  "rg": "número do RG se aplicável"
+}
+
+Regras:
+- Passaporte: Passport No / Nº do passaporte, Date of issue, Date of expiry, Authority (PF, DPF, país).
+- CNH: registro, validade, categoria.
+- Certificado/treinamento: número do certificado, instituição, data de realização e validade.
+- Não invente valores. Campos ausentes = null.
+- Datas estritamente YYYY-MM-DD.
+- Retorne APENAS o JSON, sem markdown e sem explicações.`;
+}
+
+async function extrairDadosComLLM(
+  texto: string,
+  tipoDocumento: OCRTipoDocumento,
+  profileCpf?: string | null
+): Promise<Record<string, any> | null> {
+  if (!deveExtrairEstruturaComLlm(texto, tipoDocumento)) {
+    console.log('[OCR/LLM] Extração estruturada pulada (texto vazio/insuficiente).');
+    return null;
+  }
+
+  try {
+    const { getIAConfig } = await import('@/lib/ia/client');
+    const config = await getIAConfig();
+    if (!config || !config.ativo) {
+      console.log('[OCR/LLM] Nenhuma configuração ativa de IA encontrada no banco.');
+      return null;
+    }
+
+    const systemPrompt = promptExtracaoLLM(tipoDocumento);
 
     const messages = [
       { role: 'system' as const, content: systemPrompt },
       { role: 'user' as const, content: texto }
     ];
 
-    console.log('[OCR/LLM] Enviando texto ao LLM para extração inteligente do ASO...');
-    const response = await chatCompletion(messages, { temperature: 0.1 });
-    const content = response.choices?.[0]?.message?.content;
+    console.log(`[OCR/LLM] Enviando texto ao LLM para extração inteligente (${tipoDocumento}) — sem tools...`);
+
+    const response = await fetch(`${config.endpoint}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${config.api_key}`,
+      },
+      body: JSON.stringify({
+        model: config.model_default,
+        messages,
+        max_tokens: Math.min(config.max_tokens || 2048, 2048),
+        temperature: 0.1,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Sem detalhes');
+      console.warn(`[OCR/LLM] LLM retornou ${response.status}: ${errorText.substring(0, 200)}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
     if (!content) {
       console.warn('[OCR/LLM] Resposta do LLM veio vazia.');
       return null;
@@ -751,10 +899,61 @@ Retorne APENAS o objeto JSON válido, sem explicações, sem blocos de código m
     }
 
     const parsed = JSON.parse(jsonText);
-    console.log('[OCR/LLM] Dados extraídos via LLM com sucesso:', parsed);
+
+    // Validação matemática de CPF extraído pela IA
+    if (parsed.cpf) {
+      const cpfClean = String(parsed.cpf).replace(/\D/g, '');
+      if (validarCPF(cpfClean)) {
+        parsed.cpf = cpfClean;
+      } else {
+        console.log(`[OCR/LLM] CPF retornado pelo LLM (${cpfClean}) é inválido pelo Módulo 11. Tentando auto-reparo...`);
+        const reparado = repararCPFOptico(cpfClean, profileCpf);
+        if (reparado && validarCPF(reparado.cpf)) {
+          console.log(`[OCR/LLM] CPF reparado com sucesso: ${cpfClean} -> ${reparado.cpf}`);
+          parsed.cpf = reparado.cpf;
+        } else {
+          console.warn(`[OCR/LLM] Não foi possível reparar CPF do LLM (${cpfClean}). Descartando para uso do extrator regex inteligente.`);
+          delete parsed.cpf;
+        }
+      }
+    }
+
+    // Validação matemática de CNPJ da clínica
+    if (parsed.cnpj_clinica) {
+      const cnpjClean = String(parsed.cnpj_clinica).replace(/\D/g, '');
+      if (validarCNPJ(cnpjClean)) {
+        parsed.cnpj_clinica = cnpjClean;
+      } else {
+        delete parsed.cnpj_clinica;
+      }
+    }
+
+    if (tipoDocumento === 'aso' && parsed.resultado === 'inapto') {
+      const resHeuristica = extrairResultadoInteligente(texto);
+      if (resHeuristica === 'apto') {
+        console.log('[OCR/LLM] LLM indicou inapto por falso positivo de gabarito. Corrigindo para apto.');
+        parsed.resultado = 'apto';
+      }
+    }
+
+    // Validação de data de nascimento (evitar século 19 ou ano do exame)
+    if (parsed.data_nascimento) {
+      const mDN = String(parsed.data_nascimento).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (mDN) {
+        let ano = parseInt(mDN[1], 10);
+        if (ano < 1920 && ano >= 1800) ano += 100;
+        if (ano < 1940 || ano >= 2015) {
+          delete parsed.data_nascimento;
+        } else {
+          parsed.data_nascimento = `${ano}-${mDN[2]}-${mDN[3]}`;
+        }
+      }
+    }
+
+    console.log('[OCR/LLM] Dados extraídos e validados via LLM com sucesso:', parsed);
     return parsed;
   } catch (err: any) {
-    console.warn('[OCR/LLM] Falha ao extrair dados do ASO via LLM, usando fallback de regex:', err.message);
+    console.warn(`[OCR/LLM] Falha ao extrair dados via LLM (${tipoDocumento}), usando fallback de regex:`, err.message);
     return null;
   }
 }
@@ -769,7 +968,8 @@ Retorne APENAS o objeto JSON válido, sem explicações, sem blocos de código m
  */
 export async function processarImagensPreRenderizadas(
   images: string[], // data URIs base64 (data:image/jpeg;base64,...)
-  tipoDocumento?: OCRTipoDocumento
+  tipoDocumento?: OCRTipoDocumento,
+  profileCpf?: string | null
 ): Promise<OCRExtractResult> {
   try {
     if (!images || images.length === 0) {
@@ -778,95 +978,99 @@ export async function processarImagensPreRenderizadas(
 
     console.log(`[OCR/ClientImages] Recebidas ${images.length} imagens pré-renderizadas pelo navegador.`);
 
-    // Enviar TODAS as imagens em uma ÚNICA chamada ao LLM com visão
+    const buffers: Buffer[] = [];
+    for (const img of images) {
+      const match = img.match(/^data:[^;]+;base64,(.+)$/);
+      if (match) buffers.push(Buffer.from(match[1], 'base64'));
+    }
+
+    let texto = '';
+    let confianca = 0;
+
+    if (!isAmbienteServerless() && buffers.length > 0) {
+      const local = await ocrImagensComTesseract(buffers, 'por');
+      if (local && textoOcrSuficiente(local.texto)) {
+        texto = local.texto;
+        confianca = local.confianca;
+        console.log(`[OCR/ClientImages] Tesseract local extraiu ${texto.length} caracteres.`);
+      }
+    }
+
     const { getIAConfig } = await import('@/lib/ia/client');
     const config = await getIAConfig();
-    if (!config || !config.ativo) {
-      return { success: false, error: 'IA não está configurada ou inativa. Configure a IA no painel admin.' };
-    }
 
-    const isLlamaCpp = config.provider === 'llamacpp';
-    const modelLower = (config.model_default || '').toLowerCase();
-    const visionModels = ['gpt-4o', 'gpt-4v', 'gpt-4-turbo', 'claude-3', 'claude-4', 'sonnet', 'haiku', 'opus', 'gemini', 'llava', 'bakllava', 'moondream', 'minicpm-v', 'qwen-vl', 'internvl', 'qwopus'];
-    const isLikelyVision = isLlamaCpp || visionModels.some(m => modelLower.includes(m));
-
-    if (!isLikelyVision) {
-      return { success: false, error: `Modelo "${config.model_default}" não suporta visão. Use um modelo com capacidade de visão (ex: LLaVA, Qwen-VL, GPT-4o).` };
-    }
-
-    const systemPrompt = `Você é um sistema de OCR. Extraia TODO o texto visível das imagens do documento fornecido.
+    if (!textoOcrSuficiente(texto) && visaoLlmCompativel(config)) {
+      const systemPrompt = `Você é um sistema de OCR. Extraia TODO o texto visível das imagens do documento fornecido.
 Transcreva o conteúdo exatamente como aparece, preservando a estrutura e quebras de linha.
 Inclua cabeçalhos, rodapés, carimbos, assinaturas legíveis, tabelas, e qualquer informação visível.
 Retorne APENAS o texto extraído, sem explicações, sem formatação markdown.`;
 
-    // Montar conteúdo multimodal — todas as páginas em uma mensagem
-    const userContent: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
-      { type: 'text', text: `Extraia todo o texto deste documento (${images.length} página(s)):` },
-    ];
+      const userContent: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
+        { type: 'text', text: `Extraia todo o texto deste documento (${images.length} página(s)):` },
+      ];
 
-    for (const img of images) {
-      userContent.push({
-        type: 'image_url',
-        image_url: { url: img },
-      });
-    }
-
-    const messages = [
-      { role: 'system' as const, content: systemPrompt },
-      { role: 'user' as const, content: userContent },
-    ];
-
-    console.log(`[OCR/ClientImages] Enviando ${images.length} imagens ao LLM "${config.model_default}" (provider: ${config.provider})...`);
-
-    const response = await fetch(`${config.endpoint}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.api_key}`,
-      },
-      body: JSON.stringify({
-        model: config.model_default,
-        messages,
-        max_tokens: config.max_tokens || 4096,
-        temperature: 0.1,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => 'Sem detalhes');
-      console.error(`[OCR/ClientImages] LLM retornou ${response.status}: ${errorText.substring(0, 500)}`);
-
-      // Se o modelo não aceitar múltiplas imagens, tentar uma por uma
-      if (images.length > 1 && (response.status === 400 || response.status === 422)) {
-        console.log('[OCR/ClientImages] Tentando enviar imagens individualmente...');
-        return await processarImagensIndividualmente(images, config, tipoDocumento);
+      for (const img of images) {
+        userContent.push({
+          type: 'image_url',
+          image_url: { url: img },
+        });
       }
 
-      return { success: false, error: `LLM retornou erro ${response.status}. Verifique a configuração da IA.` };
+      const messages = [
+        { role: 'system' as const, content: systemPrompt },
+        { role: 'user' as const, content: userContent },
+      ];
+
+      console.log(`[OCR/ClientImages] Enviando ${images.length} imagens ao LLM "${config!.model_default}" (provider: ${config!.provider})...`);
+
+      const response = await fetch(`${config!.endpoint}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${config!.api_key}`,
+        },
+        body: JSON.stringify({
+          model: config!.model_default,
+          messages,
+          max_tokens: config!.max_tokens || 4096,
+          temperature: 0.1,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => 'Sem detalhes');
+        console.error(`[OCR/ClientImages] LLM retornou ${response.status}: ${errorText.substring(0, 500)}`);
+
+        if (images.length > 1 && (response.status === 400 || response.status === 422)) {
+          console.log('[OCR/ClientImages] Tentando enviar imagens individualmente...');
+          return await processarImagensIndividualmente(images, config, tipoDocumento, profileCpf);
+        }
+      } else {
+        const data = await response.json();
+        let visionText = data.choices?.[0]?.message?.content || '';
+
+        if (visionText.includes('<think>')) {
+          visionText = visionText.substring(visionText.indexOf('</think>') + 8).trim();
+        }
+        visionText = visionText.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+
+        if (textoOcrSuficiente(visionText)) {
+          texto = visionText;
+          confianca = 90;
+          console.log(`[OCR/ClientImages] LLM extraiu ${texto.length} caracteres com sucesso.`);
+        }
+      }
+    } else if (!textoOcrSuficiente(texto)) {
+      console.log(
+        `[OCR/ClientImages] Visão LLM pulada: provider "${config?.provider || '?'}" ` +
+        `+ modelo "${config?.model_default || '?'}" incompatível.`
+      );
     }
 
-    const data = await response.json();
-    let texto = data.choices?.[0]?.message?.content || '';
-
-    // Limpar blocos de raciocínio (DeepSeek/Qwen)
-    if (texto.includes('<think>')) {
-      texto = texto.substring(texto.indexOf('</think>') + 8).trim();
-    }
-    texto = texto.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-
-    if (texto.length < 10) {
-      return { success: false, error: 'LLM retornou texto insuficiente. O documento pode estar ilegível.' };
-    }
-
-    console.log(`[OCR/ClientImages] LLM extraiu ${texto.length} caracteres com sucesso.`);
-
-    // Extrair dados estruturados via regex
-    const dadosRegex = extrairDadosTexto(texto, tipoDocumento);
-
-    // Extrair dados via LLM estruturado (se for ASO)
+    const dadosRegex = extrairDadosTexto(texto, tipoDocumento, profileCpf);
     let dadosIa: Record<string, any> | null = null;
-    if (tipoDocumento === 'aso') {
-      dadosIa = await extrairDadosComLLM(texto, tipoDocumento);
+    if (deveExtrairEstruturaComLlm(texto, tipoDocumento, dadosRegex)) {
+      dadosIa = await extrairDadosComLLM(texto, tipoDocumento || 'outro', profileCpf);
     }
 
     const dadosIaLimpos: Record<string, any> = {};
@@ -878,11 +1082,9 @@ Retorne APENAS o texto extraído, sem explicações, sem formatação markdown.`
       });
     }
 
-    const dadosExtraidos = { ...dadosRegex, ...dadosIaLimpos };
-
     return {
       success: true,
-      data: { texto, dadosExtraidos, confianca: 90 },
+      data: { texto, dadosExtraidos: { ...dadosRegex, ...dadosIaLimpos }, confianca },
     };
   } catch (error) {
     console.error('[OCR/ClientImages] Erro inesperado:', error);
@@ -899,7 +1101,8 @@ Retorne APENAS o texto extraído, sem explicações, sem formatação markdown.`
 async function processarImagensIndividualmente(
   images: string[],
   config: any,
-  tipoDocumento?: OCRTipoDocumento
+  tipoDocumento?: OCRTipoDocumento,
+  profileCpf?: string | null
 ): Promise<OCRExtractResult> {
   const systemPrompt = `Você é um sistema de OCR. Extraia TODO o texto visível da imagem do documento.
 Transcreva o conteúdo exatamente como aparece, preservando a estrutura e quebras de linha.
@@ -964,11 +1167,10 @@ Retorne APENAS o texto extraído, sem explicações, sem formatação markdown.`
 
   const texto = textos.join('\n\n');
 
-  // Extrair dados estruturados
-  const dadosRegex = extrairDadosTexto(texto, tipoDocumento);
+  const dadosRegex = extrairDadosTexto(texto, tipoDocumento, profileCpf);
   let dadosIa: Record<string, any> | null = null;
-  if (tipoDocumento === 'aso') {
-    dadosIa = await extrairDadosComLLM(texto, tipoDocumento);
+  if (deveExtrairEstruturaComLlm(texto, tipoDocumento, dadosRegex)) {
+    dadosIa = await extrairDadosComLLM(texto, tipoDocumento || 'outro', profileCpf);
   }
 
   const dadosIaLimpos: Record<string, any> = {};
@@ -988,7 +1190,8 @@ Retorne APENAS o texto extraído, sem explicações, sem formatação markdown.`
 
 export async function processarDocumentoOCR(
   arquivoUrl: string,
-  tipoDocumento?: OCRTipoDocumento
+  tipoDocumento?: OCRTipoDocumento,
+  profileCpf?: string | null
 ): Promise<OCRExtractResult> {
   try {
     if (!arquivoUrl) {
@@ -996,7 +1199,7 @@ export async function processarDocumentoOCR(
     }
 
     const config = await getOCRConfigFromDB();
-    const isServerless = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+    const serverless = isAmbienteServerless();
     let resultado: { texto: string; dadosExtraidos: Record<string, any>; confianca: number } | null = null;
 
     if (config.fallback_api_url) {
@@ -1042,24 +1245,29 @@ export async function processarDocumentoOCR(
       } else if (ext === 'txt' || ext === 'csv') {
         parseResult = await processarTXT(buffer);
       } else if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext)) {
-        try {
-          const mime = ext === 'jpg' ? 'jpeg' : ext;
-          const texto = await extrairTextoViaLLMVisao(buffer, `image/${mime}`);
-          if (texto && texto.trim().length >= 10) {
-            parseResult = { texto, confianca: 90 };
-          }
-        } catch (err: any) {
-          console.warn('[OCR/Image] LLM visão falhou:', err.message);
-        }
-        if (!parseResult && !isServerless) {
+        if (!serverless) {
           try {
             parseResult = await processarComTesseract(buffer, config.idioma);
-          } catch {
-            parseResult = await processarTXT(buffer);
+            if (parseResult && textoOcrSuficiente(parseResult.texto)) {
+              console.log(`[OCR/Image] Tesseract extraiu ${parseResult.texto.length} caracteres.`);
+            }
+          } catch (tessErr: any) {
+            console.warn('[OCR/Image] Tesseract falhou:', tessErr.message);
+          }
+        }
+        if (!textoOcrSuficiente(parseResult?.texto)) {
+          try {
+            const mime = ext === 'jpg' ? 'jpeg' : ext;
+            const texto = await extrairTextoViaLLMVisao(buffer, `image/${mime}`, [buffer]);
+            if (texto && textoOcrSuficiente(texto)) {
+              parseResult = { texto, confianca: 90 };
+            }
+          } catch (err: any) {
+            console.warn('[OCR/Image] LLM visão falhou:', err.message);
           }
         }
       } else {
-        if (!isServerless) {
+        if (!serverless) {
           try {
             parseResult = await processarComTesseract(buffer, config.idioma);
           } catch {
@@ -1068,8 +1276,10 @@ export async function processarDocumentoOCR(
         }
       }
 
+      // Arquivo salvo permanece editável mesmo se o OCR não extrair texto
       if (!parseResult) {
-        return { success: false, error: `Não foi possível processar ou extrair texto do documento do tipo ${ext}` };
+        parseResult = { texto: '', confianca: 0 };
+        console.warn(`[OCR/Parser] Sem texto extraído para tipo ${ext}; documento permanece editável.`);
       }
 
       resultado = {
@@ -1079,13 +1289,16 @@ export async function processarDocumentoOCR(
       };
     }
 
-    // Tentar extração inteligente via LLM se for ASO e a IA estiver configurada
+    const dadosRegex = extrairDadosTexto(resultado.texto, tipoDocumento, profileCpf);
     let dadosIa: Record<string, any> | null = null;
-    if (tipoDocumento === 'aso') {
-      dadosIa = await extrairDadosComLLM(resultado.texto, tipoDocumento);
+    if (deveExtrairEstruturaComLlm(resultado.texto, tipoDocumento, dadosRegex)) {
+      dadosIa = await extrairDadosComLLM(resultado.texto, tipoDocumento || 'outro', profileCpf);
+    } else {
+      console.log(
+        `[OCR/LLM] Extração via LLM pulada (texto insuficiente ou regex já preencheu ${tipoDocumento || 'documento'}).`
+      );
     }
 
-    // Filtra chaves nulas ou vazias da IA para não sobrescrever o fallback de regex
     const dadosIaLimpos: Record<string, any> = {};
     if (dadosIa) {
       Object.keys(dadosIa).forEach(key => {
@@ -1096,7 +1309,7 @@ export async function processarDocumentoOCR(
     }
 
     resultado.dadosExtraidos = {
-      ...extrairDadosTexto(resultado.texto, tipoDocumento),
+      ...dadosRegex,
       ...dadosIaLimpos,
       ...resultado.dadosExtraidos,
     };

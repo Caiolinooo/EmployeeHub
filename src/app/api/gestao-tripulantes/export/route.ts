@@ -46,7 +46,7 @@ function parseFilters(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const token = extractTokenFromHeader(req.headers.get('authorization'));
+  const token = extractTokenFromHeader(req.headers.get('authorization') || undefined);
   if (!token || !verifyToken(token)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
@@ -76,8 +76,8 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: prev.error }, { status: prev.status || 500 });
       }
       return NextResponse.json({
-        success: true,
         ...prev,
+        success: true,
         presets: EXPORT_TEMPLATE_PRESETS,
         placeholders: TEMPLATE_PLACEHOLDERS,
         limites: { padrao: MAX_FUNCIONARIOS_PADRAO, maximo: MAX_FUNCIONARIOS_HARD },
@@ -119,7 +119,7 @@ export async function GET(req: NextRequest) {
 
 /** POST — salva o template de pastas em gt_configuracoes ('gt_export_template'). */
 export async function POST(req: NextRequest) {
-  const token = extractTokenFromHeader(req.headers.get('authorization'));
+  const token = extractTokenFromHeader(req.headers.get('authorization') || undefined);
   if (!token || !verifyToken(token)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }

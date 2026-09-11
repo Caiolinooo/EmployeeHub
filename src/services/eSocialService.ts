@@ -1,4 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase';
+import { alinharDataExamePtBr, normalizeEsocialDate } from '@/lib/e-social/esocial-date';
+import { sanitizeTsNome } from '@/lib/e-social/ts-nome';
 
 export interface ESocialEvento {
   id: string;
@@ -151,6 +153,8 @@ export async function createEvento(evento: {
   modulo_origem?: string;
   entidade_origem_id?: string;
   entidade_origem_tipo?: string;
+  protocolo_envio?: string | null;
+  numero_recibo?: string | null;
 }): Promise<ESocialEvento> {
   const { data, error } = await supabaseAdmin
     .from('esocial_eventos')
@@ -164,6 +168,8 @@ export async function createEvento(evento: {
       modulo_origem: evento.modulo_origem || 'manual',
       entidade_origem_id: evento.entidade_origem_id || null,
       entidade_origem_tipo: evento.entidade_origem_tipo || null,
+      protocolo_envio: evento.protocolo_envio || null,
+      numero_recibo: evento.numero_recibo || null,
     })
     .select()
     .single();
@@ -187,8 +193,10 @@ export async function updateEvento(id: string, updates: {
   revisado_em?: string;
   enviado_em?: string;
   comentario_revisao?: string;
+  matricula?: string;
+  updated_at?: string;
 }): Promise<ESocialEvento> {
-  const updateData: any = { updated_at: new Date().toISOString() };
+  const updateData: any = { updated_at: updates.updated_at || new Date().toISOString() };
 
   if (updates.dados_evento !== undefined) updateData.dados_evento = updates.dados_evento;
   if (updates.status !== undefined) updateData.status = updates.status;
@@ -201,6 +209,7 @@ export async function updateEvento(id: string, updates: {
   if (updates.revisado_em !== undefined) updateData.revisado_em = updates.revisado_em;
   if (updates.enviado_em !== undefined) updateData.enviado_em = updates.enviado_em;
   if (updates.comentario_revisao !== undefined) updateData.comentario_revisao = updates.comentario_revisao;
+  if (updates.matricula !== undefined) updateData.matricula = updates.matricula;
 
   const { data, error } = await supabaseAdmin
     .from('esocial_eventos')
@@ -405,44 +414,8 @@ function optTag(t: string, val: any, indent = 0): string {
   return tag(t, e(String(val)), indent);
 }
 
-/**
- * Normaliza qualquer formato de data para YYYY-MM-DD (ISO 8601 / XSD date).
- * Aceita: DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, YYYY-MM-DD, ISO timestamps.
- * Rejeita datas inválidas (ex: mês 13) e retorna string vazia.
- */
-function normalizeDate(raw: string | undefined | null): string {
-  if (!raw) return '';
-  const s = String(raw).trim();
-
-  // Já está no formato correto YYYY-MM-DD — valida e devolve
-  const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (isoMatch) {
-    const [, y, m, d] = isoMatch;
-    if (Number(m) >= 1 && Number(m) <= 12 && Number(d) >= 1 && Number(d) <= 31) {
-      return `${y}-${m}-${d}`;
-    }
-    // Mês/dia inválido — tenta inverter (YYYY-DD-MM -> YYYY-MM-DD)
-    if (Number(d) >= 1 && Number(d) <= 12 && Number(m) >= 1 && Number(m) <= 31) {
-      return `${y}-${d}-${m}`;
-    }
-    return ''; // irrecuperável
-  }
-
-  // DD/MM/YYYY ou DD-MM-YYYY
-  const brMatch = s.match(/^(\d{2})[\/-](\d{2})[\/-](\d{4})/);
-  if (brMatch) {
-    const [, d, m, y] = brMatch;
-    if (Number(m) >= 1 && Number(m) <= 12 && Number(d) >= 1 && Number(d) <= 31) {
-      return `${y}-${m}-${d}`;
-    }
-    return '';
-  }
-
-  // ISO timestamp (2026-06-09T...) — extrai só a data
-  const tsMatch = s.match(/^(\d{4}-\d{2}-\d{2})T/);
-  if (tsMatch) return normalizeDate(tsMatch[1]);
-
-  return '';
+function normalizeDate(raw: string | undefined | null, ancora?: string): string {
+  return ancora ? alinharDataExamePtBr(raw, ancora) : normalizeEsocialDate(raw);
 }
 
 export function generateEventXML(eventoCodigo: string, dadosEvento: any): string {
@@ -496,7 +469,7 @@ export function generateEventXML(eventoCodigo: string, dadosEvento: any): string
         optTag('matricula', matricula, 2), 1)
     : block('ideTrabalhador',
         optTag('cpfTrab', cpf, 2) +
-        optTag('nmTrab', esp.nome || esp.nmTrab, 2) +
+        optTag('nmTrab', sanitizeTsNome(esp.nome || esp.nmTrab || ''), 2) +
         optTag('nisTrab', esp.nis || esp.nisTrab, 2), 1);
 
   let corpo = '';
@@ -597,7 +570,7 @@ export function generateEventXML(eventoCodigo: string, dadosEvento: any): string
         
         for (const ex of listExames) {
           const cod = ex.codProc || ex.procRealizado || getCodProcFromNome(ex.nome);
-          const dt = normalizeDate(ex.data || ex.dtExm || defaultDate);
+          const dt = normalizeDate(ex.data || ex.dtExm || defaultDate, defaultDate);
           const key = `${dt}-${cod}`;
           
           let ordExameVal = calculatedOrdExame;
@@ -656,12 +629,19 @@ export function generateEventXML(eventoCodigo: string, dadosEvento: any): string
         optTag('resAso', resAsoNum, 3) +
         examesXml +
         block('medico',
-          optTag('nmMed', esp.medico || esp.medico_nome || esp.nmMed || esp.medicoNome || '', 4) +
-          optTag('nrCRM', esp.crm || esp.medico_crm || esp.nrCRM || '', 4) +
-          optTag('ufCRM', esp.uf || esp.medico_uf || esp.ufCRM || '', 4), 3), 2);
+          optTag('nmMed', sanitizeTsNome(
+            (typeof esp.medico === 'string' ? esp.medico : '')
+            || esp.medico_nome
+            || esp.nmMed
+            || esp.medicoNome
+            || (esp.medico && typeof esp.medico === 'object' ? esp.medico.nmMed : '')
+            || '',
+          ), 4) +
+          optTag('nrCRM', String(esp.crm || esp.medico_crm || esp.nrCRM || '').replace(/\D/g, ''), 4) +
+          optTag('ufCRM', String(esp.uf || esp.medico_uf || esp.ufCRM || '').trim().toUpperCase(), 4), 3), 2);
 
       const respMonitBlock = medicoPcmsoNome ? block('respMonit',
-        optTag('nmResp', medicoPcmsoNome, 3) +
+        optTag('nmResp', sanitizeTsNome(medicoPcmsoNome), 3) +
         optTag('nrCRM', medicoPcmsoCrm, 3) +
         optTag('ufCRM', medicoPcmsoUf, 3), 2) : '';
 

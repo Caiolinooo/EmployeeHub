@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     let auth;
     try {
-      auth = resolveEmailAuth();
+      auth = await resolveEmailAuth();
     } catch (error) {
       return NextResponse.json(
         {

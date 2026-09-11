@@ -3,10 +3,10 @@ import { generateEventXML, validateEventXML } from '../src/services/eSocialServi
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-const supabaseUrl = ***REMOVED*** || '';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-const supabase = ***REMOVED*** supabaseKey);
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function run() {
   const eventId = '75c7ee81-210a-417d-ad3c-12e1b126b660';

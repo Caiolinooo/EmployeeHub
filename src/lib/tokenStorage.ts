@@ -37,8 +37,8 @@ export const saveToken = (token: string, expiryInSeconds?: number): void => {
       expiryDate.setSeconds(expiryDate.getSeconds() + expiryInSeconds);
       localStorage.setItem(TOKEN_EXPIRY_KEY, expiryDate.toISOString());
     } else {
-      // Padrão de 24 horas
-      expiryDate.setHours(expiryDate.getHours() + 24);
+      // Padrão de 30 dias para sessão persistente em mobile / PWA
+      expiryDate.setDate(expiryDate.getDate() + 30);
       localStorage.setItem(TOKEN_EXPIRY_KEY, expiryDate.toISOString());
     }
 

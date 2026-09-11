@@ -10,6 +10,7 @@ import CertificadoManager from '@/components/e-social/CertificadoManager';
 import ESocialNavigation from '@/components/e-social/ESocialNavigation';
 import { toast } from 'react-hot-toast';
 import { FiRefreshCw } from 'react-icons/fi';
+import GtPageShell, { GT_PAGE_SCROLLPORT_CLASS } from '@/components/gestao-tripulantes/GtPageShell';
 
 export default function ESocialCertificadosPage() {
   const { user, isLoading: authLoading } = useSupabaseAuth();
@@ -104,11 +105,11 @@ export default function ESocialCertificadosPage() {
   if (authLoading || !user) return null;
 
   return (
-    <div className="flex-1 p-6">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <GtPageShell>
+      <div className="flex flex-col flex-1 min-h-0 w-full max-w-5xl mx-auto gap-4">
         
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between shrink-0">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">{t('eSocial.certificadosTitle', 'Certificados Digitais')}</h1>
             <p className="text-sm text-gray-500">{t('eSocial.certificados.title', 'Certificados A1 ou A3 para assinatura digital de eventos')}</p>
@@ -123,18 +124,22 @@ export default function ESocialCertificadosPage() {
         </div>
 
         {/* Sub-Navigation Tabs */}
-        <ESocialNavigation />
+        <div className="shrink-0">
+          <ESocialNavigation />
+        </div>
 
         {/* Manager Component */}
-        <CertificadoManager
-          certificados={certificados}
-          loading={loading}
-          onUpload={handleUpload}
-          onSetActive={handleSetActive}
-          onDelete={handleDelete}
-          uploadLoading={uploadLoading}
-        />
+        <div className={GT_PAGE_SCROLLPORT_CLASS}>
+          <CertificadoManager
+            certificados={certificados}
+            loading={loading}
+            onUpload={handleUpload}
+            onSetActive={handleSetActive}
+            onDelete={handleDelete}
+            uploadLoading={uploadLoading}
+          />
+        </div>
       </div>
-    </div>
+    </GtPageShell>
   );
 }

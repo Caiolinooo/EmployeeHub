@@ -24,3 +24,5 @@ CREATE TABLE IF NOT EXISTS gt_afastamentos (
 
 CREATE INDEX IF NOT EXISTS idx_gt_afastamentos_colaborador_id ON gt_afastamentos(colaborador_id);
 CREATE INDEX IF NOT EXISTS idx_gt_afastamentos_esocial_status ON gt_afastamentos(esocial_status);
+
+ALTER TABLE gt_afastamentos ENABLE ROW LEVEL SECURITY;

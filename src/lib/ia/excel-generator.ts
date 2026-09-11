@@ -241,6 +241,72 @@ export function formatEpisForExcel(data: any[]): { data: any[]; columns: ColumnD
 }
 
 /**
+ * Formata dados de ponto/presença para planilha
+ */
+export function formatPontoForExcel(data: any[]): { data: any[]; columns: ColumnDef[] } {
+  const columns: ColumnDef[] = [
+    { key: 'usuario', header: 'Usuário', width: 25 },
+    { key: 'email', header: 'Email', width: 30 },
+    { key: 'departamento', header: 'Departamento', width: 20 },
+    { key: 'funcao', header: 'Função', width: 20 },
+    { key: 'empresa', header: 'Empresa', width: 20 },
+    { key: 'evento', header: 'Evento', width: 25 },
+    { key: 'local', header: 'Local', width: 20 },
+    { key: 'data_evento', header: 'Data Evento', width: 14 },
+    { key: 'registrado_em', header: 'Registrado em', width: 14 },
+  ];
+  return { data, columns };
+}
+
+/**
+ * Formata dados de compras para planilha
+ */
+export function formatComprasForExcel(data: any[]): { data: any[]; columns: ColumnDef[] } {
+  const columns: ColumnDef[] = [
+    { key: 'usuario', header: 'Solicitante', width: 25 },
+    { key: 'email', header: 'Email', width: 30 },
+    { key: 'departamento', header: 'Departamento', width: 20 },
+    { key: 'numero', header: 'Número', width: 15 },
+    { key: 'provider_name', header: 'Fornecedor', width: 25 },
+    { key: 'buyer_name', header: 'Comprador', width: 20 },
+    { key: 'valor', header: 'Valor', width: 12, format: (v: number) => v ? `R$ ${Number(v).toFixed(2)}` : '' },
+    { key: 'status', header: 'Status', width: 14 },
+    { key: 'created_at', header: 'Criado em', width: 14 },
+  ];
+  return { data, columns };
+}
+
+/**
+ * Formata dados de eventos de calendário para planilha
+ */
+export function formatEventosForExcel(data: any[]): { data: any[]; columns: ColumnDef[] } {
+  const columns: ColumnDef[] = [
+    { key: 'usuario', header: 'Usuário', width: 25 },
+    { key: 'email', header: 'Email', width: 30 },
+    { key: 'summary', header: 'Título', width: 30 },
+    { key: 'location', header: 'Local', width: 20 },
+    { key: 'start_time', header: 'Início', width: 16 },
+    { key: 'end_time', header: 'Fim', width: 16 },
+    { key: 'description', header: 'Descrição', width: 35 },
+  ];
+  return { data, columns };
+}
+
+/**
+ * Formata dados de cursos Academy para planilha
+ */
+export function formatCursosForExcel(data: any[]): { data: any[]; columns: ColumnDef[] } {
+  const columns: ColumnDef[] = [
+    { key: 'title', header: 'Curso', width: 30 },
+    { key: 'categoria', header: 'Categoria', width: 20 },
+    { key: 'level', header: 'Nível', width: 12 },
+    { key: 'is_active', header: 'Ativo', width: 10, format: (v: any) => (v ? 'Sim' : 'Não') },
+    { key: 'description', header: 'Descrição', width: 40 },
+  ];
+  return { data, columns };
+}
+
+/**
  * Gera totais para incluir no relatório
  */
 export function generateTotals(data: any[], groupBy: string, valueField: string): any[] {

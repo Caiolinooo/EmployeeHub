@@ -36,3 +36,29 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+
+// DELETE /api/sectors/[id] - Delete a sector
+export async function DELETE(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+    const params = await props.params;
+    const sectorId = params.id;
+    if (!sectorId) {
+        return NextResponse.json({ error: 'Missing sector ID' }, { status: 400 });
+    }
+
+    try {
+        const { error } = await supabaseAdmin
+            .from('sectors')
+            .delete()
+            .eq('id', sectorId);
+
+        if (error) {
+            console.error('Error deleting sector:', error);
+            return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+
+        return NextResponse.json({ success: true, message: 'Setor removido com sucesso' });
+    } catch (error: any) {
+        console.error('Unexpected error deleting sector:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}

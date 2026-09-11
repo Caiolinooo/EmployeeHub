@@ -1,64 +1,34 @@
 import { gerarS2220, DadosS2220 } from './eventos/s-2220';
-import { gerarS2205, type DadosS2205 } from './eventos/s-2205';
-import { gerarS2206, type DadosS2206 } from './eventos/s-2206';
-import { gerarS2210, type DadosS2210 } from './eventos/s-2210';
-import { gerarS2230, type DadosS2230 } from './eventos/s-2230';
-import { gerarS2298, type DadosS2298 } from './eventos/s-2298';
-import { gerarS2299, type DadosS2299 } from './eventos/s-2299';
-import { validarXML } from './validacao';
+import { generateEventXML } from '@/services/eSocialService';
 
 type TipoAso = 'ADMISSIONAL' | 'PERIODICO' | 'RETORNO' | 'MUDANCA' | 'DEMISSIONAL';
 type ResultadoAso = 'APTO' | 'APTO_COM_RESTRICAO' | 'INAPTO';
 
 export function getTipoAso(tipo: TipoAso): number {
   const mapa: Record<TipoAso, number> = {
-    ADMISSIONAL: 1,
-    PERIODICO: 2,
-    RETORNO: 3,
-    MUDANCA: 4,
-    DEMISSIONAL: 5,
+    ADMISSIONAL: 0,
+    PERIODICO: 1,
+    RETORNO: 2,
+    MUDANCA: 3,
+    DEMISSIONAL: 9,
   };
-  return mapa[tipo] ?? 2;
+  return mapa[tipo] ?? 1;
 }
 
 export function getResultadoAso(resultado: ResultadoAso): number {
   const mapa: Record<ResultadoAso, number> = {
     APTO: 1,
-    APTO_COM_RESTRICAO: 2,
-    INAPTO: 3,
+    APTO_COM_RESTRICAO: 1,
+    INAPTO: 2,
   };
   return mapa[resultado] ?? 1;
 }
 
 export function gerarXMLEvento(codigoEvento: string, dados: Record<string, unknown>): string {
-  switch (codigoEvento) {
-    case 'S-2220':
-      return gerarS2220(dados as unknown as DadosS2220);
-    case 'S-2200':
-      return gerarS2200(dados);
-    case 'S-2205':
-      return gerarS2205(dados as unknown as DadosS2205);
-    case 'S-2206':
-      return gerarS2206(dados as unknown as DadosS2206);
-    case 'S-2210':
-      return gerarS2210(dados as unknown as DadosS2210);
-    case 'S-2230':
-      return gerarS2230(dados as unknown as DadosS2230);
-    case 'S-2240':
-      return gerarS2240(dados);
-    case 'S-2298':
-      return gerarS2298(dados as unknown as DadosS2298);
-    case 'S-2299':
-      return gerarS2299(dados as unknown as DadosS2299);
-    case 'S-2300':
-      return gerarS2300(dados);
-    case 'S-2399':
-      return gerarS2399(dados);
-    case 'S-3000':
-      return gerarS3000(dados);
-    default:
-      throw new Error(`Evento não implementado: ${codigoEvento}`);
+  if (codigoEvento === 'S-2220') {
+    return gerarS2220(dados as unknown as DadosS2220);
   }
+  return generateEventXML(codigoEvento, dados);
 }
 
 interface DadosS2200 {

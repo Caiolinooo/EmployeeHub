@@ -23,7 +23,7 @@ export function gerarS2205(dados: DadosS2205): string {
   xml += '    </ideEvento>\n';
   xml += '    <ideEmpregador>\n';
   xml += buildTag('tpInsc', ideEmpregador.tpInsc, 4);
-  xml += buildTag('nrInsc', ideEmpregador.tpInsc === 1 ? ideEmpregador.nrInsc.replace(/\\D/g, '').substring(0, 8) : ideEmpregador.nrInsc, 4);
+  xml += buildTag('nrInsc', ideEmpregador.tpInsc === 1 ? ideEmpregador.nrInsc.replace(/\D/g, '').substring(0, 8) : ideEmpregador.nrInsc, 4);
   xml += '    </ideEmpregador>\n';
   xml += '    <ideTrabalhador>\n';
   xml += buildTag('cpfTrab', ideTrabalhador.cpfTrab, 4);

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -22,7 +22,9 @@ import {
   FiX,
   FiAlertCircle,
   FiFilter,
-  FiSettings
+  FiSettings,
+  FiImage,
+  FiVolume2
 } from 'react-icons/fi';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import UserEditor, { UserEditorData } from '@/components/admin/UserEditor';
@@ -31,7 +33,7 @@ import UserPasswordReset from '@/components/admin/UserPasswordReset';
 import UserRoleManager from '@/components/admin/UserRoleManager';
 import { useAllUsers } from '@/hooks/useAllUsers';
 
-  // Interface para o usu�rio na lista
+  // Interface para o usuário na lista
   interface User {
     _id: string;
     phoneNumber: string;
@@ -48,9 +50,17 @@ import { useAllUsers } from '@/hooks/useAllUsers';
     isAuthorized?: boolean;
     authorizationStatus?: string;
     accessPermissions?: any;
+    startup_splash_enabled?: boolean;
+    startup_splash_url?: string;
+    startup_sound_enabled?: boolean;
+    startup_sound_url?: string;
+    reimbursement_email_settings?: {
+      enabled: boolean;
+      recipients: string[];
+    };
   }
 
-// Interface para usu�rio autorizado
+// Interface para usurio autorizado
 type AuthorizedUser = {
   _id: string;
   email?: string;
@@ -343,20 +353,23 @@ export default function UnifiedUserManager() {
     if (hookError) setError(hookError);
   }, [hookUsers, hookError]);
 
-  // Buscar usu�rios regulares
+  // Buscar usuários regulares
   const fetchUsers = async () => {
     console.log(t('components.iniciandoBuscaDeUsuariosUseallusers'));
     setLoading(true);
     setError(null);
     try {
-      await refreshAllUsers();
-      return; // restante mantido apenas por compatibilidade
+      const freshUsers = await refreshAllUsers();
+      if (Array.isArray(freshUsers)) {
+        setUsers(freshUsers as any);
+        setFilteredUsers(freshUsers as any);
+      }
+    } catch (err: any) {
+      console.error('Erro ao buscar usuários:', err);
     } finally {
       setLoading(false);
     }
-
   };
-
 
 
 
@@ -659,7 +672,7 @@ export default function UnifiedUserManager() {
 
       setSuccessMessage(`${t('components.usuario')} ${isNewUser ? t('components.criado') : t('components.atualizado')} ${t('components.comSucesso')}!`);
       setShowEditor(false);
-      fetchUsers();
+      await fetchUsers();
 
       // Dispatch permission update event to refresh user permissions in real-time
       if (typeof window !== 'undefined') {
@@ -696,7 +709,8 @@ export default function UnifiedUserManager() {
         throw new Error(t('components.naoAutorizado'));
       }
 
-      const response = await fetch(`/api/users/${selectedUser._id}`, {
+      const deletedId = selectedUser._id;
+      const response = await fetch(`/api/users/${deletedId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -708,11 +722,15 @@ export default function UnifiedUserManager() {
         throw new Error(errorData.error || t('components.erroAoExcluirUsuario'));
       }
 
+      // Atualização otimista imediata do estado
+      setUsers(prev => prev.filter(u => u._id !== deletedId));
+      setFilteredUsers(prev => prev.filter(u => u._id !== deletedId));
       setSuccessMessage(t('components.usuarioExcluidoComSucesso'));
       setShowDeleteConfirm(false);
-      fetchUsers();
+      setSelectedUser(null);
+      await fetchUsers();
 
-      // Limpar a mensagem ap�s 3 segundos
+      // Limpar a mensagem após 3 segundos
       setTimeout(() => {
         setSuccessMessage('');
       }, 3000);
@@ -1066,9 +1084,9 @@ export default function UnifiedUserManager() {
 
   // Renderiza��o do componente
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="flex flex-col min-h-0 flex-1 h-full">
       {/* Abas */}
-      <div className="flex justify-between mb-6">
+      <div className="shrink-0 flex justify-between mb-6">
         <div>
           <button
             onClick={fixToken}
@@ -1120,8 +1138,8 @@ export default function UnifiedUserManager() {
 
       {/* Conte�do da aba de usu�rios */}
       {activeTab === 'users' && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex flex-wrap justify-between items-center mb-6">
+        <div className="bg-white rounded-lg shadow-md p-6 flex-1 min-h-0 flex flex-col">
+          <div className="shrink-0 flex flex-wrap justify-between items-center mb-6">
             <div className="flex items-center mb-4 md:mb-0">
               <div className="relative mr-2">
                 <input
@@ -1155,9 +1173,9 @@ export default function UnifiedUserManager() {
             </button>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="flex-1 min-h-0 overflow-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 sticky top-0 z-10">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Nome
@@ -1223,7 +1241,35 @@ export default function UnifiedUserManager() {
                         <div className="text-sm text-gray-900">
                           {user.role === 'ADMIN' ? 'Administrador' : user.role === 'MANAGER' ? 'Gerente' : t('components.usuario')}
                         </div>
-                        <div className="text-sm text-gray-500">{user.position || 'N�o definido'}</div>
+                        <div className="text-sm text-gray-500">{user.position || 'No definido'}</div>
+                        {(user.startup_splash_url || user.startup_sound_url) && (
+                          <div className="flex items-center gap-1.5 mt-1">
+                            {user.startup_splash_url && (
+                              <span
+                                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                                  user.startup_splash_enabled
+                                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                                    : 'bg-gray-100 text-gray-400 line-through'
+                                }`}
+                                title={user.startup_splash_enabled ? 'Splash Screen Ativo' : 'Splash Screen Desativado'}
+                              >
+                                <FiImage className="w-3 h-3" /> Splash
+                              </span>
+                            )}
+                            {user.startup_sound_url && (
+                              <span
+                                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                                  user.startup_sound_enabled
+                                    ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                                    : 'bg-gray-100 text-gray-400 line-through'
+                                }`}
+                                title={user.startup_sound_enabled ? 'Som de Início Ativo' : 'Som de Início Desativado'}
+                              >
+                                <FiVolume2 className="w-3 h-3" /> Áudio
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${user.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
@@ -1321,10 +1367,10 @@ export default function UnifiedUserManager() {
 
       {/* Conte�do da aba de usu�rios autorizados */}
       {activeTab === 'authorized' && (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-6 flex-1 min-h-0 flex flex-col">
           {/* Estat�sticas */}
           {stats && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="shrink-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <div className="bg-blue-50 p-4 rounded-lg">
                 <h3 className="text-lg font-semibold text-blue-700">Usu�rios</h3>
                 <div className="mt-2 space-y-1">
@@ -1607,9 +1653,9 @@ export default function UnifiedUserManager() {
           )}
 
           {/* Lista de usu�rios autorizados */}
-          <div className="overflow-x-auto">
+          <div className="flex-1 min-h-0 overflow-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 sticky top-0 z-10">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Tipo
@@ -1730,7 +1776,13 @@ export default function UnifiedUserManager() {
             role: selectedUser.role,
             position: selectedUser.position,
             department: selectedUser.department,
-            sector_id: selectedUser.sector_id
+            sector_id: selectedUser.sector_id,
+            startup_splash_enabled: selectedUser.startup_splash_enabled,
+            startup_splash_url: selectedUser.startup_splash_url,
+            startup_sound_enabled: selectedUser.startup_sound_enabled,
+            startup_sound_url: selectedUser.startup_sound_url,
+            accessPermissions: selectedUser.accessPermissions,
+            reimbursement_email_settings: selectedUser.reimbursement_email_settings
           }}
           onSave={handleSaveUser}
           onCancel={() => setShowEditor(false)}

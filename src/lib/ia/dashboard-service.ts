@@ -272,14 +272,51 @@ async function fetchModularKPIs(userId: string, role: string): Promise<IADashboa
  * Exporta dados de KPI para XLSX (Buffer)
  */
 export async function exportKPIsToXLSX(data: any): Promise<Buffer> {
-  return Buffer.from('XLSX_DATA_PLACEHOLDER');
+  try {
+    const { generateExcelReport } = await import('./excel-generator');
+    const rows = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.rows)
+        ? data.rows
+        : Array.isArray(data?.kpis)
+          ? data.kpis
+          : [data].filter(Boolean);
+
+    const sample = (rows[0] && typeof rows[0] === 'object' ? rows[0] : { info: 'sem dados' }) as Record<string, any>;
+    const keys = Object.keys(sample).length ? Object.keys(sample) : ['info'];
+    const columns = keys.map((k) => ({ key: k, header: k, width: 18 }));
+    return generateExcelReport(rows.length ? rows : [{ info: 'sem dados' }], columns, {
+      titulo: data?.titulo || 'KPIs Portal ABZ',
+      subtitulo: data?.subtitulo,
+    });
+  } catch (err) {
+    console.error('[IA Dashboard] exportKPIsToXLSX failed:', err);
+    return Buffer.from(JSON.stringify({ error: 'export_failed', message: String(err) }));
+  }
 }
 
 /**
  * Exporta relatório de KPI para PDF (Buffer)
  */
 export async function exportKPIsToPDF(data: any): Promise<Buffer> {
-  return Buffer.from('PDF_DATA_PLACEHOLDER');
+  try {
+    const { generatePDFBase64 } = await import('./pdf-generator');
+    const rows = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.rows)
+        ? data.rows
+        : Array.isArray(data?.kpis)
+          ? data.kpis
+          : [];
+    const base64 = generatePDFBase64(rows.length ? rows : [{ info: 'sem dados' }], 'kpis', {
+      titulo: data?.titulo || 'Relatório KPI',
+      subtitulo: data?.subtitulo,
+    });
+    return Buffer.from(base64, 'base64');
+  } catch (err) {
+    console.error('[IA Dashboard] exportKPIsToPDF failed:', err);
+    return Buffer.from(JSON.stringify({ error: 'export_failed', message: String(err) }));
+  }
 }
 
 // =====================================================

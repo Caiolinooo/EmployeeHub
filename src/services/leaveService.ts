@@ -27,7 +27,16 @@ export interface LeaveRequest {
     created_at: string;
     updated_at: string;
     // Joins
-    user?: { id: string; name: string; email: string; sector_id: string; sector?: { name: string } };
+    user?: {
+        id: string;
+        name?: string;
+        first_name?: string | null;
+        last_name?: string | null;
+        email: string;
+        sector_id: string;
+        tax_id?: string | null;
+        sector?: { name: string };
+    };
 }
 
 // ==========================================
@@ -122,9 +131,26 @@ export async function getUserLeaveRequests(userId: string): Promise<LeaveRequest
     return data as LeaveRequest[];
 }
 
-export async function getPendingLeaveRequestsForApprover(approverId: string, hasGlobalAccess: boolean = false): Promise<LeaveRequest[]> {
+export type ApproverLeaveQueryOptions = {
+    hasGlobalAccess?: boolean;
+    /** When true, return all statuses for the approver's sectors (histórico), not only pending. */
+    includeHistory?: boolean;
+    status?: string;
+    year?: number;
+};
+
+export async function getPendingLeaveRequestsForApprover(
+    approverId: string,
+    hasGlobalAccess: boolean = false,
+    options: ApproverLeaveQueryOptions = {}
+): Promise<LeaveRequest[]> {
+    const includeHistory = options.includeHistory === true;
+    const statusFilter = options.status && options.status !== 'ALL' ? options.status : undefined;
+    const year = options.year;
+
     let sectorIdsWhereLeader: string[] = [];
     let sectorIdsWhereManager: string[] = [];
+    let allApproverSectorIds: string[] = [];
 
     if (!hasGlobalAccess) {
         // Busca configs onde o approverId é líder ou gerente
@@ -144,24 +170,28 @@ export async function getPendingLeaveRequestsForApprover(approverId: string, has
 
         sectorIdsWhereLeader = configs.filter(c => c.leader_id === approverId).map(c => c.sector_id);
         sectorIdsWhereManager = configs.filter(c => c.manager_id === approverId).map(c => c.sector_id);
+        allApproverSectorIds = [...new Set([...sectorIdsWhereLeader, ...sectorIdsWhereManager])];
     }
 
-    // Precisamos buscar as requests dos usuários que pertencem a esses setores
-    // E filtrar pelo status apropriado
-
-    // As we can't easily join and filter in a single Supabase query with complex ORs and related tables,
-    // we'll fetch potentially relevant ones and filter in memory, or use a broad query.
-    // However, the cleanest way is a raw supabase query if we have the view, but let's do it via REST.
-
-    // Get all requests that are pending leader OR pending manager
-    const { data: requests, error: reqError } = await supabaseAdmin
+    let query = supabaseAdmin
         .from('leave_requests')
         .select(`
             *,
-            user:users_unified!inner(id, name, email, sector_id)
+            user:users_unified!inner(id, name, email, sector_id, sector:sectors(name))
         `)
-        .in('status', ['PENDING_LEADER', 'PENDING_MANAGER'])
         .order('created_at', { ascending: false });
+
+    if (!includeHistory) {
+        query = query.in('status', ['PENDING_LEADER', 'PENDING_MANAGER']);
+    } else if (statusFilter) {
+        query = query.eq('status', statusFilter);
+    }
+
+    if (year && year >= 2000 && year <= 2100) {
+        query = query.gte('start_date', `${year}-01-01`).lte('start_date', `${year}-12-31`);
+    }
+
+    const { data: requests, error: reqError } = await query.limit(500);
 
     if (reqError) {
         console.error('Error fetching pending requests:', reqError);
@@ -170,12 +200,16 @@ export async function getPendingLeaveRequestsForApprover(approverId: string, has
 
     // Now filter based on approver role per sector
     const filteredRequests = (requests as any[]).filter(req => {
-        // Prevent users from approving their own request
-        if (req.user_id === approverId) return false;
+        // Prevent users from approving their own request in the pending queue
+        if (!includeHistory && req.user_id === approverId) return false;
 
         if (hasGlobalAccess) return true;
 
         const userSectorId = req.user.sector_id;
+
+        if (includeHistory) {
+            return allApproverSectorIds.includes(userSectorId);
+        }
 
         if (req.status === 'PENDING_LEADER' && sectorIdsWhereLeader.includes(userSectorId)) {
             return true;
@@ -189,6 +223,36 @@ export async function getPendingLeaveRequestsForApprover(approverId: string, has
     });
 
     return filteredRequests as LeaveRequest[];
+}
+
+export async function getUserLeaveRequestsFiltered(
+    userId: string,
+    options: { status?: string; year?: number } = {}
+): Promise<LeaveRequest[]> {
+    let query = supabaseAdmin
+        .from('leave_requests')
+        .select(`
+      *,
+      user:users_unified(id, name, email, sector_id)
+    `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+    if (options.status && options.status !== 'ALL') {
+        query = query.eq('status', options.status);
+    }
+    if (options.year && options.year >= 2000 && options.year <= 2100) {
+        query = query.gte('start_date', `${options.year}-01-01`).lte('start_date', `${options.year}-12-31`);
+    }
+
+    const { data, error } = await query.limit(200);
+
+    if (error) {
+        console.error(`Error fetching leave requests for user ${userId}:`, error);
+        return [];
+    }
+
+    return data as LeaveRequest[];
 }
 
 export async function getAllLeaveRequests(): Promise<LeaveRequest[]> {
@@ -284,6 +348,88 @@ export async function updateLeaveRequestStatus(
     if (error) {
         console.error(`Error updating leave request ${requestId} to ${status}:`, error);
         return false;
+    }
+
+    // Se aprovado, sincronizar com gt_afastamentos para refletir no Fechamento DP, Man Schedule e e-Social
+    if (status === 'APPROVED') {
+        try {
+            const { data: req } = await supabaseAdmin
+                .from('leave_requests')
+                .select('*, user:users_unified(id, first_name, last_name, email, tax_id)')
+                .eq('id', requestId)
+                .single();
+
+            if (req && req.user) {
+                const userCpf = req.user.tax_id ? req.user.tax_id.replace(/\D/g, '') : null;
+                const userEmail = req.user.email ? req.user.email.toLowerCase().trim() : null;
+
+                let colabId: string | null = null;
+                if (userCpf && userCpf.length === 11) {
+                    const { data: cByCpf } = await supabaseAdmin
+                        .from('gt_colaboradores')
+                        .select('id, cpf')
+                        .or(`cpf.eq.${userCpf},cpf.eq.${userCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}`)
+                        .is('deleted_at', null)
+                        .maybeSingle();
+                    if (cByCpf) colabId = cByCpf.id;
+                }
+                if (!colabId && userEmail) {
+                    const { data: cByEmail } = await supabaseAdmin
+                        .from('gt_colaboradores')
+                        .select('id')
+                        .ilike('email', userEmail)
+                        .is('deleted_at', null)
+                        .maybeSingle();
+                    if (cByEmail) colabId = cByEmail.id;
+                }
+
+                if (colabId) {
+                    const periods: Array<{ start_date: string; end_date: string }> =
+                        Array.isArray(req.periods) && req.periods.length > 0
+                            ? req.periods
+                            : [{ start_date: req.start_date, end_date: req.end_date }];
+
+                    for (const p of periods) {
+                        if (!p.start_date || !p.end_date) continue;
+
+                        const { data: existingAf } = await supabaseAdmin
+                            .from('gt_afastamentos')
+                            .select('id')
+                            .eq('colaborador_id', colabId)
+                            .eq('data_inicio', p.start_date)
+                            .is('deleted_at', null)
+                            .maybeSingle();
+
+                        if (!existingAf) {
+                            await supabaseAdmin
+                                .from('gt_afastamentos')
+                                .insert({
+                                    colaborador_id: colabId,
+                                    tipo_afastamento: 'ferias',
+                                    cod_mot_afast: '15',
+                                    motivo: req.justification || 'Férias aprovadas no portal',
+                                    data_inicio: p.start_date,
+                                    data_fim: p.end_date,
+                                    data_prevista_retorno: p.end_date,
+                                    observacoes: `Solicitação de férias aprovada (ID: ${requestId})`,
+                                    esocial_status: 'nao_enviado',
+                                });
+                        }
+                    }
+
+                    const todayStr = new Date().toISOString().slice(0, 10);
+                    const isTodayInVacation = periods.some(p => p.start_date <= todayStr && p.end_date >= todayStr);
+                    if (isTodayInVacation) {
+                        await supabaseAdmin
+                            .from('gt_colaboradores')
+                            .update({ status_embarque: 'ferias', updated_at: new Date().toISOString() })
+                            .eq('id', colabId);
+                    }
+                }
+            }
+        } catch (syncErr) {
+            console.error('[LeaveService] Error syncing approved leave to gt_afastamentos:', syncErr);
+        }
     }
 
     return true;

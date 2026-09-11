@@ -35,16 +35,38 @@ export default function AsoReviewPanel({ compact = false }: Props) {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const [comment, setComment] = useState<Record<string, string>>({});
+  const [warning, setWarning] = useState<string | null>(null);
 
-  const fetchAsos = useCallback(async () => {
+  const fetchAsos = useCallback(async (sync = false) => {
     try {
       setLoading(true);
-      const res = await fetchWithToken('/api/gestao-tripulantes/poliweb/asos-pendentes');
-      if (!res.ok) throw new Error('Erro ao carregar ASOs');
-      const json = await res.json();
-      setAsos(json.data || []);
-    } catch (err) {
-      console.error(err);
+      setWarning(null);
+      const url = sync
+        ? '/api/gestao-tripulantes/poliweb/asos-pendentes?sync=1'
+        : '/api/gestao-tripulantes/poliweb/asos-pendentes';
+      const res = await fetchWithToken(url);
+      const json = await res.json().catch(() => ({} as Record<string, unknown>));
+      const payload = json as {
+        ok?: boolean;
+        data?: unknown;
+        warning?: string;
+        error?: string;
+      };
+      const raw = payload.data;
+      const list: ASOPendente[] = Array.isArray(raw)
+        ? raw
+        : raw && typeof raw === 'object' && Array.isArray((raw as { importados?: unknown }).importados)
+          ? (raw as { importados: ASOPendente[] }).importados
+          : [];
+      setAsos(list);
+      if (!res.ok || payload.ok === false) {
+        setWarning(payload.warning || payload.error || 'Não foi possível carregar ASOs do PoliWeb');
+      } else if (payload.warning) {
+        setWarning(payload.warning);
+      }
+    } catch {
+      setAsos([]);
+      setWarning('Não foi possível carregar ASOs do PoliWeb');
     } finally {
       setLoading(false);
     }
@@ -60,7 +82,10 @@ export default function AsoReviewPanel({ compact = false }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ acao, comentario: comment[id] || '' }),
       });
-      if (!res.ok) throw new Error('Falha na revisão');
+      if (!res.ok) {
+        toast.error(t('gestaoTripulantes.errors.saveError'));
+        return;
+      }
       toast.success(acao === 'aprovado' ? 'ASO aprovado e importado!' : 'ASO rejeitado');
       setAsos(prev => prev.filter(a => a.id !== id));
     } catch {
@@ -86,10 +111,20 @@ export default function AsoReviewPanel({ compact = false }: Props) {
   }
 
   if (asos.length === 0) {
-    return compact ? null : (
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 text-center">
-        <FiActivity className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-        <p className="text-gray-400 text-sm">{t('gestaoTripulantes.aso.pendingReview', 'Nenhum ASO pendente de revisão')}</p>
+    if (compact && !warning) return null;
+    return (
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 text-center space-y-2">
+        {warning ? (
+          <p className="flex items-center justify-center gap-2 text-amber-700 text-sm">
+            <FiAlertCircle className="w-4 h-4 flex-shrink-0" />
+            {warning}
+          </p>
+        ) : (
+          <>
+            <FiActivity className="w-8 h-8 text-gray-200 mx-auto mb-2" />
+            <p className="text-gray-400 text-sm">{t('gestaoTripulantes.aso.pendingReview', 'Nenhum ASO pendente de revisão')}</p>
+          </>
+        )}
       </div>
     );
   }
@@ -105,13 +140,19 @@ export default function AsoReviewPanel({ compact = false }: Props) {
           </span>
         </div>
         <button
-          onClick={fetchAsos}
+          onClick={() => fetchAsos(true)}
           className="p-1.5 text-orange-500 hover:bg-orange-100 rounded transition"
           title="Atualizar"
         >
           <FiRefreshCw className="w-3.5 h-3.5" />
         </button>
       </div>
+
+      {warning && (
+        <p className="px-5 py-2 text-xs text-amber-700 bg-amber-50 border-b border-amber-100">
+          {warning}
+        </p>
+      )}
 
       {/* List */}
       <div className="divide-y divide-gray-100">

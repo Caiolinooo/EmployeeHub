@@ -1,0 +1,47 @@
+{
+  "results": [
+    {
+      "name": "gt-tab: data loaded",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "name": "gt-tab headed: grid overflows",
+      "pass": true,
+      "detail": "scrollW=1724 > clientW=1118"
+    },
+    {
+      "name": "gt-tab headed: bottom scrollbar occupies >=14px",
+      "pass": false,
+      "detail": "h=0px"
+    },
+    {
+      "name": "gt-tab headed: top bar overflows",
+      "pass": true,
+      "detail": "top=true"
+    },
+    {
+      "name": "gt-tab headed: dragging TOP scrollbar scrolls grid",
+      "pass": false,
+      "detail": "scrollLeft 0 -> 0"
+    },
+    {
+      "name": "gt-tab headed: NOME pinned while scrolled",
+      "pass": true,
+      "detail": "delta=0px"
+    }
+  ],
+  "m": {
+    "clientW": 1118,
+    "scrollW": 1724,
+    "hasHScroll": true,
+    "hThickness": 0,
+    "topH": true,
+    "topBox": {
+      "x": 289,
+      "y": 334,
+      "w": 1118,
+      "h": 14
+    }
+  }
+}

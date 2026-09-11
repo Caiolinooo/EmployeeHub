@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { syncAllFromMIO, syncToMIO } from '@/lib/gestao-tripulantes/mio-sync';
+import { syncAllFromMIO } from '@/lib/gestao-tripulantes/mio-sync';
 import { verifyToken } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -21,10 +21,12 @@ async function handleCronRequest(request: NextRequest) {
     const authHeader = request.headers.get('authorization');
     const cronSecretHeader = request.headers.get('x-vercel-cron-secret');
 
-    const isVercelCron = cronSecretHeader === process.env.CRON_SECRET;
+    const isVercelCron =
+      cronSecretHeader === process.env.CRON_SECRET ||
+      (Boolean(process.env.CRON_SECRET) && authHeader === `Bearer ${process.env.CRON_SECRET}`);
     let isAdmin = false;
 
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    if (authHeader && authHeader.startsWith('Bearer ') && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
       const token = authHeader.substring(7);
       const decoded = verifyToken(token);
       if (decoded && (decoded.role === 'ADMIN' || decoded.role === 'MANAGER')) {
@@ -55,35 +57,36 @@ async function handleCronRequest(request: NextRequest) {
       });
 
     const allResult = await syncAllFromMIO();
-    const toMioResult = await syncToMIO();
 
     const success = allResult.success;
     const colData = allResult.data?.colaboradores || { importados: 0, atualizados: 0, erros: [] };
     const treData = allResult.data?.treinamentos || { importados: 0, atualizados: 0, ignorados: 0, erros: [] };
     const embData = allResult.data?.embarques || { importados: 0, atualizados: 0, ignorados: 0, erros: [] };
     const usrData = allResult.data?.usuarios || { criados: 0, atualizados: 0, erros: [] };
+    const afaData = allResult.data?.afastamentos || { importados: 0, atualizados: 0, ignorados: 0, erros: [] };
 
-    const totalProcessados = 
+    const totalProcessados =
       (colData.importados || 0) + (colData.atualizados || 0) +
       (treData.importados || 0) + (treData.atualizados || 0) +
       (embData.importados || 0) + (embData.atualizados || 0) +
       (usrData.criados || 0) + (usrData.atualizados || 0) +
-      (toMioResult.data?.enviados || 0);
+      (afaData.importados || 0) + (afaData.atualizados || 0);
 
-    const totalErros = 
-      (colData.erros?.length || 0) + 
-      (treData.erros?.length || 0) + 
+    const totalErros =
+      (colData.erros?.length || 0) +
+      (treData.erros?.length || 0) +
       (embData.erros?.length || 0) +
       (usrData.erros?.length || 0) +
-      (toMioResult.data?.erros?.length || 0);
+      (afaData.erros?.length || 0);
 
     const detalhes = {
       colaboradores: colData,
       treinamentos: treData,
       embarques: embData,
+      afastamentos: afaData,
       usuarios: usrData,
-      exportacao_mio: toMioResult.data,
-      erro: allResult.error || toMioResult.error
+      exportacao_mio: { enviados: 0, erros: [], blocked: true },
+      erro: allResult.error
     };
 
     await supabaseAdmin

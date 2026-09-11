@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { getEmployeeFullRecord } from '@/lib/employee-hub/employee-hub-service';
 
 export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const token = extractTokenFromHeader(request.headers.get('authorization') || undefined);
+    if (!token || !verifyToken(token)) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
+    const { id } = await context.params;
     if (!id) {
       return NextResponse.json({ error: 'ID do colaborador obrigatório' }, { status: 400 });
     }

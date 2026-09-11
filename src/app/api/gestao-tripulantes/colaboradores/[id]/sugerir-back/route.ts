@@ -1,3 +1,4 @@
+import { overlayStatusEscalaHoje } from '@/lib/gestao-tripulantes/dashboard-service';
 import { NextRequest, NextResponse } from 'next/server';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { sugerirBack } from '@/lib/gestao-tripulantes/algoritmo-back';
@@ -37,7 +38,10 @@ export async function GET(
           .in('id', ids)
       : { data: [] };
 
-    const colMap = new Map((colaboradores || []).map((c: any) => [c.id, c]));
+    const overlay = await overlayStatusEscalaHoje(
+      ((colaboradores || []) as Array<{ id: string }>).map((c) => ({ ...c, id: c.id })),
+    );
+    const colMap = new Map((overlay.error ? colaboradores || [] : overlay.rows).map((c: { id: string }) => [c.id, c]));
 
     const MAX_SCORE = 100;
 

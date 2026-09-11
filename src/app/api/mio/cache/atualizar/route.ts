@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { verifyToken } from '@/lib/auth';
 import { mioClient } from '@/lib/mio/client';
+import { runMioPull } from '@/lib/mio/pull-context';
 
 export const dynamic = 'force-dynamic';
 const MIN_INTERVAL_MS = 10_000; // 10 segundos entre sincronizações
@@ -94,6 +95,7 @@ export async function POST(request: NextRequest) {
 
         const fetchPromises: Promise<any>[] = [];
 
+        await runMioPull(async () => {
         if (toUpdate.includes('integrantes')) {
             fetchPromises.push(
                 mioClient.getIntegrantes()
@@ -124,6 +126,7 @@ export async function POST(request: NextRequest) {
         }
 
         await Promise.all(fetchPromises);
+        });
 
         const now = new Date().toISOString();
         const entries: any[] = [];

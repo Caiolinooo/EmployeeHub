@@ -6,9 +6,9 @@ import nodemailer from 'nodemailer';
 import { emailTlsOptions, resolveEmailAuth } from '@/lib/email-env';
 
 // Configuração do transporter
-function getTransporter() {
+async function getTransporter() {
   try {
-    const auth = resolveEmailAuth();
+    const auth = await resolveEmailAuth();
     console.log('[IA Email] Usando SMTP:', auth.host, 'port:', auth.port, 'user:', auth.user);
 
     return nodemailer.createTransport(
@@ -57,7 +57,7 @@ export interface SendEmailResult {
  * Envia email real usando nodemailer
  */
 export async function sendEmailWithNodemailer(options: SendEmailOptions): Promise<SendEmailResult> {
-  const transporter = getTransporter();
+  const transporter = await getTransporter();
 
   if (!transporter) {
     console.log('[IA Email] Modo mock ativo. Email seria enviado para:', options.to);
@@ -70,7 +70,7 @@ export async function sendEmailWithNodemailer(options: SendEmailOptions): Promis
 
   try {
     const to = Array.isArray(options.to) ? options.to.join(', ') : options.to;
-    const auth = resolveEmailAuth();
+    const auth = await resolveEmailAuth();
 
     const info = await transporter.sendMail({
       from: auth.from || process.env.EMAIL_FROM,

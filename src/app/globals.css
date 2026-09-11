@@ -162,6 +162,10 @@ error, success {
 }
 
 /* Custom Scrollbar for elements with .custom-scrollbar class */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #e5e7eb transparent;
+}
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -190,10 +194,88 @@ error, success {
   }
 }
 
+/* Man Schedule: barra de rolagem explícita (não overlay) para pan horizontal */
+.man-schedule-scroll {
+  scrollbar-width: auto;
+  scrollbar-color: #94a3b8 #f1f5f9;
+  -webkit-overflow-scrolling: touch;
+}
+
+.man-schedule-scroll::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+.man-schedule-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 8px;
+}
+
+.man-schedule-scroll::-webkit-scrollbar-thumb {
+  background-color: #94a3b8;
+  border-radius: 8px;
+  border: 3px solid #f1f5f9;
+}
+
+.man-schedule-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: #64748b;
+}
+
+.man-schedule-scroll::-webkit-scrollbar-corner {
+  background: #f1f5f9;
+}
+
+/* CollaboratorModal tablist: hide the native horizontal bar; fade via data-overflow-* */
+.collaborator-modal-tablist {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.collaborator-modal-tablist::-webkit-scrollbar {
+  display: none;
+  height: 0;
+  width: 0;
+}
+.collaborator-modal-tablist-shell[data-overflow-left='true']::before,
+.collaborator-modal-tablist-shell[data-overflow-right='true']::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2rem;
+  pointer-events: none;
+  z-index: 1;
+}
+.collaborator-modal-tablist-shell[data-overflow-left='true']::before {
+  left: 0;
+  background: linear-gradient(to right, rgb(249 250 251), transparent);
+}
+.collaborator-modal-tablist-shell[data-overflow-right='true']::after {
+  right: 0;
+  background: linear-gradient(to left, rgb(249 250 251), transparent);
+}
+
 /* React PDF Text & Annotation layer adjustments for clickable signature inputs */
 .react-pdf__Page__textLayer,
 .react-pdf__Page__annotations,
 .react-pdf__Page__annotationLayer {
   pointer-events: none !important;
+}
+
+/* Utilitário para rolagem horizontal/vertical sem barra visível */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Suporte a rolagem fluida no mobile (iOS / Android) */
+@supports (-webkit-overflow-scrolling: touch) {
+  .touch-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
 }
 

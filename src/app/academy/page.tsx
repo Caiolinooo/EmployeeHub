@@ -325,9 +325,9 @@ const AcademyPage: React.FC = () => {
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex flex-col min-h-0 flex-1 h-full max-w-7xl mx-auto w-full">
         {/* Header */}
-        <div className="mb-8">
+        <div className="shrink-0 mb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <AcademicCapIcon className="w-8 h-8 text-blue-600 mr-3" />
@@ -387,7 +387,7 @@ const AcademyPage: React.FC = () => {
         </div>
 
         {/* Modos de Visualização */}
-        <div className="mb-6">
+        <div className="shrink-0 mb-6">
           <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
             <button
               onClick={() => setViewMode('all')}
@@ -422,7 +422,7 @@ const AcademyPage: React.FC = () => {
         </div>
 
         {/* Filtros e Busca */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+        <div className="shrink-0 bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Busca */}
             <div className="relative">
@@ -471,7 +471,7 @@ const AcademyPage: React.FC = () => {
         </div>
 
         {/* Lista de Cursos */}
-        <div className="mb-8">
+        <div className="flex-1 min-h-0 overflow-auto mb-2">
           {viewMode === 'enrolled' && enrollments.length === 0 ? (
             <div className="text-center py-12">
               <BookOpenIcon className="mx-auto h-12 w-12 text-gray-400" />

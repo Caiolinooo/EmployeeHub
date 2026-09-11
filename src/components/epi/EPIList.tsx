@@ -34,9 +34,9 @@ export default function EPIList({ registrations, onCancel, showActions = true, s
     return (
         <div className="w-full">
             {/* Desktop View (Table) */}
-            <div className="hidden md:block overflow-x-auto rounded-xl border border-gray-200">
+            <div className="hidden md:block overflow-auto rounded-xl border border-gray-200">
                 <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-gray-50 sticky top-0 z-10">
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Equipamento

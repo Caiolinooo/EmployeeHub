@@ -1,0 +1,111 @@
+{
+  "mode": "after",
+  "email": "hudna.mendonca@groupabz.com",
+  "pages": {
+    "standalone-desktop": {
+      "viewport": {
+        "w": 1440,
+        "h": 900
+      },
+      "docOverflowX": false,
+      "wrapperWidth": 1184,
+      "mainWidth": 1184,
+      "scrollport": {
+        "clientWidth": 1184,
+        "scrollWidth": 1184,
+        "rectWidth": 1184,
+        "overflowX": "auto",
+        "hasHScroll": false
+      },
+      "tableWidth": 1184,
+      "topBar": {
+        "clientWidth": 1184,
+        "scrollWidth": 1184,
+        "hasHScroll": false,
+        "height": 14
+      },
+      "stickyName": {
+        "position": "sticky",
+        "left": "0px"
+      }
+    },
+    "gt-tab-desktop": {
+      "viewport": {
+        "w": 1440,
+        "h": 900
+      },
+      "docOverflowX": false,
+      "wrapperWidth": 624,
+      "mainWidth": 624,
+      "scrollport": {
+        "clientWidth": 1118,
+        "scrollWidth": 1724,
+        "rectWidth": 1118,
+        "overflowX": "auto",
+        "hasHScroll": true
+      },
+      "tableWidth": 1724,
+      "topBar": {
+        "clientWidth": 1118,
+        "scrollWidth": 1724,
+        "hasHScroll": true,
+        "height": 14
+      },
+      "stickyName": {
+        "position": "sticky",
+        "left": "0px"
+      },
+      "interactions": {
+        "afterTableScroll": {
+          "table": 400,
+          "top": 400
+        },
+        "stickyDeltaAt400": 0,
+        "afterTopScroll": {
+          "table": 606,
+          "top": 606
+        },
+        "stickyDeltaAt800": 0
+      }
+    },
+    "standalone-mobile": {
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "docOverflowX": false,
+      "wrapperWidth": 390,
+      "mainWidth": 390,
+      "scrollport": {
+        "clientWidth": 390,
+        "scrollWidth": 765,
+        "rectWidth": 390,
+        "overflowX": "auto",
+        "hasHScroll": true
+      },
+      "tableWidth": 765,
+      "topBar": {
+        "clientWidth": 390,
+        "scrollWidth": 765,
+        "hasHScroll": true,
+        "height": 14
+      },
+      "stickyName": {
+        "position": "sticky",
+        "left": "0px"
+      }
+    }
+  },
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "[2026-09-03T17:23:33.461Z] ❌ [useEffectivePermissions] Failed to fetch permissions: 401 Unauthorized",
+    "[2026-09-03T17:23:41.899Z] fetchWithToken: Erro ao fazer requisição para /api/man-schedule/realtime: TypeError: Failed to fetch\n    at fetchWithToken (webpack-internal:///(app-pages-browser)/./src/lib/tokenStorage.ts:332:32)\n    at ManSchedulePage.useCallback[fetchSchedules] (webpack-internal:///(ap",
+    "[2026-09-03T17:23:41.901Z] fetchWithToken: Erro ao fazer requisição para /api/man-schedule/realtime: TypeError: Failed to fetch\n    at fetchWithToken (webpack-internal:///(app-pages-browser)/./src/lib/tokenStorage.ts:332:32)\n    at ManSchedulePage.useCallback[fetchSchedules] (webpack-internal:///(ap",
+    "[2026-09-03T17:23:41.903Z] Erro ao carregar módulos ACL: TypeError: Failed to fetch\n    at SupabaseAuthProvider.useEffect.loadAclModules (webpack-internal:///(app-pages-browser)/./src/contexts/SupabaseAuthContext.tsx:117:43)\n    at SupabaseAuthProvider.useEffect (webpack-internal:///(app-pages-brows",
+    "[2026-09-03T17:23:41.905Z] fetchWithToken: Erro ao fazer requisição para /api/man-schedule/realtime: TypeError: Failed to fetch\n    at fetchWithToken (webpack-internal:///(app-pages-browser)/./src/lib/tokenStorage.ts:332:32)\n    at ManSchedulePage.useCallback[fetchSchedules] (webpack-internal:///(ap",
+    "[2026-09-03T17:23:41.906Z] fetchWithToken: Erro ao fazer requisição para /api/notifications?user_id=4b72ad5d-4451-41c2-a834-02ff128a8bcb&limit=20&page=1: TypeError: Failed to fetch\n    at fetchWithToken (webpack-internal:///(app-pages-browser)/./src/lib/tokenStorage.ts:332:32)\n    at useNotification",
+    "[2026-09-03T17:23:41.907Z] fetchWithToken: Erro ao fazer requisição para /api/notifications?user_id=4b72ad5d-4451-41c2-a834-02ff128a8bcb&limit=20&page=1: TypeError: Failed to fetch\n    at fetchWithToken (webpack-internal:///(app-pages-browser)/./src/lib/tokenStorage.ts:332:32)\n    at useNotification",
+    "[2026-09-03T17:23:41.908Z] fetchWithToken: Erro ao fazer requisição para /api/notifications?user_id=4b72ad5d-4451-41c2-a834-02ff128a8bcb&limit=20&page=1: TypeError: Failed to fetch\n    at fetchWithToken (webpack-internal:///(app-pages-browser)/./src/lib/tokenStorage.ts:332:32)\n    at useNotification",
+    "[2026-09-03T17:23:41.910Z] Error fetching schedules: TypeError: Failed to fetch\n    at fetchWithToken (webpack-internal:///(app-pages-browser)/./src/lib/tokenStorage.ts:332:32)\n    at ManSchedulePage.useCallback[fetchSchedules] (webpack-internal:///(app-pages-browser)/./src/app/department/man-schedu"
+  ]
+}

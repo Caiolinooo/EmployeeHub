@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { parseIcs, IcsEvent } from '@/lib/ics';
+import { dedupeSimilarCalendarEvents } from '@/lib/calendar-event-dedupe';
 
 export const dynamic = 'force-dynamic';
 
 // Simple in-memory cache (per lambda instance)
-let CACHE: { ts: number; events: IcsEvent[] } | null = null;
+let CACHE: { key: string; ts: number; events: IcsEvent[]; duplicatesHidden: number } | null = null;
 
 function deriveIcsFromGcalUrl(input?: string | null): string | null {
   if (!input) return null;
@@ -26,7 +27,9 @@ const DEFAULT_GCAL_URL = "https://calendar.google.com/calendar/u/0?cid=YWJ6Lm1pZ
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const rangeDays = parseInt(searchParams.get('rangeDays') || '365');
+    const rangeDays = parseInt(searchParams.get('rangeDays') || '365', 10);
+    const fromParam = searchParams.get('from');
+    const toParam = searchParams.get('to');
     const force = searchParams.get('force') === '1';
     const directUrl = searchParams.get('url');
     const directGcal = searchParams.get('gcal');
@@ -46,10 +49,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'ICS URL não configurada. Defina em settings (key=company_calendar, value.ics_url) ou variável de ambiente COMPANY_CALENDAR_ICS_URL.' }, { status: 400 });
     }
 
-    if (CACHE && !force && Date.now() - CACHE.ts < 1000 * 60 * 5) {
-      // serve cached (5 min)
-      const events = CACHE.events;
-      return NextResponse.json({ events });
+    const cacheKey = `${icsUrl}|${fromParam || ''}|${toParam || ''}|${rangeDays}`;
+    if (CACHE && CACHE.key === cacheKey && !force && Date.now() - CACHE.ts < 1000 * 60 * 5) {
+      return NextResponse.json({ events: CACHE.events, duplicatesHidden: CACHE.duplicatesHidden });
     }
 
     const res = await fetch(icsUrl, { cache: 'no-store' });
@@ -62,18 +64,31 @@ export async function GET(req: NextRequest) {
     const icsText = await res.text();
 
     let events = await parseIcs(icsText);
-    // Filter by date range
     const now = new Date();
-    const max = new Date();
-    max.setDate(max.getDate() + rangeDays);
-    events = events.filter(e => {
+    const min = fromParam
+      ? new Date(`${fromParam}T00:00:00`)
+      : new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const max = toParam
+      ? new Date(`${toParam}T23:59:59`)
+      : (() => {
+          const d = new Date(min);
+          d.setDate(d.getDate() + rangeDays);
+          return d;
+        })();
+    events = events.filter((e) => {
       const start = new Date(e.start);
-      return start >= new Date(now.getFullYear(), now.getMonth(), now.getDate()) && start <= max;
+      return start >= min && start <= max;
     }).sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
 
-    CACHE = { ts: Date.now(), events };
+    const deduped = dedupeSimilarCalendarEvents(events);
+    events = deduped.events;
 
-    return NextResponse.json({ events });
+    CACHE = { key: cacheKey, ts: Date.now(), events, duplicatesHidden: deduped.hidden };
+
+    return NextResponse.json({
+      events,
+      duplicatesHidden: deduped.hidden,
+    });
   } catch (e: any) {
     console.error('company/events GET error', e);
     return NextResponse.json({ error: e?.message || 'Erro interno' }, { status: 500 });

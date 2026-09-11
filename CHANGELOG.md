@@ -1,5 +1,387 @@
 # Changelog
 
+## [5.76.0] - 2026-09-11
+
+### 🗓️ Man Schedule: marcações invisíveis corrigidas + auditoria do módulo
+
+1. **Marcação que sumia ao salvar**: ON lançado sobre um evento MIO com datas idênticas (ex.: OFF-C 17/10→31/10) ficava invisível — o desempate de sobreposição dava +5 ao tipo específico e a linha MIO vencia em todas as colunas, embora o save gravasse no banco. Agora o lançamento manual (`origem='local'`) vence empate de data idêntica em `pickOverlappingRotation`; FER/AFAST dominam a escolha do dia civil (nunca viram POB); `/department/man-schedule` reusa o mesmo seletor (o copião antigo deixava tipo específico ganhar de início mais recente).
+2. **POST `/embarques` idempotente**: retentar o mesmo save atualiza o evento (colaborador + período exato) em vez de empilhar linhas idênticas. Colapsa só linhas locais — linhas MIO não são tombadas. Legado limpo: `node scripts/dedupe-embarques-locais.js` removeu 26 linhas duplicadas de 14 grupos (duplicatas inflamavam FI/folga indenizada e a aba Ciclos NxN do fechamento).
+3. **Fechamento DP**: ciclos idênticos colapsados antes do loop NxN (sem FI fantasma por cópia); afastamento aberto (sem `data_fim`/previsão) entra como FER/AFAST pela janela de 90d — igual ao overlay da grade — em vez de contar ON para quem está de licença; mês de referência default em BRT no modal, na rota e no cron (não vira mais o mês às 21h do fim de mês).
+4. **Célula FER/AFAST na grade** não abre mais o editor de embarque (PUT/DELETE `/embarques/<id de gt_afastamentos>` dava 404 silencioso). Toast orienta resolver no módulo de Férias/DP.
+5. **Integridade de datas e cache**: `data_desembarque < data_embarque` = 400 no POST e no PUT; "Próximo Embarque" da Matriz não retrocede mais um dia (parse UTC→BRT); save sem mudança real não converte linha MIO em `origem='local'` (continua sincronizável); assinatura de cache do realtime inclui probe de `gt_afastamentos` (mudanças do DP aparecem sem esperar o TTL); `cron/relatorio-mensal` exige `CRON_SECRET` (branch de auth estava vazia).
+6. **Time de agentes Claude Code** em `.claude/agents/`: 8 subagentes do projeto (`abz-tech-lead`, `abz-architect`, `abz-dev-frontend`, `abz-dev-backend`, `abz-qa`, `abz-bughunter`, `abz-reviewer`, `abz-security`) + skill `/sobe-o-git` (verifica → versiona → changelog → commit/push).
+
+## [5.75.0] - 2026-09-10
+
+### Departamento Pessoal, fechamento NxN e matrícula e-Social
+
+1. **Cadastro DP do zero**: `/department/dp/novo` (e GT `/novo`) criam colaborador em `gt_colaboradores` via `POST /api/gestao-tripulantes/colaboradores`. Sem tabela paralela. A ficha (Dados Pessoais → Editar) altera qualquer campo do cadastro (`PUT`). Gate ADMIN/MANAGER/SUPERADMIN ou setor DP/RH + módulo `gestao-tripulantes`. CPF Módulo 11; CPF duplicado = 409; `matricula_esocial` vazio copia `matricula`.
+2. **Fechamento fidedigno**: motor `fechamento-calculo.ts` compara embarque N / folga N com dt início e dt fim. Dobra = excedente a bordo; FI = evento + déficit sem duplicar; exporta também folga e STB. Mesmos números na UI, `GET /relatorio-mensal` (`calculosFolha`) e XLSX (aba Ciclos NxN). Sem dt fim não inventa janela.
+3. **e-Social matrícula**: campo sempre visível em `EventoRevisao`. `POST /api/e-social/corrigir-matricula` grava evento + XML + cadastro GT. Evento processado com recibo fica travado.
+
+## [5.74.2] - 2026-09-09
+
+### 📅 e-Social S-2220: datas sempre PT-BR (DD/MM)
+
+1. **Swap dia/mês**: exames no mesmo ASO vinham uns como `2026-08-10` e outros como `2026-10-08` (leitura MM/DD inglesa de `10/08/2026`). O e-Social rejeitava. Parse agora é sempre DD/MM; `dtExm` que é inversão de `dtAso` alinha em `dtAso`. Nomes de mês PT e EN (`10 de agosto` / `August 10`) viram o mesmo ISO.
+2. **Validar Auto-Correção / pré-envio**: corrige `dados_evento` e o XML gerado. OCR de ASO usa o mesmo alinhamento. Evento já gravado no Supabase o usuário corrige na base; eventos novos não repetem o erro.
+
+## [5.74.1] - 2026-09-09
+
+### 🩺 e-Social S-2220: auto-correção de `nmMed` / `TS_nome`
+
+1. **Schema XSD**: OCR colava cargo (`Médica`), quebra de linha e lixo (`à Á`) em `nmMed`. O e-Social rejeitava com `The Pattern constraint failed`. **Validar Auto-Correção** agora sanitiza o nome (`Thalia Leal Dibo`), rebuilda o XML e limpa `protocolo_envio` quando a rejeição foi só de schema (sem recibo).
+2. **Envio**: botão **Enviar ao e-Social** no modal e na lista (status `erro`). Pré-envio usa o mesmo sanitizer. OCR ASO e `POST .../documentos/[id]/esocial` já gravam o nome limpo.
+
+## [5.74.0] - 2026-09-03
+
+### 🎓 Matrizes de Treinamento, Lista de Presença e Responsividade Global (Mobile & PC)
+
+1. **Matrizes de Treinamento por Cargo & Setores (ACL)**:
+   - Configuração completa em `/admin/gestao-tripulantes` e atalho direto em `/department/gestao-tripulantes` (aba e botão de cabeçalho).
+   - Importador oficial de planilhas XLSX do MIO (`Matriz - Modelo 002`).
+   - Cruzamento automático por cargo e regime na ficha do colaborador (`MatrizConformidadeColaboradorCard`) com barra de conformidade, listagem de cursos vigentes/a vencer/vencidos/faltantes e ação rápida "Lançar / Anexar" em 1 clique.
+   - Visibilidade e gestão condicionadas a Setores autorizados (DP, RH, Treinamento, Operações, SMS/QHSE com módulo `gestao-tripulantes`), Roles (ADMIN/MANAGER), ACL granular (`matrizes.manage`/`matrizes.view`) e feature JSONB configurável em `/admin/users`.
+2. **Edição e Exclusão Total de Treinamentos**:
+   - Correção e exclusão auditável de lançamentos incorretos de cursos e certificados, operando tanto no certificado primário quanto no histórico colapsado (`obsoleto`) na ficha do colaborador.
+3. **Lista de Presença para Treinamentos Internos**:
+   - Modal integrado na ficha do colaborador (`ModalListaPresencaTreinamento`) permitindo emitir listas oficiais de presença em `/lista-presenca` para assinaturas digitais, download em PDF e opção de lançamento automático imediato da conclusão em lote nos prontuários de todos os participantes.
+4. **Man Schedule (Scroll e Timeline)**:
+   - Adicionada barra de rolagem de alto contraste e largura confortável (14px) no CSS global e barra superior de rolagem sincronizada em tempo real via `ResizeObserver`.
+5. **Responsividade Global e Viewport (Mobile & PC)**:
+   - Auto-close do menu drawer no mobile ao navegar (`pathname`).
+   - Padding responsivo do `<main>` (`px-3 py-3 sm:px-4 sm:py-4 md:px-8 md:py-6 touch-scroll`), recuperando mais de 50px de altura útil.
+   - `GtPageShell` atualizado para rolagem vertical suave no mobile (`overflow-y-auto lg:overflow-hidden`) com scrollports mantendo altura mínima segura (`min-h-[320px]` / `min-h-[360px]`), garantindo que tabelas nunca mais colapsem para 0px.
+   - Cards de KPI em grade compacta 2x2 no mobile (`grid-cols-2 lg:grid-cols-4`) ocupando apenas ~110px de altura.
+   - Filtros, abas de navegação (`no-scrollbar`) e tabelas com largura mínima (`min-w-[...]`) permitindo visualização fluida e cliques precisos em qualquer dispositivo.
+   - Modais com botões de ação fixos no rodapé (`sticky bottom-0`).
+
+## [5.73.0] - 2026-09-02
+
+### 🚪 Desligamento, ACL de documentos GT e Man Schedule
+
+1. **Desligamento / rescisão**: processo em `gt_desligamentos` pela aba/botão do `CollaboratorModal` (não na lista DP). Permissão ADMIN/MANAGER ou setor DP/RH com módulo `gestao-tripulantes`. Folha é fail-soft; e-Social S-2299 reusa `autoGenerateESocialEvents` (`motivo_demissao` = `mtvDeslig`).
+2. **Editar e excluir itens do cadastro**: Treinamentos, ASO, documentos e passaportes passam pelo gate `PUT`/`DELETE /api/gestao-tripulantes/documentos/[id]` (`canEditGtDocuments` / `canDeleteGtDocuments`). ADMIN/MANAGER liberados; USER precisa da feature `gestao-tripulantes.documents.edit` / `.delete` ou ACL no recurso `gestao-tripulantes`. ASO já `enviado`/`processado` no e-Social não é editável/excluível na aba.
+3. **Man Schedule**: mês de referência (default = mês civil; `localStorage`) gera colunas do 1º ao último dia mesmo sem rotações, para planejar o futuro. Setas do rótulo mudam o mês; setas laterais andam uma coluna.
+
+## [5.72.1] - 2026-09-02
+
+### 🔒 Segurança e qualidade de tipos (employee-hub, GT, IA e e-mail)
+
+1. **Vazamento PII na ficha unificada**: `resolvePortalUser` exige corroboração de identidade (nome ou segundo identificador) antes de mesclar férias/reembolsos de outro usuário do portal ou fazer backfill de `user_id`. Match solto por e-mail/CPF editável no GT não expõe mais dados de terceiros.
+2. **TypeScript real zerado**: corrigidos ~140 erros de tipo em gestão-tripulantes/e-Social (flatten de joins Supabase), IA/e-mail (`await` em `resolveEmailAuth`, `LLMMessage` com `tool`, schemas de tools) e pontos residuais (catálogo lista-presença, mascote Companion).
+3. **Build confiável**: `tsconfig` exclui `scratch/` e `scripts/` de verificação; `npx tsc --noEmit` passa sem erros de código-fonte.
+
+## [5.72.0] - 2026-09-02
+
+### 🪪 Ficha do colaborador, regime sem escala e viewport do portal
+
+1. **GT não cai mais em branco**: `ModalAprovacaoFechamento` usa `useSupabaseAuth` (o portal não monta o `AuthProvider` legado).
+2. **Ficha**: vínculo de portal por `user_id` → `tax_id` → e-mail (não `cpf`/`full_name`). QHSE/EPI deixa de listar ASO; exames ocupacionais ficam só na aba ASO. Modal preenche a tela; cada aba rola o conteúdo internamente.
+3. **Administrativo / onshore**: regimes `sem_escala`, `administrativo` e `onshore` (dias 0). Token vazio + 0/0 não vira 14x14. DBA automático não trata quem não tem rotação.
+4. **Viewport**: Matriz, DP, Man Schedule, e-Social e listas do portal (férias, reembolso, academy, admin) preenchem `h-dvh`; filtros ficam, a tabela rola.
+
+## [5.71.3] - 2026-09-01
+
+### 🔧 Fechamento isolado, colunas reais de `users_unified` e ASO logística por setor
+
+1. **Salvar fechamento**: a aba admin grava só `PUT /relatorio-mensal/config`. O PUT geral `/configuracoes` não toca mais em `gt_fechamento_mensal_config`. Adicionar/remover aprovador persiste na hora; o seletor busca nome/e-mail (`SearchableCreatableSelect`).
+2. **Colunas reais**: ASO ator, alerta de vencimentos, token de voz e sync de férias → `gt_afastamentos` leem `first_name`/`last_name`/`tax_id` (nunca `full_name`/`cpf` em `users_unified`).
+3. **ASO logística**: USER do setor Logística com módulo `gestao-tripulantes` pode aprovar/reprovar/cancelar. ADMIN/MANAGER segue liberado. USER de TI/QHSE com o mesmo módulo continua 403. Fechamento nominado não muda.
+
+## [5.71.2] - 2026-09-01
+
+### ✍️ Fechamento: espera exatamente quem está na lista, independente do cargo
+
+1. **Lista nominada**: o e-mail ao DP só sai quando **as pessoas cadastradas** tiverem assinado. USER na lista pode assinar; ADMIN fora da lista recebe 403. O cargo no portal não substitui a lista.
+2. **Dropdown**: passa a listar usuários ativos com e-mail (`listarUsuariosPortalAtivos`), não só ADMIN/MANAGER.
+3. **Lista vazia**: fallback inalterado — um gestor/administrador assina uma vez e conclui.
+
+## [5.71.1] - 2026-09-01
+
+### 🔧 Fechamento de escalas: assinatura digital, dropdown de gestores e lista vazia
+
+1. **Assinatura no modal**: `ModalAprovacaoFechamento` passa a aguardar a Promise de `requestSignature()` em vez do callback obsoleto `onSign`. O cadastro de assinatura POSTa `/aprovar`; quem já tem assinatura envia `signature_url` no body (antes o POST ia sem a URL).
+2. **Dropdown de gestores**: a lista usa `first_name` / `last_name` / `tax_id` de `users_unified` (não `full_name` / `cpf`). O PostgREST deixava `availableManagers=[]` e o placeholder do select parecia duplicado.
+3. **Lista vazia de aprovadores**: sem nomes cadastrados, uma assinatura de ADMIN/MANAGER conclui o fechamento e libera o e-mail ao DP. Lista nominada continua exigindo 100% das N assinaturas.
+
+## [5.71.0] - 2026-09-01
+
+### ⚓ GT/DP: status real da escala, Man Schedule usável e agendamento de ASO
+
+1. **Status = célula de hoje**: a pílula da Matriz/DP/ficha deixa de usar `status_embarque` velho (Anderson ON hoje aparecia Folga). ON exato hoje = Embarcado; STB = StandBy. O KPI Embarcados Agora e o filtro usam o mesmo mapa.
+2. **Man Schedule**: scroll interno da grade com nomes/QTD/cargo sticky (`border-separate`); Hoje, setas e `Hoje: NP a bordo` interpolam o POB (ON civil de hoje) e saltam por coluna (dia ou semana sáb–sex). i18n aceita `{count}` e `{{count}}`.
+3. **Workflow ASO DP ↔ logística**: antecedência configurável no admin (padrão 60 dias). O sistema sugere datas pela escala (preferência STB, bloqueio de ON). DP escolhe a data; logística aprova/reprova com assinatura digital, log, e-mail e notificação no portal. Aprovado vira **Marcado** nos dois painéis (`gt_aso_agendamentos`).
+4. **RLS**: `gt_afastamentos`, `gt_acidentes`, `gt_relatorios_aprovacoes` com RLS ligado e sem policy anon (só `service_role` / APIs).
+
+## [5.70.0] - 2026-09-01
+
+### ⚓ GT, QHSE/EPI e Calendário: POB só ON, histórico de docs, catálogo e dedupe
+
+1. **Filtro de data (Man Schedule)**: o `input type=date` do Chrome disparava `0002-01-01` enquanto o ano era digitado e a grade montava centenas de milhares de colunas. Agora só entra `YYYY-MM-DD` completo (1990–2100), com teto de colunas (`filter-date.ts`, `ScheduleDateFilterInput.tsx`).
+2. **POB / Embarcados Agora**: conta só o código de escala **exato `ON`** no dia civil — não `ON*`, `*`, STB, DBA, FI, etc. (caso 3P do Aislan: 2 ON + 1 ON*). Cards de KPI clicáveis com `?kpi=embarcados|disponiveis|docs_vencidos|colaboradores` (`embarque-status.ts`).
+3. **Histórico de treinamentos/documentos**: agrupa por tipo de curso (CBSP etc.); a linha primária é o certificado/validade mais recente; versões antigas ficam em Histórico/Obsoleto com download. KPIs e resumos usam só o primário, para declaração vencida não gerar pendência falsa.
+4. **Catálogo global de documentos** + aba nativa **QHSE / EPI** na ficha GT, `/profile` e `/admin/users`. Liberado pelo módulo **EPI** (`epi`) já existente — sem ACL extra de catálogo. Ficha AN-HSE-005, entregas e lista de presença QHSE. A aba Documentos do GT deixa de despejar “outros módulos”.
+5. **Calendário**: deduplica título semelhante + mesmo início + local compatível (só feriados + ICS; sem eventos MIO). Hint para duplicatas ocultas (`calendar-event-dedupe.ts`).
+
+## [5.69.3] - 2026-08-31
+
+### 🛠️ GT: documento vencido visível + lançamentos de escala na coluna ON
+
+1. **Matriz de Conformidade**: o KPI de documentos vencidos lista título, tipo, validade e aba; só o vigente de cada slot entra no número. Ficha unificada (Employee Hub) junta `gt_*`, portal, férias e reembolso.
+2. **Man Schedule**: novo evento de escala (ON/FI/DBA…) aparece na grade e soma na coluna ON na hora. Insert local invalida o cache; lançamento recente prevalece sobre STB longo.
+
+## [5.69.2] - 2026-08-31
+
+### 🛠️ GT: lookup criável, KPIs só ativos e viewport diário no Man Schedule
+
+1. **Cargo / Empresa / Embarcação / Centro de Custo**: busca com opção de cadastrar novo (`SearchableCreatableSelect`) no modal, cadastro e filtros.
+2. **Cards da Matriz**: total, embarcados e back consideram só colaboradores `ativo=true` e centros de custo ativos.
+3. **Documentos vencidos**: contagem por `data_validade` civil (não só `status_validacao`) nos ativos.
+4. **Man Schedule**: checkbox **Visualizar por dia** (ligado = coluna por dia; desligado = semana sáb–sex).
+
+## [5.69.1] - 2026-08-31
+
+### 🛠️ Departamento Pessoal: menu lateral, cadastro e vencimentos de ASO
+
+Correção da tela `/department/dp`:
+1. **Menu lateral**: `layout.tsx` com `MainLayout`, no mesmo padrão de GT / e-Social / Man Schedule.
+2. **Cadastro**: tabela usa campos achatados da API (`cargo_nome`, `empresa_nome`, `centro_custo_*`, `ativo`, regime/escala) em vez de nested `cargo.nome`.
+3. **ASO**: lista só `tipo_documento=aso` via `GET /aso/notificar-vencimentos` (helper `aso-vencimentos.ts`, data civil local). A aba não mistura mais treinamentos da auditoria nem mostra colaborador como N/A.
+4. **Fechamento**: preview de totais ON/DBA/FI/TRE do mês na própria aba.
+
+## [5.69.0] - 2026-08-31
+
+### 🚀 Integração Global do Departamento Pessoal (DP), Permissões de Setores, Motor de Dobras e Cruzamento de Dados
+
+Esta grande versão integra o Departamento Pessoal (DP) em todo o ecossistema do Portal ABZ:
+1. **Permissões de Setores & Módulos do Sistema**: Módulo `dp` (Departamento Pessoal) registrado no catálogo oficial (`SYSTEM_MODULES`), ícones, cartões e gerenciador de permissões de setores (`/admin/sectors`), permitindo controle granular por setor (TI, DP, RH, Operações, etc.).
+2. **Motor Estrito de Dobras por Escala Individual**: O fechamento de escalas e a planilha oficial calculam dobras considerando a escala específica cadastrada de cada colaborador (`14x14`, `28x28`, `15x15`, `30x30`, `60x60`), convertendo dias contínuos excedentes à escala regular em `DBA` (Dobra).
+3. **Cruzamento Global de Dados sem Retrabalho**:
+   - **Férias & Afastamentos**: Ao aprovar férias em `/ferias`, registros são sincronizados automaticamente com `gt_afastamentos` (código e-Social 15), Man Schedule e Fechamento DP.
+   - **e-Social**: Alterações em colaboradores refletem em tempo real nos eventos S-2200, S-2220 e S-2240.
+   - **Alertas de ASO**: Disparo automático de e-mails detalhados para o DP e notificações in-app para tripulantes e gestores.
+
+## [5.68.4] - 2026-08-31
+
+### 🏢 Módulo do Departamento Pessoal (DP), Alertas de Vencimento de ASO & Correção Defensiva Final no Admin
+
+Esta versão entrega a central do Departamento Pessoal e os alertas automáticos de conformidade ocupacional:
+1. **Novo Módulo DP (`/department/dp`)**: Central unificada com consulta, busca em tempo real e edição de todos os colaboradores, controle de regimes de escala (`14x14`, `28x28`), integração com Fechamento Mensal DP e e-Social.
+2. **Alertas Automáticos de Vencimento de ASO (E-mail & Portal)**: Endpoints dedicados (`/api/gestao-tripulantes/aso/notificar-vencimentos` e cron) para envio de e-mails detalhados com a lista de ASOs vencidos/vencendo e criação de notificações in-app para colaboradores e gestores.
+3. **Proteção Total contra Erros no Painel Administrativo**: Garantia de tratamento defensivo em todas as categorias de auditoria de documentos e sincronizações no painel administrativo (`/admin/gestao-tripulantes`).
+
+## [5.68.3] - 2026-08-31
+
+### 🎓 Gestão de Tripulantes: Correção no Cálculo de Treinamentos (TRE) do Fechamento
+
+Esta versão corrige a contagem indevida de dias de treinamento no fechamento mensal:
+1. **Origem Estrita de Eventos de Treinamento**: A coluna e cômputo de **Dias TRE** agora considera estritamente **eventos de treinamento lançados na escala** (`gt_historico_embarques.tipo = 'tre' | 'tf'`) que ocorreram no mês de fechamento.
+2. **Desacoplamento de Certificados Plurianuais**: Eliminada a verificação equivocada na tabela de certificados arquivísticos (`gt_documentos`), cuja validade plurianual (ex: cursos com validade de 2 a 5 anos) gerava falsa contagem de 30/31 dias de treinamento todos os meses.
+
+## [5.68.2] - 2026-08-31
+
+### 🛡️ Gestão de Tripulantes: Correção de Defensiva em Auditoria, Centros de Custo e Painel Admin
+
+Esta versão corrige a exceção `Cannot read properties of undefined (reading 'length')` que ocorria ao acessar o painel de configurações administrativas (`/admin/gestao-tripulantes`):
+1. **Auditoria de Documentos**: Proteção com optional chaining e fallback seguro para `data?.duplicados` e `data?.resumo`.
+2. **Centros de Custo e Fechamento DP**: Blindagem contra arrays indefinidos em contagens e listas de aprovadores obrigatórios.
+3. **Logs de Integrações MIO e PoliWeb**: Tratamento seguro para `cronLogs` e `scrapeResult.erros`.
+
+## [5.68.1] - 2026-08-31
+
+### 📊 Gestão de Tripulantes: Cálculo Diário Estrito de Embarques/Dobras, Layout com Células Mescladas e Edição de Escala no Cadastro
+
+Esta versão aperfeiçoa a precisão contábil e a apresentação visual do Fechamento Mensal DP e amplia o cadastro de tripulantes:
+1. **Motor de Cálculo Diário Estrito**: Os totais de **Dias ON**, **Dias DBA (Dobra)**, **Dias FI (Folga Indenizada)** e **Dias TRE (Treinamento)** agora são calculados dia a dia dentro do período do fechamento mensal.
+2. **Cálculo Inteligente de Dobras por Escala**: Considera o regime cadastrado no colaborador (ex: `14x14`, `28x28`, `15x15`, `30x30`) — qualquer permanência a bordo que ultrapassar a escala máxima contínua é automaticamente categorizada como **DBA (Dobra)**.
+3. **Melhoria Visual e Alinhamento no XLSX**: Aplicação de mesclagens de células (`!merges`) para o cabeçalho principal, subtítulo de filtros, total consolidado e chancelas de assinaturas digitais, eliminando compressão de texto e bordas desalinhadas.
+4. **Campos de Escala e Datas no Cadastro do Colaborador**: Aba de dados pessoais atualizada com suporte à edição de **Regime de Trabalho / Escala de Embarque e Folga**, **Último Embarque/Desembarque**, **Próximo Embarque** e **Centro de Custo**.
+
+## [5.68.0] - 2026-08-31
+
+### ⚓ Gestão de Tripulantes: Filtros Dinâmicos na Planilha DP, Multi-Assinaturas Obrigatórias, Histórico Completo & Vínculo de Matrícula/Centro de Custo
+
+Esta versão aprimora todo o ciclo de visualização histórica e fechamento mensal da Gestão de Tripulantes:
+1. **Histórico Completo de Escala**: Carregamento irrestrito de todo o histórico passado e futuro (`janela=all`), com recálculo dinâmico das colunas de semanas e datas do cronograma baseado nos filtros de data inicial e final.
+2. **Exportação & Fechamento com Filtros Ativos**: O gerador de XLSX e a prévia do Fechamento DP respeitam rigorosamente todas as seleções ativas (Embarcação, Empresa, Cargo, Status Ativo/Inativo, Intervalos de Datas e Busca).
+3. **Conferência de Integrantes e Múltiplas Assinaturas Obrigatórias**: Painel administrativo para cadastrar os gestores que são obrigados a assinar digitalmente o fechamento. O envio oficial por e-mail com anexo para o DP só é liberado quando **100% dos integrantes obrigatórios** concluírem suas assinaturas.
+4. **Vínculo de Matrícula & Centro de Custo**: Inclusão de colunas em destaque de Matrícula e Centro de Custo vinculados a cada colaborador tanto na visualização do modal quanto na planilha oficial XLSX enviada ao DP.
+
+### Added
+- Colunas de Matrícula e Centro de Custo nos relatórios consolidados e prévias da folha/DP.
+- Painel de Aprovadores Obrigatórios com checagem de pendências e badges de conferência individual.
+- Tabela `gt_relatorios_aprovacoes` criada com suporte a arrays de assinaturas digitais com carimbo criptográfico.
+
+### Fixed
+- Visualização de datas passadas no Man Schedule com suporte a seleção de intervalos retroativos.
+- Filtros dinâmicos respeitados na geração de relatórios XLSX e rotas de fechamento mensal.
+
+## [5.67.1] - 2026-08-31
+
+### 🛠️ Gestão de Tripulantes: Correção de Importações de Token e Ajuste de Sintaxe no Man Schedule
+
+Esta versão corrige a resolução de módulos do helper `fetchWithToken` (redirecionado para `@/lib/tokenStorage`) nos componentes de Centros de Custo, Fechamento DP e Modal de Aprovação, e restaura o fechamento de dependências do hook `useMemo` na linha de escalas do Man Schedule.
+
+### Fixed
+- **Resolução de Imports `fetchWithToken`**:
+  - Atualizados `CentrosCustoAdminTab.tsx`, `WorkflowFechamentoTab.tsx` e `ModalAprovacaoFechamento.tsx` para importar `fetchWithToken` a partir de `@/lib/tokenStorage`.
+- **Sintaxe de Hooks em `GTManScheduleTab.tsx`**:
+  - Fechamento estrito do hook `useMemo` com a lista completa de dependências na renderização de linhas de tripulantes (`ScheduleRow`).
+
+## [5.67.0] - 2026-08-31
+
+### ⚓ Gestão de Tripulantes: Fechamento Mensal DP, Totais de Escala (ON/DBA/FI/TRE), Centros de Custo Globais & Histórico Completo
+
+Esta versão implementa o workflow completo de fechamento mensal de escalas para o Departamento Pessoal com aprovação auditável e assinatura digital, adiciona o cômputo e colunas individuais e totais de ON (A bordo), DBA (Dobra), FI (Folga Indenizada) e TRE (Treinamento Indenizado) na planilha de escalas em formato unificado de folha única, disponibiliza a gestão global de Centros de Custo compartilhados entre os 4 departamentos e garante a exibição do histórico completo de escalas sem truncamento.
+
+### Added
+- **Workflow de Fechamento Mensal & Envio ao Departamento Pessoal (DP)**:
+  - Tabela `gt_relatorios_aprovacoes` e configuração `gt_fechamento_mensal_config` no Supabase.
+  - Endpoints `/api/gestao-tripulantes/relatorio-mensal`, `/aprovar`, `/config` e cron `/cron/relatorio-mensal`.
+  - Modal `ModalAprovacaoFechamento` para visualização dos KPIs do mês, detalhamento dos tripulantes, assinatura digital com carimbo criptográfico (hash SHA-256) e disparo de e-mail corporativo com anexo XLSX oficial para o DP.
+  - Nova aba `Fechamento DP` (`WorkflowFechamentoTab`) no `/admin/gestao-tripulantes` para configurar data de corte (ex: dia 25), e-mails de destino e auditoria de fechamentos anteriores.
+- **Cômputo e Exportação de ON, DBA, FI e TRE por Colaborador**:
+  - Motor oficial de geração de planilhas `relatorio-escala-generator.ts` em aba única (`Schedule`) com cálculo individual de dias/semanas para ON, DBA, FI e TRE.
+  - Colunas dedicadas e estilizadas integradas visualmente na tabela de escalas (`GTManScheduleTab`) e no fluxo de `Exportar XLSX`.
+- **Gestão Global de Centros de Custo**:
+  - Tabela `gt_centros_custo` e rotas API `/api/centros-custo` e `/api/gestao-tripulantes/centros-custo`.
+  - Nova aba `Centros de Custo` (`CentrosCustoAdminTab`) no `/admin/gestao-tripulantes` permitindo cadastro, edição, busca e ativação/desativação rápida para uso conjunto em Gestão de Tripulantes, Folha/DP, Finanças e Logística.
+
+### Fixed
+- **Histórico Completo de Colaboradores e Escala (MIO + Local)**:
+  - Corrigido o tratamento de `janela=all` em `src/app/api/man-schedule/realtime/route.ts` para evitar `Invalid Date` decorrente de `Infinity`, retornando todo o histórico passado de embarques e eventos sem limitação de datas.
+
+## [5.66.0] - 2026-08-28
+
+### 🗓️ Gestão de Tripulantes (Man Schedule) — Alinhamento de Troca de Turma & Controle de Indicação de Início (d.X)
+
+Esta versão corrige o cálculo e enquadramento de datas da escala na troca de turma aos sábados, elimina o recuo indevido gerado por fuso horário UTC em datas ISO e introduz o botão/toggle de controle para exibição opcional do dia de início do evento na célula (`d.X`) diretamente no modal flutuante de escala.
+
+### Added
+- **Controle de Indicação do Dia de Início na Célula (`d.X`)**:
+  - Adicionado toggle no modal flutuante de escala (`GTManScheduleTab`) permitindo habilitar ou desabilitar a exibição do dia de início na célula da planilha.
+  - Quando ativado, o marcador com o dia inicial (ex: `d.29`) é exibido estritamente na célula da semana em que o evento se inicia, enquanto as semanas subsequentes da mesma rotação mantêm a sigla limpa do evento (ex: `ON`).
+  - Persistência na coluna `exibir_dia_inicio` na tabela `gt_historico_embarques` com suporte integral em `GET /api/man-schedule/realtime`, `POST /api/gestao-tripulantes/embarques` e `PUT /api/gestao-tripulantes/embarques/[id]`.
+  - Indicador `d.X = Dia inicial do evento` sincronizado na legenda inferior.
+
+### Fixed
+- **Alinhamento de Semanas e Troca de Turma aos Sábados**:
+  - Implementado parser local de datas (`parseLocalDate`) que evita o deslocamento de 3 horas para trás (para sexta-feira 21:00 UTC-3) ao instanciar strings `YYYY-MM-DD`.
+  - Embarques que iniciam no sábado da troca de turma (ex: 29 de agosto) agora são contabilizados rigorosamente a partir da respectiva semana de início (`29-Ago-26`), sem sobrepor incorretamente a semana anterior (`22-Ago-26`).
+
+## [5.65.0] - 2026-08-27
+
+### 🚢 Gestão de Tripulantes: Filtro Ativos/Inativos, Modal Draggable de Escala, Bubbles Animados de Comentários & Indicador de Dia Inicial
+
+Esta versão adiciona suporte completo a filtros de colaboradores ativos e inativos na Matriz e no Man Schedule, transforma o modal de escala em uma janela flutuante arrastável (não obstrutiva), implementa balões animados (*speech bubbles*) ao passar o mouse sobre observações e exibe o dia inicial do evento diretamente na planilha de escalas.
+
+### Added
+- **Filtro de Colaboradores Ativos / Inativos / Todos**:
+  - Novo seletor de status na Matriz de Conformidade (`GTMatrixFilters.tsx`) e na barra de ferramentas superior do Man Schedule (`GTManScheduleTab.tsx`).
+  - Suporte nas rotas de API `/api/gestao-tripulantes/colaboradores` e `/api/man-schedule/realtime`.
+- **Modal de Escala Móvel e Flutuante (*Draggable Window*)**:
+  - Modal de escala transformado em janela flutuante arrastável por mouse e touch, eliminando o backdrop escuro bloqueante e mantendo a planilha sempre visível.
+  - Alça visual de movimentação (`FiMove`), acabamento em `backdrop-blur`, sombra em relevo e preservação integral de todas as opções de criação e edição de eventos.
+- **Bubbles Animados de Comentários ao Passar o Mouse**:
+  - Marcador animado pulsante (`animate-ping`) nas células da escala que possuem observações cadastradas.
+  - Balão flutuante em *dark glassmorphism* (`fade-in zoom-in-95`) com dados do tripulante, data inicial, embarcação, texto integral da observação e seta indicadora.
+- **Dia Inicial do Evento na Planilha (`d.X`)**:
+  - Indicadores na grade de escalas exibem o código do evento e o dia inicial da rotação/embarque no mês (ex: `d.15`, `d.01`).
+  - Colunas ajustadas para 36px de largura e legenda informativa atualizada.
+
+## [5.64.0] - 2026-08-27
+
+### 🔄 Persistência de Assets de Inicialização (Splash & Áudio), Sincronização em Tempo Real do Admin & PWA
+
+Esta versão corrige a persistência e visualização das configurações de Splash Screen e Áudio no gerenciador de usuários, implementa atualização imediata da lista de usuários sem necessidade de recarregar a página (F5) e resolve o conflito de roteamento de manifest PWA no Next.js.
+
+### Added
+- **Badges de Splash e Áudio na Tabela de Usuários**:
+  - Indicadores visuais na tabela de usuários (`UnifiedUserManager` e `/admin/users`) mostrando se o usuário possui Splash ou Áudio customizado e seu estado ativo/inativo.
+
+### Fixed
+- **Persistência e Edição de Splash Screen e Áudio de Usuário**:
+  - Corrigida a omissão dos campos `startup_splash_*` e `startup_sound_*` ao abrir o editor de usuário (`UserEditor`), garantindo que fotos e áudios previamente cadastrados sejam carregados e não sobrescritos por valores vazios.
+  - Sincronização reativa com `useEffect` no `UserEditor` para atualizar o preview de mídia sempre que a prop `user` for alterada.
+  - Ajustada a remoção de assets no backend (`PUT /api/users/[id]` e `POST /api/users`) convertendo URLs vazias em `null` no banco de dados.
+- **Atualização Imediata no Gerenciador de Usuários (sem F5)**:
+  - Adicionado `cache: 'no-store'` e parâmetro de timestamp (`_=${Date.now()}`) no hook `useAllUsers` para anular cache HTTP do navegador em `/api/users`.
+  - Implementada atualização otimista imediata ao excluir usuários e espera da sincronização com o servidor ao salvar ou alterar usuários.
+- **Conflito de Rota PWA (`manifest.webmanifest`)**:
+  - Removido arquivo duplicado em `public/manifest.webmanifest`, eliminando o erro 500 no Next.js e mantendo a geração dinâmica em `src/app/manifest.ts`.
+
+## [5.63.0] - 2026-08-27
+
+### 📱 PWA Mobile Durável, Splash & Áudio de Inicialização por Usuário & Gestão de Tripulantes Fullscreen
+
+Esta versão corrige a inicialização mobile em tela inicial (PWA standalone) e persistência de sessão, implementa telas de splash e sons de abertura customizados por colaborador configuráveis via painel de administração, e aprimora o layout dinâmico em tela inteira da Gestão de Tripulantes.
+
+### Added
+- **Splash Screen e Som de Abertura Personalizados por Usuário**:
+  - Nova seção no modal de edição de usuário (`UserEditor`) permitindo envio de imagem de splash e arquivo de áudio (`.mp3`, `.wav`, `.ogg`, `.m4a`).
+  - Toggles dedicados para habilitar/desabilitar splash e som de forma independente.
+  - Novo endpoint de upload seguro `POST /api/admin/users/upload-startup-asset` integrado ao bucket público `user-startup-assets`.
+  - Componente global `StartupExperience` com animação suave de abertura, temporizador automático, toque para avançar e reprodução de som respeitando políticas de autoplay.
+- **Suporte Oficial a Web App Manifest (PWA)**:
+  - Criação de `src/app/manifest.ts`, `public/manifest.json` e `public/manifest.webmanifest` com configurações standalone, tema `#0B72E7` e ícones multi-resolução para Android e iOS.
+
+### Fixed
+- **Inicialização e Persistência de Sessão Mobile (Tela Inicial / PWA Standalone)**:
+  - Corrigido travamento de tela em branco quando o app é aberto a partir do ícone da tela inicial do dispositivo.
+  - Ampliada a expiração padrão do token local para 30 dias com renovação contínua via refresh token.
+  - Ajustado `ProtectedRoute` para exibir loader de transição e redirecionar imediatamente para `/login` quando o usuário estiver deslogado, eliminando o falso "Acesso Negado" ou tela branca.
+- **Gestão de Tripulantes (Man Schedule) em Tela Cheia**:
+  - Cabeçalho de datas sincronizado com todas as 52+ semanas do ano, alinhando colunas e corrigindo visualização que limitava a Agosto/Setembro.
+  - Layout dinâmico `100vh` sem barra de rolagem externa da janela e rolagem interna suave com centralização automática na semana atual ("Hoje").
+
+## [5.62.0] - 2026-08-27
+
+### ⚡ Gestão de Tripulantes, Setores no Admin & Resiliência de APIs
+
+Esta versão introduz a criação dinâmica de setores com permissões modulares no Admin, desbloqueia a edição e exclusão local de lançamentos da escala na Gestão de Tripulantes com garantia de isolamento do MIO, corrige efeitos colaterais de renderização no posicionamento de assinaturas e otimiza a resiliência de endpoints críticos.
+
+### Added
+- **Criação Dinâmica de Setores no Admin** (`/admin/sectors` + `POST /api/sectors`):
+  - Botão "+ Novo Setor" com modal interativo para cadastro imediato de setores corporativos.
+  - Seleção em lote de módulos permitidos organizados por categoria (Geral, RH, Departamento, Conhecimento, etc.).
+  - Integração instantânea com o fluxo do sistema: o novo setor passa a ficar disponível imediatamente no dropdown de edição/cadastro de usuários (`UserEditor`) e no controle de permissões.
+  - Nova rota `DELETE /api/sectors/[id]` para gestão completa de setores.
+- **Índices de Alta Performance para Notificações**:
+  - Criação de índices compostos `idx_notifications_user_read` (`user_id, read_at`) e `idx_notifications_user_created` (`user_id, created_at DESC`) para consultas ultra-rápidas.
+
+### Fixed
+- **Edição e Exclusão de Escala Local (Gestão de Tripulantes)**:
+  - Desbloqueada a edição e exclusão de qualquer lançamento de escala em `/api/gestao-tripulantes/embarques/[id]` (removido bloqueio 403 `origem !== 'local'`).
+  - **Garantia de Isolamento MIO**: Todas as alterações operam estritamente sobre a base local `gt_historico_embarques` marcando `origem='local'` ou `deleted_at`, sem enviar requisições de escrita para o MIO.
+  - **Proteção contra sobrescrita em Syncs MIO**: Rotina `mio-sync.ts` atualizada para respeitar exclusões locais (`deleted_at`) e edições manuais (`origem='local'`), evitando restaurações indesejadas.
+- **Overlay de Assinatura Digital (`SignaturePositionOverlay`)**:
+  - Corrigido erro de React *"Cannot update a component (`ContratoDetailPage`) while rendering a different component (`SignaturePositionOverlay`)"*.
+  - Desacoplado o rastreamento de arrasto para `useRef`s e disparo limpo de `onDragEnd` fora de callbacks de atualização de estado.
+- **Resiliência e Fail-Soft em APIs Críticas**:
+  - `GET /api/avaliacao-desempenho/avaliacoes/pending-review`: Adicionado tratamento fail-soft para evitar erro 500 no carregamento do `AdminLayout`.
+  - `GET /api/purchase-orders`: Adicionada a coluna `approver_ids TEXT[]` no banco de dados e tratamento fail-soft no endpoint para evitar travamentos de busca de ordens de compra.
+
+## [5.61.0] - 2026-08-25
+
+### 🛡️ Gestão de Tripulantes — Identidade Retroativa & Performance Man Schedule
+
+Correção dos documentos legados trocados entre colaboradores (evidenciados em produção) e eliminação da lentidão extrema da aba Man Schedule.
+
+### Fixed
+- **Documentos trocados entre colaboradores (legado)**: varredura completa nos 1.018 docs vivos identificou **70 vinculados sem prova de identidade** — 5 confirmados de pessoa errada (ASOs de Wendel/Vinicius nos perfis de Adalberto e Gabriela) e 4 sem prova nenhuma. Os **9 casos** receberam quarentena conforme contrato (`identity_match='quarantine'`, `colaborador_id=null`); os 61 restantes tiveram o falso `'match'` corrigido para `'unknown'`. Descoberta-chave: o `identity_match='match'` doc-level era setado no upload, antes do OCR — a única prova real de identidade é `cpf_documento` == CPF do perfil. Backups em `scratch/backup-gt-quarantine-*.json`; relatório completo em `scratch/RELATORIO-DOCUMENTOS-TROCADOS.md`.
+- **Causa raiz do envio errado bloqueada**: a rota S-2220 enviava usando o **CPF do perfil** quando o OCR não extraía nada do documento. Agora retorna **409 `ASO_CPF_NAO_EXTRAIDO`**. UI: botão desabilitado com aviso "Execute o OCR / identidade não verificada" + guard extra.
+- **Reincidência prevenida**: todo upload nasce `identity_match='unknown'`; OCR sem CPF dispara toast claro "⚠️ Documento enviado para QUARENTENA… resolva em Auditoria > Quarentena".
+- **Duplicados**: clusters reais mapeados (Ludmilla ~28x, Vinicius ~15x, Gabriela 9x) já agrupados na Auditoria com ação ADMIN `mesclar_duplicados`.
+
+### Performance
+- **Man Schedule (aba extremamente lenta → rápida)**:
+  - Backend `/api/man-schedule/realtime`: cache do resultado computado com TTL 90s invalidado pela assinatura do `mio_cache`; chamadas à API do MIO nunca mais no caminho da requisição (refresh fire-and-forget em background); filtro `?janela=` limitando processamento às rotações relevantes (retrocompatível); instrumentação de tempo por etapa.
+  - Frontend `GTManScheduleTab`: janela de semanas limitada com navegação ‹ › (fim das centenas de colunas), linha memoizada via `React.memo` com metadados pré-computados por célula, formatação de datas fora do render.
+
+### Docs
+- Relatório de evidência da varredura: `scratch/gt-risk-scan-report-v2.json`, `scratch/RELATORIO-DOCUMENTOS-TROCADOS.md`.
+
 ## [5.60.0] - 2026-08-25
 
 ### 🚢 Gestão de Tripulantes — Confiabilidade de Ponta a Ponta

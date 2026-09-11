@@ -28,14 +28,14 @@ function TopGradientCard({ user, profile, t }: { user: any; profile: any; t: any
     'Fulanito';
 
   return (
-    <div className="relative w-full bg-gradient-to-r from-white via-blue-50 to-blue-100 rounded-[2rem] p-8 md:p-12 mb-8 flex flex-col md:flex-row items-start justify-between min-h-[300px] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.05)]">
+    <div className="relative w-full bg-gradient-to-r from-white via-blue-50 to-blue-100 rounded-[1.5rem] sm:rounded-[2rem] p-5 sm:p-8 md:p-12 mb-6 sm:mb-8 flex flex-col md:flex-row items-start justify-between min-h-[200px] sm:min-h-[280px] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.05)]">
 
       {/* Left Content */}
-      <div className="flex-1 z-10 max-w-2xl mt-4">
-        <h1 className="text-5xl font-bold text-gray-900 mb-4 tracking-tight">
+      <div className="flex-1 z-10 max-w-2xl mt-2 sm:mt-4">
+        <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-2 sm:mb-4 tracking-tight">
           {t('dashboard.hello', { name: firstName })}
         </h1>
-        <p className="text-gray-500 text-xl font-normal mb-8">
+        <p className="text-gray-500 text-sm sm:text-lg md:text-xl font-normal mb-4 sm:mb-8">
           {t('dashboard.welcomeMessage')}
         </p>
 
@@ -79,7 +79,7 @@ export default function Dashboard() {
           {/* Top Section contains the gradient */}
           <TopGradientCard user={user} profile={profile} t={t} />
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 items-stretch">
 
             {/* Banner - Spans 5 (News) */}
             <div className="lg:col-span-5 min-h-[400px]">

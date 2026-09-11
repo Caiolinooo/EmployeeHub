@@ -145,6 +145,10 @@ export function sanitizeMessagesForLLM(messages: LLMMessage[]): LLMMessage[] {
 
       const role = msg.role;
       let rawContent = typeof msg.content === 'string' ? msg.content : (msg.content ? String(msg.content) : '');
+      // Prefixo interno de roteamento do Companion — não enviar ao LLM
+      if (role === 'user') {
+        rawContent = rawContent.replace(/^\[ABZ_COMPANION\]\s*/i, '');
+      }
 
       const cleanMsg: any = {
         role,
@@ -152,12 +156,12 @@ export function sanitizeMessagesForLLM(messages: LLMMessage[]): LLMMessage[] {
       };
 
       if (role === 'tool') {
-        cleanMsg.tool_call_id = (msg as any).tool_call_id || 'call_0';
+        cleanMsg.tool_call_id = msg.tool_call_id || 'call_0';
         // Sem 'name' no objeto tool para compatibilidade estrita com o Gemini
       }
 
-      if (role === 'assistant' && Array.isArray((msg as any).tool_calls) && (msg as any).tool_calls.length > 0) {
-        cleanMsg.tool_calls = (msg as any).tool_calls;
+      if (role === 'assistant' && Array.isArray(msg.tool_calls) && msg.tool_calls.length > 0) {
+        cleanMsg.tool_calls = msg.tool_calls;
       }
 
       return cleanMsg as LLMMessage;
@@ -283,8 +287,8 @@ export async function chatCompletion(
       data.choices[0].message.content = stripReasoningBlocks(data.choices[0].message.content);
     }
     
-    // Limite de iterações para evitar loop infinito
-    const MAX_TOOL_ITERATIONS = 10;
+    // Multi-tool workflows (pendências → dashboard → abrir KPI) precisam de várias rodadas
+    const MAX_TOOL_ITERATIONS = 12;
     const toolIterationCount = options?._toolIterations || 0;
     const firstValidContent = options?._firstValidContent || null;
     
@@ -297,23 +301,21 @@ export async function chatCompletion(
                          data.choices[0].message.tool_calls.length > 0;
     
     if (hasToolCalls && userContext) {
-      if (toolIterationCount >= 3 && !data.choices[0].message.content?.trim()) {
-        const fallbackContent = options?._firstValidContent;
-        if (fallbackContent) {
-          data.choices[0].message.content = fallbackContent + '\n\n(Resposta baseada em cache parcial.)';
-          return data;
-        }
-      }
-      
       if (toolIterationCount >= MAX_TOOL_ITERATIONS) {
         const fallbackContent = options?._firstValidContent;
         data.choices[0].message.content = fallbackContent || 'Limite de busca atingido.';
         return data;
       }
       
-      const toolCalls = data.choices[0].message.tool_calls;
-      const newMessages = [...messages, data.choices[0].message];
+      const toolCalls = data.choices[0].message.tool_calls ?? [];
+      const assistantMessage: LLMMessage = {
+        role: 'assistant',
+        content: data.choices[0].message.content,
+        tool_calls: toolCalls,
+      };
+      const newMessages: LLMMessage[] = [...messages, assistantMessage];
       let mergedMetadata = options?._accumulatedMetadata || {};
+      const { formatToolResultForLLM } = await import('./tool-result-format');
       
       for (const tc of toolCalls) {
           if (options?.onStatus) {
@@ -325,23 +327,44 @@ export async function chatCompletion(
           } catch {
             args = {};
           }
-          let result = await executeToolCall(tc.function.name, args, userContext.role, userContext.userId);
+          const result = await executeToolCall(tc.function.name, args, userContext.role, userContext.userId);
           let toolContent = result;
           try {
             const parsedResult = JSON.parse(result);
             if (parsedResult._metadata) {
-              mergedMetadata = { ...mergedMetadata, ...parsedResult._metadata };
+              const incoming = parsedResult._metadata;
+              // Concatena portalCommands em vez de sobrescrever
+              if (Array.isArray(incoming.portalCommands)) {
+                const prev = Array.isArray(mergedMetadata.portalCommands)
+                  ? mergedMetadata.portalCommands
+                  : [];
+                mergedMetadata = {
+                  ...mergedMetadata,
+                  ...incoming,
+                  portalCommands: [...prev, ...incoming.portalCommands],
+                };
+              } else {
+                mergedMetadata = { ...mergedMetadata, ...incoming };
+              }
             }
             if (tc.function.name === 'render_dashboard') {
-              toolContent = parsedResult.message || 'Dashboard renderizado.';
+              toolContent = JSON.stringify({
+                _summary: parsedResult.message || 'Dashboard renderizado.',
+                success: parsedResult.success !== false,
+                message: parsedResult.message || 'Dashboard renderizado.',
+              });
+            } else {
+              toolContent = formatToolResultForLLM(tc.function.name, result).contentForLlm;
             }
-          } catch { /* usa o result original */ }
+          } catch {
+            toolContent = formatToolResultForLLM(tc.function.name, result).contentForLlm;
+          }
 
           newMessages.push({
             role: 'tool',
             content: toolContent,
             tool_call_id: tc.id,
-          } as any);
+          });
         }
       
       const totalElapsed = Date.now() - callStartTime;
@@ -508,7 +531,7 @@ export async function chatCompletionStream(
   }
 
   let toolIterationCount = 0;
-  const MAX_TOOL_ITERATIONS = 5;
+  const MAX_TOOL_ITERATIONS = 10;
 
   async function startStream(currentMessages: LLMMessage[], streamController: ReadableStreamDefaultController<Uint8Array>) {
     if (toolIterationCount >= MAX_TOOL_ITERATIONS) {
@@ -624,20 +647,37 @@ export async function chatCompletionStream(
           args = {};
         }
         const rawResult = await executeToolCall(tc.name, args, userContext?.role || 'USER', userContext?.userId || '');
+        const { formatToolResultForLLM } = await import('./tool-result-format');
         
         let toolContent = rawResult;
         try {
           const parsedResult = JSON.parse(rawResult);
           if (parsedResult._metadata) {
-            accumulatedMetadata = { ...accumulatedMetadata, ...parsedResult._metadata };
+            const incoming = parsedResult._metadata;
+            if (Array.isArray(incoming.portalCommands)) {
+              const prev = Array.isArray(accumulatedMetadata.portalCommands)
+                ? accumulatedMetadata.portalCommands
+                : [];
+              accumulatedMetadata = {
+                ...accumulatedMetadata,
+                ...incoming,
+                portalCommands: [...prev, ...incoming.portalCommands],
+              };
+            } else {
+              accumulatedMetadata = { ...accumulatedMetadata, ...incoming };
+            }
           }
-          // Se for o render_dashboard, podemos limpar o conteúdo para não poluir o contexto se for muito grande
-          // Mas o LLM precisa saber que funcionou.
           if (tc.name === 'render_dashboard') {
-            toolContent = parsedResult.message || 'Dashboard renderizado.';
+            toolContent = JSON.stringify({
+              _summary: parsedResult.message || 'Dashboard renderizado.',
+              success: parsedResult.success !== false,
+              message: parsedResult.message || 'Dashboard renderizado.',
+            });
+          } else {
+            toolContent = formatToolResultForLLM(tc.name, rawResult).contentForLlm;
           }
         } catch {
-          // Não era JSON ou falhou o parse, usa raw
+          toolContent = formatToolResultForLLM(tc.name, rawResult).contentForLlm;
         }
 
         nextMessages.push({
@@ -688,10 +728,30 @@ export async function chatCompletionStream(
   return new ReadableStream<Uint8Array>({
     async start(streamController) {
       try {
-        await startStream(messages, streamController);
+        // Feedback imediato na UI (evita só "..." enquanto o LLM ainda não emitiu delta)
+        streamController.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ status: 'Consultando a IA...' })}\n\n`)
+        );
+        await startStream(cleanMessages, streamController);
       } catch (err) {
         console.error('[IA Stream] Erro na orquestração:', err);
-        streamController.error(err);
+        const msg = err instanceof Error ? err.message : 'Erro no streaming da IA';
+        try {
+          streamController.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({
+                content: `❌ ${msg}`,
+                done: true,
+                fullContent: `❌ ${msg}`,
+              })}\n\n`
+            )
+          );
+          streamController.close();
+        } catch {
+          streamController.error(err);
+        }
+      } finally {
+        clearTimeout(timeout);
       }
     },
     cancel() {

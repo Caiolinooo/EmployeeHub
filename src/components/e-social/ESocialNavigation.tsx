@@ -21,7 +21,7 @@ export default function ESocialNavigation() {
     {
       id: 'eventos',
       href: '/department/e-social/eventos',
-      label: t('eSocial.tabs.eventos', 'Eventos Enviados'),
+      label: t('eSocial.tabs.eventos', 'Eventos & Envios'),
       icon: FiList,
     },
     {
@@ -45,7 +45,7 @@ export default function ESocialNavigation() {
   ];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-1 mb-6 flex flex-wrap gap-1">
+    <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-1 mb-4 sm:mb-6 flex overflow-x-auto no-scrollbar gap-1 min-w-0">
       {navItems.map((item) => {
         const Icon = item.icon;
         const isActive = item.exact 
@@ -56,7 +56,7 @@ export default function ESocialNavigation() {
           <Link
             key={item.id}
             href={item.href}
-            className={`flex items-center gap-2.5 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 whitespace-nowrap shrink-0 ${
               isActive
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'

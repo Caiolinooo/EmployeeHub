@@ -60,6 +60,13 @@ export async function POST(
         updateData.erros_processamento = null;
       }
 
+      const rejeicaoSchema = !evento.numero_recibo && /schema|xsd|pattern constraint|ts_nome|nmMed/i.test(
+        `${evento.ultimo_erro || ''} ${JSON.stringify(evento.erros_processamento || '')}`,
+      );
+      if (rejeicaoSchema) {
+        updateData.protocolo_envio = null;
+      }
+
       await updateEvento(id, updateData);
 
       await logEnvio({
@@ -72,6 +79,9 @@ export async function POST(
 
       // Atualiza o objeto para retorno
       Object.assign(evento, updateData);
+    } else if (result.dadosCorrigidos) {
+      await updateEvento(id, { dados_evento: result.dadosCorrigidos });
+      Object.assign(evento, { dados_evento: result.dadosCorrigidos });
     }
 
     return NextResponse.json({ ...result, evento });

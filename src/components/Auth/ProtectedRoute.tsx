@@ -331,9 +331,18 @@ export default function ProtectedRoute({
     );
   }
 
+  // Se não estiver autenticado, exibir loader enquanto o useEffect redireciona para /login
+  if (!isAuthenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-abz-background">
+        <FiLoader className="animate-spin h-12 w-12 text-abz-blue" />
+        <p className="mt-3 text-sm text-gray-500 font-medium">Redirecionando para login...</p>
+      </div>
+    );
+  }
+
   // Verificar acesso em ambiente de produção
   if (!isDevelopment && (
-    !isAuthenticated ||
     (adminOnly && !isAdmin && !forceAdmin && !isAvaliacaoRoute && !window.location.pathname.includes('/admin')) ||
     (managerOnly && !isAdmin && !isManager && !forceAdmin && !isAvaliacaoRoute) ||
     (moduleName && moduleName !== 'avaliacao' && !hasAccess(moduleName) && !isAdmin && !forceAdmin && !isAvaliacaoRoute) ||

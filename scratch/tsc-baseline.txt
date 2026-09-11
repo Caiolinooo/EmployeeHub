@@ -1,0 +1,8 @@
+scratch/regenerate_xml.ts(6,21): error TS1109: Expression expected.
+scratch/regenerate_xml.ts(6,23): error TS1109: Expression expected.
+scratch/regenerate_xml.ts(6,33): error TS1109: Expression expected.
+scratch/regenerate_xml.ts(6,35): error TS1109: Expression expected.
+scratch/regenerate_xml.ts(9,18): error TS1109: Expression expected.
+scratch/regenerate_xml.ts(9,20): error TS1109: Expression expected.
+scratch/regenerate_xml.ts(9,30): error TS1109: Expression expected.
+scratch/regenerate_xml.ts(9,43): error TS1005: ',' expected.

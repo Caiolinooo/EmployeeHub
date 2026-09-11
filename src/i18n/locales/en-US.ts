@@ -469,7 +469,24 @@ export default {
     perfilNaoEncontradoFacaLoginNovamente: 'Profile not found. Please log in again.',
     nomeESobrenomeSaoObrigatorios: 'First Name and Last Name are required',
     usuario: 'User',
-    naoInformado: 'Not informed'
+    naoInformado: 'Not informed',
+    documents: 'Documents',
+    qhse: 'QHSE / PPE',
+    signature: 'Signature',
+  },
+  documentCatalog: {
+    title: 'Collaborator documents',
+    subtitle: 'GT, QHSE/PPE, signed attendance lists and other modules — matched automatically by CPF, user id and email.',
+    qhseTitle: 'QHSE / PPE',
+    qhseSubtitle: 'PPE form (AN-HSE-005), deliveries and QHSE attendance lists. Occupational exams (ASO) belong on the ASO tab.',
+    qhseEmpty: 'No QHSE/PPE documents found for this collaborator.',
+    all: 'All',
+    loading: 'Loading documents...',
+    empty: 'No documents found for this collaborator.',
+    error: 'Error loading documents',
+    signed: 'Signed',
+    download: 'Download',
+    openModule: 'Open module',
   },
   validation: {
     suggestions: 'Suggestions',
@@ -587,6 +604,8 @@ export default {
     gestaoTripulantes: 'Crew Management'
   },
   cards: {
+    dp: 'Personnel Department (DP)',
+    dpDesc: 'Full employee records, schedules, payroll closing and DP management',
     contratos: 'Contracts',
     contratosDesc: 'Document management and electronic signatures',
     wkradar: 'WK Radar',
@@ -743,14 +762,18 @@ export default {
   },
   calendario: {
     title: 'Holiday Calendar',
-    description: 'National and UK Bank Holidays',
-    loading: 'Loading holidays...',
+    description: 'Official holidays and shared company calendar events',
+    loading: 'Loading calendar...',
     loadingHolidays: 'Loading...',
     couldNotLoadHolidays: 'Could not load holidays.',
     noHolidaysThisMonth: 'No holidays this month.',
-    nationalHoliday: 'National / Other Holiday',
+    noEventsThisMonth: 'No events this month.',
+    nationalHoliday: 'National holiday',
     municipalHoliday: 'UK Bank Holiday',
-    holidaysInMonth: 'Holidays in',
+    companyEvents: 'Shared calendar',
+    sharedOnlyHint: 'Official holidays and shared company calendar only.',
+    duplicatesHiddenHint: '{{count}} similar duplicate(s) hidden',
+    holidaysInMonth: 'Events in',
     failedToFetchBrasilApi: 'Failed to fetch from BrasilAPI',
     tryingAlternative: 'Trying alternative...',
     failedToFetchFromAllSources: 'Failed to fetch holidays from all sources.'
@@ -3584,6 +3607,18 @@ export default {
     legendOffC: 'Crew Change',
     legendFi: 'Indemnified Leave',
     legendDba: 'Double Rotation',
+    todayPob: 'Today: {count}P onboard',
+    todayPobHint: 'People with exact ON today (no asterisk)',
+    today: 'Today',
+    currentWeek: 'Jump to today',
+    goToCurrentMonth: 'Back to the current month and jump to today',
+    prevDay: 'Previous day',
+    nextDay: 'Next day',
+    prevWeeks: 'Previous week',
+    nextWeeks: 'Next week',
+    prevMonth: 'Previous month',
+    nextMonth: 'Next month',
+    referenceMonth: 'Reference month',
     legendStb: 'StandBy'
   },
   contrato: {
@@ -4363,7 +4398,9 @@ export default {
       substitutions: 'Substitutions', close: 'Close', edit: 'Edit',
       save: 'Save', cancel: 'Cancel', suggestBack: 'Suggest Backup',
       uploadDocument: 'Upload Document', notify: 'Notify',
-      loading: 'Loading profile...', notFound: 'Crew member not found'
+      loading: 'Loading profile...', notFound: 'Crew member not found',
+      otherModulesDocs: 'Documents from other modules',
+      qhse: 'QHSE / PPE'
     },
     personalData: {
       fullName: 'Full Name', cpf: 'CPF', rg: 'ID', birthDate: 'Birth Date',
@@ -4453,7 +4490,17 @@ export default {
     },
     dashboard: {
       totalCollaborators: 'Total Crew', onboardNow: 'Onboard Now',
-      availableBackup: 'Available for Backup', expiredDocs: 'Expired Documents'
+      availableBackup: 'Available for Backup', expiredDocs: 'Expired Documents',
+      kpiClick: 'Click to filter', kpiActive: 'Filter on — click to clear',
+      kpiHintTotal: 'Click to list all active crew',
+      kpiHintEmbarcados: 'Click to list who is ON today (no ON* / *)',
+      kpiHintDisponiveis: 'Click to list available for backup',
+      kpiHintDocs: 'Click to list people with expired documents',
+      kpiBannerEmbarcados: 'Filtered list: onboard now (ON today, no asterisk)',
+      kpiBannerDisponiveis: 'Filtered list: available for backup',
+      kpiBannerDocs: 'Filtered list: expired documents',
+      kpiBannerTotal: 'List: all active crew',
+      kpiClear: 'Clear filter'
     },
     upload: {
       uploading: 'Uploading...', success: 'File uploaded successfully',

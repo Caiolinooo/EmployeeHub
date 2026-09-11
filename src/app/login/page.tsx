@@ -569,7 +569,7 @@ export default function Login() {
 
 
   return (
-    <div className="min-h-screen flex flex-col justify-center px-4 py-6 sm:px-6 sm:py-12 lg:px-8 bg-abz-background">
+    <div className="min-h-screen flex flex-col px-4 py-6 sm:px-6 sm:py-12 lg:px-8 bg-abz-background overflow-y-auto">
 
       {showBiometricPrompt && (
         <PostLoginBiometricPrompt
@@ -594,6 +594,9 @@ export default function Login() {
 
 
 
+      {/* Wrapper com my-auto: centraliza quando o conteúdo cabe na viewport e
+          permite rolagem sem cortar o topo quando a viewport é baixa */}
+      <div className="my-auto w-full flex flex-col">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           {(config.login_logo || config.logo) && (
@@ -1374,6 +1377,7 @@ export default function Login() {
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

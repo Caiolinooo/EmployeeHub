@@ -103,7 +103,16 @@ export async function POST(request: NextRequest) {
       role,
       position,
       department,
-      sector_id
+      sector_id,
+      startup_splash_enabled,
+      startup_splash_url,
+      startup_sound_enabled,
+      startup_sound_url,
+      startupSplashEnabled,
+      startupSplashUrl,
+      startupSoundEnabled,
+      startupSoundUrl,
+      accessPermissions
     } = body;
 
     // Validar os dados de entrada
@@ -242,7 +251,11 @@ export async function POST(request: NextRequest) {
           authorization_status: 'active', // Status de autorização ativo
           email_verified: true, // Usuários criados pelo admin não precisam verificar email
           password_last_changed: now.toISOString(),
-          access_permissions: defaultPermissions[userRole as 'ADMIN' | 'MANAGER' | 'USER'],
+          access_permissions: accessPermissions || defaultPermissions[userRole as 'ADMIN' | 'MANAGER' | 'USER'],
+          startup_splash_enabled: startup_splash_enabled !== undefined ? !!startup_splash_enabled : (startupSplashEnabled !== undefined ? !!startupSplashEnabled : false),
+          startup_splash_url: startup_splash_url || startupSplashUrl || null,
+          startup_sound_enabled: startup_sound_enabled !== undefined ? !!startup_sound_enabled : (startupSoundEnabled !== undefined ? !!startupSoundEnabled : false),
+          startup_sound_url: startup_sound_url || startupSoundUrl || null,
           access_history: accessHistory,
           created_at: now.toISOString(),
           updated_at: now.toISOString()

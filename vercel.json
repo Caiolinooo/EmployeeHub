@@ -7,6 +7,14 @@
     {
       "path": "/api/avaliacao/cron/criar-avaliacoes",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/gestao-tripulantes/cron/sync-mio",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/gestao-tripulantes/cron/aso-agendamentos",
+      "schedule": "0 10 * * *"
     }
   ]
 }

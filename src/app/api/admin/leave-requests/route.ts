@@ -27,9 +27,11 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const status = searchParams.get('status');
-        const limit = parseInt(searchParams.get('limit') || '50');
-        const offset = parseInt(searchParams.get('offset') || '0');
+        const yearParam = searchParams.get('year');
+        const limit = Math.min(parseInt(searchParams.get('limit') || '500', 10) || 500, 1000);
+        const offset = parseInt(searchParams.get('offset') || '0', 10) || 0;
         const search = searchParams.get('search') || '';
+        const year = yearParam ? parseInt(yearParam, 10) : undefined;
 
         let query = supabaseAdmin
             .from('leave_requests')
@@ -40,6 +42,10 @@ export async function GET(request: Request) {
 
         if (status && status !== 'ALL') {
             query = query.eq('status', status);
+        }
+
+        if (year && !Number.isNaN(year) && year >= 2000 && year <= 2100) {
+            query = query.gte('start_date', `${year}-01-01`).lte('start_date', `${year}-12-31`);
         }
 
         query = query.order('created_at', { ascending: false })

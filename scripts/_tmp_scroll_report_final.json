@@ -1,0 +1,52 @@
+[
+  {
+    "name": "headed: grid overflows",
+    "pass": true,
+    "detail": "scrollW=1852 > clientW=829"
+  },
+  {
+    "name": "headed: bottom scrollbar occupies >=14px",
+    "pass": true,
+    "detail": "h=15px v=15px"
+  },
+  {
+    "name": "nav: \"Next week\" enabled",
+    "pass": true,
+    "detail": "count=1"
+  },
+  {
+    "name": "nav: › scrolls one column",
+    "pass": true,
+    "detail": "scrollLeft 0 -> 24"
+  },
+  {
+    "name": "nav: ‹ scrolls back",
+    "pass": true,
+    "detail": "scrollLeft 24 -> 0"
+  },
+  {
+    "name": "nav: Today scrolls to today column",
+    "pass": true,
+    "detail": "scrollLeft=552 today={\"inView\":true,\"relLeft\":530}"
+  },
+  {
+    "name": "gt-tab headed: grid overflows",
+    "pass": false,
+    "detail": "scrollW=1119 > clientW=1119"
+  },
+  {
+    "name": "gt-tab headed: bottom scrollbar occupies >=14px",
+    "pass": false,
+    "detail": "h=0px"
+  },
+  {
+    "name": "gt-tab headed: top bar overflows",
+    "pass": false,
+    "detail": "top=false"
+  },
+  {
+    "name": "gt-tab headed: dragging TOP scrollbar thumb scrolls grid",
+    "pass": false,
+    "detail": "scrollLeft 0 -> 0"
+  }
+]

@@ -165,11 +165,16 @@ export function hasTool(toolName: string): boolean {
   return toolsRegistry.has(toolName);
 }
 
+let toolsInitialized = false;
+
 /**
  * Inicializa todas as ferramentas do sistema
  * Called on app startup
  */
 export async function initializeTools(): Promise<void> {
+  if (toolsInitialized) return;
+  toolsInitialized = true;
+
   console.log('[IA Tools Registry] Initializing tools...');
   
   // Importar e registrar todas as ferramentas
@@ -190,6 +195,7 @@ export async function initializeTools(): Promise<void> {
     await import('./definitions/admin.tools'),
     await import('./definitions/microsoft.tools'),
     await import('./definitions/feedback.tools'),
+    await import('./definitions/portal.tools'),
   ];
 
   for (const module of toolModules) {

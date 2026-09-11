@@ -68,7 +68,7 @@ export interface IAChatMessage {
 // Tipos de Dashboard Generativo (AI-Driven)
 // =====================================================
 
-export type IADashboardWidgetType = 'metric' | 'table' | 'chart' | 'list';
+export type IADashboardWidgetType = 'metric' | 'table' | 'chart' | 'list' | 'markdown';
 
 export interface IADashboardWidget {
   id: string;
@@ -200,17 +200,20 @@ export interface IADashboardResponse {
 // Tipos internos do cliente LLM
 // =====================================================
 
+export interface LLMToolCall {
+  id: string;
+  type: 'function';
+  function: {
+    name: string;
+    arguments: string;
+  };
+}
+
 export interface LLMMessage {
-  role: 'system' | 'user' | 'assistant';
+  role: 'system' | 'user' | 'assistant' | 'tool';
   content?: string;
-  tool_calls?: Array<{
-    id: string;
-    type: 'function';
-    function: {
-      name: string;
-      arguments: string;
-    };
-  }>;
+  tool_calls?: LLMToolCall[];
+  tool_call_id?: string;
 }
 
 export interface LLMCompletionRequest {
@@ -225,8 +228,9 @@ export interface LLMCompletionRequest {
 export interface LLMCompletionChoice {
   index: number;
   message: {
-    role: string;
+    role: LLMMessage['role'] | string;
     content: string;
+    tool_calls?: LLMToolCall[];
     metadata?: {
       dashboard?: IADashboardLayout;
       [key: string]: unknown;

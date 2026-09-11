@@ -1,11 +1,46 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { FiDownload, FiSearch } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 import * as XLSX from 'xlsx-js-style';
 import { useI18n } from '@/contexts/I18nContext';
 import { fetchWithToken } from '@/lib/tokenStorage';
+import ScheduleDateFilterInput from '@/components/gestao-tripulantes/ScheduleDateFilterInput';
+import ManScheduleTimelineNav from '@/components/gestao-tripulantes/ManScheduleTimelineNav';
+import GtPageShell from '@/components/gestao-tripulantes/GtPageShell';
+import {
+    MAN_SCHEDULE_SCROLL_CLASS,
+    MAN_SCHEDULE_STICKY_EDGE_CLASS,
+    MAN_SCHEDULE_STICKY_NAME_CLASS,
+    MAN_SCHEDULE_TABLE_CLASS,
+    MAN_SCHEDULE_THEAD_CLASS,
+    MAN_SCHEDULE_TOP_SCROLL_CLASS,
+} from '@/components/gestao-tripulantes/man-schedule-grid-classes';
+import { useManScheduleScrollSync } from '@/components/gestao-tripulantes/use-man-schedule-scroll-sync';
+import { parseCompleteFilterDate } from '@/lib/gestao-tripulantes/filter-date';
+import { civilTodayYmd, countPobOnCivilDay, scheduleDisplayCode } from '@/lib/gestao-tripulantes/embarque-status';
+import {
+    adjacentColumnIndex,
+    readVisibleColumnIndex,
+    scrollScheduleColumnIntoView,
+} from '@/lib/gestao-tripulantes/man-schedule-nav';
+import {
+    buildScheduleColumns,
+    civilReferenceMonth,
+    clampReferenceMonth,
+    columnPeriod,
+    focusColumnIndex,
+    formatReferenceMonthLabel,
+    indexOfCivilDay,
+    isSameReferenceMonth,
+    persistReferenceMonthPreference,
+    readReferenceMonthPreference,
+    realtimeJanelaForReferenceMonth,
+    shiftReferenceMonth,
+    type ReferenceMonth,
+} from '@/lib/gestao-tripulantes/man-schedule-reference-month';
+import { pickOverlappingRotation, type RotationLike } from '@/lib/gestao-tripulantes/escala-contagem';
 
 interface CrewSchedule {
     id: string;
@@ -18,8 +53,13 @@ interface CrewSchedule {
     rotation_end: string | null;
     embarque_status: string | null;
     local_embarque: string;
-    rotation_type: 'normal' | 'fi' | 'dba' | 'stb' | 'offc';
+    rotation_type: string;
+    origem?: 'mio' | 'local';
 }
+
+type ScheduleRotation = RotationLike & {
+    exibir_dia_inicio?: boolean;
+};
 
 interface ApiMeta {
     vessels: string[];
@@ -64,13 +104,28 @@ export default function ManSchedulePage() {
     const [filterPosition, setFilterPosition] = useState('');
     const [filterDateStart, setFilterDateStart] = useState('');
     const [filterDateEnd, setFilterDateEnd] = useState('');
+    const [referenceMonth, setReferenceMonth] = useState<ReferenceMonth>(() => civilReferenceMonth());
 
-    // Timeline navigation
-    const tableContainerRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        const stored = readReferenceMonthPreference();
+        if (stored) setReferenceMonth(stored);
+    }, []);
+
+    const applyReferenceMonth = useCallback((next: ReferenceMonth) => {
+        const clamped = clampReferenceMonth(next);
+        setReferenceMonth(clamped);
+        persistReferenceMonthPreference(clamped);
+    }, []);
+
+    const janela = useMemo(
+        () => realtimeJanelaForReferenceMonth(referenceMonth),
+        [referenceMonth],
+    );
 
     const fetchSchedules = useCallback(async () => {
         try {
-            const res = await fetchWithToken('/api/man-schedule/realtime');
+            const qs = janela === '90d' ? '' : `?janela=${janela}`;
+            const res = await fetchWithToken(`/api/man-schedule/realtime${qs}`);
             if (!res.ok) {
                 if (res.status === 503) {
                     throw new Error('Cache MIO indisponível. Por favor, atualize o cache no painel administrativo.');
@@ -87,7 +142,7 @@ export default function ManSchedulePage() {
         } finally {
             setLoading(false);
         }
-    }, [t]);
+    }, [t, janela]);
 
     useEffect(() => { fetchSchedules(); }, [fetchSchedules]);
 
@@ -139,7 +194,7 @@ export default function ManSchedulePage() {
 
     // ─── Build dynamic rows grouped by position ───
     const positionGroups = useMemo(() => {
-        const byPosition: Record<string, { name: string; cpf: string; rotations: { start: string | null; end: string | null; type: string }[] }[]> = {};
+        const byPosition: Record<string, { name: string; cpf: string; rotations: ScheduleRotation[] }[]> = {};
 
         for (const s of filteredSchedules) {
             const pos = normalizePosition(s.position) || 'SEM CARGO';
@@ -148,14 +203,14 @@ export default function ManSchedulePage() {
             const existing = byPosition[pos].find(c => c.cpf === s.cpf);
             if (existing) {
                 if (s.rotation_start || s.rotation_end) {
-                    existing.rotations.push({ start: s.rotation_start, end: s.rotation_end, type: s.rotation_type || 'normal' });
+                    existing.rotations.push({ start: s.rotation_start, end: s.rotation_end, type: s.rotation_type || 'normal', exibir_dia_inicio: (s as any).exibir_dia_inicio, origem: (s as any).origem });
                 }
             } else {
                 byPosition[pos].push({
                     name: s.full_name,
                     cpf: s.cpf,
                     rotations: (s.rotation_start || s.rotation_end)
-                        ? [{ start: s.rotation_start, end: s.rotation_end, type: s.rotation_type || 'normal' }]
+                        ? [{ start: s.rotation_start, end: s.rotation_end, type: s.rotation_type || 'normal', exibir_dia_inicio: (s as any).exibir_dia_inicio, origem: (s as any).origem }]
                         : []
                 });
             }
@@ -166,112 +221,117 @@ export default function ManSchedulePage() {
             .map(([position, members]) => ({ position, members, count: members.length }));
     }, [filteredSchedules]);
 
-    // ─── Dynamic timeline calculation ───
-    const { weeks, timelineStart } = useMemo(() => {
-        // Find earliest and latest dates across all visible rotations
-        let earliest: Date | null = null;
-        let latest: Date | null = null;
+function parseLocalDate(str: string | null | undefined): Date | null {
+    if (!str || typeof str !== 'string' || str.trim() === '') return null;
+    const clean = str.trim().slice(0, 10);
+    const parts = clean.split('-');
+    if (parts.length === 3) {
+        const y = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10) - 1;
+        const d = parseInt(parts[2], 10);
+        const parsed = new Date(y, m, d, 0, 0, 0, 0);
+        if (!isNaN(parsed.getTime())) return parsed;
+    }
+    const fallback = new Date(str);
+    return isNaN(fallback.getTime()) ? null : fallback;
+}
 
+    const weeks = useMemo(() => {
+        const rotationDates: Date[] = [];
         for (const group of positionGroups) {
             for (const m of group.members) {
                 for (const r of m.rotations) {
-                    if (r.start) {
-                        const d = new Date(r.start);
-                        if (!earliest || d < earliest) earliest = d;
-                    }
-                    if (r.end) {
-                        const d = new Date(r.end);
-                        if (!latest || d > latest) latest = d;
-                    }
+                    const start = parseLocalDate(r.start);
+                    const end = parseLocalDate(r.end);
+                    if (start) rotationDates.push(start);
+                    if (end) rotationDates.push(end);
                 }
             }
         }
 
-        // Fallback: if no dates, show current year range
-        if (!earliest) earliest = new Date(new Date().getFullYear(), 0, 1);
-        if (!latest) latest = new Date(new Date().getFullYear(), 11, 31);
+        return buildScheduleColumns({
+            viewport: 'week',
+            referenceMonth,
+            rotationDates,
+            filterStart: parseCompleteFilterDate(filterDateStart),
+            filterEnd: parseCompleteFilterDate(filterDateEnd),
+        });
+    }, [positionGroups, referenceMonth, filterDateStart, filterDateEnd]);
 
-        // Snap earliest to start of week (Saturday to match original)
-        const snapToSaturday = (d: Date) => {
-            const day = d.getDay();
-            const diff = (day >= 6) ? day - 6 : day + 1; // distance to previous Saturday
-            d.setDate(d.getDate() - diff);
-            return d;
-        };
-
-        const start = snapToSaturday(new Date(earliest));
-        // Add 2 weeks buffer before and after
-        start.setDate(start.getDate() - 14);
-
-        const endDate = new Date(latest);
-        endDate.setDate(endDate.getDate() + 14);
-
-        const totalWeeks = Math.max(Math.ceil((endDate.getTime() - start.getTime()) / (7 * 24 * 60 * 60 * 1000)), 12);
-
-        const generatedWeeks = [];
-        for (let i = 0; i < totalWeeks; i++) {
-            const d = new Date(start);
-            d.setDate(d.getDate() + i * 7);
-            generatedWeeks.push({ date: new Date(d) });
-        }
-
-        return { weeks: generatedWeeks, timelineStart: start };
-    }, [positionGroups]);
-
-    // ─── Filtered weeks based on date range selector ───
     const filteredWeeks = useMemo(() => {
-        if (!filterDateStart && !filterDateEnd) return weeks;
-        const startDate = filterDateStart ? new Date(filterDateStart) : null;
-        const endDate = filterDateEnd ? new Date(filterDateEnd) : null;
+        const startDate = parseCompleteFilterDate(filterDateStart);
+        const endDate = parseCompleteFilterDate(filterDateEnd);
+        if (!startDate && !endDate) return weeks;
 
-        return weeks.filter(w => {
-            const weekDate = new Date(w.date);
-            const weekEnd = new Date(weekDate);
-            weekEnd.setDate(weekEnd.getDate() + 6);
+        return weeks.filter((w) => {
+            const { start: colStart, end: colEnd } = columnPeriod(w.date, 'week');
             if (startDate && endDate) {
-                return weekEnd >= startDate && weekDate <= endDate;
+                return colEnd >= startDate && colStart <= endDate;
             }
             if (startDate) {
-                return weekEnd >= startDate;
+                return colEnd >= startDate;
             }
             if (endDate) {
-                return weekDate <= endDate;
+                return colStart <= endDate;
             }
             return true;
         });
     }, [weeks, filterDateStart, filterDateEnd]);
 
-    // ─── Current week calculation ───
-    const currentWeekIndex = useMemo(() => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        let idx = -1;
-        for (let i = 0; i < filteredWeeks.length; i++) {
-            const weekStart = new Date(filteredWeeks[i].date);
-            weekStart.setHours(0, 0, 0, 0);
-            const weekEnd = new Date(weekStart);
-            weekEnd.setDate(weekEnd.getDate() + 6);
-            
-            if (today >= weekStart && today <= weekEnd) {
-                idx = i;
-                break;
-            }
+    const {
+        tableContainerRef,
+        topScrollRef,
+        tableScrollWidth,
+        handleTopScroll,
+        handleTableScroll,
+    } = useManScheduleScrollSync(filteredWeeks.length);
+
+    const todayYmd = civilTodayYmd();
+    const todayColumnIndex = useMemo(
+        () => indexOfCivilDay(filteredWeeks, todayYmd, 'week'),
+        [filteredWeeks, todayYmd],
+    );
+    const isCurrentMonth = isSameReferenceMonth(referenceMonth, civilReferenceMonth());
+    const focusIndex = useMemo(
+        () => focusColumnIndex(filteredWeeks, referenceMonth, 'week', todayYmd),
+        [filteredWeeks, referenceMonth, todayYmd],
+    );
+
+    const todayPobCount = useMemo(() => {
+        return countPobOnCivilDay(
+            positionGroups.flatMap((group) => group.members),
+            todayYmd,
+        );
+    }, [positionGroups, todayYmd]);
+
+    const scrollToColumn = useCallback((index: number) => {
+        const root = tableContainerRef.current;
+        if (!root) return;
+        scrollScheduleColumnIntoView(root, adjacentColumnIndex(index, 0, filteredWeeks.length));
+    }, [filteredWeeks.length]);
+
+    const scrollByColumns = useCallback((delta: number) => {
+        const root = tableContainerRef.current;
+        if (!root) return;
+        const visible = readVisibleColumnIndex(root);
+        scrollToColumn(adjacentColumnIndex(visible, delta, filteredWeeks.length));
+    }, [filteredWeeks.length, scrollToColumn]);
+
+    const goToToday = useCallback(() => {
+        const current = civilReferenceMonth();
+        if (!isSameReferenceMonth(referenceMonth, current)) {
+            applyReferenceMonth(current);
+            return;
         }
-        
-        if (idx === -1 && filteredWeeks.length > 0) {
-            let minDiff = Infinity;
-            filteredWeeks.forEach((week, i) => {
-                const diff = Math.abs(today.getTime() - new Date(week.date).getTime());
-                if (diff < minDiff) {
-                    minDiff = diff;
-                    idx = i;
-                }
-            });
+        scrollToColumn(focusIndex);
+    }, [applyReferenceMonth, focusIndex, referenceMonth, scrollToColumn]);
+
+    useEffect(() => {
+        if (!loading && filteredWeeks.length > 0) {
+            const timer = setTimeout(() => scrollToColumn(focusIndex), 120);
+            return () => clearTimeout(timer);
         }
-        
-        return idx >= 0 ? idx : 0;
-    }, [filteredWeeks]);
+    }, [loading, filteredWeeks.length, focusIndex, referenceMonth.year, referenceMonth.month, scrollToColumn]);
 
     // ─── Format helpers ───
     const formatHeaderDate = (d: Date) => {
@@ -287,31 +347,46 @@ export default function ManSchedulePage() {
     };
 
     // ─── Check exact rotation status for the week ───
-    const getWeekStatus = (weekDate: Date, rotations: { start: string | null; end: string | null; type?: string }[]): '' | 'ON' | 'OFF-C' | 'FI' | 'DBA' | 'STB' => {
+    const getWeekRotationMeta = (weekDate: Date, rotations: ScheduleRotation[]): { status: string; dayLabel?: string } => {
         const wStart = new Date(weekDate);
         wStart.setHours(0, 0, 0, 0);
         const wEnd = new Date(wStart);
         wEnd.setDate(wEnd.getDate() + 6);
         wEnd.setHours(23, 59, 59, 999);
 
-        for (const r of rotations) {
-            if (!r.start) continue;
-            const rStart = new Date(r.start);
-            rStart.setHours(0, 0, 0, 0);
+        // Mesma regra da aba GT: início na coluna, início mais recente,
+        // tipo específico e lançamento manual (origem='local') vencem empates.
+        const bestRot = pickOverlappingRotation(rotations, wStart, wEnd) as ScheduleRotation | null;
 
-            const rEnd = r.end ? new Date(r.end) : new Date(rStart.getTime() + 90 * 24 * 60 * 60 * 1000);
-            rEnd.setHours(23, 59, 59, 999);
+        if (!bestRot) return { status: '' };
 
-            const overlaps = wStart <= rEnd && wEnd >= rStart;
-            if (!overlaps) continue;
-
-            if (r.type === 'fi') return 'FI';
-            if (r.type === 'dba') return 'DBA';
-            if (r.type === 'stb') return 'STB';
-            if (r.type === 'offc') return 'OFF-C';
-            return 'ON';
+        let dayLabel: string | undefined = undefined;
+        if (bestRot.exibir_dia_inicio && bestRot.start) {
+            const parsed = parseLocalDate(bestRot.start);
+            if (parsed) {
+                const directlyInWeek = parsed >= wStart && parsed <= wEnd;
+                if (directlyInWeek) {
+                    dayLabel = `d.${parsed.getDate()}`;
+                } else {
+                    // Se começou antes mas é a primeira semana visível
+                    const prevWeek = new Date(wStart);
+                    prevWeek.setDate(prevWeek.getDate() - 7);
+                    const prevMeta = getWeekRotationMeta(prevWeek, rotations);
+                    // Compara códigos de exibição (ON/OFF-C/...), nunca tipo cru vs display.
+                    const isFirstWeek = !prevMeta.status || prevMeta.status !== scheduleDisplayCode(bestRot.type || 'normal');
+                    if (isFirstWeek) {
+                        dayLabel = `d.${parsed.getDate()}`;
+                    }
+                }
+            }
         }
-        return '';
+
+        const status = scheduleDisplayCode(bestRot.type || 'normal');
+        return { status, dayLabel };
+    };
+
+    const getWeekStatus = (weekDate: Date, rotations: ScheduleRotation[]) => {
+        return getWeekRotationMeta(weekDate, rotations).status;
     };
 
     // ─── Vessel display name ───
@@ -354,7 +429,7 @@ export default function ManSchedulePage() {
                     right: { style: "thin", color: { rgb: "000000" } } 
                 };
 
-                let cellStyle: any = {
+                const cellStyle: any = {
                     alignment: { vertical: "center", horizontal: "center", wrapText: true }
                 };
 
@@ -370,14 +445,26 @@ export default function ManSchedulePage() {
                     cellStyle.font = { bold: true, color: { rgb: "000000" }, sz: 10 };
                     cellStyle.border = defaultBorder;
                 } else {
-                    if (cell.v === 'ON' || cell.v === 'FI' || cell.v === 'DBA') {
+                    const rawVal = typeof cell.v === 'string' ? cell.v.trim() : '';
+                    const match = rawVal.match(/^([A-Za-z0-9\-_]+)(?:\s+(d\.\d+))?$/i);
+                    const baseCode = match ? match[1].toUpperCase() : rawVal;
+                    const daySuffix = match && match[2] ? match[2] : '';
+
+                    if (baseCode === 'ON*' || baseCode === '*') {
+                        cellStyle.fill = { fgColor: { rgb: "C6D9F0" } };
+                        cellStyle.font = { color: { rgb: "1F4E79" }, bold: true, sz: 10 };
+                        cellStyle.border = defaultBorder;
+                        cell.v = daySuffix ? `${baseCode}\n${daySuffix}` : baseCode;
+                    } else if (baseCode === 'ON' || baseCode === 'FI' || baseCode === 'DBA') {
                         cellStyle.fill = { fgColor: { rgb: "E2EFDA" } };
                         cellStyle.font = { color: { rgb: "00B050" }, bold: true, sz: 10 };
                         cellStyle.border = defaultBorder;
-                    } else if (cell.v === 'OFF-C' || cell.v === 'STB') {
+                        cell.v = daySuffix ? `${baseCode}\n${daySuffix}` : baseCode;
+                    } else if (baseCode === 'OFF-C' || baseCode === 'STB') {
                         cellStyle.fill = { fgColor: { rgb: "F4CCCC" } };
                         cellStyle.font = { color: { rgb: "CC0000" }, bold: true, sz: 10 };
                         cellStyle.border = defaultBorder;
+                        cell.v = daySuffix ? `${baseCode}\n${daySuffix}` : baseCode;
                     } else if (cell.v) {
                         cellStyle.font = { color: { rgb: C === 0 ? "002060" : "000000" }, bold: C < 3, sz: 10 };
                         if (C === 1 || C === 2) cellStyle.fill = { fgColor: { rgb: "E7E6E6" } };
@@ -472,7 +559,7 @@ export default function ManSchedulePage() {
     }, [presentStatuses, t]);
 
     return (
-        <div className="flex flex-col -mx-8 -my-8 h-[calc(100vh-5rem)] overflow-hidden bg-white">
+        <GtPageShell flush>
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center px-4 py-3 shrink-0 border-b border-gray-200 gap-3">
                 <div>
@@ -542,25 +629,41 @@ export default function ManSchedulePage() {
 
                     <div className="min-w-[140px] flex-shrink-0">
                         <label className="block text-xs font-semibold text-gray-600 mb-1">{t('manSchedule.dateStart', 'Data Inicio')}</label>
-                        <input
-                            type="date"
+                        <ScheduleDateFilterInput
+                            aria-label={t('manSchedule.dateStart', 'Data Inicio')}
                             value={filterDateStart}
-                            onChange={(e) => setFilterDateStart(e.target.value)}
+                            onCommit={setFilterDateStart}
                             className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
                         />
                     </div>
 
                     <div className="min-w-[140px] flex-shrink-0">
                         <label className="block text-xs font-semibold text-gray-600 mb-1">{t('manSchedule.dateEnd', 'Data Fim')}</label>
-                        <input
-                            type="date"
+                        <ScheduleDateFilterInput
+                            aria-label={t('manSchedule.dateEnd', 'Data Fim')}
                             value={filterDateEnd}
-                            onChange={(e) => setFilterDateEnd(e.target.value)}
+                            onCommit={setFilterDateEnd}
                             className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
                         />
                     </div>
 
+                    <ManScheduleTimelineNav
+                        loading={loading}
+                        pobCount={todayPobCount}
+                        viewport="week"
+                        onPrev={() => scrollByColumns(-1)}
+                        onNext={() => scrollByColumns(1)}
+                        onToday={goToToday}
+                        referenceMonthLabel={formatReferenceMonthLabel(referenceMonth, locale)}
+                        onPrevMonth={() => applyReferenceMonth(shiftReferenceMonth(referenceMonth, -1))}
+                        onNextMonth={() => applyReferenceMonth(shiftReferenceMonth(referenceMonth, 1))}
+                        disablePrevMonth={isSameReferenceMonth(referenceMonth, shiftReferenceMonth(referenceMonth, -1))}
+                        disableNextMonth={isSameReferenceMonth(referenceMonth, shiftReferenceMonth(referenceMonth, 1))}
+                        isCurrentMonth={isCurrentMonth}
+                    />
+
                     <button
+                        type="button"
                         onClick={exportToExcel}
                         className="flex items-center gap-2 bg-green-600 text-white px-4 py-1.5 rounded shadow hover:bg-green-700 transition font-medium text-sm flex-shrink-0 self-end"
                     >
@@ -570,10 +673,26 @@ export default function ManSchedulePage() {
                 </div>
             </div>
 
+            {/* Barra de rolagem horizontal superior sincronizada para fácil navegação */}
+            <div
+                ref={topScrollRef}
+                onScroll={handleTopScroll}
+                className={MAN_SCHEDULE_TOP_SCROLL_CLASS}
+                style={{ height: '14px' }}
+                title="Barra de rolagem horizontal rápida do Man Schedule"
+            >
+                <div style={{ width: `${tableScrollWidth || 3000}px`, height: '1px' }} />
+            </div>
+
             {/* Matrix Table - Scrollable area */}
-            <div ref={tableContainerRef} className="flex-1 overflow-auto min-h-0 relative">
-                <table id="man-schedule-table" className="w-max border-collapse font-sans text-xs bg-white">
-                    <thead className="sticky top-0 z-40 bg-white">
+            <div
+                ref={tableContainerRef}
+                onScroll={handleTableScroll}
+                data-testid="man-schedule-scroll"
+                className={MAN_SCHEDULE_SCROLL_CLASS}
+            >
+                <table id="man-schedule-table" className={MAN_SCHEDULE_TABLE_CLASS}>
+                    <thead className={MAN_SCHEDULE_THEAD_CLASS}>
                         {/* Row 1: Vessel name */}
                         <tr>
                             <th
@@ -594,7 +713,7 @@ export default function ManSchedulePage() {
 
                         {/* Row 2: Column headers + dates (vertical) */}
                         <tr>
-                            <th className="bg-white text-black font-bold text-center border-r border-b border-black sticky left-0 z-30 min-w-[300px] w-[300px] px-2 py-2">
+                            <th className={`${MAN_SCHEDULE_STICKY_NAME_CLASS} bg-white text-black font-bold text-center border-r border-b border-black sticky left-0 z-30 min-w-[300px] w-[300px] px-2 py-2`}>
                                 {t('manSchedule.tableHeaders.name', 'NOME')}
                             </th>
                             <th className="bg-white text-black font-bold text-center border-r border-b border-black sticky left-[300px] z-30 px-2 py-2 w-[80px] min-w-[80px]">
@@ -604,14 +723,19 @@ export default function ManSchedulePage() {
                                     </React.Fragment>
                                 ))}
                             </th>
-                            <th className="bg-white text-black font-bold text-center border-r border-b border-black sticky left-[380px] z-30 px-4 py-2 min-w-[150px] w-[150px]">
+                            <th
+                                className={`bg-white ${MAN_SCHEDULE_STICKY_EDGE_CLASS} text-black font-bold text-center border-r border-b border-black sticky left-[380px] z-30 px-4 py-2 min-w-[150px] w-[150px]`}
+                                data-man-schedule-sticky-end=""
+                            >
                                 {t('manSchedule.tableHeaders.rank', 'CARGO')}
                             </th>
                             {filteredWeeks.map((week, idx) => {
-                                const isCurrentWeek = idx === currentWeekIndex;
+                                const isCurrentWeek = todayColumnIndex >= 0 && idx === todayColumnIndex;
                                 return (
                                 <th
                                     key={`date-${idx}`}
+                                    data-man-schedule-col={idx}
+                                    data-man-schedule-today={isCurrentWeek ? '1' : undefined}
                                     className={`text-center border-r border-b align-bottom pt-2 pb-1 ${
                                         isCurrentWeek 
                                             ? 'bg-yellow-100 text-yellow-800 font-bold border-yellow-500 border-2' 
@@ -629,11 +753,11 @@ export default function ManSchedulePage() {
 
                         {/* Row 3: Day of week */}
                         <tr>
-                            <th className="bg-white border-r border-b border-black sticky left-0 z-30"></th>
+                            <th className={`${MAN_SCHEDULE_STICKY_NAME_CLASS} bg-white border-r border-b border-black sticky left-0 z-30`}></th>
                             <th className="bg-white border-r border-b border-black sticky left-[300px] z-30"></th>
-                            <th className="bg-white border-r border-b border-black sticky left-[380px] z-30"></th>
+                            <th className={`bg-white ${MAN_SCHEDULE_STICKY_EDGE_CLASS} border-r border-b border-black sticky left-[380px] z-30`}></th>
                             {filteredWeeks.map((week, idx) => {
-                                const isCurrentWeek = idx === currentWeekIndex;
+                                const isCurrentWeek = todayColumnIndex >= 0 && idx === todayColumnIndex;
                                 return (
                                 <th
                                     key={`day-${idx}`}
@@ -672,7 +796,7 @@ export default function ManSchedulePage() {
                                         {group.members.map((member, mIdx) => (
                                             <tr key={`row-${gIdx}-${mIdx}`}>
                                                 {/* NAME */}
-                                                <td className={`bg-white text-blue-900 font-bold px-2 py-1 border-r border-b border-black whitespace-nowrap overflow-hidden sticky left-0 z-20 uppercase`}>
+                                                <td className={`${MAN_SCHEDULE_STICKY_NAME_CLASS} bg-white text-blue-900 font-bold px-2 py-1 border-r border-b border-black whitespace-nowrap overflow-hidden sticky left-0 z-20 uppercase`}>
                                                     {member.name || '\u00A0'}
                                                 </td>
                                                 {/* QTD (show only on first row of the group) */}
@@ -680,15 +804,18 @@ export default function ManSchedulePage() {
                                                     {mIdx === 0 ? group.count : ''}
                                                 </td>
                                                 {/* POSITION */}
-                                                <td className={`${bg} text-black font-bold px-2 py-1 border-r border-b border-black uppercase sticky left-[380px] z-20`}>
+                                                <td className={`${bg} ${MAN_SCHEDULE_STICKY_EDGE_CLASS} text-black font-bold px-2 py-1 border-r border-b border-black uppercase sticky left-[380px] z-20`}>
                                                     {group.position}
                                                 </td>
                                                 {/* Timeline cells */}
                                                  {filteredWeeks.map((week, wIdx) => {
-                                                    const status = getWeekStatus(week.date, member.rotations);
-                                                    const isCurrentWeek = wIdx === currentWeekIndex;
+                                                    const meta = getWeekRotationMeta(week.date, member.rotations);
+                                                    const status = meta.status;
+                                                    const dayLabel = meta.dayLabel;
+                                                    const isCurrentWeek = todayColumnIndex >= 0 && wIdx === todayColumnIndex;
                                                     let cellClass = 'bg-white border-[#d1d5db]';
-                                                    if (status === 'ON' || status === 'FI' || status === 'DBA') cellClass = 'bg-[#e2efda] text-[#00b050] font-bold border-black';
+                                                    if (status === 'ON*') cellClass = 'bg-[#c6d9f0] text-[#1f4e79] font-bold border-black';
+                                                    else if (status === 'ON' || status === 'FI' || status === 'DBA') cellClass = 'bg-[#e2efda] text-[#00b050] font-bold border-black';
                                                     else if (status === 'OFF-C' || status === 'STB') cellClass = 'bg-[#f4cccc] text-[#cc0000] font-bold border-black';
                                                     
                                                     if (isCurrentWeek) {
@@ -701,7 +828,12 @@ export default function ManSchedulePage() {
                                                             className={`${cellClass} border-r border-b text-center`}
                                                             style={{ width: '24px', minWidth: '24px', fontSize: '9px' }}
                                                         >
-                                                             {status === 'FI' ? 'FI' : status === 'DBA' ? 'DBA' : status === 'STB' ? 'STB' : status === 'OFF-C' ? 'OFF-C' : status || '-'}
+                                                            <div className="flex flex-col items-center justify-center leading-none py-0.5">
+                                                                <span>{status === 'FI' ? 'FI' : status === 'DBA' ? 'DBA' : status === 'STB' ? 'STB' : status === 'OFF-C' ? 'OFF-C' : status || '-'}</span>
+                                                                {dayLabel && (
+                                                                    <span className="text-[7.5px] opacity-75 font-normal tracking-tighter mt-0.5">{dayLabel}</span>
+                                                                )}
+                                                            </div>
                                                         </td>
                                                     );
                                                 })}
@@ -735,7 +867,11 @@ export default function ManSchedulePage() {
                         <span className="text-gray-700 font-semibold whitespace-nowrap">{item.label}</span>
                     </div>
                 ))}
+                <div className="flex items-center gap-1.5 flex-shrink-0 text-slate-600 font-semibold text-xs whitespace-nowrap ml-2">
+                    <span className="font-mono text-[9px] bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded border border-slate-300 font-bold">d.X</span>
+                    <span className="text-[11px] text-slate-600">= Dia inicial do evento</span>
+                </div>
             </div>
-        </div>
+        </GtPageShell>
     );
 }

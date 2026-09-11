@@ -99,6 +99,39 @@ function parseASOsFromHTML(html: string): PoliWebASO[] {
   return asos;
 }
 
+/** Upstream Poliweb hang (~5s) must not block GT page load. */
+export const POLIWEB_FETCH_TIMEOUT_MS = 2500;
+
+async function fetchPoliweb(url: string, init: RequestInit = {}): Promise<Response> {
+  const controller = new AbortController();
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeoutError = () =>
+    new Error(`PoliWeb indisponível (timeout ${POLIWEB_FETCH_TIMEOUT_MS}ms)`);
+
+  try {
+    return await new Promise<Response>((resolve, reject) => {
+      timeoutId = setTimeout(() => {
+        controller.abort();
+        reject(timeoutError());
+      }, POLIWEB_FETCH_TIMEOUT_MS);
+
+      fetch(url, {
+        ...init,
+        signal: controller.signal,
+        cache: 'no-store',
+      }).then(resolve, (err: unknown) => {
+        if (err instanceof Error && err.name === 'AbortError') {
+          reject(timeoutError());
+          return;
+        }
+        reject(err);
+      });
+    });
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+  }
+}
+
 export async function scrapePoliWeb(): Promise<{
   success: boolean;
   data?: PoliWebASO[];
@@ -144,7 +177,7 @@ export async function scrapePoliWeb(): Promise<{
       };
     }
 
-    const loginResponse = await fetch('https://poliweb.com.br/login', {
+    const loginResponse = await fetchPoliweb('https://poliweb.com.br/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
@@ -159,7 +192,7 @@ export async function scrapePoliWeb(): Promise<{
 
     const cookies = loginResponse.headers.get('set-cookie') || '';
 
-    const asosResponse = await fetch('https://poliweb.com.br/asos', {
+    const asosResponse = await fetchPoliweb('https://poliweb.com.br/asos', {
       headers: { Cookie: cookies },
     });
 

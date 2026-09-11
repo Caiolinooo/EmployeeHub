@@ -304,7 +304,7 @@ export function generateKPIsPDF(data: any, options: PDFReportOptions): Buffer {
  */
 export function generatePDFBase64(
   data: any[],
-  type: 'reembolsos' | 'ferias' | 'avaliacoes' | 'epis' | 'usuarios' | 'kpis',
+  type: 'reembolsos' | 'ferias' | 'avaliacoes' | 'epis' | 'usuarios' | 'kpis' | 'ponto' | 'compras' | 'resumo',
   options: PDFReportOptions
 ): string {
   let buffer: Buffer;

@@ -5,6 +5,7 @@
  */
 
 import nodemailer from 'nodemailer';
+import type { SendMailOptions } from 'nodemailer';
 import { buildAppUrl } from './app-url';
 import {
   clearResolvedEmailAuthCache,
@@ -135,7 +136,7 @@ export async function sendEmail(
       tls: emailTlsOptions(),
     });
 
-    const mailOptions = {
+    const mailOptions: SendMailOptions = {
       from: options?.from || (await resolveEmailFrom()),
       to,
       cc: options?.cc,
@@ -144,7 +145,7 @@ export async function sendEmail(
       text,
       html,
       attachments: options?.attachments,
-      replyTo: process.env.EMAIL_REPLY_TO || resolveEmailAddress()
+      replyTo: process.env.EMAIL_REPLY_TO || (await resolveEmailAddress()),
     };
 
     console.log('Enviando e-mail para:', Array.isArray(to) ? to.join(', ') : to);

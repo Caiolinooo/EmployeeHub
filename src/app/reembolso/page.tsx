@@ -208,39 +208,39 @@ export default function ReembolsoPage() {
 
   return (
     <MainLayout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center mb-6">
+      <div className="flex flex-col min-h-0 flex-1 h-full">
+        <div className="shrink-0 flex items-center mb-6">
           <FiDollarSign className="h-6 w-6 text-abz-blue mr-2" />
           <h1 className="text-2xl font-bold text-abz-blue">{t('reimbursement.title', 'Reembolso')}</h1>
         </div>
 
         {/* Tab Navigation */}
-        <div className="mb-6 border-b border-gray-200">
-          <nav className="flex -mb-px">
+        <div className="shrink-0 mb-4 sm:mb-6 border-b border-gray-200 overflow-x-auto no-scrollbar">
+          <nav className="flex -mb-px min-w-max">
             <button
               onClick={() => handleTabChange('request')}
-              className={`py-4 px-6 font-medium text-sm border-b-2 ${
+              className={`py-3 sm:py-4 px-3.5 sm:px-6 font-medium text-xs sm:text-sm border-b-2 whitespace-nowrap ${
                 activeTab === 'request'
                   ? 'border-abz-blue text-abz-blue'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
               <div className="flex items-center">
-                <FiDollarSign className="mr-2" />
+                <FiDollarSign className="mr-1.5 sm:mr-2" />
                 {t('reimbursement.tabs.request', 'Solicitar Reembolso')}
               </div>
             </button>
 
             <button
               onClick={() => handleTabChange('dashboard')}
-              className={`py-4 px-6 font-medium text-sm border-b-2 ${
+              className={`py-3 sm:py-4 px-3.5 sm:px-6 font-medium text-xs sm:text-sm border-b-2 whitespace-nowrap ${
                 activeTab === 'dashboard'
                   ? 'border-abz-blue text-abz-blue'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
               <div className="flex items-center">
-                <FiList className="mr-2" />
+                <FiList className="mr-1.5 sm:mr-2" />
                 {t('reimbursement.tabs.dashboard', 'Meus Reembolsos')}
               </div>
             </button>
@@ -248,7 +248,7 @@ export default function ReembolsoPage() {
             {/* Always show approval tab for admins and managers, or if user has permission */}
             <button
               onClick={() => handleTabChange('approval')}
-              className={`py-4 px-6 font-medium text-sm border-b-2 ${
+              className={`py-3 sm:py-4 px-3.5 sm:px-6 font-medium text-xs sm:text-sm border-b-2 whitespace-nowrap ${
                 activeTab === 'approval'
                   ? 'border-abz-blue text-abz-blue'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -256,7 +256,7 @@ export default function ReembolsoPage() {
               disabled={isLoading}
             >
               <div className="flex items-center">
-                <FiCheck className="mr-2" />
+                <FiCheck className="mr-1.5 sm:mr-2" />
                 {t('reimbursement.tabs.approval', 'Aprovar Reembolsos')}
               </div>
             </button>
@@ -264,7 +264,7 @@ export default function ReembolsoPage() {
         </div>
 
         {/* Tab Content */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-6 flex-1 min-h-0 overflow-auto flex flex-col">
           <ErrorBoundary fallback={
             <div className="p-4 text-center">
               <div className="text-red-500 mb-4">

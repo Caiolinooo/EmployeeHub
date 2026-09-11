@@ -267,14 +267,14 @@ export default function ExportarTab() {
             )}
             <span className="font-mono text-xs text-gray-500">{preview.template}</span>
           </div>
-          {preview.avisos.length > 0 && (
+          {(preview?.avisos?.length ?? 0) > 0 && (
             <div className="px-4 py-2 bg-yellow-50 border-b border-yellow-100 text-xs text-yellow-800 flex items-start gap-2">
               <FiAlertTriangle className="mt-0.5 shrink-0" />
               <span>{preview.avisos.join('; ')}</span>
             </div>
           )}
           <div className="max-h-80 overflow-y-auto p-4 font-mono text-xs leading-relaxed">
-            {preview.tree.map((dir) => (
+            {(preview?.tree || []).map((dir) => (
               <div key={dir.path} className="mb-2">
                 <div className="flex items-center text-gray-700">
                   <FiFolder className="mr-1 shrink-0" /> {dir.path}/

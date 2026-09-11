@@ -424,3 +424,91 @@ export async function executarScrapingPoliWeb(): Promise<{ success: boolean; dat
     return { success: false, error: error.message };
   }
 }
+
+export interface AsoPendenteRevisao {
+  id: string;
+  colaborador_id: string | null;
+  colaborador_nome: string | null;
+  cpf: string;
+  tipo_exame: string;
+  resultado: string;
+  data_realizacao: string;
+  data_validade: string | null;
+  medico_nome: string | null;
+  medico_crm: string | null;
+  nome_clinica: string | null;
+  poliweb_id: string;
+  status_revisao: string;
+  arquivo_url: string | null;
+}
+
+/** Lista ASOs Poliweb já importados e ainda pendentes de revisão (sem chamar o site). */
+export async function listarASOsPendentesRevisao(): Promise<AsoPendenteRevisao[]> {
+  const query = (async () => {
+    const { data: docs, error } = await supabaseAdmin
+      .from('gt_documentos')
+      .select('id, colaborador_id, data_emissao, data_validade, arquivo_url, status_revisao, numero_documento')
+      .eq('tipo_documento', 'aso')
+      .eq('origem', 'poliweb')
+      .eq('status_revisao', 'pendente_revisao')
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    if (error || !docs?.length) return [];
+
+    const ids = docs.map((d) => d.id);
+    const colaboradorIds = [...new Set(docs.map((d) => d.colaborador_id).filter(Boolean))] as string[];
+
+    const [{ data: asos }, { data: colaboradores }] = await Promise.all([
+      supabaseAdmin
+        .from('gt_documentos_aso')
+        .select('documento_id, tipo_exame, resultado, data_realizacao, medico_nome, medico_crm, nome_clinica')
+        .in('documento_id', ids),
+      colaboradorIds.length
+        ? supabaseAdmin.from('gt_colaboradores').select('id, nome_completo, cpf').in('id', colaboradorIds)
+        : Promise.resolve({ data: [] as { id: string; nome_completo: string | null; cpf: string | null }[] }),
+    ]);
+
+    const asoByDoc = new Map((asos || []).map((a) => [a.documento_id, a]));
+    const colById = new Map((colaboradores || []).map((c) => [c.id, c]));
+
+    return docs.map((doc) => {
+      const aso = asoByDoc.get(doc.id);
+      const col = doc.colaborador_id ? colById.get(doc.colaborador_id) : undefined;
+      return {
+        id: doc.id,
+        colaborador_id: doc.colaborador_id,
+        colaborador_nome: col?.nome_completo || null,
+        cpf: col?.cpf || doc.numero_documento || '',
+        tipo_exame: aso?.tipo_exame || '',
+        resultado: aso?.resultado || '',
+        data_realizacao: aso?.data_realizacao || doc.data_emissao || '',
+        data_validade: doc.data_validade || null,
+        medico_nome: aso?.medico_nome || null,
+        medico_crm: aso?.medico_crm || null,
+        nome_clinica: aso?.nome_clinica || null,
+        poliweb_id: doc.id,
+        status_revisao: doc.status_revisao,
+        arquivo_url: doc.arquivo_url || null,
+      };
+    });
+  })();
+
+  query.catch(() => undefined);
+
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      query,
+      new Promise<AsoPendenteRevisao[]>((_, reject) => {
+        timeoutId = setTimeout(
+          () => reject(new Error('Timeout ao listar ASOs pendentes de revisão')),
+          3000
+        );
+      }),
+    ]);
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+  }
+}

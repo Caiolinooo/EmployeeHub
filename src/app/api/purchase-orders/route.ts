@@ -107,14 +107,14 @@ export async function GET(request: NextRequest) {
 
         if (error) {
             console.error('Error fetching POs:', error);
-            throw error;
+            return NextResponse.json({ data: [], warning: error.message });
         }
 
-        return NextResponse.json({ data });
+        return NextResponse.json({ data: data || [] });
 
     } catch (error: any) {
-        console.error('API Error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error('API Error in purchase-orders GET:', error);
+        return NextResponse.json({ data: [], error: error.message }, { status: 500 });
     }
 }
 

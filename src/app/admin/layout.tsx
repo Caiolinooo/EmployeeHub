@@ -249,6 +249,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     };
   }, []);
 
+  // Fechar menu mobile automaticamente ao navegar
+  React.useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
   // Adicionar logs para depuração
   console.log('AdminLayout - isAdmin:', isAdmin);
   console.log('AdminLayout - pathname:', pathname);
@@ -260,7 +265,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <ProtectedRoute adminOnly>
-      <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
+      <div className="h-dvh bg-gray-100 flex flex-col md:flex-row overflow-hidden">
         {/* Sidebar para desktop */}
         <aside
           className={`bg-white shadow-md fixed inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-all duration-300 ease-in-out z-30 flex flex-col`}
@@ -387,14 +392,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </aside>
 
         {/* Conteúdo principal */}
-        <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out ${isCollapsed ? 'md:ml-16' : 'md:ml-64'}`}>
+        <div className={`flex-1 flex flex-col min-h-0 h-dvh transition-all duration-300 ease-in-out ${isCollapsed ? 'md:ml-16' : 'md:ml-64'}`}>
           {/* Notificações globais fixas (desktop) */}
           <div className="hidden md:block fixed top-4 right-4 z-50">
             {user && <NotificationHUD userId={user.id} position="top-right" evaluationPendingCount={pendingCount} />}
           </div>
 
           {/* Header mobile */}
-          <header className="bg-white shadow-sm md:hidden">
+          <header className="bg-white shadow-sm md:hidden shrink-0">
             <div className="px-4 py-3 flex items-center justify-between">
               <div className="flex items-center">
                 <button
@@ -412,12 +417,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </header>
 
           {/* Conteúdo da página */}
-          <main className="flex-1 p-4 md:p-6 overflow-auto">
+          <main className="flex-1 min-h-0 flex flex-col overflow-y-auto p-3 sm:p-4 md:p-6 touch-scroll">
             {children}
           </main>
 
-          {/* Footer */}
-          <Footer />
+          {/* Footer (compacto em telas pequenas) */}
+          <div className="shrink-0 hidden sm:block">
+            <Footer />
+          </div>
 
           {/* Performance Monitor (only visible in development) */}
           <PerformanceMonitor />

@@ -6,6 +6,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { getEffectiveRole, getTeamMemberIds } from './permissions';
 import { getIAConfig } from './client';
 import { getAvailableTools } from './tools';
+import { enrichGraphEmails } from './graph-comms-format';
 import type { IAUserContext, IAUserRole, LLMMessage, IAChatMessage } from '@/types/ia';
 
 const MAX_HISTORY_MESSAGES = 30; // ate 30 mensagens para manter contexto
@@ -184,17 +185,20 @@ async function getUserEmails(userId: string): Promise<Array<{subject: string; fr
       }
     }
 
-    const res = await fetch('https://graph.microsoft.com/v1.0/me/messages?$top=5&$select=subject,from,receivedDateTime', {
-      headers: { 'Authorization': `Bearer ${accessToken}` }
-    });
+    const res = await fetch(
+      `https://graph.microsoft.com/v1.0/me/messages?$top=25&$select=id,conversationId,subject,from,toRecipients,ccRecipients,receivedDateTime,sentDateTime,bodyPreview,isRead,hasAttachments,importance,webLink,parentFolderId`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }
+    );
 
     if (!res.ok) return [];
 
     const mailData = await res.json();
-    return (mailData.value || []).map((msg: any) => ({
-      subject: msg.subject,
-      from: msg.from?.emailAddress?.name || msg.from?.emailAddress?.address || 'Desconhecido',
-      date: new Date(msg.receivedDateTime).toLocaleString('pt-BR')
+    return enrichGraphEmails(mailData.value || [], { maxItems: 25 }).map((email) => ({
+      subject: email.assunto || '',
+      from: email.de?.email || email.de?.nome || '',
+      date: email.data_recebido || email.data_recebido_iso || '',
     }));
 
   } catch {
@@ -278,21 +282,27 @@ export function buildSystemPrompt(userContext: IAUserContext, customPrompt?: str
 Hoje e ${today}.
 
 ## FLUXO DE TRABALHO (IMPORTANTE)
-Quando voce recebe uma pergunta que precisa de dados em tempo real:
-1. Se precisa de dados -> use APENAS UMA ferramenta por pergunta
-2. Execute a ferramenta e receba o resultado
-3. Apos receber o resultado, RESPONDA O USUARIO diretamente com os dados
-4. NAO repita a chamada de ferramenta - ja recebeu os dados!
+Quando a pergunta precisa de dados em tempo real:
+1. CHAME a(s) ferramenta(s) correta(s) ANTES de afirmar números/status/valores.
+2. Pode usar VÁRIAS tools em sequência quando o fluxo exigir (ex.: buscar pendências → render_dashboard → abrir_quadro_kpi).
+3. Após receber o resultado, RESPONDA com base no payload (use \`_summary\` quando existir).
+4. NÃO repita a mesma tool sem motivo (evite loop). Se falhar, informe a falha — não invente.
+
+## DADOS REAIS (REGRA ABSOLUTA — anti-alucinação)
+- NUNCA invente números, contagens, valores em R$, datas, status ou listas de pendências.
+- Sem tool call, não invente fatos do portal. Se não houver dado, diga que não encontrou / peça para tentar de novo.
+- Não existe ferramenta de logs de banco de dados/schema (migrations, DDL, criação de tabelas/índices). Se perguntarem, informe que você não tem acesso a esse dado — nunca fabrique registros de log, nomes de tabelas ou eventos de schema.
 
 Exemplo CORRETO:
 Usuario: "Quais sao minhas pendencias?"
-Voce: (executa ferramenta buscar_ferias)
-Resultado: "Voce tem 2 solicitacoes pendentes"
+Voce: (executa buscar_dados_usuario tipo=resumo)
+Resultado: "_summary: ... 2 ferias pendentes ..."
 Voce: "Voce tem 2 solicitacoes de ferias pendentes de aprovacao."
 
 Exemplo INCORRETO (NAO FACA ISSO):
 Usuario: "Quais sao minhas pendencias?"
 Voce: (executa ferramenta) -> resultado -> (executa mesma ferramenta novamente) -> loop infinito!
+Voce: inventa "você tem 5 reembolsos" sem tool.
 
 ## Sobre voce
 - Seu nome e **ABZ Assistant**
@@ -300,7 +310,7 @@ Voce: (executa ferramenta) -> resultado -> (executa mesma ferramenta novamente) 
 - Responda sempre em Portugues Brasileiro
 - Seja profissional, objetivo e amigavel
 - Use markdown para formatar respostas quando util (listas, negrito, tabelas)
-- Nunca invente dados — use apenas as informacoes fornecidas no contexto
+- Nunca invente dados — use apenas informacoes do contexto do usuario OU resultados de tools
 
 REGRA ABSOLUTA DE COMUNICAÇÃO (OBRIGATÓRIO PARA TODOS OS MODELOS E PROVEDORES):
 - JAMAIS exiba raciocínio interno, rascunhos de pensamento ou tags como <thought>, <think> ou <reasoning> na sua resposta.
@@ -334,17 +344,29 @@ IMPORTANTE: Voce ja sabe o email e ID do usuario logado! NAO peca essas informac
 
   prompt += `
 
-## DASHBOARD GENERATIVO (NOVIDADE)
+## DASHBOARD GENERATIVO / QUADRO BRANCO KPI
 Voce tem a capacidade de renderizar uma interface visual dinâmica e interativa para o usuario.
-- Sempre que o usuario pedir um **resumo**, **status geral**, **pendencias** ou **KPIs**, use a ferramenta \`render_dashboard\`.
-- O dashboard deve ser usado para COMPLEMENTAR sua resposta de texto.
-- Voce pode criar widgets de: \`metric\` (numeros), \`chart\` (graficos bar/line/pie), \`table\` (tabelas de dados) e \`list\` (listas de tarefas).
-- Seja criativo e use cores/icones para tornar o dashboard profissional.
+- Sempre que o usuario pedir um **resumo**, **status geral**, **pendencias**, **KPIs** ou **alterar o modulo KPI**, use \`render_dashboard\` e/ou \`criar_quadro_kpi\` e \`abrir_quadro_kpi\`.
+- Para **apagar/limpar/remover** quadros: use \`excluir_quadro_kpi\` (id e/ou titulo fuzzy) ou \`excluir_todos_quadros_kpi\`. NUNCA diga que exclusao e indisponivel.
+- Harness por role (enforcement no servidor): ADMIN = liberdade máxima (widget \`html_sandbox\` permitido); MANAGER/USER = somente trabalho (sem jogos, sem HTML livre).
+- Widgets: \`metric\`, \`chart\`, \`table\`, \`list\`, \`markdown\` (+ \`html_sandbox\` só ADMIN com data.srcdoc).
+- **Shapes de data (obrigatório para não ficar em branco)**:
+  - metric: \`{ value, label?, unit?, change?, trend? }\`
+  - list: \`{ items: [{ title, subtitle?, status? }] }\` (aceita label/value/assunto/name no normalizer)
+  - chart: \`{ type: "bar"|"line"|"pie", items: [{ name, value }] }\` (aceita labels/datasets)
+  - table: \`{ columns: [{ key, label }], rows: [...] }\`
+  - markdown: \`{ content }\`
+- Prefira \`dataSource: { tool, args?, path? }\` para dados vivos (path ex.: \`comunicacao.email_sinais\`); o servidor resolve no GET /kpi?resolve=1.
+- PROIBIDO: dizer que nao consegue injetar no KPI; dump de HTML/JS fora do portal; pedir salvar .html.
+- USER/MANAGER pedem minigame/HTML: recuse e ofereça quadro profissional; ADMIN: use html_sandbox + abrir /kpi.
+- \`render_dashboard\` persiste o layout como quadro em \`ia_kpi_boards\` e deve abrir /kpi via Companion.
+- dataSource no spec só com tools allowlisted do papel do usuario.
 
 Exemplo: Se o usuario perguntar "Como estao minhas pendencias?", voce deve:
 1. Buscar os dados (ferias, reembolsos, etc).
-2. Chamar \`render_dashboard\` com um layout contendo métricas e tabelas dos dados encontrados.
-3. Responder em texto fazendo um resumo do que foi mostrado no dashboard.
+2. Chamar \`render_dashboard\` ou \`criar_quadro_kpi\` com widgets dos dados.
+3. Chamar \`abrir_quadro_kpi\` (ou deixar o persist emitir OPEN_KPI_BOARD) para mostrar em /kpi.
+4. Responder em texto fazendo um resumo do que foi mostrado.
 - NUNCA imprima o JSON do dashboard no texto da resposta. Use exclusivamente a ferramenta.`;
 
   if (userContext.evaluations && userContext.evaluations.count > 0) {
@@ -506,6 +528,33 @@ export async function buildChatMessages(
     }
   } catch (kbErr) {
     console.warn('[IA Context] Erro ao carregar knowledge base:', kbErr);
+  }
+
+  // Memória de longo prazo do usuário (Hermes-like — persiste entre logins)
+  try {
+    const { buildUserMemoryPromptBlock } = await import('@/lib/ia/user-memory');
+    const memBlock = await buildUserMemoryPromptBlock(userId);
+    if (memBlock) systemPrompt += memBlock;
+  } catch (memErr) {
+    console.warn('[IA Context] Erro ao carregar user memory:', memErr);
+  }
+
+  // Skills procedurais do usuário (Hermes Agent–like — persistem entre logins)
+  try {
+    const { buildUserSkillsPromptBlock } = await import('@/lib/ia/user-skills');
+    const skillsBlock = await buildUserSkillsPromptBlock(userId);
+    if (skillsBlock) systemPrompt += skillsBlock;
+  } catch (skErr) {
+    console.warn('[IA Context] Erro ao carregar user skills:', skErr);
+  }
+
+  // Índice breve de quadros KPI (quadro branco) + harness por role
+  try {
+    const { buildKpiBoardsPromptBlock } = await import('@/lib/ia/kpi-board');
+    const boardsBlock = await buildKpiBoardsPromptBlock(userId, userContext.role);
+    if (boardsBlock) systemPrompt += boardsBlock;
+  } catch (boardErr) {
+    console.warn('[IA Context] Erro ao carregar kpi boards:', boardErr);
   }
 
   const messages: LLMMessage[] = [

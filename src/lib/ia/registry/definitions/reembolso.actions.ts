@@ -38,14 +38,14 @@ const approveReembolsoAction: IAAction = {
         return { success: false, message: 'Reembolso não encontrado' };
       }
 
-      if (reembolso.status !== 'PENDING') {
+      if (reembolso.status !== 'pendente' && reembolso.status !== 'PENDING') {
         return { success: false, message: `Reembolso já está ${reembolso.status}` };
       }
 
       const { error: updateError } = await supabaseAdmin
         .from('Reimbursement')
         .update({
-          status: 'APPROVED',
+          status: 'aprovado',
           approvedBy: context.userId,
           approvedAt: new Date().toISOString(),
         })
@@ -100,7 +100,7 @@ const rejectReembolsoAction: IAAction = {
       const { error: updateError } = await supabaseAdmin
         .from('Reimbursement')
         .update({
-          status: 'REJECTED',
+          status: 'rejeitado',
           approvedBy: context.userId,
           approvedAt: new Date().toISOString(),
         })

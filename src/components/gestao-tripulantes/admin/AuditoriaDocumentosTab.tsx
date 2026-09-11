@@ -118,13 +118,14 @@ export default function AuditoriaDocumentosTab() {
   const listaAtual = (): DocRow[] => {
     if (!data) return [];
     switch (bucket) {
-      case 'sem_emissao': return data.sem_emissao;
-      case 'sem_validade': return data.sem_validade;
-      case 'sem_rastreio': return data.sem_rastreio;
-      case 'duplicados': return data.duplicados.flatMap(g => g.grupo);
-      case 'quarentena': return data.quarentena;
-      case 'vencidos': return data.vencidos;
-      case 'vencendo': return data.vencendo;
+      case 'sem_emissao': return data.sem_emissao || [];
+      case 'sem_validade': return data.sem_validade || [];
+      case 'sem_rastreio': return data.sem_rastreio || [];
+      case 'duplicados': return (data.duplicados || []).flatMap(g => g?.grupo || []);
+      case 'quarentena': return data.quarentena || [];
+      case 'vencidos': return data.vencidos || [];
+      case 'vencendo': return data.vencendo || [];
+      default: return [];
     }
   };
 
@@ -312,8 +313,8 @@ export default function AuditoriaDocumentosTab() {
             <span className="flex items-center gap-1 text-[10px] uppercase text-gray-400">
               {b.icon} {b.label}
             </span>
-            <p className={`text-xl font-bold ${(data?.resumo[b.key] ?? 0) > 0 ? 'text-orange-600' : 'text-green-600'}`}>
-              {b.key === 'duplicados' ? (data?.resumo.duplicados_excedentes ?? '—') : (data?.resumo[b.key] ?? '—')}
+            <p className={`text-xl font-bold ${(data?.resumo?.[b.key] ?? 0) > 0 ? 'text-orange-600' : 'text-green-600'}`}>
+              {b.key === 'duplicados' ? (data?.resumo?.duplicados_excedentes ?? '—') : (data?.resumo?.[b.key] ?? '—')}
             </p>
           </button>
         ))}
@@ -321,17 +322,17 @@ export default function AuditoriaDocumentosTab() {
 
       {bucket === 'duplicados' ? (
         <div className="space-y-3">
-          {data?.duplicados.length === 0 && !loading && (
+          {(data?.duplicados?.length ?? 0) === 0 && !loading && (
             <div className="flex items-center gap-2 p-3 bg-green-50 text-green-800 rounded-lg text-sm">
               <FiCheckCircle /> Nenhuma duplicidade encontrada.
             </div>
           )}
-          {data?.duplicados.map((g, gi) => (
+          {data?.duplicados?.map((g, gi) => (
             <div key={gi} className="border border-orange-200 bg-orange-50 rounded-lg p-3 space-y-2">
               <p className="text-xs font-semibold text-orange-700 uppercase">
-                Grupo com {g.grupo.length} registros idênticos — clique em &quot;Manter este&quot; no registro correto
+                Grupo com {g.grupo?.length || 0} registros idênticos — clique em &quot;Manter este&quot; no registro correto
               </p>
-              {g.grupo.map(d =>
+              {g.grupo?.map(d =>
                 renderDocCard(
                   d,
                   <button
@@ -348,12 +349,12 @@ export default function AuditoriaDocumentosTab() {
         </div>
       ) : (
         <div className="space-y-2">
-          {listaAtual().length === 0 && !loading && (
+          {(listaAtual()?.length ?? 0) === 0 && !loading && (
             <div className="flex items-center gap-2 p-3 bg-green-50 text-green-800 rounded-lg text-sm">
               <FiCheckCircle /> Nada pendente nesta categoria.
             </div>
           )}
-          {listaAtual().map(d => renderDocCard(d))}
+          {listaAtual()?.map(d => renderDocCard(d))}
         </div>
       )}
 

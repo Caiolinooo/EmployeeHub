@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { getEsocialTimeline } from '@/lib/employee-hub/employee-hub-service';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const token = extractTokenFromHeader(request.headers.get('authorization') || undefined);
+    if (!token || !verifyToken(token)) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
+    const { id } = await context.params;
 
     // Get CPF from colaborador
     const { data: colab } = await supabaseAdmin

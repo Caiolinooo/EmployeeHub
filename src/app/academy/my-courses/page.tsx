@@ -223,9 +223,9 @@ const MyCoursesPage: React.FC = () => {
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex flex-col min-h-0 flex-1 h-full max-w-7xl mx-auto w-full">
         {/* Header */}
-        <div className="mb-8">
+        <div className="shrink-0 mb-6">
           <button
             onClick={() => router.push('/academy')}
             className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
@@ -248,7 +248,7 @@ const MyCoursesPage: React.FC = () => {
         </div>
 
         {/* Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="shrink-0 grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -299,7 +299,7 @@ const MyCoursesPage: React.FC = () => {
         </div>
 
         {/* Filtros */}
-        <div className="mb-6">
+        <div className="shrink-0 mb-6">
           <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
             <button
               onClick={() => setFilter('all')}
@@ -333,7 +333,7 @@ const MyCoursesPage: React.FC = () => {
 
         {/* Lista de cursos */}
         {filteredEnrollments.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-12 flex-1 min-h-0">
             <BookOpenIcon className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">
               {filter === 'all' ? t('academy.nenhumCursoMatriculado') :
@@ -356,7 +356,7 @@ const MyCoursesPage: React.FC = () => {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1 min-h-0 overflow-auto">
             {filteredEnrollments.map((enrollment) => {
               const progress = enrollment.progress?.[0];
               const progressPercentage = progress?.progress_percentage || 0;

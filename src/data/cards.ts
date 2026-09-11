@@ -149,6 +149,22 @@ export function getHardcodedCards(): DashboardCard[] {
       managerOnly: false,
       moduleKey: 'social',
     },
+    {
+      id: 'dp',
+      title: 'Departamento Pessoal',
+      description: 'Gestão completa de colaboradores, escalas, fechamento de folha e DP',
+      href: '/department/dp',
+      icon: FiBriefcase,
+      iconName: 'FiBriefcase',
+      color: 'bg-emerald-600',
+      hoverColor: 'hover:bg-emerald-700',
+      external: false,
+      enabled: true,
+      order: 15,
+      adminOnly: false,
+      managerOnly: false,
+      moduleKey: 'dp',
+    },
     // Adicionar outros cards aqui conforme necessário
   ];
 }
@@ -428,6 +444,22 @@ export function getTranslatedCards(t: (key: string) => string): DashboardCard[] 
       order: 14,
       adminOnly: false,
       moduleKey: 'chat'
+    },
+    {
+      id: 'dp',
+      title: t('cards.dp'),
+      description: t('cards.dpDesc'),
+      href: '/department/dp',
+      icon: FiBriefcase,
+      iconName: 'FiBriefcase',
+      color: 'bg-emerald-600',
+      hoverColor: 'hover:bg-emerald-700',
+      external: false,
+      enabled: true,
+      order: 15,
+      adminOnly: false,
+      managerOnly: false,
+      moduleKey: 'dp'
     }
   ];
 }

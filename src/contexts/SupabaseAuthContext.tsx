@@ -12,6 +12,8 @@ import tokenRefreshManager, { startTokenRefreshManager, stopTokenRefreshManager 
 import { attemptSessionRecovery, recoverSessionOnReturn } from '@/lib/sessionRecovery';
 import { activateUserAfterEmailVerification } from '@/lib/user-approval';
 import { getDefaultPermissionsForRole } from '@/config/modules';
+import { clearCompanionSession } from '@/lib/ia/companion-session-storage';
+import { hasEffectiveFeature } from '@/lib/effective-feature';
 // Import a browser-compatible JWT library or use a safer approach
 
 // Função para gerar um token JWT (deve ser feito no servidor)
@@ -77,6 +79,10 @@ export interface UserProfile {
   bio?: string | null;
   birth_date?: string | null;
   cover_url?: string | null;
+  startup_splash_enabled?: boolean | null;
+  startup_splash_url?: string | null;
+  startup_sound_enabled?: boolean | null;
+  startup_sound_url?: string | null;
   accessPermissions?: {
     modules?: {
       [key: string]: boolean;
@@ -155,6 +161,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   const [authStatus, setAuthStatus] = useState<string | undefined>(undefined);
   const [rolePermissions, setRolePermissions] = useState<any>({});
   const [aclEnabledModules, setAclEnabledModules] = useState<string[]>([]);
+  const [effectiveFeatures, setEffectiveFeatures] = useState<Record<string, boolean>>({});
+  const [aclPermissionNames, setAclPermissionNames] = useState<string[]>([]);
   const router = useRouter();
 
   // Carregar permissões por role
@@ -178,7 +186,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
     const loadAclModules = async () => {
       try {
-        const res = await fetch('/api/user/effective-permissions');
+        const res = await fetch('/api/user/effective-permissions', { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           if (data.effective_modules) {
@@ -189,6 +197,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
               .map(([k]) => k);
             setAclEnabledModules(modules);
           }
+          setEffectiveFeatures(data.effective_features || {});
+          setAclPermissionNames(Array.isArray(data.acl_permission_names) ? data.acl_permission_names : []);
         }
       } catch (error) {
         console.error('Erro ao carregar módulos ACL:', error);
@@ -204,11 +214,15 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
     if (typeof window !== 'undefined') {
       window.addEventListener('permissions-updated', handlePermissionsUpdate);
+      window.addEventListener('visibilitychange', handlePermissionsUpdate);
+      window.addEventListener('focus', handlePermissionsUpdate);
     }
 
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('permissions-updated', handlePermissionsUpdate);
+        window.removeEventListener('visibilitychange', handlePermissionsUpdate);
+        window.removeEventListener('focus', handlePermissionsUpdate);
       }
     };
   }, [user?.id]);
@@ -1141,6 +1155,11 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('logout_in_progress', 'true');
       sessionStorage.setItem('logout_in_progress', 'true');
 
+      const loggingOutUserId = user?.id || null;
+
+      // STM Companion: limpa contexto/sessão local ANTES de zerar user (LTM no DB permanece)
+      clearCompanionSession(loggingOutUserId);
+
       // Limpar estado DO REACT PRIMEIRO (antes de qualquer operação assíncrona)
       setUser(null);
       setProfile(null);
@@ -1183,6 +1202,9 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       // Remover TODOS os dados de autenticação do localStorage
       const keysToRemove = ['auth', 'token', 'abzToken', 'user', 'rememberMe', 'sb-access-token', 'sb-refresh-token'];
       keysToRemove.forEach(key => localStorage.removeItem(key));
+
+      // Garante limpeza de leftovers do Companion STM
+      clearCompanionSession(loggingOutUserId);
 
       // Limpar todos os cookies relacionados à autenticação
       const cookiesToClear = ['token', 'abzToken', 'auth', 'refreshToken', 'sb-access-token', 'sb-refresh-token'];
@@ -2196,16 +2218,17 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
           return false;
         },
         hasFeature: (feature: string) => {
-          // Administradores têm acesso a todas as funcionalidades
-          if (isAdmin) return true;
-
-          // Gerentes têm acesso a todas as funcionalidades, exceto as administrativas
-          if (isManager && !feature.startsWith('admin.')) return true;
-
-          // Verificar permissões de funcionalidade (verificar tanto accessPermissions quanto access_permissions)
-          return !!(
-            profile?.accessPermissions?.features?.[feature] ||
-            profile?.access_permissions?.features?.[feature]
+          return hasEffectiveFeature(
+            {
+              role: profile?.role,
+              features: {
+                ...(profile?.access_permissions?.features || {}),
+                ...(profile?.accessPermissions?.features || {}),
+                ...effectiveFeatures,
+              },
+              aclNames: aclPermissionNames,
+            },
+            feature,
           );
         },
         refreshProfile: async () => {
@@ -2255,8 +2278,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
               setProfile(profileData);
               console.log('Perfil do usuário atualizado com sucesso');
 
-              // Re-carregar módulos ACL
-              const aclRes = await fetch('/api/user/effective-permissions');
+              // Re-carregar módulos ACL + features efetivas (JSONB + nomes ACL)
+              const aclRes = await fetch('/api/user/effective-permissions', { cache: 'no-store' });
               if (aclRes.ok) {
                 const aclData = await aclRes.json();
                 if (aclData.effective_modules) {
@@ -2265,6 +2288,10 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
                     .map(([k]) => k);
                   setAclEnabledModules(modules);
                 }
+                setEffectiveFeatures(aclData.effective_features || {});
+                setAclPermissionNames(
+                  Array.isArray(aclData.acl_permission_names) ? aclData.acl_permission_names : [],
+                );
               }
             }
           } catch (error) {

@@ -1,0 +1,9 @@
+{
+  "name": "painel-abz-rive-gen-scratch",
+  "private": true,
+  "description": "Scratch install of rive-mcp-server for regenerating companion-mascot.riv. Not a product dependency — do not redistribute the server source.",
+  "type": "module",
+  "devDependencies": {
+    "rive-mcp-server": "0.4.1"
+  }
+}

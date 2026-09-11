@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { getDashboardData } from '@/lib/gestao-tripulantes/dashboard-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,23 +17,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
-    const { data, error } = await supabaseAdmin
-      .from('gt_vw_dashboard_resumo')
-      .select('*')
-      .maybeSingle();
-
-    if (error) {
-      console.error('Erro ao buscar dados do dashboard:', error);
+    const result = await getDashboardData();
+    if (!result.success || !result.data) {
+      console.error('Erro ao buscar dados do dashboard:', result.error);
       return NextResponse.json({ error: 'Erro ao buscar dados do dashboard' }, { status: 500 });
     }
 
     return NextResponse.json({
       success: true,
-      data: data || {},
+      data: result.data,
       meta: {
         module: 'gestao-tripulantes',
-        updatedAt: new Date().toISOString()
-      }
+        updatedAt: new Date().toISOString(),
+      },
     });
   } catch (error) {
     console.error('Erro na API dashboard:', error);

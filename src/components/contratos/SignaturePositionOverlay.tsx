@@ -40,16 +40,47 @@ export default function SignaturePositionOverlay({
     tipo,
 }: SignaturePositionOverlayProps) {
     const [isDragging, setIsDragging] = useState(false);
-    const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
     const [currentPos, setCurrentPos] = useState({ x, y });
+    const dragOffsetRef = useRef({ x: 0, y: 0 });
+    const currentPosRef = useRef({ x, y });
+    const onDragEndRef = useRef(onDragEnd);
+    onDragEndRef.current = onDragEnd;
     const elementRef = useRef<HTMLDivElement>(null);
 
     // Sync position if external x,y changes
     useEffect(() => {
         if (!isDragging) {
             setCurrentPos({ x, y });
+            currentPosRef.current = { x, y };
         }
     }, [x, y, isDragging]);
+
+    // Handle drag pointer events
+    useEffect(() => {
+        if (!isDragging) return;
+
+        const handlePointerMove = (e: PointerEvent) => {
+            const newX = Math.max(0, e.clientX - dragOffsetRef.current.x);
+            const newY = Math.max(0, e.clientY - dragOffsetRef.current.y);
+            currentPosRef.current = { x: newX, y: newY };
+            setCurrentPos({ x: newX, y: newY });
+        };
+
+        const handlePointerUp = () => {
+            setIsDragging(false);
+            if (onDragEndRef.current) {
+                onDragEndRef.current(currentPosRef.current.x, currentPosRef.current.y);
+            }
+        };
+
+        document.addEventListener('pointermove', handlePointerMove);
+        document.addEventListener('pointerup', handlePointerUp);
+
+        return () => {
+            document.removeEventListener('pointermove', handlePointerMove);
+            document.removeEventListener('pointerup', handlePointerUp);
+        };
+    }, [isDragging]);
 
     const statusStyles = {
         PENDING: {
@@ -95,45 +126,13 @@ export default function SignaturePositionOverlay({
         e.preventDefault();
         e.stopPropagation(); // Prevent triggering background click handlers
         
-        setIsDragging(true);
-        setDragOffset({
+        dragOffsetRef.current = {
             x: e.clientX - currentPos.x,
-            y: e.clientY - currentPos.y
-        });
-        
-        // Add listeners to document
-        document.addEventListener('pointermove', handlePointerMove);
-        document.addEventListener('pointerup', handlePointerUp);
-    };
-
-    const handlePointerMove = (e: PointerEvent) => {
-        setDragOffset(prevOffset => {
-            const newX = Math.max(0, e.clientX - prevOffset.x);
-            const newY = Math.max(0, e.clientY - prevOffset.y);
-            setCurrentPos({ x: newX, y: newY });
-            return prevOffset;
-        });
-    };
-
-    const handlePointerUp = () => {
-        setIsDragging(false);
-        document.removeEventListener('pointermove', handlePointerMove);
-        document.removeEventListener('pointerup', handlePointerUp);
-        
-        // Trigger onDragEnd with the final position
-        setCurrentPos(prev => {
-            if (onDragEnd) onDragEnd(prev.x, prev.y);
-            return prev;
-        });
-    };
-
-    // Cleanup listeners on unmount
-    useEffect(() => {
-        return () => {
-            document.removeEventListener('pointermove', handlePointerMove);
-            document.removeEventListener('pointerup', handlePointerUp);
+            y: e.clientY - currentPos.y,
         };
-    }, []);
+        currentPosRef.current = { x: currentPos.x, y: currentPos.y };
+        setIsDragging(true);
+    };
 
     // Rounding class depends on type (checkbox is square, others are capsule-shaped or rounded rectangles)
     const roundingClass = resolvedTipo === 'checkbox' ? 'rounded-lg' : 'rounded-2xl';

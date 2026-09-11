@@ -45,25 +45,13 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import UserAvatar from '@/components/UserAvatar';
 import HelpWidget from '@/components/Help/HelpWidget';
 import MenuCustomizer from '@/components/admin/MenuCustomizer'; // Import
+import { useEffectivePermissions } from '@/hooks/useEffectivePermissions';
+import { SYSTEM_MODULES, MODULE_CATEGORIES, SystemModule } from '@/constants/modules';
+import { getModuleIcon } from '@/constants/moduleIcons';
 
 interface MainLayoutProps {
   children: React.ReactNode;
 }
-
-// Logo Component
-const PortalLogo = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M16 28C22.6274 28 28 22.6274 28 16C28 9.37258 22.6274 4 16 4C9.37258 4 4 9.37258 4 16C4 22.6274 9.37258 28 16 28Z" stroke="white" strokeWidth="0" />
-    <path d="M16.5 7C13 7 10 9 9 12C8 15 9.5 19 12 21C14.5 23 18 23 21 21" stroke="#0EA5E9" strokeWidth="3.5" strokeLinecap="round" />
-    <path d="M12 21C10 23 8 23 6 22" stroke="#22C55E" strokeWidth="3.5" strokeLinecap="round" />
-    <path d="M21 10C24 10 26 12 26 15C26 18 24 20 21 21" stroke="#F59E0B" strokeWidth="3.5" strokeLinecap="round" />
-    <circle cx="16" cy="15" r="3" fill="#3B82F6" />
-  </svg>
-);
-
-import { useEffectivePermissions } from '@/hooks/useEffectivePermissions';
-import { SYSTEM_MODULES, MODULE_CATEGORIES, SystemModule } from '@/constants/modules';
-import { getModuleIcon } from '@/constants/moduleIcons';
 
 export default function MainLayout({ children }: MainLayoutProps) {
   const pathname = usePathname();
@@ -80,6 +68,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const [isMeuRHOpen, setIsMeuRHOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // O estado colapsado/aberto é restaurado do localStorage após o mount.
+  // Até lá, as transições ficam desabilitadas para que a página abra direto
+  // no estado final, sem animação de "esticar" do menu/conteúdo.
+  const [isLayoutStateLoaded, setIsLayoutStateLoaded] = useState(false);
+  const layoutTransition = (classes: string) => (isLayoutStateLoaded ? classes : '!transition-none');
+
   // Customizer State
   const [isMenuCustomizerOpen, setIsMenuCustomizerOpen] = useState(false);
 
@@ -92,7 +86,22 @@ export default function MainLayout({ children }: MainLayoutProps) {
     setIsCollapsed(saved ? JSON.parse(saved) : false);
     const savedMeuRH = localStorage.getItem('sidebar-meurh-open');
     if (savedMeuRH !== null) setIsMeuRHOpen(JSON.parse(savedMeuRH));
+    // Só reabilita as transições depois que o estado restaurado foi pintado
+    // (dois frames), evitando a animação de esticar ao abrir a página.
+    let raf2: number | undefined;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => setIsLayoutStateLoaded(true));
+    });
+    return () => {
+      cancelAnimationFrame(raf1);
+      if (raf2 !== undefined) cancelAnimationFrame(raf2);
+    };
   }, []);
+
+  // Fechar menu mobile automaticamente ao navegar
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   const toggleSidebar = () => {
     const newState = !isCollapsed;
@@ -179,7 +188,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
         key={item.id}
         href={item.href}
         onClick={handleItemClick}
-        className={`relative flex items-center px-4 py-3.5 my-1 mx-2 rounded-xl transition-all duration-200 group
+        className={`relative flex items-center px-4 py-3.5 my-1 mx-2 rounded-xl ${layoutTransition('transition-all duration-200')} group
           ${isActive
             ? 'bg-[#0066FF] text-white shadow-md shadow-blue-500/30'
             : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
@@ -215,7 +224,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   return (
     <ProtectedRoute>
       <GlobalTimeTracker />
-      <div className="min-h-screen bg-gray-50 flex font-sans">
+      <div className="h-dvh bg-gray-50 flex font-sans overflow-hidden">
 
         {/* Mobile Overlay */}
         {isMobileMenuOpen && (
@@ -230,7 +239,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           className={`bg-white fixed z-40 inset-y-0 left-0 border-r border-gray-100 flex flex-col transition-transform duration-300 w-64 ${isCollapsed ? 'md:w-20' : 'md:w-64'} ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
         >
           {/* Logo */}
-          <div className={`h-20 flex items-center ${isCollapsed ? 'md:justify-center px-6 md:px-0' : 'px-6'} justify-between`}>
+          <div className={`h-20 shrink-0 flex items-center ${isCollapsed ? 'md:justify-center px-6 md:px-0' : 'px-6'} justify-between`}>
             {(!isCollapsed || isMobileMenuOpen) && (
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 flex items-center justify-center shrink-0">
@@ -270,7 +279,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
           </div>
 
           {/* Menu */}
-          <nav className="flex-1 py-4 overflow-y-auto px-2 space-y-1">
+          {/* min-h-0: sem ele o flex item não encolhe abaixo do conteúdo e o menu
+              empurra o rodapé da sidebar para fora da viewport (logo cortado, sem scroll) */}
+          <nav className="flex-1 min-h-0 py-4 overflow-y-auto px-2 space-y-1">
             {/* Core Items - Using Unified Data */}
             {unifiedCore.map(renderItem)}
 
@@ -285,13 +296,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   {!isCollapsed && (
                     <>
                       <span className="font-medium text-sm text-gray-500 flex-1 text-left">{t('categories.hr', MODULE_CATEGORIES.hr)}</span>
-                      <FiChevronDown className={`w-4 h-4 transition-transform ${isMeuRHOpen ? 'rotate-180' : ''}`} />
+                      <FiChevronDown className={`w-4 h-4 ${layoutTransition('transition-transform')} ${isMeuRHOpen ? 'rotate-180' : ''}`} />
                     </>
                   )}
                 </button>
 
                 {/* Submenu */}
-                <div className={`overflow-hidden transition-all duration-300 ${isMeuRHOpen && !isCollapsed ? 'max-h-[1200px] mt-1' : 'max-h-0'}`}>
+                <div className={`overflow-hidden ${layoutTransition('transition-all duration-300')} ${isMeuRHOpen && !isCollapsed ? 'max-h-[1200px] mt-1' : 'max-h-0'}`}>
                   {unifiedHr.map(renderItem)}
                 </div>
               </div>
@@ -310,13 +321,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
                       <span className="font-medium text-sm text-gray-500 flex-1 text-left truncate">
                         {departmentTitle === MODULE_CATEGORIES.department ? t('categories.department', MODULE_CATEGORIES.department) : departmentTitle}
                       </span>
-                      <FiChevronDown className={`w-4 h-4 transition-transform ${isDepartmentOpen ? 'rotate-180' : ''}`} />
+                      <FiChevronDown className={`w-4 h-4 ${layoutTransition('transition-transform')} ${isDepartmentOpen ? 'rotate-180' : ''}`} />
                     </>
                   )}
                 </button>
 
                 {/* Submenu */}
-                <div className={`overflow-hidden transition-all duration-300 ${isDepartmentOpen && !isCollapsed ? 'max-h-[1200px] mt-1' : 'max-h-0'}`}>
+                <div className={`overflow-hidden ${layoutTransition('transition-all duration-300')} ${isDepartmentOpen && !isCollapsed ? 'max-h-[1200px] mt-1' : 'max-h-0'}`}>
                   {unifiedDept.map(renderItem)}
                 </div>
               </div>
@@ -331,7 +342,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
           {/* Credits */}
           {!isCollapsed && (
-            <div className="p-6 mt-auto">
+            <div className="p-6 mt-auto shrink-0">
               <div className="pt-4 border-t border-gray-100 text-[11px] text-gray-500 font-medium leading-relaxed">
                 {t('layout.developedBy', 'Desenvolvido por')} <a href="https://github.com/Caiolinooo" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600 transition-colors">Caio Correia</a>.
                 <br />
@@ -342,22 +353,25 @@ export default function MainLayout({ children }: MainLayoutProps) {
         </aside>
 
         {/* Main Content Wrapper */}
-        <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
+        {/* min-w-0: row flex items default to min-width:auto (min-content of descendants).
+            Without it, wide grids (Man Schedule `w-max` table) inflate this wrapper beyond
+            the viewport and the outer `overflow-hidden` clips them — no scrollport ever overflows. */}
+        <div className={`flex-1 min-w-0 flex flex-col min-h-0 h-dvh ${layoutTransition('transition-all duration-300')} ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
 
           {/* Top Header */}
-          <header className="h-20 px-4 md:px-8 flex items-center justify-between md:justify-end bg-transparent z-20 sticky top-0 pointer-events-none">
+          <header className="h-16 shrink-0 px-4 md:px-8 flex items-center justify-between md:justify-end bg-gray-50/90 backdrop-blur-md border-b border-gray-200/50 z-20 sticky top-0 transition-colors">
             {/* Mobile Menu Toggle (Left Side) */}
-            <div className="pointer-events-auto md:hidden mt-4">
+            <div className="md:hidden">
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="p-2 bg-white border border-gray-100 rounded-lg shadow-sm text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center h-11 w-11"
+                className="p-2 bg-white border border-gray-100 rounded-lg shadow-sm text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center h-10 w-10"
               >
-                <FiMenu className="w-6 h-6" />
+                <FiMenu className="w-5 h-5" />
               </button>
             </div>
 
             {/* Right Side Actions */}
-            <div className="pointer-events-auto flex items-center bg-white rounded-full shadow-sm border border-gray-100 px-2 py-1.5 mt-4 gap-1">
+            <div className="flex items-center bg-white rounded-full shadow-sm border border-gray-100 px-2 py-1 gap-1">
               {/* Notification Button */}
               <NotificationHUD
                 userId={user?.id || ''}
@@ -436,7 +450,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             </div>
           </header>
 
-          <main className="flex-1 px-4 md:px-8 py-8">
+          <main className="flex-1 min-h-0 min-w-0 flex flex-col overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 md:px-8 md:py-6 touch-scroll">
             {children}
           </main>
         </div>

@@ -73,9 +73,12 @@ export async function GET(request: NextRequest) {
 
     // Duplicados: mesmo colaborador + tipo + título normalizado + nº documento,
     // ou mesmo arquivo_hash compartilhado entre 2+ documentos.
+    // Para ASO, agrupa também por data_emissao + data_validade.
     const groups = new Map<string, DocRow[]>();
     for (const d of docs) {
-      const key = `${d.colaborador_id || 'ORFAO'}::${d.tipo_documento}::${(d.titulo || '').toLowerCase().trim()}::${(d.numero_documento || '').trim()}`;
+      const key = d.tipo_documento === 'aso'
+        ? `${d.colaborador_id || 'ORFAO'}::aso::${d.data_emissao || 'NE'}::${d.data_validade || 'NV'}`
+        : `${d.colaborador_id || 'ORFAO'}::${d.tipo_documento}::${(d.titulo || '').toLowerCase().trim()}::${(d.numero_documento || '').trim()}`;
       const g = groups.get(key) ?? groups.set(key, []).get(key)!;
       g.push(d);
     }
@@ -332,7 +335,9 @@ export async function POST(request: NextRequest) {
         if (!manter) return NextResponse.json({ error: 'Registro a manter não encontrado' }, { status: 404 });
 
         const keyOf = (d: DocRow) =>
-          `${d.colaborador_id || 'ORFAO'}::${d.tipo_documento}::${(d.titulo || '').toLowerCase().trim()}::${(d.numero_documento || '').trim()}`;
+          d.tipo_documento === 'aso'
+            ? `${d.colaborador_id || 'ORFAO'}::aso::${d.data_emissao || 'NE'}::${d.data_validade || 'NV'}`
+            : `${d.colaborador_id || 'ORFAO'}::${d.tipo_documento}::${(d.titulo || '').toLowerCase().trim()}::${(d.numero_documento || '').trim()}`;
         const grupo = docs.filter(d => keyOf(d) === keyOf(manter));
         const remover = grupo.filter(d => d.id !== manter.id);
 

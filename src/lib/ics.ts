@@ -1,7 +1,7 @@
 /**
  * Minimal ICS (iCalendar) parser for VEVENT blocks.
  * - Handles line folding
- * - Extracts SUMMARY, DESCRIPTION, DTSTART, DTEND, LOCATION, UID, ATTENDEE, ORGANIZER
+ * - Extracts SUMMARY, DESCRIPTION, DTSTART, DTEND, LOCATION, URL, UID, ATTENDEE, ORGANIZER
  */
 import { randomUUID } from 'crypto';
 
@@ -10,6 +10,7 @@ export type IcsEvent = {
   summary: string;
   description?: string;
   location?: string;
+  url?: string;
   start: string; // ISO
   end?: string;  // ISO
   allDay?: boolean;
@@ -73,9 +74,6 @@ export async function parseIcs(ics: string): Promise<IcsEvent[]> {
   const blocks = text.split(/BEGIN:VEVENT/).slice(1).map(b => b.split(/END:VEVENT/)[0]);
   const events: IcsEvent[] = [];
 
-  // Import crypto once for all events
-  const { randomUUID } = await import('crypto');
-
   for (const block of blocks) {
     const lines = block.split(/\r?\n/);
     const fields: Record<string, string | string[]> = {};
@@ -104,6 +102,7 @@ export async function parseIcs(ics: string): Promise<IcsEvent[]> {
     const summary = decodeText(String(fields['SUMMARY'] || '').trim());
     const description = decodeText(String(fields['DESCRIPTION'] || '').trim());
     const location = decodeText(String(fields['LOCATION'] || '').trim());
+    const url = decodeText(String(fields['URL'] || '').trim());
 
     // DTSTART/DTEND may have parameters. If DATE or TZID exists, value is after ':' already handled.
     const startStr = String(fields['DTSTART'] || '').trim();
@@ -133,6 +132,7 @@ export async function parseIcs(ics: string): Promise<IcsEvent[]> {
       summary,
       description: description || undefined,
       location: location || undefined,
+      url: url || undefined,
       start: startParsed.iso,
       end: endParsed?.iso,
       allDay: startParsed.allDay,

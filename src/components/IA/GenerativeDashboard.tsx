@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -10,9 +10,6 @@ import {
   Clock, 
   ArrowRight,
   Info,
-  BarChart2,
-  PieChart as PieIcon,
-  Activity
 } from 'lucide-react';
 import {
   BarChart,
@@ -29,6 +26,7 @@ import {
   Pie
 } from 'recharts';
 import type { IADashboardLayout, IADashboardWidget } from '@/types/ia';
+import { normalizeWidgetData } from '@/lib/ia/kpi-board-shared';
 
 interface Props {
   layout: IADashboardLayout;
@@ -73,7 +71,7 @@ export default function GenerativeDashboard({ layout }: Props) {
           }`}
         >
           {widget.title && (
-            <div className="px-4 py-2 border-bottom border-gray-50 bg-gray-50/50 flex items-center justify-between">
+            <div className="px-4 py-2 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between">
               <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">{widget.title}</h4>
               <Info className="w-3 h-3 text-gray-300" />
             </div>
@@ -87,25 +85,52 @@ export default function GenerativeDashboard({ layout }: Props) {
   );
 }
 
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="text-xs text-gray-400 italic text-center py-4 px-2">
+      {message}
+    </div>
+  );
+}
+
 function renderWidgetContent(widget: IADashboardWidget) {
+  const data = normalizeWidgetData(widget.type, widget.data);
+
   switch (widget.type) {
     case 'metric':
-      return <MetricWidget data={widget.data} />;
+      return <MetricWidget data={data} />;
     case 'table':
-      return <TableWidget data={widget.data} />;
+      return <TableWidget data={data} />;
     case 'list':
-      return <ListWidget data={widget.data} />;
+      return <ListWidget data={data} />;
     case 'chart':
-      return <ChartWidget data={widget.data} />;
-    default:
-      return <div className="text-xs text-gray-400 italic">Widget não suportado: {widget.type}</div>;
+      return <ChartWidget data={data} />;
+    case 'markdown':
+      return (
+        <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap text-xs">
+          {typeof data === 'object' && data && 'content' in data
+            ? String((data as { content?: string }).content || '') || (
+                <span className="text-gray-400 italic">Sem conteúdo</span>
+              )
+            : String(data ?? '')}
+        </div>
+      );
+    default: {
+      const _exhaustive: never = widget.type;
+      return <div className="text-xs text-gray-400 italic">Widget não suportado: {String(_exhaustive)}</div>;
+    }
   }
 }
 
 function ChartWidget({ data }: { data: any }) {
-  if (!data) return null;
-  const { type, items, height = 200 } = data;
-  if (!items || items.length === 0) return <div className="text-xs text-gray-400 italic text-center py-4">Sem dados para o gráfico</div>;
+  if (!data) return <EmptyState message="Sem dados para o gráfico" />;
+  const { type, items, height = 200, emptyMessage, error } = data;
+  if (error && (!items || items.length === 0)) {
+    return <EmptyState message={String(error)} />;
+  }
+  if (!items || items.length === 0) {
+    return <EmptyState message={emptyMessage || 'Sem dados para o gráfico'} />;
+  }
 
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
@@ -158,18 +183,28 @@ function ChartWidget({ data }: { data: any }) {
 }
 
 function MetricWidget({ data }: { data: any }) {
-  if (!data) return null;
-  const { value, label, change, trend, unit, action } = data;
+  if (!data) return <EmptyState message="Sem dados" />;
+  const { value, label, change, trend, unit, action, error, empty } = data;
+  if (error && (value === undefined || value === null || value === '—')) {
+    return <EmptyState message={String(error)} />;
+  }
+  if (empty && (value === undefined || value === null || value === '—') && !label) {
+    return <EmptyState message="Sem dados" />;
+  }
   const isPositive = trend === 'up';
   
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-baseline gap-1">
-        <span className="text-2xl font-bold text-gray-900 tracking-tight">{value}</span>
+        <span className="text-2xl font-bold text-gray-900 tracking-tight">
+          {value !== undefined && value !== null && value !== '' ? String(value) : '—'}
+        </span>
         {unit && <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{unit}</span>}
       </div>
       <div className="flex items-center justify-between mt-1 mb-2">
-        <span className="text-[11px] font-medium text-gray-500 truncate">{label}</span>
+        <span className="text-[11px] font-medium text-gray-500 truncate">
+          {label || (empty ? 'Sem dados' : '')}
+        </span>
         {change && (
           <div className={`flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
             isPositive ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
@@ -182,8 +217,6 @@ function MetricWidget({ data }: { data: any }) {
       {action && (
         <button 
           onClick={() => {
-            // This is a placeholder for interaction
-            // In a real scenario, we'd trigger a tool or send a message
             window.dispatchEvent(new CustomEvent('ia-dashboard-action', { 
               detail: { type: 'metric_action', action: action.type, value: action.value } 
             }));
@@ -199,9 +232,14 @@ function MetricWidget({ data }: { data: any }) {
 }
 
 function TableWidget({ data }: { data: any }) {
-  if (!data || !data.columns || !data.rows) return null;
-  const { columns, rows, actions } = data;
-  if (!rows || rows.length === 0) return <div className="text-xs text-gray-400 italic text-center py-4">Sem dados para exibir</div>;
+  if (!data) return <EmptyState message="Sem dados para exibir" />;
+  const { columns, rows, actions, emptyMessage, error } = data;
+  if (error && (!rows || rows.length === 0)) {
+    return <EmptyState message={String(error)} />;
+  }
+  if (!columns || !rows || rows.length === 0) {
+    return <EmptyState message={emptyMessage || 'Sem dados para exibir'} />;
+  }
 
   return (
     <div className="overflow-x-auto">
@@ -320,39 +358,54 @@ function renderTableCell(value: any, type?: string) {
     );
   }
 
-  return <span className="font-medium text-gray-700">{String(value)}</span>;
+  return <span className="font-medium text-gray-700">{String(value ?? '')}</span>;
 }
 
 function ListWidget({ data }: { data: any }) {
-  if (!data || !data.items) return null;
-  const { items } = data;
-  if (!items || items.length === 0) return <div className="text-xs text-gray-400 italic text-center py-4">Sem itens</div>;
+  if (!data) return <EmptyState message="Nenhum item" />;
+  const { items, emptyMessage, error } = data;
+  if (error && (!items || items.length === 0)) {
+    return <EmptyState message={String(error)} />;
+  }
+  if (!items || items.length === 0) {
+    return <EmptyState message={emptyMessage || 'Nenhum item'} />;
+  }
 
   return (
     <div className="space-y-3">
-      {items.map((item: any, i: number) => (
-        <div key={i} className="flex items-center gap-4 p-3 rounded-xl hover:bg-blue-50/50 border border-transparent hover:border-blue-100 transition-all group">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ${
-            item.status === 'urgent' ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-blue-50 text-blue-600 border border-blue-100'
-          }`}>
-            {item.status === 'urgent' ? <AlertCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+      {items.map((listItem: any, i: number) => {
+        const title = String(
+          listItem.title || listItem.label || listItem.name || listItem.assunto || 'Item'
+        );
+        const subtitle = String(
+          listItem.subtitle || listItem.value || listItem.description || listItem.de || ''
+        );
+        return (
+          <div key={listItem.id ?? i} className="flex items-center gap-4 p-3 rounded-xl hover:bg-blue-50/50 border border-transparent hover:border-blue-100 transition-all group">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ${
+              listItem.status === 'urgent' ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-blue-50 text-blue-600 border border-blue-100'
+            }`}>
+              {listItem.status === 'urgent' ? <AlertCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h5 className="text-xs font-bold text-gray-900 truncate tracking-tight">{title}</h5>
+              {subtitle ? (
+                <p className="text-[11px] font-medium text-gray-500 truncate mt-0.5">{subtitle}</p>
+              ) : null}
+            </div>
+            <button 
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('ia-dashboard-action', { 
+                  detail: { type: 'list_action', itemId: listItem.id || i, itemData: listItem } 
+                }));
+              }}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 group-hover:text-blue-600 group-hover:bg-white transition-all shadow-sm"
+            >
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
-          <div className="flex-1 min-w-0">
-            <h5 className="text-xs font-bold text-gray-900 truncate tracking-tight">{item.title}</h5>
-            <p className="text-[11px] font-medium text-gray-500 truncate mt-0.5">{item.subtitle}</p>
-          </div>
-          <button 
-            onClick={() => {
-              window.dispatchEvent(new CustomEvent('ia-dashboard-action', { 
-                detail: { type: 'list_action', itemId: item.id || i, itemData: item } 
-              }));
-            }}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 group-hover:text-blue-600 group-hover:bg-white transition-all shadow-sm"
-          >
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
