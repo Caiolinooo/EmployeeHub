@@ -1,5 +1,11 @@
 # Changelog
 
+## [5.76.2] - 2026-09-11
+
+### 🗓️ Man Schedule: grade pula para o mês do evento salvo
+
+1. **Marcar em outro mês não "desaparece" mais**: ao salvar um evento cujo mês difere do mês de referência da grade, a view pula automaticamente para o mês do evento (antes: o save gravava, mas a grade continuava em setembro e o operador não via a marcação de outubro).
+
 ## [5.76.1] - 2026-09-11
 
 ### 🗓️ Man Schedule: save substitui eventos sobrepostos

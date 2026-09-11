@@ -864,6 +864,13 @@ function parseLocalDate(str: string | null | undefined): Date | null {
                 );
             }
 
+            // A grade mostra o mês de referência atual — evento salvo em outro
+            // mês não aparece até navegar. Pular para o mês do evento salvo.
+            const [sy, sm] = formStart.split('-').map(Number);
+            if (sy && sm && !isSameReferenceMonth(referenceMonth, { year: sy, month: sm })) {
+                applyReferenceMonth({ year: sy, month: sm });
+            }
+
             fetchSchedules(true, true);
         } catch (err: unknown) {
             toast.error(err instanceof Error ? err.message : 'Falha ao salvar evento.');
