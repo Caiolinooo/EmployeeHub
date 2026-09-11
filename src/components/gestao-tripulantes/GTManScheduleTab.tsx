@@ -848,6 +848,16 @@ function parseLocalDate(str: string | null | undefined): Date | null {
             }
 
             toast.success(editingId ? 'Evento de escala atualizado!' : 'Evento de escala inserido com sucesso!');
+            // Sobreposições: o grid mostra 1 evento por semana (ganha o início
+            // mais recente) — sem este aviso parece que a marcação "não pegou".
+            const conflitos = (data?.conflitos || []) as Array<{ tipo: string; data_embarque: string; data_desembarque: string }>;
+            for (const c of conflitos.slice(0, 2)) {
+                toast.error(
+                    `Atenção: existe ${c.tipo?.toUpperCase()} ${c.data_embarque}→${c.data_desembarque} sobreposto. Ele aparece nas semanas em que começa depois deste evento.`,
+                    { duration: 8000 }
+                );
+            }
+
             fetchSchedules(true, true);
         } catch (err: unknown) {
             toast.error(err instanceof Error ? err.message : 'Falha ao salvar evento.');

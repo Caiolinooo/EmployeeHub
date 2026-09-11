@@ -121,7 +121,17 @@ export async function POST(request: NextRequest) {
         );
       }
       if (collapsed > 0) invalidateManScheduleCache();
-      return NextResponse.json({ success: true, data: updated, merged: true });
+      // Mesmo merged pode sobrepor terceiros (ex.: OFF-C que começa depois).
+      const { data: sobrepostosMerged } = await supabaseAdmin
+        .from('gt_historico_embarques')
+        .select('id, tipo, data_embarque, data_desembarque')
+        .eq('colaborador_id', colab.id)
+        .is('deleted_at', null)
+        .neq('id', keep.id)
+        .lte('data_embarque', dia(data_desembarque))
+        .gte('data_desembarque', dia(data_embarque))
+        .limit(5);
+      return NextResponse.json({ success: true, data: updated, merged: true, conflitos: sobrepostosMerged || [] });
     }
 
     let { data, error } = await supabaseAdmin
@@ -147,8 +157,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Sobreposições: o grid mostra um evento por semana (ganha o início mais
+    // recente) — sem aviso, o operador acha que a marcação "não pegou".
+    const { data: sobrepostos } = await supabaseAdmin
+      .from('gt_historico_embarques')
+      .select('id, tipo, data_embarque, data_desembarque')
+      .eq('colaborador_id', colab.id)
+      .is('deleted_at', null)
+      .neq('id', (data as { id?: string }).id ?? '')
+      .lte('data_embarque', dia(data_desembarque))
+      .gte('data_desembarque', dia(data_embarque))
+      .limit(5);
+
     invalidateManScheduleCache();
-    return NextResponse.json({ success: true, data });
+    return NextResponse.json({ success: true, data, conflitos: sobrepostos || [] });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     console.error('Erro na API de embarques:', error);
