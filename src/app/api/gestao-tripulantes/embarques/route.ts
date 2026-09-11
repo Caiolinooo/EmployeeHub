@@ -69,37 +69,38 @@ export async function POST(request: NextRequest) {
       updated_at: now,
     };
 
-    // Idempotência: um evento por colaborador + período exato. Retentar o mesmo
-    // save atualiza o registro existente (e colapsa duplicatas antigas) em vez
-    // de empilhar linhas idênticas que inflam o fechamento NxN.
+    // Substituição: o save do operador é a verdade — todo evento do mesmo
+    // colaborador que sobreponha o período informado é substituído (soft-delete;
+    // o pull MIO preserva exclusões locais). Período exatamente igual atualiza a
+    // linha existente (id estável para o grid), retentar nunca duplica.
     const dia = (v: unknown) => String(v ?? '').slice(0, 10);
-    const { data: duplicates, error: dupErr } = await supabaseAdmin
+    const embIni = dia(data_embarque);
+    const embFim = dia(data_desembarque);
+
+    const { data: sobrepostos, error: ovErr } = await supabaseAdmin
       .from('gt_historico_embarques')
-      .select('id, origem, created_at')
+      .select('id, tipo, data_embarque, data_desembarque, created_at')
       .eq('colaborador_id', colab.id)
-      .eq('data_embarque', dia(data_embarque))
-      .eq('data_desembarque', dia(data_desembarque))
       .is('deleted_at', null)
+      .lte('data_embarque', embFim)
+      .gte('data_desembarque', embIni)
       .order('created_at', { ascending: false });
 
-    if (dupErr) {
-      console.error('Erro ao verificar duplicados de embarque:', dupErr);
-    } else if (duplicates && duplicates.length > 0) {
-      const keep = duplicates[0];
-      let collapsed = 0;
-      if (duplicates.length > 1) {
-        // Colapsa só linhas locais — linhas MIO são da sincronização e podem voltar.
-        const staleIds = duplicates.slice(1).filter((d) => d.origem === 'local').map((d) => d.id);
-        if (staleIds.length > 0) {
-          const { error: delErr } = await supabaseAdmin
-            .from('gt_historico_embarques')
-            .update({ deleted_at: now, updated_at: now })
-            .in('id', staleIds);
-          if (delErr) console.error('Erro ao colapsar duplicados de embarque:', delErr);
-          else collapsed = staleIds.length;
-        }
-      }
-      const { data: updated, error: updErr } = await supabaseAdmin
+    if (ovErr) {
+      console.error('Erro ao verificar sobrepostos de embarque:', ovErr);
+    }
+
+    const lista = sobrepostos || [];
+    const keep = lista.find((r) => r.data_embarque === embIni && r.data_desembarque === embFim) || null;
+    const substituir = lista.filter((r) => r.id !== keep?.id);
+
+    let data: Record<string, unknown> | null;
+    let error: { message: string } | null;
+    let merged = false;
+
+    if (keep) {
+      merged = true;
+      const upd = await supabaseAdmin
         .from('gt_historico_embarques')
         .update({
           tipo: dbTipo,
@@ -113,64 +114,51 @@ export async function POST(request: NextRequest) {
         .eq('id', keep.id)
         .select('*')
         .single();
-      if (updErr) {
-        console.error('Erro ao atualizar embarque duplicado:', updErr);
-        return NextResponse.json(
-          { error: updErr.message || 'Erro ao atualizar evento de escala' },
-          { status: 500 }
-        );
-      }
-      if (collapsed > 0) invalidateManScheduleCache();
-      // Mesmo merged pode sobrepor terceiros (ex.: OFF-C que começa depois).
-      const { data: sobrepostosMerged } = await supabaseAdmin
+      data = upd.data as Record<string, unknown> | null;
+      error = upd.error;
+    } else {
+      const ins = await supabaseAdmin
         .from('gt_historico_embarques')
-        .select('id, tipo, data_embarque, data_desembarque')
-        .eq('colaborador_id', colab.id)
-        .is('deleted_at', null)
-        .neq('id', keep.id)
-        .lte('data_embarque', dia(data_desembarque))
-        .gte('data_desembarque', dia(data_embarque))
-        .limit(5);
-      return NextResponse.json({ success: true, data: updated, merged: true, conflitos: sobrepostosMerged || [] });
-    }
+        .insert(row)
+        .select('*')
+        .single();
+      data = ins.data as Record<string, unknown> | null;
+      error = ins.error;
 
-    let { data, error } = await supabaseAdmin
-      .from('gt_historico_embarques')
-      .insert(row)
-      .select('*')
-      .single();
-
-    if (error && /exibir_dia_inicio|updated_at/i.test(error.message || '')) {
-      const retry = { ...row };
-      if (/exibir_dia_inicio/i.test(error.message || '')) delete retry.exibir_dia_inicio;
-      if (/updated_at/i.test(error.message || '')) delete retry.updated_at;
-      const second = await supabaseAdmin.from('gt_historico_embarques').insert(retry).select('*').single();
-      data = second.data;
-      error = second.error;
+      if (error && /exibir_dia_inicio|updated_at/i.test(error.message || '')) {
+        const retry = { ...row };
+        if (/exibir_dia_inicio/i.test(error.message || '')) delete retry.exibir_dia_inicio;
+        if (/updated_at/i.test(error.message || '')) delete retry.updated_at;
+        const second = await supabaseAdmin.from('gt_historico_embarques').insert(retry).select('*').single();
+        data = second.data as Record<string, unknown> | null;
+        error = second.error;
+      }
     }
 
     if (error) {
-      console.error('Erro ao inserir evento de embarque:', error);
+      console.error('Erro ao salvar evento de embarque:', error);
       return NextResponse.json(
-        { error: error.message || 'Erro ao criar evento de escala' },
+        { error: error.message || 'Erro ao salvar evento de escala' },
         { status: 500 }
       );
     }
 
-    // Sobreposições: o grid mostra um evento por semana (ganha o início mais
-    // recente) — sem aviso, o operador acha que a marcação "não pegou".
-    const { data: sobrepostos } = await supabaseAdmin
-      .from('gt_historico_embarques')
-      .select('id, tipo, data_embarque, data_desembarque')
-      .eq('colaborador_id', colab.id)
-      .is('deleted_at', null)
-      .neq('id', (data as { id?: string }).id ?? '')
-      .lte('data_embarque', dia(data_desembarque))
-      .gte('data_desembarque', dia(data_embarque))
-      .limit(5);
+    const substituidos = substituir.map((r) => ({
+      id: r.id,
+      tipo: r.tipo,
+      data_embarque: r.data_embarque,
+      data_desembarque: r.data_desembarque,
+    }));
+    if (substituir.length > 0) {
+      const { error: delErr } = await supabaseAdmin
+        .from('gt_historico_embarques')
+        .update({ deleted_at: now, updated_at: now })
+        .in('id', substituir.map((r) => r.id));
+      if (delErr) console.error('Erro ao substituir embarques sobrepostos:', delErr);
+    }
 
     invalidateManScheduleCache();
-    return NextResponse.json({ success: true, data, conflitos: sobrepostos || [] });
+    return NextResponse.json({ success: true, data, merged, substituidos });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     console.error('Erro na API de embarques:', error);

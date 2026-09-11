@@ -29,7 +29,7 @@ export async function PUT(
 
     const { data: existing, error: findErr } = await supabaseAdmin
       .from('gt_historico_embarques')
-      .select('id, tipo, data_embarque, data_desembarque, local_embarque, local_desembarque, observacoes, exibir_dia_inicio, origem, mio_embarque_id, deleted_at')
+      .select('id, colaborador_id, tipo, data_embarque, data_desembarque, local_embarque, local_desembarque, observacoes, exibir_dia_inicio, origem, mio_embarque_id, deleted_at')
       .eq('id', id)
       .maybeSingle();
 
@@ -125,8 +125,32 @@ export async function PUT(
       );
     }
 
+    // Substituição: o evento salvo vence — sobrepostos do mesmo colaborador
+    // saem (soft-delete; o pull MIO preserva exclusões locais).
+    const ini = String((data as { data_embarque?: string }).data_embarque || '').slice(0, 10);
+    const fim = String((data as { data_desembarque?: string }).data_desembarque || '').slice(0, 10);
+    const { data: sobrepostos } = await supabaseAdmin
+      .from('gt_historico_embarques')
+      .select('id, tipo, data_embarque, data_desembarque')
+      .eq('colaborador_id', (existing as { colaborador_id?: string }).colaborador_id ?? '')
+      .is('deleted_at', null)
+      .neq('id', id)
+      .lte('data_embarque', fim)
+      .gte('data_desembarque', ini);
+
+    let substituidos: Array<{ id: string; tipo: string; data_embarque: string; data_desembarque: string }> = [];
+    const ids = (sobrepostos || []).map((r) => r.id);
+    if (ids.length > 0) {
+      const { error: delErr } = await supabaseAdmin
+        .from('gt_historico_embarques')
+        .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .in('id', ids);
+      if (delErr) console.error('Erro ao substituir embarques sobrepostos:', delErr);
+      else substituidos = sobrepostos || [];
+    }
+
     invalidateManScheduleCache();
-    return NextResponse.json({ success: true, data });
+    return NextResponse.json({ success: true, data, substituidos });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     console.error('Erro na API de atualização de embarque:', error);

@@ -1,5 +1,11 @@
 # Changelog
 
+## [5.76.1] - 2026-09-11
+
+### 🗓️ Man Schedule: save substitui eventos sobrepostos
+
+1. **O save do operador é a verdade**: ao salvar (POST/PUT) um evento de escala, todo evento do mesmo colaborador que sobreponha o período é substituído (soft-delete — o pull MIO preserva exclusões locais e não ressuscita). Período exatamente igual atualiza a linha existente (id estável no grid). A resposta traz `substituidos` e o grid informa "Substituiu evento sobreposto: OFF-C 24/10→20/11". Fim da classe "marquei e não apareceu": nenhum evento antigo sombreia um novo.
+
 ## [5.76.0] - 2026-09-11
 
 ### 🗓️ Man Schedule: marcações invisíveis corrigidas + auditoria do módulo
