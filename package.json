@@ -183,7 +183,7 @@
   "overrides": {
     "glob@10": "10.5.0",
     "minimatch@9": "9.0.9",
-    "postcss": "8.5.22",
+    "postcss": "8.5.23",
     "sharp": "0.35.3",
     "uuid": "11.1.1"
   },
@@ -216,7 +216,7 @@
     "os-browserify": "^0.3.0",
     "path-browserify": "^1.0.1",
     "pg": "^8.20.0",
-    "postcss": "8.5.22",
+    "postcss": "8.5.23",
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",
     "tailwindcss": "^3.3.0",
