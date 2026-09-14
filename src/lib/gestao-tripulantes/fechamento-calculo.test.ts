@@ -249,6 +249,94 @@ describe('calcularFechamentoColaborador comparativo NxN', () => {
   });
 });
 
+describe('DBA explícito não é ciclo de rotação', () => {
+  it('DBA entre dois ciclos: reduz folga realizada e gera FI 6 (não 20)', () => {
+    const calc = calcularFechamentoColaborador(
+      ESCALA_14,
+      [
+        { tipo: 'normal', data_embarque: '2026-09-01', data_desembarque: '2026-09-14' },
+        { tipo: 'dba', data_embarque: '2026-09-15', data_desembarque: '2026-09-16' },
+        { tipo: 'normal', data_embarque: '2026-09-25', data_desembarque: '2026-10-08' },
+      ],
+      [],
+      SETEMBRO,
+    );
+    assert.equal(calc.dias_dba, 2);
+    assert.equal(calc.dias_fi, 6);
+    assert.equal(calc.dias_fi_deficit, 6);
+    assert.equal(calc.dias_folga, 8); // 17–24/set — DBA 15-16 é trabalho, não folga
+    assert.equal(calc.dias_on, 14 + 6); // 01–14/set + 25–30/set
+    assert.equal(calc.statusPorDia['2026-09-15'], 'DBA');
+    assert.equal(calc.statusPorDia['2026-09-17'], 'FOLGA');
+    // DBA não entra como ciclo NxN: só os dois embarques normais.
+    assert.equal(calc.embarques.length, 2);
+    assert.ok(calc.embarques.every((e) => e.data_inicio !== '2026-09-15'));
+    assert.equal(calc.embarques[0].dias_folga_real, 8);
+    assert.equal(calc.embarques[0].dias_fi_deficit, 6);
+    assert.ok(calc.embarques[0].alertas.some((a) => a.includes('6 FI')));
+  });
+
+  it('DBA sem embarque posterior: folga em andamento, sem FI, FOLGA não pinta sobre DBA', () => {
+    const calc = calcularFechamentoColaborador(
+      ESCALA_14,
+      [
+        { tipo: 'normal', data_embarque: '2026-09-01', data_desembarque: '2026-09-14' },
+        { tipo: 'dba', data_embarque: '2026-09-15', data_desembarque: '2026-09-16' },
+      ],
+      [],
+      SETEMBRO,
+    );
+    assert.equal(calc.dias_fi, 0);
+    assert.equal(calc.dias_fi_deficit, 0);
+    assert.equal(calc.dias_dba, 2);
+    assert.equal(calc.dias_folga, 12); // 17–28/set; 15-16 continuam DBA
+    assert.equal(calc.statusPorDia['2026-09-15'], 'DBA');
+    assert.equal(calc.statusPorDia['2026-09-16'], 'DBA');
+    assert.equal(calc.statusPorDia['2026-09-17'], 'FOLGA');
+    assert.equal(calc.embarques.length, 1);
+    assert.equal(calc.embarques[0].dias_fi_deficit, 0);
+  });
+
+  it('DBA explícita isolada: sem ciclo, sem FI e sem janela de folga fantasma', () => {
+    const calc = calcularFechamentoColaborador(
+      ESCALA_14,
+      [{ tipo: 'dba', data_embarque: '2026-09-15', data_desembarque: '2026-09-16' }],
+      [],
+      SETEMBRO,
+    );
+    assert.equal(calc.dias_dba, 2);
+    assert.equal(calc.dias_fi, 0);
+    assert.equal(calc.dias_fi_deficit, 0);
+    assert.equal(calc.dias_folga, 0);
+    assert.equal(calc.embarques.length, 0);
+    assert.equal(calc.statusPorDia['2026-09-15'], 'DBA');
+    assert.equal(calc.statusPorDia['2026-09-16'], 'DBA');
+    assert.equal(calc.statusPorDia['2026-09-17'], undefined);
+    assert.equal(calc.statusPorDia['2026-09-30'], undefined);
+  });
+
+  it('DBA fora do período: janela de folga cross-month não conta o dia como folga', () => {
+    // Ciclo 15–28/set; próximo embarque 10/out; DBA explícito 01–02/out
+    // (FORA do período setembro). Janela 29/set–09/out = 11 dias, 2 de DBA
+    // (01-02/out) → folga realizada 9 → déficit 14−9 = 5.
+    const calc = calcularFechamentoColaborador(
+      ESCALA_14,
+      [
+        { tipo: 'normal', data_embarque: '2026-09-15', data_desembarque: '2026-09-28' },
+        { tipo: 'dba', data_embarque: '2026-10-01', data_desembarque: '2026-10-02' },
+        { tipo: 'normal', data_embarque: '2026-10-10', data_desembarque: '2026-10-23' },
+      ],
+      [],
+      SETEMBRO,
+    );
+    assert.equal(calc.embarques.length, 1);
+    assert.equal(calc.embarques[0].dias_folga_real, 9);
+    assert.equal(calc.embarques[0].dias_fi_deficit, 5);
+    assert.equal(calc.dias_fi, 5);
+    assert.equal(calc.dias_fi_deficit, 5);
+  });
+});
+
 describe('ymdFromDate', () => {
   it('formats local civil date', () => {
     assert.equal(ymdFromDate(d('2026-09-10')), '2026-09-10');

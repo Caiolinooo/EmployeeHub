@@ -9,6 +9,7 @@ import { marcarPapeisConformidade } from '@/lib/gestao-tripulantes/validade-civi
 import { montarItensAlerta } from '@/lib/gestao-tripulantes/documentos-alertas';
 import { contarDocsPorStatusPrimario, type DocumentoAgrupavel } from '@/lib/gestao-tripulantes/documento-historico';
 import { overlayStatusEscalaHoje } from '@/lib/gestao-tripulantes/dashboard-service';
+import { derivarDatasEscala, type EventoEscalaDatasLike } from '@/lib/gestao-tripulantes/embarques-datas';
 
 export const DEFAULT_INCLUDE = [
   'profile',
@@ -339,6 +340,14 @@ export async function loadColaboradorDetail(
   let documentos = (docsRes.data || []) as any[];
   const embarques = ((embRes.data || []) as Record<string, unknown>[]).map(flattenEmbarque);
   const substituicoes = subRes.data || [];
+
+  // Datas de escala derivadas dos eventos vivos — as colunas de gt_colaboradores
+  // congelaram no último pull MIO (desligado na v5.77.0) e a ficha mostrava escala
+  // antiga. Sem eventos derivados (ou include sem 'embarques'), mantém a coluna.
+  const datasEscala = derivarDatasEscala(embarques as unknown as EventoEscalaDatasLike[]);
+  colaborador.data_ultimo_embarque = datasEscala.data_ultimo_embarque ?? colaborador.data_ultimo_embarque;
+  colaborador.data_ultimo_desembarque = datasEscala.data_ultimo_desembarque ?? colaborador.data_ultimo_desembarque;
+  colaborador.data_proximo_embarque = datasEscala.data_proximo_embarque ?? colaborador.data_proximo_embarque;
 
   const asoDocIds = documentos.filter((d) => d.tipo_documento === 'aso').map((d) => d.id);
   const treDocIds = documentos.filter((d) => d.tipo_documento === 'treinamento').map((d) => d.id);

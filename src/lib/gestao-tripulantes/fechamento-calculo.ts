@@ -421,6 +421,27 @@ function clipCount(start: Date, end: Date, period: PeriodoFechamento, predicate:
   return n;
 }
 
+/**
+ * Folga realizada = dias civis da janela menos os dias de DBA explícito dentro
+ * dela: DBA é trabalho extra, não folga — reduz a folga e aumenta o déficit FI.
+ * Usa o conjunto global de dias DBA (não o statusPorDia, que só cobre o
+ * período): DBA em janela que cruza o mês conta igualmente como trabalho.
+ * Demais marcações (STB/FER/AFAST...) NÃO reduzem aqui (mantido: só alertam
+ * via "folga > escala" ou pintam o dia com o próprio status).
+ */
+function contarFolgaRealEfetiva(
+  restStart: Date,
+  restEnd: Date,
+  dbaDays: Set<string>,
+): number {
+  let n = 0;
+  for (const day of eachCivilDay(restStart, restEnd)) {
+    if (dbaDays.has(ymdFromDate(day))) continue;
+    n += 1;
+  }
+  return n;
+}
+
 export function calcularFechamentoColaborador(
   colaborador: CamposEscalaColaborador,
   eventos: EventoEscalaCalculo[],
@@ -435,6 +456,16 @@ export function calcularFechamentoColaborador(
   const { usable, semDtInicio, semDtFim } = normalizarEventos(eventos);
   const days = eachCivilDay(periodStart, periodEnd);
   const statusPorDia: Record<string, StatusDiaFechamento> = {};
+
+  // Dias de DBA explícito (qualquer data, inclusive fora do período): trabalho
+  // dentro da janela de folga de um ciclo nunca conta como folga realizada.
+  const dbaDays = new Set<string>();
+  for (const item of usable) {
+    if (item.codigo !== 'dba') continue;
+    for (const day of eachCivilDay(item.start, item.end)) {
+      dbaDays.add(ymdFromDate(day));
+    }
+  }
 
   for (const day of days) {
     const afast = findAfastamentoDoDia(afastamentos, day);
@@ -455,9 +486,13 @@ export function calcularFechamentoColaborador(
 
   // Colapsa ciclos idênticos (mesmo período e tipo) — linhas duplicadas do
   // mesmo embarque geravam déficit FI fantasma e ciclo NxN repetido por cópia.
+  // DBA explícito é trabalho extra, NÃO é ciclo de rotação: não abre janela de
+  // folga própria e não corta a janela do ciclo anterior (a pintura 'DBA' no
+  // statusPorDia já aconteceu no loop de dias via statusDeEvento).
   const seenCiclos = new Set<string>();
   const aBordo = usable.filter((item) => {
     if (!item.aBordo) return false;
+    if (item.codigo === 'dba') return false;
     const key = `${item.start.getTime()}|${item.end.getTime()}|${item.codigo}`;
     if (seenCiclos.has(key)) return false;
     seenCiclos.add(key);
@@ -481,9 +516,9 @@ export function calcularFechamentoColaborador(
 
     const diasTotais = daysInclusive(cur.start, cur.end);
     const aplica = escala.aplicaDobraAutomatica && escala.diasEmbarque > 0;
-    const dbaFull = cur.codigo === 'dba'
-      ? diasTotais
-      : (aplica ? Math.max(0, diasTotais - escala.diasEmbarque) : 0);
+    // DBA explícito não chega aqui como ciclo (filtrado em aBordo); o único
+    // caminho de dobra de ciclo é o excedente da escala (dobra automática).
+    const dbaFull = aplica ? Math.max(0, diasTotais - escala.diasEmbarque) : 0;
     const onFull = diasTotais - dbaFull;
 
     const restStart = addCivilDays(cur.end, 1);
@@ -491,10 +526,12 @@ export function calcularFechamentoColaborador(
     let restActual = 0;
     if (next) {
       restEnd = addCivilDays(next.start, -1);
-      restActual = restEnd.getTime() >= restStart.getTime() ? daysInclusive(restStart, restEnd) : 0;
+      restActual = restEnd.getTime() >= restStart.getTime()
+        ? contarFolgaRealEfetiva(restStart, restEnd, dbaDays)
+        : 0;
     } else if (escala.diasFolga > 0) {
       restEnd = addCivilDays(cur.end, escala.diasFolga);
-      restActual = daysInclusive(restStart, restEnd);
+      restActual = contarFolgaRealEfetiva(restStart, restEnd, dbaDays);
     }
 
     const fiDeficit = aplica && escala.diasFolga > 0 && next

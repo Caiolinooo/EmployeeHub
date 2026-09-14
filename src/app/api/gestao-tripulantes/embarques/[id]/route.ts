@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { mapCodigoToDbTipo } from '@/lib/gestao-tripulantes/escala-tipos';
 import { invalidateManScheduleCache } from '@/lib/gestao-tripulantes/man-schedule-cache';
+import { sincronizarDatasEscalaColaborador } from '@/lib/gestao-tripulantes/embarques-datas-sync';
 
 export const dynamic = 'force-dynamic';
 
@@ -155,6 +156,11 @@ export async function PUT(
     }
 
     invalidateManScheduleCache();
+    // Datas de escala (último embarque/desembarque, próximo) voltam a acompanhar
+    // os eventos — pull MIO desligado. Best-effort: nunca falha a requisição.
+    await sincronizarDatasEscalaColaborador(
+      (existing as { colaborador_id?: string }).colaborador_id ?? null
+    );
     return NextResponse.json({ success: true, data, substituidos });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erro interno do servidor';
@@ -175,7 +181,7 @@ export async function DELETE(
 
     const { data: existing, error: findErr } = await supabaseAdmin
       .from('gt_historico_embarques')
-      .select('id, origem, deleted_at')
+      .select('id, origem, deleted_at, colaborador_id')
       .eq('id', id)
       .maybeSingle();
 
@@ -197,6 +203,11 @@ export async function DELETE(
     }
 
     invalidateManScheduleCache();
+    // Soft-delete confirmado acima (update em deleted_at): recalcula as datas de
+    // escala com as linhas vivas restantes. Best-effort: nunca falha a requisição.
+    await sincronizarDatasEscalaColaborador(
+      (existing as { colaborador_id?: string }).colaborador_id ?? null
+    );
     return NextResponse.json({ success: true, message: 'Evento de escala removido com sucesso.' });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erro interno do servidor';

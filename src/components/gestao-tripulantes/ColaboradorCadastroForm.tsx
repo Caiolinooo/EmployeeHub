@@ -15,6 +15,8 @@ import {
   escalaDiasParaForm,
   inferRegimeUi,
   isRegimeSemRotacao,
+  parseNxNPair,
+  parseRegimeTrabalho,
   persistirCamposEscala,
 } from '@/lib/gestao-tripulantes/regime-escala';
 import { formatCpf, isValidCpf } from '@/lib/utils/identity';
@@ -536,10 +538,16 @@ export default function ColaboradorCadastroForm({
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                   value={form.regime_trabalho == null ? '' : String(form.regime_trabalho)}
                   onChange={e => {
+                    // Trocar de regime substitui o par de dias já digitado pelo
+                    // default do regime (sem rotação zera os dois campos); o
+                    // usuário ainda pode ajustar os dias depois.
+                    const regimeSelecionado = e.target.value || null;
+                    const regimeConhecido = parseRegimeTrabalho(regimeSelecionado);
+                    const parRegime = regimeConhecido ? parseNxNPair(regimeConhecido) : null;
                     const persistido = persistirCamposEscala({
-                      regime_trabalho: e.target.value || null,
-                      escala_embarque: form.escala_embarque as string | number | null,
-                      escala_folga: form.escala_folga as string | number | null,
+                      regime_trabalho: regimeSelecionado,
+                      escala_embarque: parRegime ? parRegime[0] : form.escala_embarque as string | number | null,
+                      escala_folga: parRegime ? parRegime[1] : form.escala_folga as string | number | null,
                     });
                     setForm(p => ({
                       ...p,

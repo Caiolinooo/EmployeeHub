@@ -4,6 +4,7 @@ import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { mapCodigoToDbTipo } from '@/lib/gestao-tripulantes/escala-tipos';
 import { findColaboradorByCpf } from '@/lib/gestao-tripulantes/cpf-lookup';
 import { invalidateManScheduleCache } from '@/lib/gestao-tripulantes/man-schedule-cache';
+import { sincronizarDatasEscalaColaborador } from '@/lib/gestao-tripulantes/embarques-datas-sync';
 
 export const dynamic = 'force-dynamic';
 
@@ -160,6 +161,9 @@ export async function POST(request: NextRequest) {
     }
 
     invalidateManScheduleCache();
+    // Datas de escala (último embarque/desembarque, próximo) voltam a acompanhar
+    // os eventos — pull MIO desligado. Best-effort: nunca falha a requisição.
+    await sincronizarDatasEscalaColaborador(colab.id);
     return NextResponse.json({ success: true, data, merged, substituidos });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erro interno do servidor';

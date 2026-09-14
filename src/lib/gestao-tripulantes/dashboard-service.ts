@@ -16,8 +16,8 @@ import {
   somarDocsPorStatusPrimario,
   type DocumentoAgrupavel,
 } from '@/lib/gestao-tripulantes/documento-historico';
+import { PAGE_SIZE, paginarSelect } from '@/lib/gestao-tripulantes/supabase-paginacao';
 
-const PAGE_SIZE = 1000;
 const DOC_IN_CHUNK = 120;
 const COLAB_ID_IN_LIMIT = 120;
 
@@ -66,22 +66,6 @@ export async function listarColaboradoresDashboardAtivos(): Promise<{
   };
 }
 
-async function paginarSelect<T>(
-  fetchPage: (from: number, to: number) => Promise<{ data: T[] | null; error: { message: string } | null }>,
-): Promise<{ rows: T[]; error?: string }> {
-  const rows: T[] = [];
-  let from = 0;
-  while (true) {
-    const { data, error } = await fetchPage(from, from + PAGE_SIZE - 1);
-    if (error) return { rows, error: error.message };
-    const page = data || [];
-    rows.push(...page);
-    if (page.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
-  }
-  return { rows };
-}
-
 export interface ListarStatusEscalaHojeOptions {
   colaboradorIds?: string[];
   fallbackById?: Map<string, string | null>;
@@ -124,7 +108,8 @@ export async function listarStatusEscalaHoje(
         .from('gt_historico_embarques')
         .select('id, colaborador_id, tipo, data_embarque, data_desembarque, data_prevista_desembarque, observacoes')
         .is('deleted_at', null)
-        .lte('data_embarque', hoje);
+        .lte('data_embarque', hoje)
+        .order('id');
       if (idList) q = q.in('colaborador_id', idList);
       const r = await q.range(from, to);
       return {
@@ -152,7 +137,8 @@ export async function listarStatusEscalaHoje(
       let q = supabaseAdmin
         .from('gt_afastamentos')
         .select('id, colaborador_id, tipo_afastamento, data_inicio, data_fim, data_prevista_retorno, motivo')
-        .is('deleted_at', null);
+        .is('deleted_at', null)
+        .order('id');
       if (idList) q = q.in('colaborador_id', idList);
       const r = await q.range(from, to);
       return {

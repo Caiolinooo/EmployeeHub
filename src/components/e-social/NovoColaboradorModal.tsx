@@ -392,8 +392,8 @@ export default function NovoColaboradorModal({ isOpen, onClose, onSuccess }: Pro
               <div>{label('Categoria do Contrato')}{input('categoria_contrato')}</div>
               <div>{label('Tipo de Trabalho')}{input('tipo_trabalho')}</div>
               <div>{label('Tipo de Mão de Obra')}{input('tipo_mao_de_obra')}</div>
-              <div>{label('Escala Embarque')}{input('escala_embarque', { placeholder: 'Ex: 14x21' })}</div>
-              <div>{label('Escala Folga')}{input('escala_folga', { placeholder: 'Ex: 21x14' })}</div>
+              <div>{label('Escala Embarque')}{input('escala_embarque', { placeholder: 'Ex: 14' })}</div>
+              <div>{label('Escala Folga')}{input('escala_folga', { placeholder: 'Ex: 14' })}</div>
               <div>{label('Jornada Semanal (Horas)')}{input('jornada_semanal')}</div>
               <div>{label('Jornada Mensal (Horas)')}{input('jornada_mensal')}</div>
               <div>{label('Status de Embarque')}{select('status_embarque', ['embarcado','standby','folga','desembarcado','afastado','ferias','treinamento'])}</div>

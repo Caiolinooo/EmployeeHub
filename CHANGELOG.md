@@ -1,5 +1,14 @@
 # Changelog
 
+## [5.78.0] - 2026-09-14
+
+### 💰 Fechamento DP: DBA/FI sobre 100% dos dados; ficha do colaborador mostra a escala real
+
+1. **Totais de DBA/FI agora cobrem todos os embarques**: o gerador do relatório mensal lia `gt_historico_embarques` sem paginação — o PostgREST trunca em 1000 linhas e o preview/XLSX/aprovação/painel DP calculavam sobre um subconjunto arbitrário (a tabela já passou de 2800 linhas vivas, com viés contra as marcações recentes). É a mesma correção da v5.77.1, agora no fechamento: helper extraído para `supabase-paginacao.ts` com `.order('id')` determinístico, `dashboard-service` migrado para o helper, e erro de banco agora interrompe o relatório em vez de gerar totais de subconjunto em silêncio.
+2. **Dobra explícita não infla mais a Folga Indenizada (pagaria dobrado)**: evento DBA marcado na grade era tratado como ciclo de rotação — zerava a folga do ciclo anterior e abria janela de folga própria (cenário real: 6 FI viravam 20). Agora DBA é trabalho extra: não é ciclo, reduz a folga realizada e o dia de DBA dentro da folga conta como folga faltante (regra confirmada pelo DP: 8 dias folgados + 2 DBA = 6 FI + 2 DBA). Válida também para janelas que cruzam o mês e para os tipos legados `dobra`/`folga_indenizada`.
+3. **Ficha do colaborador deixa de mostrar escala antiga**: `último embarque`/`último desembarque`/`próximo embarque` eram lidos de colunas de `gt_colaboradores` congeladas no último pull MIO (desligado na v5.77.0). A ficha agora deriva as datas dos eventos vivos de `gt_historico_embarques` (fonte canônica) e cada save/edição/exclusão de embarque ressincroniza as colunas — o que também corrige a senioridade do algoritmo de BACK.
+4. **Cadastros e histórico corrigidos**: trocar o regime no cadastro (ex.: 14x14 → 28x28) agora preenche os dias do par escolhido (antes mantinha 14/14 silenciosamente e a ficha continuava "antiga"); regimes sem rotação zeram os dias. Cards "Dobras"/"Folgas Indenizadas" do histórico passam a contar as gravações novas (`dba`/`fi`), as datas do histórico não mostram mais véspera no fuso BRT e o cadastro e-Social aceita "14x21" nos campos de escala sem erro 400.
+
 ## [5.77.1] - 2026-09-14
 
 ### 🗓️ Man Schedule: a causa real do "não marca alterações" — truncamento de 1000 linhas

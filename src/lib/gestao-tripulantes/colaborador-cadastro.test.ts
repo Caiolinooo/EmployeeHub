@@ -111,4 +111,37 @@ describe('montarPayloadCadastro', () => {
     assert.equal(result.ok, false);
     if (!result.ok) assert.match(result.error, /salario/);
   });
+
+  it('e-Social: escala NxN "14x21" extrai o primeiro inteiro em vez de falhar', () => {
+    const result = montarPayloadCadastro({
+      nome_completo: 'Ana Silva',
+      cpf: CPF_OK,
+      escala_embarque: '14x21',
+      escala_folga: '21x14',
+    }, 'create');
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.equal(result.data.escala_embarque, 14);
+    assert.equal(result.data.escala_folga, 21);
+  });
+
+  it('e-Social: variantes de separador e número puro continuam válidos', () => {
+    const barra = montarPayloadCadastro({ escala_embarque: '14 / 21' }, 'update');
+    assert.equal(barra.ok, true);
+    if (barra.ok) assert.equal(barra.data.escala_embarque, 14);
+
+    const doisDigitos = montarPayloadCadastro({ escala_folga: '28X28' }, 'update');
+    assert.equal(doisDigitos.ok, true);
+    if (doisDigitos.ok) assert.equal(doisDigitos.data.escala_folga, 28);
+
+    const puro = montarPayloadCadastro({ escala_embarque: 21 }, 'update');
+    assert.equal(puro.ok, true);
+    if (puro.ok) assert.equal(puro.data.escala_embarque, 21);
+  });
+
+  it('e-Social: texto sem inteiro inicial continua rejeitado', () => {
+    const result = montarPayloadCadastro({ escala_embarque: 'quatorze x vinte e um' }, 'update');
+    assert.equal(result.ok, false);
+    if (!result.ok) assert.match(result.error, /escala_embarque/);
+  });
 });

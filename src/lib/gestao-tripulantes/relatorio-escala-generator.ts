@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import { normalizeCpf } from '@/lib/gestao-tripulantes/escala-tipos';
 import { extractEscalaDias } from '@/lib/gestao-tripulantes/regime-escala';
+import { paginarSelect } from '@/lib/gestao-tripulantes/supabase-paginacao';
 import {
   calcularFechamentoColaborador,
   montarRubricasFolha,
@@ -106,6 +107,44 @@ function labelCheck(ok: boolean): string {
   return ok ? 'OK' : 'ALERTA';
 }
 
+interface ColabRelatorioRow {
+  id: string;
+  cpf: string | null;
+  nome_completo: string | null;
+  matricula: string | null;
+  ativo: boolean | null;
+  escala_embarque: number | string | null;
+  escala_folga: number | string | null;
+  regime_trabalho: string | null;
+  cargo: unknown;
+  empresa: unknown;
+  embarcacao_atual: unknown;
+  centro_custo: unknown;
+}
+
+interface EmbarqueRelatorioRow {
+  id: string;
+  colaborador_id: string;
+  tipo: string | null;
+  data_embarque: string | null;
+  data_desembarque: string | null;
+  data_prevista_desembarque: string | null;
+  local_embarque: string | null;
+  local_desembarque: string | null;
+  observacoes: string | null;
+  origem: string | null;
+}
+
+interface AfastamentoRelatorioRow {
+  id: string;
+  colaborador_id: string;
+  tipo_afastamento: string | null;
+  data_inicio: string | null;
+  data_fim: string | null;
+  data_prevista_retorno: string | null;
+  motivo: string | null;
+}
+
 export async function gerarRelatorioEscalaMensal(
   options: RelatorioEscalaOptions = {},
 ): Promise<RelatorioEscalaResult> {
@@ -157,35 +196,56 @@ export async function gerarRelatorioEscalaMensal(
     curWeek.setDate(curWeek.getDate() + 7);
   }
 
-  const [{ data: colabs }, { data: embarques }, { data: afastamentosRows }] = await Promise.all([
-    supabaseAdmin
-      .from('gt_colaboradores')
-      .select(`
-        id, cpf, nome_completo, matricula, ativo, escala_embarque, escala_folga, regime_trabalho,
-        cargo:gt_cargos(nome),
-        empresa:gt_empresas(nome),
-        embarcacao_atual:gt_embarcacoes!embarcacao_atual_id(nome),
-        centro_custo:gt_centros_custo(codigo, nome)
-      `)
-      .is('deleted_at', null)
-      .order('nome_completo'),
-    supabaseAdmin
-      .from('gt_historico_embarques')
-      .select(`
-        id, colaborador_id, tipo, data_embarque, data_desembarque,
-        data_prevista_desembarque, local_embarque, local_desembarque,
-        observacoes, origem
-      `)
-      .is('deleted_at', null),
-    supabaseAdmin
-      .from('gt_afastamentos')
-      .select('id, colaborador_id, tipo_afastamento, data_inicio, data_fim, data_prevista_retorno, motivo')
-      .is('deleted_at', null),
+  // PostgREST trunca em 1000 linhas (db-max-rows=1000): paginar tudo e ordenar
+  // por coluna estável para páginas determinísticas.
+  const [colabsRes, embarquesRes, afastamentosRes] = await Promise.all([
+    paginarSelect<ColabRelatorioRow>(async (from, to) => {
+      const r = await supabaseAdmin
+        .from('gt_colaboradores')
+        .select(`
+          id, cpf, nome_completo, matricula, ativo, escala_embarque, escala_folga, regime_trabalho,
+          cargo:gt_cargos(nome),
+          empresa:gt_empresas(nome),
+          embarcacao_atual:gt_embarcacoes!embarcacao_atual_id(nome),
+          centro_custo:gt_centros_custo(codigo, nome)
+        `)
+        .is('deleted_at', null)
+        .order('nome_completo')
+        .order('id')
+        .range(from, to);
+      return { data: r.data, error: r.error };
+    }),
+    paginarSelect<EmbarqueRelatorioRow>(async (from, to) => {
+      const r = await supabaseAdmin
+        .from('gt_historico_embarques')
+        .select(`
+          id, colaborador_id, tipo, data_embarque, data_desembarque,
+          data_prevista_desembarque, local_embarque, local_desembarque,
+          observacoes, origem
+        `)
+        .is('deleted_at', null)
+        .order('id')
+        .range(from, to);
+      return { data: r.data, error: r.error };
+    }),
+    paginarSelect<AfastamentoRelatorioRow>(async (from, to) => {
+      const r = await supabaseAdmin
+        .from('gt_afastamentos')
+        .select('id, colaborador_id, tipo_afastamento, data_inicio, data_fim, data_prevista_retorno, motivo')
+        .is('deleted_at', null)
+        .order('id')
+        .range(from, to);
+      return { data: r.data, error: r.error };
+    }),
   ]);
 
-  let colaboradores = colabs || [];
-  const hist = embarques || [];
-  const afastamentos = afastamentosRows || [];
+  if (colabsRes.error) throw new Error(`Erro ao carregar colaboradores: ${colabsRes.error}`);
+  if (embarquesRes.error) throw new Error(`Erro ao carregar embarques: ${embarquesRes.error}`);
+  if (afastamentosRes.error) throw new Error(`Erro ao carregar afastamentos: ${afastamentosRes.error}`);
+
+  let colaboradores = colabsRes.rows;
+  const hist = embarquesRes.rows;
+  const afastamentos = afastamentosRes.rows;
 
   if (options.empresa) {
     const emp = options.empresa.toLowerCase().trim();

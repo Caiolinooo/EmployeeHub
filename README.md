@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.77.1 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.78.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,13 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.78.0)
+
+- **Fechamento calcula DBA/FI sobre 100% dos embarques**: o relatório mensal lia os dados sem paginação e o PostgREST trunca em 1000 linhas — preview, XLSX, aprovação e painel DP calculavam sobre subconjunto arbitrário. Agora pagina (mesma correção do Man Schedule na v5.77.1).
+- **Dobra explícita não paga mais FI dobrada**: evento DBA na grade não vira mais "ciclo" de rotação; dia trabalhado na folga conta como folga faltante (regra confirmada pelo DP).
+- **Ficha do colaborador mostra a escala real**: último/próximo embarque passam a ser derivados dos eventos vivos (as colunas estavam congeladas desde o último pull MIO) e são ressincronizadas a cada save.
+- **Cadastros corrigidos**: trocar o regime preenche os dias da escala escolhida, cards do histórico contam gravações novas e datas não mostram mais véspera no fuso BRT.
 
 ## Nesta versão (5.77.1)
 

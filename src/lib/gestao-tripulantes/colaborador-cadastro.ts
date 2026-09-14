@@ -36,6 +36,8 @@ export const BOOLEAN_COLAB_FIELDS = new Set(['standby', 'ativo']);
 export const NUMBER_COLAB_FIELDS = new Set([
   'peso', 'altura', 'salario', 'escala_embarque', 'escala_folga',
 ]);
+/** Campos de escala NxN: e-Social manda "14x21" — extrai o primeiro inteiro. */
+export const ESCALA_NXN_COLAB_FIELDS = new Set(['escala_embarque', 'escala_folga']);
 export const JSON_COLAB_FIELDS = new Set(['dados_bancarios', 'dados_saude']);
 
 export const MENSAGEM_CADASTRO_NEGADO =
@@ -97,6 +99,12 @@ function coerceField(
 
   if (NUMBER_COLAB_FIELDS.has(key)) {
     if (value == null || value === '') return { ok: true, value: null };
+    if (ESCALA_NXN_COLAB_FIELDS.has(key) && typeof value === 'string') {
+      // e-Social manda o par NxN ("14x21", "14/21", "14:21", "14 - 21"):
+      // extrai o primeiro inteiro em vez de quebrar o cadastro com NaN.
+      const nxn = value.trim().match(/^(\d+)\s*[xX/:\-]\s*\d+$/);
+      if (nxn) return { ok: true, value: parseInt(nxn[1], 10) };
+    }
     const n = Number(value);
     if (Number.isNaN(n)) {
       return { ok: false, error: `Campo ${key} deve ser numérico` };

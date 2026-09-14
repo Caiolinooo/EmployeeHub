@@ -7,6 +7,8 @@ import {
   COLLABORATOR_MODAL_TAB_FILL_CLASS,
   COLLABORATOR_MODAL_TABLE_SCROLL_CLASS,
 } from '@/components/gestao-tripulantes/collaborator-modal-layout';
+import { mapDbTipoToCodigo } from '@/lib/gestao-tripulantes/escala-tipos';
+import { parseCivilDate } from '@/lib/gestao-tripulantes/escala-contagem';
 
 interface Embarkation {
   id: string;
@@ -64,9 +66,14 @@ function durationDays(start: string, end: string | null): string {
 export default function HistoricoEmbarquesTab({ embarques }: Props) {
   const { t } = useI18n();
 
+  // Datas 'YYYY-MM-DD' parseadas como UTC exibem a véspera no fuso BRT; parse civil local.
   const formatDate = (d: string | null | undefined) => {
     if (!d) return '—';
-    try { return new Date(d).toLocaleDateString('pt-BR'); } catch { return d; }
+    const civil = parseCivilDate(d);
+    if (!civil) return d;
+    const dd = String(civil.getDate()).padStart(2, '0');
+    const mm = String(civil.getMonth() + 1).padStart(2, '0');
+    return `${dd}/${mm}/${civil.getFullYear()}`;
   };
 
   if (embarques.length === 0) {
@@ -88,13 +95,13 @@ export default function HistoricoEmbarquesTab({ embarques }: Props) {
         </div>
         <div className="bg-orange-50 rounded-xl p-4 text-center">
           <p className="text-2xl font-bold text-orange-700">
-            {embarques.filter(e => e.tipo === 'dobra').length}
+            {embarques.filter(e => mapDbTipoToCodigo(e.tipo) === 'dba').length}
           </p>
           <p className="text-xs text-orange-600 mt-1">Dobras</p>
         </div>
         <div className="bg-green-50 rounded-xl p-4 text-center">
           <p className="text-2xl font-bold text-green-700">
-            {embarques.filter(e => e.tipo === 'folga_indenizada').length}
+            {embarques.filter(e => mapDbTipoToCodigo(e.tipo) === 'fi').length}
           </p>
           <p className="text-xs text-green-600 mt-1">Folgas Indenizadas</p>
         </div>
