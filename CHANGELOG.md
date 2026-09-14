@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.77.1] - 2026-09-14
+
+### 🗓️ Man Schedule: a causa real do "não marca alterações" — truncamento de 1000 linhas
+
+1. **GET `/api/man-schedule/realtime` pagina as leituras de `gt_historico_embarques`** (e colaboradores/afastamentos). O PostgREST devolve no máximo 1000 linhas por requisição (`db-max-rows`) e trunca em silêncio: com 2825 linhas vivas na tabela, toda marcação nova/alterada ficava no fim do heap e **nunca entrava na resposta** — o save gravava (toast, linha viva no banco), o refetch 1s depois voltava sem a marca e a célula apagava. Reproduzido em produção: resposta sem `fb87c5ab` (marca viva do Sérgio de 17/10→31/10); após o fix, count 1057→2857 e todas as 4 linhas que sumiam presentes. Nenhum dos fixes anteriores (v5.76.0–v5.77.0) podia resolver porque a linha nunca chegava ao browser.
+2. **Paginação determinística**: `.order('id')` antes de `.range(from, to)` em cada página — sem ordenação estável as páginas poderiam pular/duplicar linhas.
+3. **Follow-up (não bloqueia)**: `dashboard-service` e `/api/mio/calendar` também podem ler muitas linhas de embarques sem paginação; contagens por colaborador (fichas, ASO, employee-hub) não são afetadas.
+
 ## [5.77.0] - 2026-09-14
 
 ### 🗓️ Man Schedule: causa raiz do "não marca alterações" + escala 100% local

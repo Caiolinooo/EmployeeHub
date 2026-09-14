@@ -114,6 +114,28 @@ function rotationOverlapsWindow(
     return start <= windowEnd && end >= windowStart;
 }
 
+/**
+ * PostgREST devolve no máximo 1000 linhas por requisição (db-max-rows) e
+ * trunca em silêncio — com 2800+ linhas vivas em gt_historico_embarques, as
+ * mais recentes (toda marcação nova) ficavam de fora da resposta e o grid
+ * apagava a célula 1s depois do save. Pagina até esgotar.
+ */
+async function selectAllPaged<T>(
+    page: (from: number, to: number) => Promise<{ data: T[] | null; error: { message: string } | null }>,
+): Promise<{ data: T[]; error: { message: string } | null }> {
+    const PAGE_SIZE = 1000;
+    const MAX_PAGES = 20; // 20k linhas — folga além de qualquer janela atual
+    const out: T[] = [];
+    for (let i = 0; i < MAX_PAGES; i++) {
+        const from = i * PAGE_SIZE;
+        const { data, error } = await page(from, from + PAGE_SIZE - 1);
+        if (error) return { data: out, error };
+        if (data?.length) out.push(...data);
+        if (!data || data.length < PAGE_SIZE) break;
+    }
+    return { data: out, error: null };
+}
+
 export async function GET(request: NextRequest) {
     const t0 = Date.now();
     try {
@@ -216,36 +238,45 @@ export async function GET(request: NextRequest) {
         const toDate = isAllJanela ? '2099-12-31' : new Date(windowEnd).toISOString().slice(0, 10);
         const lookback = isAllJanela ? '1990-01-01' : new Date(windowStart - 180 * dayMs).toISOString().slice(0, 10);
 
-        let embQuery = supabaseAdmin
-            .from('gt_historico_embarques')
-            .select(`
-                id, colaborador_id, tipo, data_embarque, data_desembarque,
-                data_prevista_desembarque, local_embarque, local_desembarque,
-                observacoes, origem, mio_embarque_id, exibir_dia_inicio
-            `)
-            .is('deleted_at', null);
-
-        if (!isAllJanela) {
-            embQuery = embQuery.gte('data_embarque', lookback).lte('data_embarque', toDate);
-        }
-
         const blobStart = Date.now();
         const [{ data: colabs, error: colErr }, { data: embarques, error: embErr }, { data: afastamentosRows, error: afastErr }] = await Promise.all([
-            supabaseAdmin
-                .from('gt_colaboradores')
-                .select(`
-                    id, cpf, nome_completo, ativo, matricula,
-                    cargo:gt_cargos(nome),
-                    empresa:gt_empresas(nome),
-                    embarcacao_atual:gt_embarcacoes!embarcacao_atual_id(nome),
-                    centro_custo:gt_centros_custo(codigo, nome)
-                `)
-                .is('deleted_at', null),
-            embQuery,
-            supabaseAdmin
-                .from('gt_afastamentos')
-                .select('id, colaborador_id, tipo_afastamento, data_inicio, data_fim, data_prevista_retorno, motivo, observacoes')
-                .is('deleted_at', null),
+            selectAllPaged((from, to) =>
+                supabaseAdmin
+                    .from('gt_colaboradores')
+                    .select(`
+                        id, cpf, nome_completo, ativo, matricula,
+                        cargo:gt_cargos(nome),
+                        empresa:gt_empresas(nome),
+                        embarcacao_atual:gt_embarcacoes!embarcacao_atual_id(nome),
+                        centro_custo:gt_centros_custo(codigo, nome)
+                    `)
+                    .is('deleted_at', null)
+                    .order('id')
+                    .range(from, to)
+            ),
+            selectAllPaged((from, to) => {
+                let embQuery = supabaseAdmin
+                    .from('gt_historico_embarques')
+                    .select(`
+                        id, colaborador_id, tipo, data_embarque, data_desembarque,
+                        data_prevista_desembarque, local_embarque, local_desembarque,
+                        observacoes, origem, mio_embarque_id, exibir_dia_inicio
+                    `)
+                    .is('deleted_at', null)
+                    .order('id');
+                if (!isAllJanela) {
+                    embQuery = embQuery.gte('data_embarque', lookback).lte('data_embarque', toDate);
+                }
+                return embQuery.range(from, to);
+            }),
+            selectAllPaged((from, to) =>
+                supabaseAdmin
+                    .from('gt_afastamentos')
+                    .select('id, colaborador_id, tipo_afastamento, data_inicio, data_fim, data_prevista_retorno, motivo, observacoes')
+                    .is('deleted_at', null)
+                    .order('id')
+                    .range(from, to)
+            ),
         ]);
         timings.blobRead = Date.now() - blobStart;
 
