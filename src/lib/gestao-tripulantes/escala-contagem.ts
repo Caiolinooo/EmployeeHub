@@ -8,9 +8,12 @@ export interface RotationLike {
   start: string | null;
   end: string | null;
   type: string;
-  /** 'local' = lançamento manual; beats 'mio' on exact ties (same start date). */
+  /** 'local' = lançamento manual; vence QUALQUER 'mio' sobreposta (portal é a única verdade). */
   origem?: string | null;
 }
+
+/** Bônus de origem='local': precisa superar o maior termo de data (99991231×10). */
+const LOCAL_DOMINANCE = 1_000_000_000;
 
 export function parseCivilDate(str: string | null | undefined): Date | null {
   if (!str || typeof str !== 'string' || str.trim() === '') return null;
@@ -55,10 +58,11 @@ export function rotationOverlapsPeriod(
 }
 
 /**
- * Among overlapping events, prefer: starts in this column, then the latest
- * start date (the new launch), then a more specific type, then the manual
- * launch (origem='local' — the operator's adjustment must stay visible over
- * the MIO row it overrides), then persisted id.
+ * Among overlapping events, prefer the manual launch (origem='local' — o
+ * lançamento do operador é a única verdade e vence qualquer linha MIO,
+ * independente de quem começa antes/depois), então: starts in this column,
+ * latest start date (desempate entre linhas da mesma origem), tipo mais
+ * específico, id persistido.
  */
 export function pickOverlappingRotation(
   rotations: RotationLike[],
@@ -74,10 +78,10 @@ export function pickOverlappingRotation(
     if (!rStart) continue;
     const startsInPeriod = rStart >= periodStart && rStart <= periodEnd;
     const score =
+      (r.origem === 'local' ? LOCAL_DOMINANCE : 0) +
       (startsInPeriod ? 1_000_000 : 0) +
       civilYmdNumber(r.start) * 10 +
       (isSpecificTipo(r.type) ? 5 : 0) +
-      (r.origem === 'local' ? 6 : 0) +
       (r.id ? 1 : 0);
     if (score > bestScore) {
       bestScore = score;

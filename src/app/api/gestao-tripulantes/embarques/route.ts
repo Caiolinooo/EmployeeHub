@@ -77,13 +77,15 @@ export async function POST(request: NextRequest) {
     const embIni = dia(data_embarque);
     const embFim = dia(data_desembarque);
 
+    // Sobreposição inclui linhas "abertas" (data_desembarque NULL — rotação MIO
+    // em andamento): gte nunca casa NULL em SQL, então or(is.null, gte).
     const { data: sobrepostos, error: ovErr } = await supabaseAdmin
       .from('gt_historico_embarques')
       .select('id, tipo, data_embarque, data_desembarque, created_at')
       .eq('colaborador_id', colab.id)
       .is('deleted_at', null)
       .lte('data_embarque', embFim)
-      .gte('data_desembarque', embIni)
+      .or(`data_desembarque.is.null,data_desembarque.gte.${embIni}`)
       .order('created_at', { ascending: false });
 
     if (ovErr) {

@@ -565,9 +565,15 @@ MIO API → POST /api/mio/cache/atualizar (poll 15s) → mio_cache table → GET
 - Múltiplos tipos → retorno agrupado `{ data: { integrantes: {...}, lgp_reports: {...} } }`
 
 ### Module Integration
-- **Man Schedule** (`/api/man-schedule/realtime`): lê de `mio_cache` em vez de chamar MIO direto
+- **Man Schedule** (`/api/man-schedule/realtime`): lê **`gt_historico_embarques`** (fonte canônica; nunca blobs do `mio_cache` no caminho da requisição)
 - **Logística / E-social**: continuam usando `gt_vw_colaboradores_completo` (alimentado pelo `syncFromMIO`)
 - Novos módulos: ler do cache via `GET /api/mio/cache`
+
+### Escala: portal é a única fonte de verdade (2026-09-14)
+- **Importação de escala do MIO ENCERRADA**: `syncEmbarquesFromMIO` é no-op — nenhum pull (cron `0 3 * * *`, botões admin, rotas manuais) grava em `gt_historico_embarques`. Linhas já importadas (`origem='mio'`) permanecem intactas; edição/exclusão local nunca é revertida.
+- Único escritor de `gt_historico_embarques`: as rotas do módulo (`POST/PUT/DELETE /api/gestao-tripulantes/embarques`). Save local vence qualquer sobreposição — inclusive linhas abertas (`data_desembarque NULL`, tratadas via `or(is.null, gte)`).
+- Na pintura do grid (`pickOverlappingRotation`), `origem='local'` domina qualquer linha `mio`, independente da data de início.
+- **Consequência aceita**: `gt_colaboradores.data_ultimo_embarque`/`data_ultimo_desembarque` eram atualizados pelo pull MIO e agora congelam no valor do último pull (`status_embarque` não sofre — é sobreposto ao vivo por `aplicarStatusEscalaHoje`). Atualizar essas colunas no save local é follow-up.
 
 ### Frontend Polling
 - Hook `useMIOData(tipo)` com SWR + `refreshInterval: 15000`

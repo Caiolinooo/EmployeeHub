@@ -1,5 +1,15 @@
 # Changelog
 
+## [5.77.0] - 2026-09-14
+
+### 🗓️ Man Schedule: causa raiz do "não marca alterações" + escala 100% local
+
+1. **Refetch pós-save não desfaz mais a marcação**: cada save/delete inicia uma nova geração de refetch — a resposta antiga em voo (snapshot pré-save) não sobrescreve mais o estado otimista nem contamina o cache de 60s do módulo. Era a causa primária do "salvei, apareceu o toast e a célula voltou vazia".
+2. **Portal é a única fonte de verdade da escala**: importação de escala do MIO encerrada — `syncEmbarquesFromMIO` é no-op (cron 03:00 UTC, botões admin e rotas manuais não gravam mais em `gt_historico_embarques`). Linhas já importadas permanecem intactas; edição/exclusão local nunca é revertida.
+3. **Substituição cobre eventos "abertos"**: sobrepostos com `data_desembarque` NULL (rotação MIO em andamento) agora entram na substituição do save (`or(is.null, gte)` no POST e no PUT) — antes escapavam da query de sobreposição e sombreavam a marcação nova indefinidamente.
+4. **Lançamento local domina a pintura**: no grid, `origem='local'` vence qualquer MIO sobreposta, independente de quem começa antes/depois (antes o termo "início mais recente ×10" vencia o bônus +6 do local e a marcação gravada nunca era pintada). Testes de regressão em `escala-contagem.test.ts` (5 casos).
+5. **Docs corrigidos**: CLAUDE.md dizia que o `/api/man-schedule/realtime` lia `mio_cache` — na verdade lê `gt_historico_embarques`; a documentação errada tinha guiado as duas tentativas de fix anteriores (v5.76.1/v5.76.2) para a camada errada.
+
 ## [5.76.2] - 2026-09-11
 
 ### 🗓️ Man Schedule: grade pula para o mês do evento salvo

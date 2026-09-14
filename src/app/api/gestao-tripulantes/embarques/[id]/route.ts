@@ -129,14 +129,19 @@ export async function PUT(
     // saem (soft-delete; o pull MIO preserva exclusões locais).
     const ini = String((data as { data_embarque?: string }).data_embarque || '').slice(0, 10);
     const fim = String((data as { data_desembarque?: string }).data_desembarque || '').slice(0, 10);
-    const { data: sobrepostos } = await supabaseAdmin
+    // Mesma regra do POST: linhas abertas (data_desembarque NULL) também
+    // sobrepõem — gte nunca casa NULL em SQL.
+    const { data: sobrepostos, error: ovErr } = await supabaseAdmin
       .from('gt_historico_embarques')
       .select('id, tipo, data_embarque, data_desembarque')
       .eq('colaborador_id', (existing as { colaborador_id?: string }).colaborador_id ?? '')
       .is('deleted_at', null)
       .neq('id', id)
       .lte('data_embarque', fim)
-      .gte('data_desembarque', ini);
+      .or(`data_desembarque.is.null,data_desembarque.gte.${ini}`);
+    if (ovErr) {
+      console.error('Erro ao verificar sobrepostos de embarque (PUT):', ovErr);
+    }
 
     let substituidos: Array<{ id: string; tipo: string; data_embarque: string; data_desembarque: string }> = [];
     const ids = (sobrepostos || []).map((r) => r.id);

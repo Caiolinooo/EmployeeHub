@@ -354,8 +354,9 @@ function parseLocalDate(str: string | null | undefined): Date | null {
         wEnd.setDate(wEnd.getDate() + 6);
         wEnd.setHours(23, 59, 59, 999);
 
-        // Mesma regra da aba GT: início na coluna, início mais recente,
-        // tipo específico e lançamento manual (origem='local') vencem empates.
+        // Mesma regra da aba GT: lançamento manual (origem='local') vence
+        // qualquer MIO sobreposta; entre demais, início na coluna, início
+        // mais recente e tipo específico desempatam.
         const bestRot = pickOverlappingRotation(rotations, wStart, wEnd) as ScheduleRotation | null;
 
         if (!bestRot) return { status: '' };

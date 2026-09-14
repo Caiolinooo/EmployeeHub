@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { supabaseAdmin } from '@/lib/supabase';
 import type { GTColaborador, TipoDocumento, TipoExameASO } from '@/types/gestao-tripulantes';
-import type { MIOIntegrante, MIOTreinamento, MIOEmbarque } from '@/types/mio';
+import type { MIOIntegrante, MIOTreinamento } from '@/types/mio';
 import { mioClient } from '@/lib/mio/client';
 import { runMioPull } from '@/lib/mio/pull-context';
 import { v4 as uuidv4 } from 'uuid';
@@ -15,14 +15,8 @@ import {
   marcarAnexoMissResolvido,
   collectMioAnexoUrls,
 } from '@/lib/gestao-tripulantes/mio-file-copy';
-import {
-  detectRotationType,
-  lgpRotationEnd,
-  lgpRotationStart,
-  type RawLGPRecord,
-} from '@/lib/gestao-tripulantes/lgp-rotation';
-import { dataLocalISO } from '@/lib/gestao-tripulantes/aso-vencimentos';
-import { composeLgpObservacoes } from '@/lib/gestao-tripulantes/embarque-status';
+// Importação de escala do MIO desligada (2026-09-14): lgp-rotation, aso-vencimentos
+// e embarque-status deixaram de ser usados aqui quando o pull de embarques virou no-op.
 import {
   mesclarRegimeMio,
   regimeFromMioIntegrante,
@@ -665,197 +659,17 @@ export async function syncEmbarquesFromMIO(): Promise<{
   data?: { importados: number; atualizados: number; ignorados: number; erros: string[]; lgp_range?: unknown };
   error?: string;
 }> {
-  try {
-    const supabase = supabaseAdmin;
-    const lgpRaw = (await mioClient.getLGPReportsRaw()) as RawLGPRecord[];
-
-    if (!lgpRaw || lgpRaw.length === 0) {
-      return { success: false, error: 'Nenhum embarque retornado do MIO' };
-    }
-
-    const byCpf = new Map<string, RawLGPRecord[]>();
-    for (const record of lgpRaw) {
-      const cpf = String(record.CPF || '').replace(/\D/g, '');
-      if (!cpf) continue;
-      const list = byCpf.get(cpf) || [];
-      list.push(record);
-      byCpf.set(cpf, list);
-    }
-
-    let importados = 0;
-    let atualizados = 0;
-    let ignorados = 0;
-    const erros: string[] = [];
-
-    const upsertEmb = async (payload: {
-      colaborador_id: string;
-      tipo: string;
-      data_embarque: string;
-      data_desembarque?: string | null;
-      data_prevista_desembarque?: string | null;
-      local_embarque?: string | null;
-      local_desembarque?: string | null;
-      observacoes?: string | null;
-      mio_embarque_id: string;
-    }) => {
-      const { data: existingEmb } = await supabase
-        .from('gt_historico_embarques')
-        .select('id, origem, deleted_at')
-        .eq('mio_embarque_id', payload.mio_embarque_id)
-        .eq('colaborador_id', payload.colaborador_id)
-        .maybeSingle();
-
-      if (existingEmb?.deleted_at) {
-        // Registro excluído localmente pelo usuário — preservar exclusão
-        return;
-      }
-
-      if (existingEmb?.origem === 'local') {
-        // Registro editado localmente pelo usuário — preservar alterações locais
-        return;
-      }
-
-      const row = {
-        ...payload,
-        origem: 'mio' as const,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (existingEmb) {
-        const { error: updateErr } = await supabase
-          .from('gt_historico_embarques')
-          .update(row)
-          .eq('id', existingEmb.id);
-        if (updateErr) erros.push(`Erro ao atualizar embarque ${payload.mio_embarque_id}: ${updateErr.message}`);
-        else atualizados++;
-      } else {
-        const { error: insertErr } = await supabase.from('gt_historico_embarques').insert(row);
-        if (insertErr) erros.push(`Erro ao importar embarque ${payload.mio_embarque_id}: ${insertErr.message}`);
-        else importados++;
-      }
-    };
-
-    for (const [cpfLimpo, records] of byCpf) {
-      const colaborador = await findColaboradorByCpf(cpfLimpo);
-      if (!colaborador) {
-        ignorados += records.length;
-        continue;
-      }
-
-      const sorted = records.slice().sort((a, b) => {
-        const da = lgpRotationStart(a) || '';
-        const db = lgpRotationStart(b) || '';
-        return da.localeCompare(db);
-      });
-
-      for (let i = 0; i < sorted.length; i++) {
-        try {
-          const record = sorted[i];
-          const next = i + 1 < sorted.length ? sorted[i + 1] : null;
-          const dataEmbarque = cleanDate(lgpRotationStart(record));
-          if (!dataEmbarque) {
-            ignorados++;
-            continue;
-          }
-          const dataDesembarque = cleanDate(record['Desembarque Real'] || lgpRotationEnd(record));
-          const dataPrevista = cleanDate(record['Prev. Desemb. RTPD'] || record['Prev. Desemb.']);
-          const { type, extraPeriods } = detectRotationType(record, next);
-          const nrRtpe = String(record['Nº RTPE'] || '');
-          const mioId = `mio_lgp_${cpfLimpo}_${dataEmbarque}_${nrRtpe || i}`;
-          const embarqueReal = Boolean(record['Embarque Real']);
-          const tipoPrincipal = type === 'normal' && !embarqueReal ? 'previsto' : type;
-          const prevEmb = cleanDate(record['Prev. de Emb.']);
-          const realEmb = cleanDate(record['Embarque Real']);
-
-          await upsertEmb({
-            colaborador_id: colaborador.id,
-            tipo: tipoPrincipal,
-            data_embarque: dataEmbarque,
-            data_desembarque: dataDesembarque,
-            data_prevista_desembarque: dataPrevista,
-            local_embarque: record.Origem || undefined,
-            local_desembarque: record.Destino || undefined,
-            observacoes: composeLgpObservacoes(embarqueReal, record['RTPE Status'] ? String(record['RTPE Status']) : null),
-            mio_embarque_id: mioId,
-          });
-
-          if (prevEmb && realEmb && prevEmb < realEmb) {
-            await upsertEmb({
-              colaborador_id: colaborador.id,
-              tipo: 'previsto',
-              data_embarque: prevEmb,
-              data_desembarque: realEmb,
-              local_embarque: record.Origem || undefined,
-              local_desembarque: record.Destino || undefined,
-              observacoes: composeLgpObservacoes(false, record['RTPE Status'] ? String(record['RTPE Status']) : null),
-              mio_embarque_id: `${mioId}_previsto_${prevEmb}`,
-            });
-          }
-
-          for (const extra of extraPeriods) {
-            if (!extra.start) continue;
-            await upsertEmb({
-              colaborador_id: colaborador.id,
-              tipo: extra.type,
-              data_embarque: extra.start,
-              data_desembarque: extra.end || undefined,
-              local_embarque: record.Origem || undefined,
-              local_desembarque: record.Destino || undefined,
-              observacoes: `LGP extra ${extra.type} from ${mioId}`,
-              mio_embarque_id: `${mioId}_${extra.type}_${extra.start}`,
-            });
-          }
-        } catch (err) {
-          erros.push(`Erro ao processar embarque CPF ${cpfLimpo}: ${err}`);
-        }
-      }
-
-      const hojeIso = dataLocalISO();
-      let statusAtual: 'embarcado' | 'folga' | 'desembarcado' = 'desembarcado';
-      let ultimoEmb: string | undefined;
-      let ultimoDes: string | undefined;
-      for (const record of sorted) {
-        const realEmb = cleanDate(record['Embarque Real']);
-        const realDes = cleanDate(record['Desembarque Real']);
-        const start = cleanDate(lgpRotationStart(record));
-        if (!start || start > hojeIso) continue;
-        if (realEmb && realEmb <= hojeIso && (!realDes || realDes > hojeIso)) {
-          statusAtual = 'embarcado';
-          ultimoEmb = realEmb;
-        } else if (realDes && realDes <= hojeIso) {
-          statusAtual = 'folga';
-          ultimoDes = realDes;
-        }
-      }
-      const statusPatch: Record<string, unknown> = {
-        status_embarque: statusAtual,
-        standby: false,
-        updated_at: new Date().toISOString(),
-      };
-      if (ultimoEmb) statusPatch.data_ultimo_embarque = ultimoEmb;
-      if (ultimoDes) statusPatch.data_ultimo_desembarque = ultimoDes;
-      await supabase.from('gt_colaboradores').update(statusPatch).eq('id', colaborador.id);
-    }
-
-    await persistMioCacheRow('lgp_reports', lgpRaw);
-
-    return {
-      success: true,
-      data: {
-        importados,
-        atualizados,
-        ignorados,
-        erros,
-        lgp_range: mioClient.lastLgpRange,
-      },
-    };
-  } catch (error) {
-    console.error('Erro em syncEmbarquesFromMIO:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Erro desconhecido',
-    };
-  }
+  // Importação de escala ENCERRADA (decisão 2026-09-14): o portal é a única
+  // fonte de verdade de gt_historico_embarques. Linhas já importadas do MIO
+  // permanecem intactas; nenhum pull (cron 03:00 UTC, botões admin, rotas
+  // manuais) grava mais embarques — edição/exclusão local nunca é revertida.
+  console.info(
+    '[MIO] syncEmbarquesFromMIO desligado: portal é a única fonte de verdade de gt_historico_embarques (dados existentes preservados).'
+  );
+  return {
+    success: true,
+    data: { importados: 0, atualizados: 0, ignorados: 0, erros: [] },
+  };
 }
 
 export async function syncToMIO(): Promise<{

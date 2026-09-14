@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.76.2 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.77.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,12 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.77.0)
+
+- **"Não marca alterações" resolvido na causa raiz**: o refetch que roda após o save não descarta mais a marcação com resposta antiga em voo, e o cache de 60s do módulo não guarda mais dado pré-save.
+- **Escala 100% local**: importação de escala do MIO desligada — os dados já importados são mantidos e a escrita do portal é a única verdade; nada reverte edição ou exclusão local.
+- **Eventos "abertos" (sem data de desembarque) são substituídos pelo save**, e a marcação local vence qualquer sobreposição na pintura do grid.
 
 ## Nesta versão (5.76.1)
 

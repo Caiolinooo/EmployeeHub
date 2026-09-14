@@ -245,6 +245,10 @@ function cellPeriodTooltip(viewport: ScheduleViewport, formattedDate: string): s
 const SCHEDULE_CACHE_TTL_MS = 60_000;
 let scheduleCache: { fetchedAt: number; data: CrewSchedule[] } | null = null;
 let scheduleInflight: Promise<CrewSchedule[]> | null = null;
+// Geração do refetch: cada force (pós-save/delete) invalida respostas antigas
+// em voo — sem isso o GET anterior (snapshot pré-save) sobrescreve a marcação
+// otimista via setAllSchedules e envenena o cache de 60s com dado sem a marca.
+let scheduleRequestId = 0;
 
 async function loadScheduleRows(force = false): Promise<CrewSchedule[]> {
     if (force) {
@@ -253,8 +257,12 @@ async function loadScheduleRows(force = false): Promise<CrewSchedule[]> {
     if (!force && scheduleCache && Date.now() - scheduleCache.fetchedAt < SCHEDULE_CACHE_TTL_MS) {
         return scheduleCache.data;
     }
-    if (scheduleInflight) return scheduleInflight;
-    scheduleInflight = (async () => {
+    // force NÃO reutiliza request em voo: o GET anterior pode ter lido o banco
+    // antes do save recém-feito. Inicia um novo; a resposta antiga é descartada
+    // pelos guards de geração (aqui e no fetchSchedules).
+    if (scheduleInflight && !force) return scheduleInflight;
+    const myId = scheduleRequestId;
+    const request = (async () => {
         const res = await fetchWithToken('/api/man-schedule/realtime?janela=all');
         if (!res.ok) {
             if (res.status === 503) {
@@ -265,12 +273,16 @@ async function loadScheduleRows(force = false): Promise<CrewSchedule[]> {
         const result = await res.json();
         if (!result.success) throw new Error(result.error || 'Erro na API');
         const data = (result.data || []) as CrewSchedule[];
-        scheduleCache = { fetchedAt: Date.now(), data };
+        if (myId === scheduleRequestId) {
+            scheduleCache = { fetchedAt: Date.now(), data };
+        }
         return data;
-    })().finally(() => {
-        scheduleInflight = null;
+    })();
+    const wrapped = request.finally(() => {
+        if (scheduleInflight === wrapped) scheduleInflight = null;
     });
-    return scheduleInflight;
+    scheduleInflight = wrapped;
+    return wrapped;
 }
 
 // ---------------------------------------------------------------------------
@@ -707,8 +719,15 @@ export default function GTManScheduleTab({ onColabClick, kpiFilter = '' }: Props
 
     const fetchSchedules = useCallback(async (force = false, silent = false) => {
         try {
+            if (force) {
+                // Nova geração: respostas de refetchs anteriores em voo não
+                // podem sobrescrever o estado otimista recém-aplicado.
+                scheduleRequestId += 1;
+            }
+            const myRequestId = scheduleRequestId;
             if (!silent && !scheduleCache) setLoading(true);
             const data = await loadScheduleRows(force);
+            if (scheduleRequestId !== myRequestId) return; // resposta velha: descarta
             setAllSchedules(data);
         } catch (error: unknown) {
             console.error('Error fetching schedules:', error);
