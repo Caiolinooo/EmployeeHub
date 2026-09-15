@@ -17,7 +17,7 @@ import {
   FiClock,
 } from 'react-icons/fi';
 import { fetchWithToken } from '@/lib/tokenStorage';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useSignature } from '@/contexts/SignatureContext';
 import {
   assinaturaCobreAprovador,
@@ -67,7 +67,7 @@ export default function ModalAprovacaoFechamento({
   const [resultMsg, setResultMsg] = useState<{ success: boolean; text: string; hash?: string; pendentes?: any[] } | null>(null);
 
   const { requestSignature, hasSignature } = useSignature();
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
 
   const buildQueryString = (targetMes: string) => {
     const params = new URLSearchParams();

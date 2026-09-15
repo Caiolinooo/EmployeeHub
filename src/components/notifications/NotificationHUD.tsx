@@ -104,7 +104,7 @@ const getAudioContext = useCallback((): AudioContext | null => {
     debugLog('🔊 Erro ao criar AudioContext:', error);
     return null;
   }
-});
+}, []);
 
 /**
  * Libera o áudio após uma interação do usuário.
