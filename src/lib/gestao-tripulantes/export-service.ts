@@ -335,7 +335,7 @@ export async function buildExportZip(
 
   const colRes = await buscarColaboradoresFiltrados(filters);
   if (!colRes.success) return { success: false, error: colRes.error || 'Erro ao buscar colaboradores' };
-  let colaboradores = colRes.data ?? [];
+  const colaboradores = colRes.data ?? [];
 
   const avisos: string[] = [];
   if (colaboradores.length === 0) {

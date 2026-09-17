@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.78.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.79.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,13 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.79.0)
+
+- **Fechamento DP v2**: período manual dd/mm/aa por mês (gravado com a assinatura), colaboradores marcados por fechamento ("confirmar lista") e pendências de FI/DBA do próximo período visíveis sem entrar no mês fechado.
+- **Edição de ON/DBA/FI auditada e reversível**: todo save grava quem/quando/antes/depois; aprovadores revisam a fila e podem rejeitar (rollback automático) ou reverter qualquer edição.
+- **Marcador não apaga mais a rotação**: DBA de 1 dia dentro do ON não apaga mais o ciclo inteiro — substituição agora é por tipo (bug do Rômulo).
+- **Tudo live + tela cheia + multi-embarcação**: grade, matriz e fechamento reagem a mudanças em 15s; modal de fechamento em tela cheia; filtros de embarcação multi-seleção; portal usável no celular.
 
 ## Nesta versão (5.78.0)
 

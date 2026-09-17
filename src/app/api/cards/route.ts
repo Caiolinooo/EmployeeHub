@@ -10,10 +10,11 @@ export async function GET() {
     console.log('🔄 API Cards - Buscando cards do Supabase...');
 
     // Tentar buscar do Supabase primeiro
-    let { data: cards, error } = await supabaseAdmin
+    const { data: cardsFromDb, error } = await supabaseAdmin
       .from('cards')
       .select('*')
       .order('order', { ascending: true });
+    let cards = cardsFromDb;
 
     if (error) {
       console.log('⚠️ Erro ao buscar do Supabase:', error.message);

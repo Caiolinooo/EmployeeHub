@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import { alinharDataExamePtBr, normalizeEsocialDate } from '@/lib/e-social/esocial-date';
 import { sanitizeTsNome } from '@/lib/e-social/ts-nome';
+import { validarDadosEvento, validarXMLGerado } from '@/lib/e-social/esocialValidator';
 
 export interface ESocialEvento {
   id: string;
@@ -912,11 +913,10 @@ export function generateEventXML(eventoCodigo: string, dadosEvento: any): string
 }
 
 export function validateEventXML(xml: string): { valido: boolean; erros: string[] } {
-  const validador = require('@/lib/e-social/esocialValidator');
   const codigoEventoMatch = xml.match(/<evt(\w+)(\s|>)/);
   const codigoEvento = codigoEventoMatch ? `S-${codigoEventoMatch[1]}` : 'Desconhecido';
-  
-  const resultado = validador.validarXMLGerado(xml, codigoEvento);
+
+  const resultado = validarXMLGerado(xml, codigoEvento);
   
   return {
     valido: resultado.valido,
@@ -931,9 +931,7 @@ function getField(obj: any, field: string): any {
 }
 
 export function validateEventData(eventoCodigo: string, dadosEvento: any): { valido: boolean; erros: string[] } {
-  // Importação estática aqui para evitar circular dependency caso haja
-  const validador = require('@/lib/e-social/esocialValidator');
-  const resultado = validador.validarDadosEvento(eventoCodigo, dadosEvento);
+  const resultado = validarDadosEvento(eventoCodigo, dadosEvento);
   
   return {
     valido: resultado.valido && resultado.camposPendentes.length === 0,

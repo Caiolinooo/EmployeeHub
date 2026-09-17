@@ -12,6 +12,7 @@ import {
   HeartIcon as HeartSolidIcon
 } from '@heroicons/react/24/solid';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import DOMPurify from 'dompurify';
 import PostCreator from './PostCreator';
 import CommentSection from './CommentSection';
 
@@ -170,7 +171,6 @@ const SocialFeed: React.FC<SocialFeedProps> = ({ className = '' }) => {
 
     // Sanitizar o HTML para prevenir XSS (apenas no cliente)
     if (typeof window !== 'undefined') {
-      const DOMPurify = require('dompurify');
       const sanitizedContent = DOMPurify.sanitize(processedContent, {
         ALLOWED_TAGS: ['span'],
         ALLOWED_ATTR: ['class']

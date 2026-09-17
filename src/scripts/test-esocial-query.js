@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires -- script legado CommonJS executado direto pelo node */
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
 

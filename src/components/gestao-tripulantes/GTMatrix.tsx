@@ -30,6 +30,10 @@ interface GTMatrixProps {
   loading: boolean;
   onRowClick: (colaborador: Collaborator) => void;
   className?: string;
+  /** R5: coluna de seleção para o fechamento (desktop). Visível só para quem pode marcar. */
+  selectable?: boolean;
+  selectedIds?: ReadonlySet<string>;
+  onToggleSelect?: (id: string) => void;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -52,27 +56,48 @@ const STATUS_LABEL_KEYS: Record<string, string> = {
   treinamento: 'gestaoTripulantes.status.treinamento',
 };
 
-function SkeletonRows() {
+/**
+ * R9: tabela em `border-separate` (obrigatório para sticky em células no Chrome —
+ * mesmo modelo do Man Schedule). Colunas de bordas em cada th/td porque `divide-y`
+ * em `tr` não pinta com border-separate.
+ */
+const TH_CLASS = 'px-4 py-3 bg-gray-50 border-b border-gray-200';
+const TD_CLASS = 'px-4 py-3 border-b border-gray-100';
+/** Coluna NOME: sticky left-0 no mobile (<lg), sombra na borda direita como o Man Schedule. */
+const STICKY_NAME_TD_CLASS = `${TD_CLASS} sticky left-0 top-auto z-20 bg-white group-hover:bg-blue-50 shadow-[4px_0_8px_-2px_rgba(15,23,42,0.16)] lg:static lg:z-auto lg:shadow-none`;
+const STICKY_NAME_TH_CLASS = `${TH_CLASS} sticky left-0 top-0 z-40 shadow-[4px_0_8px_-2px_rgba(15,23,42,0.16)] lg:static lg:z-auto lg:shadow-none`;
+const CHECK_CELL_CLASS = 'hidden lg:table-cell px-3 border-b border-gray-100';
+const CHECK_TH_CLASS = 'hidden lg:table-cell px-3 py-3 w-10 bg-gray-50 border-b border-gray-200';
+const PHOTO_CELL_CLASS = 'hidden lg:table-cell px-4 py-3 border-b border-gray-100';
+
+function SkeletonRows({ cols }: { cols: number }) {
   return (
     <>
       {Array.from({ length: 8 }).map((_, i) => (
         <tr key={i} className="animate-pulse">
-          <td className="px-4 py-3"><div className="w-9 h-9 bg-gray-200 rounded-full" /></td>
-          <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-36" /></td>
-          <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-24" /></td>
-          <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-20" /></td>
-          <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-20" /></td>
-          <td className="px-4 py-3"><div className="h-5 bg-gray-200 rounded-full w-20" /></td>
-          <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-16" /></td>
-          <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-24" /></td>
+          {Array.from({ length: cols }).map((__, j) => (
+            <td key={j} className={TD_CLASS}>
+              <div className={j === 0 ? 'w-9 h-9 bg-gray-200 rounded-full' : 'h-4 w-24 bg-gray-200 rounded'} />
+            </td>
+          ))}
         </tr>
       ))}
     </>
   );
 }
 
-export default function GTMatrix({ colaboradores, loading, onRowClick, className }: GTMatrixProps) {
+export default function GTMatrix({
+  colaboradores,
+  loading,
+  onRowClick,
+  className,
+  selectable = false,
+  selectedIds,
+  onToggleSelect,
+}: GTMatrixProps) {
   const { t } = useI18n();
+
+  const totalCols = 8 + (selectable ? 1 : 0);
 
   const getStatusBadge = (status: string, standby: boolean) => {
     const color = STATUS_COLORS[status] || 'bg-gray-100 text-gray-600 border-gray-300';
@@ -127,58 +152,81 @@ export default function GTMatrix({ colaboradores, loading, onRowClick, className
   return (
     <div className={cn('bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col min-h-0 min-w-0 overflow-hidden', className)}>
       <div className={GT_PAGE_SCROLLPORT_CLASS}>
-        <table className="w-full min-w-[760px] text-sm text-left">
-          <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b sticky top-0 z-10">
+        <table className="w-full min-w-[760px] text-sm text-left border-separate border-spacing-0">
+          <thead className="text-xs text-gray-500 uppercase sticky top-0 z-30">
             <tr>
-              <th className="px-4 py-3 w-12">{t('gestaoTripulantes.table.photo')}</th>
-              <th className="px-4 py-3">{t('gestaoTripulantes.table.name')}</th>
-              <th className="px-4 py-3">{t('gestaoTripulantes.table.rank')}</th>
-              <th className="px-4 py-3">{t('gestaoTripulantes.table.company')}</th>
-              <th className="px-4 py-3">{t('gestaoTripulantes.table.vessel')}</th>
-              <th className="px-4 py-3">{t('gestaoTripulantes.table.status')}</th>
-              <th className="px-4 py-3">{t('gestaoTripulantes.table.documents')}</th>
-              <th className="px-4 py-3">{t('gestaoTripulantes.table.nextEmbark')}</th>
+              {selectable && (
+                <th className={CHECK_TH_CLASS}>
+                  <span className="sr-only">{t('gtMatrizV2.marcados.coluna')}</span>
+                </th>
+              )}
+              <th className={cn(TH_CLASS, 'w-12 hidden lg:table-cell')}>{t('gestaoTripulantes.table.photo')}</th>
+              <th className={STICKY_NAME_TH_CLASS}>{t('gestaoTripulantes.table.name')}</th>
+              <th className={TH_CLASS}>{t('gestaoTripulantes.table.rank')}</th>
+              <th className={TH_CLASS}>{t('gestaoTripulantes.table.company')}</th>
+              <th className={TH_CLASS}>{t('gestaoTripulantes.table.vessel')}</th>
+              <th className={TH_CLASS}>{t('gestaoTripulantes.table.status')}</th>
+              <th className={TH_CLASS}>{t('gestaoTripulantes.table.documents')}</th>
+              <th className={TH_CLASS}>{t('gestaoTripulantes.table.nextEmbark')}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {loading ? (
-              <SkeletonRows />
+              <SkeletonRows cols={totalCols} />
             ) : colaboradores.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={totalCols} className="px-4 py-8 text-center text-gray-400">
                   {t('gestaoTripulantes.common.noResults')}
                 </td>
               </tr>
             ) : (
-              colaboradores.map(col => (
-                <tr
-                  key={col.id}
-                  className="hover:bg-blue-50 transition-colors cursor-pointer"
-                  onClick={() => onRowClick(col)}
-                >
-                  <td className="px-4 py-3">
-                    <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
-                      {col.foto_url ? (
-                        <img src={col.foto_url} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-sm">
-                          {col.nome_completo?.charAt(0) || '?'}
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
-                    <div>{col.nome_completo}</div>
-                    <div className="text-xs text-gray-400">{col.matricula || col.cpf || ''}</div>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{col.cargo_nome || '-'}</td>
-                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{col.empresa_nome || '-'}</td>
-                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{col.embarcacao_nome || '-'}</td>
-                  <td className="px-4 py-3">{getStatusBadge(col.status_embarque, col.standby)}</td>
-                  <td className="px-4 py-3">{getDocIndicator(col)}</td>
-                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatDate(col.data_proximo_embarque)}</td>
-                </tr>
-              ))
+              colaboradores.map(col => {
+                const selecionado = selectedIds?.has(col.id) ?? false;
+                return (
+                  <tr
+                    key={col.id}
+                    className="group hover:bg-blue-50 transition-colors cursor-pointer"
+                    onClick={() => onRowClick(col)}
+                  >
+                    {selectable && (
+                      <td
+                        className={CHECK_CELL_CLASS}
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                          checked={selecionado}
+                          onChange={() => onToggleSelect?.(col.id)}
+                          onClick={e => e.stopPropagation()}
+                          aria-label={col.nome_completo}
+                        />
+                      </td>
+                    )}
+                    <td className={cn(PHOTO_CELL_CLASS, 'w-12')}>
+                      <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+                        {col.foto_url ? (
+                          <img src={col.foto_url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-sm">
+                            {col.nome_completo?.charAt(0) || '?'}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className={cn(STICKY_NAME_TD_CLASS, 'font-medium text-gray-900 whitespace-nowrap w-[220px] min-w-[220px] max-w-[220px]')}>
+                      <div className="truncate" title={col.nome_completo}>{col.nome_completo}</div>
+                      <div className="text-xs text-gray-400 truncate">{col.matricula || col.cpf || ''}</div>
+                    </td>
+                    <td className={cn(TD_CLASS, 'text-gray-600 whitespace-nowrap')}>{col.cargo_nome || '-'}</td>
+                    <td className={cn(TD_CLASS, 'text-gray-600 whitespace-nowrap')}>{col.empresa_nome || '-'}</td>
+                    <td className={cn(TD_CLASS, 'text-gray-600 whitespace-nowrap')}>{col.embarcacao_nome || '-'}</td>
+                    <td className={TD_CLASS}>{getStatusBadge(col.status_embarque, col.standby)}</td>
+                    <td className={TD_CLASS}>{getDocIndicator(col)}</td>
+                    <td className={cn(TD_CLASS, 'text-gray-600 whitespace-nowrap')}>{formatDate(col.data_proximo_embarque)}</td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

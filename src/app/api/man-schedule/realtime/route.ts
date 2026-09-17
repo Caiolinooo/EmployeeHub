@@ -121,7 +121,9 @@ function rotationOverlapsWindow(
  * apagava a célula 1s depois do save. Pagina até esgotar.
  */
 async function selectAllPaged<T>(
-    page: (from: number, to: number) => Promise<{ data: T[] | null; error: { message: string } | null }>,
+    // PromiseLike: PostgrestFilterBuilder é thenable (não expõe catch/finally),
+    // então o builder pode ser passado direto sem `await` no callback.
+    page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
 ): Promise<{ data: T[]; error: { message: string } | null }> {
     const PAGE_SIZE = 1000;
     const MAX_PAGES = 20; // 20k linhas — folga além de qualquer janela atual

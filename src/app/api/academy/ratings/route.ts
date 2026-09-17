@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
       .eq('course_id', courseId)
       .eq('is_approved', true);
 
-    let ratingStats = {
+    const ratingStats = {
       total_ratings: 0,
       average_rating: 0,
       rating_distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }

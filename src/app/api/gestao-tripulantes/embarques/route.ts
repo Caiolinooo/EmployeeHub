@@ -5,6 +5,14 @@ import { mapCodigoToDbTipo } from '@/lib/gestao-tripulantes/escala-tipos';
 import { findColaboradorByCpf } from '@/lib/gestao-tripulantes/cpf-lookup';
 import { invalidateManScheduleCache } from '@/lib/gestao-tripulantes/man-schedule-cache';
 import { sincronizarDatasEscalaColaborador } from '@/lib/gestao-tripulantes/embarques-datas-sync';
+import {
+  buscarSobrepostos,
+  carregarAtorEscala,
+  registrarEdicoesEscala,
+  snapshotEmbarque,
+  type EmbarqueRow,
+} from '@/lib/gestao-tripulantes/escala-audit-writer';
+import { filtrarSubstitutiveis } from '@/lib/gestao-tripulantes/escala-overlap';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +28,9 @@ export async function POST(request: NextRequest) {
     if (!payload) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
+
+    // GT v2 (R7): ator da trilha de auditoria (JWT verificado + IP).
+    const ator = await carregarAtorEscala(payload, request);
 
     const body = await request.json();
     const {
@@ -80,22 +91,21 @@ export async function POST(request: NextRequest) {
 
     // Sobreposição inclui linhas "abertas" (data_desembarque NULL — rotação MIO
     // em andamento): gte nunca casa NULL em SQL, então or(is.null, gte).
-    const { data: sobrepostos, error: ovErr } = await supabaseAdmin
-      .from('gt_historico_embarques')
-      .select('id, tipo, data_embarque, data_desembarque, created_at')
-      .eq('colaborador_id', colab.id)
-      .is('deleted_at', null)
-      .lte('data_embarque', embFim)
-      .or(`data_desembarque.is.null,data_desembarque.gte.${embIni}`)
-      .order('created_at', { ascending: false });
+    // GT v2: select completo (before-image da auditoria) + paginado.
+    const lista = await buscarSobrepostos(colab.id, embIni, embFim);
 
-    if (ovErr) {
-      console.error('Erro ao verificar sobrepostos de embarque:', ovErr);
-    }
-
-    const lista = sobrepostos || [];
     const keep = lista.find((r) => r.data_embarque === embIni && r.data_desembarque === embFim) || null;
-    const substituir = lista.filter((r) => r.id !== keep?.id);
+    // Substituição TYPE-AWARE (fix Rômulo): rotação ('normal') substitui só
+    // rotação; marcador (dba/fi/stb/offc/custom) substitui só o MESMO marcador.
+    // O ON aberto do tripulante embarcado NUNCA sai por causa de um DBA/FI/STB/
+    // OFF-C — marcadores coexistem com a rotação (a grade já resolve o mesmo dia
+    // via pickOverlappingRotation). O match exato acima ("keep") roda ANTES do
+    // filtro de propósito: re-marcar a mesma faixa exata atualiza a linha in
+    // place, qualquer que seja o tipo.
+    const substituir = filtrarSubstitutiveis(
+      dbTipo,
+      lista.filter((r) => r.id !== keep?.id)
+    );
 
     let data: Record<string, unknown> | null;
     let error: { message: string } | null;
@@ -158,6 +168,51 @@ export async function POST(request: NextRequest) {
         .update({ deleted_at: now, updated_at: now })
         .in('id', substituir.map((r) => r.id));
       if (delErr) console.error('Erro ao substituir embarques sobrepostos:', delErr);
+    }
+
+    // GT v2 (R7): trilha de auditoria da escala — best-effort, nunca falha o
+    // save. Uma linha para o evento gravado (create/update) e uma por evento
+    // substituído (delete).
+    try {
+      const auditoria = [] as Parameters<typeof registrarEdicoesEscala>[0];
+      if (keep) {
+        auditoria.push({
+          embarqueId: keep.id || null,
+          colaboradorId: colab.id,
+          operacao: 'update' as const,
+          status: 'aplicada' as const,
+          dadosAnteriores: snapshotEmbarque(keep),
+          dadosNovos: snapshotEmbarque((data || {}) as EmbarqueRow),
+          motivo: 'Evento de escala salvo (merged: período idêntico atualizado)',
+          ator,
+        });
+      } else {
+        auditoria.push({
+          embarqueId: (data as { id?: string } | null)?.id || null,
+          colaboradorId: colab.id,
+          operacao: 'create' as const,
+          status: 'aplicada' as const,
+          dadosAnteriores: null,
+          dadosNovos: snapshotEmbarque((data || {}) as EmbarqueRow),
+          motivo: 'Evento de escala criado',
+          ator,
+        });
+      }
+      for (const r of substituir) {
+        auditoria.push({
+          embarqueId: r.id || null,
+          colaboradorId: colab.id,
+          operacao: 'delete' as const,
+          status: 'aplicada' as const,
+          dadosAnteriores: snapshotEmbarque(r),
+          dadosNovos: { ...snapshotEmbarque(r), deleted_at: now },
+          motivo: 'Substituído pelo evento salvo (overlap-replace)',
+          ator,
+        });
+      }
+      await registrarEdicoesEscala(auditoria);
+    } catch (auditErr) {
+      console.error('Falha ao gravar auditoria de escala (best-effort):', auditErr);
     }
 
     invalidateManScheduleCache();

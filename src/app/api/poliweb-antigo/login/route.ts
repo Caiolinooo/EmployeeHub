@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
         // Check if login succeeded
         let isLoggedIn = false;
         let errorMessage = null;
-        let location = loginResponse.headers.get('location');
+        const location = loginResponse.headers.get('location');
 
         if (loginResponse.status === 302) {
             console.log('[Poliweb Antigo Login] Location:', location);

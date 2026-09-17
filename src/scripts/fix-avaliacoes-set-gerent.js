@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires -- script legado CommonJS executado direto pelo node */
 // scripts/fix-avaliacoes-set-gerente.js
 const { createClient } = require('@supabase/supabase-js');
 const path = require('path');

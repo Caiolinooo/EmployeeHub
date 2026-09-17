@@ -72,6 +72,26 @@ export interface ChecagensFechamento {
   alertas: string[];
 }
 
+/**
+ * R1/R4 — parte do ciclo NxN que escapa do período definido (janela de folga
+ * que cruza data_fim). FI/DBA pendentes NÃO debitem este período: viram
+ * "pendência do próximo período" (adição entre períodos — o mês seguinte
+ * computa a fatia dele quando a janela cai inteira nele).
+ * - fiDeficit: déficit FI da(s) janela(s) além de data_fim (esperado − folga
+ *   real, incluindo os dias de escala que a janela curta nem alcançou a ter).
+ * - dbaDias: dias de DBA explícito dentro da janela além de data_fim (trabalho
+ *   que reduzirá a folga do próximo período).
+ * - folgaAberta: último embarque sem próximo — folga em andamento (regra do
+ *   dono: informativo, NÃO gera FI).
+ * - proximoEmbarque: data do próximo embarque que corta a janela pendente.
+ */
+export interface PendenciasProximoPeriodo {
+  fiDeficit: number;
+  dbaDias: string[];
+  folgaAberta: boolean;
+  proximoEmbarque?: string;
+}
+
 export interface CalculoFechamentoColaborador {
   regime_escala: string;
   dias_embarque_escala: number;
@@ -91,6 +111,7 @@ export interface CalculoFechamentoColaborador {
   embarques: CicloEmbarqueCalculo[];
   statusPorDia: Record<string, StatusDiaFechamento>;
   checagens: ChecagensFechamento;
+  pendenciasProximoPeriodo: PendenciasProximoPeriodo;
 }
 
 export interface TotaisConsolidadosFechamento {
@@ -501,6 +522,13 @@ export function calcularFechamentoColaborador(
   const ciclos: CicloEmbarqueCalculo[] = [];
   const alertas: string[] = [];
 
+  // R1/R4 — pendências do próximo período (janelas de folga que cruzam data_fim
+  // e folga aberta do último ciclo). Fi/DBA além do período NÃO debitem este mês.
+  let pendFiDeficit = 0;
+  const pendDbaDias = new Set<string>();
+  let pendFolgaAberta = false;
+  let pendProximoEmbarque: string | undefined;
+
   for (let i = 0; i < aBordo.length; i += 1) {
     const cur = aBordo[i];
     const next = aBordo[i + 1] ?? null;
@@ -534,9 +562,76 @@ export function calcularFechamentoColaborador(
       restActual = contarFolgaRealEfetiva(restStart, restEnd, dbaDays);
     }
 
-    const fiDeficit = aplica && escala.diasFolga > 0 && next
-      ? Math.max(0, escala.diasFolga - restActual)
-      : 0;
+    // ---- R1/R4: recorte do período (modelo "clipped") ----
+    // A janela [restStart..restEnd] é cortada em data_fim: a fatia dentro do
+    // período vira o FI deste fechamento; a fatia além de data_fim vira
+    // PENDÊNCIA do próximo período (soma entre períodos permanece aditiva —
+    // o mês seguinte computa a fatia dele quando a janela cai inteira nele).
+    // Esperado = dias de escala (NxN) contados a partir do INÍCIO da janela;
+    // dia de DBA dentro da fatia esperada = folga FALTANTE (regra do dono:
+    // 14x14 com 8 folga + 2 DBA = 6 FI + 2 DBA).
+    const windowDays = restEnd && restEnd.getTime() >= restStart.getTime()
+      ? eachCivilDay(restStart, restEnd)
+      : [];
+    let antes = 0; // dias da janela antes do período
+    let noPeriodo = 0; // dias da janela dentro do período
+    let depois = 0; // dias da janela além de data_fim
+    let dbaNoPeriodo = 0;
+    let dbaDepois = 0;
+    for (const day of windowDays) {
+      const t = day.getTime();
+      if (t < periodStart.getTime()) antes += 1;
+      else if (t > periodEnd.getTime()) {
+        depois += 1;
+        if (dbaDays.has(ymdFromDate(day))) dbaDepois += 1;
+      } else {
+        noPeriodo += 1;
+        if (dbaDays.has(ymdFromDate(day))) dbaNoPeriodo += 1;
+      }
+    }
+    let fiDeficit = 0;
+    let fiPendente = 0;
+    if (aplica && escala.diasFolga > 0 && next) {
+      if (windowDays.length === 0) {
+        // Embarques adjacentes (janela vazia): déficit integral no período —
+        // comportamento mantido (folga realizada 0).
+        fiDeficit = escala.diasFolga;
+      } else {
+        const esperadoTotal = Math.min(escala.diasFolga, windowDays.length);
+        const esperadoIn = Math.min(Math.max(esperadoTotal - antes, 0), noPeriodo);
+        const esperadoFora = Math.min(Math.max(esperadoTotal - antes - noPeriodo, 0), depois);
+        const folgaRealIn = noPeriodo - dbaNoPeriodo;
+        const folgaRealFora = depois - dbaDepois;
+        // Dias de escala que a janela curta nem alcançou a ter ("fantasma"):
+        // atribuídos ao período onde a janela TERMINA — é lá que o déficit
+        // se materializa (mantém a soma entre períodos aditiva).
+        const fantasma = Math.max(0, escala.diasFolga - windowDays.length);
+        fiDeficit = Math.max(0, esperadoIn - folgaRealIn);
+        fiPendente = Math.max(0, esperadoFora - folgaRealFora);
+        if (fantasma > 0) {
+          if (depois > 0) fiPendente += fantasma;
+          else fiDeficit += fantasma;
+        }
+        // Pendência DBA: dias de DBA explícito da janela além de data_fim
+        // (até next.start − 1) — reduzirão a folga do próximo período.
+        if (dbaDepois > 0) {
+          for (const day of windowDays) {
+            const key = ymdFromDate(day);
+            if (day.getTime() > periodEnd.getTime() && dbaDays.has(key)) pendDbaDias.add(key);
+          }
+        }
+        if ((fiPendente > 0 || dbaDepois > 0) && !pendProximoEmbarque) {
+          pendProximoEmbarque = ymdFromDate(next.start);
+        }
+      }
+    } else if (!next && restEnd && restEnd.getTime() >= restStart.getTime()) {
+      // Folga aberta (sem próximo embarque) cobrindo o período: apenas
+      // informativo — regra do dono, NÃO gera FI.
+      if (overlapInclusive(restStart, restEnd, periodStart, periodEnd)) {
+        pendFolgaAberta = true;
+      }
+    }
+    pendFiDeficit += fiPendente;
 
     if (restStart && restEnd && restEnd.getTime() >= restStart.getTime()) {
       for (const day of eachCivilDay(restStart, restEnd)) {
@@ -554,7 +649,17 @@ export function calcularFechamentoColaborador(
           : `embarque ${diasTotais}d < escala ${escala.diasEmbarque}d`,
       );
     }
-    if (aplica && next && restActual !== escala.diasFolga) {
+    if (aplica && next && depois > 0 && windowDays.length > 0) {
+      // Janela cortada por data_fim: FI do período + pendência explicitados.
+      if (fiDeficit + fiPendente > 0) {
+        cicloAlertas.push(
+          `folga cortada em ${ymdFromDate(periodEnd)}: ${fiDeficit} FI no período + ${fiPendente} FI pendente(s) do próximo período`,
+        );
+      }
+      if (windowDays.length > escala.diasFolga) {
+        cicloAlertas.push(`folga ${windowDays.length}d > escala ${escala.diasFolga}d (excedente, não debita)`);
+      }
+    } else if (aplica && next && restActual !== escala.diasFolga) {
       cicloAlertas.push(
         restActual < escala.diasFolga
           ? `folga ${restActual}d < escala ${escala.diasFolga}d (${fiDeficit} FI)`
@@ -631,6 +736,12 @@ export function calcularFechamentoColaborador(
       sem_dt_inicio: semDtInicio,
       sem_dt_fim: semDtFim,
       alertas,
+    },
+    pendenciasProximoPeriodo: {
+      fiDeficit: pendFiDeficit,
+      dbaDias: [...pendDbaDias].sort(),
+      folgaAberta: pendFolgaAberta,
+      ...(pendProximoEmbarque ? { proximoEmbarque: pendProximoEmbarque } : {}),
     },
   };
 }

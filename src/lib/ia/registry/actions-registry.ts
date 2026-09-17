@@ -253,9 +253,9 @@ export async function initializeActions(): Promise<void> {
     await import('./definitions/microsoft.actions'),
   ];
 
-  for (const module of actionModules) {
-    if (module.registerActions) {
-      await module.registerActions();
+  for (const moduleDef of actionModules) {
+    if (moduleDef.registerActions) {
+      await moduleDef.registerActions();
     }
   }
 

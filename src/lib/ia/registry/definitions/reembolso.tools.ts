@@ -114,7 +114,7 @@ const buscarPendenciasReembolsoTool: IATool = {
   adminOnly: false,
   handler: async (args, context) => {
     try {
-      let baseQuery = supabaseAdmin
+      const baseQuery = supabaseAdmin
         .from('Reimbursement')
         .select('id, status, valorTotal, descricao, data, email, nome')
         .eq('status', 'pendente')

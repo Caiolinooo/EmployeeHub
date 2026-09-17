@@ -22,7 +22,7 @@ export function extractNameFromEmail(email: string): { firstName?: string; lastN
     if (!emailPart) return null;
 
     // Remover números e caracteres especiais, substituir por espaços
-    let cleanName = emailPart
+    const cleanName = emailPart
       .replace(/[0-9._-]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();

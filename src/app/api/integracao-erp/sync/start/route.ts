@@ -186,9 +186,9 @@ async function startSyncProcess(jobId: string, connectionId: string, module: str
 
     // Simular processo de sincronização baseado no módulo
     let totalRecords = 0;
-    let processedRecords = 0;
-    let successfulRecords = 0;
-    let failedRecords = 0;
+    const processedRecords = 0;
+    const successfulRecords = 0;
+    const failedRecords = 0;
 
     switch (module) {
       case 'funcionarios':

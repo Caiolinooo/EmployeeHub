@@ -279,3 +279,47 @@ error, success {
   }
 }
 
+/* ── GT v2 / R9 — utilitários de shell mobile (portal inteiro) ─────────────
+   .pb-safe / .pt-safe: respeitam safe-areas (requer viewport-fit=cover,
+   configurado em `export const viewport` de src/app/layout.tsx).
+   .tap-target: alvo de toque mínimo de 44x44px (WCAG 2.5.5 / Apple HIG).
+   .table-responsive: wrapper de tabela com swipe horizontal no touch,
+   momentum iOS e barra fina (padrão .custom-scrollbar). */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.tap-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #e5e7eb transparent;
+}
+
+.table-responsive::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background-color: #e5e7eb;
+  border-radius: 20px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background-color: #d1d5db;
+}
+

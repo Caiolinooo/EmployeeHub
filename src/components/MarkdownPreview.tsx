@@ -127,7 +127,7 @@ const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, className = 
   // Inline parser: **bold**, *italic*, `code`, [text](url)
   const renderInline = (text: string, keyPrefix: string) => {
     const elements: React.ReactNode[] = [];
-    let remaining = text;
+    const remaining = text;
     let key = 0;
 
     const pushText = (t: string) => {

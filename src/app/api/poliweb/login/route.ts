@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        let email = credentials?.username_novo || credentials?.username;
-        let password = credentials?.password_novo || credentials?.password;
+        const email = credentials?.username_novo || credentials?.username;
+        const password = credentials?.password_novo || credentials?.password;
 
         if (!email || !password) {
             console.log('[Poliweb Login] Credenciais do Novo Poliweb não configuradas para userId:', authResult.userId);

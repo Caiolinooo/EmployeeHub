@@ -231,6 +231,33 @@ describe('montarHashFechamento', () => {
     });
     assert.equal(hash, 'GT_FECHAMENTO:2026-08:Ana Silva:12345678909:2026-09-01T15:00:00.000Z:1.2.3.4');
   });
+
+  it('default (sem período) mantém o formato antigo mesmo com periodo vazio', () => {
+    const hash = montarHashFechamento({
+      mesAno: '2026-08',
+      nome: 'Ana Silva',
+      cpf: '12345678909',
+      dataIso: '2026-09-01T15:00:00.000Z',
+      ip: '1.2.3.4',
+      periodo: {},
+    });
+    assert.equal(hash, 'GT_FECHAMENTO:2026-08:Ana Silva:12345678909:2026-09-01T15:00:00.000Z:1.2.3.4');
+  });
+
+  it('GT v2 (R2): período definido entra no carimbo (dataInicio:dataFim)', () => {
+    const hash = montarHashFechamento({
+      mesAno: '2026-08',
+      nome: 'Ana Silva',
+      cpf: '123.456.789-09',
+      dataIso: '2026-09-01T15:00:00.000Z',
+      ip: '1.2.3.4',
+      periodo: { dataInicio: '2026-07-26', dataFim: '2026-08-25' },
+    });
+    assert.equal(
+      hash,
+      'GT_FECHAMENTO:2026-08:Ana Silva:12345678909:2026-09-01T15:00:00.000Z:1.2.3.4:2026-07-26:2026-08-25',
+    );
+  });
 });
 
 describe('labelFechamentoStatus', () => {

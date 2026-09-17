@@ -4,6 +4,8 @@
  */
 
 import { supabaseAdmin } from '@/lib/supabase';
+import fs from 'fs';
+import path from 'path';
 
 interface TestResult {
   component: string;
@@ -165,8 +167,6 @@ class SocialSystemTester {
       'supabase/migrations/social_system_tables.sql'
     ];
 
-    const fs = require('fs');
-    const path = require('path');
 
     for (const file of requiredFiles) {
       try {

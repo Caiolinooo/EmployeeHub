@@ -81,6 +81,9 @@ export async function GET(request: NextRequest) {
 
     const isAdmin = user?.role === 'ADMIN';
 
+    let channels: unknown[] | undefined;
+    let error: { message: string } | null = null;
+
     if (!isAdmin) {
       // Construir filtro complexo para não-admins
       // Logic: 
@@ -129,12 +132,11 @@ export async function GET(request: NextRequest) {
       });
 
       // Replace the standard fetch result with our filtered list
-      var channels = filtered;
-      var error = null;
+      channels = filtered;
 
     } else {
       // Admin sees all
-      var { data: fetched, error: err } = await query;
+      const { data: fetched, error: err } = await query;
       channels = fetched || [];
       error = err;
     }

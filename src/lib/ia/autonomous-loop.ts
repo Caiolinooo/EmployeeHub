@@ -34,7 +34,7 @@ export class AutonomousKPIAgent {
   private decisionLog: DecisionLog[] = [];
   private cycleHistory: CycleData[] = [];
   
-  private eventHandlers: Partial<Record<keyof AutonomousAgentEvents, Function[]>> = {};
+  private eventHandlers: { [K in keyof AutonomousAgentEvents]?: AutonomousAgentEvents[K][] } = {};
 
   constructor(
     userId: string,
@@ -742,7 +742,9 @@ export class AutonomousKPIAgent {
     if (handlers) {
       handlers.forEach(handler => {
         try {
-          handler(...args);
+          // TS não correlaciona `handler` (E[K]) com `args` (Parameters<E[K]>)
+          // através do forEach — o cast preserva a chamada tipada em runtime.
+          (handler as (...a: unknown[]) => void)(...args);
         } catch (err) {
           console.error(`[AutonomousKPIAgent] Error in event handler for ${event}:`, err);
         }

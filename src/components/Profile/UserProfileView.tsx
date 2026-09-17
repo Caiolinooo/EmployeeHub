@@ -33,6 +33,20 @@ interface UserProfileViewProps {
 export default function UserProfileView({ user, isOwnProfile, onEdit, isLoading }: UserProfileViewProps) {
     const { t } = useI18n();
 
+    // Online Logic: Active in last 15 minutes
+    // Hook ANTES do early return — hooks precisam rodar em toda render (rules-of-hooks).
+    const isOnline = useMemo(() => {
+        if (!user?.last_login) return false;
+        try {
+            const lastLogin = new Date(user.last_login).getTime();
+            const now = new Date().getTime();
+            const diffMinutes = (now - lastLogin) / 1000 / 60;
+            return diffMinutes < 15;
+        } catch (e) {
+            return false;
+        }
+    }, [user?.last_login]);
+
     if (isLoading || !user) {
         return (
             <div className="w-full max-w-4xl mx-auto animate-pulse">
@@ -52,19 +66,6 @@ export default function UserProfileView({ user, isOwnProfile, onEdit, isLoading 
     }
 
     const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email;
-
-    // Online Logic: Active in last 15 minutes
-    const isOnline = useMemo(() => {
-        if (!user.last_login) return false;
-        try {
-            const lastLogin = new Date(user.last_login).getTime();
-            const now = new Date().getTime();
-            const diffMinutes = (now - lastLogin) / 1000 / 60;
-            return diffMinutes < 15;
-        } catch (e) {
-            return false;
-        }
-    }, [user.last_login]);
 
     return (
         <div className="w-full max-w-4xl mx-auto bg-white md:rounded-2xl md:shadow-xl overflow-hidden md:border border-gray-100 mb-6 md:mb-10">

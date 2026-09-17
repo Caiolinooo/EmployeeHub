@@ -1,8 +1,7 @@
 'use client';
 
-import React, { Suspense, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { Suspense, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import { FiAward } from 'react-icons/fi';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useI18n } from '@/contexts/I18nContext';
@@ -13,6 +12,7 @@ import GtPageShell from '@/components/gestao-tripulantes/GtPageShell';
 import GTMatrixFilters from '@/components/gestao-tripulantes/GTMatrixFilters';
 import GTMatrix from '@/components/gestao-tripulantes/GTMatrix';
 import GTMatrixLegend from '@/components/gestao-tripulantes/GTMatrixLegend';
+import MarcadosBulkBar from '@/components/gestao-tripulantes/matrix/MarcadosBulkBar';
 import CollaboratorModal from '@/components/gestao-tripulantes/CollaboratorModal';
 import AsoReviewPanel from '@/components/gestao-tripulantes/AsoReviewPanel';
 import AsoAgendamentoInbox from '@/components/gestao-tripulantes/AsoAgendamentoInbox';
@@ -23,6 +23,7 @@ import {
   type GtDashboardKpi,
 } from '@/lib/gestao-tripulantes/embarque-status';
 import { useGtMatrizPermissions } from '@/components/gestao-tripulantes/use-gt-matriz-permissions';
+import { useGtLiveProbe } from '@/hooks/useGtLiveProbe';
 
 const GTManScheduleTab = dynamic(
   () => import('@/components/gestao-tripulantes/GTManScheduleTab'),
@@ -77,7 +78,8 @@ interface Collaborator {
 interface FiltersState {
   search: string;
   empresa: string;
-  embarcacao: string;
+  /** R8: multi-embarcação, valores = NOMES (API resolve nomes→ids paginado). */
+  embarcacoes: string[];
   cargo: string;
   centro_custo: string;
   status: string;
@@ -107,7 +109,7 @@ function kpiBannerKey(kpi: GtDashboardKpi | ''): string {
 
 function GestaoTripulantesContent() {
   const { t } = useI18n();
-  const { user } = useSupabaseAuth();
+  const { user, hasFeature } = useSupabaseAuth();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -133,9 +135,15 @@ function GestaoTripulantesContent() {
   const [modalTab, setModalTab] = useState<TabKey | undefined>(undefined);
   const [highlightDocId, setHighlightDocId] = useState<string | null>(null);
   const [filters, setFilters] = useState<FiltersState>({
-    search: '', empresa: '', embarcacao: '', cargo: '', centro_custo: '', status: '',
+    search: '', empresa: '', embarcacoes: [], cargo: '', centro_custo: '', status: '',
     ativo: 'ativos', apenasStandby: false, docsVencidos: false
   });
+  // R5: seleção de marcados sobrevive a refetches (set de ids; checkboxes filtram pela página atual)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // R5: mesma família de gate do fechamento — ADMIN/MANAGER (bypass do hasFeature)
+  // ou ACL `gestao-tripulantes.fechamento.marcas`. O server reforça no POST.
+  const podeMarcar = useMemo(() => hasFeature('gestao-tripulantes.fechamento.marcas'), [hasFeature]);
 
   useEffect(() => {
     if (filters.docsVencidos) setShowAlertas(true);
@@ -188,7 +196,8 @@ function GestaoTripulantesContent() {
       const params = new URLSearchParams();
       if (filters.search) params.set('search', filters.search);
       if (filters.empresa) params.set('empresa', filters.empresa);
-      if (filters.embarcacao) params.set('embarcacao', filters.embarcacao);
+      // R8: multi-embarcação via CSV de nomes (server resolve nomes→ids paginado)
+      if (filters.embarcacoes.length > 0) params.set('embarcacoes', filters.embarcacoes.join(','));
       if (filters.cargo) params.set('cargo', filters.cargo);
       if (filters.centro_custo) params.set('centro_custo', filters.centro_custo);
       if (kpiFilter === 'embarcados') {
@@ -226,6 +235,42 @@ function GestaoTripulantesContent() {
     }, delay);
     return () => clearTimeout(timer);
   }, [user, filters, kpiFilter, fetchColaboradores]);
+
+  // R3 live: probe leve (15s) via hook compartilhado (baseline na 1ª resposta,
+  // pausa com aba oculta, guarda de requisição em voo). Muda a assinatura →
+  // refetch dos cards + da lista. Refs evitam rearmar o probe a cada tecla do
+  // filtro (debounce de 300ms da busca preservado).
+  const fetchDashboardRef = useRef(fetchDashboard);
+  const fetchColaboradoresRef = useRef(fetchColaboradores);
+  useEffect(() => {
+    fetchDashboardRef.current = fetchDashboard;
+    fetchColaboradoresRef.current = fetchColaboradores;
+  }, [fetchDashboard, fetchColaboradores]);
+
+  useGtLiveProbe({
+    escopo: 'colaboradores',
+    intervalMs: 15000,
+    enabled: Boolean(user),
+    onChange: () => {
+      fetchDashboardRef.current();
+      fetchColaboradoresRef.current();
+    },
+  });
+
+  const handleToggleSelect = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
+  const selectedIdsList = useMemo(() => Array.from(selectedIds), [selectedIds]);
 
   const handleFilterChange = useCallback((partial: Partial<FiltersState>) => {
     if (partial.status !== undefined || partial.apenasStandby !== undefined || partial.docsVencidos !== undefined) {
@@ -379,11 +424,21 @@ function GestaoTripulantesContent() {
             )}
             <GTMatrixFilters filters={filters} onChange={handleFilterChange} colaboradores={colaboradores} />
           </div>
+          {podeMarcar && selectedIdsList.length > 0 && (
+            <MarcadosBulkBar
+              selectedIds={selectedIdsList}
+              onClear={handleClearSelection}
+              onMarcado={() => fetchDashboard()}
+            />
+          )}
           <GTMatrix
             colaboradores={colaboradores}
             loading={loading}
             onRowClick={handleRowClick}
             className="flex-1 min-h-0 min-w-0"
+            selectable={podeMarcar}
+            selectedIds={podeMarcar ? selectedIds : undefined}
+            onToggleSelect={podeMarcar ? handleToggleSelect : undefined}
           />
           <GTMatrixLegend />
         </div>

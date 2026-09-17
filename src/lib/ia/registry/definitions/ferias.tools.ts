@@ -108,7 +108,7 @@ const buscarPendenciasFeriasTool: IATool = {
   handler: async (args, context): Promise<IAToolResult> => {
     const { days_limit = 30 } = args as { days_limit?: number };
     try {
-      let baseQuery = supabaseAdmin
+      const baseQuery = supabaseAdmin
         .from('leave_requests')
         .select('*, user:users_unified(name, email, department)')
         .in('status', ['PENDING_LEADER', 'PENDING_MANAGER'])

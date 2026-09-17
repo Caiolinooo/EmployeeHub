@@ -1,13 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { extractTokenFromHeader, verifyToken, type TokenPayload } from '@/lib/auth';
 import { mapCodigoToDbTipo } from '@/lib/gestao-tripulantes/escala-tipos';
 import { invalidateManScheduleCache } from '@/lib/gestao-tripulantes/man-schedule-cache';
 import { sincronizarDatasEscalaColaborador } from '@/lib/gestao-tripulantes/embarques-datas-sync';
+import {
+  buscarSobrepostos,
+  carregarAtorEscala,
+  registrarEdicoesEscala,
+  snapshotEmbarque,
+  type EmbarqueRow,
+  type EscalaEdicaoAtor,
+} from '@/lib/gestao-tripulantes/escala-audit-writer';
+import { filtrarSubstitutiveis } from '@/lib/gestao-tripulantes/escala-overlap';
 
 export const dynamic = 'force-dynamic';
 
-function requireAuth(request: NextRequest) {
+function requireAuth(request: NextRequest): {
+  error?: NextResponse;
+  payload?: TokenPayload;
+} {
   const authHeader = request.headers.get('authorization') || undefined;
   const token = extractTokenFromHeader(authHeader);
   if (!token) return { error: NextResponse.json({ error: 'Token de autorização necessário' }, { status: 401 }) };
@@ -28,11 +40,15 @@ export async function PUT(
     const { id } = await context.params;
     const body = await request.json();
 
-    const { data: existing, error: findErr } = await supabaseAdmin
+    // GT v2 (R7): ator da trilha de auditoria (JWT verificado + IP).
+    const ator: EscalaEdicaoAtor = await carregarAtorEscala(auth.payload!, request);
+
+    const { data: existingData, error: findErr } = await supabaseAdmin
       .from('gt_historico_embarques')
-      .select('id, colaborador_id, tipo, data_embarque, data_desembarque, local_embarque, local_desembarque, observacoes, exibir_dia_inicio, origem, mio_embarque_id, deleted_at')
+      .select('id, colaborador_id, tipo, data_embarque, data_desembarque, data_prevista_desembarque, local_embarque, local_desembarque, observacoes, exibir_dia_inicio, origem, mio_embarque_id, deleted_at, updated_at')
       .eq('id', id)
       .maybeSingle();
+    const existing = existingData as EmbarqueRow | null;
 
     if (findErr || !existing || existing.deleted_at) {
       return NextResponse.json({ error: 'Evento de escala não encontrado' }, { status: 404 });
@@ -131,28 +147,71 @@ export async function PUT(
     const ini = String((data as { data_embarque?: string }).data_embarque || '').slice(0, 10);
     const fim = String((data as { data_desembarque?: string }).data_desembarque || '').slice(0, 10);
     // Mesma regra do POST: linhas abertas (data_desembarque NULL) também
-    // sobrepõem — gte nunca casa NULL em SQL.
-    const { data: sobrepostos, error: ovErr } = await supabaseAdmin
-      .from('gt_historico_embarques')
-      .select('id, tipo, data_embarque, data_desembarque')
-      .eq('colaborador_id', (existing as { colaborador_id?: string }).colaborador_id ?? '')
-      .is('deleted_at', null)
-      .neq('id', id)
-      .lte('data_embarque', fim)
-      .or(`data_desembarque.is.null,data_desembarque.gte.${ini}`);
-    if (ovErr) {
-      console.error('Erro ao verificar sobrepostos de embarque (PUT):', ovErr);
-    }
+    // sobrepõem — gte nunca casa NULL em SQL. GT v2: before-image completa
+    // (auditoria) e leitura paginada.
+    const sobrepostos = await buscarSobrepostos(
+      (existing as { colaborador_id?: string }).colaborador_id ?? '',
+      ini,
+      fim,
+      id,
+    );
 
     let substituidos: Array<{ id: string; tipo: string; data_embarque: string; data_desembarque: string }> = [];
-    const ids = (sobrepostos || []).map((r) => r.id);
+    // Substituição TYPE-AWARE (fix Rômulo), mesma regra do POST: rotação
+    // ('normal') substitui só rotação; marcador (dba/fi/stb/offc/custom) só o
+    // MESMO marcador. O ON aberto do tripulante embarcado nunca sai por causa
+    // de um marcador — marcadores coexistem com a rotação (a grade resolve o
+    // mesmo dia via pickOverlappingRotation).
+    const tipoSalvo = (data as { tipo?: string } | null)?.tipo ?? existing.tipo;
+    const substituir = filtrarSubstitutiveis(String(tipoSalvo || ''), sobrepostos || []);
+    const ids = substituir.map((r) => r.id);
     if (ids.length > 0) {
+      const agoraDel = new Date().toISOString();
       const { error: delErr } = await supabaseAdmin
         .from('gt_historico_embarques')
-        .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .update({ deleted_at: agoraDel, updated_at: agoraDel })
         .in('id', ids);
       if (delErr) console.error('Erro ao substituir embarques sobrepostos:', delErr);
-      else substituidos = sobrepostos || [];
+      else substituidos = substituir.map((r) => ({
+        id: r.id as string,
+        tipo: (r.tipo as string) || '',
+        data_embarque: (r.data_embarque as string) || '',
+        data_desembarque: (r.data_desembarque as string) || '',
+      }));
+    }
+
+    // GT v2 (R7): trilha de auditoria — best-effort, nunca falha o save.
+    try {
+      const agoraAudit = new Date().toISOString();
+      const colaboradorId = (existing as { colaborador_id?: string }).colaborador_id || null;
+      const auditoria: Parameters<typeof registrarEdicoesEscala>[0] = [
+        {
+          embarqueId: id,
+          colaboradorId,
+          operacao: 'update',
+          status: 'aplicada',
+          dadosAnteriores: snapshotEmbarque(existing),
+          dadosNovos: snapshotEmbarque((data || {}) as EmbarqueRow),
+          motivo: 'Evento de escala editado',
+          ator,
+        },
+      ];
+      // Só as linhas REALMENTE substituídas entram como 'delete' na trilha.
+      for (const r of substituir) {
+        auditoria.push({
+          embarqueId: (r.id as string) || null,
+          colaboradorId,
+          operacao: 'delete',
+          status: 'aplicada',
+          dadosAnteriores: snapshotEmbarque(r),
+          dadosNovos: { ...snapshotEmbarque(r), deleted_at: agoraAudit },
+          motivo: 'Substituído pela edição do evento (overlap-replace)',
+          ator,
+        });
+      }
+      await registrarEdicoesEscala(auditoria);
+    } catch (auditErr) {
+      console.error('Falha ao gravar auditoria de escala (best-effort):', auditErr);
     }
 
     invalidateManScheduleCache();
@@ -179,11 +238,14 @@ export async function DELETE(
 
     const { id } = await context.params;
 
-    const { data: existing, error: findErr } = await supabaseAdmin
+    const ator: EscalaEdicaoAtor = await carregarAtorEscala(auth.payload!, request);
+
+    const { data: existingData, error: findErr } = await supabaseAdmin
       .from('gt_historico_embarques')
-      .select('id, origem, deleted_at, colaborador_id')
+      .select('id, colaborador_id, tipo, data_embarque, data_desembarque, data_prevista_desembarque, local_embarque, local_desembarque, observacoes, exibir_dia_inicio, origem, deleted_at, updated_at')
       .eq('id', id)
       .maybeSingle();
+    const existing = existingData as EmbarqueRow | null;
 
     if (findErr || !existing || existing.deleted_at) {
       return NextResponse.json({ error: 'Evento de escala não encontrado' }, { status: 404 });
@@ -200,6 +262,25 @@ export async function DELETE(
     if (error) {
       console.error('Erro ao excluir evento de embarque:', error);
       return NextResponse.json({ error: 'Erro ao excluir evento de escala' }, { status: 500 });
+    }
+
+    // GT v2 (R7): trilha de auditoria — best-effort, nunca falha o delete.
+    try {
+      const agoraDel = new Date().toISOString();
+      await registrarEdicoesEscala([
+        {
+          embarqueId: id,
+          colaboradorId: (existing as { colaborador_id?: string }).colaborador_id || null,
+          operacao: 'delete',
+          status: 'aplicada',
+          dadosAnteriores: snapshotEmbarque(existing),
+          dadosNovos: { ...snapshotEmbarque(existing), deleted_at: agoraDel },
+          motivo: 'Evento de escala excluído',
+          ator,
+        },
+      ]);
+    } catch (auditErr) {
+      console.error('Falha ao gravar auditoria de escala (best-effort):', auditErr);
     }
 
     invalidateManScheduleCache();

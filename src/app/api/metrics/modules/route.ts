@@ -121,7 +121,7 @@ export const GET = withPermission('admin', async (request: NextRequest) => {
         const topUserIds = [...new Set(
             modules.flatMap(m => m.top_users.map(u => u.user_id)).filter(Boolean)
         )];
-        let userDetails: Record<string, any> = {};
+        const userDetails: Record<string, any> = {};
 
         try {
             // Lookup users by ID directly in the users table

@@ -17,9 +17,13 @@ import {
   FiUsers,
 } from 'react-icons/fi';
 import { fetchWithToken } from '@/lib/tokenStorage';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import SearchableCreatableSelect from '@/components/gestao-tripulantes/SearchableCreatableSelect';
+import FilaRevisaoEscala from '@/components/gestao-tripulantes/fechamento/FilaRevisaoEscala';
+import { mesAnoAtualBRT } from '@/components/gestao-tripulantes/fechamento/fechamentoV2';
 import {
   displayNameFromUser,
+  isFechamentoRole,
   isFechamentoStatus,
   labelFechamentoStatus,
 } from '@/lib/gestao-tripulantes/fechamento-assinatura';
@@ -81,6 +85,9 @@ export type WorkflowFechamentoHandle = {
 };
 
 const WorkflowFechamentoTab = forwardRef<WorkflowFechamentoHandle>(function WorkflowFechamentoTab(_, ref) {
+  const { profile } = useSupabaseAuth();
+  // R7: fila de revisão visível apenas para o papel de fechamento (server reforça).
+  const podeRevisar = isFechamentoRole(profile?.role);
   const [config, setConfig] = useState<FechamentoConfig>({
     dia_fechamento_mes: 25,
     emails_destinatarios_dp: ['dp@groupabz.com'],
@@ -134,8 +141,8 @@ const WorkflowFechamentoTab = forwardRef<WorkflowFechamentoHandle>(function Work
         throw new Error(dataConfig.error || 'Falha ao carregar configurações de fechamento.');
       }
 
-      // Carregar preview e histórico
-      const currentMes = new Date().toISOString().slice(0, 7);
+      // Carregar preview e histórico (mês civil BRT, não UTC)
+      const currentMes = mesAnoAtualBRT();
       const resRel = await fetchWithToken(`/api/gestao-tripulantes/relatorio-mensal?mesAno=${currentMes}`);
       const dataRel = await resRel.json();
       if (dataRel.registro) {
@@ -620,6 +627,11 @@ const WorkflowFechamentoTab = forwardRef<WorkflowFechamentoHandle>(function Work
           </table>
         </div>
       </div>
+
+      {/* R7: Fila de Revisão de Edições de Escala (rollback auditado) — só isFechamentoRole */}
+      {podeRevisar && (
+        <FilaRevisaoEscala podeRevisar onEdicoesChanged={loadData} />
+      )}
     </div>
   );
 });

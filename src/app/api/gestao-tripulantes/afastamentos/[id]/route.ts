@@ -4,10 +4,10 @@ import { supabaseAdmin } from '@/lib/supabase';
 // PUT: update afastamento
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
 
     const updateFields: Record<string, any> = {
@@ -43,10 +43,10 @@ export async function PUT(
 // DELETE: soft-delete afastamento
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const { error } = await supabaseAdmin
       .from('gt_afastamentos')

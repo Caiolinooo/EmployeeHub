@@ -35,7 +35,7 @@ export const generateGeneralEPIReport = (registrations: EPIWithUser[], options: 
     }
 
     let bodyData: any[] = [];
-    let head = [['Colaborador', 'Setor', 'Equipamento', 'Qtd', 'CA', 'Validade', 'Status']];
+    const head = [['Colaborador', 'Setor', 'Equipamento', 'Qtd', 'CA', 'Validade', 'Status']];
 
     if (options.unifyRequests) {
         // Group by User

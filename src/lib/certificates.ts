@@ -17,7 +17,6 @@ export async function ensureCertificatesBucket() {
     const exists = (data || []).some(b => b.name === 'certificates');
     if (!exists) {
       // create (private)
-      // @ts-ignore - createBucket exists on supabase-js v2
       const { error: createErr } = await (supabaseAdmin.storage as any).createBucket('certificates', { public: false });
       if (createErr) console.warn('createBucket certificates error:', createErr);
     }

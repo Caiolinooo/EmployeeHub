@@ -10,6 +10,7 @@ import ModalAprovacaoFechamento from '@/components/gestao-tripulantes/ModalAprov
 import AsoAgendamentoDpPanel from '@/components/gestao-tripulantes/AsoAgendamentoDpPanel';
 import GtPageShell, { GT_PAGE_SCROLLPORT_CLASS } from '@/components/gestao-tripulantes/GtPageShell';
 import SearchableCreatableSelect from '@/components/gestao-tripulantes/SearchableCreatableSelect';
+import { mesAnoAtualBRT } from '@/components/gestao-tripulantes/fechamento/fechamentoV2';
 import { toast } from 'react-hot-toast';
 import {
   FiUsers, FiCalendar, FiAlertTriangle, FiSearch, FiEdit2, FiRefreshCw, FiSend,
@@ -126,7 +127,8 @@ export default function DepartamentoPessoalPage() {
   const [filterStatus, setFilterStatus] = useState('ativos');
   const [colaboradoresTotalApi, setColaboradoresTotalApi] = useState<number | null>(null);
 
-  const [mesFechamento, setMesFechamento] = useState(() => new Date().toISOString().slice(0, 7));
+  // Mês civil BRT (UTC viraria o mês após 21h do último dia).
+  const [mesFechamento, setMesFechamento] = useState(() => mesAnoAtualBRT());
   const [fechamentoTotais, setFechamentoTotais] = useState<FechamentoTotais | null>(null);
   const [fechamentoLoading, setFechamentoLoading] = useState(false);
 
@@ -724,6 +726,7 @@ export default function DepartamentoPessoalPage() {
           filters={{
             empresa: filterEmpresa || undefined,
             embarcacao: filterEmbarcacao || undefined,
+            embarcacoes: filterEmbarcacao ? [filterEmbarcacao] : undefined,
             cargo: filterCargo || undefined,
             statusAtivo: (filterStatus as 'ativos' | 'inativos' | 'todos') || 'ativos',
             busca: searchTerm || undefined,

@@ -49,14 +49,15 @@ export async function GET(request: NextRequest, props: { params: Promise<{ proto
 
         // 2. Se não existir, buscar dados do reembolso no banco
         // O id recebido pode ser um UUID ou um protocolo customizado
-        let reimbursementData: any = null;
+        const reimbursementData: any = null;
 
         // Tentar buscar por ID primeiro (assumindo que o "protocolo" na URL pode ser o ID interno)
-        let { data: reimbursement, error: dbError } = await supabaseAdmin
+        const { data: reimbursementById, error: dbError } = await supabaseAdmin
             .from('Reimbursement')
             .select('*') // Removed invalid join
             .eq('id', id)
             .single();
+        let reimbursement = reimbursementById;
 
         if (dbError || !reimbursement) {
             // Tentar buscar pela coluna protocolo se ID falhar

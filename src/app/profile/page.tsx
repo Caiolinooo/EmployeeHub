@@ -83,10 +83,8 @@ export default function ProfilePage() {
       phoneNumber: profile.phone_number || '',
       position: profile.position || '',
       department: profile.department || '',
-      // @ts-ignore
       bio: profile.bio || '',
       taxId: profile.tax_id ? formatCpf(profile.tax_id) : '',
-      // @ts-ignore
       birthDate: (profile as any).birth_date || '',
     });
 

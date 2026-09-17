@@ -135,9 +135,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Simular criptografia (em produção usar bcrypt ou similar)
-    let hashedPassword = password ? `encrypted_${password}` : null;
-    let hashedApiKey = apiKey ? `encrypted_${apiKey}` : null;
-    let hashedApiSecret = apiSecret ? `encrypted_${apiSecret}` : null;
+    const hashedPassword = password ? `encrypted_${password}` : null;
+    const hashedApiKey = apiKey ? `encrypted_${apiKey}` : null;
+    const hashedApiSecret = apiSecret ? `encrypted_${apiSecret}` : null;
 
     // Configuração padrão
     const defaultConfig: ERPConfig = {

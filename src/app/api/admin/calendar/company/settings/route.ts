@@ -53,7 +53,8 @@ export const GET = withPermission('manager', async (req, user) => {
 export const PUT = withPermission('manager', async (req, user) => {
   try {
     const body = await req.json().catch(() => ({}));
-    let { ics_url, gcal_url, notify_minutes_before, extra_recipients, marker_color } = body || {};
+    const { gcal_url, notify_minutes_before, extra_recipients, marker_color } = body || {};
+    let { ics_url } = body || {};
 
     // If admin pasted a Google Calendar page URL, derive ICS
     if ((!ics_url || typeof ics_url !== 'string' || !ics_url.includes('.ics')) && typeof gcal_url === 'string') {

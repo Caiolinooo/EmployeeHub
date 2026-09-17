@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     // Verificar se o usuário já existe
     let existingUser = null;
     let emailError = null;
-    let phoneError = null;
+    const phoneError = null;
 
     if (email) {
       const { data, error } = await supabase

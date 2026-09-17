@@ -184,7 +184,7 @@ export async function GET(request: NextRequest) {
 
         // Layer 4: ACL Permissions (from user_acl_permissions + role_acl_permissions)
         // If user has ANY ACL permission for a resource (e.g. ferias.read), enable that module
-        let aclModulesApplied: string[] = [];
+        const aclModulesApplied: string[] = [];
         let aclPermissionNames: string[] = [];
         try {
             const userAclPromise = supabaseAdmin

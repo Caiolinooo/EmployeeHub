@@ -94,7 +94,7 @@ export async function GET(
         }
 
         // Fetch user details for all unique user IDs
-        let users: Record<string, any> = {};
+        const users: Record<string, any> = {};
         if (userIds.size > 0) {
             const { data: userData, error: userFetchError } = await supabaseAdmin
                 .from('users_unified')

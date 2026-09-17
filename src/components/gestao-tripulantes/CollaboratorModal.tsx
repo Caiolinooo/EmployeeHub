@@ -73,7 +73,10 @@ interface Substitution {
   embarcacao_nome: string;
 }
 
-interface CollaboratorDetail {
+// `type` (não `interface`): type aliases de objeto recebem index signature
+// implícita e permanecem atribuíveis ao shape tolerante de DadosPessoaisTab
+// (que usa `[key: string]: unknown`).
+type CollaboratorDetail = {
   id: string;
   nome_completo: string;
   cpf: string;
@@ -111,7 +114,7 @@ interface CollaboratorDetail {
   data_admissao: string;
   data_demissao?: string | null;
   motivo_demissao?: string | null;
-  ativo?: boolean;
+  ativo?: boolean | null;
   data_ultimo_embarque?: string | null;
   data_ultimo_desembarque?: string | null;
   data_proximo_embarque: string;
@@ -122,7 +125,7 @@ interface CollaboratorDetail {
   documentos_alertas?: DocumentoAlertaUI[];
   embarques: Embarkation[];
   substituicoes: Substitution[];
-}
+};
 
 export type TabKey = 'dados' | 'ficha' | 'treinamentos' | 'aso' | 'passaportes' | 'documentos' | 'qhse' | 'embarques' | 'substituicoes' | 'desligamento';
 
@@ -454,7 +457,7 @@ export default function CollaboratorModal({ colaboradorId, onClose, initialTab, 
       case 'qhse':
         return <QhseTab colaboradorId={data.id} />;
       case 'embarques':
-        return <HistoricoEmbarquesTab embarques={data.embarques || []} />;
+        return <HistoricoEmbarquesTab embarques={data.embarques || []} colaboradorId={data.id} onRefresh={silentRefresh} />;
       case 'substituicoes':
         return <SubstituicoesTab colaboradorId={data.id} substituicoes={data.substituicoes || []} />;
       case 'desligamento':

@@ -4,6 +4,8 @@
  */
 
 import { supabaseAdmin } from '@/lib/supabase';
+import fs from 'fs';
+import path from 'path';
 
 interface CheckResult {
   component: string;
@@ -184,8 +186,6 @@ class AcademyFinalChecker {
       'src/components/Academy/VideoPlayer.tsx'
     ];
 
-    const fs = require('fs');
-    const path = require('path');
 
     for (const file of requiredFiles) {
       try {

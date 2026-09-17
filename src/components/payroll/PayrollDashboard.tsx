@@ -169,7 +169,7 @@ export default function PayrollDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-abz-background p-6">
+      <div className="min-h-dvh bg-abz-background p-4 sm:p-6">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-300 rounded w-1/4 mb-6"></div>
@@ -188,35 +188,35 @@ export default function PayrollDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-abz-background">
+    <div className="min-h-dvh bg-abz-background">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center space-x-3 min-w-0">
               <Link
                 href="/dashboard"
-                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="tap-target inline-flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors shrink-0"
                 title={t('common.back', 'Voltar')}
               >
                 <ArrowLeft className="h-5 w-5" />
               </Link>
-              <div className="p-2 bg-abz-blue/10 rounded-lg">
+              <div className="p-2 bg-abz-blue/10 rounded-lg shrink-0">
                 <Calculator className="h-6 w-6 text-abz-blue" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-abz-text-dark">
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold text-abz-text-dark truncate">
                   {t('payroll.title', 'Folha de Pagamento')}
                 </h1>
-                <p className="text-gray-600">
+                <p className="text-gray-600 text-sm truncate">
                   {t('payroll.description', 'Gestão completa de folha de pagamento')}
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 shrink-0">
               <button
                 onClick={handleNewPayroll}
-                className="bg-abz-blue text-white px-4 py-2 rounded-md hover:bg-abz-blue-dark transition-colors flex items-center space-x-2"
+                className="w-full sm:w-auto bg-abz-blue text-white px-4 py-2.5 rounded-md hover:bg-abz-blue-dark transition-colors flex items-center justify-center space-x-2"
               >
                 <Plus className="h-4 w-4" />
                 <span>{t('payroll.newPayroll', 'Nova Folha')}</span>
@@ -226,20 +226,20 @@ export default function PayrollDashboard() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6">
         {/* Seleção de Empresa e Workflow */}
         {companies.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-8">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4 sm:p-6 mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
               <h3 className="text-lg font-semibold text-abz-text-dark flex items-center">
                 <Building2 className="h-5 w-5 mr-2 text-blue-600" />
                 Empresa Selecionada
               </h3>
-              <div className="flex items-center space-x-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 <select
                   value={selectedCompany}
                   onChange={(e) => setSelectedCompany(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-abz-blue focus:border-transparent"
+                  className="w-full sm:w-auto px-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-abz-blue focus:border-transparent"
                 >
                   {companies.map((company) => (
                     <option key={company.id} value={company.id}>
@@ -250,7 +250,7 @@ export default function PayrollDashboard() {
                 <button
                   onClick={() => handleCompanyWorkflow(selectedCompany)}
                   disabled={!selectedCompany}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-300 transition-colors flex items-center space-x-2"
+                  className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2.5 rounded-md hover:bg-blue-700 disabled:bg-gray-300 transition-colors flex items-center justify-center space-x-2"
                 >
                   <Workflow className="h-4 w-4" />
                   <span>Workflow</span>
@@ -265,14 +265,14 @@ export default function PayrollDashboard() {
                   <div className="space-y-2">
                     <button
                       onClick={handleImportData}
-                      className="w-full bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center space-x-2 text-sm"
+                      className="w-full bg-green-600 text-white px-3 py-2.5 rounded-md hover:bg-green-700 transition-colors flex items-center space-x-2 text-sm"
                     >
                       <Upload className="h-4 w-4" />
                       <span>Importar Dados</span>
                     </button>
                     <button
                       onClick={handleNewPayroll}
-                      className="w-full bg-abz-blue text-white px-3 py-2 rounded-md hover:bg-abz-blue-dark transition-colors flex items-center space-x-2 text-sm"
+                      className="w-full bg-abz-blue text-white px-3 py-2.5 rounded-md hover:bg-abz-blue-dark transition-colors flex items-center space-x-2 text-sm"
                     >
                       <Plus className="h-4 w-4" />
                       <span>Nova Folha</span>
@@ -285,14 +285,14 @@ export default function PayrollDashboard() {
                   <div className="space-y-2">
                     <button
                       onClick={handleManageEmployees}
-                      className="w-full bg-gray-600 text-white px-3 py-2 rounded-md hover:bg-gray-700 transition-colors flex items-center space-x-2 text-sm"
+                      className="w-full bg-gray-600 text-white px-3 py-2.5 rounded-md hover:bg-gray-700 transition-colors flex items-center space-x-2 text-sm"
                     >
                       <Users className="h-4 w-4" />
                       <span>Funcionários</span>
                     </button>
                     <button
                       onClick={() => router.push(`/folha-pagamento/sheets?companyId=${selectedCompany}`)}
-                      className="w-full bg-gray-600 text-white px-3 py-2 rounded-md hover:bg-gray-700 transition-colors flex items-center space-x-2 text-sm"
+                      className="w-full bg-gray-600 text-white px-3 py-2.5 rounded-md hover:bg-gray-700 transition-colors flex items-center space-x-2 text-sm"
                     >
                       <FileText className="h-4 w-4" />
                       <span>Folhas</span>
@@ -305,14 +305,14 @@ export default function PayrollDashboard() {
                   <div className="space-y-2">
                     <button
                       onClick={handleMonthlyReport}
-                      className="w-full bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700 transition-colors flex items-center space-x-2 text-sm"
+                      className="w-full bg-purple-600 text-white px-3 py-2.5 rounded-md hover:bg-purple-700 transition-colors flex items-center space-x-2 text-sm"
                     >
                       <Download className="h-4 w-4" />
                       <span>Relatório Mensal</span>
                     </button>
                     <button
                       onClick={handlePaymentGuides}
-                      className="w-full bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700 transition-colors flex items-center space-x-2 text-sm"
+                      className="w-full bg-purple-600 text-white px-3 py-2.5 rounded-md hover:bg-purple-700 transition-colors flex items-center space-x-2 text-sm"
                     >
                       <FileSpreadsheet className="h-4 w-4" />
                       <span>Guias</span>
@@ -392,21 +392,21 @@ export default function PayrollDashboard() {
             <div className="space-y-3">
               <button
                 onClick={handleNewPayroll}
-                className="w-full bg-abz-blue text-white px-4 py-2 rounded-md hover:bg-abz-blue-dark transition-colors flex items-center space-x-2"
+                className="w-full bg-abz-blue text-white px-4 py-2.5 rounded-md hover:bg-abz-blue-dark transition-colors flex items-center space-x-2"
               >
                 <Plus className="h-4 w-4" />
                 <span>{t('payroll.newPayrollSheet', 'Nova Folha de Pagamento')}</span>
               </button>
               <button
                 onClick={handleManageEmployees}
-                className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors flex items-center space-x-2"
+                className="w-full bg-gray-100 text-gray-700 px-4 py-2.5 rounded-md hover:bg-gray-200 transition-colors flex items-center space-x-2"
               >
                 <Users className="h-4 w-4" />
                 <span>{t('payroll.manageEmployees', 'Gerenciar Funcionários')}</span>
               </button>
               <button
                 onClick={handleManageCompanies}
-                className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors flex items-center space-x-2"
+                className="w-full bg-gray-100 text-gray-700 px-4 py-2.5 rounded-md hover:bg-gray-200 transition-colors flex items-center space-x-2"
               >
                 <Building2 className="h-4 w-4" />
                 <span>{t('payroll.manageCompanies', 'Gerenciar Empresas')}</span>
@@ -421,21 +421,21 @@ export default function PayrollDashboard() {
             <div className="space-y-3">
               <button
                 onClick={handleMonthlyReport}
-                className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors flex items-center space-x-2"
+                className="w-full bg-gray-100 text-gray-700 px-4 py-2.5 rounded-md hover:bg-gray-200 transition-colors flex items-center space-x-2"
               >
                 <Download className="h-4 w-4" />
                 <span>{t('payroll.monthlyReport', 'Relatório Mensal')}</span>
               </button>
               <button
                 onClick={handlePaymentGuides}
-                className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors flex items-center space-x-2"
+                className="w-full bg-gray-100 text-gray-700 px-4 py-2.5 rounded-md hover:bg-gray-200 transition-colors flex items-center space-x-2"
               >
                 <FileText className="h-4 w-4" />
                 <span>{t('payroll.paymentGuides', 'Guias de Recolhimento')}</span>
               </button>
               <button
                 onClick={handleCostAnalysis}
-                className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors flex items-center space-x-2"
+                className="w-full bg-gray-100 text-gray-700 px-4 py-2.5 rounded-md hover:bg-gray-200 transition-colors flex items-center space-x-2"
               >
                 <TrendingUp className="h-4 w-4" />
                 <span>{t('payroll.costAnalysis', 'Análise de Custos')}</span>
@@ -450,19 +450,19 @@ export default function PayrollDashboard() {
             <div className="space-y-3">
               <button
                 onClick={handlePayrollCodes}
-                className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors"
+                className="w-full bg-gray-100 text-gray-700 px-4 py-2.5 rounded-md hover:bg-gray-200 transition-colors"
               >
                 {t('payroll.payrollCodes', 'Códigos de Folha')}
               </button>
               <button
                 onClick={handleCalculationProfiles}
-                className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors"
+                className="w-full bg-gray-100 text-gray-700 px-4 py-2.5 rounded-md hover:bg-gray-200 transition-colors"
               >
                 {t('payroll.calculationProfiles', 'Perfis de Cálculo')}
               </button>
               <button
                 onClick={handleLegalTables}
-                className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors"
+                className="w-full bg-gray-100 text-gray-700 px-4 py-2.5 rounded-md hover:bg-gray-200 transition-colors"
               >
                 {t('payroll.legalTables', 'Tabelas Legais')}
               </button>
@@ -494,7 +494,7 @@ export default function PayrollDashboard() {
                 <p className="text-gray-500">{t('payroll.noPayrollSheets', 'Nenhuma folha de pagamento encontrada')}</p>
                 <button
                   onClick={handleCreateFirstPayroll}
-                  className="mt-4 bg-abz-blue text-white px-4 py-2 rounded-md hover:bg-abz-blue-dark transition-colors"
+                  className="mt-4 bg-abz-blue text-white px-4 py-2.5 rounded-md hover:bg-abz-blue-dark transition-colors"
                 >
                   {t('payroll.createFirstSheet', 'Criar primeira folha')}
                 </button>

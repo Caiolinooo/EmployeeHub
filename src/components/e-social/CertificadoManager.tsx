@@ -121,6 +121,7 @@ export default function CertificadoManager({ certificados, loading, onUpload, on
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow-sm border border-gray-100">
+          <div className="table-responsive">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -172,7 +173,7 @@ export default function CertificadoManager({ certificados, loading, onUpload, on
                       {!cert.ativo && (
                         <button
                           onClick={() => onSetActive(cert.id)}
-                          className="p-1.5 text-gray-400 hover:text-amber-600 transition-colors"
+                          className="tap-target inline-flex items-center justify-center text-gray-400 hover:text-amber-600 transition-colors"
                           title={t('eSocial.certificados.setActive')}
                         >
                           <FiStar size={16} />
@@ -180,7 +181,7 @@ export default function CertificadoManager({ certificados, loading, onUpload, on
                       )}
                       <button
                         onClick={() => onDelete(cert.id)}
-                        className="p-1.5 text-gray-400 hover:text-red-600 transition-colors"
+                        className="tap-target inline-flex items-center justify-center text-gray-400 hover:text-red-600 transition-colors"
                         title={t('eSocial.certificados.delete')}
                       >
                         <FiTrash2 size={16} />
@@ -191,6 +192,7 @@ export default function CertificadoManager({ certificados, loading, onUpload, on
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

@@ -51,7 +51,7 @@ export default function FillEvaluationClient({
   // Bloquear renderização se avaliação estiver concluída
   if (evaluation.status === 'concluida') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="min-h-dvh bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="bg-white rounded-2xl shadow-lg p-8 border-2 border-yellow-200 max-w-md">
           <div className="flex items-center gap-3 mb-4">
             <FiAlertCircle className="w-8 h-8 text-yellow-600" />
@@ -239,7 +239,7 @@ export default function FillEvaluationClient({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-dvh bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         {/* Header */}
         <motion.div
@@ -399,12 +399,13 @@ export default function FillEvaluationClient({
           </motion.div>
         )}
 
-        {/* Botões de ação */}
+        {/* Botões de ação — rodapé sticky: Salvar/Enviar ficam visíveis no fim do formulário
+            (no mobile o submit não some após as 24 questões) + safe-area da home indicator */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="mt-8 bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-200"
+          className="sticky bottom-0 z-30 mt-8 bg-white/95 backdrop-blur rounded-t-2xl shadow-lg border-2 border-gray-200 px-6 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
         >
           <div className="flex flex-wrap gap-4 justify-end">
             <button
@@ -419,14 +420,14 @@ export default function FillEvaluationClient({
             <button
               onClick={handleSubmitClick}
               disabled={isSaving}
-              className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FiSend className="w-5 h-5" />
               {isSaving ? t('evaluation.sending') : isManager ? t('evaluation.finalize') : t('evaluation.sendForApproval')}
             </button>
           </div>
 
-          <p className="text-xs text-gray-500 text-right mt-4">
+          <p className="text-xs text-gray-500 text-right mt-4 hidden sm:block">
             {isManager
               ? t('evaluation.finalizeNote')
               : t('evaluation.sendNote')

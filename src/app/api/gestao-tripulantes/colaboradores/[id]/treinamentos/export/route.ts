@@ -65,7 +65,7 @@ export async function GET(
 
     // 3. Fetch gt_documentos_treinamento metadata
     const docIds = treinamentos.map(t => t.id);
-    let treDataMap: Record<string, any> = {};
+    const treDataMap: Record<string, any> = {};
     if (docIds.length > 0) {
       const { data: treData } = await supabaseAdmin
         .from('gt_documentos_treinamento')

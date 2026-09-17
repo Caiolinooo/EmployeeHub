@@ -1086,28 +1086,28 @@ export default function UnifiedUserManager() {
   return (
     <div className="flex flex-col min-h-0 flex-1 h-full">
       {/* Abas */}
-      <div className="shrink-0 flex justify-between mb-6">
+      <div className="shrink-0 flex flex-col sm:flex-row justify-between gap-3 mb-6">
         <div>
           <button
             onClick={fixToken}
             disabled={isFixingToken}
-            className={`flex items-center px-4 py-2 rounded-md ${isFixingToken ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white`}
+            className={`flex items-center justify-center px-4 py-2.5 rounded-md ${isFixingToken ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white`}
           >
             <FiRefreshCw className={`mr-2 ${isFixingToken ? 'animate-spin' : ''}`} />
             {isFixingToken ? 'Corrigindo Token...' : 'Corrigir Token de Acesso'}
           </button>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setActiveTab('users')}
-            className={`flex items-center px-4 py-2 rounded-md ${activeTab === 'users' ? 'bg-abz-blue text-white' : 'bg-gray-200 text-gray-700'}`}
+            className={`flex items-center justify-center px-4 py-2.5 rounded-md ${activeTab === 'users' ? 'bg-abz-blue text-white' : 'bg-gray-200 text-gray-700'}`}
           >
             <FiUser className="mr-2" />
             Usu�rios
           </button>
           <button
             onClick={() => setActiveTab('authorized')}
-            className={`flex items-center px-4 py-2 rounded-md ${activeTab === 'authorized' ? 'bg-abz-blue text-white' : 'bg-gray-200 text-gray-700'}`}
+            className={`flex items-center justify-center px-4 py-2.5 rounded-md ${activeTab === 'authorized' ? 'bg-abz-blue text-white' : 'bg-gray-200 text-gray-700'}`}
           >
             <FiUserCheck className="mr-2" />
             Autoriza��es
@@ -1147,7 +1147,7 @@ export default function UnifiedUserManager() {
                   placeholder={t('components.buscarUsuarios')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-abz-blue focus:border-abz-blue w-full md:w-64"
+                  className="pl-10 pr-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-abz-blue focus:border-abz-blue w-full md:w-64"
                 />
                 <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               </div>
@@ -1156,8 +1156,8 @@ export default function UnifiedUserManager() {
                   console.log(t('components.atualizandoListaDeUsuariosManualmente'));
                   fetchUsers();
                 }}
-                className="flex items-center px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-                title={t('admin.refreshUserList', 'Atualizar lista de usu�rios')}
+                className="flex items-center px-3 py-2.5 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                title={t('admin.refreshUserList', 'Atualizar lista de usuários')}
               >
                 <FiRefreshCw className="mr-1" />
                 {t('common.refresh', 'Atualizar')}
@@ -1166,14 +1166,14 @@ export default function UnifiedUserManager() {
 
             <button
               onClick={handleAddUser}
-              className="flex items-center px-4 py-2 bg-abz-blue text-white rounded-md hover:bg-abz-blue-dark transition-colors"
+              className="flex items-center px-4 py-2.5 bg-abz-blue text-white rounded-md hover:bg-abz-blue-dark transition-colors"
             >
               <FiPlus className="mr-2" />
               {t('userEditor.newUser', 'Novo Usu�rio')}
             </button>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-auto">
+          <div className="flex-1 min-h-0 overflow-auto table-responsive">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50 sticky top-0 z-10">
                 <tr>
@@ -1292,7 +1292,7 @@ export default function UnifiedUserManager() {
                               <div className="flex space-x-1">
                                 <button
                                   onClick={() => handleApproveUser(user._id)}
-                                  className="inline-flex items-center px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-md transition-colors"
+                                  className="inline-flex items-center px-2 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-md transition-colors"
                                   title={t('components.aprovarUsuario')}
                                 >
                                   <FiCheck className="w-3 h-3 mr-1" />
@@ -1300,7 +1300,7 @@ export default function UnifiedUserManager() {
                                 </button>
                                 <button
                                   onClick={() => handleRejectUser(user._id)}
-                                  className="inline-flex items-center px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-md transition-colors"
+                                  className="inline-flex items-center px-2 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-md transition-colors"
                                   title={t('components.rejeitarUsuario')}
                                 >
                                   <FiX className="w-3 h-3 mr-1" />
@@ -1317,38 +1317,38 @@ export default function UnifiedUserManager() {
                         {formatDate(user.createdAt)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end space-x-2">
+                        <div className="flex justify-end space-x-1">
                           <button
                             onClick={() => handleViewHistory(user)}
-                            className="text-gray-600 hover:text-abz-blue"
+                            className="tap-target inline-flex items-center justify-center text-gray-600 hover:text-abz-blue"
                             title={t('components.verHistoricoDeAcesso')}
                           >
                             <FiClock />
                           </button>
                           <button
                             onClick={() => handleResetPassword(user)}
-                            className="text-gray-600 hover:text-abz-blue"
+                            className="tap-target inline-flex items-center justify-center text-gray-600 hover:text-abz-blue"
                             title="Redefinir senha"
                           >
                             <FiKey />
                           </button>
                           <button
                             onClick={() => handleManageRole(user)}
-                            className="text-gray-600 hover:text-abz-blue"
-                            title="Gerenciar papel/fun��o"
+                            className="tap-target inline-flex items-center justify-center text-gray-600 hover:text-abz-blue"
+                            title="Gerenciar papel/função"
                           >
                             <FiShield />
                           </button>
                           <button
                             onClick={() => handleEditUser(user)}
-                            className="text-gray-600 hover:text-abz-blue"
+                            className="tap-target inline-flex items-center justify-center text-gray-600 hover:text-abz-blue"
                             title={t('components.editarUsuario')}
                           >
                             <FiEdit2 />
                           </button>
                           <button
                             onClick={() => handleDeleteConfirm(user)}
-                            className="text-gray-600 hover:text-red-600"
+                            className="tap-target inline-flex items-center justify-center text-gray-600 hover:text-red-600"
                             title={t('components.excluirUsuario')}
                           >
                             <FiTrash2 />
@@ -1419,7 +1419,7 @@ export default function UnifiedUserManager() {
                   setSuccessMessage('');
                   setError('');
                 }}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="flex items-center px-4 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
                 <FiPlus className="mr-2" />
                 {showAddForm ? t('common.cancel', 'Cancelar') : t('common.add', 'Adicionar')}
@@ -1430,7 +1430,7 @@ export default function UnifiedUserManager() {
                   fetchAuthorizedUsers();
                   fetchStats();
                 }}
-                className="flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                className="flex items-center px-4 py-2.5 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
               >
                 <FiRefreshCw className="mr-2" />
                 {t('common.refresh', 'Atualizar')}
@@ -1442,7 +1442,7 @@ export default function UnifiedUserManager() {
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="border border-gray-300 rounded-md px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">Todos</option>
                 <option value="active">Ativos</option>
@@ -1460,7 +1460,7 @@ export default function UnifiedUserManager() {
               <div className="flex flex-wrap gap-2 mb-4">
                 <button
                   onClick={() => setFormType('email')}
-                  className={`flex items-center px-3 py-2 rounded-md ${formType === 'email' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                  className={`flex items-center px-3 py-2.5 rounded-md ${formType === 'email' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
                 >
                   <FiMail className="mr-2" />
                   Email
@@ -1468,7 +1468,7 @@ export default function UnifiedUserManager() {
 
                 <button
                   onClick={() => setFormType('phone')}
-                  className={`flex items-center px-3 py-2 rounded-md ${formType === 'phone' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                  className={`flex items-center px-3 py-2.5 rounded-md ${formType === 'phone' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
                 >
                   <FiPhone className="mr-2" />
                   Telefone
@@ -1476,7 +1476,7 @@ export default function UnifiedUserManager() {
 
                 <button
                   onClick={() => setFormType('domain')}
-                  className={`flex items-center px-3 py-2 rounded-md ${formType === 'domain' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                  className={`flex items-center px-3 py-2.5 rounded-md ${formType === 'domain' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
                 >
                   <FiGlobe className="mr-2" />
                   Dom�nio
@@ -1484,7 +1484,7 @@ export default function UnifiedUserManager() {
 
                 <button
                   onClick={() => setFormType('invite')}
-                  className={`flex items-center px-3 py-2 rounded-md ${formType === 'invite' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                  className={`flex items-center px-3 py-2.5 rounded-md ${formType === 'invite' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
                 >
                   <FiKey className="mr-2" />
                   C�digo de Convite
@@ -1628,7 +1628,7 @@ export default function UnifiedUserManager() {
                     <div className="flex justify-end">
                       <button
                         type="submit"
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                        className="px-4 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                       >
                         {formType === 'invite' ? t('components.gerarCodigo') : 'Adicionar'}
                       </button>
@@ -1642,7 +1642,7 @@ export default function UnifiedUserManager() {
                         setGeneratedInviteCode('');
                         setSuccessMessage('');
                       }}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                      className="px-4 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                     >
                       Gerar Outro C�digo
                     </button>
@@ -1653,7 +1653,7 @@ export default function UnifiedUserManager() {
           )}
 
           {/* Lista de usu�rios autorizados */}
-          <div className="flex-1 min-h-0 overflow-auto">
+          <div className="flex-1 min-h-0 overflow-auto table-responsive">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50 sticky top-0 z-10">
                 <tr>
@@ -1727,19 +1727,19 @@ export default function UnifiedUserManager() {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
+                        <div className="flex space-x-1">
                           {user.status === 'pending' && (
                             <>
                               <button
                                 onClick={() => handleApprove(user._id)}
-                                className="text-green-600 hover:text-green-900"
+                                className="tap-target inline-flex items-center justify-center text-green-600 hover:text-green-900"
                                 title="Aprovar"
                               >
                                 <FiCheck className="h-5 w-5" />
                               </button>
                               <button
                                 onClick={() => openRejectModal(user._id)}
-                                className="text-red-600 hover:text-red-900"
+                                className="tap-target inline-flex items-center justify-center text-red-600 hover:text-red-900"
                                 title="Rejeitar"
                               >
                                 <FiX className="h-5 w-5" />
@@ -1748,7 +1748,7 @@ export default function UnifiedUserManager() {
                           )}
                           <button
                             onClick={() => handleDeleteAuthorizedUser(user._id)}
-                            className="text-gray-600 hover:text-gray-900"
+                            className="tap-target inline-flex items-center justify-center text-gray-600 hover:text-gray-900"
                             title="Excluir"
                           >
                             <FiTrash2 className="h-5 w-5" />
@@ -1817,7 +1817,7 @@ export default function UnifiedUserManager() {
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                className="px-4 py-2.5 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
               >
                 {t('common.cancel', 'Cancelar')}
               </button>
@@ -1888,7 +1888,7 @@ export default function UnifiedUserManager() {
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setShowRejectModal(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                className="px-4 py-2.5 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
               >
                 Cancelar
               </button>

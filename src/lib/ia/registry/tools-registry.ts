@@ -198,9 +198,9 @@ export async function initializeTools(): Promise<void> {
     await import('./definitions/portal.tools'),
   ];
 
-  for (const module of toolModules) {
-    if (module.registerTools) {
-      await module.registerTools();
+  for (const moduleDef of toolModules) {
+    if (moduleDef.registerTools) {
+      await moduleDef.registerTools();
     }
   }
 

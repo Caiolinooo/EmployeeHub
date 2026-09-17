@@ -338,7 +338,6 @@ async function detectarExtensao(buffer: Buffer, extIndicada: string): Promise<st
  */
 async function converterPDFParaImagens(pdfBuffer: Buffer): Promise<Buffer[]> {
   try {
-    // @ts-ignore
     const pdfjsModule = await import('pdfjs-dist/legacy/build/pdf.mjs').catch(() => import('pdfjs-dist'));
     const pdfjs = (pdfjsModule as any).getDocument ? pdfjsModule : ((pdfjsModule as any).default || pdfjsModule);
 
@@ -551,7 +550,7 @@ async function ocrImagensComTesseract(
 async function ocrPdfDigitalizado(buffer: Buffer, idioma: string = 'por'): Promise<{ texto: string; confianca: number }> {
   // 1) pdf-parse com render customizado — camada de texto residual
   try {
-    // @ts-ignore
+    // @ts-expect-error - pdf-parse/lib/pdf-parse.js sem tipos
     const pdfParseModule = await import('pdf-parse/lib/pdf-parse.js').catch(() => import('pdf-parse'));
     const pdfParse = typeof pdfParseModule === 'function' ? pdfParseModule : (pdfParseModule.default || pdfParseModule);
 
@@ -633,7 +632,7 @@ async function ocrPdfDigitalizado(buffer: Buffer, idioma: string = 'por'): Promi
 async function processarPDF(buffer: Buffer, idioma: string = 'por'): Promise<{ texto: string; confianca: number }> {
   let digitalTexto = '';
   try {
-    // @ts-ignore
+    // @ts-expect-error - pdf-parse/lib/pdf-parse.js sem tipos
     const pdfParseModule = await import('pdf-parse/lib/pdf-parse.js').catch(() => import('pdf-parse'));
     const pdfParse = typeof pdfParseModule === 'function' ? pdfParseModule : (pdfParseModule.default || pdfParseModule);
     const data = await pdfParse(buffer);

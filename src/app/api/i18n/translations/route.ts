@@ -58,12 +58,12 @@ export async function POST(request: NextRequest) {
         const existingSet = new Set(existing?.map(e => `${e.key}:${e.locale}`));
 
         // 2. Iterate System Modules
-        for (const module of SYSTEM_MODULES) {
-            const titleKey = `cards.${module.id}`; // e.g., cards.wkradar
-            const descKey = `cards.${module.id}Desc`; // e.g., cards.wkradarDesc
+        for (const moduleDef of SYSTEM_MODULES) {
+            const titleKey = `cards.${moduleDef.id}`; // e.g., cards.wkradar
+            const descKey = `cards.${moduleDef.id}Desc`; // e.g., cards.wkradarDesc
 
             // Generate Title Translations
-            const titleTrans = generateTranslations(titleKey, module.label, 'label');
+            const titleTrans = generateTranslations(titleKey, moduleDef.label, 'label');
             for (const t of titleTrans) {
                 if (!existingSet.has(`${titleKey}:${t.locale}`)) {
                     newEntries.push({ key: titleKey, locale: t.locale, value: t.value });
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
             }
 
             // Generate Description Translations
-            const descTrans = generateTranslations(descKey, module.description || module.label, 'desc');
+            const descTrans = generateTranslations(descKey, moduleDef.description || moduleDef.label, 'desc');
             for (const t of descTrans) {
                 if (!existingSet.has(`${descKey}:${t.locale}`)) {
                     newEntries.push({ key: descKey, locale: t.locale, value: t.value });

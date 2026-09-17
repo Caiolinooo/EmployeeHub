@@ -120,7 +120,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
         }
 
         // 3. Generate PDF
-        // @ts-ignore
+        // @ts-expect-error - renderToBuffer não tipa os props do componente PDF
         const pdfBuffer = await renderToBuffer(React.createElement(PurchaseOrderPdf, { data: po }));
 
         // 4. Prepare Attachments

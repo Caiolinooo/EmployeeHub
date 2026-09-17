@@ -6,7 +6,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import type { IAModuleConfig, IAWritePermissions, IARole } from '@/types/ia-global';
 
 // Cache de configurações
-let configCache: Map<string, unknown> = new Map();
+const configCache: Map<string, unknown> = new Map();
 let configCacheTime = 0;
 const CONFIG_CACHE_TTL = 60_000; // 1 minuto
 

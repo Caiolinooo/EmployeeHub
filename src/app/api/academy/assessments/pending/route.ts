@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
             .eq('attempt_id', attempt_id);
 
         let totalCorrect = 0;
-        let totalQuestions = allAnswers?.length || 1;
+        const totalQuestions = allAnswers?.length || 1;
 
         if (allAnswers) {
             allAnswers.forEach(ans => {

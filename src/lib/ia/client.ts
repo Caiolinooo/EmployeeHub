@@ -576,7 +576,7 @@ export async function chatCompletionStream(
     const reader = response.body.getReader();
     let currentFullContent = '';
     let isToolCallMode = false;
-    let pendingToolCalls: { id: string; name: string; arguments: string }[] = [];
+    const pendingToolCalls: { id: string; name: string; arguments: string }[] = [];
     let buffer = '';
 
     while (true) {

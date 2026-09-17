@@ -210,7 +210,7 @@ export default function AddShortcutModal({ onClose, onAdd, existingShortcuts }: 
                                     </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         {suggestions.map(suggestion => {
-                                            const module = modules.find(m => m.id === suggestion.module_id);
+                                            const moduleDef = modules.find(m => m.id === suggestion.module_id);
                                             // Skip if already in shortcuts (should be filtered by API but safely checking)
                                             if (existingShortcuts.includes(suggestion.module_id)) return null;
 
@@ -221,11 +221,11 @@ export default function AddShortcutModal({ onClose, onAdd, existingShortcuts }: 
                                                     className="flex items-center p-3 rounded-xl border border-gray-100 hover:border-blue-100 hover:bg-blue-50/50 hover:shadow-sm transition-all group text-left"
                                                 >
                                                     <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center mr-3 group-hover:bg-blue-200 transition-colors">
-                                                        {renderIcon(module?.iconName || module?.icon || '', "w-5 h-5")}
+                                                        {renderIcon(moduleDef?.iconName || moduleDef?.icon || '', "w-5 h-5")}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <h4 className="font-medium text-gray-900 group-hover:text-blue-700 truncate">
-                                                            {module?.moduleKey ? t(`cards.${module.moduleKey}`, module.title) : t(`cards.${suggestion.module_name}`)}
+                                                            {moduleDef?.moduleKey ? t(`cards.${moduleDef.moduleKey}`, moduleDef.title) : t(`cards.${suggestion.module_name}`)}
                                                         </h4>
                                                         <p className="text-xs text-gray-500">
                                                             {t('dashboard.oftenAccessed', 'Acessado frequentemente')}

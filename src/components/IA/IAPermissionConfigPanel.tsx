@@ -49,11 +49,11 @@ export default function IAPermissionConfigPanel({ token }: ConfigPanelProps) {
     setSaving(true);
     setMessage(null);
     try {
-      const module = modules.find(m => m.key === moduleKey);
-      if (!module) return;
+      const moduleDef = modules.find(m => m.key === moduleKey);
+      if (!moduleDef) return;
 
       await updateModuleConfig(moduleKey, {
-        ...module,
+        ...moduleDef,
         [field]: value,
       });
 
@@ -71,10 +71,10 @@ export default function IAPermissionConfigPanel({ token }: ConfigPanelProps) {
     setMessage(null);
 
     try {
-      const module = modules.find(m => m.key === moduleKey);
-      if (!module) return;
+      const moduleDef = modules.find(m => m.key === moduleKey);
+      if (!moduleDef) return;
 
-      let newRoles = [...module.writeRoles];
+      let newRoles = [...moduleDef.writeRoles];
       if (checked) {
         if (!newRoles.includes(role as any)) newRoles.push(role as any);
       } else {

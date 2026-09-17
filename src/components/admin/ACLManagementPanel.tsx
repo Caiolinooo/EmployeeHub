@@ -160,7 +160,7 @@ const ACLManagementPanel: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Gerenciamento ACL</h1>
           <p className="text-gray-600">Controle de acesso hierárquico avançado</p>
@@ -168,7 +168,7 @@ const ACLManagementPanel: React.FC = () => {
         {activeTab === 'permissions' && (
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <FiPlus className="w-4 h-4" />
             <span>Nova Permissão</span>
@@ -177,14 +177,14 @@ const ACLManagementPanel: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-gray-200 overflow-x-auto no-scrollbar">
         {tabs.map(tab => {
           const Icon = tab.icon;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center space-x-2 py-4 px-6 border-b-2 font-medium text-sm transition-colors ${
+              className={`flex items-center space-x-2 py-4 px-4 sm:px-6 border-b-2 font-medium text-sm transition-colors whitespace-nowrap shrink-0 ${
                 activeTab === tab.id
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -204,7 +204,7 @@ const ACLManagementPanel: React.FC = () => {
             <h3 className="text-lg font-medium mb-4">Permissões ACL ({permissions.length})</h3>
             
             {/* Estatísticas */}
-            <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
               {resources.map(resource => {
                 const count = permissions.filter(p => p.resource === resource).length;
                 return (
@@ -219,9 +219,9 @@ const ACLManagementPanel: React.FC = () => {
             {/* Lista de Permissões */}
             <div className="space-y-2">
               {permissions.map(permission => (
-                <div key={permission.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3">
+                <div key={permission.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border border-gray-200 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                       <h4 className="font-medium text-gray-900">{permission.name}</h4>
                       <span className={`px-2 py-1 text-xs rounded-full ${
                         permission.level === 0 ? 'bg-green-100 text-green-800' :
@@ -237,14 +237,14 @@ const ACLManagementPanel: React.FC = () => {
                     </div>
                     <p className="text-sm text-gray-500 mt-1">{permission.description}</p>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 shrink-0 self-end sm:self-auto">
                     <button
                       onClick={() => setEditingPermission(permission)}
-                      className="p-2 text-gray-400 hover:text-blue-600 rounded"
+                      className="tap-target inline-flex items-center justify-center text-gray-400 hover:text-blue-600 rounded"
                     >
                       <FiEdit className="w-4 h-4" />
                     </button>
-                    <button className="p-2 text-gray-400 hover:text-red-600 rounded">
+                    <button className="tap-target inline-flex items-center justify-center text-gray-400 hover:text-red-600 rounded">
                       <FiTrash2 className="w-4 h-4" />
                     </button>
                   </div>
@@ -302,8 +302,8 @@ const ACLManagementPanel: React.FC = () => {
                   const individualPerms = userACLPermissions[user.id] || [];
                   return (
                     <div key={user.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center min-w-0">
                           <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold">
                             {(user.first_name?.[0] || '') + (user.last_name?.[0] || '')}
                           </div>
@@ -317,13 +317,13 @@ const ACLManagementPanel: React.FC = () => {
                             </span>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-3">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 shrink-0">
                           <span className="text-sm text-gray-500">
                             {individualPerms.length} permissão(ões) individual
                           </span>
                           <a
                             href="/admin/users"
-                            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                            className="inline-flex items-center px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
                           >
                             Gerenciar
                           </a>
@@ -359,8 +359,8 @@ const ACLManagementPanel: React.FC = () => {
 
       {/* Modal de Criar Permissão */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md my-8">
             <h3 className="text-lg font-semibold mb-4">Nova Permissão ACL</h3>
 
             <div className="space-y-4">
@@ -390,7 +390,7 @@ const ACLManagementPanel: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Recurso
@@ -444,13 +444,13 @@ const ACLManagementPanel: React.FC = () => {
             <div className="flex justify-end space-x-3 mt-6">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                className="px-4 py-2.5 text-gray-600 hover:text-gray-800"
               >
                 Cancelar
               </button>
               <button
                 onClick={createPermission}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 Criar Permissão
               </button>

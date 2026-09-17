@@ -111,8 +111,8 @@ export async function GET(request: NextRequest) {
       )
     ]);
 
-    let { data: notifications, error, attempts } = notificationsResult;
-    notifications = notifications || [];
+    const { data: notificationsData, error, attempts } = notificationsResult;
+    let notifications = notificationsData || [];
     const totalCount = totalResult.count || 0;
     const unreadCount = unreadResult.count || 0;
     const newsUnreadCount = newsUnreadResult.count || 0;

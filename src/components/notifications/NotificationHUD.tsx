@@ -54,8 +54,6 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
     pagination
   } = useNotifications(safeUserId);
 
-  if (!userId) return null;
-
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLButtonElement>(null);
@@ -291,6 +289,10 @@ const NotificationHUD: React.FC<NotificationHUDProps> = ({
       }
     }
   }, [userId]);
+
+  // Sem userId: renderiza nada. O guard fica DEPOIS de todos os hooks —
+  // hooks precisam rodar na mesma ordem em toda render (rules-of-hooks).
+  if (!userId) return null;
 
   return (
     <div className="relative" ref={dropdownRef}>

@@ -2695,7 +2695,7 @@ return JSON.stringify(data);
           };
         });
 
-        let output: any = { total: formattedData.length, reembolsos: formattedData };
+        const output: any = { total: formattedData.length, reembolsos: formattedData };
 
         if (agrupar_por && incluir_totais) {
           const grouped: Record<string, { count: number; total: number }> = {};
@@ -2779,7 +2779,7 @@ return JSON.stringify(data);
           };
         });
 
-        let output: any = {
+        const output: any = {
           total: formattedData.length,
           ferias: formattedData,
           filtros: { status: statusNorm || null, ano: ano || null, incluir_historico },
@@ -2830,7 +2830,7 @@ return JSON.stringify(data);
           };
         });
 
-        let output: any = { total: formattedData.length, avaliacoes: formattedData };
+        const output: any = { total: formattedData.length, avaliacoes: formattedData };
 
         if (incluir_totais) {
           const notasValidas = formattedData.filter((a: any) => a.nota != null).map((a: any) => a.nota);
@@ -2883,7 +2883,7 @@ return JSON.stringify(data);
           };
         });
 
-        let output: any = { total: formattedData.length, epis: formattedData };
+        const output: any = { total: formattedData.length, epis: formattedData };
 
         if (agrupar_por) {
           const grouped: Record<string, number> = {};
@@ -2927,7 +2927,7 @@ return JSON.stringify(data);
           created_by: c.created_by || c.user_id,
         }));
 
-        let output: any = { total: formattedData.length, compras: formattedData };
+        const output: any = { total: formattedData.length, compras: formattedData };
 
         if (agrupar_por && agrupar_por !== 'created_by') {
           const grouped: Record<string, number> = {};
@@ -2967,7 +2967,7 @@ return JSON.stringify(data);
           registrado_em: r.created_at,
         }));
 
-        let output: any = { total: formattedData.length, registros: formattedData };
+        const output: any = { total: formattedData.length, registros: formattedData };
 
         if (agrupar_por) {
           const grouped: Record<string, number> = {};
@@ -2986,7 +2986,7 @@ return JSON.stringify(data);
         
         let data: any[] = [];
         let columns: any[] = [];
-        let periodo = { inicio: filtros.data_inicio || 'Início', fim: filtros.data_fim || 'Atual' };
+        const periodo = { inicio: filtros.data_inicio || 'Início', fim: filtros.data_fim || 'Atual' };
 
         // Configuration for different data types
         const configMap: Record<string, any> = {
@@ -3378,7 +3378,7 @@ return JSON.stringify(data);
         console.log('[IA Tools] Enviando email real para:', para);
 
         try {
-          let attachments: any[] = [];
+          const attachments: any[] = [];
 
           // Se tem dados de anexo, gerar o arquivo
           if (dados_anexo && titulo_anexo) {
@@ -4466,10 +4466,10 @@ return JSON.stringify(data);
       }
 
       case 'usar_skill': {
-        const { useUserSkill } = await import('./user-skills');
+        const { applyUserSkill } = await import('./user-skills');
         const key = String(args?.skill || '').trim();
         if (!key) return 'skill (nome ou id) é obrigatório.';
-        const { skill, promptBlock, error } = await useUserSkill(userId, key);
+        const { skill, promptBlock, error } = await applyUserSkill(userId, key);
         if (!skill) return error || 'Skill não encontrada.';
         return JSON.stringify({
           success: true,
@@ -4848,7 +4848,7 @@ case 'coletar_dados_holisticos': {
       case 'buscar_ponto': {
         const { funcionario_id, data_inicio, data_fim, limite = 100 } = args;
         
-        let targetUserId = funcionario_id || userId;
+        const targetUserId = funcionario_id || userId;
         if (userRole !== 'ADMIN' && userRole !== 'GERENTE' && targetUserId !== userId) {
           return 'Acesso negado: Você só pode buscar seus próprios registros de ponto.';
         }

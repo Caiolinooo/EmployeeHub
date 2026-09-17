@@ -95,7 +95,7 @@ const buscarPendenciasAprovacaoTool: IATool = {
   adminOnly: false,
   handler: async (args, context) => {
     try {
-      let baseQuery = supabaseAdmin
+      const baseQuery = supabaseAdmin
         .from('purchase_requests')
         .select('*, user:users_unified(first_name, last_name, department)')
         .eq('status', 'pending')

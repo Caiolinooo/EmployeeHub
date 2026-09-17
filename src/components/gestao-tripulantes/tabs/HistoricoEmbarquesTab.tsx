@@ -1,8 +1,26 @@
 'use client';
 
-import React from 'react';
-import { FiAnchor, FiCalendar, FiMapPin, FiClock, FiArrowRight, FiMessageSquare } from 'react-icons/fi';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  FiAnchor,
+  FiArrowRight,
+  FiCalendar,
+  FiChevronDown,
+  FiChevronUp,
+  FiClock,
+  FiEdit2,
+  FiMapPin,
+  FiMessageSquare,
+  FiTrash2,
+} from 'react-icons/fi';
+import { toast } from 'react-hot-toast';
 import { useI18n } from '@/contexts/I18nContext';
+import { fetchWithToken, getToken } from '@/lib/tokenStorage';
+import EscalaEventoForm, {
+  EscalaEventoFooter,
+  isValidEscalaEventoForm,
+  type EscalaEventoFormValues,
+} from '@/components/gestao-tripulantes/EscalaEventoForm';
 import {
   COLLABORATOR_MODAL_TAB_FILL_CLASS,
   COLLABORATOR_MODAL_TABLE_SCROLL_CLASS,
@@ -12,6 +30,7 @@ import { parseCivilDate } from '@/lib/gestao-tripulantes/escala-contagem';
 
 interface Embarkation {
   id: string;
+  colaborador_id?: string;
   embarcacao_nome?: string;
   // API returns embarcacao as nested object from JOIN
   embarcacao?: { nome?: string } | null;
@@ -20,7 +39,8 @@ interface Embarkation {
   data_desembarque: string;
   data_prevista_desembarque: string;
   local_embarque: string;
-  local_desembarque: string;
+  local_desembarque?: string;
+  exibir_dia_inicio?: boolean;
   voo_ida: string;
   voo_volta: string;
   observacoes: string;
@@ -29,6 +49,23 @@ interface Embarkation {
 
 interface Props {
   embarques: Embarkation[];
+  /** Id do colaborador (para GET /escala-edicoes?colaboradorId=). Fallback: embarques[0].colaborador_id. */
+  colaboradorId?: string;
+  /** Atualiza a ficha (CollaboratorModal.silentRefresh) após salvar/excluir. */
+  onRefresh?: () => void;
+}
+
+/** Linha de gt_escala_edicoes (R7 — contrato compartilhado da API). */
+interface EscalaEdicaoItem {
+  id: string;
+  embarque_id?: string | null;
+  operacao: 'create' | 'update' | 'delete' | 'restore' | 'rejeicao' | 'reversao';
+  status: 'aplicada' | 'revertida' | 'rejeitada';
+  dados_anteriores?: Record<string, unknown> | null;
+  dados_novos?: Record<string, unknown> | null;
+  motivo?: string | null;
+  ator_nome?: string | null;
+  created_at?: string | null;
 }
 
 const TIPO_CONFIG: Record<string, { color: string; label: string }> = {
@@ -57,23 +94,274 @@ const DOT_COLORS: Record<string, string> = {
   treinamento: 'bg-gray-500',
 };
 
+/** Férias/afastamento vivem em gt_afastamentos — PUT/DELETE /embarques/<id> daria 404. */
+function isEmbarqueEditavel(tipo: string | null | undefined): boolean {
+  const codigo = mapDbTipoToCodigo(tipo);
+  return codigo !== 'ferias' && codigo !== 'afastamento';
+}
+
 function durationDays(start: string, end: string | null): string {
   if (!start || !end) return '';
   const d = Math.ceil((new Date(end).getTime() - new Date(start).getTime()) / 86400000);
   return `${d} dias`;
 }
 
-export default function HistoricoEmbarquesTab({ embarques }: Props) {
+/** Campos exibidos no diff compacto (antes → depois) do histórico de alterações. */
+const CAMPOS_DIFF: Array<{ key: string; labelKey: string; defaultLabel: string }> = [
+  { key: 'tipo', labelKey: 'campoTipo', defaultLabel: 'Tipo' },
+  { key: 'data_embarque', labelKey: 'campoDataEmbarque', defaultLabel: 'Data de embarque' },
+  { key: 'data_desembarque', labelKey: 'campoDataDesembarque', defaultLabel: 'Data de desembarque' },
+  { key: 'local_embarque', labelKey: 'campoLocalEmbarque', defaultLabel: 'Local de embarque' },
+  { key: 'local_desembarque', labelKey: 'campoLocalDesembarque', defaultLabel: 'Embarcação/Destino' },
+  { key: 'observacoes', labelKey: 'campoObservacoes', defaultLabel: 'Observações' },
+];
+
+function formatDiffValue(key: string, raw: unknown): string {
+  if (raw === null || raw === undefined || raw === '') return '—';
+  if (key === 'tipo') {
+    const codigo = mapDbTipoToCodigo(String(raw));
+    return TIPO_CONFIG[codigo]?.label || TIPO_CONFIG[String(raw)]?.label || String(raw).toUpperCase();
+  }
+  if (key === 'data_embarque' || key === 'data_desembarque') {
+    const civil = parseCivilDate(String(raw).slice(0, 10));
+    if (civil) {
+      const dd = String(civil.getDate()).padStart(2, '0');
+      const mm = String(civil.getMonth() + 1).padStart(2, '0');
+      return `${dd}/${mm}/${civil.getFullYear()}`;
+    }
+    return String(raw);
+  }
+  if (key === 'exibir_dia_inicio') return raw === true || raw === 'true' ? 'Sim' : 'Não';
+  return String(raw);
+}
+
+export default function HistoricoEmbarquesTab({ embarques, colaboradorId, onRefresh }: Props) {
   const { t } = useI18n();
 
+  const colabId = colaboradorId || embarques.find((e) => e.colaborador_id)?.colaborador_id || '';
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValues, setEditValues] = useState<EscalaEventoFormValues | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [edicoes, setEdicoes] = useState<EscalaEdicaoItem[] | null>(null);
+  const [edicoesLoading, setEdicoesLoading] = useState(false);
+  const [historicoAberto, setHistoricoAberto] = useState<Set<string>>(() => new Set());
+
   // Datas 'YYYY-MM-DD' parseadas como UTC exibem a véspera no fuso BRT; parse civil local.
-  const formatDate = (d: string | null | undefined) => {
+  const formatDate = useCallback((d: string | null | undefined) => {
     if (!d) return '—';
     const civil = parseCivilDate(d);
     if (!civil) return d;
     const dd = String(civil.getDate()).padStart(2, '0');
     const mm = String(civil.getMonth() + 1).padStart(2, '0');
     return `${dd}/${mm}/${civil.getFullYear()}`;
+  }, []);
+
+  const formatQuando = useCallback((iso: string | null | undefined) => {
+    if (!iso) return '—';
+    const dt = new Date(iso);
+    if (isNaN(dt.getTime())) return String(iso);
+    const dd = String(dt.getDate()).padStart(2, '0');
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const aa = dt.getFullYear();
+    const hh = String(dt.getHours()).padStart(2, '0');
+    const mi = String(dt.getMinutes()).padStart(2, '0');
+    return `${dd}/${mm}/${aa} ${hh}:${mi}`;
+  }, []);
+
+  // ─── Histórico de alterações (gt_escala_edicoes) — paginado, fail-soft ───
+  const carregarEdicoes = useCallback(async () => {
+    if (!colabId) {
+      setEdicoes([]);
+      return;
+    }
+    setEdicoesLoading(true);
+    try {
+      const token = getToken();
+      const headers: Record<string, string> = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const acumulado: EscalaEdicaoItem[] = [];
+      const pageSize = 100;
+      for (let page = 1; page <= 5; page++) {
+        const res = await fetch(
+          `/api/gestao-tripulantes/escala-edicoes?colaboradorId=${encodeURIComponent(colabId)}&page=${page}&pageSize=${pageSize}&_t=${Date.now()}`,
+          { headers, cache: 'no-store' }
+        );
+        if (!res.ok) break;
+        const json = await res.json().catch(() => null);
+        // Contrato da rota: { rows: [...] } (fallback data p/ robustez).
+        const rows = (json?.rows ?? json?.data ?? []) as EscalaEdicaoItem[];
+        if (!Array.isArray(rows)) break;
+        acumulado.push(...rows);
+        if (rows.length < pageSize) break;
+      }
+      setEdicoes(acumulado);
+    } catch {
+      setEdicoes((prev) => prev ?? []);
+    } finally {
+      setEdicoesLoading(false);
+    }
+  }, [colabId]);
+
+  useEffect(() => {
+    void carregarEdicoes();
+  }, [carregarEdicoes]);
+
+  const edicoesPorEmbarque = useMemo(() => {
+    const map = new Map<string, EscalaEdicaoItem[]>();
+    for (const ed of edicoes || []) {
+      const keys = new Set<string>();
+      if (ed.embarque_id) keys.add(ed.embarque_id);
+      const antesId = (ed.dados_anteriores as { id?: unknown } | null)?.id;
+      const depoisId = (ed.dados_novos as { id?: unknown } | null)?.id;
+      if (typeof antesId === 'string' && antesId) keys.add(antesId);
+      if (typeof depoisId === 'string' && depoisId) keys.add(depoisId);
+      for (const key of keys) {
+        const list = map.get(key) || [];
+        list.push(ed);
+        map.set(key, list);
+      }
+    }
+    return map;
+  }, [edicoes]);
+
+  const toggleHistorico = (id: string) => {
+    setHistoricoAberto((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const abrirEdicao = (emb: Embarkation) => {
+    if (!isEmbarqueEditavel(emb.tipo)) {
+      toast.error(t(
+        'gtEscalaV2.bloqueioFerias',
+        'Férias e afastamentos são gerenciados pelo módulo de Férias/DP e não podem ser editados aqui.'
+      ));
+      return;
+    }
+    setEditingId(emb.id);
+    setEditValues({
+      tipo: mapDbTipoToCodigo(emb.tipo),
+      dataInicio: String(emb.data_embarque || '').slice(0, 10),
+      dataFim: String(emb.data_desembarque || emb.data_prevista_desembarque || '').slice(0, 10),
+      embarcacao: emb.local_desembarque || emb.embarcacao_nome || emb.embarcacao?.nome || '',
+      localEmbarque: emb.local_embarque || '',
+      observacoes: emb.observacoes || '',
+      exibirDiaInicio: emb.exibir_dia_inicio !== false,
+    });
+  };
+
+  const salvarEdicao = async (emb: Embarkation) => {
+    if (!editValues || !isValidEscalaEventoForm(editValues)) return;
+    setSaving(true);
+    try {
+      const res = await fetchWithToken(`/api/gestao-tripulantes/embarques/${emb.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tipo: editValues.tipo,
+          data_embarque: editValues.dataInicio,
+          data_desembarque: editValues.dataFim,
+          local_embarque: editValues.localEmbarque,
+          local_desembarque: editValues.embarcacao,
+          observacoes: editValues.observacoes,
+          exibir_dia_inicio: editValues.exibirDiaInicio,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Erro ao salvar evento.');
+      // R7: toda edição aplica na hora e fica auditada — reversível pela fila.
+      toast.success(t('gtEscalaV2.alteracaoRegistrada', 'Alteração registrada no histórico (reversível)'));
+      setEditingId(null);
+      setEditValues(null);
+      onRefresh?.();
+      void carregarEdicoes();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Falha ao salvar evento.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const excluirEmbarque = async (emb: Embarkation) => {
+    if (!isEmbarqueEditavel(emb.tipo)) {
+      toast.error(t(
+        'gtEscalaV2.bloqueioFerias',
+        'Férias e afastamentos são gerenciados pelo módulo de Férias/DP e não podem ser editados aqui.'
+      ));
+      return;
+    }
+    if (!window.confirm(t('gtEscalaV2.confirmarExclusao', 'Excluir este evento de escala? A remoção fica registrada e pode ser revertida.'))) {
+      return;
+    }
+    setDeletingId(emb.id);
+    try {
+      const res = await fetchWithToken(`/api/gestao-tripulantes/embarques/${emb.id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Erro ao excluir evento.');
+      toast.success(t('gtEscalaV2.eventoRemovido', 'Evento removido (reversível via histórico de alterações)'));
+      if (editingId === emb.id) {
+        setEditingId(null);
+        setEditValues(null);
+      }
+      onRefresh?.();
+      void carregarEdicoes();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Falha ao remover evento.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const statusBadgeClass = (status: string): string => {
+    switch (status) {
+      case 'aplicada':
+        return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'revertida':
+        return 'bg-amber-50 text-amber-700 border-amber-200';
+      case 'rejeitada':
+        return 'bg-rose-50 text-rose-700 border-rose-200';
+      default:
+        return 'bg-slate-50 text-slate-600 border-slate-200';
+    }
+  };
+
+  const operacaoLabel = (operacao: string): string => {
+    switch (operacao) {
+      case 'create':
+        return t('gtEscalaV2.opCreate', 'Criação');
+      case 'update':
+        return t('gtEscalaV2.opUpdate', 'Alteração');
+      case 'delete':
+        return t('gtEscalaV2.opDelete', 'Exclusão');
+      case 'restore':
+        return t('gtEscalaV2.opRestore', 'Restauração');
+      case 'rejeicao':
+        return t('gtEscalaV2.opRejeicao', 'Rejeição');
+      case 'reversao':
+        return t('gtEscalaV2.opReversao', 'Reversão');
+      default:
+        return operacao;
+    }
+  };
+
+  const statusLabel = (status: string): string => {
+    switch (status) {
+      case 'aplicada':
+        return t('gtEscalaV2.statusAplicada', 'Aplicada');
+      case 'revertida':
+        return t('gtEscalaV2.statusRevertida', 'Revertida');
+      case 'rejeitada':
+        return t('gtEscalaV2.statusRejeitada', 'Rejeitada');
+      default:
+        return status;
+    }
   };
 
   if (embarques.length === 0) {
@@ -111,21 +399,25 @@ export default function HistoricoEmbarquesTab({ embarques }: Props) {
       <div className={`${COLLABORATOR_MODAL_TABLE_SCROLL_CLASS} relative pl-6`}>
         <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-400 to-gray-200" />
 
-        {embarques.map((emb, i) => {
+        {embarques.map((emb) => {
           const tipoCfg = TIPO_CONFIG[emb.tipo] || TIPO_CONFIG.normal;
           const dotColor = DOT_COLORS[emb.tipo] || 'bg-gray-500';
           const duration = durationDays(emb.data_embarque, emb.data_desembarque);
+          const editavel = isEmbarqueEditavel(emb.tipo);
+          const emEdicao = editingId === emb.id;
+          const edicoesDoEvento = edicoesPorEmbarque.get(emb.id) || [];
+          const historicoExpandido = historicoAberto.has(emb.id);
 
           return (
-            <div key={emb.id} className={`relative mb-5 ${i === embarques.length - 1 ? '' : ''}`}>
+            <div key={emb.id} className="relative mb-5">
               {/* Dot */}
               <div className={`absolute -left-4 top-3 w-3 h-3 rounded-full ${dotColor} border-2 border-white shadow ring-2 ring-white`} />
 
-              <div className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow ml-2">
+              <div className={`bg-white border rounded-xl p-4 hover:shadow-md transition-shadow ml-2 ${emEdicao ? 'border-blue-300 ring-1 ring-blue-100' : 'border-gray-100'}`}>
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-2">
-                      <p className="font-semibold text-gray-800 text-sm">{emb.embarcacao_nome || (emb.embarcacao as any)?.nome || '—'}</p>
+                      <p className="font-semibold text-gray-800 text-sm">{emb.embarcacao_nome || emb.embarcacao?.nome || '—'}</p>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${tipoCfg.color}`}>
                         {t(`gestaoTripulantes.embarkations.types.${emb.tipo}`, tipoCfg.label)}
                       </span>
@@ -174,7 +466,152 @@ export default function HistoricoEmbarquesTab({ embarques }: Props) {
                       </div>
                     )}
                   </div>
+
+                  {/* Ações (R7): Editar / Excluir — imediato + auditado (reversível) */}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {editavel ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => (emEdicao ? setEditingId(null) : abrirEdicao(emb))}
+                          disabled={saving || deletingId !== null}
+                          className="min-h-[44px] lg:min-h-[30px] w-9 lg:w-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:text-blue-700 hover:border-blue-300 hover:bg-blue-50 disabled:opacity-40 transition-colors"
+                          title={t('gtEscalaV2.editar', 'Editar')}
+                          aria-label={t('gtEscalaV2.editar', 'Editar')}
+                        >
+                          <FiEdit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void excluirEmbarque(emb)}
+                          disabled={saving || deletingId !== null}
+                          className="min-h-[44px] lg:min-h-[30px] w-9 lg:w-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:text-rose-600 hover:border-rose-300 hover:bg-rose-50 disabled:opacity-40 transition-colors"
+                          title={t('gtEscalaV2.excluirCurto', 'Excluir')}
+                          aria-label={t('gtEscalaV2.excluirCurto', 'Excluir')}
+                        >
+                          {deletingId === emb.id ? (
+                            <span className="w-3 h-3 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <FiTrash2 className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </>
+                    ) : (
+                      <span
+                        className="text-[10px] text-slate-400 border border-slate-200 rounded-md px-2 py-1 bg-slate-50 whitespace-nowrap"
+                        title={t('gtEscalaV2.bloqueioFerias', 'Férias e afastamentos são gerenciados pelo módulo de Férias/DP.')}
+                      >
+                        {t('gtEscalaV2.bloqueadoFeriasCurto', 'Férias/DP')}
+                      </span>
+                    )}
+                  </div>
                 </div>
+
+                {/* Editor inline (mesmo formulário da grade — EscalaEventoForm) */}
+                {emEdicao && editValues && (
+                  <div className="mt-3 pt-3 border-t border-slate-200">
+                    <EscalaEventoForm
+                      value={editValues}
+                      onChange={setEditValues}
+                      idPrefix={`gt-escala-ficha-${emb.id}`}
+                      disabled={saving}
+                    />
+                    <div className="mt-3 pt-3 border-t border-slate-200 bg-white rounded-b-xl">
+                      <EscalaEventoFooter
+                        editing
+                        submitting={saving}
+                        disabled={!isValidEscalaEventoForm(editValues)}
+                        onDelete={() => void excluirEmbarque(emb)}
+                        onCancel={() => {
+                          setEditingId(null);
+                          setEditValues(null);
+                        }}
+                        onSave={() => void salvarEdicao(emb)}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Histórico de alterações (R7 — fila de revisão/rollback) */}
+                {colabId && (
+                  <div className="mt-3 pt-2 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => toggleHistorico(emb.id)}
+                      className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-blue-700 transition-colors min-h-[44px] lg:min-h-0 py-1"
+                      aria-expanded={historicoExpandido}
+                    >
+                      {historicoExpandido ? <FiChevronUp className="w-3.5 h-3.5" /> : <FiChevronDown className="w-3.5 h-3.5" />}
+                      {t('gtEscalaV2.historicoAlteracoes', 'Histórico de alterações')}
+                      {edicoesDoEvento.length > 0 && (
+                        <span className="px-1.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-bold">
+                          {edicoesDoEvento.length}
+                        </span>
+                      )}
+                    </button>
+
+                    {historicoExpandido && (
+                      <div className="mt-1.5 space-y-2">
+                        {edicoesLoading && edicoes === null && (
+                          <p className="text-[11px] text-slate-400">{t('gtEscalaV2.historicoCarregando', 'Carregando histórico...')}</p>
+                        )}
+                        {!edicoesLoading && edicoesDoEvento.length === 0 && (
+                          <p className="text-[11px] text-slate-400 italic">
+                            {t('gtEscalaV2.historicoVazio', 'Sem alterações registradas para este evento.')}
+                          </p>
+                        )}
+                        {edicoesDoEvento.map((ed) => {
+                          const antes = ed.dados_anteriores || null;
+                          const depois = ed.dados_novos || null;
+                          const diffs = CAMPOS_DIFF
+                            .map(({ key, labelKey, defaultLabel }) => {
+                              const valorAntes = antes ? antes[key] : undefined;
+                              const valorDepois = depois ? depois[key] : undefined;
+                              const antesTxt = formatDiffValue(key, valorAntes);
+                              const depoisTxt = formatDiffValue(key, valorDepois);
+                              return { label: t(`gtEscalaV2.${labelKey}`, defaultLabel), antesTxt, depoisTxt, mudou: antesTxt !== depoisTxt };
+                            })
+                            .filter((d) => d.mudou);
+                          return (
+                            <div key={ed.id} className="rounded-lg border border-slate-200 bg-slate-50/60 p-2.5 text-[11px]">
+                              <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                                <span className="font-bold text-slate-700">{operacaoLabel(ed.operacao)}</span>
+                                <span className={`px-1.5 py-0.5 rounded border font-semibold uppercase text-[9px] ${statusBadgeClass(ed.status)}`}>
+                                  {statusLabel(ed.status)}
+                                </span>
+                                {ed.ator_nome && (
+                                  <span className="text-slate-500">
+                                    {t('gtEscalaV2.historicoAtor', 'Por')}: <span className="font-semibold text-slate-600">{ed.ator_nome}</span>
+                                  </span>
+                                )}
+                                <span className="text-slate-400 ml-auto font-mono text-[10px]">{formatQuando(ed.created_at)}</span>
+                              </div>
+
+                              {diffs.length > 0 && (
+                                <div className="space-y-0.5">
+                                  {diffs.map((d) => (
+                                    <div key={d.label} className="flex items-start gap-1.5 flex-wrap">
+                                      <span className="text-slate-400 font-semibold min-w-[110px]">{d.label}:</span>
+                                      <span className="text-rose-600 line-through decoration-rose-300">{d.antesTxt}</span>
+                                      <FiArrowRight className="w-3 h-3 text-slate-300 mt-0.5" />
+                                      <span className="text-emerald-700 font-semibold">{d.depoisTxt}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {ed.motivo && (
+                                <p className="mt-1.5 text-slate-500 italic">
+                                  {t('gtEscalaV2.motivo', 'Motivo')}: {ed.motivo}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           );

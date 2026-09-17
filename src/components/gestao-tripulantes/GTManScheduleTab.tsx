@@ -9,6 +9,17 @@ import ModalAprovacaoFechamento from '@/components/gestao-tripulantes/ModalAprov
 import SearchableCreatableSelect from '@/components/gestao-tripulantes/SearchableCreatableSelect';
 import ScheduleDateFilterInput from '@/components/gestao-tripulantes/ScheduleDateFilterInput';
 import ManScheduleTimelineNav from '@/components/gestao-tripulantes/ManScheduleTimelineNav';
+import EscalaEventoForm, {
+    EscalaEventoFooter,
+    emptyEscalaEventoForm,
+    isValidEscalaEventoForm,
+    type EscalaEventoFormValues,
+} from '@/components/gestao-tripulantes/EscalaEventoForm';
+import MultiVesselSelect, {
+    formatVesselHeaderName,
+    vesselMatchesSelection,
+} from '@/components/gestao-tripulantes/MultiVesselSelect';
+import { useGtLiveProbe } from '@/components/gestao-tripulantes/use-gt-live-probe';
 import {
     MAN_SCHEDULE_SCROLL_CLASS,
     MAN_SCHEDULE_STICKY_EDGE_CLASS,
@@ -220,6 +231,23 @@ function persistViewportDayPreference(checked: boolean): void {
     } catch {
         // private mode / quota
     }
+}
+
+/**
+ * R9: <lg o editor de evento vira bottom-sheet; ≥lg mantém o painel flutuante
+ * arrastável de 420px. Media query via matchMedia (sem calc(100vh-*) mágico —
+ * o sheet usa dvh + flex min-h-0).
+ */
+function useIsDesktopViewport(): boolean {
+    const [isDesktop, setIsDesktop] = useState(false);
+    useEffect(() => {
+        const mq = window.matchMedia('(min-width: 1024px)');
+        const update = () => setIsDesktop(mq.matches);
+        update();
+        mq.addEventListener('change', update);
+        return () => mq.removeEventListener('change', update);
+    }, []);
+    return isDesktop;
 }
 
 function formatLocalYmd(date: Date): string {
@@ -529,14 +557,10 @@ export default function GTManScheduleTab({ onColabClick, kpiFilter = '' }: Props
         rotationType?: string;
         vessel: string;
     } | null>(null);
-    const [formTipo, setFormTipo] = useState('normal');
-    const [formStart, setFormStart] = useState('');
-    const [formEnd, setFormEnd] = useState('');
-    const [formVessel, setFormVessel] = useState('');
-    const [formLocalEmb, setFormLocalEmb] = useState('');
-    const [formObs, setFormObs] = useState('');
-    const [formExibirDia, setFormExibirDia] = useState(false);
+    // R7: formulário compartilhado (EscalaEventoForm) usado pelo painel da grade.
+    const [form, setForm] = useState<EscalaEventoFormValues>(() => emptyEscalaEventoForm());
     const [submittingEvent, setSubmittingEvent] = useState(false);
+    const isDesktopViewport = useIsDesktopViewport();
 
     const [filterStatusAtivo, setFilterStatusAtivo] = useState<'ativos' | 'inativos' | 'todos'>('ativos');
     const [isFechamentoOpen, setIsFechamentoOpen] = useState(false);
@@ -561,7 +585,8 @@ export default function GTManScheduleTab({ onColabClick, kpiFilter = '' }: Props
     });
 
     const [searchName, setSearchName] = useState('');
-    const [filterVessel, setFilterVessel] = useState('');
+    // R8: embarcação virou multi-seleção (Set de nomes exatos; vazio = todas).
+    const [filterVessels, setFilterVessels] = useState<Set<string>>(() => new Set());
     const [filterCompany, setFilterCompany] = useState('');
     const [filterPosition, setFilterPosition] = useState('');
     const [filterDateStart, setFilterDateStart] = useState('');
@@ -717,7 +742,12 @@ export default function GTManScheduleTab({ onColabClick, kpiFilter = '' }: Props
         }
     }, []);
 
+    // R3: enquanto um fetch/refetch está em voo o probe de live não roda —
+    // a resposta do banco deve chegar sem concorrência com a assinatura.
+    const probeBusyRef = useRef(false);
+
     const fetchSchedules = useCallback(async (force = false, silent = false) => {
+        probeBusyRef.current = true;
         try {
             if (force) {
                 // Nova geração: respostas de refetchs anteriores em voo não
@@ -733,9 +763,20 @@ export default function GTManScheduleTab({ onColabClick, kpiFilter = '' }: Props
             console.error('Error fetching schedules:', error);
             if (!silent) toast.error(error instanceof Error ? error.message : 'Erro ao carregar escala do MIO.');
         } finally {
+            probeBusyRef.current = false;
             if (!silent) setLoading(false);
         }
     }, []);
+
+    // R3 live: poll leve (15s); mudou a assinatura → refetch silencioso (force)
+    // que respeita os guards de geração e o cache de módulo (v5.77.1 intacto).
+    const { notifyLocalWrite: probeNotifyLocalWrite } = useGtLiveProbe({
+        escopo: 'escala',
+        canProbe: useCallback(() => !probeBusyRef.current, []),
+        onChange: useCallback(() => {
+            void fetchSchedules(true, true);
+        }, [fetchSchedules]),
+    });
 
     useEffect(() => {
         fetchTipos();
@@ -783,21 +824,27 @@ function parseLocalDate(str: string | null | undefined): Date | null {
             });
         }
 
-        setFormTipo(mappedTipo);
-        setFormExibirDia(matchingRotation?.exibir_dia_inicio !== undefined ? Boolean(matchingRotation.exibir_dia_inicio) : true);
-
-        if (matchingRotation?.start && matchingRotation?.end && isUuid(rotId)) {
-            setFormStart(matchingRotation.start.slice(0, 10));
-            setFormEnd(matchingRotation.end.slice(0, 10));
-            setFormLocalEmb(matchingRotation.local_embarque || '');
-            setFormObs(matchingRotation.observacoes || '');
-        } else {
-            setFormStart(formattedDate);
-            setFormEnd(formattedEnd);
-            setFormLocalEmb(matchingRotation?.local_embarque || '');
-            setFormObs(matchingRotation?.observacoes || '');
-        }
-        setFormVessel(currentVessel || '');
+        setForm({
+            tipo: mappedTipo || 'normal',
+            dataInicio:
+                matchingRotation?.start && matchingRotation?.end && isUuid(rotId)
+                    ? matchingRotation.start.slice(0, 10)
+                    : formattedDate,
+            dataFim:
+                matchingRotation?.start && matchingRotation?.end && isUuid(rotId)
+                    ? matchingRotation.end.slice(0, 10)
+                    : formattedEnd,
+            embarcacao: currentVessel || '',
+            localEmbarque:
+                matchingRotation?.start && matchingRotation?.end && isUuid(rotId)
+                    ? matchingRotation.local_embarque || ''
+                    : matchingRotation?.local_embarque || '',
+            observacoes: matchingRotation?.observacoes || '',
+            exibirDiaInicio:
+                matchingRotation?.exibir_dia_inicio !== undefined
+                    ? Boolean(matchingRotation.exibir_dia_inicio)
+                    : true,
+        });
     };
 
     const handleSaveEvent = async () => {
@@ -809,6 +856,8 @@ function parseLocalDate(str: string | null | undefined): Date | null {
             setSelectedCell(null);
             return;
         }
+        if (!isValidEscalaEventoForm(form)) return;
+
         const editingId = selectedCell.rotationId && isUuid(selectedCell.rotationId)
             ? selectedCell.rotationId
             : null;
@@ -817,29 +866,32 @@ function parseLocalDate(str: string | null | undefined): Date | null {
         const cellCpf = selectedCell.cpf;
         const updatedRot: RotationCell = {
             id: optimisticId,
-            start: formStart,
-            end: formEnd,
-            type: formTipo,
-            vessel: formVessel,
-            local_embarque: formLocalEmb,
-            observacoes: formObs,
-            exibir_dia_inicio: formExibirDia,
+            start: form.dataInicio,
+            end: form.dataFim,
+            type: form.tipo,
+            vessel: form.embarcacao,
+            local_embarque: form.localEmbarque,
+            observacoes: form.observacoes,
+            exibir_dia_inicio: form.exibirDiaInicio,
         };
 
         setAllSchedules((prev) => applyRotationRow(prev, cellCpf, updatedRot, 'upsert', editingId));
         setSelectedCell(null);
+        // Gravação local a caminho: próximo probe re-basa a assinatura e não
+        // dispara refetch redundante pelo próprio write.
+        probeNotifyLocalWrite();
 
         try {
             setSubmittingEvent(true);
             const payload = {
                 colaborador_cpf: cellCpf,
-                tipo: formTipo,
-                data_embarque: formStart,
-                data_desembarque: formEnd,
-                local_embarque: formLocalEmb,
-                local_desembarque: formVessel,
-                observacoes: formObs,
-                exibir_dia_inicio: formExibirDia,
+                tipo: form.tipo,
+                data_embarque: form.dataInicio,
+                data_desembarque: form.dataFim,
+                local_embarque: form.localEmbarque,
+                local_desembarque: form.embarcacao,
+                observacoes: form.observacoes,
+                exibir_dia_inicio: form.exibirDiaInicio,
             };
 
             const res = editingId
@@ -885,7 +937,7 @@ function parseLocalDate(str: string | null | undefined): Date | null {
 
             // A grade mostra o mês de referência atual — evento salvo em outro
             // mês não aparece até navegar. Pular para o mês do evento salvo.
-            const [sy, sm] = formStart.split('-').map(Number);
+            const [sy, sm] = form.dataInicio.split('-').map(Number);
             if (sy && sm && !isSameReferenceMonth(referenceMonth, { year: sy, month: sm })) {
                 applyReferenceMonth({ year: sy, month: sm });
             }
@@ -908,6 +960,8 @@ function parseLocalDate(str: string | null | undefined): Date | null {
         }
         const rotIdToDelete = selectedCell.rotationId;
         const cellCpf = selectedCell.cpf;
+
+        probeNotifyLocalWrite();
 
         setAllSchedules((prev) =>
             applyRotationRow(
@@ -971,7 +1025,6 @@ function parseLocalDate(str: string | null | undefined): Date | null {
 
     const filteredSchedules = useMemo(() => {
         const sName = searchName.trim().toLowerCase();
-        const fVes = filterVessel.trim().toLowerCase();
         const fComp = filterCompany.trim().toLowerCase();
         const fPos = filterPosition.trim().toLowerCase();
 
@@ -981,7 +1034,8 @@ function parseLocalDate(str: string | null | undefined): Date | null {
                 s.full_name?.toLowerCase().includes(sName) ||
                 s.cpf?.includes(sName) ||
                 (s.matricula && s.matricula.toLowerCase().includes(sName));
-            const matchVessel = !fVes || (s.vessel || '').trim().toLowerCase() === fVes;
+            // R8: multi-seleção — a linha entra se a embarcação ∈ conjunto.
+            const matchVessel = vesselMatchesSelection(s.vessel, filterVessels);
             const matchCompany = !fComp || (s.company || '').trim().toLowerCase() === fComp;
             const matchPosition = !fPos || (s.position || '').trim().toLowerCase() === fPos;
             const matchAtivo =
@@ -992,15 +1046,14 @@ function parseLocalDate(str: string | null | undefined): Date | null {
                     : s.ativo !== false;
             return matchName && matchVessel && matchCompany && matchPosition && matchAtivo;
         });
-    }, [allSchedules, searchName, filterVessel, filterCompany, filterPosition, filterStatusAtivo]);
+    }, [allSchedules, searchName, filterVessels, filterCompany, filterPosition, filterStatusAtivo]);
 
     const availableCompanies = useMemo(() => {
-        const fVes = filterVessel.trim().toLowerCase();
         const fPos = filterPosition.trim().toLowerCase();
         const valid = allSchedules
             .filter(
                 (s) =>
-                    (!fVes || (s.vessel || '').trim().toLowerCase() === fVes) &&
+                    vesselMatchesSelection(s.vessel, filterVessels) &&
                     (!fPos || (s.position || '').trim().toLowerCase() === fPos) &&
                     (filterStatusAtivo === 'todos'
                         ? true
@@ -1011,7 +1064,7 @@ function parseLocalDate(str: string | null | undefined): Date | null {
             .map((s) => (s.company || '').trim())
             .filter(Boolean);
         return Array.from(new Set(valid)).sort();
-    }, [allSchedules, filterVessel, filterPosition, filterStatusAtivo]);
+    }, [allSchedules, filterVessels, filterPosition, filterStatusAtivo]);
 
     const availableVessels = useMemo(() => {
         const fComp = filterCompany.trim().toLowerCase();
@@ -1034,12 +1087,11 @@ function parseLocalDate(str: string | null | undefined): Date | null {
 
     const availablePositions = useMemo(() => {
         const fComp = filterCompany.trim().toLowerCase();
-        const fVes = filterVessel.trim().toLowerCase();
         const valid = allSchedules
             .filter(
                 (s) =>
                     (!fComp || (s.company || '').trim().toLowerCase() === fComp) &&
-                    (!fVes || (s.vessel || '').trim().toLowerCase() === fVes) &&
+                    vesselMatchesSelection(s.vessel, filterVessels) &&
                     (filterStatusAtivo === 'todos'
                         ? true
                         : filterStatusAtivo === 'inativos'
@@ -1049,7 +1101,7 @@ function parseLocalDate(str: string | null | undefined): Date | null {
             .map((s) => (s.position || '').trim())
             .filter(Boolean);
         return Array.from(new Set(valid)).sort();
-    }, [allSchedules, filterCompany, filterVessel, filterStatusAtivo]);
+    }, [allSchedules, filterCompany, filterVessels, filterStatusAtivo]);
 
     const positionGroups = useMemo(() => {
         const byPosition: Record<string, { name: string; cpf: string; rotations: RotationCell[] }[]> = {};
@@ -1256,14 +1308,12 @@ function parseLocalDate(str: string | null | undefined): Date | null {
         [getWeekRotation, getDisplayCode]
     );
 
-    const vesselDisplayName =
-        filterVessel && filterCompany
-            ? `${filterCompany.toUpperCase()} - ${filterVessel.toUpperCase()}`
-            : filterVessel
-                ? filterVessel.toUpperCase()
-                : filterCompany
-                    ? filterCompany.toUpperCase()
-                    : t('manSchedule.allVessels', 'Todas as Embarcações');
+    // R8: o banner do cabeçalho lista as embarcações selecionadas.
+    const vesselDisplayName = formatVesselHeaderName(
+        filterVessels,
+        filterCompany,
+        t('manSchedule.allVessels', 'Todas as Embarcações')
+    );
 
     const presentStatuses = useMemo(() => {
         const statuses = new Set<string>();
@@ -1462,13 +1512,14 @@ function parseLocalDate(str: string | null | undefined): Date | null {
             e: { r: lastRow, c: Math.max(range.e.c, legendCol) },
         });
 
-        const safeName = (filterVessel || 'All_Vessels').replace(/[^a-zA-Z0-9_\-\s]/g, '').replace(/\s+/g, '_');
+        const safeName = (Array.from(filterVessels).join('-') || 'All_Vessels')
+            .replace(/[^a-zA-Z0-9_\-\s]/g, '')
+            .replace(/\s+/g, '_');
         XLSX.writeFile(wb, `Man_Schedule_${safeName}.xlsx`);
         toast.success(t('manSchedule.exportedSuccess', 'Planilha exportada com sucesso!'));
     };
 
     const groupColors = ['bg-[#d9e1f2]', 'bg-[#b4c6e7]'];
-    const activeTiposForSelect = tipos.filter((tipo) => tipo.ativo);
     const editingLocal = !!(selectedCell?.rotationId && isUuid(selectedCell.rotationId));
 
     return (
@@ -1502,16 +1553,12 @@ function parseLocalDate(str: string | null | undefined): Date | null {
                         />
                     </div>
 
-                    <div className="min-w-[140px] flex-shrink-0">
+                    <div className="min-w-[150px] flex-shrink-0">
                         <label className="block text-xs font-semibold text-gray-600 mb-1">{t('manSchedule.vesselLabel', 'Embarcação')}</label>
-                        <SearchableCreatableSelect
-                            className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                            options={availableVessels.map((v) => ({ id: v, label: v }))}
-                            value={filterVessel}
-                            onChange={setFilterVessel}
-                            placeholder={t('manSchedule.allVessels', 'Todas')}
-                            emptyLabel={t('manSchedule.allVessels', 'Todas')}
-                            allowCreate={false}
+                        <MultiVesselSelect
+                            value={filterVessels}
+                            onChange={setFilterVessels}
+                            dataVessels={availableVessels}
                         />
                     </div>
 
@@ -1876,210 +1923,143 @@ function parseLocalDate(str: string | null | undefined): Date | null {
             )}
 
             {selectedCell && (
-                <div
-                    className="fixed z-50 pointer-events-auto"
-                    style={{
-                        left: `${modalPos?.x ?? (typeof window !== 'undefined' ? Math.max(20, window.innerWidth - 440) : 40)}px`,
-                        top: `${modalPos?.y ?? 110}px`,
-                        width: '420px',
-                        maxWidth: 'calc(100vw - 32px)',
-                    }}
-                >
-                    <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden flex flex-col transition-shadow duration-200 ring-1 ring-black/10">
-                        {/* Draggable Header */}
-                        <div
-                            onMouseDown={handleDragStart}
-                            onTouchStart={handleTouchStart}
-                            className="bg-slate-100/90 px-4 py-3 border-b border-slate-200 flex items-center justify-between cursor-move select-none group"
-                        >
-                            <div className="flex items-center gap-2">
-                                <div className="p-1 rounded bg-slate-200 text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
-                                    <FiMove className="w-3.5 h-3.5" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xs font-bold text-slate-800 tracking-tight flex items-center gap-1.5">
-                                        {editingLocal ? 'Editar Evento de Escala' : 'Novo Evento de Escala'}
-                                        {editingLocal && (
-                                            <span className="px-1.5 py-0.5 rounded text-[9px] bg-amber-100 text-amber-800 font-bold uppercase">
-                                                Local
-                                            </span>
-                                        )}
-                                    </h3>
-                                    <p className="text-[10px] text-slate-500 font-normal">Arraste para mover o painel</p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => setSelectedCell(null)}
-                                className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 transition-colors font-bold text-base"
-                                title="Fechar"
-                            >
-                                &times;
-                            </button>
-                        </div>
-
-                        {/* Modal Content */}
-                        <div className="p-4 flex flex-col gap-3 max-h-[calc(100vh-200px)] overflow-y-auto">
-                            {/* Tripulante Details Card */}
-                            <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100 flex items-center justify-between">
-                                <div className="truncate mr-2">
-                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Tripulante</span>
-                                    <p className="text-xs font-bold text-slate-900 uppercase truncate">{selectedCell.name}</p>
-                                </div>
-                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 font-mono font-medium shrink-0">
-                                    {selectedCell.cpf}
-                                </span>
-                            </div>
-
-                            {/* Event Type & Vessel */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Tipo de Evento</label>
-                                    <select
-                                        value={formTipo}
-                                        onChange={(e) => setFormTipo(e.target.value)}
-                                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                                    >
-                                        {activeTiposForSelect.map((tipo) => (
-                                            <option key={tipo.id} value={tipo.codigo}>
-                                                {tipo.label} ({tipo.display_code})
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {resolveTipo(formTipo) && (
-                                        <div className="mt-1.5 flex items-center gap-1.5">
-                                            <span
-                                                className="inline-block min-w-[36px] text-center font-bold px-1.5 py-0.5 border border-black/80 rounded-sm text-[10px]"
-                                                style={{
-                                                    backgroundColor: resolveTipo(formTipo)!.bg_color,
-                                                    color: resolveTipo(formTipo)!.text_color,
-                                                }}
-                                            >
-                                                {resolveTipo(formTipo)!.display_code}
-                                            </span>
-                                            <span className="text-[10px] text-slate-500 truncate">{resolveTipo(formTipo)!.label}</span>
+                <>
+                    {/*
+                      Cabeçalho + conteúdo do editor compartilhados entre as duas
+                      variantes (R9): desktop = painel flutuante arrastável 420px;
+                      <lg = bottom-sheet fixo (max-h 92dvh, rodapé fixo).
+                    */}
+                    {(() => {
+                        const headerContent = (
+                            <>
+                                <div className="flex items-center gap-2 min-w-0">
+                                    {isDesktopViewport && (
+                                        <div className="p-1 rounded bg-slate-200 text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors shrink-0">
+                                            <FiMove className="w-3.5 h-3.5" />
                                         </div>
                                     )}
+                                    <div className="min-w-0">
+                                        <h3 className="text-xs font-bold text-slate-800 tracking-tight flex items-center gap-1.5">
+                                            {editingLocal ? t('gtEscalaV2.formTitleEdit', 'Editar Evento de Escala') : t('gtEscalaV2.formTitleNew', 'Novo Evento de Escala')}
+                                            {editingLocal && (
+                                                <span className="px-1.5 py-0.5 rounded text-[9px] bg-amber-100 text-amber-800 font-bold uppercase">
+                                                    {t('gtEscalaV2.formBadgeLocal', 'Local')}
+                                                </span>
+                                            )}
+                                        </h3>
+                                        <p className="text-[10px] text-slate-500 font-normal truncate">
+                                            {isDesktopViewport
+                                                ? t('gtEscalaV2.dragHint', 'Arraste para mover o painel')
+                                                : selectedCell.name}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedCell(null)}
+                                    className="w-11 h-11 lg:w-7 lg:h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 transition-colors font-bold text-base shrink-0"
+                                    title={t('gtEscalaV2.fechar', 'Fechar')}
+                                    aria-label={t('gtEscalaV2.fechar', 'Fechar')}
+                                >
+                                    &times;
+                                </button>
+                            </>
+                        );
+
+                        const bodyContent = (
+                            <>
+                                {/* Tripulante Details Card */}
+                                <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100 flex items-center justify-between">
+                                    <div className="truncate mr-2">
+                                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
+                                            {t('gtEscalaV2.tripulante', 'Tripulante')}
+                                        </span>
+                                        <p className="text-xs font-bold text-slate-900 uppercase truncate">{selectedCell.name}</p>
+                                    </div>
+                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 font-mono font-medium shrink-0">
+                                        {selectedCell.cpf}
+                                    </span>
                                 </div>
 
-                                <div>
-                                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Embarcação / Destino</label>
-                                    <input
-                                        type="text"
-                                        value={formVessel}
-                                        onChange={(e) => setFormVessel(e.target.value)}
-                                        placeholder="Ex: NORMAND..."
-                                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Dates */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Data Início</label>
-                                    <input
-                                        type="date"
-                                        value={formStart}
-                                        onChange={(e) => setFormStart(e.target.value)}
-                                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Data Fim</label>
-                                    <input
-                                        type="date"
-                                        value={formEnd}
-                                        onChange={(e) => setFormEnd(e.target.value)}
-                                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Toggle Indicação do Dia de Início */}
-                            <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-colors">
-                                <div className="pr-3">
-                                    <label htmlFor="exibir-dia-toggle" className="text-xs font-semibold text-slate-800 cursor-pointer block">
-                                        Indicar dia de início na célula (d.X)
-                                    </label>
-                                    <p className="text-[11px] text-slate-500 mt-0.5">
-                                        Exibe o dia de início ({formStart ? `d.${parseInt(formStart.split('-')[2] || '0', 10)}` : 'd.X'}) na célula da escala
-                                    </p>
-                                </div>
-                                <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                                    <input
-                                        id="exibir-dia-toggle"
-                                        type="checkbox"
-                                        checked={formExibirDia}
-                                        onChange={(e) => setFormExibirDia(e.target.checked)}
-                                        className="sr-only peer"
-                                    />
-                                    <div className="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                                </label>
-                            </div>
-
-                            {/* Origin / Local Embarque */}
-                            <div>
-                                <label className="block text-[11px] font-bold text-slate-700 mb-1">Local de Embarque (Origem)</label>
-                                <input
-                                    type="text"
-                                    value={formLocalEmb}
-                                    onChange={(e) => setFormLocalEmb(e.target.value)}
-                                    placeholder="Cidade, Aeroporto ou Base"
-                                    className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                                <EscalaEventoForm
+                                    value={form}
+                                    onChange={setForm}
+                                    tipos={tipos}
+                                    idPrefix="gt-escala-painel"
+                                    disabled={submittingEvent}
                                 />
-                            </div>
+                            </>
+                        );
 
-                            {/* Observations */}
-                            <div>
-                                <label className="block text-[11px] font-bold text-slate-700 mb-1">Observações / Comentários</label>
-                                <textarea
-                                    value={formObs}
-                                    onChange={(e) => setFormObs(e.target.value)}
-                                    placeholder="Informações adicionais..."
-                                    rows={2}
-                                    className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white resize-none"
-                                />
-                            </div>
+                        const footerContent = (
+                            <EscalaEventoFooter
+                                editing={editingLocal}
+                                submitting={submittingEvent}
+                                disabled={!isValidEscalaEventoForm(form)}
+                                onDelete={editingLocal ? handleDeleteEvent : undefined}
+                                onCancel={() => setSelectedCell(null)}
+                                onSave={handleSaveEvent}
+                            />
+                        );
 
-                            {/* Actions Footer */}
-                            <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-200 mt-1">
-                                {editingLocal ? (
-                                    <button
-                                        onClick={handleDeleteEvent}
-                                        disabled={submittingEvent}
-                                        className="px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-bold hover:bg-rose-700 disabled:opacity-50 transition-colors shadow-sm"
-                                    >
-                                        Excluir Evento
-                                    </button>
-                                ) : (
-                                    <div />
-                                )}
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => setSelectedCell(null)}
-                                        className="px-3 py-1.5 border border-slate-300 text-slate-700 rounded-lg text-xs font-semibold hover:bg-slate-100 transition-colors"
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        onClick={handleSaveEvent}
-                                        disabled={submittingEvent}
-                                        className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-sm flex items-center gap-1.5"
-                                    >
-                                        {submittingEvent ? (
-                                            <>
-                                                <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                                Salvando...
-                                            </>
-                                        ) : (
-                                            'Salvar'
-                                        )}
-                                    </button>
+                        if (isDesktopViewport) {
+                            return (
+                                <div
+                                    className="fixed z-50 pointer-events-auto"
+                                    style={{
+                                        left: `${modalPos?.x ?? (typeof window !== 'undefined' ? Math.max(20, window.innerWidth - 440) : 40)}px`,
+                                        top: `${modalPos?.y ?? 110}px`,
+                                        width: '420px',
+                                        maxWidth: 'calc(100vw - 32px)',
+                                    }}
+                                >
+                                    <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden flex flex-col max-h-[min(86dvh,760px)] transition-shadow duration-200 ring-1 ring-black/10">
+                                        {/* Draggable Header */}
+                                        <div
+                                            onMouseDown={handleDragStart}
+                                            onTouchStart={handleTouchStart}
+                                            className="bg-slate-100/90 px-4 py-3 border-b border-slate-200 flex items-center justify-between cursor-move select-none group shrink-0"
+                                        >
+                                            {headerContent}
+                                        </div>
+
+                                        {/* Modal Content */}
+                                        <div className="p-4 flex flex-col gap-3 flex-1 min-h-0 overflow-y-auto">
+                                            {bodyContent}
+                                        </div>
+
+                                        {/* Actions Footer (fixo — não rola com o conteúdo) */}
+                                        <div className="shrink-0 px-4 py-3 border-t border-slate-200 bg-white/90">
+                                            {footerContent}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        return (
+                            /* R9 mobile: bottom-sheet fixo no rodapé, sem backdrop
+                               bloqueante (mesmo espírito não-intrusivo do desktop). */
+                            <div className="fixed bottom-0 inset-x-0 z-50 pointer-events-auto">
+                                <div className="bg-white/97 backdrop-blur-md rounded-t-2xl shadow-2xl border-t border-x border-slate-200/90 flex flex-col max-h-[92dvh] ring-1 ring-black/10 pb-[env(safe-area-inset-bottom)]">
+                                    <div className="bg-slate-100/90 px-4 pt-2 pb-1 border-b border-slate-200 flex flex-col shrink-0 rounded-t-2xl">
+                                        <div className="mx-auto mb-1 h-1 w-10 rounded-full bg-slate-300" aria-hidden="true" />
+                                        <div className="flex items-center justify-between">{headerContent}</div>
+                                    </div>
+
+                                    <div className="p-4 flex flex-col gap-3 flex-1 min-h-0 overflow-y-auto">
+                                        {bodyContent}
+                                    </div>
+
+                                    {/* Sticky footer save */}
+                                    <div className="shrink-0 sticky bottom-0 px-4 py-3 border-t border-slate-200 bg-white/95">
+                                        {footerContent}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
+                        );
+                    })()}
+                </>
             )}
 
             {/* Modal de Fechamento Mensal DP & Aprovação Digital */}
@@ -2088,7 +2068,9 @@ function parseLocalDate(str: string | null | undefined): Date | null {
                 onClose={() => setIsFechamentoOpen(false)}
                 filters={{
                     empresa: filterCompany,
-                    embarcacao: filterVessel,
+                    // R8: multi-seleção — lista separada por vírgula (a rota de
+                    // relatório aceita `embarcacoes` comma-separated).
+                    embarcacao: Array.from(filterVessels).join(','),
                     cargo: filterPosition,
                     statusAtivo: filterStatusAtivo,
                     busca: searchName,

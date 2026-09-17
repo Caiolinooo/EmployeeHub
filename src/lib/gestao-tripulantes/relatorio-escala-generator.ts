@@ -10,6 +10,7 @@ import {
   type CalculoFechamentoColaborador,
   type ChecagensFechamento,
   type CicloEmbarqueCalculo,
+  type PendenciasProximoPeriodo,
   type RubricasDiasFechamento,
   type TotaisConsolidadosFechamento,
 } from '@/lib/gestao-tripulantes/fechamento-calculo';
@@ -34,15 +35,22 @@ export interface RelatorioEscalaOptions {
   dataFim?: string;
   empresa?: string;
   embarcacao?: string;
+  /** GT v2: multi-embarcações (OR). Vazio/não informado = sem filtro extra. */
+  embarcacoes?: string[];
   cargo?: string;
   statusAtivo?: 'ativos' | 'inativos' | 'todos';
   busca?: string;
   colaboradorId?: string;
+  /** GT v2 (R5): base set explícito — lista confirmada do mês entra só com
+   * estes ids. Vazio/não informado = comportamento legado (todos os filtros). */
+  colaboradorIds?: string[];
   aprovador?: AprovadorRegistro;
   aprovadores?: AprovadorRegistro[];
 }
 
 export interface ColaboradorTotaisEscala {
+  /** GT v2: id em gt_colaboradores (base do vínculo de pendências/marcados). */
+  colaborador_id: string;
   matricula: string;
   cpf: string;
   cpf_formatado: string;
@@ -65,12 +73,25 @@ export interface ColaboradorTotaisEscala {
   total_dias_folga: number;
   embarques: CicloEmbarqueCalculo[];
   checagens: ChecagensFechamento;
+  /** R1/R4 — folga que cruza data_fim: FI/DBA pendentes do próximo período
+   * (não debitem este fechamento; a UI/exibição consome via pendências). */
+  pendenciasProximoPeriodo: PendenciasProximoPeriodo;
   semanas: Record<string, string>;
+}
+
+/** Agregado das pendências do próximo período (R1/R4) de todos os colaboradores. */
+export interface TotaisPendenciasFechamento {
+  /** Σ déficit FI pendente (janelas de folga além de data_fim). */
+  fi: number;
+  /** Σ dias de DBA pendentes (trabalho além de data_fim que reduz a folga seguinte). */
+  dba: number;
 }
 
 export interface RelatorioEscalaResult {
   buffer: Buffer;
   totaisConsolidados: TotaisConsolidadosFechamento;
+  /** GT v2 (R1/R4): Σ fiDeficit e Σ dias DBA pendentes do próximo período. */
+  totaisPendencias: TotaisPendenciasFechamento;
   colaboradoresTotais: ColaboradorTotaisEscala[];
   calculosFolha: RubricasDiasFechamento[];
   semanas: string[];
@@ -181,7 +202,7 @@ export async function gerarRelatorioEscalaMensal(
 
   const timelineStart = snapToSaturday(new Date(dtInicio));
   const weeks: { dateStr: string; label: string; date: Date }[] = [];
-  let curWeek = new Date(timelineStart);
+  const curWeek = new Date(timelineStart);
 
   while (curWeek <= dtFim || weeks.length < 4) {
     const dStr = curWeek.toISOString().slice(0, 10);
@@ -255,6 +276,13 @@ export async function gerarRelatorioEscalaMensal(
     const emb = options.embarcacao.toLowerCase().trim();
     colaboradores = colaboradores.filter((c) => ((c.embarcacao_atual as any)?.nome || '').toLowerCase().trim() === emb);
   }
+  // GT v2: multi-embarcações (qualquer uma da lista entra).
+  if (options.embarcacoes && options.embarcacoes.length > 0) {
+    const embSet = new Set(options.embarcacoes.map((e) => e.toLowerCase().trim()).filter(Boolean));
+    if (embSet.size > 0) {
+      colaboradores = colaboradores.filter((c) => embSet.has(((c.embarcacao_atual as any)?.nome || '').toLowerCase().trim()));
+    }
+  }
   if (options.cargo) {
     const car = options.cargo.toLowerCase().trim();
     colaboradores = colaboradores.filter((c) => ((c.cargo as any)?.nome || '').toLowerCase().trim() === car);
@@ -266,6 +294,11 @@ export async function gerarRelatorioEscalaMensal(
   }
   if (options.colaboradorId) {
     colaboradores = colaboradores.filter((c) => c.id === options.colaboradorId);
+  }
+  // GT v2 (R5): lista de marcados confirmada — só estes colaboradores entram.
+  if (options.colaboradorIds) {
+    const idSet = new Set(options.colaboradorIds);
+    colaboradores = colaboradores.filter((c) => idSet.has(c.id));
   }
   if (options.busca) {
     const q = options.busca.toLowerCase().trim();
@@ -313,6 +346,7 @@ export async function gerarRelatorioEscalaMensal(
     const centroCusto = ccLabel.toUpperCase();
 
     colabTotais.push({
+      colaborador_id: c.id,
       matricula: c.matricula || '-',
       cpf: cpfNorm,
       cpf_formatado: formatCpfDisplay(cpfNorm),
@@ -335,6 +369,7 @@ export async function gerarRelatorioEscalaMensal(
       total_dias_folga: calc.dias_folga,
       embarques: calc.embarques,
       checagens: calc.checagens,
+      pendenciasProximoPeriodo: calc.pendenciasProximoPeriodo,
       semanas: semanasMap,
     });
 
@@ -349,6 +384,18 @@ export async function gerarRelatorioEscalaMensal(
     ...somarTotaisFechamento(calculos),
   };
 
+  // R1/R4 — pendências do próximo período (janelas de folga cortadas em
+  // data_fim e folga aberta): nunca debitem este fechamento; viajam na
+  // resposta para o DP planejar o mês seguinte.
+  const totaisPendencias: TotaisPendenciasFechamento = calculos.reduce(
+    (acc, c) => {
+      acc.fi += c.pendenciasProximoPeriodo.fiDeficit;
+      acc.dba += c.pendenciasProximoPeriodo.dbaDias.length;
+      return acc;
+    },
+    { fi: 0, dba: 0 },
+  );
+
   const wb = XLSX.utils.book_new();
   const totalCols = weeks.length + FIXED_COLS;
 
@@ -357,8 +404,11 @@ export async function gerarRelatorioEscalaMensal(
     ...Array(totalCols - 1).fill(''),
   ];
 
+  const embLabel = options.embarcacoes && options.embarcacoes.length > 0
+    ? options.embarcacoes.join(', ')
+    : (options.embarcacao || 'Todas');
   const filtroSub = [
-    `Período: ${options.mesAno || `${options.dataInicio || ''} a ${options.dataFim || ''}`}  |  Comparativo NxN por dt início/dt fim  |  Embarcação: ${options.embarcacao || 'Todas'}  |  Empresa: ${options.empresa || 'Todas'}  |  Emissão: ${new Date().toLocaleString('pt-BR')}`,
+    `Período: ${options.mesAno || `${options.dataInicio || ''} a ${options.dataFim || ''}`}  |  Comparativo NxN por dt início/dt fim  |  Embarcação: ${embLabel}  |  Empresa: ${options.empresa || 'Todas'}  |  Emissão: ${new Date().toLocaleString('pt-BR')}`,
     ...Array(totalCols - 1).fill(''),
   ];
 
@@ -646,6 +696,7 @@ export async function gerarRelatorioEscalaMensal(
   return {
     buffer: Buffer.from(buffer),
     totaisConsolidados,
+    totaisPendencias,
     colaboradoresTotais: colabTotais,
     calculosFolha,
     semanas: weeks.map((w) => w.dateStr),

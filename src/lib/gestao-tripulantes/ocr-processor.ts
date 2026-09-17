@@ -401,7 +401,7 @@ function extrairNomeMedicoDoContexto(texto: string, crmIndice: number, tipo: 'pc
     }
   }
 
-  let regex = /(?:Dr\.?\s*[ºª]?\s*|Dra\.?\s*[ºª]?\s*|Drª\s*|Drº\s*)([A-Za-zÀ-ÖØ-öø-ÿçãõ\s]{10,60})/i;
+  const regex = /(?:Dr\.?\s*[ºª]?\s*|Dra\.?\s*[ºª]?\s*|Drª\s*|Drº\s*)([A-Za-zÀ-ÖØ-öø-ÿçãõ\s]{10,60})/i;
   if (tipo === 'pcmso') {
     const pcmsoIdx = texto.toLowerCase().indexOf('pcmso');
     if (pcmsoIdx !== -1) {
@@ -612,7 +612,7 @@ function extrairExamesDoTexto(texto: string, dataAso: string | null): { nome: st
 
         const dia = match[1];
         const mes = match[2];
-        let anoRaw = match[3];
+        const anoRaw = match[3];
         let anoClean = anoRaw.replace(/O/g, '0').replace(/S/g, '5').replace(/[Il]/g, '1').replace(/[^\d]/g, '');
         if (anoClean.length === 2) {
           anoClean = '20' + anoClean;
@@ -810,35 +810,35 @@ export async function extrairDadosASODoTexto(
   const crmsEncontrados = extrairCRMsDoTexto(texto);
   const dadosMedicos = extrairDadosDosMedicos(texto, crmsEncontrados);
 
-  let medico_nome =
+  const medico_nome =
     dadosExtraidos?.medico_examinador_nome ||
     dadosExtraidos?.medico ||
     medicosInfo.medicoExaminador?.nome ||
     dadosMedicos.medico_nome ||
     '';
-  let medico_crm =
+  const medico_crm =
     dadosExtraidos?.medico_examinador_crm ||
     dadosExtraidos?.medico_crm ||
     medicosInfo.medicoExaminador?.crm ||
     dadosMedicos.medico_crm ||
     '';
-  let medico_uf =
+  const medico_uf =
     dadosExtraidos?.medico_examinador_uf ||
     medicosInfo.medicoExaminador?.uf ||
     dadosMedicos.medico_uf ||
     'RJ';
 
-  let medico_pcmso_nome =
+  const medico_pcmso_nome =
     dadosExtraidos?.medico_pcmso_nome ||
     medicosInfo.medicoPcmso?.nome ||
     dadosMedicos.medico_pcmso_nome ||
     '';
-  let medico_pcmso_crm =
+  const medico_pcmso_crm =
     dadosExtraidos?.medico_pcmso_crm ||
     medicosInfo.medicoPcmso?.crm ||
     dadosMedicos.medico_pcmso_crm ||
     '';
-  let medico_pcmso_uf =
+  const medico_pcmso_uf =
     dadosExtraidos?.medico_pcmso_uf ||
     medicosInfo.medicoPcmso?.uf ||
     dadosMedicos.medico_pcmso_uf ||

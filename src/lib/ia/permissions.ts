@@ -258,8 +258,8 @@ export async function canAccessModule(userId: string, moduleName: string): Promi
     // Verificar SYSTEM_MODULES default roles
     try {
       const { SYSTEM_MODULES } = await import('@/config/modules');
-      const module = SYSTEM_MODULES.find(m => m.key === moduleName);
-      if (module && module.defaultRoles.includes(user.role as 'ADMIN' | 'MANAGER' | 'USER')) {
+      const moduleDef = SYSTEM_MODULES.find(m => m.key === moduleName);
+      if (moduleDef && moduleDef.defaultRoles.includes(user.role as 'ADMIN' | 'MANAGER' | 'USER')) {
         return true;
       }
     } catch {

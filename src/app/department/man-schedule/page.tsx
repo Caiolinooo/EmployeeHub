@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { FiDownload, FiSearch } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 import * as XLSX from 'xlsx-js-style';
@@ -9,6 +9,11 @@ import { fetchWithToken } from '@/lib/tokenStorage';
 import ScheduleDateFilterInput from '@/components/gestao-tripulantes/ScheduleDateFilterInput';
 import ManScheduleTimelineNav from '@/components/gestao-tripulantes/ManScheduleTimelineNav';
 import GtPageShell from '@/components/gestao-tripulantes/GtPageShell';
+import MultiVesselSelect, {
+    formatVesselHeaderName,
+    vesselMatchesSelection,
+} from '@/components/gestao-tripulantes/MultiVesselSelect';
+import { useGtLiveProbe } from '@/components/gestao-tripulantes/use-gt-live-probe';
 import {
     MAN_SCHEDULE_SCROLL_CLASS,
     MAN_SCHEDULE_STICKY_EDGE_CLASS,
@@ -99,7 +104,9 @@ export default function ManSchedulePage() {
 
     // Filters
     const [searchName, setSearchName] = useState('');
-    const [filterVessel, setFilterVessel] = useState('');
+    // R8: embarcação multi-seleção (Set de nomes; vazio = todas) — mesmo
+    // comportamento da aba GT (GTManScheduleTab).
+    const [filterVessels, setFilterVessels] = useState<Set<string>>(() => new Set());
     const [filterCompany, setFilterCompany] = useState('');
     const [filterPosition, setFilterPosition] = useState('');
     const [filterDateStart, setFilterDateStart] = useState('');
@@ -122,7 +129,12 @@ export default function ManSchedulePage() {
         [referenceMonth],
     );
 
-    const fetchSchedules = useCallback(async () => {
+    // R3: probe de live não roda enquanto um fetch está em voo.
+    const probeBusyRef = useRef(false);
+
+    const fetchSchedules = useCallback(async (opts?: { silent?: boolean }) => {
+        const silent = Boolean(opts?.silent);
+        probeBusyRef.current = true;
         try {
             const qs = janela === '90d' ? '' : `?janela=${janela}`;
             const res = await fetchWithToken(`/api/man-schedule/realtime${qs}`);
@@ -138,44 +150,54 @@ export default function ManSchedulePage() {
             if (result.meta) setMeta(result.meta);
         } catch (error: any) {
             console.error('Error fetching schedules:', error);
-            toast.error(error.message || t('common.error', 'Erro ao carregar escala do MIO.'));
+            // refetch silencioso do probe não repete toast a cada 15s
+            if (!silent) toast.error(error.message || t('common.error', 'Erro ao carregar escala do MIO.'));
         } finally {
-            setLoading(false);
+            probeBusyRef.current = false;
+            if (!silent) setLoading(false);
         }
     }, [t, janela]);
+
+    // R3 live: poll leve (15s) — mudou a assinatura do banco, refetch silencioso.
+    useGtLiveProbe({
+        escopo: 'escala',
+        canProbe: useCallback(() => !probeBusyRef.current, []),
+        onChange: useCallback(() => {
+            void fetchSchedules({ silent: true });
+        }, [fetchSchedules]),
+    });
 
     useEffect(() => { fetchSchedules(); }, [fetchSchedules]);
 
     // ─── Filtered data & Cascading Dropdowns ───
     const filteredSchedules = useMemo(() => {
         const sName = searchName.trim().toLowerCase();
-        const fVes = filterVessel.trim().toLowerCase();
         const fComp = filterCompany.trim().toLowerCase();
         const fPos = filterPosition.trim().toLowerCase();
 
         return allSchedules.filter(s => {
             const matchName = !sName || s.full_name?.toLowerCase().includes(sName);
-            const matchVessel = !fVes || (s.vessel || '').trim().toLowerCase() === fVes;
+            // R8: multi-seleção — a linha entra se a embarcação ∈ conjunto.
+            const matchVessel = vesselMatchesSelection(s.vessel, filterVessels);
             const matchCompany = !fComp || (s.company || '').trim().toLowerCase() === fComp;
             const matchPosition = !fPos || (s.position || '').trim().toLowerCase() === fPos;
             return matchName && matchVessel && matchCompany && matchPosition;
         });
-    }, [allSchedules, searchName, filterVessel, filterCompany, filterPosition]);
+    }, [allSchedules, searchName, filterVessels, filterCompany, filterPosition]);
 
     const availableCompanies = useMemo(() => {
-        const fVes = filterVessel.trim().toLowerCase();
         const fPos = filterPosition.trim().toLowerCase();
-        const valid = allSchedules.filter(s => 
-            (!fVes || (s.vessel || '').trim().toLowerCase() === fVes) &&
+        const valid = allSchedules.filter(s =>
+            vesselMatchesSelection(s.vessel, filterVessels) &&
             (!fPos || (s.position || '').trim().toLowerCase() === fPos)
         ).map(s => (s.company || '').trim()).filter(Boolean);
         return Array.from(new Set(valid)).sort();
-    }, [allSchedules, filterVessel, filterPosition]);
+    }, [allSchedules, filterVessels, filterPosition]);
 
     const availableVessels = useMemo(() => {
         const fComp = filterCompany.trim().toLowerCase();
         const fPos = filterPosition.trim().toLowerCase();
-        const valid = allSchedules.filter(s => 
+        const valid = allSchedules.filter(s =>
             (!fComp || (s.company || '').trim().toLowerCase() === fComp) &&
             (!fPos || (s.position || '').trim().toLowerCase() === fPos)
         ).map(s => (s.vessel || '').trim()).filter(Boolean);
@@ -184,13 +206,28 @@ export default function ManSchedulePage() {
 
     const availablePositions = useMemo(() => {
         const fComp = filterCompany.trim().toLowerCase();
-        const fVes = filterVessel.trim().toLowerCase();
-        const valid = allSchedules.filter(s => 
+        const valid = allSchedules.filter(s =>
             (!fComp || (s.company || '').trim().toLowerCase() === fComp) &&
-            (!fVes || (s.vessel || '').trim().toLowerCase() === fVes)
+            vesselMatchesSelection(s.vessel, filterVessels)
         ).map(s => (s.position || '').trim()).filter(Boolean);
         return Array.from(new Set(valid)).sort();
-    }, [allSchedules, filterCompany, filterVessel]);
+    }, [allSchedules, filterCompany, filterVessels]);
+
+    /** Opções do MultiVesselSelect: meta da API + embarcações presentes nos dados. */
+    const vesselOptions = useMemo(() => {
+        const seen = new Set<string>();
+        const merged: string[] = [];
+        for (const v of [...(meta.vessels || []), ...availableVessels]) {
+            const nome = String(v || '').trim();
+            if (!nome) continue;
+            const key = nome.toLowerCase();
+            if (seen.has(key)) continue;
+            seen.add(key);
+            merged.push(nome);
+        }
+        merged.sort((a, b) => a.localeCompare(b));
+        return merged;
+    }, [meta.vessels, availableVessels]);
 
     // ─── Build dynamic rows grouped by position ───
     const positionGroups = useMemo(() => {
@@ -390,14 +427,12 @@ function parseLocalDate(str: string | null | undefined): Date | null {
         return getWeekRotationMeta(weekDate, rotations).status;
     };
 
-    // ─── Vessel display name ───
-    const vesselDisplayName = filterVessel && filterCompany
-        ? `${filterCompany.toUpperCase()} - ${filterVessel.toUpperCase()}`
-        : filterVessel 
-            ? filterVessel.toUpperCase()
-            : filterCompany
-                ? filterCompany.toUpperCase()
-                : t('manSchedule.allVessels', 'Todas as Embarcações');
+    // ─── Vessel display name (R8: lista as embarcações selecionadas) ───
+    const vesselDisplayName = formatVesselHeaderName(
+        filterVessels,
+        filterCompany,
+        t('manSchedule.allVessels', 'Todas as Embarcações')
+    );
 
     // ─── Export ───
     const exportToExcel = () => {
@@ -525,7 +560,9 @@ function parseLocalDate(str: string | null | undefined): Date | null {
 
         ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: lastRow, c: Math.max(range.e.c, legendCol) } });
 
-        const safeName = (filterVessel || 'All_Vessels').replace(/[^a-zA-Z0-9_\-\s]/g, '').replace(/\s+/g, '_');
+        const safeName = (Array.from(filterVessels).join('-') || 'All_Vessels')
+            .replace(/[^a-zA-Z0-9_\-\s]/g, '')
+            .replace(/\s+/g, '_');
         XLSX.writeFile(wb, `Man_Schedule_${safeName}.xlsx`);
         toast.success(t('manSchedule.exportedSuccess', 'Planilha exportada com sucesso!'));
     };
@@ -600,18 +637,13 @@ function parseLocalDate(str: string | null | undefined): Date | null {
                         </select>
                     </div>
 
-                    <div className="min-w-[130px] flex-shrink-0">
+                    <div className="min-w-[150px] flex-shrink-0">
                         <label className="block text-xs font-semibold text-gray-600 mb-1">{t('manSchedule.vesselLabel', 'Embarcação')}</label>
-                        <select
-                            className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white truncate"
-                            value={filterVessel}
-                            onChange={(e) => setFilterVessel(e.target.value)}
-                        >
-                            <option value="">{t('manSchedule.allVessels', 'Todas')}</option>
-                            {availableVessels.map((v, idx) => (
-                                <option key={idx} value={v}>{v}</option>
-                            ))}
-                        </select>
+                        <MultiVesselSelect
+                            value={filterVessels}
+                            onChange={setFilterVessels}
+                            dataVessels={vesselOptions}
+                        />
                     </div>
 
                     <div className="min-w-[130px] flex-shrink-0">

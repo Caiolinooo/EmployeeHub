@@ -18,6 +18,12 @@ import {
   type AssinaturaFechamento,
 } from '@/lib/gestao-tripulantes/fechamento-assinatura';
 import { loadFechamentoAtor } from '@/lib/gestao-tripulantes/fechamento-gestores';
+import {
+  carregarMarcadosDoMes,
+  extrairPendenciasDoRelatorio,
+  montarNomeArquivoFechamento,
+  resolverPeriodoFechamento,
+} from '@/lib/gestao-tripulantes/fechamento-periodo-resolver';
 
 export const dynamic = 'force-dynamic';
 
@@ -100,12 +106,30 @@ export async function POST(request: NextRequest) {
 
     const nowIso = new Date().toISOString();
     const clientIp = clientIpFromRequest(request);
+
+    // GT v2 (R2): período efetivo do fechamento — explicit (filtros) >
+    // gt_fechamento_periodos do mês > mês civil. Entra no carimbo e no upsert.
+    const filtrosEmbarcacoes = String(filtros.embarcacoes || '')
+      .split(',')
+      .map((e) => e.trim())
+      .filter(Boolean);
+    const periodo = await resolverPeriodoFechamento({
+      mesAno,
+      dataInicio: filtros.dataInicio,
+      dataFim: filtros.dataFim,
+    });
+
+    // GT v2 (R5): mesma base do GET — lista confirmada → SOMENTE os marcados
+    // entram no fechamento (o XLSX assinado precisa bater com o preview).
+    const marcados = await carregarMarcadosDoMes(mesAno);
+
     const hashContent = montarHashFechamento({
       mesAno,
       nome: approverName,
       cpf: approverCpf,
       dataIso: nowIso,
       ip: clientIp,
+      periodo: { dataInicio: periodo.dataInicio, dataFim: periodo.dataFim },
     });
     const signatureHash = crypto.createHash('sha256').update(hashContent).digest('hex');
 
@@ -141,13 +165,16 @@ export async function POST(request: NextRequest) {
 
     const reportResult = await gerarRelatorioEscalaMensal({
       mesAno,
-      dataInicio: filtros.dataInicio,
-      dataFim: filtros.dataFim,
+      // Período resolvido (explicit/config/mês) — mesma janela do GET/download.
+      dataInicio: periodo.dataInicio,
+      dataFim: periodo.dataFim,
       empresa: filtros.empresa,
       embarcacao: filtros.embarcacao,
+      embarcacoes: filtrosEmbarcacoes,
       cargo: filtros.cargo,
       statusAtivo: filtros.statusAtivo as 'ativos' | 'inativos' | 'todos' | undefined,
       busca: filtros.busca,
+      colaboradorIds: marcados.listaConfirmada ? marcados.idsMarcados : undefined,
       aprovadores: assinaturasArray.map((s) => ({
         nome: s.nome || '',
         cpf: s.cpf,
@@ -164,8 +191,16 @@ export async function POST(request: NextRequest) {
     const recipientList = Array.isArray(recipientRaw)
       ? recipientRaw.map((e) => String(e).trim()).filter(Boolean)
       : ['dp@groupabz.com'];
-    const safeEmb = (filtros.embarcacao || 'Todas').replace(/[^a-zA-Z0-9_\-\s]/g, '').replace(/\s+/g, '_');
-    const filename = `relatorio_fechamento_${mesAno}_${safeEmb}.xlsx`;
+    // Snapshot das pendências (R1/R4) para o registro de aprovação.
+    const pendencias = await extrairPendenciasDoRelatorio(reportResult);
+    const filename = montarNomeArquivoFechamento({
+      mesAno,
+      embarcacoes: filtrosEmbarcacoes,
+      embarcacao: filtros.embarcacao,
+      dataInicio: periodo.dataInicio,
+      dataFim: periodo.dataFim,
+      fonte: periodo.fonte,
+    });
     let emailSent = false;
     let emailErrorMsg: string | null = null;
 
@@ -254,6 +289,16 @@ export async function POST(request: NextRequest) {
         mes,
         status: finalStatus,
         dados_totais: reportResult.totaisConsolidados,
+        // GT v2 (R2/R1): período fechado + snapshot das pendências do próximo
+        // período ficam carimbados no registro da aprovação.
+        data_inicio: periodo.dataInicio,
+        data_fim: periodo.dataFim,
+        pendencias: {
+          fonte: periodo.fonte,
+          listaConfirmada: periodo.listaConfirmada,
+          porColaborador: pendencias.porColaborador,
+          totais: pendencias.totais,
+        },
         total_colaboradores: reportResult.totaisConsolidados.totalColaboradores,
         total_on: reportResult.totaisConsolidados.totalON,
         total_dba: reportResult.totaisConsolidados.totalDBA,
@@ -303,6 +348,16 @@ export async function POST(request: NextRequest) {
       message,
       status: finalStatus,
       registro: record,
+      periodo: {
+        dataInicio: periodo.dataInicio,
+        dataFim: periodo.dataFim,
+        fonte: periodo.fonte,
+      },
+      pendencias,
+      marcados: {
+        listaConfirmada: marcados.listaConfirmada,
+        total: marcados.total,
+      },
       todosAssinaram,
       pendentes,
       assinaturas: assinaturasArray,

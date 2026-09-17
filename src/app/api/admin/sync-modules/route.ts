@@ -36,24 +36,24 @@ export async function POST(request: NextRequest) {
 
         console.log('Starting module synchronization...');
 
-        for (const module of SYSTEM_MODULES) {
+        for (const moduleDef of SYSTEM_MODULES) {
             // 1. Upsert into sys_modules
             const permissions = {
-                read: module.defaultRoles.map(r => r.toLowerCase()),
-                write: module.defaultRoles.includes('ADMIN') ? ['admin'] : module.defaultRoles.map(r => r.toLowerCase()) // Simplified write logic
+                read: moduleDef.defaultRoles.map(r => r.toLowerCase()),
+                write: moduleDef.defaultRoles.includes('ADMIN') ? ['admin'] : moduleDef.defaultRoles.map(r => r.toLowerCase()) // Simplified write logic
             };
 
             const { error: moduleError } = await supabase
                 .from('sys_modules')
                 .upsert({
-                    key: module.key,
-                    description: module.description,
+                    key: moduleDef.key,
+                    description: moduleDef.description,
                     permissions: permissions,
                     active: true
                 }, { onConflict: 'key' });
 
             if (moduleError) {
-                console.error(`Error syncing module ${module.key}:`, moduleError);
+                console.error(`Error syncing moduleDef ${moduleDef.key}:`, moduleError);
                 results.modules.failed++;
             } else {
                 results.modules.success++;
@@ -64,21 +64,21 @@ export async function POST(request: NextRequest) {
             const { data: existingCard } = await supabase
                 .from('cards')
                 .select('id')
-                .eq('key', module.key)
+                .eq('key', moduleDef.key)
                 .single();
 
             const cardData = {
-                key: module.key,
-                title: module.name,
-                description: module.description || '',
+                key: moduleDef.key,
+                title: moduleDef.name,
+                description: moduleDef.description || '',
                 icon: 'CubeIcon', // Default icon
-                link: `/${module.key}`,
+                link: `/${moduleDef.key}`,
                 type: 'system',
                 active: true,
-                allowed_roles: module.defaultRoles, // Use the default roles from config
+                allowed_roles: moduleDef.defaultRoles, // Use the default roles from config
                 allowed_user_ids: [],
-                admin_only: module.defaultRoles.length === 1 && module.defaultRoles.includes('ADMIN'),
-                manager_only: !module.defaultRoles.includes('USER') && module.defaultRoles.includes('MANAGER'),
+                admin_only: moduleDef.defaultRoles.length === 1 && moduleDef.defaultRoles.includes('ADMIN'),
+                manager_only: !moduleDef.defaultRoles.includes('USER') && moduleDef.defaultRoles.includes('MANAGER'),
                 order_index: 99 // Put new ones at end
             };
 
@@ -87,11 +87,11 @@ export async function POST(request: NextRequest) {
                 const { error: cardError } = await supabase
                     .from('cards')
                     .update({
-                        title: module.name,
-                        allowed_roles: module.defaultRoles,
-                        description: module.description
+                        title: moduleDef.name,
+                        allowed_roles: moduleDef.defaultRoles,
+                        description: moduleDef.description
                     })
-                    .eq('key', module.key);
+                    .eq('key', moduleDef.key);
 
                 if (cardError) results.cards.failed++; else results.cards.success++;
             } else {

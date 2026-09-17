@@ -235,9 +235,17 @@ export function montarHashFechamento(input: {
   cpf: string;
   dataIso: string;
   ip: string;
+  /** GT v2 (R2): período efetivamente fechado — quando informado, entra no
+   * carimbo. Sem período (default), o formato antigo é preservado. */
+  periodo?: { dataInicio?: string | null; dataFim?: string | null } | null;
 }): string {
   const cpf = normalizeCpf(input.cpf || '') || (input.cpf || '');
-  return `GT_FECHAMENTO:${input.mesAno}:${input.nome}:${cpf}:${input.dataIso}:${input.ip}`;
+  const base = `GT_FECHAMENTO:${input.mesAno}:${input.nome}:${cpf}:${input.dataIso}:${input.ip}`;
+  const periodo = input.periodo;
+  if (periodo?.dataInicio && periodo?.dataFim) {
+    return `${base}:${periodo.dataInicio}:${periodo.dataFim}`;
+  }
+  return base;
 }
 
 export function mensagemErroAssinaturaAusente(): string {

@@ -145,7 +145,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   useEffect(() => {
     if (profile?.sector?.name) {
-      // @ts-ignore - Supabase type definition mismatch possible, but runtime data is there
       setDepartmentTitle(profile.sector.name);
     } else if (profile?.department) {
       setDepartmentTitle(profile.department);
@@ -268,10 +267,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
               <FiSidebar className="w-6 h-6" />
             </button>
 
-            {/* Close Mobile Menu Button */}
+            {/* Close Mobile Menu Button (44px tap target) */}
             <button
               onClick={() => setIsMobileMenuOpen(false)}
-              className="md:hidden p-1.5 rounded-lg text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors ml-auto"
+              aria-label={t('gtMobileV2.closeMenu', 'Fechar menu') as string}
+              className="md:hidden tap-target flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors ml-auto"
             >
               <FiBriefcase className="w-6 h-6 opacity-0" /> {/* Just for spacing if needed, but we can use real close icon or let overlay handle it */}
               <span className="material-symbols-outlined w-6 h-6 flex items-center justify-center">close</span>
@@ -364,7 +364,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
             <div className="md:hidden">
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="p-2 bg-white border border-gray-100 rounded-lg shadow-sm text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center h-10 w-10"
+                aria-label={t('gtMobileV2.openMenu', 'Abrir menu') as string}
+                className="p-2 bg-white border border-gray-100 rounded-lg shadow-sm text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center h-11 w-11"
               >
                 <FiMenu className="w-5 h-5" />
               </button>
@@ -372,15 +373,15 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
             {/* Right Side Actions */}
             <div className="flex items-center bg-white rounded-full shadow-sm border border-gray-100 px-2 py-1 gap-1">
-              {/* Notification Button */}
+              {/* Notification Button (44px no touch, 36px no desktop) */}
               <NotificationHUD
                 userId={user?.id || ''}
                 showBanner={true}
-                className="w-9 h-9 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-50 hover:text-gray-700 relative transition-colors"
+                className="w-11 h-11 md:w-9 md:h-9 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-50 hover:text-gray-700 relative transition-colors"
               />
 
               {/* Language Button */}
-              <div className="w-9 h-9 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors">
+              <div className="w-11 h-11 md:w-9 md:h-9 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors">
                 <LanguageSelector variant="dropdown" className="!p-0 !bg-transparent text-gray-500 hover:text-gray-700" />
               </div>
 
@@ -389,7 +390,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               {/* Profile Dropdown */}
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
-                  <button className="w-9 h-9 rounded-full overflow-hidden border border-gray-200 outline-none hover:ring-2 hover:ring-blue-100 transition-all focus:ring-2 focus:ring-blue-100 flex-shrink-0 relative">
+                  <button className="w-11 h-11 md:w-9 md:h-9 rounded-full overflow-hidden border border-gray-200 outline-none hover:ring-2 hover:ring-blue-100 transition-all focus:ring-2 focus:ring-blue-100 flex-shrink-0 relative">
                     <div className="w-full h-full rounded-full overflow-hidden relative">
                       <UserAvatar user={user} profile={profile} className="w-full h-full" />
                     </div>
@@ -456,7 +457,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
         </div>
 
       </div>
-      <HelpWidget />
+      {/* Widget flutuante é fixo z-50 — acima da gaveta (z-40). Escondido enquanto
+          a gaveta mobile está aberta para não cobrir o menu/overlay. */}
+      {!isMobileMenuOpen && <HelpWidget />}
 
       {/* Menu Customizer Drawer */}
       <MenuCustomizer

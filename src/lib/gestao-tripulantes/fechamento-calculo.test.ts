@@ -315,10 +315,13 @@ describe('DBA explícito não é ciclo de rotação', () => {
     assert.equal(calc.statusPorDia['2026-09-30'], undefined);
   });
 
-  it('DBA fora do período: janela de folga cross-month não conta o dia como folga', () => {
+  it('DBA fora do período: janela cross-month vira pendência do próximo período (modelo recortado)', () => {
     // Ciclo 15–28/set; próximo embarque 10/out; DBA explícito 01–02/out
-    // (FORA do período setembro). Janela 29/set–09/out = 11 dias, 2 de DBA
-    // (01-02/out) → folga realizada 9 → déficit 14−9 = 5.
+    // (FORA do período setembro). Modelo recortado (R1/R4): a janela
+    // 29/set–09/out é cortada em 30/set — setembro só computa 29–30/set
+    // (2 dias de folga, déficit 0 no período); 01–02/out de DBA viram
+    // PENDÊNCIA (2 dias de folga faltante + 3 dias de escala que a janela
+    // de 11d nem alcançou a ter = 5 FI pendentes), atribuídos a outubro.
     const calc = calcularFechamentoColaborador(
       ESCALA_14,
       [
@@ -330,10 +333,89 @@ describe('DBA explícito não é ciclo de rotação', () => {
       SETEMBRO,
     );
     assert.equal(calc.embarques.length, 1);
-    assert.equal(calc.embarques[0].dias_folga_real, 9);
-    assert.equal(calc.embarques[0].dias_fi_deficit, 5);
-    assert.equal(calc.dias_fi, 5);
-    assert.equal(calc.dias_fi_deficit, 5);
+    assert.equal(calc.embarques[0].dias_folga_real, 9); // 11 dias − 2 DBA (janela inteira, informativo)
+    assert.equal(calc.dias_fi_deficit, 0);
+    assert.equal(calc.dias_fi, 0);
+    assert.equal(calc.dias_folga, 2); // 29–30/set
+    assert.equal(calc.dias_dba, 0); // DBA de outubro não entra no mês
+    assert.deepEqual(calc.pendenciasProximoPeriodo, {
+      fiDeficit: 5,
+      dbaDias: ['2026-10-01', '2026-10-02'],
+      folgaAberta: false,
+      proximoEmbarque: '2026-10-10',
+    });
+  });
+
+  it('janela de folga totalmente dentro do período: resultado idêntico ao modelo anterior', () => {
+    // 01–14/set embarque; 15–28/set folga (14d = escala); próximo 29/set.
+    const calc = calcularFechamentoColaborador(
+      ESCALA_14,
+      [
+        { tipo: 'normal', data_embarque: '2026-09-01', data_desembarque: '2026-09-14' },
+        { tipo: 'normal', data_embarque: '2026-09-29', data_desembarque: '2026-10-12' },
+      ],
+      [],
+      SETEMBRO,
+    );
+    assert.equal(calc.dias_on, 14 + 2); // 01–14 + 29–30/set
+    assert.equal(calc.dias_folga, 14);
+    assert.equal(calc.dias_fi_deficit, 0);
+    assert.equal(calc.dias_fi, 0);
+    assert.equal(calc.embarques[0].escala_ok, true);
+    assert.deepEqual(calc.pendenciasProximoPeriodo, { fiDeficit: 0, dbaDias: [], folgaAberta: false });
+  });
+
+  it('janela cruzando data_fim: déficit do período exclui DBA externo e a soma entre períodos é aditiva', () => {
+    // Janela 29/set–09/out (11d), escala 14x14.
+    // Sem DBA: recorte puro — 2 dias em setembro, 9 em outubro, sem DBA.
+    // A janela de 11d < escala 14d: os 3 dias "fantasma" (que a janela nem
+    // alcançou a ter) ficam pendentes para outubro, onde a janela termina.
+    const eventos = [
+      { tipo: 'normal', data_embarque: '2026-09-15', data_desembarque: '2026-09-28' },
+      { tipo: 'normal', data_embarque: '2026-10-10', data_desembarque: '2026-10-23' },
+    ];
+    const semDbaSet = calcularFechamentoColaborador(ESCALA_14, eventos, [], SETEMBRO);
+    assert.equal(semDbaSet.dias_fi_deficit, 0);
+    assert.equal(semDbaSet.pendenciasProximoPeriodo.fiDeficit, 3);
+
+    // Com DBA 01–03/out (além de data_fim): setembro NÃO debita o DBA externo;
+    // os 3 dias viram pendência (folga faltante) junto com os 3 dias de escala
+    // que a janela de 11d não alcançou (fantasma — a janela termina em outubro).
+    const comDba = [
+      ...eventos,
+      { tipo: 'dba', data_embarque: '2026-10-01', data_desembarque: '2026-10-03' },
+    ];
+    const setDba = calcularFechamentoColaborador(ESCALA_14, comDba, [], SETEMBRO);
+    assert.equal(setDba.dias_fi_deficit, 0);
+    assert.equal(setDba.dias_fi, 0);
+    assert.equal(setDba.pendenciasProximoPeriodo.fiDeficit, 6); // 3 DBA + 3 fantasma
+    assert.deepEqual(setDba.pendenciasProximoPeriodo.dbaDias, ['2026-10-01', '2026-10-02', '2026-10-03']);
+
+    // Outubro computa a fatia dele: esperado 9 (01–09/out) − 3 DBA = 3 FI,
+    // + 3 dias fantasma (a janela termina 09/out, dentro de outubro) = 6 FI.
+    // Aditividade: setembro 0 + outubro 6 = déficit total 14 − (11 − 3) = 6.
+    const outubro = { dataInicio: d('2026-10-01'), dataFim: d('2026-10-31') };
+    const outDba = calcularFechamentoColaborador(ESCALA_14, comDba, [], outubro);
+    assert.equal(outDba.dias_fi_deficit, 6);
+    assert.equal(outDba.dias_fi, 6);
+    assert.equal(outDba.pendenciasProximoPeriodo.fiDeficit, 0);
+  });
+
+  it('folga aberta sem próximo embarque: pendência informativa, sem FI', () => {
+    const calc = calcularFechamentoColaborador(
+      ESCALA_14,
+      [{ tipo: 'normal', data_embarque: '2026-09-01', data_desembarque: '2026-09-14' }],
+      [],
+      SETEMBRO,
+    );
+    assert.equal(calc.dias_fi, 0);
+    assert.equal(calc.dias_fi_deficit, 0);
+    assert.equal(calc.dias_folga, 14);
+    assert.deepEqual(calc.pendenciasProximoPeriodo, {
+      fiDeficit: 0,
+      dbaDias: [],
+      folgaAberta: true,
+    });
   });
 });
 

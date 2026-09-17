@@ -28,7 +28,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
             return new NextResponse('Order not found', { status: 404 });
         }
 
-        // @ts-ignore
+        // @ts-expect-error - renderToBuffer não tipa os props do componente PDF
         const pdfBuffer = await renderToBuffer(React.createElement(PurchaseOrderPdf, { data: po }));
 
         const headers = new Headers();

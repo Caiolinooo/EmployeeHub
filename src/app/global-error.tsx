@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { FiAlertTriangle, FiRefreshCw, FiHome } from 'react-icons/fi';
 
 export default function GlobalError({
@@ -68,13 +69,13 @@ export default function GlobalError({
                 Tentar novamente
               </button>
 
-              <a
+              <Link
                 href="/"
                 className="flex-1 flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
               >
                 <FiHome className="mr-2" />
                 Página inicial
-              </a>
+              </Link>
             </div>
           </div>
         </div>

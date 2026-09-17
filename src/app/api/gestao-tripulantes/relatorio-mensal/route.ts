@@ -3,6 +3,12 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { gerarRelatorioEscalaMensal } from '@/lib/gestao-tripulantes/relatorio-escala-generator';
 import { normalizeAprovadoresObrigatorios } from '@/lib/gestao-tripulantes/fechamento-assinatura';
+import {
+  carregarMarcadosDoMes,
+  extrairPendenciasDoRelatorio,
+  montarNomeArquivoFechamento,
+  resolverPeriodoFechamento,
+} from '@/lib/gestao-tripulantes/fechamento-periodo-resolver';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,11 +31,22 @@ export async function GET(request: NextRequest) {
     const dataFim = searchParams.get('dataFim') || undefined;
     const empresa = searchParams.get('empresa') || undefined;
     const embarcacao = searchParams.get('embarcacao') || undefined;
+    // GT v2: multi-embarcações — `embarcacoes` (vírgula) além do `embarcacao` atual.
+    const embarcacoes = (searchParams.get('embarcacoes') || '')
+      .split(',')
+      .map((e) => e.trim())
+      .filter(Boolean);
     const cargo = searchParams.get('cargo') || undefined;
     const statusAtivo = (searchParams.get('statusAtivo') as any) || 'ativos';
     const busca = searchParams.get('busca') || undefined;
     const colaboradorId = searchParams.get('colaboradorId') || undefined;
     const download = searchParams.get('download') === 'true';
+
+    // GT v2 (R2): período explícito > gt_fechamento_periodos do mês > mês civil.
+    const periodo = await resolverPeriodoFechamento({ mesAno, dataInicio, dataFim });
+
+    // GT v2 (R5): lista confirmada → SOMENTE os marcados entram no fechamento.
+    const marcados = await carregarMarcadosDoMes(mesAno);
 
     // 1. Buscar configuração de aprovadores obrigatórios
     const { data: configData } = await supabaseAdmin
@@ -59,14 +76,17 @@ export async function GET(request: NextRequest) {
 
     const reportResult = await gerarRelatorioEscalaMensal({
       mesAno,
-      dataInicio,
-      dataFim,
+      // Período resolvido (explicit/config/mês) governa a janela do cálculo.
+      dataInicio: periodo.dataInicio,
+      dataFim: periodo.dataFim,
       empresa,
       embarcacao,
+      embarcacoes,
       cargo,
       statusAtivo,
       busca,
       colaboradorId,
+      colaboradorIds: marcados.listaConfirmada ? marcados.idsMarcados : undefined,
       aprovadores: assinaturasColetadas.length > 0 ? assinaturasColetadas : (registroExistente?.aprovado_por_nome ? [{
         nome: registroExistente.aprovado_por_nome,
         cpf: registroExistente.aprovado_por_cpf,
@@ -77,9 +97,18 @@ export async function GET(request: NextRequest) {
       }] : undefined)
     });
 
+    // GT v2 (R1/R4): pendências do próximo período expostas pelo motor.
+    const pendencias = await extrairPendenciasDoRelatorio(reportResult);
+
     if (download) {
-      const safeEmb = (embarcacao || 'Todas').replace(/[^a-zA-Z0-9_\-\s]/g, '').replace(/\s+/g, '_');
-      const filename = `relatorio_fechamento_${mesAno}_${safeEmb}.xlsx`;
+      const filename = montarNomeArquivoFechamento({
+        mesAno,
+        embarcacoes,
+        embarcacao,
+        dataInicio: periodo.dataInicio,
+        dataFim: periodo.dataFim,
+        fonte: periodo.fonte,
+      });
       return new NextResponse(reportResult.buffer, {
         status: 200,
         headers: {
@@ -93,8 +122,9 @@ export async function GET(request: NextRequest) {
       success: true,
       mesAno,
       periodo: {
-        dataInicio: dataInicio || undefined,
-        dataFim: dataFim || undefined,
+        dataInicio: periodo.dataInicio,
+        dataFim: periodo.dataFim,
+        fonte: periodo.fonte,
       },
       regra: 'comparativo_nxn_dt_inicio_dt_fim',
       registro: registroExistente || null,
@@ -104,6 +134,11 @@ export async function GET(request: NextRequest) {
       colaboradoresTotais: reportResult.colaboradoresTotais,
       calculosFolha: reportResult.calculosFolha,
       semanas: reportResult.semanas,
+      pendencias,
+      marcados: {
+        listaConfirmada: marcados.listaConfirmada,
+        total: marcados.total,
+      },
     });
   } catch (error: any) {
     console.error('[API RelatorioMensal GET]', error);

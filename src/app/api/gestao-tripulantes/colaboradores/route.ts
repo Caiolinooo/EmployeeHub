@@ -69,6 +69,34 @@ async function resolveNomeToId(table: string, nome: string): Promise<string | nu
   return data?.id ?? null;
 }
 
+/**
+ * R8: resolve NOMES → ids paginado (db-max-rows=1000 trunca select sem range()).
+ * Usado por `?embarcacoes=a,b,c` (filtro multi da Matriz). Contrato values-as-NAMES.
+ */
+async function resolveNomesToIds(table: string, nomes: string[]): Promise<string[] | { error: true }> {
+  const found = new Set<string>();
+  const pageSize = 1000;
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabaseAdmin
+      .from(table)
+      .select('id')
+      .in('nome', nomes)
+      .range(from, from + pageSize - 1);
+    if (error) {
+      console.error(`Erro ao resolver nomes em ${table}:`, error);
+      return { error: true };
+    }
+    const rows = (data || []) as { id?: string | null }[];
+    for (const r of rows) {
+      if (r?.id) found.add(String(r.id));
+    }
+    if (rows.length < pageSize) break;
+    from += pageSize;
+  }
+  return Array.from(found);
+}
+
 export async function GET(request: NextRequest) {
   const t0 = Date.now();
   try {
@@ -89,6 +117,8 @@ export async function GET(request: NextRequest) {
     const lite = searchParams.get('lite') === '1';
     const empresa = searchParams.get('empresa');
     const embarcacao = searchParams.get('embarcacao');
+    // R8: multi-embarcação (CSV de nomes). Compat: `embarcacao` (único) continua válido.
+    const embarcacoesParam = searchParams.get('embarcacoes');
     const cargo = searchParams.get('cargo');
     const centroCusto = searchParams.get('centro_custo');
     const status = searchParams.get('status');
@@ -131,6 +161,23 @@ export async function GET(request: NextRequest) {
 
     if (empresa && !empresaId) {
       return NextResponse.json({ success: true, data: [], pagination: { page, limit, total: 0, totalPages: 0 } });
+    }
+
+    let embarcacaoIds: string[] | null = null;
+    if (embarcacoesParam !== null) {
+      const nomes = Array.from(new Set(
+        embarcacoesParam.split(',').map(s => s.trim()).filter(Boolean)
+      ));
+      if (nomes.length > 0) {
+        const resolved = await resolveNomesToIds('gt_embarcacoes', nomes);
+        if (!Array.isArray(resolved)) {
+          return NextResponse.json({ error: 'Erro ao listar colaboradores' }, { status: 500 });
+        }
+        embarcacaoIds = resolved;
+        if (embarcacaoIds.length === 0) {
+          return NextResponse.json({ success: true, data: [], pagination: { page, limit, total: 0, totalPages: 0 } });
+        }
+      }
     }
 
     let vencidoIds: string[] | null = null;
@@ -184,7 +231,9 @@ export async function GET(request: NextRequest) {
     }
 
     if (empresaId) query = query.eq('empresa_id', empresaId);
+    // R8: single (compat) AND multi — quando ambos vierem, interseção (AND).
     if (embarcacaoId) query = query.eq('embarcacao_atual_id', embarcacaoId);
+    if (embarcacaoIds && embarcacaoIds.length > 0) query = query.in('embarcacao_atual_id', embarcacaoIds);
     if (cargoId) query = query.eq('cargo_id', cargoId);
     if (centroId) query = query.eq('centro_custo_id', centroId);
     if (ativo === 'true' || ativo === 'ativos' || ativo === 'ativo') query = query.eq('ativo', true);
@@ -281,7 +330,7 @@ export async function GET(request: NextRequest) {
     const flattened = (rows || []).map((row) => flattenColaboradorRow(row as unknown as Record<string, unknown>));
     const ids = flattened.map((c) => c.id as string).filter(Boolean);
 
-    let countsById: Record<string, { qtd_docs_vencidos: number; qtd_docs_vencendo: number; qtd_docs_validos: number }> = {};
+    const countsById: Record<string, { qtd_docs_vencidos: number; qtd_docs_vencendo: number; qtd_docs_validos: number }> = {};
     const docRows: DocPendencyRow[] = [];
     if (ids.length > 0) {
       const fetchedDocs = await fetchDocumentosAgrupaveis(ids);

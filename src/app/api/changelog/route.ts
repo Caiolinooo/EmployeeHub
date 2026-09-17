@@ -81,7 +81,7 @@ function parseChangelog(content: string): ChangelogRelease[] {
 
         // If no specific sections matched, try to just grab all bullet points from the section
         // excluding the version header itself
-        let customContent = fullSection; // Could be used for custom markdown rendering if we want
+        const customContent = fullSection; // Could be used for custom markdown rendering if we want
 
         releases.push({
             version: indices[i].version,

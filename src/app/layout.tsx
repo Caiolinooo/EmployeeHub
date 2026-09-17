@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ErrorFallback from "@/components/ErrorFallback";
 import localFont from "next/font/local";
@@ -57,6 +57,16 @@ export const metadata: Metadata = {
   description: "Portal centralizado para colaboradores da ABZ Group",
 };
 
+// Viewport via export do Next 15 (App Router) — substitui a <meta> crua no <head>.
+// viewportFit: 'cover' respeita safe-areas (notch/barra do iPhone) para .pb-safe/.pt-safe.
+// maximum-scale=5.0 mantém o zoom acessível (não desabilitar).
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -77,8 +87,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
           type="text/css"
         />
-        {/* Viewport - Critical for mobile rendering */}
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+        {/* Viewport agora vem de `export const viewport` (Next 15) — ver acima */}
         {/* PWA Manifest & Meta */}
         <link rel="manifest" href="/manifest.webmanifest" />
         <meta name="theme-color" content="#0B72E7" />

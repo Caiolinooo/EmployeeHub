@@ -87,7 +87,7 @@ export async function listUserSkills(
   userId: string,
   opts?: { limit?: number; query?: string }
 ): Promise<UserSkillEntry[]> {
-  let q = supabaseAdmin
+  const q = supabaseAdmin
     .from('ia_user_skills')
     .select('*')
     .eq('user_id', userId)
@@ -201,7 +201,7 @@ export async function createUserSkill(input: {
   return { skill: data as UserSkillEntry };
 }
 
-export async function useUserSkill(
+export async function applyUserSkill(
   userId: string,
   skillIdOrName: string
 ): Promise<{ skill: UserSkillEntry | null; promptBlock: string; error?: string }> {

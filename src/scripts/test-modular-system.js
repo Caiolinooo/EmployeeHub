@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires -- script legado CommonJS executado direto pelo node */
 // Script to test the modular system backend using direct DB connection
 require('dotenv').config();
 const { Pool } = require('pg');

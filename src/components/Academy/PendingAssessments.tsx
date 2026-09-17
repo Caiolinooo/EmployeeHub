@@ -129,6 +129,7 @@ export default function PendingAssessments({ courseId }: { courseId: string }) {
         <div className="space-y-6">
             {!gradingId ? (
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    <div className="table-responsive">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
@@ -152,7 +153,7 @@ export default function PendingAssessments({ courseId }: { courseId: string }) {
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <button
                                             onClick={() => startGrading(attempt)}
-                                            className="text-blue-600 hover:text-blue-900"
+                                            className="tap-target inline-flex items-center px-3 text-blue-600 hover:text-blue-900"
                                         >
                                             Avaliar Respostas
                                         </button>
@@ -161,11 +162,12 @@ export default function PendingAssessments({ courseId }: { courseId: string }) {
                             ))}
                         </tbody>
                     </table>
+                    </div>
                 </div>
             ) : (
                 activeAttempt && (
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <div className="flex justify-between items-center mb-6">
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
                             <div>
                                 <h3 className="text-lg font-semibold text-gray-900">
                                     Avaliando: {activeAttempt.enrollment.user.first_name} {activeAttempt.enrollment.user.last_name}
@@ -174,7 +176,7 @@ export default function PendingAssessments({ courseId }: { courseId: string }) {
                             </div>
                             <button
                                 onClick={() => setGradingId(null)}
-                                className="text-sm text-gray-500 hover:text-gray-700"
+                                className="tap-target inline-flex items-center justify-center px-3 text-sm text-gray-500 hover:text-gray-700 self-start sm:self-auto"
                             >
                                 Voltar à Lista
                             </button>
@@ -188,7 +190,7 @@ export default function PendingAssessments({ courseId }: { courseId: string }) {
                                         {ans.text_answer || <span className="text-gray-400 italic">Nenhuma resposta em texto fornecida.</span>}
                                     </div>
 
-                                    <div className="flex items-center space-x-4">
+                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                                         <span className="text-sm font-medium text-gray-700">Avaliação:</span>
                                         <label className="flex items-center space-x-2 cursor-pointer">
                                             <input
@@ -215,11 +217,11 @@ export default function PendingAssessments({ courseId }: { courseId: string }) {
                             ))}
                         </div>
 
-                        <div className="mt-8 flex justify-end">
+                        <div className="mt-8 flex justify-end pb-safe">
                             <button
                                 onClick={submitGrades}
                                 disabled={saving}
-                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                             >
                                 {saving ? 'Processando...' : 'Salvar Avaliação e Concluir'}
                             </button>

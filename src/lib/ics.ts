@@ -82,7 +82,7 @@ export async function parseIcs(ics: string): Promise<IcsEvent[]> {
       const idx = line.indexOf(':');
       if (idx <= 0) continue;
       const nameAndParams = line.slice(0, idx);
-      let value = line.slice(idx + 1);
+      const value = line.slice(idx + 1);
       const name = nameAndParams.split(';')[0].toUpperCase();
 
       if (name === 'ATTENDEE') {
@@ -91,7 +91,12 @@ export async function parseIcs(ics: string): Promise<IcsEvent[]> {
         const cnMatch = /CN=([^;:]+)/i.exec(nameAndParams);
         const nameParam = cnMatch ? decodeURIComponent(cnMatch[1]) : undefined;
         const v = JSON.stringify({ email: email.replace(/^mailto:/i, ''), name: nameParam });
-        (fields[name] as string[] | undefined)?.push?.(v) || (fields[name] = [v]);
+        const existingAttendees = fields[name] as string[] | undefined;
+        if (existingAttendees && typeof existingAttendees.push === 'function') {
+          existingAttendees.push(v);
+        } else {
+          fields[name] = [v];
+        }
         continue;
       }
 

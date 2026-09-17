@@ -16,7 +16,8 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
         }
 
-        let { postId, userId, duration } = body;
+        const { postId, duration } = body;
+        let { userId } = body;
 
         // Fallback: Tentar obter usuário do token se não vier no body (correção do problema de anônimos)
         if (!userId) {

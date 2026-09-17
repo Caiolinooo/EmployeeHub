@@ -430,7 +430,7 @@ export default function ReimbursementDashboard() {
 
   return (
     <div className="flex flex-col min-h-0 flex-1">
-      <div className="shrink-0 flex items-center justify-between mb-6">
+      <div className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <h2 className="text-xl font-semibold text-gray-800">{t('reimbursement.tabs.dashboard')}</h2>
         <button
           onClick={handleCreateReimbursement}
@@ -462,7 +462,7 @@ export default function ReimbursementDashboard() {
             </div>
             <button
               onClick={fetchReimbursements}
-              className="ml-2 p-2 bg-abz-blue text-white rounded-md hover:bg-abz-blue-dark"
+              className="ml-2 p-2.5 bg-abz-blue text-white rounded-md hover:bg-abz-blue-dark shrink-0"
               title={t('common.search')}
             >
               <FiSearch />
@@ -472,7 +472,7 @@ export default function ReimbursementDashboard() {
           <div className="flex items-center space-x-2">
             <div className="relative">
               <select
-                className="pl-4 pr-8 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-abz-blue focus:border-transparent appearance-none"
+                className="pl-4 pr-8 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-abz-blue focus:border-transparent appearance-none"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
@@ -487,7 +487,7 @@ export default function ReimbursementDashboard() {
 
             <button
               onClick={fetchReimbursements}
-              className="p-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+              className="p-2.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
               title={t('common.refresh')}
             >
               <FiRefreshCw />
@@ -569,7 +569,7 @@ export default function ReimbursementDashboard() {
             </button>
           </div>
         ) : (
-          <div className="flex-1 min-h-0 overflow-auto">
+          <div className="flex-1 min-h-0 overflow-auto table-responsive">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50 sticky top-0 z-10">
                 <tr>
@@ -621,7 +621,8 @@ export default function ReimbursementDashboard() {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => handleViewDetails(reimbursement)}
-                        className="text-abz-blue hover:text-abz-blue-dark"
+                        className="tap-target inline-flex items-center justify-center text-abz-blue hover:text-abz-blue-dark"
+                        title={t('common.actions')}
                       >
                         <FiEye className="h-5 w-5" />
                       </button>
@@ -636,8 +637,8 @@ export default function ReimbursementDashboard() {
 
       {/* Paginação */}
       {!loading && !error && reimbursements.length > 0 && (
-        <div className="shrink-0 mt-4 flex items-center justify-between">
-          <div className="text-sm text-gray-700">
+        <div className="shrink-0 mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-sm text-gray-700 text-center sm:text-left">
             {t('common.showing')} <span className="font-medium">{(page - 1) * limit + 1}</span> {t('common.to')}{' '}
             <span className="font-medium">{Math.min(page * limit, totalCount)}</span> {t('common.of')}{' '}
             <span className="font-medium">{totalCount}</span> {t('common.results')}
@@ -646,7 +647,7 @@ export default function ReimbursementDashboard() {
             <button
               onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page === 1}
-              className={`px-3 py-1 rounded-md ${
+              className={`px-3 py-2 rounded-md ${
                 page === 1
                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   : 'bg-abz-blue text-white hover:bg-abz-blue-dark'
@@ -657,7 +658,7 @@ export default function ReimbursementDashboard() {
             <button
               onClick={() => setPage(page + 1)}
               disabled={page * limit >= totalCount}
-              className={`px-3 py-1 rounded-md ${
+              className={`px-3 py-2 rounded-md ${
                 page * limit >= totalCount
                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   : 'bg-abz-blue text-white hover:bg-abz-blue-dark'

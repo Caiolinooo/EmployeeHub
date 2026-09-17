@@ -341,7 +341,7 @@ export async function PATCH(request: NextRequest) {
       }, { status: 404 });
     }
 
-    let updateData: any = {
+    const updateData: any = {
       updated_at: new Date().toISOString()
     };
 

@@ -266,6 +266,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <ProtectedRoute adminOnly>
       <div className="h-dvh bg-gray-100 flex flex-col md:flex-row overflow-hidden">
+        {/* Backdrop da gaveta mobile (antes faltava — a sidebar ficava aberta sem forma de fechar tocando fora) */}
+        {isMobileMenuOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-20 md:hidden transition-opacity"
+            onClick={toggleMobileMenu}
+          />
+        )}
+
         {/* Sidebar para desktop */}
         <aside
           className={`bg-white shadow-md fixed inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-all duration-300 ease-in-out z-30 flex flex-col`}
@@ -290,8 +298,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {isCollapsed ? <FiChevronRight className="h-5 w-5" /> : <FiChevronLeft className="h-5 w-5" />}
               </button>
               <button
-                className="md:hidden text-gray-500 hover:text-gray-700"
+                className="md:hidden tap-target flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
                 onClick={toggleMobileMenu}
+                aria-label={t('gtMobileV2.closeMenu', 'Fechar menu') as string}
               >
                 <FiX className="h-6 w-6" />
               </button>
@@ -404,13 +413,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <div className="flex items-center">
                 <button
                   onClick={toggleMobileMenu}
-                  className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                  aria-label={t('gtMobileV2.openMenu', 'Abrir menu') as string}
+                  className="flex items-center justify-center h-11 w-11 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none transition-colors"
                 >
                   <FiMenu className="h-6 w-6" />
                 </button>
                 <span className="ml-3 text-lg font-semibold text-abz-blue-dark">{t('admin.title')}</span>
               </div>
-              <Link href="/dashboard" className="text-gray-500 hover:text-gray-700">
+              <Link href="/dashboard" className="flex items-center justify-center h-11 w-11 rounded-lg text-gray-500 hover:text-gray-700 transition-colors">
                 <FiGrid className="h-6 w-6" />
               </Link>
             </div>
@@ -421,8 +431,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {children}
           </main>
 
-          {/* Footer (compacto em telas pequenas) */}
-          <div className="shrink-0 hidden sm:block">
+          {/* Footer — agora visível também no mobile (compacto, py-4); pb-safe respeita a home indicator */}
+          <div className="shrink-0 pb-safe">
             <Footer />
           </div>
 
