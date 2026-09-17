@@ -343,7 +343,7 @@ export class AdvancedPDFGenerator {
       });
 
       const page = await browser.newPage();
-      await page.setContent(html, { waitUntil: 'networkidle0' });
+      await page.setContent(html, { waitUntil: 'load' });
       
       // Aguardar os gráficos serem renderizados
       await page.waitForFunction(() => window.chartsReady, { timeout: 10000 });

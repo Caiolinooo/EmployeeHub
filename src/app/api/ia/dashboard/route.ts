@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
         ? await exportKPIsToPDF(result.data)
         : await exportKPIsToXLSX(result.data);
 
-      return new NextResponse(buffer, {
+      return new NextResponse(new Uint8Array(buffer), {
         headers: {
           'Content-Type': format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           'Content-Disposition': `attachment; filename="dashboard-kpi.${format}"`,

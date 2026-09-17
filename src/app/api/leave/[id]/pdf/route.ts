@@ -136,7 +136,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
             .substring(0, 30);
         const fileName = `Comprovante_Ferias_${safeUserName}_${req.id.slice(0, 8)}.pdf`;
 
-        return new NextResponse(pdfBuffer, {
+        return new NextResponse(new Uint8Array(pdfBuffer), {
             headers: {
                 'Content-Type': 'application/pdf',
                 'Content-Disposition': `attachment; filename="${fileName}"`,

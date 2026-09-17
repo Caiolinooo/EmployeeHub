@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
         dataFim: periodo.dataFim,
         fonte: periodo.fonte,
       });
-      return new NextResponse(reportResult.buffer, {
+      return new NextResponse(new Uint8Array(reportResult.buffer), {
         status: 200,
         headers: {
           'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

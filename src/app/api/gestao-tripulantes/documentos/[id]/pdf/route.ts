@@ -100,7 +100,7 @@ export async function GET(
     const filename = `Treinamento_${safeTitle}_${safeName}.pdf`;
     const disposition = forceDownload ? 'attachment' : 'inline';
 
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',

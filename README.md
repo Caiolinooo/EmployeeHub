@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.79.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.79.1 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,11 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.79.1)
+
+- **44 vulnerabilidades zeradas** (2 críticas): Next 15.5.25 (RCE), SheetJS xlsx 0.20.3 (tarball oficial do CDN), puppeteer 25, nodemailer, sharp, postcss e transitivos — `npm audit` limpo.
+- **Sem quebra de função**: 163 testes, build de produção e smoke real de XLSX (roundtrip) e PDF (geração com Chrome) passaram; única mudança visível é interna (buffers de PDF/XLSX viram `Uint8Array` nas respostas — bytes idênticos).
 
 ## Nesta versão (5.79.0)
 

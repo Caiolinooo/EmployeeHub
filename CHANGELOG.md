@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.79.1] - 2026-09-17
+
+### 🔒 Dependências: 44 vulnerabilidades zeradas (2 críticas), sem quebra de função
+
+1. **Next.js 15.5.21 → 15.5.25 (crítico)**: RCE não autenticado (windows-media-type / otimização de imagem) e as falhas encadeadas de `postcss`/`sharp` que vinham junto na árvore do Next. Mesma linha 15.x — zero mudança de API.
+2. **SheetJS `xlsx` 0.18.5 → 0.20.3**: prototype pollution + ReDoS. O npm não publica mais a linha corrigida do SheetJS — fix via tarball oficial do CDN (`cdn.sheetjs.com`) fixado em `dependencies` + `overrides`. Smoke de roundtrip real (gera → lê → compara células) passou nos mesmos moldes dos importers/exporters do portal.
+3. **puppeteer 24 → 25.11**: cadeia do `extract-zip` (symlink path traversal). O gerador de relatórios PDF usa só API estável (launch/newPage/setContent/pdf); duas quebras de tipagem adaptadas sem mudança de comportamento — `page.pdf()` agora devolve `Uint8Array` (o único caller grava com `fs.writeFile`, que aceita nativamente) e `setContent` tipa `waitUntil: 'load'` (o HTML é inline, sem rede; os gráficos continuam esperados por `waitForFunction(window.chartsReady)`).
+4. **Demais diretas**: `nodemailer` 9.1.1 (bypass de allow-list IDN + ReDoS), `sharp` 0.35.4 (libheif), `@netlify/functions` 6 (SDK de deploy — produção é Vercel), `postcss` 8.5.28 e `@netlify/zip-it-and-ship-it` novo. Overrides de transitivos sem fix por range dos pais: `esbuild` 0.28.2, `toml` 5, `brace-expansion` atualizado por subárvore.
+5. **Tipagem de resposta de arquivo**: `next` 15.5.25 apertou o `BodyInit` — os 6 pontos que devolvem PDF/XLSX (`documentos`, `relatorio-mensal`, `ia/dashboard`, `leave` x2, `reembolso`) passam a envolver o buffer em `new Uint8Array(...)`; bytes idênticos no cliente.
+6. **Verificação completa**: 163 testes GT ✅, `tsc --noEmit` 0 erros, lint 0 erros, build de produção ✅, smoke real de XLSX (roundtrip) e PDF (launch → `%PDF-`), `npm audit` = **0 vulnerabilidades** (antes: 44 alertas — 2 críticos, 25 high, 15 moderados, 2 low).
+
 ## [5.79.0] - 2026-09-17
 
 ### 🚀 GT v2: fechamento com período manual, marcados por mês, edição auditada com rollback, tudo live — e portal usável no celular
