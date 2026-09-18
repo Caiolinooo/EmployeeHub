@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.80.0] - 2026-09-18
+
+### ✂️ GT: recorte de marcações, exclusão parcial com confirmação e histórico global reversível
+
+1. **Remarcar não apaga mais o evento inteiro (recorte)**: salvar um evento sobre uma marcação same-type existente recorta a antiga em torno do novo período — as pontas antes/depois ficam (ex.: ON 1–14 remarcado do dia 8 em diante mantém 1–7); no meio, o evento vira dois blocos. Checkboxes **Apagar marcações anteriores/posteriores** no painel flutuante (só em clique sobre marcação existente, default desmarcado) descartam a ponta correspondente de propósito. Mantidos: substituição same-tipo, merge de período idêntico e linhas abertas.
+2. **Exclusão com confirmação e escopo do visor**: o delete da grade abre modal — sem a caixa **Apagar evento completo** marcada, apaga só o dia (visor dia) ou a semana sáb–sex (visor semana) clipada ao evento; marcada, apaga o evento inteiro como foi criado. Ficha do colaborador usa o mesmo modal (sempre evento inteiro). Tudo soft-delete + trilha — reversível.
+3. **Desfazer no toast**: todo save/exclusão mostra toast com botão **Desfazer** que reverte a própria ação na hora; o autor pode desfazer o próprio lance sem ser gestor (guarda de supersessão fail-closed segue valendo). Ordem de reversão corrigida para saves que recortam (evento salvo primeiro) — segunda rodada de revisão/QA pegou o 409 no meio da cadeia.
+4. **Histórico global de alterações**: nova aba **"Histórico de alterações"** na página GT (`?tab=historico`) sobre a trilha `gt_escala_edicoes`, com filtros status/operação/colaborador/**período de-até** (filtro novo no `GET /escala-edicoes`, janela BRT inclusiva, 400 em data inválida), diff antes→depois e Reverter/Rejeitar com motivo para gestores. A ficha do colaborador também ganhou Reverter/Rejeitar por lance.
+5. **Fragmentos íntegros**: recorte de linha aberta preserva `data_prevista_desembarque` (fragmento não sai do automático do fechamento); falha na divisão é **tudo-ou-nada** com trilha "RECORTE NÃO APLICADO" para a fila de revisão — nunca resta original apagada com meia ponta viva.
+6. **Verificação**: suíte GT 196 testes ✅ (recorte 23, período BRT 10, grade 4 mjs), `tsc --noEmit` 0, lint 0, build de produção ✅, E2E via API (recorte/fragmentos/trilha, rollback LIFO restaurando o original, exclusão parcial de linha aberta, bordas do filtro de/ate, RBAC do autodesfazer) 100% pass.
+
 ## [5.79.1] - 2026-09-17
 
 ### 🔒 Dependências: 44 vulnerabilidades zeradas (2 críticas), sem quebra de função

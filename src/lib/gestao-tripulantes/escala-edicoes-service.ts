@@ -17,6 +17,7 @@
  */
 import { supabaseAdmin } from '@/lib/supabase';
 import { paginarSelect } from '@/lib/gestao-tripulantes/supabase-paginacao';
+import { normalizarJanelaPeriodoBRT } from '@/lib/gestao-tripulantes/escala-edicoes-periodo';
 import {
   ESCALA_EDICAO_OPERACOES,
   ESCALA_EDICAO_STATUS,
@@ -67,7 +68,8 @@ export async function registrarEscalaEdicao(
 ): Promise<{ ok: boolean; error?: string }> {
   let ok = false;
   try {
-    ok = await registrarEdicaoEscala({
+    // registrarEdicaoEscala devolve o ID inserido (null = falha best-effort).
+    ok = Boolean(await registrarEdicaoEscala({
       embarqueId: input.embarqueId,
       colaboradorId: input.colaboradorId,
       operacao: input.operacao,
@@ -76,7 +78,7 @@ export async function registrarEscalaEdicao(
       dadosNovos: input.dadosNovos ?? null,
       motivo: input.motivo ?? null,
       ator: { ...(input.ator || {}), ip: input.ator?.ip || input.ip || null },
-    });
+    }));
   } catch (err) {
     console.error('[gt-escala-edicoes] Erro inesperado ao registrar edição:', err);
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
@@ -87,6 +89,10 @@ export async function registrarEscalaEdicao(
 export interface ListarEscalaEdicoesFiltro {
   status?: string | null;
   colaboradorId?: string | null;
+  /** Período BRT inclusivo (YYYY-MM-DD) — created_at >= `${de}T00:00:00-03:00`. */
+  de?: string | null;
+  /** Período BRT inclusivo (YYYY-MM-DD) — created_at <= `${ate}T23:59:59-03:00`. */
+  ate?: string | null;
   page?: number;
   pageSize?: number;
 }
@@ -95,6 +101,8 @@ export interface ListarEscalaEdicoesFiltro {
  * Fila paginada (mais novas primeiro, desempate por id) com nome do
  * colaborador resolvido em lote. Uma página é <= pageSize (<= 200) — range()
  * direto; o count usa query separada com os mesmos filtros.
+ * `de`/`ate` inválidos (não YYYY-MM-DD completo ou de > ate) retornam
+ * `{ error }` sem tocar o banco — a rota traduz para 400.
  */
 export async function listarEscalaEdicoes(filtro: ListarEscalaEdicoesFiltro = {}): Promise<{
   rows: EscalaEdicaoRowComNome[];
@@ -107,11 +115,19 @@ export async function listarEscalaEdicoes(filtro: ListarEscalaEdicoesFiltro = {}
   const page = Math.max(1, Number(filtro.page) > 0 ? Math.floor(Number(filtro.page)) : 1);
   const pageSize = Math.min(200, Math.max(1, Number(filtro.pageSize) > 0 ? Math.floor(Number(filtro.pageSize)) : 50));
 
+  const janelaRes = normalizarJanelaPeriodoBRT(filtro.de, filtro.ate);
+  if (!janelaRes.ok) {
+    return { rows: [], total: 0, page, pageSize, totalPages: 0, error: janelaRes.error };
+  }
+  const { createdDe, createdAte } = janelaRes.janela;
+
   const statusFiltro = filtro.status && isStatusEscalaEdicao(filtro.status) ? filtro.status : null;
   const aplicarFiltros = (query: any): any => {
     let q = query;
     if (statusFiltro) q = q.eq('status', statusFiltro);
     if (filtro.colaboradorId) q = q.eq('colaborador_id', filtro.colaboradorId);
+    if (createdDe) q = q.gte('created_at', createdDe);
+    if (createdAte) q = q.lte('created_at', createdAte);
     return q;
   };
 

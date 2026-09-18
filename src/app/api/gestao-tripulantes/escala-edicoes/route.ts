@@ -7,6 +7,7 @@ import {
   resolverNomesColaboradores,
   type EscalaEdicaoRow,
 } from '@/lib/gestao-tripulantes/escala-audit-writer';
+import { normalizarJanelaPeriodoBRT } from '@/lib/gestao-tripulantes/escala-edicoes-periodo';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +25,10 @@ function colaboradorIdDaEdicao(r: EscalaEdicaoRow): string | null {
  * GET /api/gestao-tripulantes/escala-edicoes
  * Fila de auditoria das edições da escala (R7) — paginada, mais novas primeiro.
  * Query: ?status=aplicada|revertida|rejeitada&operacao=create|update|delete|restore|rejeicao|reversao
- *        &colaboradorId=UUID&embarqueId=UUID&page=1&pageSize=50
+ *        &colaboradorId=UUID&embarqueId=UUID&de=YYYY-MM-DD&ate=YYYY-MM-DD&page=1&pageSize=50
+ * Período (de/ate) opcional, INCLUSIVO, interpretado em BRT (offset fixo -03:00):
+ * filtra created_at por `>= de T00:00:00-03:00` e `<= ate T23:59:59-03:00`.
+ * Formato inválido ou de > ate → 400 (validação em escala-edicoes-periodo.ts).
  */
 export async function GET(request: NextRequest) {
   try {
@@ -59,6 +63,13 @@ export async function GET(request: NextRequest) {
     const colaboradorId = (searchParams.get('colaboradorId') || '').trim() || undefined;
     const embarqueId = (searchParams.get('embarqueId') || '').trim() || undefined;
 
+    // Período opcional (de/ate, YYYY-MM-DD inclusivos, fuso BRT). Inválido/invertido → 400.
+    const janelaRes = normalizarJanelaPeriodoBRT(searchParams.get('de'), searchParams.get('ate'));
+    if (!janelaRes.ok) {
+      return NextResponse.json({ error: janelaRes.error }, { status: 400 });
+    }
+    const { createdDe, createdAte } = janelaRes.janela;
+
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
     const pageSize = Math.min(
       PAGE_MAX,
@@ -90,6 +101,14 @@ export async function GET(request: NextRequest) {
     if (embarqueId) {
       countQuery = countQuery.eq('embarque_id', embarqueId);
       rowsQuery = rowsQuery.eq('embarque_id', embarqueId);
+    }
+    if (createdDe) {
+      countQuery = countQuery.gte('created_at', createdDe);
+      rowsQuery = rowsQuery.gte('created_at', createdDe);
+    }
+    if (createdAte) {
+      countQuery = countQuery.lte('created_at', createdAte);
+      rowsQuery = rowsQuery.lte('created_at', createdAte);
     }
 
     const [totalRes, pageRes] = await Promise.all([

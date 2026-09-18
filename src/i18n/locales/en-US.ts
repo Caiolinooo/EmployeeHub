@@ -4355,6 +4355,9 @@ export default {
   gestaoTripulantes: {
     title: 'Crew Management',
     subtitle: 'Intelligent crew management and offshore scale dashboard',
+    tabs: {
+      historico: 'Change history'
+    },
     colaboradores: 'Crew Members',
     colaborador: 'Crew Member',
     filters: {
@@ -4762,7 +4765,17 @@ export default {
       erroAcao: 'Failed to process the review.',
       pagAnterior: 'Previous',
       pagProxima: 'Next',
-      paginaDe: 'Page {{page}} of {{totalPages}}'
+      paginaDe: 'Page {{page}} of {{totalPages}}',
+      operacao: 'Operation',
+      todasOperacoes: 'All operations',
+      periodoDe: 'From (edit date)',
+      periodoAte: 'To (edit date)'
+    },
+    historicoGlobal: {
+      titulo: 'Global Scale Change History',
+      descricao: 'Every scale edit in the portal — any vessel and crew member. Revert/Reject is restricted to closing managers.',
+      semPermissao: 'Only closing managers can revert or reject edits.',
+      vazio: 'No changes found with the current filters.'
     },
     aprovadores: {
       titulo: 'Crew Verification & Required Signatures',
@@ -4850,7 +4863,33 @@ export default {
     eventoRemovido: 'Event removed (reversible via change history)',
     bloqueioFerias: 'Vacations and leaves are managed by the HR/Leave module and cannot be edited here.',
     bloqueadoFeriasCurto: 'HR/Leave',
-    confirmarExclusao: 'Delete this schedule event? The removal is recorded and can be reverted.',
+    recorteTitulo: 'Delete marks on save',
+    apagarAnteriores: 'Delete earlier marks',
+    apagarAnterioresHint: "Deletes this crew member's marks before {data}",
+    apagarPosteriores: 'Delete later marks',
+    apagarPosterioresHint: "Deletes this crew member's marks after {data}",
+    excluirMarcacaoTitulo: 'Delete mark',
+    excluirMarcacaoTrecho: 'Segment to delete',
+    excluirMarcacaoEscopoDia: 'Scope: the clicked day',
+    excluirMarcacaoEscopoSemana: 'Scope: week (Sat–Fri) of the clicked column',
+    excluirMarcacaoEscopoEvento: 'Scope: entire event',
+    apagarEventoCompleto: 'Delete entire event ({periodo}, {dias} days)',
+    apagarEventoCompletoAberto: 'Delete entire event (from {periodo}, open-ended)',
+    excluirPreservarNota: 'Marks outside the selected segment are preserved.',
+    excluirReversivelNota: 'The deletion is recorded in the history and can be reverted.',
+    desfazer: 'Undo',
+    desfeito: 'Undone',
+    desfazerMotivoDefault: 'Undo by the author themselves',
+    desfazerErro: 'Could not undo.',
+    reverter: 'Revert',
+    rejeitar: 'Reject',
+    motivoObrigatorio: 'Reason is required.',
+    motivoPlaceholder: 'E.g.: wrong end date — correct launch is 09/12.',
+    confirmarReverter: 'Confirm revert',
+    confirmarRejeitar: 'Confirm rejection',
+    reversaoOk: 'Edit reverted: previous schedule state restored.',
+    rejeicaoOk: 'Edit rejected: previous schedule state restored.',
+    revisaoErro: 'Error processing the action.',
     historicoAlteracoes: 'Change history',
     historicoVazio: 'No changes recorded for this event.',
     historicoCarregando: 'Loading history...',

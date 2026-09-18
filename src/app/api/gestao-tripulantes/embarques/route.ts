@@ -6,13 +6,15 @@ import { findColaboradorByCpf } from '@/lib/gestao-tripulantes/cpf-lookup';
 import { invalidateManScheduleCache } from '@/lib/gestao-tripulantes/man-schedule-cache';
 import { sincronizarDatasEscalaColaborador } from '@/lib/gestao-tripulantes/embarques-datas-sync';
 import {
+  aplicarRecorteEmSobreposto,
   buscarSobrepostos,
   carregarAtorEscala,
-  registrarEdicoesEscala,
+  registrarEdicaoEscala,
   snapshotEmbarque,
   type EmbarqueRow,
 } from '@/lib/gestao-tripulantes/escala-audit-writer';
 import { filtrarSubstitutiveis } from '@/lib/gestao-tripulantes/escala-overlap';
+import { lerFlagRecorte } from '@/lib/gestao-tripulantes/escala-recorte';
 
 export const dynamic = 'force-dynamic';
 
@@ -80,6 +82,12 @@ export async function POST(request: NextRequest) {
       created_at: now,
       updated_at: now,
     };
+
+    // Recorte de marcações (v5.80): flags opcionais do contrato —
+    // apagar_anteriores descarta a ponta ANTES do período salvo;
+    // apagar_posteriores descarta a ponta DEPOIS. Default false/false.
+    const apagarAnteriores = lerFlagRecorte(body.apagar_anteriores);
+    const apagarPosteriores = lerFlagRecorte(body.apagar_posteriores);
 
     // Substituição: o save do operador é a verdade — todo evento do mesmo
     // colaborador que sobreponha o período informado é substituído (soft-delete;
@@ -156,61 +164,62 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const substituidos = substituir.map((r) => ({
-      id: r.id,
-      tipo: r.tipo,
-      data_embarque: r.data_embarque,
-      data_desembarque: r.data_desembarque,
-    }));
-    if (substituir.length > 0) {
-      const { error: delErr } = await supabaseAdmin
-        .from('gt_historico_embarques')
-        .update({ deleted_at: now, updated_at: now })
-        .in('id', substituir.map((r) => r.id));
-      if (delErr) console.error('Erro ao substituir embarques sobrepostos:', delErr);
-    }
+    const edicoes: string[] = [];
+    const substituidos: Array<{ id: string; tipo: string; data_embarque: string; data_desembarque: string }> = [];
 
-    // GT v2 (R7): trilha de auditoria da escala — best-effort, nunca falha o
-    // save. Uma linha para o evento gravado (create/update) e uma por evento
-    // substituído (delete).
+    // GT v2 (R7) + recorte (v5.80): trilha de auditoria — best-effort, nunca
+    // falha o save. Ordem de gravação (refletida em `edicoes`): 1º o evento
+    // salvo (create/update), depois um efeito por evento sobreposto do MESMO
+    // tipo — que agora é RECORTADO em torno do período salvo em vez de ser
+    // soft-deletado inteiro: ponta anterior/posterior preservada vira UPDATE na
+    // própria linha; recorte no meio vira soft-delete + 2 fragmentos; sem
+    // pontas preserváveis (ou com flags apagar_*) vira soft-delete total.
     try {
-      const auditoria = [] as Parameters<typeof registrarEdicoesEscala>[0];
       if (keep) {
-        auditoria.push({
+        const idAudit = await registrarEdicaoEscala({
           embarqueId: keep.id || null,
           colaboradorId: colab.id,
-          operacao: 'update' as const,
-          status: 'aplicada' as const,
+          operacao: 'update',
+          status: 'aplicada',
           dadosAnteriores: snapshotEmbarque(keep),
           dadosNovos: snapshotEmbarque((data || {}) as EmbarqueRow),
           motivo: 'Evento de escala salvo (merged: período idêntico atualizado)',
           ator,
         });
+        if (idAudit) edicoes.push(idAudit);
       } else {
-        auditoria.push({
+        const idAudit = await registrarEdicaoEscala({
           embarqueId: (data as { id?: string } | null)?.id || null,
           colaboradorId: colab.id,
-          operacao: 'create' as const,
-          status: 'aplicada' as const,
+          operacao: 'create',
+          status: 'aplicada',
           dadosAnteriores: null,
           dadosNovos: snapshotEmbarque((data || {}) as EmbarqueRow),
           motivo: 'Evento de escala criado',
           ator,
         });
+        if (idAudit) edicoes.push(idAudit);
       }
+
       for (const r of substituir) {
-        auditoria.push({
-          embarqueId: r.id || null,
-          colaboradorId: colab.id,
-          operacao: 'delete' as const,
-          status: 'aplicada' as const,
-          dadosAnteriores: snapshotEmbarque(r),
-          dadosNovos: { ...snapshotEmbarque(r), deleted_at: now },
-          motivo: 'Substituído pelo evento salvo (overlap-replace)',
+        const efeito = await aplicarRecorteEmSobreposto({
+          row: r,
+          periodo: { inicio: embIni, fim: embFim },
+          apagarAnteriores,
+          apagarPosteriores,
           ator,
+          colaboradorId: colab.id,
+          now,
+        });
+        if (efeito.acao === 'nada' || !efeito.afetado) continue;
+        edicoes.push(...efeito.edicoes);
+        substituidos.push({
+          id: String(r.id || ''),
+          tipo: String(r.tipo ?? ''),
+          data_embarque: String(r.data_embarque ?? ''),
+          data_desembarque: String(r.data_desembarque ?? ''),
         });
       }
-      await registrarEdicoesEscala(auditoria);
     } catch (auditErr) {
       console.error('Falha ao gravar auditoria de escala (best-effort):', auditErr);
     }
@@ -219,7 +228,7 @@ export async function POST(request: NextRequest) {
     // Datas de escala (último embarque/desembarque, próximo) voltam a acompanhar
     // os eventos — pull MIO desligado. Best-effort: nunca falha a requisição.
     await sincronizarDatasEscalaColaborador(colab.id);
-    return NextResponse.json({ success: true, data, merged, substituidos });
+    return NextResponse.json({ success: true, data, merged, substituidos, edicoes });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     console.error('Erro na API de embarques:', error);

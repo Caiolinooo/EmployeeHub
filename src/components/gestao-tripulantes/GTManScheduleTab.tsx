@@ -11,10 +11,14 @@ import ScheduleDateFilterInput from '@/components/gestao-tripulantes/ScheduleDat
 import ManScheduleTimelineNav from '@/components/gestao-tripulantes/ManScheduleTimelineNav';
 import EscalaEventoForm, {
     EscalaEventoFooter,
+    EscalaRecorteOptions,
     emptyEscalaEventoForm,
     isValidEscalaEventoForm,
     type EscalaEventoFormValues,
 } from '@/components/gestao-tripulantes/EscalaEventoForm';
+import ConfirmarExclusaoMarcacaoModal from '@/components/gestao-tripulantes/ConfirmarExclusaoMarcacaoModal';
+import { reverterEdicoesEmCadeia, type ReverterEdicoesOpcoes } from '@/components/gestao-tripulantes/reverter-edicoes';
+import { toastComAcaoDesfazer } from '@/components/gestao-tripulantes/toast-desfazer';
 import MultiVesselSelect, {
     formatVesselHeaderName,
     vesselMatchesSelection,
@@ -556,11 +560,28 @@ export default function GTManScheduleTab({ onColabClick, kpiFilter = '' }: Props
         rotationId?: string;
         rotationType?: string;
         vessel: string;
+        /** Período do evento sobreposto (para o trecho de exclusão/recorte). */
+        rotationStart?: string | null;
+        rotationEnd?: string | null;
     } | null>(null);
     // R7: formulário compartilhado (EscalaEventoForm) usado pelo painel da grade.
     const [form, setForm] = useState<EscalaEventoFormValues>(() => emptyEscalaEventoForm());
     const [submittingEvent, setSubmittingEvent] = useState(false);
     const isDesktopViewport = useIsDesktopViewport();
+
+    // Exclusão com confirmação: trecho = viewport (dia clicado / sáb–sex da
+    // coluna), clipado ao evento. Recorte parcial → DELETE modo 'periodo'.
+    const [deleteModal, setDeleteModal] = useState<{
+        rotId: string;
+        trechoInicio: string;
+        trechoFim: string;
+        eventoInicio: string;
+        eventoFim: string | null;
+        escopo: 'dia' | 'semana' | 'evento';
+        cobreEventoInteiro: boolean;
+    } | null>(null);
+    const [apagarEventoCompleto, setApagarEventoCompleto] = useState(false);
+    const [excluindo, setExcluindo] = useState(false);
 
     const [filterStatusAtivo, setFilterStatusAtivo] = useState<'ativos' | 'inativos' | 'todos'>('ativos');
     const [isFechamentoOpen, setIsFechamentoOpen] = useState(false);
@@ -815,7 +836,17 @@ function parseLocalDate(str: string | null | undefined): Date | null {
 
         const mappedTipo = matchingRotation?.type || (status ? resolveTipo(status)?.codigo : null) || 'normal';
 
-        setSelectedCell({ cpf, name, date, status, rotationId: rotId, rotationType: mappedTipo || undefined, vessel: currentVessel });
+        setSelectedCell({
+            cpf,
+            name,
+            date,
+            status,
+            rotationId: rotId,
+            rotationType: mappedTipo || undefined,
+            vessel: currentVessel,
+            rotationStart: matchingRotation?.start || null,
+            rotationEnd: matchingRotation?.end || null,
+        });
 
         if (!modalPos && typeof window !== 'undefined') {
             setModalPos({
@@ -844,6 +875,35 @@ function parseLocalDate(str: string | null | undefined): Date | null {
                 matchingRotation?.exibir_dia_inicio !== undefined
                     ? Boolean(matchingRotation.exibir_dia_inicio)
                     : true,
+            // Recorte: checkboxes DESMARCADOS a cada abertura do painel.
+            apagarAnteriores: false,
+            apagarPosteriores: false,
+        });
+    };
+
+    // Desfazer (ação do toast): reverte as edições da ação — POST/PUT com o
+    // evento salvo NA FRENTE da fila (salvarEventoPrimeiro), DELETE em LIFO
+    // puro; para no primeiro erro (mensagem do servidor, 409/403) e refetcha.
+    const executarDesfazer = useCallback(async (edicoesIds: string[], opcoes?: ReverterEdicoesOpcoes) => {
+        if (edicoesIds.length === 0) return;
+        const resultado = await reverterEdicoesEmCadeia(
+            edicoesIds,
+            t('gtEscalaV2.desfazerMotivoDefault', 'Desfazer pelo próprio autor'),
+            opcoes
+        );
+        if (resultado.erro !== undefined) {
+            toast.error(resultado.erro || t('gtEscalaV2.desfazerErro', 'Não foi possível desfazer.'));
+        } else {
+            toast.success(t('gtEscalaV2.desfeito', 'Desfeito'));
+        }
+        fetchSchedules(true, true);
+    }, [t, fetchSchedules]);
+
+    const acaoDesfazerToast = (edicoesIds: string[], mensagem: string, opcoes?: ReverterEdicoesOpcoes) => {
+        toastComAcaoDesfazer({
+            mensagem,
+            labelDesfazer: t('gtEscalaV2.desfazer', 'Desfazer'),
+            onDesfazer: () => void executarDesfazer(edicoesIds, opcoes),
         });
     };
 
@@ -852,7 +912,7 @@ function parseLocalDate(str: string | null | undefined): Date | null {
         // Férias/afastamentos vêm de gt_afastamentos — não são linhas de embarque;
         // PUT/DELETE /embarques/<id> daria 404. São gerenciados no módulo de Férias/DP.
         if (selectedCell.rotationType === 'ferias' || selectedCell.rotationType === 'afastamento') {
-            toast.error('Férias e afastamentos são gerenciados pelo módulo de Férias/DP e não podem ser editados na grade.');
+            toast.error(t('gtEscalaV2.bloqueioFerias', 'Férias e afastamentos são gerenciados pelo módulo de Férias/DP e não podem ser editados aqui.'));
             setSelectedCell(null);
             return;
         }
@@ -892,6 +952,10 @@ function parseLocalDate(str: string | null | undefined): Date | null {
                 local_desembarque: form.embarcacao,
                 observacoes: form.observacoes,
                 exibir_dia_inicio: form.exibirDiaInicio,
+                // Recorte da substituição same-type (false quando ocultos —
+                // os checkboxes só aparecem em clique de célula marcada).
+                apagar_anteriores: form.apagarAnteriores === true,
+                apagar_posteriores: form.apagarPosteriores === true,
             };
 
             const res = editingId
@@ -935,6 +999,20 @@ function parseLocalDate(str: string | null | undefined): Date | null {
                 );
             }
 
+            // Auditoria da ação (gt_escala_edicoes): com ids em mãos, oferece
+            // Desfazer no toast (auto-dismiss, não bloqueia o operador).
+            // POST/PUT: 1º id = evento salvo, resto = efeitos de recorte —
+            // desfazer o SALVO primeiro; em LIFO puro o un-delete da original
+            // recortada bate na guarda de sobreposição (409) com o salvo vivo.
+            const edicoesSalvas = Array.isArray(data?.edicoes) ? (data.edicoes as string[]) : [];
+            if (edicoesSalvas.length > 0) {
+                acaoDesfazerToast(
+                    edicoesSalvas,
+                    t('gtEscalaV2.alteracaoRegistrada', 'Alteração registrada no histórico (reversível)'),
+                    { salvarEventoPrimeiro: true }
+                );
+            }
+
             // A grade mostra o mês de referência atual — evento salvo em outro
             // mês não aparece até navegar. Pular para o mês do evento salvo.
             const [sy, sm] = form.dataInicio.split('-').map(Number);
@@ -951,49 +1029,115 @@ function parseLocalDate(str: string | null | undefined): Date | null {
         }
     };
 
-    const handleDeleteEvent = async () => {
+    /** Passo 1 da exclusão: valida bloqueios e abre a confirmação com o trecho do viewport. */
+    const abrirModalExclusao = () => {
         if (!selectedCell?.rotationId) return;
         if (selectedCell.rotationType === 'ferias' || selectedCell.rotationType === 'afastamento') {
-            toast.error('Férias e afastamentos são gerenciados pelo módulo de Férias/DP e não podem ser excluídos na grade.');
+            toast.error(t('gtEscalaV2.bloqueioFerias', 'Férias e afastamentos são gerenciados pelo módulo de Férias/DP e não podem ser editados aqui.'));
             setSelectedCell(null);
             return;
         }
-        const rotIdToDelete = selectedCell.rotationId;
-        const cellCpf = selectedCell.cpf;
+        const eventoInicio = (selectedCell.rotationStart || '').slice(0, 10);
+        if (!eventoInicio) {
+            // Período desconhecido: só resta apagar o evento inteiro.
+            setDeleteModal({
+                rotId: selectedCell.rotationId,
+                trechoInicio: formatLocalYmd(selectedCell.date),
+                trechoFim: formatLocalYmd(selectedCell.date),
+                eventoInicio: '',
+                eventoFim: null,
+                escopo: 'evento',
+                cobreEventoInteiro: true,
+            });
+            setApagarEventoCompleto(false);
+            return;
+        }
+        const eventoFim = selectedCell.rotationEnd ? selectedCell.rotationEnd.slice(0, 10) : null;
+        // Escopo do trecho = viewport: dia → o dia clicado; semana → sáb–sex da coluna.
+        const col = columnPeriod(selectedCell.date, viewport);
+        const colInicio = formatLocalYmd(col.start);
+        const colFim = formatLocalYmd(col.end);
+
+        const trechoInicio = eventoInicio > colInicio ? eventoInicio : colInicio;
+        let trechoFim = eventoFim !== null && eventoFim < colFim ? eventoFim : colFim;
+        if (trechoFim < trechoInicio) trechoFim = trechoInicio; // guarda contra dados invertidos
+
+        const cobreEventoInteiro = trechoInicio <= eventoInicio && eventoFim !== null && trechoFim >= eventoFim;
+
+        setDeleteModal({
+            rotId: selectedCell.rotationId,
+            trechoInicio,
+            trechoFim,
+            eventoInicio,
+            eventoFim,
+            escopo: viewport === 'day' ? 'dia' : 'semana',
+            cobreEventoInteiro,
+        });
+        setApagarEventoCompleto(false);
+    };
+
+    /** Passo 2: DELETE com {modo:'completo'} ou {modo:'periodo', data_inicio, data_fim}. */
+    const confirmarExclusaoMarcacao = async () => {
+        if (!deleteModal) return;
+        const cellCpf = selectedCell?.cpf || '';
+        const modoCompleto = deleteModal.cobreEventoInteiro || apagarEventoCompleto;
+        const body = modoCompleto
+            ? { modo: 'completo' as const }
+            : { modo: 'periodo' as const, data_inicio: deleteModal.trechoInicio, data_fim: deleteModal.trechoFim };
+        const rotIdToDelete = deleteModal.rotId;
 
         probeNotifyLocalWrite();
 
-        setAllSchedules((prev) =>
-            applyRotationRow(
-                prev,
-                cellCpf,
-                { id: rotIdToDelete, start: null, end: null, type: 'normal', vessel: '' },
-                'delete',
-                rotIdToDelete,
-            )
-        );
-
-        setSelectedCell(null);
+        // Remoção otimista só no modo completo — no recorte parcial o evento
+        // pode virar 2 blocos (head/tail preservados); o refetch pinta certo.
+        if (modoCompleto) {
+            setAllSchedules((prev) =>
+                applyRotationRow(
+                    prev,
+                    cellCpf,
+                    { id: rotIdToDelete, start: null, end: null, type: 'normal', vessel: '' },
+                    'delete',
+                    rotIdToDelete,
+                )
+            );
+            setSelectedCell(null);
+            setDeleteModal(null);
+        }
 
         try {
-            setSubmittingEvent(true);
+            setExcluindo(true);
             const res = await fetchWithToken(`/api/gestao-tripulantes/embarques/${rotIdToDelete}`, {
                 method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
             });
 
+            const data = await res.json().catch(() => ({}));
             if (!res.ok) {
-                const data = await res.json();
                 throw new Error(data.error || 'Erro ao excluir evento.');
             }
 
-            toast.success('Evento de escala removido com sucesso!');
-            // Sincronização silenciosa em background
+            const edicoes = Array.isArray(data?.edicoes) ? (data.edicoes as string[]) : [];
+            if (edicoes.length > 0) {
+                acaoDesfazerToast(
+                    edicoes,
+                    t('gtEscalaV2.eventoRemovido', 'Evento removido (reversível via histórico de alterações)')
+                );
+            } else {
+                toast.success(t('gtEscalaV2.eventoRemovido', 'Evento removido (reversível via histórico de alterações)'));
+            }
+
+            if (!modoCompleto) {
+                setSelectedCell(null);
+                setDeleteModal(null);
+            }
+            // Sincronização silenciosa em background (fragmentos do recorte)
             fetchSchedules(true, true);
         } catch (err: unknown) {
             toast.error(err instanceof Error ? err.message : 'Falha ao remover evento.');
             fetchSchedules(true, true);
         } finally {
-            setSubmittingEvent(false);
+            setExcluindo(false);
         }
     };
 
@@ -1988,15 +2132,28 @@ function parseLocalDate(str: string | null | undefined): Date | null {
                                     idPrefix="gt-escala-painel"
                                     disabled={submittingEvent}
                                 />
+
+                                {/* Recorte: só em clique de célula JÁ MARCADA (qualquer
+                                    viewport); férias/afastamento são bloqueados no save. */}
+                                {selectedCell.status &&
+                                    selectedCell.rotationType !== 'ferias' &&
+                                    selectedCell.rotationType !== 'afastamento' && (
+                                        <EscalaRecorteOptions
+                                            value={form}
+                                            onChange={setForm}
+                                            disabled={submittingEvent}
+                                            idPrefix="gt-escala-painel-recorte"
+                                        />
+                                    )}
                             </>
                         );
 
                         const footerContent = (
                             <EscalaEventoFooter
                                 editing={editingLocal}
-                                submitting={submittingEvent}
+                                submitting={submittingEvent || excluindo}
                                 disabled={!isValidEscalaEventoForm(form)}
-                                onDelete={editingLocal ? handleDeleteEvent : undefined}
+                                onDelete={editingLocal ? abrirModalExclusao : undefined}
                                 onCancel={() => setSelectedCell(null)}
                                 onSave={handleSaveEvent}
                             />
@@ -2061,6 +2218,26 @@ function parseLocalDate(str: string | null | undefined): Date | null {
                     })()}
                 </>
             )}
+
+            {/* Confirmação de exclusão (z-[60] acima do painel z-50) */}
+            <ConfirmarExclusaoMarcacaoModal
+                open={deleteModal !== null}
+                tripulanteNome={selectedCell?.name}
+                trechoInicio={deleteModal?.trechoInicio ?? null}
+                trechoFim={deleteModal?.trechoFim ?? null}
+                eventoInicio={deleteModal?.eventoInicio ?? null}
+                eventoFim={deleteModal?.eventoFim ?? null}
+                escopo={deleteModal?.escopo ?? 'evento'}
+                podeApagarCompleto={deleteModal !== null && !deleteModal.cobreEventoInteiro}
+                apagarCompleto={apagarEventoCompleto}
+                onApagarCompletoChange={setApagarEventoCompleto}
+                submitting={excluindo}
+                onConfirm={() => void confirmarExclusaoMarcacao()}
+                onCancelar={() => {
+                    setDeleteModal(null);
+                    setApagarEventoCompleto(false);
+                }}
+            />
 
             {/* Modal de Fechamento Mensal DP & Aprovação Digital */}
             <ModalAprovacaoFechamento

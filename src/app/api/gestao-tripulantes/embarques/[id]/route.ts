@@ -5,14 +5,16 @@ import { mapCodigoToDbTipo } from '@/lib/gestao-tripulantes/escala-tipos';
 import { invalidateManScheduleCache } from '@/lib/gestao-tripulantes/man-schedule-cache';
 import { sincronizarDatasEscalaColaborador } from '@/lib/gestao-tripulantes/embarques-datas-sync';
 import {
+  aplicarRecorteEmSobreposto,
   buscarSobrepostos,
   carregarAtorEscala,
-  registrarEdicoesEscala,
+  registrarEdicaoEscala,
   snapshotEmbarque,
   type EmbarqueRow,
   type EscalaEdicaoAtor,
 } from '@/lib/gestao-tripulantes/escala-audit-writer';
 import { filtrarSubstitutiveis } from '@/lib/gestao-tripulantes/escala-overlap';
+import { diaISO, lerFlagRecorte } from '@/lib/gestao-tripulantes/escala-recorte';
 
 export const dynamic = 'force-dynamic';
 
@@ -89,8 +91,14 @@ export async function PUT(
       nextVals.exibir_dia_inicio !== existingExibir;
 
     if (!dirty) {
-      return NextResponse.json({ success: true, data: existing, unchanged: true });
+      return NextResponse.json({ success: true, data: existing, unchanged: true, edicoes: [] });
     }
+
+    // Recorte de marcações (v5.80): flags opcionais do contrato —
+    // apagar_anteriores descarta a ponta ANTES do período salvo;
+    // apagar_posteriores descarta a ponta DEPOIS. Default false/false.
+    const apagarAnteriores = lerFlagRecorte(body.apagar_anteriores);
+    const apagarPosteriores = lerFlagRecorte(body.apagar_posteriores);
 
     const updates: Record<string, unknown> = {
       origem: 'local',
@@ -156,60 +164,63 @@ export async function PUT(
       id,
     );
 
-    let substituidos: Array<{ id: string; tipo: string; data_embarque: string; data_desembarque: string }> = [];
-    // Substituição TYPE-AWARE (fix Rômulo), mesma regra do POST: rotação
-    // ('normal') substitui só rotação; marcador (dba/fi/stb/offc/custom) só o
-    // MESMO marcador. O ON aberto do tripulante embarcado nunca sai por causa
-    // de um marcador — marcadores coexistem com a rotação (a grade resolve o
-    // mesmo dia via pickOverlappingRotation).
-    const tipoSalvo = (data as { tipo?: string } | null)?.tipo ?? existing.tipo;
-    const substituir = filtrarSubstitutiveis(String(tipoSalvo || ''), sobrepostos || []);
-    const ids = substituir.map((r) => r.id);
-    if (ids.length > 0) {
-      const agoraDel = new Date().toISOString();
-      const { error: delErr } = await supabaseAdmin
-        .from('gt_historico_embarques')
-        .update({ deleted_at: agoraDel, updated_at: agoraDel })
-        .in('id', ids);
-      if (delErr) console.error('Erro ao substituir embarques sobrepostos:', delErr);
-      else substituidos = substituir.map((r) => ({
-        id: r.id as string,
-        tipo: (r.tipo as string) || '',
-        data_embarque: (r.data_embarque as string) || '',
-        data_desembarque: (r.data_desembarque as string) || '',
-      }));
-    }
+    const edicoes: string[] = [];
+    const substituidos: Array<{ id: string; tipo: string; data_embarque: string; data_desembarque: string }> = [];
 
-    // GT v2 (R7): trilha de auditoria — best-effort, nunca falha o save.
+    // GT v2 (R7) + recorte (v5.80): trilha de auditoria — best-effort, nunca
+    // falha o save. Ordem de gravação (refletida em `edicoes`): 1º a edição do
+    // evento (update), depois um efeito por evento sobreposto do MESMO tipo —
+    // RECORTADO em torno do período salvo (não mais soft-delete inteiro):
+    // ponta anterior/posterior preservada vira UPDATE na própria linha; recorte
+    // no meio vira soft-delete + 2 fragmentos; sem pontas preserváveis (ou com
+    // flags apagar_*) vira soft-delete total.
     try {
       const agoraAudit = new Date().toISOString();
       const colaboradorId = (existing as { colaborador_id?: string }).colaborador_id || null;
-      const auditoria: Parameters<typeof registrarEdicoesEscala>[0] = [
-        {
-          embarqueId: id,
-          colaboradorId,
-          operacao: 'update',
-          status: 'aplicada',
-          dadosAnteriores: snapshotEmbarque(existing),
-          dadosNovos: snapshotEmbarque((data || {}) as EmbarqueRow),
-          motivo: 'Evento de escala editado',
-          ator,
-        },
-      ];
-      // Só as linhas REALMENTE substituídas entram como 'delete' na trilha.
+      const idAudit = await registrarEdicaoEscala({
+        embarqueId: id,
+        colaboradorId,
+        operacao: 'update',
+        status: 'aplicada',
+        dadosAnteriores: snapshotEmbarque(existing),
+        dadosNovos: snapshotEmbarque((data || {}) as EmbarqueRow),
+        motivo: 'Evento de escala editado',
+        ator,
+      });
+      if (idAudit) edicoes.push(idAudit);
+
+      // Substituição TYPE-AWARE (fix Rômulo), mesma regra do POST: rotação
+      // ('normal') substitui só rotação; marcador (dba/fi/stb/offc/custom) só o
+      // MESMO marcador. O ON aberto do tripulante embarcado nunca sai por causa
+      // de um marcador — marcadores coexistem com a rotação (a grade resolve o
+      // mesmo dia via pickOverlappingRotation).
+      const tipoSalvo = (data as { tipo?: string } | null)?.tipo ?? existing.tipo;
+      const substituir = filtrarSubstitutiveis(String(tipoSalvo || ''), sobrepostos || []);
+      // Evento salvo ABERTO (data_desembarque NULL): recorte usa o sentinel do
+      // audit-writer ('2999-12-31') — preserva a ponta ANTERIOR dos sobrepostos
+      // e corta tudo a partir do início salvo (equivalente ao antigo apagar
+      // tudo, sem jogar fora o que veio antes).
+      const fimPeriodo = fim || '2999-12-31';
       for (const r of substituir) {
-        auditoria.push({
-          embarqueId: (r.id as string) || null,
-          colaboradorId,
-          operacao: 'delete',
-          status: 'aplicada',
-          dadosAnteriores: snapshotEmbarque(r),
-          dadosNovos: { ...snapshotEmbarque(r), deleted_at: agoraAudit },
-          motivo: 'Substituído pela edição do evento (overlap-replace)',
+        const efeito = await aplicarRecorteEmSobreposto({
+          row: r,
+          periodo: { inicio: ini, fim: fimPeriodo },
+          apagarAnteriores,
+          apagarPosteriores,
           ator,
+          colaboradorId,
+          now: agoraAudit,
+          motivos: { delete: 'Substituído pela edição do evento (overlap-replace)' },
+        });
+        if (efeito.acao === 'nada' || !efeito.afetado) continue;
+        edicoes.push(...efeito.edicoes);
+        substituidos.push({
+          id: String(r.id || ''),
+          tipo: String(r.tipo ?? ''),
+          data_embarque: String(r.data_embarque ?? ''),
+          data_desembarque: String(r.data_desembarque ?? ''),
         });
       }
-      await registrarEdicoesEscala(auditoria);
     } catch (auditErr) {
       console.error('Falha ao gravar auditoria de escala (best-effort):', auditErr);
     }
@@ -220,7 +231,7 @@ export async function PUT(
     await sincronizarDatasEscalaColaborador(
       (existing as { colaborador_id?: string }).colaborador_id ?? null
     );
-    return NextResponse.json({ success: true, data, substituidos });
+    return NextResponse.json({ success: true, data, substituidos, edicoes });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     console.error('Erro na API de atualização de embarque:', error);
@@ -228,6 +239,18 @@ export async function PUT(
   }
 }
 
+/**
+ * DELETE — exclusão de evento de escala.
+ * - modo 'completo' (default; body ausente = fetch DELETE sem body): soft-delete
+ *   da linha inteira (comportamento inalterado).
+ * - modo 'periodo' {data_inicio, data_fim 'YYYY-MM-DD'}: exclusão PARCIAL — o
+ *   período é clipado ao intervalo do evento; cobrindo o evento inteiro vira
+ *   soft-delete total; senão RECORTA (escala-recorte.ts, flags {false,false}):
+ *   ponta anterior/posterior preservada encurta a linha in place, recorte no
+ *   meio soft-deleta a original e cria 2 fragmentos.
+ * Resposta inclui `modo` e `edicoes` (ids da trilha gt_escala_edicoes gravados
+ * pela ação, em ordem; vazio/ausente se a auditoria best-effort falhou).
+ */
 export async function DELETE(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -251,11 +274,84 @@ export async function DELETE(
       return NextResponse.json({ error: 'Evento de escala não encontrado' }, { status: 404 });
     }
 
+    // Body OPCIONAL e tolerante: fetch DELETE sem body / content-type vazio /
+    // JSON inválido ⇒ {} (modo completo — comportamento atual preservado).
+    let body: Record<string, unknown> = {};
+    try {
+      const raw = await request.text();
+      if (raw && raw.trim()) {
+        const parsed: unknown = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          body = parsed as Record<string, unknown>;
+        }
+      }
+    } catch {
+      body = {};
+    }
+
+    const modo = body.modo === 'periodo' ? 'periodo' : 'completo';
+    const colaboradorId = (existing as { colaborador_id?: string }).colaborador_id || null;
+    const edicoes: string[] = [];
+
+    if (modo === 'periodo') {
+      const dataInicio = diaISO(body.data_inicio);
+      const dataFim = diaISO(body.data_fim);
+      if (!dataInicio || !dataFim) {
+        return NextResponse.json(
+          { error: 'modo "periodo" exige data_inicio e data_fim no formato YYYY-MM-DD.' },
+          { status: 400 }
+        );
+      }
+      if (dataFim < dataInicio) {
+        return NextResponse.json(
+          { error: 'data_fim não pode ser anterior a data_inicio.' },
+          { status: 400 }
+        );
+      }
+
+      // Exclusão parcial = recorte com flags {false,false} (preserva head/tail
+      // fora do recorte). Efeitos + trilha por efeito (best-effort) no
+      // audit-writer; a linha some só se o clipe cobrir o evento inteiro.
+      const agora = new Date().toISOString();
+      const efeito = await aplicarRecorteEmSobreposto({
+        row: existing,
+        periodo: { inicio: dataInicio, fim: dataFim },
+        apagarAnteriores: false,
+        apagarPosteriores: false,
+        ator,
+        colaboradorId,
+        now: agora,
+        motivos: { delete: 'Exclusão parcial de período (modo período)' },
+      });
+      if (efeito.acao === 'nada') {
+        return NextResponse.json(
+          { error: 'O período informado não sobrepõe o evento de escala — nada a excluir.' },
+          { status: 400 }
+        );
+      }
+      edicoes.push(...efeito.edicoes);
+
+      invalidateManScheduleCache();
+      await sincronizarDatasEscalaColaborador(colaboradorId);
+      return NextResponse.json({
+        success: true,
+        message:
+          efeito.acao === 'apagar'
+            ? 'Evento de escala removido com sucesso.'
+            : 'Período removido do evento de escala (pontas preservadas).',
+        modo,
+        edicoes,
+        recorte: { acao: efeito.acao, fragmentosCriados: efeito.fragmentos.length },
+      });
+    }
+
+    // modo 'completo' — soft-delete da linha inteira (comportamento atual).
+    const agoraDel = new Date().toISOString();
     const { error } = await supabaseAdmin
       .from('gt_historico_embarques')
       .update({
-        deleted_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        deleted_at: agoraDel,
+        updated_at: agoraDel,
       })
       .eq('id', id);
 
@@ -266,19 +362,17 @@ export async function DELETE(
 
     // GT v2 (R7): trilha de auditoria — best-effort, nunca falha o delete.
     try {
-      const agoraDel = new Date().toISOString();
-      await registrarEdicoesEscala([
-        {
-          embarqueId: id,
-          colaboradorId: (existing as { colaborador_id?: string }).colaborador_id || null,
-          operacao: 'delete',
-          status: 'aplicada',
-          dadosAnteriores: snapshotEmbarque(existing),
-          dadosNovos: { ...snapshotEmbarque(existing), deleted_at: agoraDel },
-          motivo: 'Evento de escala excluído',
-          ator,
-        },
-      ]);
+      const idAudit = await registrarEdicaoEscala({
+        embarqueId: id,
+        colaboradorId,
+        operacao: 'delete',
+        status: 'aplicada',
+        dadosAnteriores: snapshotEmbarque(existing),
+        dadosNovos: { ...snapshotEmbarque(existing), deleted_at: agoraDel },
+        motivo: 'Evento de escala excluído',
+        ator,
+      });
+      if (idAudit) edicoes.push(idAudit);
     } catch (auditErr) {
       console.error('Falha ao gravar auditoria de escala (best-effort):', auditErr);
     }
@@ -286,10 +380,13 @@ export async function DELETE(
     invalidateManScheduleCache();
     // Soft-delete confirmado acima (update em deleted_at): recalcula as datas de
     // escala com as linhas vivas restantes. Best-effort: nunca falha a requisição.
-    await sincronizarDatasEscalaColaborador(
-      (existing as { colaborador_id?: string }).colaborador_id ?? null
-    );
-    return NextResponse.json({ success: true, message: 'Evento de escala removido com sucesso.' });
+    await sincronizarDatasEscalaColaborador(colaboradorId);
+    return NextResponse.json({
+      success: true,
+      message: 'Evento de escala removido com sucesso.',
+      modo,
+      edicoes,
+    });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erro interno do servidor';
     console.error('Erro na API de exclusão de embarque:', error);

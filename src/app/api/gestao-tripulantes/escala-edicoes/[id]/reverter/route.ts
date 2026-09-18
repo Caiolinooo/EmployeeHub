@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { resolveAuthUserId } from '@/lib/gestao-tripulantes/aso-agendamento-auth';
 import { isFechamentoRole } from '@/lib/gestao-tripulantes/fechamento-assinatura';
 import {
   carregarAtorEscala,
+  edicaoEhDoProprioAutorAplicada,
   reverterEdicaoEscala,
   type ResultadoReversao,
 } from '@/lib/gestao-tripulantes/escala-audit-writer';
@@ -11,8 +13,19 @@ export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/gestao-tripulantes/escala-edicoes/[id]/reverter  { motivo }
- * Gate: isFechamentoRole. Reversão manual de qualquer edição aplicada +
- * status 'revertida' + nova linha de auditoria (operacao 'reversao').
+ *
+ * Gates (v5.80):
+ * - GESTOR (isFechamentoRole): reversão manual de qualquer edição aplicada;
+ *   motivo obrigatório (400 sem ele).
+ * - AUTODESFAZER: fora dos gestores, o AUTOR da edição (ator_id == usuário do
+ *   JWT) pode desfazer a PRÓPRIA edição ainda 'aplicada' — motivo default
+ *   'Desfazer pelo próprio autor' quando vazio. A exigência de "edição mais
+ *   recente ainda 'aplicada' do embarque" é garantida pela guarda de
+ *   SUPERSESSÃO dentro de reverterEdicaoEscala (409 se houver edição posterior
+ *   aplicada — fail-closed, nada é sobrescrito).
+ *
+ * Efeito: rollback mecânico + status 'revertida' + revisada_* + nova linha de
+ * auditoria (operacao 'reversao'). Guardas 409 existentes intactas.
  */
 export async function POST(
   request: NextRequest,
@@ -31,17 +44,28 @@ export async function POST(
     if (!payload) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
-    if (!isFechamentoRole(payload.role)) {
-      return NextResponse.json(
-        { error: 'Apenas gestores/administradores podem reverter edições da escala.' },
-        { status: 403 },
-      );
-    }
 
     const { id } = await context.params;
     const body = await request.json().catch(() => ({}));
-    const motivo = String(body.motivo || '').trim();
-    if (!motivo) {
+    let motivo = String(body.motivo || '').trim();
+
+    let autodesfazer = false;
+    if (!isFechamentoRole(payload.role)) {
+      // Fora dos gestores: só o AUTOR desfaz a própria edição aplicada.
+      const userId = resolveAuthUserId(payload);
+      const propria = await edicaoEhDoProprioAutorAplicada(id, userId);
+      if (!propria) {
+        return NextResponse.json(
+          {
+            error:
+              'Apenas gestores/administradores podem reverter edições da escala — o autor só pode desfazer a própria edição mais recente.',
+          },
+          { status: 403 },
+        );
+      }
+      autodesfazer = true;
+      if (!motivo) motivo = 'Desfazer pelo próprio autor';
+    } else if (!motivo) {
       return NextResponse.json(
         { error: 'motivo é obrigatório para reverter uma edição.' },
         { status: 400 },
@@ -62,7 +86,10 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: 'Edição revertida — escala devolvida ao estado anterior.',
+      message: autodesfazer
+        ? 'Edição desfeita pelo próprio autor — escala devolvida ao estado anterior.'
+        : 'Edição revertida — escala devolvida ao estado anterior.',
+      autodesfazer,
       edicaoId: resultado.edicao.id,
       embarqueId: resultado.embarqueId,
       colaboradorId: resultado.colaboradorId,

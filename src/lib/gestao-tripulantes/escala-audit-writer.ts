@@ -21,6 +21,13 @@ import { resolveAuthUserId } from '@/lib/gestao-tripulantes/aso-agendamento-auth
 import { paginarSelect } from '@/lib/gestao-tripulantes/supabase-paginacao';
 import { invalidateManScheduleCache } from '@/lib/gestao-tripulantes/man-schedule-cache';
 import { sincronizarDatasEscalaColaborador } from '@/lib/gestao-tripulantes/embarques-datas-sync';
+import {
+  computarRecorte,
+  type FlagsRecorte,
+  type FragmentoRecorte,
+  type RecorteAcao,
+  type ResultadoRecorte,
+} from '@/lib/gestao-tripulantes/escala-recorte';
 
 export const ESCALA_EDICAO_OPERACOES = [
   'create',
@@ -236,50 +243,431 @@ export interface RegistrarEdicaoInput {
 }
 
 /**
- * Grava UMA linha em gt_escala_edicoes. BEST-EFFORT: erro é logado e
- * engolido — o save do operador nunca falha por causa da auditoria.
+ * Grava UMA linha em gt_escala_edicoes e devolve o ID inserido (null se a
+ * auditoria falhou). BEST-EFFORT: erro é logado e engolido — o save do
+ * operador nunca falha por causa da auditoria. Chamadores antigos que tratavam
+ * o retorno como boolean continuam válidos: um id truthy é sucesso.
  */
-export async function registrarEdicaoEscala(input: RegistrarEdicaoInput): Promise<boolean> {
+export async function registrarEdicaoEscala(input: RegistrarEdicaoInput): Promise<string | null> {
   try {
     const now = new Date().toISOString();
-    const { error } = await supabaseAdmin.from('gt_escala_edicoes').insert({
-      embarque_id: input.embarqueId || null,
-      colaborador_id: input.colaboradorId || null,
-      operacao: input.operacao,
-      status: input.status || 'aplicada',
-      dados_anteriores: input.dadosAnteriores ?? null,
-      dados_novos: input.dadosNovos ?? null,
-      motivo: input.motivo || null,
-      ator_id: input.ator?.id || null,
-      ator_nome: input.ator?.nome || null,
-      ator_cpf: input.ator?.cpf || null,
-      ator_role: input.ator?.role || null,
-      ip: input.ator?.ip || null,
-      hash: montarHashEdicao({
-        embarqueId: input.embarqueId,
+    const { data, error } = await supabaseAdmin
+      .from('gt_escala_edicoes')
+      .insert({
+        embarque_id: input.embarqueId || null,
+        colaborador_id: input.colaboradorId || null,
         operacao: input.operacao,
-        atorId: input.ator?.id,
-        dadosAnteriores: input.dadosAnteriores,
-        dadosNovos: input.dadosNovos,
-      }),
-      created_at: now,
-    });
+        status: input.status || 'aplicada',
+        dados_anteriores: input.dadosAnteriores ?? null,
+        dados_novos: input.dadosNovos ?? null,
+        motivo: input.motivo || null,
+        ator_id: input.ator?.id || null,
+        ator_nome: input.ator?.nome || null,
+        ator_cpf: input.ator?.cpf || null,
+        ator_role: input.ator?.role || null,
+        ip: input.ator?.ip || null,
+        hash: montarHashEdicao({
+          embarqueId: input.embarqueId,
+          operacao: input.operacao,
+          atorId: input.ator?.id,
+          dadosAnteriores: input.dadosAnteriores,
+          dadosNovos: input.dadosNovos,
+        }),
+        created_at: now,
+      })
+      .select('id')
+      .single();
     if (error) {
       console.error('[escala-audit] falha ao gravar auditoria (best-effort):', error.message);
-      return false;
+      return null;
     }
-    return true;
+    return (data as { id?: string } | null)?.id || null;
   } catch (err) {
     console.error('[escala-audit] exceção ao gravar auditoria (best-effort):', err);
-    return false;
+    return null;
   }
 }
 
-/** Lote best-effort: grava todas as linhas, nunca lança. */
-export async function registrarEdicoesEscala(itens: RegistrarEdicaoInput[]): Promise<void> {
-  const resultados = await Promise.allSettled(itens.map((i) => registrarEdicaoEscala(i)));
-  for (const r of resultados) {
-    if (r.status === 'rejected') console.error('[escala-audit] lote rejeitado:', r.reason);
+/**
+ * Lote best-effort: grava todas as linhas EM ORDEM (sequencial — a resposta das
+ * rotas devolve os ids na ordem de gravação) e retorna os ids inseridos.
+ * Falha de item individual é logada e pulada; nunca lança.
+ */
+export async function registrarEdicoesEscala(itens: RegistrarEdicaoInput[]): Promise<string[]> {
+  const ids: string[] = [];
+  for (const item of itens) {
+    try {
+      const id = await registrarEdicaoEscala(item);
+      if (id) ids.push(id);
+    } catch (err) {
+      console.error('[escala-audit] lote: item falhou (best-effort):', err);
+    }
+  }
+  return ids;
+}
+
+/* ------------------------------------------------------------------ */
+/* Recorte de marcações (v5.80) — execução dos efeitos computados por  */
+/* escala-recorte.ts sobre gt_historico_embarques + trilha por efeito. */
+/* ------------------------------------------------------------------ */
+
+export interface EfeitoRecorteExecutado {
+  /** Linha original analisada. */
+  row: EmbarqueRow;
+  acao: RecorteAcao;
+  /** Auditorias gravadas por ESTE efeito (ordem de gravação). */
+  edicoes: string[];
+  /** Fragmentos criados (somente acao 'dividir'), já com id do banco. */
+  fragmentos: EmbarqueRow[];
+  /** true se algo foi gravado na linha original (update/soft-delete). */
+  afetado: boolean;
+}
+
+const MOTIVO_RECORTE_HEAD =
+  'Recorte: ponta anterior preservada (substituição por evento sobreposto)';
+const MOTIVO_RECORTE_TAIL =
+  'Recorte: ponta posterior preservada (substituição por evento sobreposto)';
+const MOTIVO_FRAGMENTO_RECORTE = 'Fragmento gerado por recorte/exclusão parcial';
+
+/** Motivos de delete/fragmento configuráveis pelas rotas (POST/PUT/DELETE). */
+export interface MotivosRecorte {
+  delete?: string;
+  fragmento?: string;
+}
+
+async function softDeletarEmbarque(
+  id: string,
+  now: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const { error } = await supabaseAdmin
+    .from('gt_historico_embarques')
+    .update({ deleted_at: now, updated_at: now })
+    .eq('id', id);
+  return { ok: !error, error: error?.message };
+}
+
+/**
+ * Compensação do recorte 'dividir' que falhou no meio: soft-delete dos
+ * fragmentos já criados para não sobrar ponta órfã sobre a original
+ * preservada (nunca deixar original + fragmento vivos sobrepostos). Só é
+ * chamada com a original INTATA — falha aqui é best-effort e logada com o id
+ * para limpeza manual.
+ */
+async function compensarFragmentosParciais(
+  linhas: EmbarqueRow[],
+  now: string,
+): Promise<void> {
+  for (const linha of linhas) {
+    if (!linha?.id) continue;
+    const { error } = await supabaseAdmin
+      .from('gt_historico_embarques')
+      .update({ deleted_at: now, updated_at: now })
+      .eq('id', String(linha.id));
+    if (error) {
+      console.error(
+        '[escala-audit] COMPENSAÇÃO FALHOU — fragmento do recorte segue VIVO (limpar manualmente):',
+        String(linha.id),
+        error.message,
+      );
+    }
+  }
+}
+
+/**
+ * Trilha explícita de recorte 'dividir' NÃO aplicado (best-effort). Sem ela a
+ * fila de revisão não distingue "nada a fazer" de "tentativa falhou e foi
+ * compensada" — e a original segue VIVA sob o evento recém-salvo. Grava
+ * operacao 'update' com before==after (a original não mudou): reverter esta
+ * linha é no-op seguro, e 'update' cabe no CHECK de operacao da tabela
+ * (create/update/delete/restore/rejeicao/reversao). Nenhum 'delete'/'create'
+ * dos pedaços é gravado — o efeito não aconteceu.
+ */
+async function registrarFalhaRecorte(input: {
+  embarqueId: string;
+  colaboradorId: string | null;
+  antes: EmbarqueSnapshot | null;
+  motivo: string;
+  detalhe: string;
+  janela: string;
+  ator: EscalaEdicaoAtor;
+}): Promise<void> {
+  const imutavel = input.antes ? { ...input.antes } : null;
+  await registrarEdicaoEscala({
+    embarqueId: input.embarqueId,
+    colaboradorId: input.colaboradorId,
+    operacao: 'update',
+    status: 'aplicada',
+    dadosAnteriores: imutavel,
+    dadosNovos: imutavel,
+    motivo:
+      `RECORTE NÃO APLICADO (${input.detalhe}) — janela do recorte: ${input.janela}; ` +
+      `original preservada intacta, nenhum fragmento deixado vivo. Pedido original: ${input.motivo}`,
+    ator: input.ator,
+  });
+}
+
+/**
+ * INSERT de um fragmento de recorte — cópia de tipo/local_embarque/
+ * local_desembarque/observacoes/exibir_dia_inicio da linha original,
+ * origem='local'. Fragmento ABERTO (fim null — tail de linha a bordo
+ * recortada) recebe também `data_prevista_desembarque` da original: sem
+ * data_desembarque E sem prevista o fragmento sai do automático do
+ * fechamento e gera alerta (regra do módulo: "Sempre data_embarque +
+ * data_desembarque (ou prevista)"; AGENTS.md — NxN). Head/tail fechados têm
+ * fim real e não precisam da prevista. Mesmo fallback de colunas novas do
+ * POST (ambiente sem exibir_dia_inicio/updated_at). Retorna a linha com id
+ * (para a trilha 'create' com dados_novos) ou null em falha (best-effort).
+ */
+async function inserirFragmentoRecorte(
+  base: EmbarqueRow,
+  frag: FragmentoRecorte,
+  ctx: { colaboradorId: string | null; now: string },
+): Promise<EmbarqueRow | null> {
+  const row: Record<string, unknown> = {
+    colaborador_id: ctx.colaboradorId || (base.colaborador_id as string) || null,
+    tipo: base.tipo ?? 'normal',
+    data_embarque: frag.inicio,
+    data_desembarque: frag.fim,
+    local_embarque: (base.local_embarque as string) || '',
+    local_desembarque: (base.local_desembarque as string) || '',
+    observacoes: (base.observacoes as string) || '',
+    exibir_dia_inicio: base.exibir_dia_inicio !== false,
+    origem: 'local',
+    created_at: ctx.now,
+    updated_at: ctx.now,
+  };
+  if (frag.fim === null) {
+    row.data_prevista_desembarque = (base.data_prevista_desembarque as string) || null;
+  }
+  let ins = await supabaseAdmin.from('gt_historico_embarques').insert(row).select('*').single();
+  if (ins.error && /exibir_dia_inicio|updated_at/i.test(ins.error.message || '')) {
+    const retry = { ...row };
+    if (/exibir_dia_inicio/i.test(ins.error.message || '')) delete retry.exibir_dia_inicio;
+    if (/updated_at/i.test(ins.error.message || '')) delete retry.updated_at;
+    ins = await supabaseAdmin.from('gt_historico_embarques').insert(retry).select('*').single();
+  }
+  if (ins.error) {
+    console.error('[escala-audit] falha ao inserir fragmento do recorte:', ins.error.message);
+    return null;
+  }
+  return (ins.data as EmbarqueRow) || null;
+}
+
+/**
+ * Aplica o recorte computado por `computarRecorte` (escala-recorte.ts) a UMA
+ * linha sobreposta e grava a trilha de auditoria POR EFEITO (best-effort —
+ * nunca falha o save do operador):
+ * - 'nada'            → nada é gravado (linha não sobreposta — defensivo);
+ * - 'apagar'          → soft-delete da linha + auditoria 'delete';
+ * - 'encurtar_fim'    → UPDATE data_desembarque + auditoria 'update' (head preservado);
+ * - 'encurtar_inicio' → UPDATE data_embarque + auditoria 'update' (tail preservado);
+ * - 'dividir'         → CREATE dos 2 fragmentos (head/tail) + soft-delete da
+ *   original + auditoria 'delete' e 'create' cada. TUDO-OU-NADA: os
+ *   fragmentos vêm ANTES do soft-delete e qualquer falha compensa o que já
+ *   foi criado, deixa a original intacta (afetado=false, sem trilha dos
+ *   pedaços) e grava uma linha 'update' de recorte NÃO aplicado na trilha.
+ *
+ * Usado por POST/PUT /embarques (substituição same-type com flags) e por
+ * DELETE /embarques/[id] modo 'periodo' (flags {false,false}).
+ */
+export async function aplicarRecorteEmSobreposto(input: {
+  row: EmbarqueRow;
+  periodo: { inicio: string; fim: string };
+  apagarAnteriores?: boolean;
+  apagarPosteriores?: boolean;
+  ator: EscalaEdicaoAtor;
+  colaboradorId: string | null;
+  now: string;
+  motivos?: MotivosRecorte;
+}): Promise<EfeitoRecorteExecutado> {
+  const { row, periodo, ator, colaboradorId, now } = input;
+  const flags: FlagsRecorte = {
+    apagarAnteriores: input.apagarAnteriores === true,
+    apagarPosteriores: input.apagarPosteriores === true,
+  };
+  const motivos: MotivosRecorte = input.motivos || {};
+  const resultado: EfeitoRecorteExecutado = {
+    row,
+    acao: 'nada',
+    edicoes: [],
+    fragmentos: [],
+    afetado: false,
+  };
+  if (!row?.id) return resultado;
+
+  const recorte: ResultadoRecorte = computarRecorte(
+    {
+      data_embarque: String(row.data_embarque ?? ''),
+      data_desembarque: row.data_desembarque == null ? null : String(row.data_desembarque),
+    },
+    periodo,
+    flags,
+  );
+  resultado.acao = recorte.acao;
+  if (recorte.acao === 'nada') return resultado;
+  const embarqueId = String(row.id);
+  const antes = snapshotEmbarque(row);
+
+  try {
+    if (recorte.acao === 'apagar') {
+      const del = await softDeletarEmbarque(embarqueId, now);
+      if (!del.ok) {
+        console.error('[escala-audit] falha ao soft-deletar no recorte:', del.error);
+        return resultado;
+      }
+      resultado.afetado = true;
+      const id = await registrarEdicaoEscala({
+        embarqueId,
+        colaboradorId: colaboradorId || (row.colaborador_id as string) || null,
+        operacao: 'delete',
+        status: 'aplicada',
+        dadosAnteriores: antes,
+        dadosNovos: { ...(antes || {}), deleted_at: now },
+        motivo: motivos.delete || 'Substituído pelo evento salvo (overlap-replace)',
+        ator,
+      });
+      if (id) resultado.edicoes.push(id);
+      return resultado;
+    }
+
+    if (recorte.acao === 'encurtar_fim' || recorte.acao === 'encurtar_inicio') {
+      const updates: Record<string, unknown> = { updated_at: now };
+      if (recorte.acao === 'encurtar_fim') updates.data_desembarque = recorte.novaDataDesembarque;
+      else updates.data_embarque = recorte.novaDataEmbarque;
+      const { error } = await supabaseAdmin
+        .from('gt_historico_embarques')
+        .update(updates)
+        .eq('id', embarqueId);
+      if (error) {
+        console.error('[escala-audit] falha ao encurtar embarque no recorte:', error.message);
+        return resultado;
+      }
+      resultado.afetado = true;
+      const depois = { ...(antes || {}) };
+      if (recorte.acao === 'encurtar_fim') depois.data_desembarque = recorte.novaDataDesembarque;
+      else depois.data_embarque = recorte.novaDataEmbarque;
+      const id = await registrarEdicaoEscala({
+        embarqueId,
+        colaboradorId: colaboradorId || (row.colaborador_id as string) || null,
+        operacao: 'update',
+        status: 'aplicada',
+        dadosAnteriores: antes,
+        dadosNovos: { ...depois, updated_at: now },
+        motivo:
+          recorte.acao === 'encurtar_fim'
+            ? MOTIVO_RECORTE_HEAD
+            : MOTIVO_RECORTE_TAIL,
+        ator,
+      });
+      if (id) resultado.edicoes.push(id);
+      return resultado;
+    }
+
+    // 'dividir': TUDO-OU-NADA. Os fragmentos (head/tail) são inseridos ANTES
+    // do soft-delete da original: se qualquer passo falhar, a original NUNCA
+    // chega a ser apagada e os fragmentos já criados são soft-deletados.
+    // Apagar a original primeiro e seguir com só uma ponta viva apagaria
+    // silenciosamente um pedaço do ciclo do operador, com trilha idêntica à de
+    // um recorte legítimo. A ORDEM DA TRILHA continua delete → creates (o
+    // rollback LIFO reverte os creates primeiro; só então o delete da original
+    // passa a guarda de sobreposição).
+    const ctx = { colaboradorId, now };
+    const criados: Array<{ frag: FragmentoRecorte; linha: EmbarqueRow }> = [];
+    let detalheFalha = '';
+    for (const frag of recorte.fragmentos) {
+      const linha = await inserirFragmentoRecorte(row, frag, ctx);
+      if (!linha) {
+        detalheFalha = `falha ao inserir o fragmento ${frag.papel} [${frag.inicio}..${frag.fim || 'aberto'}]`;
+        break;
+      }
+      criados.push({ frag, linha });
+    }
+    if (!detalheFalha) {
+      const del = await softDeletarEmbarque(embarqueId, now);
+      if (!del.ok) {
+        detalheFalha = 'falha ao soft-deletar a original após criar os fragmentos';
+        console.error('[escala-audit] falha ao soft-deletar original no recorte (dividir):', del.error);
+      }
+    }
+    if (detalheFalha) {
+      // Nada é aplicado: original permanece viva; fragmentos parciais removidos;
+      // trilha registra a tentativa falhada (nunca delete/create dos pedaços).
+      await compensarFragmentosParciais(criados.map((c) => c.linha), now);
+      await registrarFalhaRecorte({
+        embarqueId,
+        colaboradorId: colaboradorId || (row.colaborador_id as string) || null,
+        antes,
+        motivo: motivos.delete || 'Substituído pelo evento salvo (overlap-replace)',
+        detalhe: detalheFalha,
+        janela: recorte.fragmentos.map((f) => `[${f.inicio}..${f.fim || 'aberto'}]`).join(' + '),
+        ator,
+      });
+      return resultado;
+    }
+    resultado.afetado = true;
+    resultado.fragmentos.push(...criados.map((c) => c.linha));
+    const idDelete = await registrarEdicaoEscala({
+      embarqueId,
+      colaboradorId: colaboradorId || (row.colaborador_id as string) || null,
+      operacao: 'delete',
+      status: 'aplicada',
+      dadosAnteriores: antes,
+      dadosNovos: { ...(antes || {}), deleted_at: now },
+      motivo: motivos.delete || 'Substituído pelo evento salvo (overlap-replace)',
+      ator,
+    });
+    if (idDelete) resultado.edicoes.push(idDelete);
+    for (const { frag, linha } of criados) {
+      const idFrag = await registrarEdicaoEscala({
+        embarqueId: (linha.id as string) || null,
+        colaboradorId: colaboradorId || (row.colaborador_id as string) || null,
+        operacao: 'create',
+        status: 'aplicada',
+        dadosAnteriores: null,
+        dadosNovos: snapshotEmbarque(linha),
+        motivo:
+          `${MOTIVO_FRAGMENTO_RECORTE} — ${frag.papel === 'head' ? 'ponta anterior' : 'ponta posterior'} ` +
+          `[${frag.inicio}..${frag.fim || 'aberto'}] (original ${embarqueId})`,
+        ator,
+      });
+      if (idFrag) resultado.edicoes.push(idFrag);
+    }
+    return resultado;
+  } catch (err) {
+    console.error('[escala-audit] exceção ao aplicar recorte (best-effort):', err);
+    return resultado;
+  }
+}
+
+/**
+ * A edição pertence ao próprio usuário (ator_id) e ainda está 'aplicada' com
+ * embarque? Base do AUTODESFAZER (v5.80): o autor comum pode desfazer a
+ * PRÓPRIA edição sem ser gestor. A verificação de "mais recente ainda
+ * 'aplicada'" (guarda de SUPERSESSÃO) permanece dentro de reverterEdicaoEscala
+ * — se houver edição posterior, o autor recebe 409 (fail-closed).
+ */
+export async function edicaoEhDoProprioAutorAplicada(
+  edicaoId: string,
+  userId: string | null | undefined,
+): Promise<boolean> {
+  if (!edicaoId || !userId) return false;
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('gt_escala_edicoes')
+      .select('ator_id, embarque_id, status')
+      .eq('id', edicaoId)
+      .maybeSingle();
+    if (error || !data) return false;
+    const ed = data as { ator_id?: string | null; embarque_id?: string | null; status?: string | null };
+    return (
+      ed.status === 'aplicada' &&
+      Boolean(ed.embarque_id) &&
+      Boolean(ed.ator_id) &&
+      ed.ator_id === userId
+    );
+  } catch (err) {
+    console.error('[escala-audit] erro ao verificar autor da edição:', err);
+    return false;
   }
 }
 

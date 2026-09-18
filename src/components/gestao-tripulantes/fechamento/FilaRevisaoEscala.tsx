@@ -10,8 +10,10 @@ import {
   FiRotateCcw,
   FiXCircle,
 } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import { useI18n } from '@/contexts/I18nContext';
+import ScheduleDateFilterInput from '@/components/gestao-tripulantes/ScheduleDateFilterInput';
 import {
   EDICAO_DIFF_FIELDS,
   formatarDataBR,
@@ -23,6 +25,17 @@ interface FilaRevisaoEscalaProps {
   podeRevisar: boolean;
   onEdicoesChanged?: () => void;
   refreshTick?: number;
+  /**
+   * Histórico global: renderiza a lista MESMO sem permissão (somente leitura,
+   * banner informativo). Default `false` — no workspace do fechamento a fila
+   * continua invisível para quem não é gestor.
+   */
+  mostrarSemPermissao?: boolean;
+  /** Filtro de status inicial ('' = todos os status). Default 'aplicada' (fila do workspace). */
+  statusInicial?: string;
+  /** Sobrescreve o título/descrição do card (já traduzidos pelo pai via useI18n). */
+  titulo?: string;
+  descricao?: string;
 }
 
 interface FilaApiResponse {
@@ -42,6 +55,7 @@ interface FilaApiResponse {
 type ModoAcao = 'rejeitar' | 'reverter' | null;
 
 const STATUS_FILTRO = ['aplicada', 'revertida', 'rejeitada'] as const;
+const OPERACAO_FILTRO = ['create', 'update', 'delete', 'restore', 'rejeicao', 'reversao'] as const;
 
 /** Nome do tripulante da edição (API devolve `colaboradorNome`; fallback legado snake_case). */
 function nomeColaborador(it: EscalaEdicaoItem): string {
@@ -58,13 +72,22 @@ export default function FilaRevisaoEscala({
   podeRevisar,
   onEdicoesChanged,
   refreshTick = 0,
+  mostrarSemPermissao = false,
+  statusInicial = 'aplicada',
+  titulo,
+  descricao,
 }: FilaRevisaoEscalaProps) {
   const { t } = useI18n();
   const [itens, setItens] = useState<EscalaEdicaoItem[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState<number | null>(null);
-  const [statusFiltro, setStatusFiltro] = useState<string>('aplicada');
+  const [statusFiltro, setStatusFiltro] = useState<string>(statusInicial);
+  const [operacaoFiltro, setOperacaoFiltro] = useState<string>('');
+  // Período de/até da edição (created_at). O GET filtra server-side (`de`/`ate`
+  // YYYY-MM-DD, janela BRT inclusiva; período inválido/invertido → 400).
+  const [deFiltro, setDeFiltro] = useState<string>('');
+  const [ateFiltro, setAteFiltro] = useState<string>('');
   const [busca, setBusca] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -83,6 +106,9 @@ export default function FilaRevisaoEscala({
       try {
         const params = new URLSearchParams();
         if (statusFiltro) params.set('status', statusFiltro);
+        if (operacaoFiltro) params.set('operacao', operacaoFiltro);
+        if (deFiltro) params.set('de', deFiltro);
+        if (ateFiltro) params.set('ate', ateFiltro);
         params.set('page', String(targetPage));
         const res = await fetchWithToken(`/api/gestao-tripulantes/escala-edicoes?${params.toString()}`);
         const json = (await res.json().catch(() => ({}))) as FilaApiResponse;
@@ -118,14 +144,14 @@ export default function FilaRevisaoEscala({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [statusFiltro, page],
+    [statusFiltro, operacaoFiltro, deFiltro, ateFiltro, page],
   );
 
   useEffect(() => {
     carregar(1);
     setPage(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFiltro]);
+  }, [statusFiltro, operacaoFiltro, deFiltro, ateFiltro]);
 
   useEffect(() => {
     if (refreshTick !== lastTickRef.current) {
@@ -135,6 +161,8 @@ export default function FilaRevisaoEscala({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshTick]);
 
+  // Período (de/ate) filtra no SERVIDOR — a paginação/contagem continua exatas.
+  // Aqui fica só a busca textual (tripulante/autor) sobre a página corrente.
   const itensFiltrados = (() => {
     const q = busca.trim().toLowerCase();
     if (!q) return itens;
@@ -174,6 +202,11 @@ export default function FilaRevisaoEscala({
             t('gtFechV2.fila.erroAcao', 'Erro ao processar a revisão.'),
         );
       }
+      toast.success(
+        acaoAberta.modo === 'rejeitar'
+          ? t('gtFechV2.fila.rejeicaoOk', 'Edição rejeitada: estado anterior da escala restaurado.')
+          : t('gtFechV2.fila.reversaoOk', 'Edição revertida: estado anterior da escala restaurado.'),
+      );
       setOkMsg(
         acaoAberta.modo === 'rejeitar'
           ? t('gtFechV2.fila.rejeicaoOk', 'Edição rejeitada: estado anterior da escala restaurado.')
@@ -184,13 +217,18 @@ export default function FilaRevisaoEscala({
       await carregar();
       onEdicoesChanged?.();
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : String(err));
+      const msg = err instanceof Error ? err.message : String(err);
+      // 409 rollback obsoleto / 403 sem permissão: a mensagem do servidor vai ao toast.
+      toast.error(msg);
+      setErrorMsg(msg);
     } finally {
       setIsProcessando(false);
     }
   };
 
-  if (!podeRevisar) return null;
+  // Workspace: sem permissão a fila nem aparece. Histórico global: lista
+  // visível para todos (somente leitura) — as ações ficam gated por podeRevisar.
+  if (!podeRevisar && !mostrarSemPermissao) return null;
 
   const valorDiff = (obj: Record<string, unknown> | null | undefined, campo: string): string => {
     const raw = obj?.[campo];
@@ -253,7 +291,7 @@ export default function FilaRevisaoEscala({
         <div>
           <h3 className="flex items-center gap-1.5 text-sm font-bold text-gray-900">
             <FiCheckSquare className="text-abz-blue" />
-            {t('gtFechV2.fila.titulo', 'Fila de Revisão de Edições de Escala')}
+            {titulo ?? t('gtFechV2.fila.titulo', 'Fila de Revisão de Edições de Escala')}
             {total !== null && (
               <span className="rounded-full bg-abz-blue px-2 py-0.5 text-[10px] font-bold text-white">
                 {total}
@@ -261,16 +299,18 @@ export default function FilaRevisaoEscala({
             )}
           </h3>
           <p className="mt-0.5 text-[11px] text-gray-500">
-            {t(
-              'gtFechV2.fila.descricao',
-              'Toda edição de escala aplica na hora e cai aqui para auditoria. Rejeitar/Reverter restaura o estado anterior (rollback auditado).',
-            )}
+            {descricao ??
+              t(
+                'gtFechV2.fila.descricao',
+                'Toda edição de escala aplica na hora e cai aqui para auditoria. Rejeitar/Reverter restaura o estado anterior (rollback auditado).',
+              )}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={statusFiltro}
             onChange={(e) => setStatusFiltro(e.target.value)}
+            aria-label={t('gtFechV2.filtro.status', 'Status')}
             className="min-h-[44px] rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-xs font-semibold text-gray-700"
           >
             {STATUS_FILTRO.map((s) => (
@@ -280,6 +320,34 @@ export default function FilaRevisaoEscala({
             ))}
             <option value="">{t('gtFechV2.fila.todosStatus', 'Todos os status')}</option>
           </select>
+          <select
+            value={operacaoFiltro}
+            onChange={(e) => setOperacaoFiltro(e.target.value)}
+            aria-label={t('gtFechV2.fila.operacao', 'Operação')}
+            className="min-h-[44px] rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-xs font-semibold text-gray-700"
+          >
+            <option value="">{t('gtFechV2.fila.todasOperacoes', 'Todas as operações')}</option>
+            {OPERACAO_FILTRO.map((op) => (
+              <option key={op} value={op}>
+                {operacaoLabel(op)}
+              </option>
+            ))}
+          </select>
+          <div className="flex items-center gap-1.5">
+            <ScheduleDateFilterInput
+              aria-label={t('gtFechV2.fila.periodoDe', 'De (data da edição)')}
+              value={deFiltro}
+              onCommit={setDeFiltro}
+              className="min-h-[44px] rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-xs font-semibold text-gray-700"
+            />
+            <span className="text-[11px] font-semibold text-gray-400">→</span>
+            <ScheduleDateFilterInput
+              aria-label={t('gtFechV2.fila.periodoAte', 'Até (data da edição)')}
+              value={ateFiltro}
+              onCommit={setAteFiltro}
+              className="min-h-[44px] rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-xs font-semibold text-gray-700"
+            />
+          </div>
           <input
             type="text"
             value={busca}
@@ -310,6 +378,17 @@ export default function FilaRevisaoEscala({
           {okMsg}
         </div>
       )}
+      {mostrarSemPermissao && !podeRevisar && (
+        <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800">
+          <FiAlertTriangle className="h-4 w-4 shrink-0" />
+          <span>
+            {t(
+              'gtFechV2.historicoGlobal.semPermissao',
+              'Somente gestores de fechamento podem reverter ou rejeitar edições.',
+            )}
+          </span>
+        </div>
+      )}
 
       <div className="space-y-2">
         {isLoading && itens.length === 0 ? (
@@ -319,7 +398,9 @@ export default function FilaRevisaoEscala({
           </div>
         ) : itensFiltrados.length === 0 ? (
           <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-xs text-gray-500">
-            {t('gtFechV2.fila.vazio', 'Nenhuma edição nesta fila.')}
+            {mostrarSemPermissao
+              ? t('gtFechV2.historicoGlobal.vazio', 'Nenhuma alteração encontrada com os filtros atuais.')
+              : t('gtFechV2.fila.vazio', 'Nenhuma edição nesta fila.')}
           </div>
         ) : (
           itensFiltrados.map((it) => {

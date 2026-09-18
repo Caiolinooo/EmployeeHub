@@ -16,7 +16,8 @@ import {
  * Payload final (contrato POST/PUT /api/gestao-tripulantes/embarques):
  *   tipo, data_embarque, data_desembarque,
  *   local_embarque, local_desembarque (= embarcacao/destino),
- *   observacoes, exibir_dia_inicio.
+ *   observacoes, exibir_dia_inicio,
+ *   apagar_anteriores?, apagar_posteriores? (recorte da substituição same-type).
  */
 
 export interface EscalaEventoFormValues {
@@ -27,6 +28,10 @@ export interface EscalaEventoFormValues {
     localEmbarque: string;
     observacoes: string;
     exibirDiaInicio: boolean;
+    /** Recorte: descarta o que sobra do evento sobreposto ANTES do período salvo. */
+    apagarAnteriores?: boolean;
+    /** Recorte: descarta o que sobra do evento sobreposto DEPOIS do período salvo. */
+    apagarPosteriores?: boolean;
 }
 
 export function emptyEscalaEventoForm(tipo = 'normal'): EscalaEventoFormValues {
@@ -38,6 +43,8 @@ export function emptyEscalaEventoForm(tipo = 'normal'): EscalaEventoFormValues {
         localEmbarque: '',
         observacoes: '',
         exibirDiaInicio: true,
+        apagarAnteriores: false,
+        apagarPosteriores: false,
     };
 }
 
@@ -311,6 +318,95 @@ export function EscalaEventoFooter({
                         (saveLabel || t('gtEscalaV2.salvar', 'Salvar'))
                     )}
                 </button>
+            </div>
+        </div>
+    );
+}
+
+interface EscalaRecorteOptionsProps {
+    value: EscalaEventoFormValues;
+    onChange: (next: EscalaEventoFormValues) => void;
+    disabled?: boolean;
+    idPrefix?: string;
+}
+
+/** YYYY-MM-DD → dd/mm (hint curto do recorte; parse civil, sem fuso UTC). */
+function formatYmdCurto(iso: string | undefined): string {
+    if (!iso) return '';
+    const parts = iso.slice(0, 10).split('-');
+    if (parts.length !== 3) return iso;
+    return `${parts[2]}/${parts[1]}`;
+}
+
+/**
+ * Opções de recorte da substituição same-type (célula já marcada). Ambas vêm
+ * DESMARCADAS a cada abertura do painel: por padrão o save preserva o que
+ * sobra do evento sobreposto (head/tail); marcando, o que sobra é apagado.
+ */
+export function EscalaRecorteOptions({
+    value,
+    onChange,
+    disabled = false,
+    idPrefix = 'gt-escala-recorte',
+}: EscalaRecorteOptionsProps) {
+    const { t } = useI18n();
+    const patch = (partial: Partial<EscalaEventoFormValues>) => onChange({ ...value, ...partial });
+
+    const hintAnteriores = t(
+        'gtEscalaV2.apagarAnterioresHint',
+        { data: formatYmdCurto(value.dataInicio) || '—' },
+        'Apaga marcações deste tripulante antes de {data}'
+    );
+    const hintPosteriores = t(
+        'gtEscalaV2.apagarPosterioresHint',
+        { data: formatYmdCurto(value.dataFim) || '—' },
+        'Apaga marcações deste tripulante depois de {data}'
+    );
+
+    return (
+        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+            <p className="text-[11px] font-bold text-slate-700 mb-1.5">
+                {t('gtEscalaV2.recorteTitulo', 'Apagar marcações ao salvar')}
+            </p>
+            <div className="space-y-1">
+                <label
+                    htmlFor={`${idPrefix}-anteriores`}
+                    className="flex items-start gap-2 py-1.5 lg:py-0.5 cursor-pointer select-none"
+                >
+                    <input
+                        id={`${idPrefix}-anteriores`}
+                        type="checkbox"
+                        checked={value.apagarAnteriores === true}
+                        disabled={disabled}
+                        onChange={(e) => patch({ apagarAnteriores: e.target.checked })}
+                        className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-60"
+                    />
+                    <span className="min-w-0">
+                        <span className="block text-xs font-semibold text-slate-800 leading-tight">
+                            {t('gtEscalaV2.apagarAnteriores', 'Apagar marcações anteriores')}
+                        </span>
+                        <span className="block text-[11px] text-slate-500 mt-0.5">{hintAnteriores}</span>
+                    </span>
+                </label>
+                <label
+                    htmlFor={`${idPrefix}-posteriores`}
+                    className="flex items-start gap-2 py-1.5 lg:py-0.5 cursor-pointer select-none"
+                >
+                    <input
+                        id={`${idPrefix}-posteriores`}
+                        type="checkbox"
+                        checked={value.apagarPosteriores === true}
+                        disabled={disabled}
+                        onChange={(e) => patch({ apagarPosteriores: e.target.checked })}
+                        className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-60"
+                    />
+                    <span className="min-w-0">
+                        <span className="block text-xs font-semibold text-slate-800 leading-tight">
+                            {t('gtEscalaV2.apagarPosteriores', 'Apagar marcações posteriores')}
+                        </span>
+                        <span className="block text-[11px] text-slate-500 mt-0.5">{hintPosteriores}</span>
+                    </span>
+                </label>
             </div>
         </div>
     );

@@ -4356,6 +4356,9 @@ export default {
   gestaoTripulantes: {
     title: 'Gestão de Tripulantes',
     subtitle: 'Dashboard inteligente de tripulantes e escala offshore',
+    tabs: {
+      historico: 'Histórico de alterações'
+    },
     colaboradores: 'Colaboradores',
     colaborador: 'Colaborador',
     filters: {
@@ -4763,7 +4766,17 @@ export default {
       erroAcao: 'Erro ao processar a revisão.',
       pagAnterior: 'Anterior',
       pagProxima: 'Próxima',
-      paginaDe: 'Página {{page}} de {{totalPages}}'
+      paginaDe: 'Página {{page}} de {{totalPages}}',
+      operacao: 'Operação',
+      todasOperacoes: 'Todas as operações',
+      periodoDe: 'De (data da edição)',
+      periodoAte: 'Até (data da edição)'
+    },
+    historicoGlobal: {
+      titulo: 'Histórico Global de Alterações de Escala',
+      descricao: 'Todas as edições de escala do portal — qualquer embarcação e colaborador. Reverter/Rejeitar é exclusivo de gestores de fechamento.',
+      semPermissao: 'Somente gestores de fechamento podem reverter ou rejeitar edições.',
+      vazio: 'Nenhuma alteração encontrada com os filtros atuais.'
     },
     aprovadores: {
       titulo: 'Conferência de Integrantes & Assinaturas Obrigatórias',
@@ -4851,7 +4864,33 @@ export default {
     eventoRemovido: 'Evento removido (reversível via histórico de alterações)',
     bloqueioFerias: 'Férias e afastamentos são gerenciados pelo módulo de Férias/DP e não podem ser editados aqui.',
     bloqueadoFeriasCurto: 'Férias/DP',
-    confirmarExclusao: 'Excluir este evento de escala? A remoção fica registrada e pode ser revertida.',
+    recorteTitulo: 'Apagar marcações ao salvar',
+    apagarAnteriores: 'Apagar marcações anteriores',
+    apagarAnterioresHint: 'Apaga marcações deste tripulante antes de {data}',
+    apagarPosteriores: 'Apagar marcações posteriores',
+    apagarPosterioresHint: 'Apaga marcações deste tripulante depois de {data}',
+    excluirMarcacaoTitulo: 'Excluir marcação',
+    excluirMarcacaoTrecho: 'Trecho a apagar',
+    excluirMarcacaoEscopoDia: 'Escopo: o dia clicado',
+    excluirMarcacaoEscopoSemana: 'Escopo: semana (sáb–sex) da coluna clicada',
+    excluirMarcacaoEscopoEvento: 'Escopo: evento completo',
+    apagarEventoCompleto: 'Apagar evento completo ({periodo}, {dias} dias)',
+    apagarEventoCompletoAberto: 'Apagar evento completo (desde {periodo}, em aberto)',
+    excluirPreservarNota: 'As marcações fora do trecho selecionado são preservadas.',
+    excluirReversivelNota: 'A exclusão fica registrada no histórico e pode ser revertida.',
+    desfazer: 'Desfazer',
+    desfeito: 'Desfeito',
+    desfazerMotivoDefault: 'Desfazer pelo próprio autor',
+    desfazerErro: 'Não foi possível desfazer.',
+    reverter: 'Reverter',
+    rejeitar: 'Rejeitar',
+    motivoObrigatorio: 'Motivo é obrigatório.',
+    motivoPlaceholder: 'Ex.: data de desembarque errada — lançamento correto é 12/09.',
+    confirmarReverter: 'Confirmar reversão',
+    confirmarRejeitar: 'Confirmar rejeição',
+    reversaoOk: 'Edição revertida: estado anterior da escala restaurado.',
+    rejeicaoOk: 'Edição rejeitada: estado anterior da escala restaurado.',
+    revisaoErro: 'Erro ao processar a ação.',
     historicoAlteracoes: 'Histórico de alterações',
     historicoVazio: 'Sem alterações registradas para este evento.',
     historicoCarregando: 'Carregando histórico...',

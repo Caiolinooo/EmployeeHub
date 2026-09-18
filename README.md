@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.79.1 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.80.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,13 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.80.0)
+
+- **Remarcar não apaga mais o resto**: salvar sobre uma marcação existente recorta o evento antigo (pontas antes/depois do novo período ficam; no meio, vira dois blocos). Caixas opcionais no painel apagam anterior/posterior de propósito.
+- **Exclusão com confirmação**: por padrão apaga só o dia/semana clicado no visor; o evento completo só sai com a caixa "Apagar evento completo" marcada. Tudo reversível.
+- **Desfazer no toast**: logo após salvar/excluir, um clique reverte a própria ação (o autor pode desfazer o próprio lance).
+- **Histórico global**: nova aba "Histórico de alterações" na página GT com filtros (status, operação, colaborador, período) e Reverter/Rejeitar para gestores.
 
 ## Nesta versão (5.79.1)
 

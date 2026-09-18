@@ -457,7 +457,7 @@ export default function CollaboratorModal({ colaboradorId, onClose, initialTab, 
       case 'qhse':
         return <QhseTab colaboradorId={data.id} />;
       case 'embarques':
-        return <HistoricoEmbarquesTab embarques={data.embarques || []} colaboradorId={data.id} onRefresh={silentRefresh} />;
+        return <HistoricoEmbarquesTab embarques={data.embarques || []} colaboradorId={data.id} colaboradorNome={data.nome_completo} onRefresh={silentRefresh} />;
       case 'substituicoes':
         return <SubstituicoesTab colaboradorId={data.id} substituicoes={data.substituicoes || []} />;
       case 'desligamento':

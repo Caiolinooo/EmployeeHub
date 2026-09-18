@@ -2,7 +2,7 @@
 
 import React, { Suspense, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { FiAward } from 'react-icons/fi';
+import { FiAward, FiClock } from 'react-icons/fi';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useI18n } from '@/contexts/I18nContext';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -16,6 +16,7 @@ import MarcadosBulkBar from '@/components/gestao-tripulantes/matrix/MarcadosBulk
 import CollaboratorModal from '@/components/gestao-tripulantes/CollaboratorModal';
 import AsoReviewPanel from '@/components/gestao-tripulantes/AsoReviewPanel';
 import AsoAgendamentoInbox from '@/components/gestao-tripulantes/AsoAgendamentoInbox';
+import HistoricoEdicoesTab from '@/components/gestao-tripulantes/tabs/HistoricoEdicoesTab';
 import DocsAlertasPanel, { type DocumentoAlertaUI } from '@/components/gestao-tripulantes/DocsAlertasPanel';
 import type { TabKey } from '@/components/gestao-tripulantes/CollaboratorModal';
 import {
@@ -118,10 +119,11 @@ function GestaoTripulantesContent() {
 
   const { canManageMatrizes, canViewMatrizes } = useGtMatrizPermissions();
 
-  const [activeTab, setActiveTab] = useState<'matrix' | 'schedule' | 'aso-logistica' | 'matriz-config'>(() => {
+  const [activeTab, setActiveTab] = useState<'matrix' | 'schedule' | 'aso-logistica' | 'matriz-config' | 'historico'>(() => {
     const tabParam = searchParams?.get('tab');
     if (tabParam === 'aso-logistica') return 'aso-logistica';
     if (tabParam === 'matriz-config') return 'matriz-config';
+    if (tabParam === 'historico') return 'historico';
     if (tabParam === 'schedule') return 'schedule';
     return 'matrix';
   });
@@ -153,6 +155,7 @@ function GestaoTripulantesContent() {
     const tab = searchParams?.get('tab');
     if (tab === 'aso-logistica') setActiveTab('aso-logistica');
     else if (tab === 'matriz-config') setActiveTab('matriz-config');
+    else if (tab === 'historico') setActiveTab('historico');
   }, [searchParams]);
 
   const setKpiInUrl = useCallback((kpi: GtDashboardKpi | '') => {
@@ -383,6 +386,17 @@ function GestaoTripulantesContent() {
           >
             ASO Logística
           </button>
+          <button
+            onClick={() => setActiveTab('historico')}
+            className={`pb-3 text-sm font-bold border-b-2 transition-all inline-flex items-center gap-1.5 ${
+              activeTab === 'historico'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <FiClock className={`w-3.5 h-3.5 ${activeTab === 'historico' ? 'text-blue-600' : 'text-gray-400'}`} />
+            {t('gestaoTripulantes.tabs.historico', 'Histórico de alterações')}
+          </button>
           {(canViewMatrizes || canManageMatrizes) && (
             <button
               onClick={() => setActiveTab('matriz-config')}
@@ -453,6 +467,12 @@ function GestaoTripulantesContent() {
       {activeTab === 'matriz-config' && (
         <div className="flex flex-col flex-1 min-h-0 overflow-y-auto pr-1">
           <MatrizTreinamentoConfigTab readOnly={!canManageMatrizes} />
+        </div>
+      )}
+
+      {activeTab === 'historico' && (
+        <div className="flex flex-col flex-1 min-h-0 min-w-0 overflow-y-auto pr-1">
+          <HistoricoEdicoesTab />
         </div>
       )}
 
