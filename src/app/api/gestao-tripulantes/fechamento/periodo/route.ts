@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { checkAclPermission, extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { resolveAuthUserId } from '@/lib/gestao-tripulantes/aso-agendamento-auth';
 import { isFechamentoRole } from '@/lib/gestao-tripulantes/fechamento-assinatura';
 import {
@@ -68,7 +68,8 @@ function dataIsoValida(v: unknown): v is string {
 /**
  * PUT /api/gestao-tripulantes/fechamento/periodo
  * Body: { mesReferencia, dataInicio: 'YYYY-MM-DD', dataFim, listaConfirmada? }
- * Gate: isFechamentoRole (mesma família do config do fechamento).
+ * Gate: isFechamentoRole || ACL gestao-tripulantes:fechamento.periodo
+ * (mesma família do config do fechamento).
  *
  * R5: `listaConfirmada` só é gravado quando o body traz um boolean — ausente/
  * undefined mantém o valor atual (PUT de período NUNCA desconfirma uma lista
@@ -88,9 +89,23 @@ export async function PUT(request: NextRequest) {
     if (!payload) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
-    if (!isFechamentoRole(payload.role)) {
+    const userId = resolveAuthUserId(payload);
+    const liberado =
+      isFechamentoRole(payload.role) ||
+      (userId
+        ? await checkAclPermission(
+            userId,
+            String(payload.role || '').toUpperCase(),
+            'gestao-tripulantes',
+            'fechamento.periodo',
+          )
+        : false);
+    if (!liberado) {
       return NextResponse.json(
-        { error: 'Apenas gestores/administradores podem definir o período do fechamento.' },
+        {
+          error:
+            'Sem permissão para definir o período do fechamento (requer gestor/administrador ou permissão gestao-tripulantes:fechamento.periodo).',
+        },
         { status: 403 },
       );
     }
@@ -116,7 +131,6 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const userId = resolveAuthUserId(payload);
     let definidoPorNome: string | null = null;
     if (userId) {
       try {

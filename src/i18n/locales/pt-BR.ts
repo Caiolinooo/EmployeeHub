@@ -4808,7 +4808,9 @@ export default {
       embarcacao: 'Embarcação',
       escala: 'Escala',
       check: 'Check',
-      alerta: 'Alerta'
+      alerta: 'Alerta',
+      embarques: 'Embarques',
+      editar: 'Editar'
     },
     assinatura: {
       titulo: 'Assinatura Digital de Fechamento de Escala',
@@ -4827,6 +4829,26 @@ export default {
       ok: 'Assinatura registrada com sucesso!',
       calculando: 'Calculando comparativo NxN (dt início / dt fim)...',
       semRegistros: 'Nenhum registro encontrado para este filtro.'
+    },
+    editorEmb: {
+      titulo: 'Embarques do período',
+      carregando: 'Carregando embarques…',
+      vazio: 'Sem embarques no período.',
+      erroCarregar: 'Erro ao carregar embarques.',
+      colTipo: 'Tipo',
+      colEmbarque: 'Embarque',
+      colDesembarque: 'Desembarque',
+      colOrigem: 'Origem',
+      colAcoes: 'Ações',
+      previsto: 'previsto {{data}}',
+      editar: 'Editar',
+      excluir: 'Excluir',
+      salvar: 'Salvar',
+      cancelar: 'Cancelar',
+      erroRange: 'Data de desembarque não pode ser anterior à data de embarque.',
+      erroSalvar: 'Erro ao salvar embarque.',
+      erroExcluir: 'Erro ao excluir embarque.',
+      confirmarExcluir: 'Excluir este evento de escala?'
     }
   },
   gtEscalaV2: {

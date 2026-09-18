@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { checkAclPermission, extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { resolveAuthUserId } from '@/lib/gestao-tripulantes/aso-agendamento-auth';
 import { isFechamentoRole } from '@/lib/gestao-tripulantes/fechamento-assinatura';
 import {
   carregarAtorEscala,
@@ -11,7 +12,8 @@ export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/gestao-tripulantes/escala-edicoes/[id]/rejeitar  { motivo }
- * Gate: isFechamentoRole. Rollback automático da edição auditada +
+ * Gate: isFechamentoRole || ACL gestao-tripulantes:fechamento.revisao.
+ * Rollback automático da edição auditada +
  * status 'revertida' + nova linha de auditoria (operacao 'rejeicao').
  */
 export async function POST(
@@ -31,9 +33,23 @@ export async function POST(
     if (!payload) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
-    if (!isFechamentoRole(payload.role)) {
+    const userId = resolveAuthUserId(payload);
+    const liberado =
+      isFechamentoRole(payload.role) ||
+      (userId
+        ? await checkAclPermission(
+            userId,
+            String(payload.role || '').toUpperCase(),
+            'gestao-tripulantes',
+            'fechamento.revisao',
+          )
+        : false);
+    if (!liberado) {
       return NextResponse.json(
-        { error: 'Apenas gestores/administradores podem rejeitar edições da escala.' },
+        {
+          error:
+            'Sem permissão para rejeitar edições da escala (requer gestor/administrador ou permissão gestao-tripulantes:fechamento.revisao).',
+        },
         { status: 403 },
       );
     }

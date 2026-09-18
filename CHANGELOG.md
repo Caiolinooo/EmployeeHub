@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.81.0] - 2026-09-18
+
+### 🧮 GT: fechamento com a regra do desembarque (folga no dia 1), planilha com o período fechado + pendências, edição em tempo real e ACL granular
+
+1. **Dia do desembarque é o 1º dia de folga (regra do dono)**: o motor do fechamento (`fechamento-calculo.ts`) não computa mais o desembarque como dia a bordo — a janela ON vai do embarque até a véspera do desembarque e a folga nasce no próprio dia do desembarque ("14 embarcado" = desembarque no 15º dia civil). Dobra automática, FI déficit, check escala/soma, rubricas de folha e totais consolidados seguem a nova base; o modelo recortado entre períodos (R1/R4) continua aditivo — o mês seguinte computa só a fatia dele. `dias_totais` do ciclo = dias a bordo.
+2. **Planilha oficial reflete o período fechado**: o subtítulo do XLSX mostra as datas reais do período resolvido (filtro > manual > mês civil), não só o mês de referência. Duas colunas novas na aba **Fechamento DP**: **PEND. FI PRÓX. PERÍODO** e **PEND. PRÓX. (DBA/FOLGA)** — o que fica para o mês seguinte agora faz parte do documento assinado que vai ao DP, igual já aparecia no preview.
+3. **Edição em tempo real dentro do módulo de fechamento**: cada linha da aba Tripulantes ganhou botão **Editar** que abre os embarques do colaborador na janela do período (`GET /api/gestao-tripulantes/embarques`, novo, paginado) com edição inline de datas (`PUT /embarques/[id]`) e exclusão com confirmação — tudo com a trilha de auditoria da v5.79 (reversível pela Fila de Revisão) e o preview recalculando na hora (refetch local + probe de 15s).
+4. **Permissões do fechamento no ACL**: `gestao-tripulantes.fechamento.periodo`, `.marcas` e `.revisao` catalogadas em `src/config/modules.ts` e aplicadas via `POST /api/acl/init` (grants ADMIN/MANAGER; outras roles via UI admin). Servidor aceita **role do fechamento OU permissão ACL** em período, marcações, rejeitar/reverter edições (fail-closed; autodesfazer do autor intacto); o workspace libera abas/painéis pela mesma regra (`hasFeature`). Antes `.marcas` era checada sem existir no catálogo — ninguém sem role conseguia de fato.
+5. **Contratos atualizados**: regra do desembarque, colunas novas do XLSX, `GET /embarques` e gates ACL documentados nos `AGENTS.md` da API e de componentes.
+6. **Verificação**: 50 testes ✅ (motor 25 — incl. desembarque=folga, ciclos adjacentes, mesmo dia, aditividade set/out; assinatura; catálogo ACL), `tsc --noEmit` 0, lint 0 erros, build de produção ✅, smoke do XLSX real 26/26 asserts, ACL aplicada ao vivo com as 3 permissões ativas no banco, gates devolvendo 401 sem token.
+
 ## [5.80.0] - 2026-09-18
 
 ### ✂️ GT: recorte de marcações, exclusão parcial com confirmação e histórico global reversível

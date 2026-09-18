@@ -99,7 +99,9 @@ export interface RelatorioEscalaResult {
 
 const ID_COLS = 8;
 const METRIC_COLS = 9;
-const FIXED_COLS = ID_COLS + METRIC_COLS;
+/** R1/R4 — pendências do próximo período (FI déficit + DBA/folga aberta). */
+const PEND_COLS = 2;
+const FIXED_COLS = ID_COLS + METRIC_COLS + PEND_COLS;
 
 function parseLocalDate(str: string | null | undefined): Date | null {
   if (!str || typeof str !== 'string' || str.trim() === '') return null;
@@ -126,6 +128,25 @@ function formatCpfDisplay(cpf: string): string {
 
 function labelCheck(ok: boolean): string {
   return ok ? 'OK' : 'ALERTA';
+}
+
+/** Subtítulo: período fechado (datas resolvidas) com fallback para mês de referência. */
+function formatarPeriodoFechado(inicio?: string | null, fim?: string | null, mesAno?: string): string {
+  const fmt = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const dtIni = parseLocalDate(inicio);
+  const dtFim = parseLocalDate(fim);
+  if (dtIni && dtFim) {
+    return `Período fechado: ${fmt(dtIni)} a ${fmt(dtFim)}`;
+  }
+  return `Período: mês de referência ${mesAno || 'atual'}`;
+}
+
+/** R1/R4 — pendências do próximo período em string compacta p/ XLSX. */
+function formatarPendenciasProximoPeriodo(p: PendenciasProximoPeriodo): string {
+  const partes: string[] = [];
+  if (p.dbaDias.length > 0) partes.push(`${p.dbaDias.length} DBA`);
+  if (p.folgaAberta) partes.push('folga aberta');
+  return partes.length > 0 ? partes.join(' + ') : '—';
 }
 
 interface ColabRelatorioRow {
@@ -408,7 +429,7 @@ export async function gerarRelatorioEscalaMensal(
     ? options.embarcacoes.join(', ')
     : (options.embarcacao || 'Todas');
   const filtroSub = [
-    `Período: ${options.mesAno || `${options.dataInicio || ''} a ${options.dataFim || ''}`}  |  Comparativo NxN por dt início/dt fim  |  Embarcação: ${embLabel}  |  Empresa: ${options.empresa || 'Todas'}  |  Emissão: ${new Date().toLocaleString('pt-BR')}`,
+    `${formatarPeriodoFechado(options.dataInicio, options.dataFim, options.mesAno)}  |  Comparativo NxN por dt início/dt fim  |  Embarcação: ${embLabel}  |  Empresa: ${options.empresa || 'Todas'}  |  Emissão: ${new Date().toLocaleString('pt-BR')}`,
     ...Array(totalCols - 1).fill(''),
   ];
 
@@ -430,6 +451,8 @@ export async function gerarRelatorioEscalaMensal(
     'DIAS FER',
     'CHECK ESCALA',
     'CHECK SOMA',
+    'PEND. FI PRÓX. PERÍODO',
+    'PEND. PRÓX. (DBA/FOLGA)',
     ...weeks.map((w) => w.label),
   ];
 
@@ -454,6 +477,8 @@ export async function gerarRelatorioEscalaMensal(
       c.total_dias_fer ?? 0,
       labelCheck(c.checagens.escala_ok),
       labelCheck(c.checagens.soma_ok),
+      c.pendenciasProximoPeriodo.fiDeficit,
+      formatarPendenciasProximoPeriodo(c.pendenciasProximoPeriodo),
       ...weeks.map((w) => c.semanas[w.dateStr] || '-'),
     ]);
   }
@@ -476,6 +501,8 @@ export async function gerarRelatorioEscalaMensal(
     totaisConsolidados.totalFER,
     `${totaisConsolidados.colaboradoresComAlerta} alerta(s)`,
     '',
+    totaisPendencias.fi,
+    totaisPendencias.dba > 0 ? `${totaisPendencias.dba} DBA` : '—',
     ...weeks.map(() => ''),
   ]);
 
@@ -514,6 +541,8 @@ export async function gerarRelatorioEscalaMensal(
     { wch: 12 },
     { wch: 14 },
     { wch: 12 },
+    { wch: 12 },
+    { wch: 18 },
     ...weeks.map(() => ({ wch: 12 })),
   ];
 

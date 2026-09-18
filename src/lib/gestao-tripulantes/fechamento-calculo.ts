@@ -2,6 +2,9 @@
  * Cálculo comparativo de fechamento offshore (DP / folha).
  * Ciclo NxN: embarque N deve folgar N. Dobra e FI saem de dt_inicio + dt_fim.
  * Sem as duas datas o embarque não entra no cômputo automático.
+ * Regra do dono: o DIA DO DESEMBARQUE conta como o 1º dia de folga — a
+ * janela a bordo é [data_embarque, data_desembarque - 1] e a janela de folga
+ * nasce no próprio data_desembarque.
  */
 
 import { isRotacaoPrevista } from '@/lib/gestao-tripulantes/embarque-status';
@@ -496,12 +499,21 @@ export function calcularFechamentoColaborador(
     }
     const picked = pickEventoDoDia(usable, day);
     if (picked) {
-      statusPorDia[ymdFromDate(day)] = statusDeEvento(
-        picked,
-        day,
-        escala.diasEmbarque,
-        escala.aplicaDobraAutomatica,
-      );
+      // Regra do dono: o dia do desembarque é o 1º dia de folga — não é dia
+      // a bordo (nem ON, nem dobra automática). A janela de folga do ciclo
+      // nasce nele (restStart = cur.end); DBA/FI/STB explícitos continuam
+      // valendo normalmente nesse dia.
+      const ehDesembarque =
+        (picked.codigo === 'normal' || picked.codigo === 'previsto') &&
+        day.getTime() === picked.end.getTime();
+      if (!ehDesembarque) {
+        statusPorDia[ymdFromDate(day)] = statusDeEvento(
+          picked,
+          day,
+          escala.diasEmbarque,
+          escala.aplicaDobraAutomatica,
+        );
+      }
     }
   }
 
@@ -532,24 +544,29 @@ export function calcularFechamentoColaborador(
   for (let i = 0; i < aBordo.length; i += 1) {
     const cur = aBordo[i];
     const next = aBordo[i + 1] ?? null;
-    const restStartPreview = addCivilDays(cur.end, 1);
+    const restStartPreview = cur.end;
     const restEndPreview = next
       ? addCivilDays(next.start, -1)
-      : addCivilDays(cur.end, Math.max(escala.diasFolga, 0));
+      : addCivilDays(cur.end, Math.max(escala.diasFolga - 1, 0));
     const aboardOverlaps = overlapInclusive(cur.start, cur.end, periodStart, periodEnd);
     const restOverlaps = restEndPreview.getTime() >= restStartPreview.getTime()
       ? overlapInclusive(restStartPreview, restEndPreview, periodStart, periodEnd)
       : null;
     if (!aboardOverlaps && !restOverlaps) continue;
 
-    const diasTotais = daysInclusive(cur.start, cur.end);
+    // Dias a bordo do ciclo: do embarque até a VÉSPERA do desembarque — o
+    // dia do desembarque é folga (regra do dono), não entra no cômputo de
+    // escala/dobra (diasTotais = dias a bordo; intervalo [start..end] tem o
+    // desembarque como último dia civil, logo -1).
+    const diasTotais = Math.max(0, daysInclusive(cur.start, cur.end) - 1);
     const aplica = escala.aplicaDobraAutomatica && escala.diasEmbarque > 0;
     // DBA explícito não chega aqui como ciclo (filtrado em aBordo); o único
     // caminho de dobra de ciclo é o excedente da escala (dobra automática).
     const dbaFull = aplica ? Math.max(0, diasTotais - escala.diasEmbarque) : 0;
     const onFull = diasTotais - dbaFull;
 
-    const restStart = addCivilDays(cur.end, 1);
+    // Regra do dono: a folga começa NO dia do desembarque (folga dia 1).
+    const restStart = cur.end;
     let restEnd: Date | null = null;
     let restActual = 0;
     if (next) {
@@ -558,7 +575,9 @@ export function calcularFechamentoColaborador(
         ? contarFolgaRealEfetiva(restStart, restEnd, dbaDays)
         : 0;
     } else if (escala.diasFolga > 0) {
-      restEnd = addCivilDays(cur.end, escala.diasFolga);
+      // Último ciclo: N dias de folga contados A PARTIR do desembarque
+      // (inclusive) → [end, end + N - 1].
+      restEnd = addCivilDays(cur.end, Math.max(escala.diasFolga - 1, 0));
       restActual = contarFolgaRealEfetiva(restStart, restEnd, dbaDays);
     }
 

@@ -15,8 +15,103 @@ import {
 } from '@/lib/gestao-tripulantes/escala-audit-writer';
 import { filtrarSubstitutiveis } from '@/lib/gestao-tripulantes/escala-overlap';
 import { lerFlagRecorte } from '@/lib/gestao-tripulantes/escala-recorte';
+import { paginarSelect } from '@/lib/gestao-tripulantes/supabase-paginacao';
 
 export const dynamic = 'force-dynamic';
+
+/** Linha do GET /embarques (colunas mínimas para o editor do fechamento). */
+type EmbarqueListRow = {
+  id: string;
+  colaborador_id: string | null;
+  tipo: string | null;
+  data_embarque: string | null;
+  data_desembarque: string | null;
+  data_prevista_desembarque: string | null;
+  local_embarque: string | null;
+  local_desembarque: string | null;
+  observacoes: string | null;
+  origem: string | null;
+  updated_at: string | null;
+};
+
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * GET — lista os eventos de escala (embarques) de um colaborador.
+ * Query: `colaboradorId` (obrigatório), `de`/`ate` (YYYY-MM-DD, opcionais).
+ * Janela: data_embarque <= ate AND coalesce(data_desembarque,
+ * data_prevista_desembarque, data_embarque) >= de — linhas "abertas" (rotação
+ * em andamento) caem no previsto/embarque. Só linhas vivas (deleted_at null).
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const authHeader = request.headers.get('authorization') || undefined;
+    const token = extractTokenFromHeader(authHeader);
+    if (!token) {
+      return NextResponse.json({ error: 'Token de autorização necessário' }, { status: 401 });
+    }
+
+    const payload = verifyToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+    }
+
+    const url = new URL(request.url);
+    const colaboradorId = (url.searchParams.get('colaboradorId') || '').trim();
+    if (!colaboradorId) {
+      return NextResponse.json({ error: 'Parâmetro "colaboradorId" é obrigatório.' }, { status: 400 });
+    }
+
+    const de = url.searchParams.get('de');
+    const ate = url.searchParams.get('ate');
+    if ((de && !ISO_DATE_RE.test(de)) || (ate && !ISO_DATE_RE.test(ate))) {
+      return NextResponse.json(
+        { error: 'Parâmetros "de"/"ate" devem estar no formato YYYY-MM-DD.' },
+        { status: 400 }
+      );
+    }
+
+    const res = await paginarSelect<EmbarqueListRow>(async (from, to) => {
+      // Builder reconstruído por página (idioma do repositório — buscarSobrepostos)
+      // com ordem determinística: data_embarque desc, id desempata.
+      let query = supabaseAdmin
+        .from('gt_historico_embarques')
+        .select(
+          'id, colaborador_id, tipo, data_embarque, data_desembarque, data_prevista_desembarque, ' +
+            'local_embarque, local_desembarque, observacoes, origem, updated_at'
+        )
+        .eq('colaborador_id', colaboradorId)
+        .is('deleted_at', null)
+        .order('data_embarque', { ascending: false })
+        .order('id', { ascending: false });
+
+      if (ate) query = query.lte('data_embarque', ate);
+      if (de) {
+        // coalesce(desembarque, prevista, embarque) >= de, expresso em or/and
+        // do PostgREST (nested and() já é usado no repo — ia/permissions).
+        query = query.or(
+          `and(data_desembarque.gte.${de}),` +
+            `and(data_desembarque.is.null,data_prevista_desembarque.gte.${de}),` +
+            `and(data_desembarque.is.null,data_prevista_desembarque.is.null,data_embarque.gte.${de})`
+        );
+      }
+
+      const r = await query.range(from, to);
+      return { data: (r.data ?? null) as unknown as EmbarqueListRow[] | null, error: r.error };
+    });
+
+    if (res.error) {
+      console.error('Erro ao listar embarques:', res.error);
+      return NextResponse.json({ error: res.error || 'Erro ao listar embarques' }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, data: { embarques: res.rows } });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
+    console.error('Erro na API de listagem de embarques:', error);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {

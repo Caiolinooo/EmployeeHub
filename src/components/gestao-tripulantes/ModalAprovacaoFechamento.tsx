@@ -15,6 +15,8 @@ import {
   FiUsers,
   FiCheck,
   FiClock,
+  FiChevronDown,
+  FiChevronUp,
   FiSliders,
   FiList,
   FiTrendingUp,
@@ -40,9 +42,11 @@ import MarcadosFechamentoPanel from './fechamento/MarcadosFechamentoPanel';
 import PendenciasProximoPeriodo from './fechamento/PendenciasProximoPeriodo';
 import FilaRevisaoEscala from './fechamento/FilaRevisaoEscala';
 import MultiEmbarcacaoFilter from './fechamento/MultiEmbarcacaoFilter';
+import FechamentoEmbarquesEditor from './fechamento/FechamentoEmbarquesEditor';
 import {
   formatarDataBR,
   mesAnoAtualBRT,
+  resolverColaboradorIdLinha,
   type ColaboradorTotaisLinha,
   type FechamentoPeriodoInfo,
   type PendenciasPayload,
@@ -87,6 +91,9 @@ export default function ModalAprovacaoFechamento({
   const [isApproving, setIsApproving] = useState(false);
   const [previewData, setPreviewData] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState(filters.busca || '');
+  // Edição em tempo real: linha do Tripulantes expandida mostra o editor
+  // inline de embarques (FechamentoEmbarquesEditor) do colaborador.
+  const [linhaExpandida, setLinhaExpandida] = useState<string | null>(null);
   const [observacoes, setObservacoes] = useState('');
   const [enviarEmail, setEnviarEmail] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -112,7 +119,7 @@ export default function ModalAprovacaoFechamento({
   } | null>(null);
 
   const { requestSignature, hasSignature } = useSignature();
-  const { user, profile } = useSupabaseAuth();
+  const { user, profile, hasFeature } = useSupabaseAuth();
   const fechamentoUser = {
     id: profile?.id || user?.id,
     email: profile?.email || user?.email || '',
@@ -121,6 +128,12 @@ export default function ModalAprovacaoFechamento({
     last_name: profile?.last_name ?? null,
   };
   const podeRevisar = isFechamentoRole(profile?.role);
+  // ACL: além da família de roles do fechamento, permissões granulares
+  // (semeadas em src/config/modules.ts → POST /api/acl/init) liberam recursos
+  // individuais. Checagens server-side espelham o mesmo OR (fail-closed).
+  const podePeriodo = podeRevisar || hasFeature('gestao-tripulantes.fechamento.periodo');
+  const podeMarcas = podeRevisar || hasFeature('gestao-tripulantes.fechamento.marcas');
+  const podeRevisao = podeRevisar || hasFeature('gestao-tripulantes.fechamento.revisao');
 
   const loadSeqRef = useRef(0);
 
@@ -286,7 +299,7 @@ export default function ModalAprovacaoFechamento({
   if (!isOpen) return null;
 
   const colabs: ColaboradorTotaisLinha[] = previewData?.colaboradoresTotais || [];
-  const filteredColabs = colabs.filter((c: any) =>
+  const filteredColabs = colabs.filter((c) =>
     (c.nome || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (c.cpf || '').includes(searchTerm) ||
     (c.cargo || '').toLowerCase().includes(searchTerm.toLowerCase())
@@ -329,7 +342,7 @@ export default function ModalAprovacaoFechamento({
     { id: 'resumo', label: t('gtFechV2.tabs.resumo', 'Resumo & Assinaturas'), icon: <FiShield className="w-3.5 h-3.5" /> },
     { id: 'colaboradores', label: `${t('gtFechV2.tabs.colaboradores', 'Tripulantes')} (${filteredColabs.length})`, icon: <FiUsers className="w-3.5 h-3.5" /> },
     { id: 'periodo', label: t('gtFechV2.tabs.periodo', 'Período & Marcados'), icon: <FiCalendar className="w-3.5 h-3.5" /> },
-    ...(podeRevisar
+    ...(podeRevisao
       ? [{ id: 'fila' as AbaFechamento, label: t('gtFechV2.tabs.fila', 'Fila de revisão'), icon: <FiList className="w-3.5 h-3.5" /> }]
       : []),
   ];
@@ -723,66 +736,104 @@ export default function ModalAprovacaoFechamento({
                       <th className="bg-purple-100/50 px-3 py-2 text-center">TRE</th>
                       <th className="bg-violet-100/50 px-3 py-2 text-center">FER</th>
                       <th className="bg-gray-100 px-3 py-2 text-center">{t('gtFechV2.table.check', 'Check')}</th>
+                      <th className="bg-gray-100 px-3 py-2 text-center">{t('gtFechV2.table.embarques', 'Embarques')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
                     {isLoading && colabs.length === 0 ? (
                       <tr>
-                        <td colSpan={15} className="px-4 py-8 text-center text-gray-500">
+                        <td colSpan={16} className="px-4 py-8 text-center text-gray-500">
                           <FiRefreshCw className="mr-1 inline h-4 w-4 animate-spin text-abz-blue" />
                           {t('gtFechV2.msg.calculando', 'Calculando comparativo NxN (dt início / dt fim)...')}
                         </td>
                       </tr>
                     ) : filteredColabs.length === 0 ? (
                       <tr>
-                        <td colSpan={15} className="px-4 py-6 text-center text-gray-500">
+                        <td colSpan={16} className="px-4 py-6 text-center text-gray-500">
                           {t('gtFechV2.msg.semRegistros', 'Nenhum registro encontrado para este filtro.')}
                         </td>
                       </tr>
                     ) : (
-                      filteredColabs.map((c: any, idx: number) => {
+                      filteredColabs.map((c, idx: number) => {
                         const escalaOk = c.checagens?.escala_ok !== false;
                         const somaOk = c.checagens?.soma_ok !== false;
                         const checkOk = escalaOk && somaOk;
+                        const colabId = resolverColaboradorIdLinha(c);
+                        const expandido = colabId !== null && linhaExpandida === colabId;
                         return (
-                          <tr key={c.cpf || idx} className="hover:bg-gray-50">
-                            <td className="px-3 py-2 font-mono font-bold text-gray-800">{c.matricula || '-'}</td>
-                            <td className="px-3 py-2 font-medium text-gray-900">{c.nome}</td>
-                            <td className="px-3 py-2 font-mono text-gray-500">{c.cpf_formatado || c.cpf}</td>
-                            <td className="px-3 py-2 text-gray-600">{c.cargo}</td>
-                            <td className="px-3 py-2 text-[11px] font-semibold text-gray-600">{c.centro_custo || 'N/A'}</td>
-                            <td className="px-3 py-2 text-gray-600">{c.embarcacao}</td>
-                            <td className="px-3 py-2 text-center font-mono font-semibold text-gray-700">{c.regime_escala || '—'}</td>
-                            <td className="bg-emerald-50/30 px-3 py-2 text-center font-bold text-emerald-700">
-                              {c.total_dias_on ?? c.total_on ?? 0}
-                            </td>
-                            <td className="bg-amber-50/30 px-3 py-2 text-center font-bold text-amber-700">
-                              {c.total_dias_dba ?? c.total_dba ?? 0}
-                            </td>
-                            <td className="bg-blue-50/30 px-3 py-2 text-center font-bold text-blue-700">
-                              {c.total_dias_fi ?? c.total_fi ?? 0}
-                            </td>
-                            <td className="bg-sky-50/30 px-3 py-2 text-center font-bold text-sky-700">
-                              {c.total_dias_folga ?? 0}
-                            </td>
-                            <td className="bg-yellow-50/30 px-3 py-2 text-center font-bold text-yellow-800">
-                              {c.total_dias_stb ?? 0}
-                            </td>
-                            <td className="bg-purple-50/30 px-3 py-2 text-center font-bold text-purple-700">
-                              {c.total_dias_tre ?? c.total_tre ?? 0}
-                            </td>
-                            <td className="bg-violet-50/30 px-3 py-2 text-center font-bold text-violet-700">
-                              {c.total_dias_fer ?? c.total_fer ?? 0}
-                            </td>
-                            <td className="px-3 py-2 text-center">
-                              <span
-                                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${checkOk ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}
-                                title={(c.checagens?.alertas || []).join(' | ') || undefined}
-                              >
-                                {checkOk ? 'OK' : t('gtFechV2.table.alerta', 'Alerta')}
-                              </span>
-                            </td>
-                          </tr>
+                          <React.Fragment key={`${c.cpf || 'sem-cpf'}-${colabId || idx}`}>
+                            <tr className="hover:bg-gray-50">
+                              <td className="px-3 py-2 font-mono font-bold text-gray-800">{c.matricula || '-'}</td>
+                              <td className="px-3 py-2 font-medium text-gray-900">{c.nome}</td>
+                              <td className="px-3 py-2 font-mono text-gray-500">{c.cpf_formatado || c.cpf}</td>
+                              <td className="px-3 py-2 text-gray-600">{c.cargo}</td>
+                              <td className="px-3 py-2 text-[11px] font-semibold text-gray-600">{c.centro_custo || 'N/A'}</td>
+                              <td className="px-3 py-2 text-gray-600">{c.embarcacao}</td>
+                              <td className="px-3 py-2 text-center font-mono font-semibold text-gray-700">{c.regime_escala || '—'}</td>
+                              <td className="bg-emerald-50/30 px-3 py-2 text-center font-bold text-emerald-700">
+                                {Number(c.total_dias_on ?? c.total_on ?? 0)}
+                              </td>
+                              <td className="bg-amber-50/30 px-3 py-2 text-center font-bold text-amber-700">
+                                {Number(c.total_dias_dba ?? c.total_dba ?? 0)}
+                              </td>
+                              <td className="bg-blue-50/30 px-3 py-2 text-center font-bold text-blue-700">
+                                {Number(c.total_dias_fi ?? c.total_fi ?? 0)}
+                              </td>
+                              <td className="bg-sky-50/30 px-3 py-2 text-center font-bold text-sky-700">
+                                {c.total_dias_folga ?? 0}
+                              </td>
+                              <td className="bg-yellow-50/30 px-3 py-2 text-center font-bold text-yellow-800">
+                                {c.total_dias_stb ?? 0}
+                              </td>
+                              <td className="bg-purple-50/30 px-3 py-2 text-center font-bold text-purple-700">
+                                {Number(c.total_dias_tre ?? c.total_tre ?? 0)}
+                              </td>
+                              <td className="bg-violet-50/30 px-3 py-2 text-center font-bold text-violet-700">
+                                {Number(c.total_dias_fer ?? c.total_fer ?? 0)}
+                              </td>
+                              <td className="px-3 py-2 text-center">
+                                <span
+                                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${checkOk ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}
+                                  title={(c.checagens?.alertas || []).join(' | ') || undefined}
+                                >
+                                  {checkOk ? 'OK' : t('gtFechV2.table.alerta', 'Alerta')}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2 text-center">
+                                {colabId ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setLinhaExpandida(expandido ? null : colabId)}
+                                    className={`inline-flex min-h-[28px] items-center gap-1 rounded-lg border px-2 py-1 text-[10px] font-bold transition ${
+                                      expandido
+                                        ? 'border-abz-blue/50 bg-blue-50 text-abz-blue'
+                                        : 'border-gray-300 bg-white text-gray-600 hover:border-abz-blue/40 hover:text-abz-blue'
+                                    }`}
+                                    title={t('gtFechV2.editorEmb.titulo', 'Embarques do período')}
+                                  >
+                                    {expandido ? <FiChevronUp className="h-3.5 w-3.5" /> : <FiChevronDown className="h-3.5 w-3.5" />}
+                                    {t('gtFechV2.table.editar', 'Editar')}
+                                  </button>
+                                ) : (
+                                  <span className="text-gray-300">—</span>
+                                )}
+                              </td>
+                            </tr>
+                            {expandido && colabId && (
+                              <tr>
+                                <td colSpan={16} className="border-t border-gray-100 bg-gray-50/80 p-3">
+                                  <FechamentoEmbarquesEditor
+                                    colaboradorId={colabId}
+                                    nome={c.nome}
+                                    dataInicio={periodoResolvido?.dataInicio ?? null}
+                                    dataFim={periodoResolvido?.dataFim ?? null}
+                                    podeEditar={podeRevisar}
+                                    onSaved={() => loadPreview(mesAno, { keepResult: true })}
+                                  />
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
                         );
                       })
                     )}
@@ -796,23 +847,23 @@ export default function ModalAprovacaoFechamento({
             <div className="space-y-4">
               <PeriodoFechamentoEditor
                 mesReferencia={mesAno}
-                podeEditar={podeRevisar}
+                podeEditar={podePeriodo}
                 onPeriodoChange={setPeriodoEditor}
                 refreshTick={probeTick}
               />
               <MarcadosFechamentoPanel
                 mesReferencia={mesAno}
                 colaboradores={colabs}
-                podeEditar={podeRevisar}
+                podeEditar={podeMarcas}
                 refreshTick={probeTick}
               />
             </div>
           )}
 
-          {aba === 'fila' && podeRevisar && (
+          {aba === 'fila' && podeRevisao && (
             <div className="h-full min-h-0 space-y-3">
               <FilaRevisaoEscala
-                podeRevisar={podeRevisar}
+                podeRevisar={podeRevisao}
                 refreshTick={probeTick}
                 onEdicoesChanged={() => loadPreview(mesAno, { keepResult: true })}
               />

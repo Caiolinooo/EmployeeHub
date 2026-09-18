@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.80.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.81.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,13 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.81.0)
+
+- **Regra do desembarque**: o dia em que a pessoa desembarca conta como o 1º dia de folga — ON vai do embarque até a véspera ("14 embarcado" = desembarque no 15º dia). Dobra, FI e checks do fechamento recalculados nessa base, com o mês seguinte pegando só a fatia dele.
+- **Planilha do fechamento completa**: XLSX mostra o período fechado com datas reais e duas colunas novas de pendência do próximo período (FI e DBA/folga aberta) — o documento assinado reflete o que fecha e o que fica.
+- **Editar sem sair do fechamento**: botão Editar em cada tripulante abre os embarques do período para corrigir datas/excluir na hora, com auditoria e reversão pela Fila de Revisão.
+- **Permissões finas no ACL**: período do fechamento, marcações e revisão de edições viraram permissões ACL (além do papel de gestor) — dá para delegar cada recurso a quem precisa.
 
 ## Nesta versão (5.80.0)
 

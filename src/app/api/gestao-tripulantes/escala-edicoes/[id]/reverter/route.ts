@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { checkAclPermission, extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { resolveAuthUserId } from '@/lib/gestao-tripulantes/aso-agendamento-auth';
 import { isFechamentoRole } from '@/lib/gestao-tripulantes/fechamento-assinatura';
 import {
@@ -15,7 +15,8 @@ export const dynamic = 'force-dynamic';
  * POST /api/gestao-tripulantes/escala-edicoes/[id]/reverter  { motivo }
  *
  * Gates (v5.80):
- * - GESTOR (isFechamentoRole): reversão manual de qualquer edição aplicada;
+ * - GESTOR (isFechamentoRole || ACL gestao-tripulantes:fechamento.revisao):
+ *   reversão manual de qualquer edição aplicada;
  *   motivo obrigatório (400 sem ele).
  * - AUTODESFAZER: fora dos gestores, o AUTOR da edição (ator_id == usuário do
  *   JWT) pode desfazer a PRÓPRIA edição ainda 'aplicada' — motivo default
@@ -49,10 +50,20 @@ export async function POST(
     const body = await request.json().catch(() => ({}));
     let motivo = String(body.motivo || '').trim();
 
+    const userId = resolveAuthUserId(payload);
+    const liberado =
+      isFechamentoRole(payload.role) ||
+      (userId
+        ? await checkAclPermission(
+            userId,
+            String(payload.role || '').toUpperCase(),
+            'gestao-tripulantes',
+            'fechamento.revisao',
+          )
+        : false);
     let autodesfazer = false;
-    if (!isFechamentoRole(payload.role)) {
+    if (!liberado) {
       // Fora dos gestores: só o AUTOR desfaz a própria edição aplicada.
-      const userId = resolveAuthUserId(payload);
       const propria = await edicaoEhDoProprioAutorAplicada(id, userId);
       if (!propria) {
         return NextResponse.json(

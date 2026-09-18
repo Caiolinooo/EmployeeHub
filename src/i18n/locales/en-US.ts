@@ -4807,7 +4807,9 @@ export default {
       embarcacao: 'Vessel',
       escala: 'Scale',
       check: 'Check',
-      alerta: 'Alert'
+      alerta: 'Alert',
+      embarques: 'Embarkations',
+      editar: 'Edit'
     },
     assinatura: {
       titulo: 'Digital Signature for Scale Closing',
@@ -4826,6 +4828,26 @@ export default {
       ok: 'Signature registered successfully!',
       calculando: 'Computing NxN comparison (start / end dates)...',
       semRegistros: 'No records found for this filter.'
+    },
+    editorEmb: {
+      titulo: 'Embarkations in the period',
+      carregando: 'Loading embarkations…',
+      vazio: 'No embarkations in the period.',
+      erroCarregar: 'Failed to load embarkations.',
+      colTipo: 'Type',
+      colEmbarque: 'Embarkation',
+      colDesembarque: 'Debarkation',
+      colOrigem: 'Origin',
+      colAcoes: 'Actions',
+      previsto: 'planned {{data}}',
+      editar: 'Edit',
+      excluir: 'Delete',
+      salvar: 'Save',
+      cancelar: 'Cancel',
+      erroRange: 'End date cannot be before the start date.',
+      erroSalvar: 'Failed to save embarkation.',
+      erroExcluir: 'Failed to delete embarkation.',
+      confirmarExcluir: 'Delete this schedule event?'
     }
   },
   gtEscalaV2: {
