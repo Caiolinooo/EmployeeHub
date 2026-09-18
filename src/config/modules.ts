@@ -534,6 +534,26 @@ export const SYSTEM_MODULES: ModuleDefinition[] = [
     ],
   },
   {
+    key: 'indicadores',
+    name: 'Indicadores R&S',
+    description: 'Indicadores e controle de vagas do Recrutamento & Seleção — importação de planilhas e gestão em grade',
+    defaultRoles: STAFF,
+    category: 'department',
+    href: '/department/indicadores',
+    visible: true,
+    features: [
+      feat('indicadores.view', 'Visualizar indicadores', 'Consultar planilhas e abas', STAFF, false),
+      feat('indicadores.edit', 'Editar linhas', 'Incluir/editar/excluir linhas das abas', STAFF),
+      feat('indicadores.import', 'Importar planilhas', 'Importar/substituir datasets via XLSX', STAFF),
+    ],
+    acl: [
+      acl('indicadores.view', 'view', 'Visualizar indicadores R&S', 0, STAFF),
+      acl('indicadores.edit', 'edit', 'Editar linhas das planilhas', 2, STAFF),
+      acl('indicadores.import', 'import', 'Importar planilhas e gerenciar datasets', 2, STAFF),
+      acl('indicadores.admin', 'admin', 'Admin total', 3, ADMIN_ONLY),
+    ],
+  },
+  {
     key: 'dp',
     name: 'Departamento Pessoal',
     description: 'Gestão completa de colaboradores, escalas, fechamento de folha e DP',

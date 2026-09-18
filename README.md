@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.81.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.82.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,13 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.82.0)
+
+- **Novo módulo Indicadores R&S** no menu: importe qualquer planilha Excel e passe a gerenciar os dados dentro do portal, em modal próprio com grade editável (incluir, editar e excluir linhas).
+- **Importação dinâmica**: o sistema descobre abas, linha de cabeçalho e tipos de coluna (datas, números, percentuais) — serve para as planilhas atuais de vagas/eficácia/auditoria e para qualquer nova.
+- **Planilhas já migradas**: Controle de Vagas 2026, Indicador de Eficácia 2026 e Indicadores Auditoria 2026 já estão no sistema (2.133 linhas), prontos para consulta e edição.
+- **Acesso controlado**: permissões próprias (visualizar/editar/importar) para o setor de R&S — ADMIN e gestores já têm; outras pessoas recebem via gestão de ACL.
 
 ## Nesta versão (5.81.0)
 

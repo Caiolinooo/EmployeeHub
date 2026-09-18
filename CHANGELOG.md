@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.82.0] - 2026-09-18
+
+### 📊 Novo módulo Indicadores R&S: importação dinâmica de planilhas e gestão em modal
+
+1. **Módulo dedicado ao Recrutamento & Seleção**: nova página `/department/indicadores` no menu (categoria departamento), com catálogo e permissões próprias — `indicadores.view`, `indicadores.edit`, `indicadores.import` (+ admin) aplicadas via `POST /api/acl/init`; acesso liberado para ADMIN/MANAGER, por ACL, ou por setor R&S-like com o módulo permitido (mesmo padrão do gate ASO logística).
+2. **Importação 100% dinâmica de planilhas**: wizard em 3 passos (arquivo → abas detectadas com preview e linha de cabeçalho ajustável → nome do dataset e modo novo/substituir). O sistema descobre abas, cabeçalho (linha com maior densidade de células entre as 30 primeiras — sobrevive às legendas do topo) e tipos por amostragem: data serial do Excel vira dia civil `YYYY-MM-DD`, números, percentuais (rótulo com %/índice/eficácia/retenção) e texto.
+3. **Alimentação dentro do portal, sem planilha**: cada aba abre um workspace em modal fullscreen com grade dinâmica — ordenação, busca e paginação server-side, formatação por tipo (dd/mm/aaaa, número pt-BR, percentual ×100) e **Nova linha / Editar / Excluir** com formulário por tipo (percentual editado como 0–100). Exclusões com modal de confirmação; reimportar substitui o dataset; tudo paginado no servidor, nada de carregar 900 linhas no cliente.
+4. **Planilhas atuais já semeadas**: Controle de Vagas e Indicadores 2026 (candidatos 884 + vagas 747), Indicador de Eficácia 2026 (vagas 217, Eficácia 9, KPI Eficácia 21) e Indicadores Auditoria 2026 (255) — 2.133 linhas verificadas no banco via `scripts/seed-rs-indicadores.ts` (idempotente, re-executável).
+5. **Infra**: 4 tabelas `rs_planilhas`/`rs_abas`/`rs_linhas`/`rs_importacoes` (RLS ligado, zero policies, migration `20260918_000001_rs_indicadores.sql` idempotente com executor `scripts/apply-rs-indicadores.js`), 9 rotas em `/api/indicadores/**` (shape `{success,data,error}`, paginação `paginarSelect`, soft-delete de linhas, histórico de importações) e lib pura de parsing `src/lib/indicadores/xlsx-import.ts`.
+6. **Verificação**: gates 8/8 em `GATES.md` (migration, lib vs planilhas reais com contagens independentes 217/884/9/21/747 e headers 8/14/5/5/8, seed com contagens no banco, 401 em 7 rotas + página 200 + ACL ativa, tsc 0, build com a rota no manifest, lint 0 erros, revisão de integração frontend↔backend). 50 testes ✅ incluindo o catálogo de módulos.
+
 ## [5.81.0] - 2026-09-18
 
 ### 🧮 GT: fechamento com a regra do desembarque (folga no dia 1), planilha com o período fechado + pendências, edição em tempo real e ACL granular
