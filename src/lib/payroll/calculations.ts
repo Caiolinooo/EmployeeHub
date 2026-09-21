@@ -10,44 +10,154 @@
  * - `case 'formula'` real via FORMULAS_FOLHA (fórmula desconhecida → aviso, nunca inventa valor).
  * - Perfis: teto de VT e flags para desligar INSS/IRRF/FGTS.
  * - Naturezas (mensal/ferias/decimo/rescisao): tributos calculados POR GRUPO.
+ * Vigência: competência anterior a 2026 usa a tabela 2025; de janeiro/2026 em diante,
+ * INSS da Portaria MPS/MF nº 13/2026 e redutor mensal da Lei 15.270/2025.
+ * Sem competência informada, vale a tabela corrente (2026).
  * Todos os campos/parâmetros novos são OPCIONAIS — consumidores antigos não quebram.
  */
 
-// Tabelas da legislação brasileira 2025
-export const LEGAL_TABLES = {
-  // INSS 2025
-  INSS: {
-    SALARY_MIN: 1518.00,
-    CEILING: 8157.41,
-    MAX_DISCOUNT: 951.62,
-    BRACKETS: [
-      { min: 0, max: 1518.00, rate: 0.075, deduction: 0 },
-      { min: 1518.01, max: 2793.88, rate: 0.09, deduction: 22.77 },
-      { min: 2793.89, max: 4190.83, rate: 0.12, deduction: 106.59 },
-      { min: 4190.84, max: 8157.41, rate: 0.14, deduction: 190.40 }
-    ]
-  },
+export type VigenciaFolha = '2025' | '2026';
 
-  // IRRF 2025 (vigente a partir de maio/2025)
-  IRRF: {
-    EXEMPTION_LIMIT: 3036.00, // Rendimento bruto
-    EXEMPTION_BASE: 2428.80,  // Base de cálculo
-    SIMPLIFIED_DEDUCTION: 607.20,
-    DEPENDENT_DEDUCTION: 189.59,
-    BRACKETS: [
-      { min: 0, max: 2428.80, rate: 0, deduction: 0 },
-      { min: 2428.81, max: 2826.65, rate: 0.075, deduction: 182.16 },
-      { min: 2826.66, max: 3751.05, rate: 0.15, deduction: 394.16 },
-      { min: 3751.06, max: 4664.68, rate: 0.225, deduction: 675.49 },
-      { min: 4664.69, max: Infinity, rate: 0.275, deduction: 908.73 }
-    ]
-  },
+/** Competência civil da folha. Mês 1–12. */
+export interface CompetenciaLegal {
+  ano: number;
+  mes: number;
+}
 
-  // FGTS
-  FGTS: {
-    RATE: 0.08 // 8%
+export interface FaixaLegal {
+  min: number;
+  max: number;
+  rate: number;
+  deduction: number;
+}
+
+/** Redutor do art. 3º-A da Lei 9.250, incluído pela Lei 15.270/2025. */
+export interface ReducaoIrrfMensal {
+  /** Até este rendimento, a redução é de até REDUCAO_ISENCAO. */
+  ISENCAO_ATE: number;
+  REDUCAO_ISENCAO: number;
+  /** Até este rendimento, redução = TETO_FORMULA − FATOR × rendimento. Acima, zero. */
+  FAIXA_ATE: number;
+  TETO_FORMULA: number;
+  FATOR: number;
+}
+
+export interface TabelaInss {
+  SALARY_MIN: number;
+  CEILING: number;
+  MAX_DISCOUNT: number;
+  BRACKETS: FaixaLegal[];
+}
+
+export interface TabelaIrrf {
+  /** Rendimento bruto a partir do qual o imposto deixa de ser zero na prática desta vigência. */
+  EXEMPTION_LIMIT: number;
+  EXEMPTION_BASE: number;
+  SIMPLIFIED_DEDUCTION: number;
+  DEPENDENT_DEDUCTION: number;
+  BRACKETS: FaixaLegal[];
+  REDUCAO?: ReducaoIrrfMensal;
+}
+
+export interface TabelasLegais {
+  INSS: TabelaInss;
+  IRRF: TabelaIrrf;
+  FGTS: { RATE: number };
+}
+
+/**
+ * INSS 2025 — empregado/segurado.
+ * Parcela a deduzir: acumulado exato das diferenças de alíquota, arredondado
+ * na 2ª casa (190,403 → 190,40). Desconto máximo: soma das faixas no teto,
+ * cada faixa truncada na 2ª casa (951,62).
+ */
+export const TABELA_INSS_2025: TabelaInss = {
+  SALARY_MIN: 1518.00,
+  CEILING: 8157.41,
+  MAX_DISCOUNT: 951.62,
+  BRACKETS: [
+    { min: 0, max: 1518.00, rate: 0.075, deduction: 0 },
+    { min: 1518.01, max: 2793.88, rate: 0.09, deduction: 22.77 },
+    { min: 2793.89, max: 4190.83, rate: 0.12, deduction: 106.59 },
+    { min: 4190.84, max: 8157.41, rate: 0.14, deduction: 190.40 }
+  ]
+};
+
+/**
+ * INSS 2026 — Portaria Interministerial MPS/MF nº 13, de 9 de janeiro de 2026.
+ * Faixas (vigência 01/01/2026): 1.621,00 / 2.902,84 / 4.354,27 / teto 8.475,55,
+ * alíquotas 7,5% / 9% / 12% / 14%.
+ * A portaria não publica parcela a deduzir. Os números abaixo usam o mesmo
+ * método da tabela 2025 deste arquivo. 957,37 não fecha com estas faixas.
+ * Deduções: 0 / 24,32 / 111,40 / 198,49. Desconto no teto: 988,07.
+ */
+export const TABELA_INSS_2026: TabelaInss = {
+  SALARY_MIN: 1621.00,
+  CEILING: 8475.55,
+  MAX_DISCOUNT: 988.07,
+  BRACKETS: [
+    { min: 0, max: 1621.00, rate: 0.075, deduction: 0 },
+    { min: 1621.01, max: 2902.84, rate: 0.09, deduction: 24.32 },
+    { min: 2902.85, max: 4354.27, rate: 0.12, deduction: 111.40 },
+    { min: 4354.28, max: 8475.55, rate: 0.14, deduction: 198.49 }
+  ]
+};
+
+/** Faixas progressivas do IRRF. Não mudaram com a Lei 15.270/2025. */
+const FAIXAS_IRRF_PROGRESSIVO: FaixaLegal[] = [
+  { min: 0, max: 2428.80, rate: 0, deduction: 0 },
+  { min: 2428.81, max: 2826.65, rate: 0.075, deduction: 182.16 },
+  { min: 2826.66, max: 3751.05, rate: 0.15, deduction: 394.16 },
+  { min: 3751.06, max: 4664.68, rate: 0.225, deduction: 675.49 },
+  { min: 4664.69, max: Infinity, rate: 0.275, deduction: 908.73 }
+];
+
+/** IRRF a partir de maio/2025, sem o redutor de 2026. */
+export const TABELA_IRRF_2025: TabelaIrrf = {
+  EXEMPTION_LIMIT: 3036.00,
+  EXEMPTION_BASE: 2428.80,
+  SIMPLIFIED_DEDUCTION: 607.20,
+  DEPENDENT_DEDUCTION: 189.59,
+  BRACKETS: FAIXAS_IRRF_PROGRESSIVO
+};
+
+/**
+ * IRRF 2026. Tabela progressiva igual à de 2025. Depois do imposto, a Lei
+ * 15.270/2025 reduz: até R$ 5.000,00, até R$ 312,89; de R$ 5.000,01 a
+ * R$ 7.350,00, 978,62 − 0,133145 × rendimento; acima, sem redução.
+ * O rendimento é o salário tributável, não a base já líquida de INSS.
+ */
+export const TABELA_IRRF_2026: TabelaIrrf = {
+  EXEMPTION_LIMIT: 5000.00,
+  EXEMPTION_BASE: 2428.80,
+  SIMPLIFIED_DEDUCTION: 607.20,
+  DEPENDENT_DEDUCTION: 189.59,
+  BRACKETS: FAIXAS_IRRF_PROGRESSIVO,
+  REDUCAO: {
+    ISENCAO_ATE: 5000.00,
+    REDUCAO_ISENCAO: 312.89,
+    FAIXA_ATE: 7350.00,
+    TETO_FORMULA: 978.62,
+    FATOR: 0.133145
   }
 };
+
+const FGTS_8 = { RATE: 0.08 };
+
+export function vigenciaDaCompetencia(competencia?: CompetenciaLegal | null): VigenciaFolha {
+  if (competencia && Number.isFinite(competencia.ano) && competencia.ano < 2026) return '2025';
+  return '2026';
+}
+
+export function tabelasDaVigencia(vigencia: VigenciaFolha = '2026'): TabelasLegais {
+  if (vigencia === '2025') {
+    return { INSS: TABELA_INSS_2025, IRRF: TABELA_IRRF_2025, FGTS: FGTS_8 };
+  }
+  return { INSS: TABELA_INSS_2026, IRRF: TABELA_IRRF_2026, FGTS: FGTS_8 };
+}
+
+/** Tabela corrente (2026). Consumidores que não passam vigência. */
+export const LEGAL_TABLES: TabelasLegais = tabelasDaVigencia('2026');
 
 /** Natureza da verba — define em qual grupo de tributos o item entra. */
 export type NaturezaFolha = 'mensal' | 'ferias' | 'decimo' | 'rescisao';
@@ -139,6 +249,13 @@ export interface PayrollItem {
   formula?: string;
   /** Grupo de tributos (default 'mensal'). */
   natureza?: NaturezaFolha;
+  /**
+   * Valor já apurado por uma fonte (dias × diária, WK, lançamento manual).
+   * Quando finito, o motor NÃO recomputa pela definição do código — o cadastro
+   * da rubrica tem value 0 e recalcular zeraria embarque/dobra/férias.
+   * Tributos legais (INSS/IRRF/FGTS) ignoram este campo: nascem do bruto.
+   */
+  valorInformado?: number;
 }
 
 /** Totais por natureza (só naturezas presentes no cálculo). */
@@ -187,44 +304,41 @@ export interface PayrollCalculatedItem {
 }
 
 /**
- * Calcula o INSS baseado no salário
+ * Calcula o INSS do segurado na vigência pedida (default: 2026).
  */
-export function calculateINSS(salary: number): { base: number; value: number } {
-  const base = Math.min(salary, LEGAL_TABLES.INSS.CEILING);
+export function calculateINSS(salary: number, vigencia: VigenciaFolha = '2026'): { base: number; value: number } {
+  const tabela = tabelasDaVigencia(vigencia).INSS;
+  const tetoCentavos = Math.round(tabela.CEILING * 100);
+  const baseCentavos = Math.min(Math.max(Math.round(salary * 100), 0), tetoCentavos);
+  if (baseCentavos <= 0) return { base: 0, value: 0 };
 
-  if (base <= 0) return { base: 0, value: 0 };
-
-  // Usar a fórmula com parcela a deduzir para cálculo mais preciso
-  let value = 0;
-
-  for (const bracket of LEGAL_TABLES.INSS.BRACKETS) {
-    if (base >= bracket.min) {
-      if (base <= bracket.max) {
-        value = (base * bracket.rate) - bracket.deduction;
-        break;
-      }
+  let valorCentavos = 0;
+  for (const bracket of tabela.BRACKETS) {
+    const minCentavos = Math.round(bracket.min * 100);
+    const maxCentavos = Math.round(bracket.max * 100);
+    if (baseCentavos >= minCentavos && baseCentavos <= maxCentavos) {
+      const aliquota = Math.round(bracket.rate * 10000);
+      const deducao = Math.round(bracket.deduction * 100);
+      valorCentavos = Math.round((baseCentavos * aliquota) / 10000) - deducao;
+      break;
     }
   }
 
-  // Garantir que não ultrapasse o desconto máximo
-  value = Math.min(value, LEGAL_TABLES.INSS.MAX_DISCOUNT);
-  value = Math.max(value, 0); // Não pode ser negativo
-
-  return { base, value: round2(value) };
+  const tetoDesconto = Math.round(tabela.MAX_DISCOUNT * 100);
+  valorCentavos = Math.min(Math.max(valorCentavos, 0), tetoDesconto);
+  return { base: baseCentavos / 100, value: valorCentavos / 100 };
 }
 
 /**
  * Aplica a tabela progressiva do IRRF a uma base de cálculo.
  */
-function impostoTabelaIRRF(base: number): number {
+function impostoTabelaIRRF(base: number, faixas: FaixaLegal[]): number {
   let value = 0;
 
-  for (const bracket of LEGAL_TABLES.IRRF.BRACKETS) {
-    if (base >= bracket.min) {
-      if (base <= bracket.max || bracket.max === Infinity) {
-        value = (base * bracket.rate) - bracket.deduction;
-        break;
-      }
+  for (const bracket of faixas) {
+    if (base >= bracket.min && (base <= bracket.max || bracket.max === Infinity)) {
+      value = (base * bracket.rate) - bracket.deduction;
+      break;
     }
   }
 
@@ -232,41 +346,55 @@ function impostoTabelaIRRF(base: number): number {
 }
 
 /**
- * Calcula o IRRF efetivo: tabela progressiva × dedução simplificada.
+ * Redução mensal da Lei 15.270/2025. Zero fora de 2026.
+ * O rendimento é o tributável sujeito à incidência mensal (salário), não a base líquida de INSS.
+ * A redução fica limitada ao imposto já apurado (§1º).
+ */
+export function reducaoMensalIRRF(rendimento: number, vigencia: VigenciaFolha = '2026'): number {
+  const red = tabelasDaVigencia(vigencia).IRRF.REDUCAO;
+  if (!red || rendimento <= 0) return 0;
+  if (rendimento <= red.ISENCAO_ATE) return red.REDUCAO_ISENCAO;
+  if (rendimento <= red.FAIXA_ATE) {
+    return Math.max(0, round2(red.TETO_FORMULA - red.FATOR * rendimento));
+  }
+  return 0;
+}
+
+/**
+ * IRRF efetivo.
  *
- * Regra vigente: o contribuinte pode optar pelo desconto simplificado fixo
- * de R$ 607,20 — na prática vale o MENOR imposto entre as duas formas.
+ * A dedução simplificada de R$ 607,20 substitui as deduções legais (INSS,
+ * dependentes, pensão). Não se soma a elas. Vale o menor imposto.
+ * Em 2026, o redutor da Lei 15.270 incide sobre esse imposto, limitado a ele.
  *
- * Fixture mental (tabelas 2025 deste arquivo):
- *   salário 3.000,00, 2 dependentes:
- *     INSS = 3.000 × 12% − 106,59 = 253,41 (faixa 3 da tabela)
- *     base legal = 3.000 − 253,41 − 2 × 189,59 = 2.367,41
- *       → faixa isenta (≤ 2.428,80) → imposto legal = 0
- *     base simplificada = 2.367,41 − 607,20 = 1.760,21 → também isenta → 0
- *     IRRF = min(0, 0) = 0
+ * `grossSalary` é o rendimento tributável antes do INSS. Em férias, o chamador
+ * já tira o 1/3 constitucional isento.
  */
 export function calculateIRRF(
   grossSalary: number,
   inssValue: number,
   dependents: number = 0,
-  useSimplifiedDeduction: boolean = true
+  useSimplifiedDeduction: boolean = true,
+  vigencia: VigenciaFolha = '2026'
 ): { base: number; value: number } {
-  // Base de cálculo = Salário bruto - INSS - dependentes
-  const base = Math.max(0, grossSalary - inssValue - (dependents * LEGAL_TABLES.IRRF.DEPENDENT_DEDUCTION));
+  const tabela = tabelasDaVigencia(vigencia).IRRF;
+  const baseLegal = Math.max(0, grossSalary - inssValue - (dependents * tabela.DEPENDENT_DEDUCTION));
+  const impostoLegal = impostoTabelaIRRF(baseLegal, tabela.BRACKETS);
 
-  if (base <= 0) return { base: 0, value: 0 };
+  let base = baseLegal;
+  let imposto = impostoLegal;
 
-  const impostoLegal = impostoTabelaIRRF(base);
-
-  if (!useSimplifiedDeduction) {
-    return { base, value: impostoLegal };
+  if (useSimplifiedDeduction) {
+    const baseSimplificada = Math.max(0, grossSalary - tabela.SIMPLIFIED_DEDUCTION);
+    const impostoSimplificado = impostoTabelaIRRF(baseSimplificada, tabela.BRACKETS);
+    if (impostoSimplificado < impostoLegal) {
+      base = baseSimplificada;
+      imposto = impostoSimplificado;
+    }
   }
 
-  const baseSimplificada = Math.max(0, base - LEGAL_TABLES.IRRF.SIMPLIFIED_DEDUCTION);
-  const impostoSimplificado = impostoTabelaIRRF(baseSimplificada);
-
-  // Menor imposto vence (opção legal pela dedução simplificada)
-  return { base, value: Math.min(impostoLegal, impostoSimplificado) };
+  const reducao = Math.min(reducaoMensalIRRF(grossSalary, vigencia), imposto);
+  return { base: round2(base), value: round2(Math.max(0, imposto - reducao)) };
 }
 
 /**
@@ -306,6 +434,11 @@ function avaliarItem(
   grossSalary: number,
   contexto?: FormulaContext
 ): { valor: number; aviso?: string } {
+  if (item.legalType !== 'inss' && item.legalType !== 'irrf' && item.legalType !== 'fgts'
+      && typeof item.valorInformado === 'number' && Number.isFinite(item.valorInformado)) {
+    return { valor: round2(item.valorInformado) };
+  }
+
   const quantity = item.quantity || 1;
   const referenceValue = item.referenceValue || baseSalary;
 
@@ -368,16 +501,19 @@ const ORDEM_NATUREZAS: NaturezaFolha[] = ['mensal', 'ferias', 'decimo', 'rescisa
  * - tetoVTPercentual: desconto de VT limitado a bruto × teto/100;
  * - ignorarInss/ignorarIrrf/ignorarFgts: desligam os descontos legais.
  *
- * Itens são agrupados por natureza e os tributos calculados POR GRUPO:
- * - decimo: INSS na própria base, SEM IRRF (FGTS mantido);
- * - ferias: IRRF sobre bruto − 1/3 constitucional isento (base = bruto − bruto/3 − INSS − dependentes);
+ * - decimo: INSS na própria base, SEM IRRF (a Lei 15.270 também reduz o 13º,
+ *   mas este motor ainda não retém IR de 13º);
+ * - ferias: o 1/3 constitucional sai do rendimento tributável antes do IR;
  * - mensal/rescisao: padrão.
+ * `competencia` escolhe a tabela: ano < 2026 → 2025; senão, ou se omitida, 2026.
  */
 export function calculateEmployeePayroll(
   employee: PayrollEmployee,
   items: PayrollItem[],
-  perfil?: PerfilCalculo
+  perfil?: PerfilCalculo,
+  competencia?: CompetenciaLegal | null,
 ): PayrollCalculationResult {
+  const vigencia = vigenciaDaCompetencia(competencia);
   const baseSalary = employee.baseSalary;
   const dependentes = employee.dependents || 0;
   let totalEarnings = 0;
@@ -443,15 +579,14 @@ export function calculateEmployeePayroll(
     // 2) Descontos legais POR GRUPO
     const inssGrupo = perfil?.ignorarInss
       ? { base: 0, value: 0 }
-      : calculateINSS(grupo.bruto);
+      : calculateINSS(grupo.bruto, vigencia);
     let irrfGrupo = { base: 0, value: 0 };
     if (!perfil?.ignorarIrrf && natureza !== 'decimo') {
-      let baseIrrf = grupo.bruto - inssGrupo.value;
-      if (natureza === 'ferias') {
-        // 1/3 constitucional de férias é isento
-        baseIrrf -= grupo.bruto / 3;
-      }
-      irrfGrupo = calculateIRRF(baseIrrf, 0, dependentes);
+      // Redutor e dedução simplificada usam o rendimento tributável, não a base já líquida de INSS.
+      const rendimentoTributavel = natureza === 'ferias'
+        ? round2(grupo.bruto - grupo.bruto / 3)
+        : grupo.bruto;
+      irrfGrupo = calculateIRRF(rendimentoTributavel, inssGrupo.value, dependentes, true, vigencia);
     }
     const fgtsGrupo = perfil?.ignorarFgts
       ? { base: 0, value: 0 }

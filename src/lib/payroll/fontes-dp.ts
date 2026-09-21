@@ -86,20 +86,42 @@ export interface FiltroFontesDp {
   colaboradorIds?: string[];
 }
 
+/**
+ * Quadro de dias do fechamento — o que o relatório mostra por pessoa,
+ * inclusive folga (descanso: não vira rubrica paga).
+ */
+export interface QuadroOperacional {
+  cpf: string;
+  nome: string;
+  centroCusto: string;
+  diasEmbarcado: number;
+  diasDobra: number;
+  diasFolga: number;
+  diasFolgaIndenizada: number;
+  diasFerias: number;
+  diasStandby: number;
+  diasTreinamento: number;
+}
+
 /** Resultado de uma coleta (antes de gravar na sheet). */
 export interface ColetaFontesDp {
   itens: ItemPropostoFolha[];
   pendencias: PendenciaCpf[];
   /** Período efetivamente fechado (explicit > gt_fechamento_periodos > mês civil). */
   periodo: { dataInicio: string; dataFim: string };
+  /** Quem teve movimento no período (algum dia > 0), com o centro de custo do GT. */
+  quadros: QuadroOperacional[];
 }
 
 export interface ResultadoSincronizacaoModulos {
+  sheetId: string;
   /** Itens origem='gt' gravados na sheet da competência. */
   inseridos: number;
   /** Itens gt descartados porque employee+code já veio de WK (precedência WK). */
   descartadosPrecedencia: number;
   pendencias: PendenciaCpf[];
+  /** Dias apurados (embarque, dobra, folga, férias…) por CPF, para o relatório. */
+  quadros: QuadroOperacional[];
 }
 
 /** Sheet da competência já aprovada/paga — nova consolidação é bloqueada (409-like). */
@@ -129,6 +151,16 @@ export class ErroValidacaoFontes extends Error {
 }
 
 const round2 = (v: number) => Math.round(v * 100) / 100;
+
+/** Salário mensal: ficha da folha quando preenchida; senão o cadastro GT. */
+function salarioMensal(baseFolha: number | null | undefined, salarioGt: number | string | null | undefined): number {
+  const folha = Number(baseFolha || 0);
+  if (folha > 0) return folha;
+  const gt = Number(salarioGt || 0);
+  return Number.isFinite(gt) && gt > 0 ? gt : 0;
+}
+
+
 
 const CODE_DIAS_NORMAIS = '001';
 const CODE_DOBA = '138';
@@ -166,6 +198,8 @@ interface ColabGtRow extends CamposEscalaColaborador {
   nome_completo: string | null;
   matricula: string | null;
   ativo: boolean | null;
+  /** Salário mensal no cadastro GT. Usado quando a ficha da folha ainda não tem base. */
+  salario?: number | string | null;
   cargo: { nome: string | null } | Array<{ nome: string | null }> | null;
   empresa: { nome: string | null } | Array<{ nome: string | null }> | null;
   centro_custo:
@@ -202,7 +236,7 @@ async function carregarColaboradoresGt(filtroEmpresa?: string, colaboradorIds?: 
     const r = await supabaseAdmin
       .from('gt_colaboradores')
       .select(`
-        id, cpf, nome_completo, matricula, ativo, escala_embarque, escala_folga, regime_trabalho,
+        id, cpf, nome_completo, matricula, ativo, salario, escala_embarque, escala_folga, regime_trabalho,
         cargo:gt_cargos(nome),
         empresa:gt_empresas(nome),
         centro_custo:gt_centros_custo(codigo, nome)
@@ -383,6 +417,7 @@ export async function coletarRubricasEscala(
 
   const itens: ItemPropostoFolha[] = [];
   const pendencias: PendenciaCpf[] = [];
+  const quadros: QuadroOperacional[] = [];
 
   for (const c of colaboradores) {
     const cpfNorm = normalizeCpf(c.cpf || '');
@@ -417,10 +452,36 @@ export async function coletarRubricasEscala(
       calc,
     );
 
-    itens.push(...converterRubricasDias(rubricas, employee.baseSalary, cpfNorm, nome));
+    const dias = rubricas.rubricas;
+    const movimento =
+      dias.dias_embarcado + dias.dias_dobra + dias.dias_folga + dias.dias_folga_indenizada +
+      dias.dias_ferias + dias.dias_standby + dias.dias_treinamento;
+    if (movimento > 0) {
+      quadros.push({
+        cpf: cpfNorm,
+        nome,
+        centroCusto: rubricas.centro_custo || 'NÃO DEFINIDO',
+        diasEmbarcado: dias.dias_embarcado,
+        diasDobra: dias.dias_dobra,
+        diasFolga: dias.dias_folga,
+        diasFolgaIndenizada: dias.dias_folga_indenizada,
+        diasFerias: dias.dias_ferias,
+        diasStandby: dias.dias_standby,
+        diasTreinamento: dias.dias_treinamento,
+      });
+      if (salarioMensal(employee.baseSalary, c.salario) <= 0) {
+        pendencias.push({
+          cpf: cpfNorm,
+          nome,
+          motivo: 'Sem salário base (folha e cadastro GT) — dias apurados, mas os valores não foram lançados',
+        });
+      }
+    }
+
+    itens.push(...converterRubricasDias(rubricas, salarioMensal(employee.baseSalary, c.salario), cpfNorm, nome));
   }
 
-  return { itens, pendencias, periodo: { dataInicio: periodo.dataInicio, dataFim: periodo.dataFim } };
+  return { itens, pendencias, quadros, periodo: { dataInicio: periodo.dataInicio, dataFim: periodo.dataFim } };
 }
 
 /** Dias do fechamento → propostas de item (só dias > 0; arredondado 2 casas). */
@@ -467,6 +528,8 @@ interface ColabCpfRow {
   id: string;
   cpf: string | null;
   nome_completo: string | null;
+  centro?: string;
+  salario?: number;
 }
 
 interface AfastamentoFeriasRow {
@@ -515,7 +578,13 @@ export async function coletarFerias(
   const colaboradores = await carregarColaboradoresGt(filtro.empresa, filtro.colaboradorIds, filtro.centroCusto);
   const colabPorId = new Map<string, ColabCpfRow>();
   for (const c of colaboradores) {
-    colabPorId.set(c.id, { id: c.id, cpf: c.cpf, nome_completo: c.nome_completo });
+    colabPorId.set(c.id, {
+      id: c.id,
+      cpf: c.cpf,
+      nome_completo: c.nome_completo,
+      centro: embedCentroCusto(c.centro_custo).toUpperCase(),
+      salario: Number(c.salario || 0),
+    });
   }
 
   const afastamentos = await carregarAfastamentosGt(new Set(colabPorId.keys()));
@@ -523,6 +592,7 @@ export async function coletarFerias(
 
   const itens: ItemPropostoFolha[] = [];
   const pendencias: PendenciaCpf[] = [];
+  const quadros: QuadroOperacional[] = [];
 
   for (const [colaboradorId, lista] of afastamentos) {
     const colab = colabPorId.get(colaboradorId);
@@ -546,9 +616,30 @@ export async function coletarFerias(
       continue;
     }
 
-    const diaria = round2(employee.baseSalary / 30);
+    quadros.push({
+      cpf: cpfNorm,
+      nome,
+      centroCusto: colab?.centro || 'NÃO DEFINIDO',
+      diasEmbarcado: 0,
+      diasDobra: 0,
+      diasFolga: 0,
+      diasFolgaIndenizada: 0,
+      diasFerias: diasNoMes,
+      diasStandby: 0,
+      diasTreinamento: 0,
+    });
+
+    const salario = salarioMensal(employee.baseSalary, colab?.salario);
+    const diaria = round2(salario / 30);
     const valorFerias = round2(diaria * diasNoMes);
-    if (valorFerias <= 0) continue;
+    if (valorFerias <= 0) {
+      pendencias.push({
+        cpf: cpfNorm,
+        nome,
+        motivo: `Férias (${diasNoMes} dia(s)) sem salário base — dias no relatório, valor não lançado`,
+      });
+      continue;
+    }
 
     itens.push({
       cpf: cpfNorm,
@@ -572,7 +663,7 @@ export async function coletarFerias(
     }
   }
 
-  return { itens, pendencias, periodo: { dataInicio: periodo.dataInicio, dataFim: periodo.dataFim } };
+  return { itens, pendencias, quadros, periodo: { dataInicio: periodo.dataInicio, dataFim: periodo.dataFim } };
 }
 
 // ============================================================
@@ -719,6 +810,33 @@ export async function coletarSaldosFerias(cpf: string, admissao: Date | string):
   }
 
   return ciclosVencidos;
+}
+
+
+/** Une quadros da escala e das férias pelo CPF. O mesmo dia não soma duas vezes. */
+function fundirQuadros(listas: QuadroOperacional[][]): QuadroOperacional[] {
+  const map = new Map<string, QuadroOperacional>();
+  for (const lista of listas) {
+    for (const q of lista) {
+      const atual = map.get(q.cpf);
+      if (!atual) {
+        map.set(q.cpf, { ...q });
+        continue;
+      }
+      atual.diasEmbarcado = Math.max(atual.diasEmbarcado, q.diasEmbarcado);
+      atual.diasDobra = Math.max(atual.diasDobra, q.diasDobra);
+      atual.diasFolga = Math.max(atual.diasFolga, q.diasFolga);
+      atual.diasFolgaIndenizada = Math.max(atual.diasFolgaIndenizada, q.diasFolgaIndenizada);
+      atual.diasFerias = Math.max(atual.diasFerias, q.diasFerias);
+      atual.diasStandby = Math.max(atual.diasStandby, q.diasStandby);
+      atual.diasTreinamento = Math.max(atual.diasTreinamento, q.diasTreinamento);
+      if ((!atual.centroCusto || atual.centroCusto === 'NÃO DEFINIDO') && q.centroCusto) {
+        atual.centroCusto = q.centroCusto;
+      }
+      if ((atual.nome === 'SEM NOME' || !atual.nome) && q.nome) atual.nome = q.nome;
+    }
+  }
+  return [...map.values()];
 }
 
 // ============================================================
@@ -974,8 +1092,10 @@ export async function sincronizarModulosInternos(opts: {
   });
 
   return {
+    sheetId: sheet.id,
     inseridos: linhas.length,
     descartadosPrecedencia,
     pendencias,
+    quadros: fundirQuadros([escala.quadros || [], ferias.quadros || []]),
   };
 }

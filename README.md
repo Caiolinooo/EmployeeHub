@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.83.2 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.84.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,12 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.84.0)
+
+- **A folha calcula pelos dados do portal**: embarque, dobra, folga indenizada e férias já lançados viram o relatório por pessoa e por centro de custo.
+- **INSS e IR de 2026**: teto do INSS em R$ 8.475,55 e imposto de renda zerado até R$ 5.000,00 de rendimento. Mês de 2025 continua na tabela antiga.
+- **ICMS, ISS e DIRF ficam de fora**: não são desconto de holerite e o sistema não baixa alíquota sozinho.
 
 ## Nesta versão (5.83.0)
 

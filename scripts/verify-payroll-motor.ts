@@ -1,7 +1,7 @@
 /**
  * Gate — valida o motor de folha (src/lib/payroll/calculations.ts + rescisao.ts)
  * contra fixtures com valor ESPERADO. O esperado NÃO é chumbado: é recalculado
- * neste script a partir das tabelas legais 2025 (LEGAL_TABLES) — o chamado
+ * neste script a partir das tabelas da vigência corrente (LEGAL_TABLES) — o chamado
  * "oráculo" — e impresso lado a lado com o calculado pelo motor.
  *
  * Puro: não toca no banco. Uso:
@@ -11,6 +11,8 @@ import {
   LEGAL_TABLES,
   FORMULAS_FOLHA,
   calculateEmployeePayroll,
+  calculateINSS,
+  calculateIRRF,
   type PayrollCalculationResult,
   type PayrollEmployee,
   type PayrollItem,
@@ -21,7 +23,7 @@ import { calcularRescisao } from '../src/lib/payroll/rescisao';
 const round2 = (v: number) => Math.round(v * 100) / 100;
 
 // ---------------------------------------------------------------------------
-// Oráculo — réplica independente da matemática das tabelas 2025
+// Oráculo — réplica independente da matemática da vigência corrente (2026)
 // ---------------------------------------------------------------------------
 
 function oracleINSS(base: number): number {
@@ -50,11 +52,19 @@ function impostoTabela(base: number): number {
 
 /** IRRF efetivo = MENOR imposto entre tabela progressiva e dedução simplificada. */
 function oracleIRRF(bruto: number, inss: number, dependentes: number): number {
-  const base = Math.max(0, bruto - inss - dependentes * LEGAL_TABLES.IRRF.DEPENDENT_DEDUCTION);
-  if (base <= 0) return 0;
-  const legal = impostoTabela(base);
-  const simplificada = impostoTabela(Math.max(0, base - LEGAL_TABLES.IRRF.SIMPLIFIED_DEDUCTION));
-  return Math.min(legal, simplificada);
+  const tabela = LEGAL_TABLES.IRRF;
+  const baseLegal = Math.max(0, bruto - inss - dependentes * tabela.DEPENDENT_DEDUCTION);
+  const legal = impostoTabela(baseLegal);
+  const simplificada = impostoTabela(Math.max(0, bruto - tabela.SIMPLIFIED_DEDUCTION));
+  let imposto = Math.min(legal, simplificada);
+  const red = tabela.REDUCAO;
+  if (red) {
+    let reducao = 0;
+    if (bruto <= red.ISENCAO_ATE) reducao = red.REDUCAO_ISENCAO;
+    else if (bruto <= red.FAIXA_ATE) reducao = round2(red.TETO_FORMULA - red.FATOR * bruto);
+    imposto = round2(Math.max(0, imposto - Math.min(reducao, imposto)));
+  }
+  return imposto;
 }
 
 const oracleFGTS = (base: number) => round2(base * LEGAL_TABLES.FGTS.RATE);
@@ -320,20 +330,53 @@ function fixtureFormulas(): void {
 
 // ---------------------------------------------------------------------------
 
+/**
+ * Números travados, não o oráculo.
+ * INSS 2025 no teto antigo; INSS 2026 no teto da Portaria MPS/MF 13/2026.
+ * IR: exemplos da Receita (Lei 15.270) com o INSS que a própria Receita usou
+ * naqueles exemplos — não o INSS de 2026.
+ */
+function fixtureVigenciaOficial(): void {
+  console.log('\n===== (f) Vigência oficial: teto 2025, teto 2026, redutor da Receita =====');
+  check('f.001 INSS 2025 no teto 8.157,41', calculateINSS(8157.41, '2025').value, 951.62);
+  check('f.002 INSS 2026 no teto 8.475,55', calculateINSS(8475.55, '2026').value, 988.07);
+  check('f.003 INSS 2026 de R$ 4.000 não é 373,41', calculateINSS(4000, '2026').value === 373.41, false);
+
+  check('f.004 Receita ex.2 R$ 4.000 → IR 0', calculateIRRF(4000, 373.41, 0, true, '2026').value, 0);
+  check('f.005 Receita ex.3 R$ 5.000 → IR 0', calculateIRRF(5000, 509.6, 0, true, '2026').value, 0);
+  check('f.006 Receita ex.4 R$ 6.000 → IR 382,88', calculateIRRF(6000, 649.6, 0, true, '2026').value, 382.88);
+  check('f.007 Receita ex.5 R$ 7.607,20 → IR 1.016,27', calculateIRRF(7607.2, 0, 0, true, '2026').value, 1016.27);
+
+  const emp: PayrollEmployee = { id: 'ver-f', name: 'Verificação F', baseSalary: 8475.55 };
+  const item: PayrollItem[] = [
+    { codeId: '001', code: '001', type: 'provento', name: 'Dias Normais', calculationType: 'fixed', value: 8475.55, quantity: 1 },
+  ];
+  const r26 = calculateEmployeePayroll(emp, item, undefined, { ano: 2026, mes: 9 });
+  const r25 = calculateEmployeePayroll(emp, item, undefined, { ano: 2025, mes: 12 });
+  check('f.008 Folha set/2026 usa o teto novo', r26.inssValue, 988.07);
+  check('f.009 Folha dez/2025 capa no teto antigo', r25.inssValue, 951.62);
+
+  const r13 = calculateEmployeePayroll(emp, [
+    { codeId: '007', code: '007', type: 'provento', name: '13º Salário', calculationType: 'fixed', value: 8475.55, quantity: 1, natureza: 'decimo' },
+  ], undefined, { ano: 2026, mes: 12 });
+  check('f.010 13º continua sem IRRF', r13.irrfValue, 0);
+}
+
 function main(): void {
-  console.log('=== verify-payroll-motor — motor de folha vs oráculo das tabelas 2025 ===');
+  console.log('=== verify-payroll-motor — motor de folha vs oráculo da vigência corrente ===');
   fixtureMensal();
   fixtureRescisao();
   fixtureDecimo();
   fixturePerfil();
   fixtureFormulas();
+  fixtureVigenciaOficial();
 
   console.log(`\n===== RESULTADO: ${total - falhas}/${total} checks OK, ${falhas} falha(s) =====`);
   if (falhas > 0) {
     process.exitCode = 1;
     console.error('FALHAS detectadas — motor divergiu do oráculo.');
   } else {
-    console.log('Motor de folha 100% conforme as tabelas 2025.');
+    console.log('Motor de folha conforme a vigência corrente.');
   }
 }
 

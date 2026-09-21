@@ -792,7 +792,7 @@ Everything happens in the DP **Payroll Items & Payroll** tab, choosing the **com
 
 2. **Module consolidation** - The portal automatically adds scale/boarding and vacation entries for the month (items flagged as "portal" origin)
 
-3. **Calculate payroll** - The engine computes INSS, IRRF (progressive table), FGTS and net pay per employee and per nature (monthly, 13th salary, vacation, termination)
+3. **Calculate payroll** - The engine computes INSS (2025 table, or from January 2026 the MPS/MF Ordinance 13/2026 table), IRRF (progressive table, simplified deduction and the 2026 reduction that zeroes tax up to R$ 5,000), FGTS and net pay per employee and per nature (monthly, 13th salary, vacation, termination)
 
 4. **Submit for approval** - The modal lists the approvers; each one signs with their token until 100% is reached
 

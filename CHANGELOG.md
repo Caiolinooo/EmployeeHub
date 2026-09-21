@@ -1,5 +1,14 @@
 # Changelog
 
+## [5.84.0] - 2026-09-21
+
+### Folha calcula pelos dados do portal, com INSS e IR de 2026
+
+1. **Calcular pelos dados**: na aba Rubricas & Folha, o botão consolida embarque, dobra, folga indenizada e férias que o portal já tem e mostra o relatório por colaborador e por centro de custo (dias, bruto, INSS, IRRF, FGTS e líquido). A folga realizada aparece no quadro e não vira rubrica paga.
+2. **Tabelas de 2026**: competência a partir de janeiro/2026 usa o INSS da Portaria Interministerial MPS/MF nº 13/2026 (mínimo R$ 1.621,00, teto R$ 8.475,55) e o redutor da Lei 15.270/2025 — imposto zerado até R$ 5.000,00 de rendimento e redução até R$ 7.350,00. Competência de 2025 continua na tabela antiga (teto R$ 8.157,41). A dedução simplificada de R$ 607,20 substitui INSS e dependentes; não se soma a eles.
+3. **Fora desta folha**: ICMS, ISS e DIRF não entram no cálculo. Não há robô gravando alíquota. O 13º continua sem retenção de IR neste motor.
+
+
 ## [5.83.2] - 2026-09-21
 
 ### 🏢 Folha por empresa e centro de custo reais (GT como fonte da verdade)

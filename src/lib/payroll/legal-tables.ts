@@ -1,52 +1,53 @@
 /**
- * Tabelas da Legislação Trabalhista Brasileira 2025
- * Sistema de Folha de Pagamento - Painel ABZ
+ * Tabelas da legislação trabalhista para exibição.
+ * O cálculo vive em calculations.ts (vigência 2025 ou 2026).
+ * Estes objetos são a vigência corrente, 2026.
  */
 
-// Tabela INSS 2025
+// INSS 2026 — Portaria MPS/MF nº 13/2026. Nome do export é histórico.
 export const INSS_TABLE_2025 = {
-  salaryMin: 1518.00,
-  ceiling: 8157.41,
-  maxDiscount: 951.62,
+  salaryMin: 1621.00,
+  ceiling: 8475.55,
+  maxDiscount: 988.07,
   brackets: [
     {
       id: 1,
-      description: 'Até R$ 1.518,00',
+      description: 'Até R$ 1.621,00',
       min: 0,
-      max: 1518.00,
+      max: 1621.00,
       rate: 7.5,
       deduction: 0
     },
     {
       id: 2,
-      description: 'De R$ 1.518,01 até R$ 2.793,88',
-      min: 1518.01,
-      max: 2793.88,
+      description: 'De R$ 1.621,01 até R$ 2.902,84',
+      min: 1621.01,
+      max: 2902.84,
       rate: 9.0,
-      deduction: 22.77
+      deduction: 24.32
     },
     {
       id: 3,
-      description: 'De R$ 2.793,89 até R$ 4.190,83',
-      min: 2793.89,
-      max: 4190.83,
+      description: 'De R$ 2.902,85 até R$ 4.354,27',
+      min: 2902.85,
+      max: 4354.27,
       rate: 12.0,
-      deduction: 106.59
+      deduction: 111.40
     },
     {
       id: 4,
-      description: 'De R$ 4.190,84 até R$ 8.157,41',
-      min: 4190.84,
-      max: 8157.41,
+      description: 'De R$ 4.354,28 até R$ 8.475,55',
+      min: 4354.28,
+      max: 8475.55,
       rate: 14.0,
-      deduction: 190.40
+      deduction: 198.49
     }
   ]
 };
 
 // Tabela IRRF 2025 (vigente a partir de maio/2025)
 export const IRRF_TABLE_2025 = {
-  exemptionLimit: 3036.00, // Rendimento bruto
+  exemptionLimit: 5000.00, // Rendimento bruto com o redutor de 2026
   exemptionBase: 2428.80,  // Base de cálculo
   simplifiedDeduction: 607.20,
   dependentDeduction: 189.59,
@@ -252,7 +253,7 @@ export class LegalTablesHelper {
     const warnings: string[] = [];
     const currentYear = new Date().getFullYear();
     
-    if (currentYear > 2025) {
+    if (currentYear > 2026) {
       warnings.push('As tabelas podem estar desatualizadas. Verifique a legislação vigente.');
     }
     

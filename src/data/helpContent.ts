@@ -816,7 +816,7 @@ Tudo acontece na aba **Rubricas & Folha** do DP, escolhendo **competência** (m�
 
 2. **Consolidação dos módulos** - O portal adiciona automaticamente as verbas da escala/embarque e das férias do mês (itens marcados como origem "portal")
 
-3. **Calcular folha** - O motor calcula INSS, IRRF (tabela progressiva), FGTS e líquido por colaborador e por natureza (mensal, 13º, férias, rescisão)
+3. **Calcular folha** - O motor calcula INSS (tabela de 2025 ou, desde janeiro/2026, Portaria MPS/MF 13/2026), IRRF (tabela progressiva, dedução simplificada e redutor da Lei 15.270/2025 até R$ 5.000), FGTS e líquido por colaborador e por natureza (mensal, 13º, férias, rescisão)
 
 4. **Enviar para aprovação** - O modal lista os aprovadores; cada um assina com seu token até completar 100%
 

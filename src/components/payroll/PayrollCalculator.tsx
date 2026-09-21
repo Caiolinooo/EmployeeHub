@@ -17,8 +17,7 @@ import {
   PayrollCalculationItem,
   PayrollCode 
 } from '@/types/payroll';
-import { calculateEmployeePayroll } from '@/lib/payroll/calculations';
-import { LegalTablesHelper } from '@/lib/payroll/legal-tables';
+import { calculateEmployeePayroll, LEGAL_TABLES } from '@/lib/payroll/calculations';
 import { useI18n } from '@/contexts/I18nContext';
 
 interface PayrollCalculatorProps {
@@ -225,10 +224,10 @@ export default function PayrollCalculator({ employee, onCalculationComplete }: P
             <div className="flex items-start space-x-2">
               <Info className="h-5 w-5 text-blue-600 mt-0.5" />
               <div>
-                <h4 className="font-semibold text-blue-800 mb-2">Legislação Trabalhista 2025</h4>
+                <h4 className="font-semibold text-blue-800 mb-2">Legislação trabalhista 2026</h4>
                 <div className="text-sm text-blue-700 space-y-1">
-                  <p><strong>INSS:</strong> Alíquotas de 7,5% a 14% (teto: {formatCurrency(8157.41)})</p>
-                  <p><strong>IRRF:</strong> Isenção até {formatCurrency(3036.00)} (rendimento bruto)</p>
+                  <p><strong>INSS:</strong> Alíquotas de 7,5% a 14% (teto: {formatCurrency(LEGAL_TABLES.INSS.CEILING)})</p>
+                  <p><strong>IRRF:</strong> Rendimento até {formatCurrency(LEGAL_TABLES.IRRF.REDUCAO?.ISENCAO_ATE ?? 0)} fica sem imposto. A redução vai até {formatCurrency(LEGAL_TABLES.IRRF.REDUCAO?.FAIXA_ATE ?? 0)}.</p>
                   <p><strong>FGTS:</strong> 8% sobre o salário bruto</p>
                 </div>
               </div>

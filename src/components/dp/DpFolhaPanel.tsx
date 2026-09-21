@@ -80,6 +80,56 @@ interface CalculoFolhaData {
   results: CalculoResult[];
 }
 
+interface ItemRelatorio {
+  code: string;
+  name: string;
+  type: string;
+  quantity: number;
+  valor: number;
+}
+
+interface LinhaRelatorio {
+  employeeId: string;
+  nome: string;
+  cpf: string;
+  centroCusto: string;
+  diasEmbarcado: number;
+  diasDobra: number;
+  diasFolga: number;
+  diasFolgaIndenizada: number;
+  diasFerias: number;
+  bruto: number;
+  descontos: number;
+  liquido: number;
+  inss: number;
+  irrf: number;
+  fgts: number;
+  itens: ItemRelatorio[];
+}
+
+interface BlocoCentro {
+  centroCusto: string;
+  colaboradores: number;
+  diasEmbarcado: number;
+  diasDobra: number;
+  diasFolga: number;
+  diasFolgaIndenizada: number;
+  diasFerias: number;
+  bruto: number;
+  descontos: number;
+  liquido: number;
+}
+
+interface RelatorioOperacional {
+  sheetId: string;
+  inseridos: number;
+  descartadosPrecedencia: number;
+  pendencias: PendenciaCpf[];
+  colaboradores: LinhaRelatorio[];
+  centros: BlocoCentro[];
+  totais: BlocoCentro;
+}
+
 interface PendenciaCpf {
   cpf: string;
   nome: string;
@@ -203,6 +253,7 @@ export default function DpFolhaPanel() {
 
   const [sheet, setSheet] = useState<FolhaSheet | null>(null);
   const [calculo, setCalculo] = useState<CalculoFolhaData | null>(null);
+  const [relatorio, setRelatorio] = useState<RelatorioOperacional | null>(null);
   const [funcionarios, setFuncionarios] = useState<EmployeeFolha[]>([]);
   const [estadoAprovacao, setEstadoAprovacao] = useState<EstadoAprovacao | null>(null);
 
@@ -387,6 +438,7 @@ export default function DpFolhaPanel() {
 
   useEffect(() => {
     if (!user) return;
+    setRelatorio(null);
     carregarCentrosCusto(companyId);
     carregarStatusWk(companyId);
     carregarColaboradoresWk(1, companyId, centroCustoId);
@@ -495,22 +547,32 @@ export default function DpFolhaPanel() {
   };
 
   const calcularFolha = async () => {
-    if (!sheet || calculando) return;
+    if (!companyId || calculando) return;
     setCalculando(true);
     try {
-      const res = await fetchWithToken('/api/payroll/calculate', {
-        method: 'PUT',
+      const res = await fetchWithToken('/api/dp/folha/calcular', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sheetId: sheet.id }),
+        body: JSON.stringify({
+          companyId,
+          competencia,
+          departmentId: centroCustoId || undefined,
+        }),
       });
       const json = await res.json();
       if (!res.ok || !json.success) {
         toast.error(json.error || tf('dp.folha.erroGeral', 'Erro na operação de folha'));
         return;
       }
-      setCalculo(json.data as CalculoFolhaData);
+      const data = json.data as RelatorioOperacional;
+      setRelatorio(data);
+      setSyncModulos({
+        inseridos: data.inseridos,
+        descartadosPrecedencia: data.descartadosPrecedencia,
+        pendencias: data.pendencias || [],
+      });
       toast.success(tf('dp.folha.sucessoCalculo', 'Folha calculada com sucesso'));
-      await carregarFolhaDaCompetencia(companyId, competencia);
+      await recarregarTudo(companyId, competencia, centroCustoId);
     } catch {
       toast.error(tf('dp.folha.erroGeral', 'Erro na operação de folha'));
     } finally {
@@ -572,7 +634,7 @@ export default function DpFolhaPanel() {
               {tf('dp.folha.titulo', 'Rubricas & Folha')}
             </h2>
             <p className="text-[11px] text-gray-500 mt-0.5 hidden sm:block">
-              {tf('dp.folha.descricao', 'Sincronize rubricas do WK Radar e dos módulos internos (escala e férias), calcule a folha e envie para aprovação')}
+              {tf('dp.folha.descricao', 'O sistema calcula a folha com os embarques, dobras, folgas e férias já registrados e gera o relatório por colaborador e centro de custo')}
             </p>
           </div>
           <div className="flex flex-wrap items-end gap-2">
@@ -660,13 +722,13 @@ export default function DpFolhaPanel() {
           <button
             type="button"
             onClick={calcularFolha}
-            disabled={desabilitadoEdicao || !sheet || sincronizando || calculando
-              || sheet.status === 'approved' || sheet.status === 'paid' || sheet.status === 'cancelled'}
+            disabled={desabilitadoEdicao || !companyId || sincronizando || calculando
+              || sheet?.status === 'approved' || sheet?.status === 'paid' || sheet?.status === 'cancelled'}
             title={tituloEdicao}
             className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-indigo-900 bg-indigo-100 hover:bg-indigo-200 rounded-xl transition shadow-xs disabled:opacity-50"
           >
             <FiDollarSign className={`w-3.5 h-3.5 ${calculando ? 'animate-pulse' : ''}`} />
-            <span className="hidden sm:inline">{calculando ? tf('dp.folha.calculandoFolha', 'Calculando folha...') : tf('dp.folha.calcularFolha', 'Calcular folha')}</span>
+            <span className="hidden sm:inline">{calculando ? tf('dp.folha.calculandoFolha', 'Calculando embarques, dobras, folgas e férias...') : tf('dp.folha.calcularFolha', 'Calcular pelos dados')}</span>
           </button>
 
           <button
@@ -674,7 +736,7 @@ export default function DpFolhaPanel() {
             onClick={() => setModalAprovacaoAberto(true)}
             disabled={!sheet || sheet.status !== 'calculated'}
             title={sheet?.status === 'draft'
-              ? tf('dp.folha.nenhumaFolha', 'Nenhuma folha encontrada para esta competência. Sincronize o WK ou os módulos internos para criar a folha rascunho.')
+              ? tf('dp.folha.nenhumaFolha', 'Nenhuma folha nesta competência. Use Calcular pelos dados — o sistema lê embarques, dobras, folgas e férias.')
               : tituloEdicao}
             className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition shadow-xs disabled:opacity-50"
           >
@@ -760,7 +822,7 @@ export default function DpFolhaPanel() {
       {/* Sheet da competência */}
       {!sheet ? (
         <div className="p-6 rounded-xl border border-dashed border-gray-300 bg-white text-xs text-gray-500 text-center shrink-0">
-          {tf('dp.folha.nenhumaFolha', 'Nenhuma folha encontrada para esta competência. Sincronize o WK ou os módulos internos para criar a folha rascunho.')}
+          {tf('dp.folha.nenhumaFolha', 'Nenhuma folha nesta competência. Use Calcular pelos dados — o sistema lê embarques, dobras, folgas e férias.')}
         </div>
       ) : (
         <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-xs space-y-2 shrink-0">
@@ -828,6 +890,93 @@ export default function DpFolhaPanel() {
               <span className="text-base font-black text-yellow-900">{formatBRL(sheet.total_fgts)}</span>
             </div>
           </div>
+        </div>
+      )}
+
+
+      {relatorio && (
+        <div className="bg-white rounded-xl border border-gray-200 shadow-xs shrink-0">
+          <div className="px-4 py-3 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-bold text-gray-900">{tf('dp.folha.relatorioTitulo', 'Relatório da competência')}</h3>
+            <span className="text-[11px] font-semibold text-gray-600">
+              {relatorio.totais.colaboradores} {tf('dp.folha.totalColaboradores', 'Colaboradores')}
+              {' · '}{tf('dp.folha.brutos', 'Bruto')} {formatBRL(relatorio.totais.bruto)}
+              {' · '}{tf('dp.folha.liquidos', 'Líquido')} {formatBRL(relatorio.totais.liquido)}
+            </span>
+          </div>
+          {relatorio.colaboradores.length === 0 ? (
+            <p className="p-6 text-xs text-gray-500 text-center">
+              {tf('dp.folha.relatorioVazio', 'Nenhum embarque, dobra, folga ou férias nesta competência.')}
+            </p>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {relatorio.centros.map((centro) => (
+                <section key={centro.centroCusto}>
+                  <div className="px-4 py-2 bg-slate-50 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
+                    <span className="font-black text-gray-900 uppercase">{centro.centroCusto}</span>
+                    <span className="text-gray-600">{centro.colaboradores} {tf('dp.folha.totalColaboradores', 'Colaboradores')}</span>
+                    <span className="text-gray-600">{tf('dp.folha.diasEmbarque', 'Embarque')} {centro.diasEmbarcado}</span>
+                    <span className="text-gray-600">{tf('dp.folha.diasDobra', 'Dobra')} {centro.diasDobra}</span>
+                    <span className="text-gray-600">{tf('dp.folha.diasFolga', 'Folga')} {centro.diasFolga}</span>
+                    <span className="text-gray-600">{tf('dp.folha.diasFi', 'FI')} {centro.diasFolgaIndenizada}</span>
+                    <span className="text-gray-600">{tf('dp.folha.diasFerias', 'Férias')} {centro.diasFerias}</span>
+                    <span className="ml-auto font-bold text-blue-900">{formatBRL(centro.bruto)}</span>
+                    <span className="font-black text-emerald-800">{formatBRL(centro.liquido)}</span>
+                  </div>
+                  <ul className="divide-y divide-gray-50">
+                    {relatorio.colaboradores.filter((c) => c.centroCusto === centro.centroCusto).map((c) => {
+                      const aberto = expandidos.has(c.employeeId);
+                      return (
+                        <li key={c.employeeId}>
+                          <button
+                            type="button"
+                            onClick={() => toggleExpandido(c.employeeId)}
+                            className="w-full flex flex-wrap items-center gap-2 px-4 py-2 hover:bg-blue-50/40 transition text-left"
+                          >
+                            <FiChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${aberto ? '' : '-rotate-90'}`} />
+                            <span className="text-xs font-bold text-gray-900 min-w-[140px]">{c.nome}</span>
+                            <span className="text-[10px] text-gray-500 tabular-nums">
+                              {tf('dp.folha.diasEmbarque', 'Embarque')} {c.diasEmbarcado}
+                              {' · '}{tf('dp.folha.diasDobra', 'Dobra')} {c.diasDobra}
+                              {' · '}{tf('dp.folha.diasFolga', 'Folga')} {c.diasFolga}
+                              {' · '}{tf('dp.folha.diasFi', 'FI')} {c.diasFolgaIndenizada}
+                              {' · '}{tf('dp.folha.diasFerias', 'Férias')} {c.diasFerias}
+                            </span>
+                            <span className="ml-auto text-xs font-black text-emerald-700">{formatBRL(c.liquido)}</span>
+                          </button>
+                          {aberto && (
+                            <div className="px-4 pb-3 text-[11px] text-gray-600">
+                              <p className="mb-1">
+                                {tf('dp.folha.brutos', 'Bruto')} {formatBRL(c.bruto)}
+                                {' · '}INSS {formatBRL(c.inss)}
+                                {' · '}IRRF {formatBRL(c.irrf)}
+                                {' · '}FGTS {formatBRL(c.fgts)}
+                                {' · '}{tf('dp.folha.liquidos', 'Líquido')} {formatBRL(c.liquido)}
+                              </p>
+                              {c.itens.length > 0 && (
+                                <table className="w-full text-left">
+                                  <tbody className="divide-y divide-gray-50">
+                                    {c.itens.map((item) => (
+                                      <tr key={`${c.employeeId}-${item.code}-${item.name}`}>
+                                        <td className="py-1 pr-2 font-mono font-bold text-gray-800">{item.code}</td>
+                                        <td className="py-1 pr-2 text-gray-700">{item.name}</td>
+                                        <td className="py-1 pr-2 text-right tabular-nums">{item.quantity}</td>
+                                        <td className="py-1 text-right tabular-nums font-bold text-gray-900">{formatBRL(item.valor)}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              )}
+                            </div>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

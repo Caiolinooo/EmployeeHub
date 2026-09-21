@@ -187,9 +187,16 @@ export async function PUT(request: NextRequest) {
       const calculationItems = employeeItems.length > 0 
         ? employeeItems.map(item => {
             const code = codes?.find(c => c.id === item.code_id);
+            const codigo = code?.code || '';
+            const informado = Number(item.calculated_value);
+            const legal = code?.legal_type === 'inss' || code?.legal_type === 'irrf' || code?.legal_type === 'fgts';
+            const natureza = codigo === '005' || codigo === '006' ? 'ferias'
+              : codigo === '007' ? 'decimo'
+              : ['301','302','303','304','305','306','307'].includes(codigo) ? 'rescisao'
+              : 'mensal';
             return {
               codeId: item.code_id,
-              code: code?.code || '',
+              code: codigo,
               type: code?.type || 'provento',
               name: code?.name || '',
               calculationType: code?.calculation_type || 'fixed',
@@ -197,7 +204,10 @@ export async function PUT(request: NextRequest) {
               quantity: item.quantity,
               referenceValue: item.reference_value,
               legalType: code?.legal_type,
-              formula: code?.formula
+              formula: code?.formula,
+              natureza,
+              // Valor já apurado (dias × diária). Recalcular por code.value zeraria a verba.
+              ...(legal || !Number.isFinite(informado) || informado === 0 ? {} : { valorInformado: informado }),
             };
           })
         : [
@@ -244,7 +254,11 @@ export async function PUT(request: NextRequest) {
             }
           ];
 
-      const result = calculateEmployeePayroll(employee, calculationItems, perfil);
+      const competencia = {
+        mes: Number(sheet.reference_month),
+        ano: Number(sheet.reference_year),
+      };
+      const result = calculateEmployeePayroll(employee, calculationItems, perfil, competencia);
       results.push(result);
 
       // Acumular totais
