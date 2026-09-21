@@ -526,117 +526,118 @@ export default function DpFolhaPanel() {
   if (!user) return null;
 
   return (
-    <div className="flex flex-col gap-3 min-h-0">
-      {/* Cabeçalho: competência + empresa */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-xs flex flex-col md:flex-row md:items-end justify-between gap-3 shrink-0">
-        <div>
-          <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-            <FiDollarSign className="w-5 h-5 text-emerald-600" />
-            {tf('dp.folha.titulo', 'Rubricas & Folha')}
-          </h2>
-          <p className="text-xs text-gray-500 mt-0.5">
-            {tf('dp.folha.descricao', 'Sincronize rubricas do WK Radar e dos módulos internos (escala e férias), calcule a folha e envie para aprovação')}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-end gap-2">
-          <label className="text-[11px] font-bold text-gray-500 uppercase">
-            {tf('dp.folha.competencia', 'Competência')}
-            <input
-              type="month"
-              value={mesAnoInput}
-              onChange={(e) => setMesAnoInput(e.target.value)}
-              className="block mt-1 px-3 py-1.5 text-xs border border-gray-300 rounded-lg font-bold text-gray-900 bg-white"
-            />
-          </label>
-          <label className="text-[11px] font-bold text-gray-500 uppercase">
-            {tf('dp.folha.empresa', 'Empresa')}
-            <select
-              value={companyId}
-              onChange={(e) => setCompanyId(e.target.value)}
-              className="block mt-1 w-56 px-2.5 py-1.5 text-xs border border-gray-300 rounded-lg bg-white font-medium text-gray-700"
+    <div className="flex flex-col gap-2 min-h-0">
+      {/* Cabeçalho: competência + empresa + ações */}
+      <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-xs flex flex-col gap-2 shrink-0">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+              <FiDollarSign className="w-4 h-4 text-emerald-600" />
+              {tf('dp.folha.titulo', 'Rubricas & Folha')}
+            </h2>
+            <p className="text-[11px] text-gray-500 mt-0.5 hidden sm:block">
+              {tf('dp.folha.descricao', 'Sincronize rubricas do WK Radar e dos módulos internos (escala e férias), calcule a folha e envie para aprovação')}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-end gap-2">
+            <label className="text-[11px] font-bold text-gray-500 uppercase">
+              {tf('dp.folha.competencia', 'Competência')}
+              <input
+                type="month"
+                value={mesAnoInput}
+                onChange={(e) => setMesAnoInput(e.target.value)}
+                className="block mt-0.5 px-2.5 py-1 text-xs border border-gray-300 rounded-lg font-bold text-gray-900 bg-white"
+              />
+            </label>
+            <label className="text-[11px] font-bold text-gray-500 uppercase">
+              {tf('dp.folha.empresa', 'Empresa')}
+              <select
+                value={companyId}
+                onChange={(e) => setCompanyId(e.target.value)}
+                className="block mt-0.5 w-44 px-2 py-1 text-xs border border-gray-300 rounded-lg bg-white font-medium text-gray-700"
+              >
+                <option value="">{tf('dp.folha.selecioneEmpresa', 'Selecione uma empresa')}</option>
+                {empresas.map((emp) => (
+                  <option key={emp.id} value={emp.id}>{emp.name}</option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              onClick={() => recarregarTudo(companyId, competencia)}
+              disabled={!companyId}
+              className="p-1.5 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-50"
+              title={tf('dp.folha.atualizar', 'Atualizar')}
             >
-              <option value="">{tf('dp.folha.selecioneEmpresa', 'Selecione uma empresa')}</option>
-              {empresas.map((emp) => (
-                <option key={emp.id} value={emp.id}>{emp.name}</option>
-              ))}
-            </select>
-          </label>
+              <FiRefreshCw className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5 border-t border-gray-100 pt-2">
           <button
             type="button"
-            onClick={() => recarregarTudo(companyId, competencia)}
-            disabled={!companyId}
-            className="p-2 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-50"
-            title={tf('dp.folha.atualizar', 'Atualizar')}
+            onClick={sincronizarWk}
+            disabled={desabilitadoEdicao || !companyId || sincronizando}
+            title={tituloEdicao}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-white bg-abz-blue hover:bg-blue-700 rounded-xl transition shadow-xs disabled:opacity-50"
           >
-            <FiRefreshCw className="w-4 h-4" />
+            <FiRefreshCw className={`w-3.5 h-3.5 ${sincronizando ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">{sincronizando ? tf('dp.folha.sincronizandoWk', 'Sincronizando WK...') : tf('dp.folha.sincronizarWk', 'Sincronizar WK')}</span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => inputArquivoRef.current?.click()}
+            disabled={desabilitadoEdicao || !companyId || importando}
+            title={tituloEdicao || tf('dp.folha.importarArquivo', 'Importar arquivo')}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-blue-900 bg-blue-100 hover:bg-blue-200 rounded-xl transition shadow-xs disabled:opacity-50"
+          >
+            <FiUpload className={`w-3.5 h-3.5 ${importando ? 'animate-pulse' : ''}`} />
+            <span className="hidden sm:inline">{importando ? tf('dp.folha.importandoArquivo', 'Importando arquivo...') : tf('dp.folha.importarArquivo', 'Importar arquivo')}</span>
+          </button>
+          <input
+            ref={inputArquivoRef}
+            type="file"
+            accept=".xlsx,.xls"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) importarArquivo(file);
+            }}
+          />
+
+          <button
+            type="button"
+            onClick={calcularFolha}
+            disabled={desabilitadoEdicao || !sheet || sincronizando || calculando
+              || sheet.status === 'approved' || sheet.status === 'paid' || sheet.status === 'cancelled'}
+            title={tituloEdicao}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-indigo-900 bg-indigo-100 hover:bg-indigo-200 rounded-xl transition shadow-xs disabled:opacity-50"
+          >
+            <FiDollarSign className={`w-3.5 h-3.5 ${calculando ? 'animate-pulse' : ''}`} />
+            <span className="hidden sm:inline">{calculando ? tf('dp.folha.calculandoFolha', 'Calculando folha...') : tf('dp.folha.calcularFolha', 'Calcular folha')}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setModalAprovacaoAberto(true)}
+            disabled={!sheet || sheet.status !== 'calculated'}
+            title={sheet?.status === 'draft'
+              ? tf('dp.folha.nenhumaFolha', 'Nenhuma folha encontrada para esta competência. Sincronize o WK ou os módulos internos para criar a folha rascunho.')
+              : tituloEdicao}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition shadow-xs disabled:opacity-50"
+          >
+            <FiSend className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{tf('dp.folha.enviarAprovacao', 'Enviar para aprovação')}</span>
+          </button>
+
+          <span className="text-[10px] text-gray-400 ml-auto hidden md:inline">
+            {statusWk?.ultimoEvento
+              ? `${tf('dp.folha.ultimaSync', 'Última sync')}: ${formatDataBR(statusWk.ultimoEvento.em)}`
+              : tf('dp.folha.nuncaSincronizado', 'Nunca sincronizado')}
+          </span>
         </div>
-      </div>
-
-      {/* Ações de sincronização e cálculo */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-xs flex flex-wrap items-center gap-2 shrink-0">
-        <button
-          type="button"
-          onClick={sincronizarWk}
-          disabled={desabilitadoEdicao || !companyId || sincronizando}
-          title={tituloEdicao}
-          className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-abz-blue hover:bg-blue-700 rounded-xl transition shadow-xs disabled:opacity-50"
-        >
-          <FiRefreshCw className={`w-3.5 h-3.5 ${sincronizando ? 'animate-spin' : ''}`} />
-          {sincronizando ? tf('dp.folha.sincronizandoWk', 'Sincronizando WK...') : tf('dp.folha.sincronizarWk', 'Sincronizar WK')}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => inputArquivoRef.current?.click()}
-          disabled={desabilitadoEdicao || !companyId || importando}
-          title={tituloEdicao}
-          className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-blue-900 bg-blue-100 hover:bg-blue-200 rounded-xl transition shadow-xs disabled:opacity-50"
-        >
-          <FiUpload className={`w-3.5 h-3.5 ${importando ? 'animate-pulse' : ''}`} />
-          {importando ? tf('dp.folha.importandoArquivo', 'Importando arquivo...') : tf('dp.folha.importarArquivo', 'Importar arquivo')}
-        </button>
-        <input
-          ref={inputArquivoRef}
-          type="file"
-          accept=".xlsx,.xls"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) importarArquivo(file);
-          }}
-        />
-
-        <button
-          type="button"
-          onClick={calcularFolha}
-          disabled={desabilitadoEdicao || !sheet || sincronizando || calculando
-            || sheet.status === 'approved' || sheet.status === 'paid' || sheet.status === 'cancelled'}
-          title={tituloEdicao}
-          className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-indigo-900 bg-indigo-100 hover:bg-indigo-200 rounded-xl transition shadow-xs disabled:opacity-50"
-        >
-          <FiDollarSign className={`w-3.5 h-3.5 ${calculando ? 'animate-pulse' : ''}`} />
-          {calculando ? tf('dp.folha.calculandoFolha', 'Calculando folha...') : tf('dp.folha.calcularFolha', 'Calcular folha')}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setModalAprovacaoAberto(true)}
-          disabled={!sheet || sheet.status !== 'calculated'}
-          title={sheet?.status === 'draft'
-            ? tf('dp.folha.nenhumaFolha', 'Nenhuma folha encontrada para esta competência. Sincronize o WK ou os módulos internos para criar a folha rascunho.')
-            : tituloEdicao}
-          className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition shadow-xs disabled:opacity-50"
-        >
-          <FiSend className="w-3.5 h-3.5" />
-          {tf('dp.folha.enviarAprovacao', 'Enviar para aprovação')}
-        </button>
-
-        <span className="text-[11px] text-gray-500 ml-auto">
-          {statusWk?.ultimoEvento
-            ? `${tf('dp.folha.ultimaSync', 'Última sincronização WK')}: ${formatDataBR(statusWk.ultimoEvento.em)} · ${statusWk.ultimoEvento.fonte === 'api' ? tf('dp.folha.fonteApi', 'API') : tf('dp.folha.fonteArquivo', 'Arquivo')}`
-            : tf('dp.folha.nuncaSincronizado', 'Nunca sincronizado')}
-        </span>
       </div>
 
       {/* 422 — códigos WK sem mapeamento */}
@@ -712,7 +713,7 @@ export default function DpFolhaPanel() {
           {tf('dp.folha.nenhumaFolha', 'Nenhuma folha encontrada para esta competência. Sincronize o WK ou os módulos internos para criar a folha rascunho.')}
         </div>
       ) : (
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-xs space-y-3 shrink-0">
+        <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-xs space-y-2 shrink-0">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold text-gray-900">
@@ -751,30 +752,30 @@ export default function DpFolhaPanel() {
             )}
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-2">
-            <div className="p-2.5 rounded-lg border border-gray-200 bg-slate-50">
+          <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-1.5">
+            <div className="p-2 rounded-lg border border-gray-200 bg-slate-50">
               <span className="text-[10px] font-bold text-gray-500 uppercase block">{tf('dp.folha.totalColaboradores', 'Colaboradores')}</span>
-              <span className="text-lg font-black text-gray-900">{sheet.total_employees ?? '—'}</span>
+              <span className="text-base font-black text-gray-900">{sheet.total_employees ?? '—'}</span>
             </div>
-            <div className="p-2.5 rounded-lg border border-blue-100 bg-blue-50">
+            <div className="p-2 rounded-lg border border-blue-100 bg-blue-50">
               <span className="text-[10px] font-bold text-blue-700 uppercase block">{tf('dp.folha.brutos', 'Bruto')}</span>
-              <span className="text-lg font-black text-blue-900">{formatBRL(sheet.total_gross)}</span>
+              <span className="text-base font-black text-blue-900">{formatBRL(sheet.total_gross)}</span>
             </div>
-            <div className="p-2.5 rounded-lg border border-red-100 bg-red-50">
+            <div className="p-2 rounded-lg border border-red-100 bg-red-50">
               <span className="text-[10px] font-bold text-red-700 uppercase block">{tf('dp.folha.descontos', 'Descontos')}</span>
-              <span className="text-lg font-black text-red-900">{formatBRL(sheet.total_deductions)}</span>
+              <span className="text-base font-black text-red-900">{formatBRL(sheet.total_deductions)}</span>
             </div>
-            <div className="p-2.5 rounded-lg border border-emerald-100 bg-emerald-50">
+            <div className="p-2 rounded-lg border border-emerald-100 bg-emerald-50">
               <span className="text-[10px] font-bold text-emerald-700 uppercase block">{tf('dp.folha.liquidos', 'Líquido')}</span>
-              <span className="text-lg font-black text-emerald-900">{formatBRL(sheet.total_net)}</span>
+              <span className="text-base font-black text-emerald-900">{formatBRL(sheet.total_net)}</span>
             </div>
-            <div className="p-2.5 rounded-lg border border-gray-200 bg-gray-50">
+            <div className="p-2 rounded-lg border border-gray-200 bg-gray-50">
               <span className="text-[10px] font-bold text-gray-600 uppercase block">INSS / IRRF</span>
               <span className="text-sm font-black text-gray-900">{formatBRL(sheet.total_inss)} / {formatBRL(sheet.total_irrf)}</span>
             </div>
-            <div className="p-2.5 rounded-lg border border-yellow-100 bg-yellow-50">
+            <div className="p-2 rounded-lg border border-yellow-100 bg-yellow-50">
               <span className="text-[10px] font-bold text-yellow-800 uppercase block">FGTS</span>
-              <span className="text-lg font-black text-yellow-900">{formatBRL(sheet.total_fgts)}</span>
+              <span className="text-base font-black text-yellow-900">{formatBRL(sheet.total_fgts)}</span>
             </div>
           </div>
         </div>
@@ -893,7 +894,7 @@ export default function DpFolhaPanel() {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[700px] divide-y divide-gray-200 text-left text-xs">
+          <table className="w-full min-w-[580px] divide-y divide-gray-200 text-left text-xs">
             <thead className="bg-gray-50 text-gray-700 font-bold uppercase tracking-wider">
               <tr>
                 <th className="px-4 py-2.5">{tf('dp.folha.matricula', 'Matrícula')}</th>

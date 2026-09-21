@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.83.1] - 2026-09-21
+
+### 🖥️ Correções de visualização DP e sidebar R&S
+
+1. **Sidebar do portal no R&S**: criado `layout.tsx` em `src/app/department/indicadores/` com `MainLayout`, igualando ao padrão de todas as outras páginas de departamento.
+2. **DP compactado para notebook**: header menor, badges inline, botões icon-only abaixo de `lg`, filtros `w-32`, colunas Centro de Custo e Escala hidden em telas menores.
+3. **DpFolhaPanel responsivo**: cabeçalho e ações unificados em 1 card, grid de KPIs `grid-cols-3 lg:grid-cols-6`, labels de botões hidden em mobile, tabela WK `min-w-[580px]`.
+
 ## [5.83.0] - 2026-09-21
 
 ### 🧾 Módulo DP completo: Rubricas, WK Radar, motor de folha e aprovação multi-assinatura

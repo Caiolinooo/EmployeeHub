@@ -317,88 +317,84 @@ export default function DepartamentoPessoalPage() {
 
   return (
     <GtPageShell className="gap-4">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-gray-200 shadow-xs shrink-0">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-gray-200 shadow-xs shrink-0">
         <div>
           <div className="flex items-center gap-2">
-            <span className="p-2 bg-blue-50 text-abz-blue rounded-xl">
-              <FiBriefcase className="w-6 h-6" />
+            <span className="p-1.5 bg-blue-50 text-abz-blue rounded-xl">
+              <FiBriefcase className="w-5 h-5" />
             </span>
             <div>
-              <h1 className="text-2xl font-black text-gray-900">Departamento Pessoal (DP)</h1>
-              <p className="text-sm text-gray-500">Gestão unificada de colaboradores, escalas de trabalho, fechamento de folha e e-Social</p>
+              <h1 className="text-lg font-black text-gray-900">Departamento Pessoal (DP)</h1>
+              <p className="text-xs text-gray-500 hidden sm:block">Gestão unificada de colaboradores, escalas de trabalho, fechamento de folha e e-Social</p>
             </div>
           </div>
-          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <button
               type="button"
               onClick={() => setActiveTab('colaboradores')}
-              className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-200 transition"
+              className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-700 hover:bg-slate-200 transition"
               title={`${ativosCount} ativos na folha · ${colaboradores.length} carregados na consulta`}
             >
               <FiUsers className="w-3 h-3" />
-              <span className="tabular-nums">{filteredColabs.length} visíveis</span>
-              <span className="font-semibold text-slate-500">
-                · {ativosCount} ativos / {colaboradores.length} na consulta
-              </span>
+              <span className="tabular-nums">{filteredColabs.length}</span>
+              <span className="font-semibold text-slate-500 hidden sm:inline">· {ativosCount} ativos</span>
             </button>
             {listaColaboradoresIncompleta && (
               <span
-                className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 border border-amber-200"
+                className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-800 border border-amber-200"
                 title={`A API retornou ${colaboradores.length} de ${colaboradoresTotalApi} colaboradores`}
               >
-                Lista incompleta ({colaboradores.length}/{colaboradoresTotalApi})
+                {colaboradores.length}/{colaboradoresTotalApi}
               </span>
             )}
             <button
               type="button"
               onClick={() => setActiveTab('asos')}
-              className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800 hover:bg-amber-100 transition"
+              className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-800 hover:bg-amber-100 transition"
               title={`${asosVencidosCount} vencidos · ${asosPendentes.length - asosVencidosCount} a vencer em ${asoAntecedenciaDias}d`}
             >
               <FiAlertTriangle className="w-3 h-3" />
               <span className="tabular-nums">{asosPendentes.length} ASO</span>
-              <span className="font-semibold text-amber-700">
-                · {asosVencidosCount} vencidos · {asosPendentes.length - asosVencidosCount} em {asoAntecedenciaDias}d
-              </span>
+              <span className="font-semibold text-amber-700 hidden sm:inline">· {asosVencidosCount} vencidos</span>
             </button>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           <button
             onClick={handleDispararAlertasAso}
             disabled={isNotifyingAsos}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 rounded-xl transition shadow-xs disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 rounded-xl transition shadow-xs disabled:opacity-50"
             title="Disparar notificações de ASOs vencendo por e-mail e in-app"
           >
             <FiSend className={`w-3.5 h-3.5 ${isNotifyingAsos ? 'animate-spin' : ''}`} />
-            Alertas de ASO
+            <span className="hidden lg:inline">Alertas de ASO</span>
           </button>
 
           <button
             onClick={handleConsolidarEsocial}
             disabled={isConsolidatingEsocial}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-indigo-900 bg-indigo-100 hover:bg-indigo-200 rounded-xl transition shadow-xs disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-indigo-900 bg-indigo-100 hover:bg-indigo-200 rounded-xl transition shadow-xs disabled:opacity-50"
             title="Consolidar eventos S-2200, S-2220 e S-2230"
           >
             <FiShield className={`w-3.5 h-3.5 ${isConsolidatingEsocial ? 'animate-spin' : ''}`} />
-            Sincronizar e-Social
+            <span className="hidden lg:inline">e-Social</span>
           </button>
 
           <button
             onClick={() => router.push('/department/dp/novo')}
-            className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition shadow-sm"
           >
             <FiPlus className="w-3.5 h-3.5" />
-            Novo colaborador
+            <span className="hidden lg:inline">Novo colaborador</span>
           </button>
 
           <button
             onClick={() => setIsFechamentoModalOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-abz-blue hover:bg-blue-700 rounded-xl transition shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-white bg-abz-blue hover:bg-blue-700 rounded-xl transition shadow-sm"
           >
             <FiCalendar className="w-3.5 h-3.5" />
-            Fechamento Mensal DP
+            <span className="hidden lg:inline">Fechamento DP</span>
           </button>
         </div>
       </div>
@@ -463,8 +459,8 @@ export default function DepartamentoPessoalPage() {
 
       {activeTab === 'colaboradores' && (
         <div className="flex flex-col flex-1 min-h-0 overflow-y-auto lg:overflow-hidden gap-3">
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-xs space-y-3 shrink-0">
-            <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
+          <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-xs space-y-2 shrink-0">
+            <div className="flex flex-col md:flex-row gap-2 items-center justify-between">
               <div className="relative flex-1 w-full">
                 <FiSearch className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
                 <input
@@ -487,36 +483,36 @@ export default function DepartamentoPessoalPage() {
                   <option value="todos">Status: Todos</option>
                 </select>
 
-                <div className="w-40">
+                <div className="w-32">
                   <SearchableCreatableSelect
-                    className="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-abz-blue"
+                    className="w-full text-xs border border-gray-300 rounded-lg px-2 py-1.5 bg-white font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-abz-blue"
                     options={empresasOptions.map(emp => ({ id: emp, label: emp }))}
                     value={filterEmpresa}
                     onChange={setFilterEmpresa}
-                    emptyLabel="Todas Empresas"
-                    placeholder="Todas Empresas"
+                    emptyLabel="Empresas"
+                    placeholder="Empresas"
                   />
                 </div>
 
-                <div className="w-40">
+                <div className="w-32">
                   <SearchableCreatableSelect
-                    className="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-abz-blue"
+                    className="w-full text-xs border border-gray-300 rounded-lg px-2 py-1.5 bg-white font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-abz-blue"
                     options={embarcacoesOptions.map(emb => ({ id: emb, label: emb }))}
                     value={filterEmbarcacao}
                     onChange={setFilterEmbarcacao}
-                    emptyLabel="Todas Embarcações"
-                    placeholder="Todas Embarcações"
+                    emptyLabel="Embarcações"
+                    placeholder="Embarcações"
                   />
                 </div>
 
-                <div className="w-40">
+                <div className="w-32">
                   <SearchableCreatableSelect
-                    className="w-full text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-abz-blue"
+                    className="w-full text-xs border border-gray-300 rounded-lg px-2 py-1.5 bg-white font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-abz-blue"
                     options={cargosOptions.map(cg => ({ id: cg, label: cg }))}
                     value={filterCargo}
                     onChange={setFilterCargo}
-                    emptyLabel="Todos Cargos"
-                    placeholder="Todos Cargos"
+                    emptyLabel="Cargos"
+                    placeholder="Cargos"
                   />
                 </div>
 
@@ -533,17 +529,17 @@ export default function DepartamentoPessoalPage() {
           </div>
 
           <div className={`bg-white rounded-xl border border-gray-200 shadow-xs ${GT_PAGE_SCROLLPORT_CLASS}`}>
-            <table className="w-full min-w-[850px] divide-y divide-gray-200 text-left text-xs">
+            <table className="w-full min-w-[720px] divide-y divide-gray-200 text-left text-xs">
               <thead className="bg-gray-50 text-gray-700 font-bold uppercase tracking-wider sticky top-0 z-10">
                   <tr>
-                    <th className="px-4 py-3">Matrícula</th>
-                    <th className="px-4 py-3">Colaborador / CPF</th>
-                    <th className="px-4 py-3">Cargo</th>
-                    <th className="px-4 py-3">Centro de Custo</th>
-                    <th className="px-4 py-3">Empresa / Embarcação</th>
-                    <th className="px-4 py-3">Regime de Escala</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3 text-right">Ação</th>
+                    <th className="px-3 py-2">Matrícula</th>
+                    <th className="px-3 py-2">Colaborador / CPF</th>
+                    <th className="px-3 py-2">Cargo</th>
+                    <th className="px-3 py-2 hidden xl:table-cell">Centro de Custo</th>
+                    <th className="px-3 py-2">Empresa / Emb.</th>
+                    <th className="px-3 py-2 hidden lg:table-cell">Escala</th>
+                    <th className="px-3 py-2">Status</th>
+                    <th className="px-3 py-2 text-right">Ação</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
@@ -567,43 +563,43 @@ export default function DepartamentoPessoalPage() {
                         onClick={() => setSelectedColaboradorId(c.id)}
                         className="hover:bg-blue-50/50 cursor-pointer transition"
                       >
-                        <td className="px-4 py-3 font-mono font-bold text-gray-900">{c.matricula || '—'}</td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-2 font-mono font-bold text-gray-900">{c.matricula || '—'}</td>
+                        <td className="px-3 py-2">
                           <div className="font-bold text-gray-900">{c.nome_completo}</div>
                           <div className="text-[11px] font-mono text-gray-500">{formatCpfDisplay(c.cpf)}</div>
                         </td>
-                        <td className="px-4 py-3 text-gray-700 font-medium">{c.cargo_nome || '—'}</td>
-                        <td className="px-4 py-3 text-gray-600">{formatCentroCusto(c)}</td>
-                        <td className="px-4 py-3 text-gray-600">
+                        <td className="px-3 py-2 text-gray-700 font-medium">{c.cargo_nome || '—'}</td>
+                        <td className="px-3 py-2 text-gray-600 hidden xl:table-cell">{formatCentroCusto(c)}</td>
+                        <td className="px-3 py-2 text-gray-600">
                           <div>{c.empresa_nome || '—'}</div>
                           <div className="text-[11px] font-semibold text-abz-blue">{c.embarcacao_nome || '—'}</div>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-2 hidden lg:table-cell">
                           <span className="inline-flex px-2 py-0.5 rounded font-mono font-semibold bg-gray-100 text-gray-800 text-[11px]">
                             {formatRegime(c)}
                           </span>
                         </td>
-                        <td className="px-4 py-3">
-                          <div className="flex flex-col items-start gap-1">
-                            <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                        <td className="px-3 py-2">
+                          <div className="flex flex-col items-start gap-0.5">
+                            <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
                               c.ativo !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
                             }`}>
                               {c.ativo !== false ? 'Ativo' : 'Inativo'}
                             </span>
-                            <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                            <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
                               EMBARQUE_STATUS_CLASS[c.status_embarque] || 'bg-gray-100 text-gray-700'
                             }`}>
                               {EMBARQUE_STATUS_LABEL[c.status_embarque] || c.status_embarque || '—'}
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-3 py-2 text-right">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedColaboradorId(c.id);
                             }}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition"
+                            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition"
                           >
                             <FiEdit2 className="w-3 h-3" /> Editar
                           </button>
