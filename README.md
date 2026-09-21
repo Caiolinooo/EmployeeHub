@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.82.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.83.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,13 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.83.0)
+
+- **Aba Rubricas & Folha no DP**: sincronize o WK Radar (API ou arquivo), calcule a folha e envie para aprovação com múltiplos assinantes — tudo dentro do Departamento Pessoal, com auditoria completa.
+- **Motor de folha corrigido**: IRRF pela tabela progressiva, fórmulas de DSR/reflexo, perfis com teto de VT e rescisão completa (verbas 301–307) no desligamento.
+- **Férias e escala alimentam a folha**: dias de embarque e férias aprovadas viram rubricas na consolidação; o WK tem precedência e lançamentos manuais nunca são sobrescritos.
+- **Rubricas editáveis com Código WK**: cadastro completo em Configurações → Rubricas, com acesso controlado por permissões (visualizar, editar, aprovar).
 
 ## Nesta versão (5.82.0)
 

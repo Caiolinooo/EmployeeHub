@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { garantirNivelPayroll } from '@/lib/payroll/payroll-auth';
 import * as XLSX from 'xlsx';
 
 export const dynamic = 'force-dynamic';
@@ -10,6 +11,9 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(request: NextRequest) {
   try {
+    const gate = await garantirNivelPayroll(request, 'edit');
+    if (!gate.ok) return gate.error;
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const companyId = formData.get('companyId') as string;

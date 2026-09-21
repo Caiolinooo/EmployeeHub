@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { PayrollCompany, PayrollCompanyForm, PayrollApiResponse } from '@/types/payroll';
+import { garantirNivelPayroll } from '@/lib/payroll/payroll-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +14,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const gate = await garantirNivelPayroll(request, 'view');
+    if (!gate.ok) return gate.error;
+
     const { data, error } = await supabaseAdmin
       .from('payroll_companies')
       .select('*')
@@ -56,6 +60,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const gate = await garantirNivelPayroll(request, 'edit');
+    if (!gate.ok) return gate.error;
+
     const body: PayrollCompanyForm = await request.json();
 
     // Validar dados obrigatórios
@@ -136,6 +143,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const gate = await garantirNivelPayroll(request, 'edit');
+    if (!gate.ok) return gate.error;
+
     // Verificar se existem funcionários vinculados
     const { data: employees } = await supabaseAdmin
       .from('payroll_employees')

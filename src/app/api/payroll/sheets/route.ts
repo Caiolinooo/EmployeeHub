@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { PayrollSheet, PayrollSheetForm, PayrollApiResponse, PayrollPaginatedResponse } from '@/types/payroll';
+import { garantirNivelPayroll } from '@/lib/payroll/payroll-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,6 +11,9 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
+    const gate = await garantirNivelPayroll(request, 'view');
+    if (!gate.ok) return gate.error;
+
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -90,6 +94,9 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const gate = await garantirNivelPayroll(request, 'edit');
+    if (!gate.ok) return gate.error;
+
     const body: PayrollSheetForm = await request.json();
 
     // Validar dados obrigatórios

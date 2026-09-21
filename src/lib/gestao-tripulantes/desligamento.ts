@@ -4,6 +4,8 @@
  * típicas da rescisão. Cálculo de valores fica com a folha.
  */
 
+import { calcularRescisao } from '@/lib/payroll/rescisao';
+
 export const TIPOS_RESCISAO = [
   'sem_justa_causa',
   'pedido_demissao',
@@ -178,76 +180,43 @@ function verba(code: string, observation: string): VerbaRescisaoPrevista {
 
 /**
  * Itens de folha típicos por tipo de rescisão.
- * Valores ficam zerados para o DP calcular — só a lista de rubricas.
+ * Delega a matriz de rubricas ao motor rescisório (src/lib/payroll/rescisao.ts):
+ * chama calcularRescisao com dados de referência — os valores são irrelevantes,
+ * só importa QUAIS rubricas o motivo/aviso produzem — e mapeia os códigos
+ * gerados para verbas previstas. Valores ficam zerados para o DP calcular.
  */
 export function verbasParaRescisao(
   tipo: TipoRescisao,
   aviso: AvisoPrevioTipo,
 ): VerbaRescisaoPrevista[] {
-  const saldo = verba(
-    PAYROLL_CODE_RESCISAO.SALDO_SALARIO,
-    'Dias trabalhados no mês da rescisão',
-  );
-  const decimo = verba(
-    PAYROLL_CODE_RESCISAO.DECIMO_TERCEIRO_PROP,
-    '12 avos por mês trabalhado no ano (fração ≥ 15 dias)',
-  );
-  const feriasProp = verba(
-    PAYROLL_CODE_RESCISAO.FERIAS_PROP,
-    'Proporcionais do período aquisitivo + 1/3 constitucional',
-  );
-  const feriasVencidas = verba(
-    PAYROLL_CODE_RESCISAO.FERIAS_VENCIDAS,
-    'Incluir só se houver período vencido; zerar na folha se não houver',
-  );
-  const avisoIndenizado = verba(
-    PAYROLL_CODE_RESCISAO.AVISO_PREVIO,
-    aviso === 'indenizado'
-      ? tipo === 'acordo_mutuo'
-        ? 'Art. 484-A: aviso indenizado pela metade'
-        : 'Aviso prévio indenizado (30 + 3 dias/ano, máx. 90)'
-      : 'Aviso prévio indenizado',
-  );
-  const multa40 = verba(
-    PAYROLL_CODE_RESCISAO.MULTA_FGTS_40,
-    'Multa de 40% sobre o saldo do FGTS — saque + seguro-desemprego',
-  );
-  const multa20 = verba(
-    PAYROLL_CODE_RESCISAO.MULTA_FGTS_20,
-    'Art. 484-A: multa de 20% do FGTS; saque de 80%; sem seguro-desemprego',
-  );
+  const ano = new Date().getFullYear();
+  const verbasCalculadas = calcularRescisao({
+    salarioMensal: 1000,
+    admissao: `${ano - 10}-01-01`,
+    ultimoDia: `${ano}-12-31`,
+    motivo: tipo,
+    diasTrabalhadosNoMes: 30,
+    feriasVencidasCiclos: 1,
+    avisoPrevio: aviso,
+  });
 
-  switch (tipo) {
-    case 'sem_justa_causa':
-    case 'rescisao_indireta':
-      return [
-        saldo,
-        decimo,
-        feriasProp,
-        feriasVencidas,
-        ...(aviso === 'indenizado' ? [avisoIndenizado] : []),
-        multa40,
-      ];
-    case 'pedido_demissao':
-      return [saldo, decimo, feriasProp, feriasVencidas];
-    case 'justa_causa':
-      return [saldo, feriasVencidas];
-    case 'acordo_mutuo':
-      return [
-        saldo,
-        decimo,
-        feriasProp,
-        feriasVencidas,
-        ...(aviso === 'indenizado' ? [avisoIndenizado] : []),
-        multa20,
-      ];
-    case 'termino_contrato':
-      return [saldo, decimo, feriasProp, feriasVencidas];
-    default: {
-      const _never: never = tipo;
-      return _never;
-    }
-  }
+  const observacoes: Record<string, string> = {
+    [PAYROLL_CODE_RESCISAO.SALDO_SALARIO]: 'Dias trabalhados no mês da rescisão',
+    [PAYROLL_CODE_RESCISAO.DECIMO_TERCEIRO_PROP]: '12 avos por mês trabalhado no ano (fração ≥ 15 dias)',
+    [PAYROLL_CODE_RESCISAO.FERIAS_PROP]: 'Proporcionais do período aquisitivo + 1/3 constitucional',
+    [PAYROLL_CODE_RESCISAO.FERIAS_VENCIDAS]: 'Incluir só se houver período vencido; zerar na folha se não houver',
+    [PAYROLL_CODE_RESCISAO.AVISO_PREVIO]: aviso === 'indenizado'
+      ? (tipo === 'acordo_mutuo'
+        ? 'Art. 484-A: aviso indenizado pela metade'
+        : 'Aviso prévio indenizado (30 + 3 dias/ano, máx. 90)')
+      : 'Aviso prévio indenizado',
+    [PAYROLL_CODE_RESCISAO.MULTA_FGTS_40]: 'Multa de 40% sobre o saldo do FGTS — saque + seguro-desemprego',
+    [PAYROLL_CODE_RESCISAO.MULTA_FGTS_20]: 'Art. 484-A: multa de 20% do FGTS; saque de 80%; sem seguro-desemprego',
+  };
+
+  return verbasCalculadas.map((calculada) =>
+    verba(calculada.code, observacoes[calculada.code] ?? calculada.code)
+  );
 }
 
 export function seguroDesempregoElegivel(tipo: TipoRescisao): boolean {

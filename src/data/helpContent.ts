@@ -589,6 +589,282 @@ Atualize sua foto de perfil para facilitar a identificação.
                 keywords: ['teams', 'foto', 'perfil', 'avatar', 'imagem']
             }
         ]
+    },
+
+    // ==========================================
+    // CATEGORIA: INDICADORES R&S
+    // ==========================================
+    {
+        id: 'indicadores-rs',
+        name: 'Indicadores R&S',
+        description: 'Planilhas do Recrutamento & Seleção: importação, edição de linhas e KPIs de eficácia',
+        icon: 'FiBarChart2',
+        articles: [
+            {
+                id: 'rs-visao-geral',
+                title: 'O que é o módulo Indicadores R&S?',
+                content: `
+## O que é o módulo Indicadores R&S?
+
+O módulo **Indicadores R&S** centraliza as planilhas de vagas do **Recrutamento & Seleção** e transforma esses dados em indicadores de desempenho do processo de atendimento ao cliente.
+
+### Onde encontrar:
+
+1. Acesse o menu **Department**
+2. Clique em **"Indicadores R&S"**
+
+### O que você pode fazer:
+
+- 📥 **Importar planilhas** - Carregue arquivos XLSX com as vagas do R&S
+- 🗂️ **Gerenciar datasets** - Cada importação cria uma planilha (dataset) dividida em abas
+- ✏️ **Editar linhas** - Corrija, inclua ou remova registros direto na grade
+- 📊 **KPIs & Avaliação** - Acompanhe a eficácia de atendimento e veja o veredito do processo
+
+### Quem acessa:
+
+O acesso é controlado por permissões:
+
+- 👁️ **indicadores.view** - Visualizar planilhas e dados
+- ✏️ **indicadores.edit** - Editar linhas das abas
+- 📥 **indicadores.import** - Importar e substituir planilhas
+- ⚙️ **indicadores.admin** - Administração do módulo
+
+### Dica:
+
+Setores de R&S com o módulo liberado já visualizam a entrada no menu Department automaticamente.
+        `,
+                category: 'indicadores-rs',
+                keywords: ['indicadores', 'r&s', 'recrutamento', 'seleção', 'vagas', 'módulo', 'kpi']
+            },
+            {
+                id: 'rs-importar-planilha',
+                title: 'Como importar uma planilha?',
+                content: `
+## Importando uma Planilha
+
+A importação é feita por um assistente de **3 passos** a partir de um arquivo Excel.
+
+### Pré-requisito:
+
+- Permissão **indicadores.import**
+
+### Passo a passo:
+
+1. **Clique em "Importar planilha"** no cabeçalho da página
+
+2. **Passo 1 - Arquivo**:
+   - Selecione o arquivo **.xlsx** ou **.xls** do seu computador
+   - Clique em **"Analisar"** para o sistema ler o arquivo
+
+3. **Passo 2 - Revisão das abas**:
+   - Confira a pré-visualização de cada aba do arquivo
+   - Ajuste a **linha do cabeçalho** se a tabela não começar na primeira linha
+   - **Selecione** apenas as abas que deseja importar
+
+4. **Passo 3 - Confirmação**:
+   - Defina o **nome do dataset** (como a planilha aparecerá na página)
+   - Escolha o **modo de importação**:
+     - **Criar nova planilha** - Gera um novo dataset
+     - **Substituir planilha existente** - Atualiza um dataset já importado
+
+### Conceitos importantes:
+
+- 📁 **Dataset (planilha)** - O conjunto importado, exibido como um card na página
+- 📑 **Abas** - As guias do arquivo Excel, importadas dentro do dataset
+- 📃 **Linhas** - Os registros (vagas, substituições, retenção) de cada aba
+
+### Reimportar ou excluir:
+
+- Use **"Reimportar"** no card do dataset para atualizar os dados (modo substituir, mantendo o nome)
+- Use **"Excluir"** no card para remover o dataset e todas as suas abas (ação sem desfazer)
+        `,
+                category: 'indicadores-rs',
+                keywords: ['importar', 'planilha', 'xlsx', 'xls', 'dataset', 'aba', 'wizard', 'reimportar', 'excluir']
+            },
+            {
+                id: 'rs-editar-linhas',
+                title: 'Como editar linhas de uma aba?',
+                content: `
+## Editando Linhas de uma Aba
+
+Os dados de cada aba são editados em uma grade, direto no portal — sem precisar baixar o arquivo novamente.
+
+### Pré-requisito:
+
+- Permissão **indicadores.edit**
+
+### Passo a passo:
+
+1. **Abra a aba** pelo chip do dataset no card correspondente
+
+2. **Localize os registros**:
+   - Use a **busca** para filtrar por qualquer valor
+   - Clique nos títulos das colunas para **ordenar**
+
+3. **Adicione uma linha**:
+   - Clique em **"Nova linha"**
+   - Preencha os campos e salve
+
+4. **Edite uma linha**:
+   - Clique na linha (ou no ícone de edição)
+   - Ajuste os valores e salve
+
+5. **Exclua uma linha**:
+   - Clique no ícone de excluir e confirme
+   - A exclusão é **lógica (soft delete)**: o registro sai da grade e dos KPIs, mas fica preservado no histórico
+
+### Importante:
+
+- As alterações valem para todos que acessam o módulo
+- Linhas excluídas não entram mais no cálculo dos KPIs
+        `,
+                category: 'indicadores-rs',
+                keywords: ['editar', 'linhas', 'grade', 'nova linha', 'excluir', 'soft delete', 'busca', 'ordenação']
+            },
+            {
+                id: 'rs-kpis-avaliacao',
+                title: 'Como ler os KPIs e a avaliação?',
+                content: `
+## Lendo os KPIs e a Avaliação
+
+O painel de indicadores mede a **eficácia de atendimento**: o percentual de vagas enviadas ao cliente dentro do prazo.
+
+### Como abrir:
+
+1. Acesse um dataset na página **Indicadores R&S**
+2. Clique no botão **"KPIs & Avaliação"** no cabeçalho
+
+### Significado dos indicadores:
+
+- 🎯 **Taxa de eficácia** - % de vagas enviadas ao cliente dentro do prazo da vaga
+- ⏱️ **Tempo médio de envio** - Média de dias entre a abertura da vaga e o envio dos candidatos
+- 📅 **Meta de envio** - **7 dias** para envio dos candidatos ao cliente
+- ⏩ **Antecipação** - Quão antes do prazo os envios aconteceram, em média
+- 🤝 **Retenção por cliente** - % de colaboradores que permaneceram (não precisaram de substituição)
+
+### Níveis da avaliação:
+
+- 🟢 **Excelente** - Eficácia ≥ 90%
+- 🔵 **Bom** - Eficácia ≥ 75%
+- 🟡 **Atenção** - Eficácia ≥ 55%
+- 🔴 **Crítico** - Eficácia < 55%
+
+### Importante:
+
+Os KPIs nascem das **colunas reconhecidas** na importação: **status da vaga**, **tempo de envio** e **prazo**. Mantenha a planilha padronizada para que os indicadores sejam calculados corretamente.
+        `,
+                category: 'indicadores-rs',
+                keywords: ['kpi', 'kpis', 'avaliação', 'eficácia', 'meta', 'prazo', 'retenção', 'tempo de envio', 'indicadores']
+            }
+        ]
+    },
+    // ==========================================
+    {
+        id: 'dp-folha',
+        name: 'Rubricas & Folha (DP)',
+        description: 'Rubricas, sincronização WK Radar, cálculo e aprovação da folha no DP',
+        icon: 'FiFileText',
+        articles: [
+            {
+                id: 'dp-folha-visao-geral',
+                title: 'O que é a aba Rubricas & Folha no DP?',
+                content: `
+## O que é a aba Rubricas & Folha?
+
+A aba **Rubricas & Folha** (menu **Department → Departamento Pessoal**) fecha o ciclo da folha dentro do DP: sincronizar dados do **WK Radar**, consolidar verbas dos módulos do portal (escala/embarque e férias), **calcular** a folha e submeter à **aprovação multi-assinatura**.
+
+### Onde encontrar:
+
+1. Acesse o menu **Department**
+2. Clique em **"Departamento Pessoal"**
+3. Abra a aba **"Rubricas & Folha"**
+
+### Quem acessa:
+
+O acesso é controlado por permissões do módulo **Folha de Pagamento**:
+
+- 👁️ **folha.view** - Visualizar rubricas, planilhas e aprovações
+- ✏️ **folha.edit** - Lançamentos, sincronização e rubricas
+- ✅ **folha.approve** - Assinar/aprovar ou rejeitar folhas
+- ⚙️ **folha.admin** - Configurar aprovadores e administração
+
+### De onde vêm os dados:
+
+- 🔗 **WK Radar** - Colaboradores e rubricas (sync via API ou importação de arquivo)
+- 📋 **Escala/Embarque** - Dias ON/DBA/FI/STB/TRE do fechamento do portal
+- 🌴 **Férias** - Afastamentos de férias aprovados no módulo de férias
+- ✍️ **Lançamentos manuais** - Sempre preservados nos re-syncs
+
+### Precedência:
+
+Se o mesmo colaborador+rubrica vier do WK e dos módulos do portal, o valor do **WK vence** (é a fonte oficial de cálculo) e o item do portal é descartado com registro de auditoria.
+        `,
+                category: 'dp-folha',
+                keywords: ['folha', 'dp', 'rubricas', 'wk', 'wkradar', 'sincronização', 'aprovação', 'módulo']
+            },
+            {
+                id: 'dp-folha-fluxo',
+                title: 'Como sincronizar, calcular e aprovar a folha?',
+                content: `
+## Fluxo completo: sincronizar → calcular → aprovar
+
+Tudo acontece na aba **Rubricas & Folha** do DP, escolhendo **competência** (mês/ano) e **empresa/departamento**.
+
+### Passo a passo:
+
+1. **Sincronizar WK** - Puxa colaboradores e rubricas do WK Radar (precisa das credenciais configuradas) ou use **Importar arquivo** com a planilha exportada do WK
+
+2. **Consolidação dos módulos** - O portal adiciona automaticamente as verbas da escala/embarque e das férias do mês (itens marcados como origem "portal")
+
+3. **Calcular folha** - O motor calcula INSS, IRRF (tabela progressiva), FGTS e líquido por colaborador e por natureza (mensal, 13º, férias, rescisão)
+
+4. **Enviar para aprovação** - O modal lista os aprovadores; cada um assina com seu token até completar 100%
+
+5. **Resultado** - Com todas as assinaturas, a folha fica **Aprovada** (com hash de integridade); um aprovador pode **Rejeitar** com motivo — a folha volta para ajuste
+
+### Códigos não mapeados:
+
+Se a planilha do WK trouxer um código de rubrica que não existe no portal, a sincronização é **abortada** com a lista dos códigos. Mapeie cada um no cadastro de rubricas (**Folha de Pagamento → Configurações → Rubricas**, campo "Código WK") e sincronize de novo. O portal **nunca cria** rubricas automaticamente.
+
+### Re-sincronizar não perde dados:
+
+Re-executar a sincronização substitui apenas os itens vindos do WK e dos módulos do portal. Lançamentos **manuais** permanecem intactos.
+        `,
+                category: 'dp-folha',
+                keywords: ['sincronizar', 'calcular', 'aprovar', 'assinar', 'rejeitar', 'folha', 'fluxo', 'código', 'mapeamento']
+            },
+            {
+                id: 'dp-folha-rubricas',
+                title: 'Como criar e editar rubricas?',
+                content: `
+## Criando e editando rubricas
+
+O cadastro de rubricas fica em **Folha de Pagamento → Configurações → Rubricas** e é a fonte única dos códigos usados pela folha e pelo mapeamento do WK.
+
+### Pré-requisito:
+
+- Permissão **folha.edit**
+
+### Campos:
+
+- **Código** e **Tipo** (provento/desconto/outros) - Formam a identidade da rubrica; ficam **bloqueados** depois que a rubrica tem lançamentos em folha
+- **Nome e descrição** - Aparecem no holerite e nas telas
+- **Tipo de cálculo**:
+  - **Valor fixo** - Quantidade × valor
+  - **Percentual** - % sobre a referência (ex.: adicional noturno 20%)
+  - **Fórmula** - Chave de fórmula registrada (**dsr**, **reflexo**, **reflexo_he**)
+  - **Legal** - Calculada pelo motor (INSS, IRRF, FGTS)
+- **Código WK** - O código equivalente no WK Radar; é o que conecta a planilha do WK à rubrica do portal
+
+### Desativar vs excluir:
+
+- **Desativar** (exclusão lógica) - A rubrica sai das listas mas o histórico de lançamentos continua correto. É o comportamento padrão do botão excluir
+- Rubricas **do sistema** (INSS, IRRF, FGTS) nunca devem ser desativadas
+        `,
+                category: 'dp-folha',
+                keywords: ['rubrica', 'rubricas', 'criar', 'editar', 'código wk', 'fórmula', 'dsr', 'reflexo', 'fixed', 'percentual', 'legal', 'desativar']
+            }
+        ]
     }
 ];
 

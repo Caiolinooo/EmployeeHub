@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.83.0] - 2026-09-21
+
+### 🧾 Módulo DP completo: Rubricas, WK Radar, motor de folha e aprovação multi-assinatura
+
+1. **Aba "Rubricas & Folha" no DP**: fluxo completo em uma tela — sincronizar WK Radar (API ou importação de arquivo), consolidar verbas, calcular a folha e enviar para aprovação multi-assinatura (padrão do fechamento GT v2: aprovadores configuráveis em `settings`, hash SHA-256, rejeição com motivo e reenvio).
+2. **Integração WK Radar sem duplicar banco**: colaboradores e lançamentos caem direto nas tabelas `payroll_*` existentes (zero tabelas novas — apenas 3 colunas: `payroll_codes.codigo_wk`, `payroll_sheet_items.origem`, `payroll_sheets.aprovacao`). Re-sync idempotente que preserva lançamentos manuais; códigos não mapeados abortam a sincronização com lista acionável.
+3. **Motor de cálculo corrigido**: IRRF progressivo aplicando o menor entre tabela legal e dedução simplificada; fórmulas reais `dsr`/`reflexo`/`reflexo_he` (sem eval); perfis de cálculo (teto de VT, flags de INSS/IRRF/FGTS); tributos calculados por natureza (mensal, 13º, férias, rescisão); rescisão completa (verbas 301–307) agora consumida pelo fluxo de desligamento.
+4. **Os módulos conversam**: dias de escala/embarque (ON/DBA/FI/STB/TRE do fechamento) e férias aprovadas (`gt_afastamentos`) entram na folha automaticamente na consolidação (`origem='gt'`); se o mesmo colaborador+rubrica vier do WK, o valor do WK vence e o descarte é auditado.
+5. **CRUD de rubricas com ACL do portal**: cadastro real em Configurações → Rubricas (criar, editar, desativar, mapear Código WK), módulo "Folha de Pagamento" no catálogo de permissões (`folha.view/edit/approve/admin`) e gate em 3 camadas (ADMIN → ACL → setor DP) em todas as rotas de folha.
+6. **KPIs do Indicadores R&S**: nova página de KPIs com avaliação de eficácia do processo, motor validado contra as 2.133 linhas reais e artigo de ajuda dedicado.
+7. **Verificação**: 119 checks em 4 scripts (`verify-payroll-motor`, `verify-dp-wk`, `verify-modulos-internos`, `verify-codes-crud`) + testes de desligamento/fechamento verdes; auditoria de sync/aprovação gravada em `payroll_audit_log`.
+
 ## [5.82.0] - 2026-09-18
 
 ### 📊 Novo módulo Indicadores R&S: importação dinâmica de planilhas e gestão em modal

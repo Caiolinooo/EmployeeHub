@@ -43,6 +43,15 @@ UI de `/department/dp` para o DP operar cadastro de colaboradores, fechamento de
 - Clique na linha do colaborador → `CollaboratorModal` → Desligar / aba Desligamento. A lista DP não tem botão próprio de rescisão.
 - Header DP tem **Novo colaborador** → `/department/dp/novo`. Salvar volta para `/department/dp`. Editar no modal cobre banco/PIS/CTPS/salário/contrato, não só identidade.
 
+## Aba Rubricas & Folha (2026-09, plano dp-rubricas-wkradar)
+
+- Quarta aba da página (`'colaboradores' | 'fechamento' | 'asos' | 'folha'`); painel `src/components/dp/DpFolhaPanel.tsx`. Visibilidade/ações por features do módulo ACL **folha** (`folha.view|edit|approve|admin` em `src/config/modules.ts`; gate server `src/lib/payroll/payroll-auth.ts` — 3 camadas: ADMIN → ACL → setor DP-like).
+- Fluxo do painel: competência + empresa/departamento → **Sincronizar WK** (`POST /api/dp/wk/sync` fonte `'api'` ou multipart `'arquivo'`; roda WK **e** consolidação dos módulos internos) → **Calcular folha** (`PUT /api/payroll/calculate { sheetId }`) → preview por colaborador (badge origem `manual|wk|gt`) → **Enviar para aprovação** (`AprovacaoFolhaModal`, rotas `/api/payroll/sheets/[id]/aprovacao` GET/POST/DELETE) → `status='approved'` ao 100% das assinaturas. Rejeição → `aprovacao.rejeicao` em `payroll_sheets.aprovacao` JSONB, sheet permanece `'calculated'`.
+- Estado de sync: `GET /api/dp/wk/status` (último evento `wk_sync` de `payroll_audit_log` + contagens `origem='wk'`). Colaboradores WK: `GET /api/dp/wk/colaboradores` (paginada, SELECT em `payroll_employees`). Credenciais Radar.API: `GET|PUT /api/dp/wk/credentials` (admin; via app_secrets `wkradar_api_url`/`wkradar_api_token`).
+- Férias/escala → folha: `src/lib/payroll/fontes-dp.ts` (`sincronizarModulosInternos`; rota dedicada `POST /api/dp/wk/modulos-internos`). Fonte de férias segue sendo `gt_afastamentos` (via `leaveService`); folha lê na consolidação, não duplica estado. Precedência WK > GT auditada.
+- Mapeamento WK ↔ portal: `payroll_codes.codigo_wk` (unique parcial). Sync aborta 422 com lista de códigos não mapeados; correção na UI **Folha de Pagamento → Configurações → Rubricas** (CRUD completo: `GET|POST /api/payroll/codes`, `PUT|DELETE /api/payroll/codes/[id]` — DELETE é soft `is_active=false`). Nunca auto-criar rubrica.
+- Motor: `src/lib/payroll/calculations.ts` (IRRF min(legal, simplificada 607,20); `FORMULAS_FOLHA` `'dsr'|'reflexo'|'reflexo_he'`; perfis `PerfilCalculo` derivados de `payroll_calculation_profiles.rules`; tributos POR natureza `mensal|ferias|decimo|rescisao`) + `src/lib/payroll/rescisao.ts` (`calcularRescisao`; códigos do seed 301–307). Aprovação: `src/lib/payroll/aprovacao.ts` clona `fechamento-assinatura.ts` (interfaces importadas, hash SHA-256); aprovadores em `settings` key `payroll_aprovadores_config` (`GET|PUT /api/payroll/aprovadores`).
+
 ## Child DOX Index
 
 _(none)_

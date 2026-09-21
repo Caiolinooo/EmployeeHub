@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { garantirNivelPayroll } from '@/lib/payroll/payroll-auth';
 import * as XLSX from 'xlsx';
 
 // Force this route to be dynamic
@@ -13,6 +14,9 @@ export const runtime = 'nodejs';
  */
 export async function GET(request: NextRequest) {
   try {
+    const gate = await garantirNivelPayroll(request, 'view');
+    if (!gate.ok) return gate.error;
+
     // Runtime check to ensure this only runs during actual HTTP requests
     if (typeof window !== 'undefined') {
       return NextResponse.json({

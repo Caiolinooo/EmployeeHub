@@ -563,6 +563,27 @@ export const SYSTEM_MODULES: ModuleDefinition[] = [
     visible: true,
     acl: crudAcl('dp', 'Departamento Pessoal', { read: STAFF, write: STAFF, admin: ADMIN_ONLY }),
   },
+  {
+    key: 'folha',
+    name: 'Folha de Pagamento',
+    description: 'Rubricas, sincronização WK Radar, cálculo e aprovação da folha',
+    defaultRoles: STAFF,
+    category: 'department',
+    href: '/folha-pagamento',
+    visible: true,
+    features: [
+      feat('folha.view', 'Visualizar folha', 'Consultar rubricas, planilhas e aprovações', STAFF, false),
+      feat('folha.edit', 'Editar folha', 'Lançamentos manuais, rubricas e sincronização', STAFF),
+      feat('folha.approve', 'Aprovar folha', 'Assinar/aprovar ou rejeitar folhas calculadas', STAFF),
+      feat('folha.admin', 'Administrar folha', 'Configurar aprovadores e administração total', ADMIN_ONLY),
+    ],
+    acl: [
+      acl('folha.view', 'view', 'Visualizar folha de pagamento', 0, STAFF),
+      acl('folha.edit', 'edit', 'Editar lançamentos e rubricas', 2, STAFF),
+      acl('folha.approve', 'approve', 'Aprovar ou rejeitar folhas', 2, STAFF),
+      acl('folha.admin', 'admin', 'Admin total', 3, ADMIN_ONLY),
+    ],
+  },
 ];
 
 /** ACL resources that are not a sidebar module. */
@@ -716,6 +737,7 @@ const ACL_RESOURCE_LABELS: Record<string, string> = {
   kpi: 'KPIs',
   avaliacao: 'Avaliação de Desempenho',
   dp: 'Departamento Pessoal',
+  folha: 'Folha de Pagamento',
   calendario: 'Calendário',
   ponto: 'Ponto',
   chat: 'Chat',

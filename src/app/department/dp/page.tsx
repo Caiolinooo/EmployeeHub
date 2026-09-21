@@ -8,13 +8,14 @@ import { formatCpf } from '@/lib/utils/identity';
 import CollaboratorModal from '@/components/gestao-tripulantes/CollaboratorModal';
 import ModalAprovacaoFechamento from '@/components/gestao-tripulantes/ModalAprovacaoFechamento';
 import AsoAgendamentoDpPanel from '@/components/gestao-tripulantes/AsoAgendamentoDpPanel';
+import DpFolhaPanel from '@/components/dp/DpFolhaPanel';
 import GtPageShell, { GT_PAGE_SCROLLPORT_CLASS } from '@/components/gestao-tripulantes/GtPageShell';
 import SearchableCreatableSelect from '@/components/gestao-tripulantes/SearchableCreatableSelect';
 import { mesAnoAtualBRT } from '@/components/gestao-tripulantes/fechamento/fechamentoV2';
 import { toast } from 'react-hot-toast';
 import {
   FiUsers, FiCalendar, FiAlertTriangle, FiSearch, FiEdit2, FiRefreshCw, FiSend,
-  FiBriefcase, FiShield, FiPlus,
+  FiBriefcase, FiShield, FiPlus, FiDollarSign,
 } from 'react-icons/fi';
 import { formatRegimeDisplay } from '@/lib/gestao-tripulantes/regime-escala';
 
@@ -106,10 +107,12 @@ function formatCpfDisplay(cpf: string | null | undefined): string {
 const COLABORADORES_FETCH_LIMIT = 5000;
 
 export default function DepartamentoPessoalPage() {
-  const { user, isLoading: authLoading } = useSupabaseAuth();
+  const { user, isLoading: authLoading, hasFeature } = useSupabaseAuth();
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<'colaboradores' | 'fechamento' | 'asos'>('colaboradores');
+  const podeVerFolha = hasFeature('folha.view');
+
+  const [activeTab, setActiveTab] = useState<'colaboradores' | 'fechamento' | 'asos' | 'folha'>('colaboradores');
   const [colaboradores, setColaboradores] = useState<ColaboradorItem[]>([]);
   const [asosPendentes, setAsosPendentes] = useState<AsoVencimentoItem[]>([]);
   const [asoAntecedenciaDias, setAsoAntecedenciaDias] = useState(60);
@@ -435,6 +438,19 @@ export default function DepartamentoPessoalPage() {
             <FiAlertTriangle className="w-4 h-4 text-amber-500" />
             Vencimentos de ASO ({asosPendentes.length})
           </button>
+          {podeVerFolha && (
+            <button
+              onClick={() => setActiveTab('folha')}
+              className={`pb-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
+                activeTab === 'folha'
+                  ? 'border-abz-blue text-abz-blue'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <FiDollarSign className="w-4 h-4 text-emerald-500" />
+              Rubricas &amp; Folha
+            </button>
+          )}
           <button
             onClick={() => router.push('/department/e-social')}
             className="pb-3 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-indigo-600 flex items-center gap-2 transition-all whitespace-nowrap"
@@ -706,6 +722,12 @@ export default function DepartamentoPessoalPage() {
             onOpenColaborador={(id) => setSelectedColaboradorId(id)}
             onRefreshVencimentos={loadData}
           />
+        </div>
+      )}
+
+      {activeTab === 'folha' && podeVerFolha && (
+        <div className="flex flex-col flex-1 min-h-0 overflow-y-auto gap-3">
+          <DpFolhaPanel />
         </div>
       )}
 

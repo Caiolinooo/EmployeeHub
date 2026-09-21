@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { garantirNivelPayroll } from '@/lib/payroll/payroll-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,9 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
+    const gate = await garantirNivelPayroll(request, 'view');
+    if (!gate.ok) return gate.error;
+
     const { searchParams } = new URL(request.url);
     const sheetId = searchParams.get('sheetId');
     const employeeId = searchParams.get('employeeId');
@@ -68,6 +72,9 @@ export async function GET(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
   try {
+    const gate = await garantirNivelPayroll(request, 'edit');
+    if (!gate.ok) return gate.error;
+
     const body = await request.json();
     const { employeeId, sheetId, manualData } = body;
 
@@ -146,6 +153,9 @@ export async function PUT(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const gate = await garantirNivelPayroll(request, 'edit');
+    if (!gate.ok) return gate.error;
+
     const body = await request.json();
     const { sheetId, updates } = body;
 

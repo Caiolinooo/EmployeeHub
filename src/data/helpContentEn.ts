@@ -565,5 +565,281 @@ Update your profile picture for easier identification.
                 keywords: ['teams', 'picture', 'profile', 'avatar', 'image']
             }
         ]
+    },
+
+    // ==========================================
+    // CATEGORY: R&S INDICATORS
+    // ==========================================
+    {
+        id: 'indicadores-rs',
+        name: 'R&S Indicators',
+        description: 'Recruitment & Selection spreadsheets: import, row editing and effectiveness KPIs',
+        icon: 'FiBarChart2',
+        articles: [
+            {
+                id: 'rs-visao-geral',
+                title: 'What is the R&S Indicators module?',
+                content: `
+## What is the R&S Indicators module?
+
+The **R&S Indicators** module centralizes the Recruitment & Selection job spreadsheets and turns that data into performance indicators for the client service process.
+
+### Where to find it:
+
+1. Open the **Department** menu
+2. Click **"R&S Indicators"**
+
+### What you can do:
+
+- 📥 **Import spreadsheets** - Upload XLSX files with R&S job data
+- 🗂️ **Manage datasets** - Each import creates a spreadsheet (dataset) divided into tabs
+- ✏️ **Edit rows** - Fix, add or remove records directly in the grid
+- 📊 **KPIs & Assessment** - Track service effectiveness and see the process verdict
+
+### Who has access:
+
+Access is controlled by permissions:
+
+- 👁️ **indicadores.view** - View spreadsheets and data
+- ✏️ **indicadores.edit** - Edit tab rows
+- 📥 **indicadores.import** - Import and replace spreadsheets
+- ⚙️ **indicadores.admin** - Module administration
+
+### Tip:
+
+R&S teams with the module enabled automatically see the entry in the Department menu.
+        `,
+                category: 'indicadores-rs',
+                keywords: ['indicators', 'r&s', 'recruitment', 'selection', 'jobs', 'module', 'kpi']
+            },
+            {
+                id: 'rs-importar-planilha',
+                title: 'How to import a spreadsheet?',
+                content: `
+## Importing a Spreadsheet
+
+Imports run through a **3-step** wizard starting from an Excel file.
+
+### Prerequisite:
+
+- **indicadores.import** permission
+
+### Step-by-step:
+
+1. **Click "Import spreadsheet"** in the page header
+
+2. **Step 1 - File**:
+   - Select the **.xlsx** or **.xls** file from your computer
+   - Click **"Analyze"** so the system can read the file
+
+3. **Step 2 - Tab review**:
+   - Check the preview of each file tab
+   - Adjust the **header row** if the table does not start on the first line
+   - **Select** only the tabs you want to import
+
+4. **Step 3 - Confirmation**:
+   - Set the **dataset name** (how the spreadsheet appears on the page)
+   - Choose the **import mode**:
+     - **Create new spreadsheet** - Generates a new dataset
+     - **Replace existing spreadsheet** - Updates a dataset that was already imported
+
+### Key concepts:
+
+- 📁 **Dataset (spreadsheet)** - The imported set, shown as a card on the page
+- 📑 **Tabs** - The Excel file sheets, imported inside the dataset
+- 📃 **Rows** - The records (jobs, replacements, retention) in each tab
+
+### Reimport or delete:
+
+- Use **"Reimport"** on the dataset card to refresh the data (replace mode, keeping the name)
+- Use **"Delete"** on the card to remove the dataset and all of its tabs (cannot be undone)
+        `,
+                category: 'indicadores-rs',
+                keywords: ['import', 'spreadsheet', 'xlsx', 'xls', 'dataset', 'tab', 'wizard', 'reimport', 'delete']
+            },
+            {
+                id: 'rs-editar-linhas',
+                title: 'How to edit rows in a tab?',
+                content: `
+## Editing Rows in a Tab
+
+Each tab's data is edited in a grid, directly in the portal — no need to download the file again.
+
+### Prerequisite:
+
+- **indicadores.edit** permission
+
+### Step-by-step:
+
+1. **Open the tab** through the dataset chip on the corresponding card
+
+2. **Find records**:
+   - Use **search** to filter by any value
+   - Click column titles to **sort**
+
+3. **Add a row**:
+   - Click **"New row"**
+   - Fill in the fields and save
+
+4. **Edit a row**:
+   - Click the row (or the edit icon)
+   - Adjust the values and save
+
+5. **Delete a row**:
+   - Click the delete icon and confirm
+   - Deletion is **logical (soft delete)**: the record leaves the grid and the KPIs but stays preserved in history
+
+### Important:
+
+- Changes apply to everyone who accesses the module
+- Deleted rows are no longer included in KPI calculations
+        `,
+                category: 'indicadores-rs',
+                keywords: ['edit', 'rows', 'grid', 'new row', 'delete', 'soft delete', 'search', 'sort']
+            },
+            {
+                id: 'rs-kpis-avaliacao',
+                title: 'How to read the KPIs and the assessment?',
+                content: `
+## Reading the KPIs and the Assessment
+
+The indicators panel measures **service effectiveness**: the percentage of jobs sent to the client within the deadline.
+
+### How to open it:
+
+1. Open a dataset on the **R&S Indicators** page
+2. Click the **"KPIs & Assessment"** button in the header
+
+### What each indicator means:
+
+- 🎯 **Effectiveness rate** - % of jobs sent to the client within the job deadline
+- ⏱️ **Average sending time** - Average days between job opening and candidate submission
+- 📅 **Sending target** - **7 days** to send candidates to the client
+- ⏩ **Lead time buffer** - How far ahead of the deadline submissions happen, on average
+- 🤝 **Retention per client** - % of employees who stayed (no replacement needed)
+
+### Assessment levels:
+
+- 🟢 **Excellent** - Effectiveness ≥ 90%
+- 🔵 **Good** - Effectiveness ≥ 75%
+- 🟡 **Attention** - Effectiveness ≥ 55%
+- 🔴 **Critical** - Effectiveness < 55%
+
+### Important:
+
+KPIs are born from the **recognized columns** in the import: **job status**, **sending time** and **deadline**. Keep the spreadsheet standardized so the indicators are calculated correctly.
+        `,
+                category: 'indicadores-rs',
+                keywords: ['kpi', 'kpis', 'assessment', 'effectiveness', 'target', 'deadline', 'retention', 'sending time', 'indicators']
+            }
+        ]
+    },
+    // ==========================================
+    {
+        id: 'dp-folha',
+        name: 'Payroll Items & Payroll (DP)',
+        description: 'Payroll items, WK Radar sync, payroll calculation and approval in the DP module',
+        icon: 'FiFileText',
+        articles: [
+            {
+                id: 'dp-folha-visao-geral',
+                title: 'What is the Payroll Items & Payroll tab in the DP module?',
+                content: `
+## What is the Payroll Items & Payroll tab?
+
+The **Payroll Items & Payroll** tab (menu **Department → HR Department**) closes the payroll cycle inside the DP: sync data from **WK Radar**, consolidate entries from portal modules (crew scale/boarding and vacations), **calculate** the payroll and submit it for **multi-signature approval**.
+
+### Where to find it:
+
+1. Open the **Department** menu
+2. Click **"HR Department"**
+3. Open the **"Payroll Items & Payroll"** tab
+
+### Who can access:
+
+Access is controlled by the **Payroll** module permissions:
+
+- 👁️ **folha.view** - View payroll items, sheets and approvals
+- ✏️ **folha.edit** - Entries, sync and payroll items
+- ✅ **folha.approve** - Sign/approve or reject payroll sheets
+- ⚙️ **folha.admin** - Configure approvers and full administration
+
+### Where the data comes from:
+
+- 🔗 **WK Radar** - Employees and payroll items (API sync or file import)
+- 📋 **Scale/Boarding** - ON/DBA/FI/STB/TRE days from the portal closing
+- 🌴 **Vacations** - Approved vacation leave from the vacations module
+- ✍️ **Manual entries** - Always preserved across re-syncs
+
+### Precedence:
+
+If the same employee+item comes from WK and from portal modules, the **WK value wins** (it is the official calculation source) and the portal item is discarded with an audit record.
+        `,
+                category: 'dp-folha',
+                keywords: ['payroll', 'hr', 'payroll items', 'wk', 'wkradar', 'sync', 'approval', 'module']
+            },
+            {
+                id: 'dp-folha-fluxo',
+                title: 'How to sync, calculate and approve the payroll?',
+                content: `
+## Full flow: sync → calculate → approve
+
+Everything happens in the DP **Payroll Items & Payroll** tab, choosing the **competence** (month/year) and **company/department**.
+
+### Step by step:
+
+1. **Sync WK** - Pulls employees and payroll items from WK Radar (credentials required) or use **Import file** with the WK-exported spreadsheet
+
+2. **Module consolidation** - The portal automatically adds scale/boarding and vacation entries for the month (items flagged as "portal" origin)
+
+3. **Calculate payroll** - The engine computes INSS, IRRF (progressive table), FGTS and net pay per employee and per nature (monthly, 13th salary, vacation, termination)
+
+4. **Submit for approval** - The modal lists the approvers; each one signs with their token until 100% is reached
+
+5. **Result** - With all signatures, the sheet becomes **Approved** (with integrity hash); an approver can **Reject** with a reason — the sheet goes back for adjustment
+
+### Unmapped codes:
+
+If the WK spreadsheet brings a payroll code that does not exist in the portal, the sync is **aborted** with the code list. Map each one in the payroll items registry (**Payroll → Settings → Payroll Items**, "WK Code" field) and sync again. The portal **never creates** items automatically.
+
+### Re-syncing loses nothing:
+
+Re-running the sync replaces only WK and portal items. **Manual** entries stay intact.
+        `,
+                category: 'dp-folha',
+                keywords: ['sync', 'calculate', 'approve', 'sign', 'reject', 'payroll', 'flow', 'code', 'mapping']
+            },
+            {
+                id: 'dp-folha-rubricas',
+                title: 'How to create and edit payroll items?',
+                content: `
+## Creating and editing payroll items
+
+The payroll items registry lives in **Payroll → Settings → Payroll Items** and is the single source of codes used by the payroll and the WK mapping.
+
+### Prerequisite:
+
+- **folha.edit** permission
+
+### Fields:
+
+- **Code** and **Type** (earning/deduction/other) - Form the item identity; they become **locked** once the item has payroll entries
+- **Name and description** - Shown on the payslip and screens
+- **Calculation type**:
+  - **Fixed** - Quantity × value
+  - **Percentage** - % over the reference (e.g. night shift 20%)
+  - **Formula** - Registered formula key (**dsr**, **reflexo**, **reflexo_he**)
+  - **Legal** - Computed by the engine (INSS, IRRF, FGTS)
+- **WK Code** - The equivalent code in WK Radar; it connects the WK spreadsheet to the portal item
+
+### Deactivate vs delete:
+
+- **Deactivate** (soft delete) - The item leaves the lists but entry history stays correct. It is the default delete behavior
+- **System** items (INSS, IRRF, FGTS) must never be deactivated
+        `,
+                category: 'dp-folha',
+                keywords: ['payroll item', 'create', 'edit', 'wk code', 'formula', 'dsr', 'reflexo', 'fixed', 'percentage', 'legal', 'deactivate']
+            }
+        ]
     }
 ];

@@ -92,6 +92,8 @@ export interface PayrollCode {
   value: number;
   formula?: string;
   legalType?: PayrollLegalType;
+  /** Código equivalente no WK Radar (coluna codigo_wk, índice único parcial). */
+  codigoWk?: string | null;
   isSystem: boolean;
   isActive: boolean;
   createdAt: Date;

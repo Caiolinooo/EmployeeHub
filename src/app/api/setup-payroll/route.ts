@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { garantirNivelPayroll } from '@/lib/payroll/payroll-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +10,9 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(request: NextRequest) {
   try {
+    const gate = await garantirNivelPayroll(request, 'edit');
+    if (!gate.ok) return gate.error;
+
     console.log('🚀 Iniciando configuração do banco de dados...');
 
     const companyId = '550e8400-e29b-41d4-a716-446655440000';

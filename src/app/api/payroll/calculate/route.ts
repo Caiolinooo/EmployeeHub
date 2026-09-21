@@ -1,9 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { calculateEmployeePayroll } from '@/lib/payroll/calculations';
+import { calculateEmployeePayroll, PerfilCalculo } from '@/lib/payroll/calculations';
 import { PayrollApiResponse, PayrollCalculationResult, PayrollCalculationInput } from '@/types/payroll';
+import { garantirNivelPayroll } from '@/lib/payroll/payroll-auth';
 
 export const dynamic = 'force-dynamic';
+
+/**
+ * Converte o rules JSONB de payroll_calculation_profiles no PerfilCalculo do motor.
+ * Formato legado (seed): { inss: { enabled }, irrf: { enabled }, fgts: { enabled },
+ * vale_transporte: { percentage, max_percentage_salary } }.
+ */
+function derivarPerfilDeRules(rules: Record<string, unknown> | undefined | null): PerfilCalculo | undefined {
+  if (!rules || typeof rules !== 'object') return undefined;
+
+  const desligado = (v: unknown): boolean => {
+    if (typeof v === 'boolean') return !v;
+    if (v && typeof v === 'object' && 'enabled' in v) {
+      const { enabled } = v; // narrowing via `in` — prop infere unknown
+      return enabled === false;
+    }
+    return false;
+  };
+
+  let tetoVT: number | undefined;
+  const vt = rules['vale_transporte'];
+  if (vt && typeof vt === 'object' && 'max_percentage_salary' in vt) {
+    const { max_percentage_salary } = vt;
+    if (typeof max_percentage_salary === 'number') tetoVT = max_percentage_salary;
+  }
+
+  const perfil: PerfilCalculo = {
+    ignorarInss: desligado(rules['inss']),
+    ignorarIrrf: desligado(rules['irrf']),
+    ignorarFgts: desligado(rules['fgts']),
+    tetoVTPercentual: tetoVT,
+  };
+  const temRegra = perfil.ignorarInss || perfil.ignorarIrrf || perfil.ignorarFgts || typeof tetoVT === 'number';
+  return temRegra ? perfil : undefined;
+}
 
 /**
  * POST /api/payroll/calculate
@@ -11,6 +46,9 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(request: NextRequest) {
   try {
+    const gate = await garantirNivelPayroll(request, 'edit');
+    if (!gate.ok) return gate.error;
+
     const body: PayrollCalculationInput = await request.json();
 
     // Validar dados obrigatórios
@@ -21,8 +59,8 @@ export async function POST(request: NextRequest) {
       } as PayrollApiResponse<null>, { status: 400 });
     }
 
-    // Calcular folha de pagamento
-    const result = calculateEmployeePayroll(body.employee, body.items);
+    // Calcular folha de pagamento (perfil opcional do body)
+    const result = calculateEmployeePayroll(body.employee, body.items, derivarPerfilDeRules(body.profile?.rules));
 
     return NextResponse.json({
       success: true,
@@ -44,6 +82,9 @@ export async function POST(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
   try {
+    const gate = await garantirNivelPayroll(request, 'edit');
+    if (!gate.ok) return gate.error;
+
     const { sheetId } = await request.json();
 
     if (!sheetId) {
@@ -119,6 +160,16 @@ export async function PUT(request: NextRequest) {
       .select('*')
       .eq('sheet_id', sheetId);
 
+    // Perfil de cálculo (default ativo da empresa) → PerfilCalculo do motor
+    const { data: perfilDefault } = await supabaseAdmin
+      .from('payroll_calculation_profiles')
+      .select('rules')
+      .eq('company_id', sheet.company_id)
+      .eq('is_default', true)
+      .eq('is_active', true)
+      .maybeSingle();
+    const perfil = derivarPerfilDeRules(perfilDefault?.rules);
+
     const results: PayrollCalculationResult[] = [];
     let totalGross = 0;
     let totalDeductions = 0;
@@ -145,7 +196,8 @@ export async function PUT(request: NextRequest) {
               value: code?.value || 0,
               quantity: item.quantity,
               referenceValue: item.reference_value,
-              legalType: code?.legal_type
+              legalType: code?.legal_type,
+              formula: code?.formula
             };
           })
         : [
@@ -192,7 +244,7 @@ export async function PUT(request: NextRequest) {
             }
           ];
 
-      const result = calculateEmployeePayroll(employee, calculationItems);
+      const result = calculateEmployeePayroll(employee, calculationItems, perfil);
       results.push(result);
 
       // Acumular totais
