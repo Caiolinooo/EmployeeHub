@@ -4941,6 +4941,8 @@ export default {
       competencia: 'Competência',
       empresa: 'Empresa',
       selecioneEmpresa: 'Selecione uma empresa',
+      centroCusto: 'Centro de custo',
+      todosCentrosCusto: 'Todos os centros',
       atualizar: 'Atualizar',
       sincronizarWk: 'Sincronizar WK',
       sincronizandoWk: 'Sincronizando WK...',

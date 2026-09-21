@@ -1,5 +1,14 @@
 # Changelog
 
+## [5.83.2] - 2026-09-21
+
+### 🏢 Folha por empresa e centro de custo reais (GT como fonte da verdade)
+
+1. **Fim da confusão do protótipo Luz Marítima**: `payroll_companies` passa a espelhar `gt_empresas` — "ABZ Group" ativa (única empresa GT) e "LUZ MARÍTIMA LTDA" (protótipo, sem contraparte GT) desativada e fora do select. Select da folha agora filtra `is_active=true`.
+2. **Centros de custo na folha**: sync `gt_centros_custo` ativos → `payroll_departments` (ABZ ADM com 17 colaboradores, MATRIX - SS07 com 4). Novo select "Centro de custo" na aba Rubricas & Folha do DP — sheet, colaboradores e sincronização WK passam a ser por centro; "Todos os centros" consolida na sheet geral da empresa.
+3. **Consolidação por centro**: `fontes-dp.ts` ganha filtro `centroCusto` — uma sheet de centro de custo coleta só o pessoal daquele centro (match por CPF continua). Nova rota `GET /api/payroll/departments` (gate `folha.view`).
+4. **Script idempotente**: `scripts/sync-payroll-empresas.ts` — reexecutável, upsert por CNPJ/nome e por empresa+código, desativa o que saiu do GT. Verificação: 18/18 checks de `verify-modulos-internos.ts` verdes após a mudança.
+
 ## [5.83.1] - 2026-09-21
 
 ### 🖥️ Correções de visualização DP e sidebar R&S

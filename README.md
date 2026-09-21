@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.83.1 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.83.2 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -22,6 +22,7 @@ Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](
 - **Motor de folha corrigido**: IRRF pela tabela progressiva, fórmulas de DSR/reflexo, perfis com teto de VT e rescisão completa (verbas 301–307) no desligamento.
 - **Férias e escala alimentam a folha**: dias de embarque e férias aprovadas viram rubricas na consolidação; o WK tem precedência e lançamentos manuais nunca são sobrescritos.
 - **Rubricas editáveis com Código WK**: cadastro completo em Configurações → Rubricas, com acesso controlado por permissões (visualizar, editar, aprovar).
+- **Empresa e centro de custo reais**: a folha espelha o cadastro do GT — ABZ Group como empresa e os centros ativos (ABZ ADM, MATRIX - SS07) como filtro; o protótipo Luz Marítima saiu do caminho.
 
 ## Nesta versão (5.82.0)
 

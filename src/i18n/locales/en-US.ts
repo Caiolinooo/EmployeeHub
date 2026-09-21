@@ -4940,6 +4940,8 @@ export default {
       competencia: 'Pay period',
       empresa: 'Company',
       selecioneEmpresa: 'Select a company',
+      centroCusto: 'Cost center',
+      todosCentrosCusto: 'All cost centers',
       atualizar: 'Refresh',
       sincronizarWk: 'Sync WK',
       sincronizandoWk: 'Syncing WK...',

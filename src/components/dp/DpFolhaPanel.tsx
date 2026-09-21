@@ -22,6 +22,12 @@ interface EmpresaItem {
   is_active?: boolean;
 }
 
+
+interface CentroCustoItem {
+  id: string;
+  code: string;
+  name: string;
+}
 type FolhaStatus = 'draft' | 'calculated' | 'approved' | 'paid' | 'cancelled';
 
 interface FolhaSheet {
@@ -38,6 +44,7 @@ interface FolhaSheet {
   total_fgts?: number | null;
   approved_by?: string | null;
   approved_at?: string | null;
+  department_id?: string | null;
 }
 
 interface CalculoItem {
@@ -189,9 +196,10 @@ export default function DpFolhaPanel() {
     const [ano, mes] = mesAnoInput.split('-');
     return { mes: parseInt(mes, 10), ano: parseInt(ano, 10) };
   }, [mesAnoInput]);
-
   const [empresas, setEmpresas] = useState<EmpresaItem[]>([]);
   const [companyId, setCompanyId] = useState('');
+  const [centrosCusto, setCentrosCusto] = useState<CentroCustoItem[]>([]);
+  const [centroCustoId, setCentroCustoId] = useState('');
 
   const [sheet, setSheet] = useState<FolhaSheet | null>(null);
   const [calculo, setCalculo] = useState<CalculoFolhaData | null>(null);
@@ -225,7 +233,7 @@ export default function DpFolhaPanel() {
 
   const carregarEmpresas = useCallback(async () => {
     try {
-      const res = await fetchWithToken('/api/payroll/companies?limit=100');
+      const res = await fetchWithToken('/api/payroll/companies?limit=100&isActive=true');
       const json = await res.json();
       if (res.ok && json.success) {
         setEmpresas(json.data || []);
@@ -252,7 +260,25 @@ export default function DpFolhaPanel() {
     }
   }, []);
 
-  const carregarFolhaDaCompetencia = useCallback(async (empresaId: string, comp: { mes: number; ano: number }) => {
+  const carregarCentrosCusto = useCallback(async (empresaId: string) => {
+    if (!empresaId) {
+      setCentrosCusto([]);
+      return;
+    }
+    try {
+      const res = await fetchWithToken(`/api/payroll/departments?companyId=${encodeURIComponent(empresaId)}&isActive=true`);
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setCentrosCusto(json.data || []);
+      } else {
+        setCentrosCusto([]);
+      }
+    } catch {
+      setCentrosCusto([]);
+    }
+  }, []);
+
+  const carregarFolhaDaCompetencia = useCallback(async (empresaId: string, comp: { mes: number; ano: number }, deptId: string) => {
     if (!empresaId) {
       setSheet(null);
       setCalculo(null);
@@ -260,10 +286,15 @@ export default function DpFolhaPanel() {
       return;
     }
     try {
-      const qs = `companyId=${encodeURIComponent(empresaId)}&referenceMonth=${comp.mes}&referenceYear=${comp.ano}&limit=1`;
+      const deptQs = deptId ? `&departmentId=${encodeURIComponent(deptId)}` : '';
+      const qs = `companyId=${encodeURIComponent(empresaId)}&referenceMonth=${comp.mes}&referenceYear=${comp.ano}&limit=5${deptQs}`;
       const res = await fetchWithToken(`/api/payroll/sheets?${qs}`);
       const json = await res.json();
-      const encontrada: FolhaSheet | null = res.ok && json.success ? (json.data?.[0] ?? null) : null;
+      const lista: FolhaSheet[] = res.ok && json.success ? (json.data || []) : [];
+      // Sem centro selecionado: prefere a sheet geral (department_id null).
+      const encontrada: FolhaSheet | null = deptId
+        ? (lista[0] ?? null)
+        : (lista.find((s) => !s.department_id) ?? lista[0] ?? null);
       setSheet(encontrada);
       setCalculo(null);
       setExpandidos(new Set());
@@ -274,13 +305,14 @@ export default function DpFolhaPanel() {
     }
   }, []);
 
-  const carregarFuncionarios = useCallback(async (empresaId: string) => {
+  const carregarFuncionarios = useCallback(async (empresaId: string, deptId: string) => {
     if (!empresaId) {
       setFuncionarios([]);
       return;
     }
     try {
-      const res = await fetchWithToken(`/api/payroll/employees?companyId=${encodeURIComponent(empresaId)}&limit=1000`);
+      const deptQs = deptId ? `&departmentId=${encodeURIComponent(deptId)}` : '';
+      const res = await fetchWithToken(`/api/payroll/employees?companyId=${encodeURIComponent(empresaId)}&limit=1000${deptQs}`);
       const json = await res.json();
       if (res.ok && json.success) {
         setFuncionarios(json.data || []);
@@ -314,10 +346,11 @@ export default function DpFolhaPanel() {
     }
   }, []);
 
-  const carregarColaboradoresWk = useCallback(async (page: number) => {
+  const carregarColaboradoresWk = useCallback(async (page: number, empresaId: string, deptId: string) => {
     setColabWkCarregando(true);
     try {
-      const res = await fetchWithToken(`/api/dp/wk/colaboradores?page=${page}&limit=${COLAB_WK_LIMIT}`);
+      const filtros = `${empresaId ? `&companyId=${encodeURIComponent(empresaId)}` : ''}${deptId ? `&departmentId=${encodeURIComponent(deptId)}` : ''}`;
+      const res = await fetchWithToken(`/api/dp/wk/colaboradores?page=${page}&limit=${COLAB_WK_LIMIT}${filtros}`);
       const json = await res.json();
       if (res.ok && json.success) {
         setColabWk(json.data?.colaboradores || []);
@@ -337,13 +370,14 @@ export default function DpFolhaPanel() {
     }
   }, [tf]);
 
-  // Recarrega tudo que depende de empresa + competência. O estado de aprovação
-  // é revalidado pelo efeito de [sheet] quando a folha é recarregada.
-  const recarregarTudo = useCallback(async (empresaId: string, comp: { mes: number; ano: number }) => {
+  // Recarrega tudo que depende de empresa + centro de custo + competência. O
+  // estado de aprovação é revalidado pelo efeito de [sheet] quando a folha é
+  // recarregada.
+  const recarregarTudo = useCallback(async (empresaId: string, comp: { mes: number; ano: number }, deptId: string) => {
     await Promise.all([
-      carregarFolhaDaCompetencia(empresaId, comp),
+      carregarFolhaDaCompetencia(empresaId, comp, deptId),
       carregarStatusWk(empresaId),
-      carregarFuncionarios(empresaId),
+      carregarFuncionarios(empresaId, deptId),
     ]);
   }, [carregarFolhaDaCompetencia, carregarStatusWk, carregarFuncionarios]);
 
@@ -353,11 +387,12 @@ export default function DpFolhaPanel() {
 
   useEffect(() => {
     if (!user) return;
+    carregarCentrosCusto(companyId);
     carregarStatusWk(companyId);
-    carregarColaboradoresWk(1);
+    carregarColaboradoresWk(1, companyId, centroCustoId);
     if (companyId) {
-      carregarFolhaDaCompetencia(companyId, competencia);
-      carregarFuncionarios(companyId);
+      carregarFolhaDaCompetencia(companyId, competencia, centroCustoId);
+      carregarFuncionarios(companyId, centroCustoId);
     } else {
       setSheet(null);
       setCalculo(null);
@@ -365,7 +400,7 @@ export default function DpFolhaPanel() {
       setFuncionarios([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, companyId, mesAnoInput]);
+  }, [user, companyId, centroCustoId, mesAnoInput]);
 
   // Estado de aprovação quando a sheet muda (só faz sentido em calculated/approved).
   useEffect(() => {
@@ -410,7 +445,7 @@ export default function DpFolhaPanel() {
       const res = await fetchWithToken('/api/dp/wk/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fonte: 'api', competencia, companyId: empresaId }),
+        body: JSON.stringify({ fonte: 'api', competencia, companyId: empresaId, departmentId: centroCustoId || undefined }),
       });
       const json = await res.json();
       if (await tratarErroSync(res, json)) return;
@@ -418,7 +453,7 @@ export default function DpFolhaPanel() {
       setAvisosSync(json.data?.wk?.avisos || []);
       setSyncModulos(json.data?.modulos || null);
       toast.success(`${tf('dp.folha.sucessoSync', 'Sincronização concluída')} — ${wkItens} itens WK`);
-      await recarregarTudo(empresaId, competencia);
+      await recarregarTudo(empresaId, competencia, centroCustoId);
     } catch {
       toast.error(tf('dp.folha.erroGeral', 'Erro na operação de folha'));
     } finally {
@@ -441,6 +476,7 @@ export default function DpFolhaPanel() {
       form.append('mes', String(competencia.mes));
       form.append('ano', String(competencia.ano));
       form.append('companyId', empresaId);
+      if (centroCustoId) form.append('departmentId', centroCustoId);
 
       const res = await fetchWithToken('/api/dp/wk/sync', { method: 'POST', body: form });
       const json = await res.json();
@@ -450,7 +486,7 @@ export default function DpFolhaPanel() {
       setSyncModulos(json.data?.modulos || null);
       toast.success(`${tf('dp.folha.sucessoSync', 'Sincronização concluída')} — ${wkItens} itens WK`);
       if (inputArquivoRef.current) inputArquivoRef.current.value = '';
-      await recarregarTudo(empresaId, competencia);
+      await recarregarTudo(empresaId, competencia, centroCustoId);
     } catch {
       toast.error(tf('dp.folha.erroGeral', 'Erro na operação de folha'));
     } finally {
@@ -489,7 +525,7 @@ export default function DpFolhaPanel() {
         ? tf('dp.folha.statusApproved', 'Aprovada')
         : tf('dp.folha.rejeitada', 'Rejeitada')
     );
-    await recarregarTudo(companyId, competencia);
+    await recarregarTudo(companyId, competencia, centroCustoId);
   };
 
   const toggleExpandido = (employeeId: string) => {
@@ -562,9 +598,23 @@ export default function DpFolhaPanel() {
                 ))}
               </select>
             </label>
+            <label className="text-[11px] font-bold text-gray-500 uppercase">
+              {tf('dp.folha.centroCusto', 'Centro de custo')}
+              <select
+                value={centroCustoId}
+                onChange={(e) => setCentroCustoId(e.target.value)}
+                disabled={!companyId}
+                className="block mt-0.5 w-44 px-2 py-1 text-xs border border-gray-300 rounded-lg bg-white font-medium text-gray-700 disabled:opacity-50"
+              >
+                <option value="">{tf('dp.folha.todosCentrosCusto', 'Todos os centros')}</option>
+                {centrosCusto.map((cc) => (
+                  <option key={cc.id} value={cc.id}>{cc.name}</option>
+                ))}
+              </select>
+            </label>
             <button
               type="button"
-              onClick={() => recarregarTudo(companyId, competencia)}
+              onClick={() => recarregarTudo(companyId, competencia, centroCustoId)}
               disabled={!companyId}
               className="p-1.5 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-50"
               title={tf('dp.folha.atualizar', 'Atualizar')}
@@ -872,7 +922,7 @@ export default function DpFolhaPanel() {
           <div className="flex items-center gap-1.5">
             <button
               type="button"
-              onClick={() => carregarColaboradoresWk(colabWkPage - 1)}
+              onClick={() => carregarColaboradoresWk(colabWkPage - 1, companyId, centroCustoId)}
               disabled={colabWkPage <= 1 || colabWkCarregando}
               className="p-1.5 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-40"
               title={tf('dp.folha.anterior', 'Anterior')}
@@ -884,7 +934,7 @@ export default function DpFolhaPanel() {
             </span>
             <button
               type="button"
-              onClick={() => carregarColaboradoresWk(colabWkPage + 1)}
+              onClick={() => carregarColaboradoresWk(colabWkPage + 1, companyId, centroCustoId)}
               disabled={colabWkPage >= colabWkTotalPages || colabWkCarregando}
               className="p-1.5 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-40"
               title={tf('dp.folha.proxima', 'Próxima')}

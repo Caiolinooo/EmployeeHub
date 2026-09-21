@@ -80,6 +80,8 @@ export interface FiltroFontesDp {
   companyId: string;
   /** Nome exato (case-insensitive) da empresa GT (gt_empresas.nome). */
   empresa?: string;
+  /** Nome ou código (case-insensitive) do centro de custo GT — restringe a coleta ao pessoal dele. */
+  centroCusto?: string;
   /** Restringe a colaboradores GT específicos (ex.: lista confirmada R5). */
   colaboradorIds?: string[];
 }
@@ -195,7 +197,7 @@ interface AfastamentoGtRow extends AfastamentoCalculo {
   tipo_afastamento: string | null;
 }
 
-async function carregarColaboradoresGt(filtroEmpresa?: string, colaboradorIds?: string[]): Promise<ColabGtRow[]> {
+async function carregarColaboradoresGt(filtroEmpresa?: string, colaboradorIds?: string[], filtroCentroCusto?: string): Promise<ColabGtRow[]> {
   const res = await paginarSelect<ColabGtRow>(async (from, to) => {
     const r = await supabaseAdmin
       .from('gt_colaboradores')
@@ -217,6 +219,13 @@ async function carregarColaboradoresGt(filtroEmpresa?: string, colaboradorIds?: 
   if (filtroEmpresa) {
     const emp = filtroEmpresa.toLowerCase().trim();
     cols = cols.filter((c) => embedNome(c.empresa).toLowerCase() === emp);
+  }
+  if (filtroCentroCusto) {
+    const alvo = filtroCentroCusto.toLowerCase().trim();
+    cols = cols.filter((c) => {
+      const obj = Array.isArray(c.centro_custo) ? c.centro_custo[0] : c.centro_custo;
+      return (obj?.nome || '').toLowerCase() === alvo || (obj?.codigo || '').toLowerCase() === alvo;
+    });
   }
   if (colaboradorIds && colaboradorIds.length > 0) {
     const ids = new Set(colaboradorIds);
@@ -364,7 +373,7 @@ export async function coletarRubricasEscala(
     ? marcados.idsMarcados
     : filtro.colaboradorIds;
 
-  const colaboradores = await carregarColaboradoresGt(filtro.empresa, idsFiltro);
+  const colaboradores = await carregarColaboradoresGt(filtro.empresa, idsFiltro, filtro.centroCusto);
   const idsColab = new Set(colaboradores.map((c) => c.id));
   const [histPorColab, afastPorColab, employees] = await Promise.all([
     carregarEventosGt(idsColab),
@@ -503,7 +512,7 @@ export async function coletarFerias(
   };
 
   // Colaboradores GT → CPF (join feito aqui, o afastamento referencia por id).
-  const colaboradores = await carregarColaboradoresGt(filtro.empresa, filtro.colaboradorIds);
+  const colaboradores = await carregarColaboradoresGt(filtro.empresa, filtro.colaboradorIds, filtro.centroCusto);
   const colabPorId = new Map<string, ColabCpfRow>();
   for (const c of colaboradores) {
     colabPorId.set(c.id, { id: c.id, cpf: c.cpf, nome_completo: c.nome_completo });
@@ -833,9 +842,22 @@ export async function sincronizarModulosInternos(opts: {
   const usuarioUuid = opts.usuarioId && UUID_RE.test(opts.usuarioId) ? opts.usuarioId : undefined;
   const sheet = await garantirSheetDraft(companyId, competencia, departmentId, usuarioUuid);
 
+  // Sheet de um centro de custo → coleta restrita ao pessoal desse centro
+  // (payroll_departments.name espelha gt_centros_custo.nome via sync-payroll-empresas).
+  let centroCustoFiltro: string | undefined;
+  if (departmentId) {
+    const { data: dept, error: deptError } = await supabaseAdmin
+      .from('payroll_departments')
+      .select('name')
+      .eq('id', departmentId)
+      .maybeSingle();
+    if (deptError) throw new Error(`Erro ao carregar payroll_departments: ${deptError.message}`);
+    centroCustoFiltro = dept?.name?.trim() || undefined;
+  }
+
   const [escala, ferias] = await Promise.all([
-    coletarRubricasEscala(competencia, { companyId }),
-    coletarFerias(competencia, { companyId }),
+    coletarRubricasEscala(competencia, { companyId, centroCusto: centroCustoFiltro }),
+    coletarFerias(competencia, { companyId, centroCusto: centroCustoFiltro }),
   ]);
 
   const pendencias = [...escala.pendencias, ...ferias.pendencias];
