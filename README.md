@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.84.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.85.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,12 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.85.0)
+
+- **Matrícula e-Social nas 251 fichas** no formato `CNPJ.000000` que o envio usa — e conferência automática: o sistema não sobrescreve exceções confirmadas pelo DP.
+- **Fichas completas com o WK**: PIS, nascimento, cargo e salário fixo importados da RadarAPI e do backup — incluindo a nova rota `POST /api/dp/wk/enriquecer` (dry-run por padrão).
+- **Login na RadarAPI pelo portal**: credenciais em app_secrets, JWT renovado sozinho, endpoints reais verificados — a sincronização WK da aba Folha funciona sem token manual.
 
 ## Nesta versão (5.84.0)
 

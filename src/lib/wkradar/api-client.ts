@@ -12,10 +12,54 @@
  * sequencial) — mesmo espírito do throttle do pull do MIO.
  */
 import { getCredential } from '@/lib/secure-credentials';
+import https from 'node:https';
+import http from 'node:http';
+
+/**
+ * HTTPS da RadarAPI usa certificado AUTOASSINADO (CN=WKSistemas, emissão WK —
+ * não há CA pública). fetch/global rejected; aqui `rejectUnauthorized:false`
+ * só para este host WK, never usado em outro cliente do portal.
+ */
+function wkRequestJson(
+  destino: string,
+  opcoes: { metodo: 'GET' | 'POST'; headers: Record<string, string>; corpo?: string; timeoutMs: number },
+): Promise<{ status: number; corpo: string }> {
+  const { promise, resolve, reject } = Promise.withResolvers<{ status: number; corpo: string }>();
+  const url = new URL(destino);
+  const transporte = url.protocol === 'http:' ? http : https;
+  const req = transporte.request(
+    {
+      method: opcoes.metodo,
+      hostname: url.hostname,
+      port: url.port || (url.protocol === 'http:' ? 80 : 443),
+      path: `${url.pathname}${url.search}`,
+      headers: opcoes.headers,
+      rejectUnauthorized: false,
+    },
+    (res) => {
+      const chunks: Buffer[] = [];
+      res.on('data', (c: Buffer) => chunks.push(c));
+      res.on('end', () =>
+        resolve({ status: res.statusCode ?? 0, corpo: Buffer.concat(chunks).toString('utf8') }),
+      );
+    },
+  );
+  req.setTimeout(opcoes.timeoutMs, () => {
+    req.destroy(new Error(`[WK] Timeout de ${opcoes.timeoutMs / 1000}s na Radar.API (${destino})`));
+  });
+  req.on('error', reject);
+  if (opcoes.corpo) req.write(opcoes.corpo);
+  req.end();
+  return promise;
+}
 
 /** Chaves de credencial em app_secrets (mesmo formato que getCredential consome). */
 export const WK_URL_CREDENTIAL_KEY = 'wkradar_api_url';
 export const WK_TOKEN_CREDENTIAL_KEY = 'wkradar_api_token';
+/** Login da RadarAPI (POST {url}/login → JWT de 12h). Preferidos ao token estático. */
+export const WK_USUARIO_CREDENTIAL_KEY = 'wkradar_api_usuario';
+export const WK_SENHA_CREDENTIAL_KEY = 'wkradar_api_senha';
+export const WK_EMPRESA_CREDENTIAL_KEY = 'wkradar_api_empresa';
 
 /** Credencial ausente/parcial — mensagem acionável apontando a rota de config. */
 export class ErroWkCredencial extends Error {
@@ -34,49 +78,114 @@ const WK_INTERVALO_MIN_MS = 250;
 
 /**
  * Allowlist de paths de LEITURA da Radar.API.
- * UNVERIFIED — confirmar os paths exatos no swagger da instância (a Radar.API
- * varia por versão/contrato do cliente); ajuste aqui sem tocar nos contratos
- * internos (sync/normalize/rotas).
+ * VERIFICADO ao vivo em 2026-09-21 contra wk.groupabz.com (swagger 370
+ * endpoints em scripts/_tmp_wk_swagger.json; extração real com 768
+ * funcionários). RadarAPI é pull-only: só GETs de cards/dashboard.
  */
 export const WK_PULL_PATHS: RegExp[] = [
-  /^\/funcionarios\/?$/i,            // UNVERIFIED: listagem de funcionários (RH)
-  /^\/funcionarios\/[^/]+\/?$/i,     // UNVERIFIED: funcionário por identificador
-  /^\/rh\/funcionarios\/?$/i,        // UNVERIFIED: alternativa de agrupador RH
-  /^\/folha\/funcionarios\/?$/i,     // UNVERIFIED: funcionários no escopo de folha
-  /^\/afastamentos\/?$/i,            // UNVERIFIED: afastamentos (RH/folha)
-  /^\/rubricas\/?$/i,                // UNVERIFIED: tabela de rubricas/eventos
-  /^\/rubricas-programadas\/?$/i,    // UNVERIFIED: rubricas programadas por competência
-  /^\/folha\/lancamentos\/?$/i,      // UNVERIFIED: lançamentos da folha da competência
+  /^\/cards\/empresarial\/funcionarios\/?$/i,
+  /^\/cards\/empresarial\/funcionarios\/existe\/?$/i,
+  /^\/cards\/empresarial\/centroscustos\/?$/i,
+  /^\/cards\/empresarial\/departamentosrh\/?$/i,
+  /^\/cards\/empresarial\/filiais\/?$/i,
+  /^\/cards\/folha\/ferias\/?$/i,
+  /^\/cards\/folha\/esocial\/?$/i,
+  /^\/cards\/folha\/esocial\/detalhado\/?$/i,
+  /^\/cards\/folha\/custofolha\/?$/i,
+  /^\/cards\/folha\/custofolha\/grupos\/?$/i,
+  /^\/cards\/folha\/indicadorcolaboradores(detalhado)?\/?$/i,
+  /^\/empresas\/?$/i,
+  /^\/empresas\/datasistema\/?$/i,
 ];
 
-/** UNVERIFIED — candidatos de endpoint de funcionários, testados em ordem pelo sync. */
-export const WK_CANDIDATOS_FUNCIONARIOS = [
-  '/funcionarios',
-  '/rh/funcionarios',
-  '/folha/funcionarios',
-];
+/**
+ * Endpoint de funcionários — VERIFICADO: GET /v1/cards/empresarial/funcionarios
+ * paginado (NumPagina/QtdItens; envelope DadosConsultaFuncionario com
+ * paginacao.temProxima) e cada item com id/codigo/nome/departamento/cargo.
+ */
+export const WK_CANDIDATOS_FUNCIONARIOS = ['/cards/empresarial/funcionarios'];
 
-/** UNVERIFIED — candidatos de endpoint de lançamentos/rubricas da competência. */
-export const WK_CANDIDATOS_LANCAMENTOS = [
-  '/rubricas-programadas',
-  '/folha/lancamentos',
-  '/rubricas',
-];
+/**
+ * A RadarAPI NÃO expõe lançamentos por funcionário (custofolha é agregado por
+ * local de trabalho). O caminho detalhado continua sendo o backup via arquivo.
+ * Candidato mantido só para o sync logar aviso claro em vez de 404.
+ */
+export const WK_CANDIDATOS_LANCAMENTOS = ['/cards/folha/custofolha/grupos'];
 
 export interface WkCredenciais {
   url: string;
   token: string;
 }
 
-/** Lê as credenciais da Radar.API. Falta uma delas → ErroWkCredencial
- * (nunca segue com request parcial). */
-export async function carregarCredenciaisWk(): Promise<WkCredenciais> {
-  const [urlCrua, token] = await Promise.all([
+interface WkLogin {
+  usuario: string;
+  senha: string;
+  empresa: string;
+}
+
+/** JWT em cache com expiração (a RadarAPI emite 12h; renovamos com 1h de folga). */
+let cacheLogin: { token: string; expiraEm: number } | null = null;
+const WK_TOKEN_TTL_MS = 11 * 60 * 60 * 1000;
+
+/**
+ * Autentica na RadarAPI: POST {url}/login com {usuario:{username,password},
+ * empresa} → {token}. Só é chamado quando não há wkradar_api_token estático.
+ */
+async function logarWk(urlBase: string, login: WkLogin): Promise<string> {
+  const agora = Date.now();
+  if (cacheLogin && cacheLogin.expiraEm > agora) return cacheLogin.token;
+
+  const { status, corpo } = await wkRequestJson(`${urlBase}/login`, {
+    metodo: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    corpo: JSON.stringify({
+      usuario: { username: login.usuario, password: login.senha },
+      empresa: login.empresa,
+    }),
+    timeoutMs: WK_TIMEOUT_MS,
+  });
+  if (status < 200 || status >= 300) {
+    throw new Error(`[WK] Login RadarAPI HTTP ${status} — confira wkradar_api_usuario/senha/empresa em /api/dp/wk/credentials.`);
+  }
+  const parsed = JSON.parse(corpo) as { token?: string };
+  if (!parsed.token) throw new Error('[WK] Login RadarAPI sem token na resposta.');
+  cacheLogin = { token: parsed.token, expiraEm: agora + WK_TOKEN_TTL_MS };
+  return parsed.token;
+}
+
+export function invalidarSessaoWk(): void {
+  cacheLogin = null;
+}
+
+/** Lê credenciais + resolve o Bearer (token estático ou login). */
+async function autenticarWk(): Promise<{ url: string; token: string; estatico: boolean }> {
+  const [urlCrua, tokenEstatico, usuario, senha, empresa] = await Promise.all([
     getCredential(WK_URL_CREDENTIAL_KEY),
     getCredential(WK_TOKEN_CREDENTIAL_KEY),
+    getCredential(WK_USUARIO_CREDENTIAL_KEY),
+    getCredential(WK_SENHA_CREDENTIAL_KEY),
+    getCredential(WK_EMPRESA_CREDENTIAL_KEY),
   ]);
-  if (!urlCrua || !token) throw new ErroWkCredencial();
-  return { url: urlCrua.trim().replace(/\/+$/, ''), token };
+  if (!urlCrua) throw new ErroWkCredencial();
+  const url = urlCrua.trim().replace(/\/+$/, '');
+
+  if (tokenEstatico) return { url, token: tokenEstatico.trim(), estatico: true };
+  if (usuario && senha) {
+    const token = await logarWk(url, {
+      usuario: usuario.trim(),
+      senha: senha.trim(),
+      empresa: (empresa || '').trim(),
+    });
+    return { url, token, estatico: false };
+  }
+  throw new ErroWkCredencial();
+}
+
+/** Lê as credenciais da Radar.API (url obrigatória; Bearer via login ou token
+ * estático). Sem nada disso → ErroWkCredencial. */
+export async function carregarCredenciaisWk(): Promise<WkCredenciais> {
+  const auth = await autenticarWk();
+  return { url: auth.url, token: auth.token };
 }
 
 /** Path está na allowlist de pull? */
@@ -127,45 +236,37 @@ export async function wkGet<T = unknown>(
     );
   }
 
-  const { url, token } = await carregarCredenciaisWk();
+  const auth = await autenticarWk();
 
   const qs = new URLSearchParams();
   for (const [chave, valor] of Object.entries(opcoes?.query || {})) {
     if (valor === undefined || valor === null || valor === '') continue;
     qs.set(chave, String(valor));
   }
-  const destino = `${url}${normalizado}${qs.toString() ? `?${qs.toString()}` : ''}`;
+  const destino = `${auth.url}${normalizado}${qs.toString() ? `?${qs.toString()}` : ''}`;
 
   await agendarVezThrottle();
 
-  const controlador = new AbortController();
-  const timer = setTimeout(() => controlador.abort(), WK_TIMEOUT_MS);
-  try {
-    const resposta = await fetch(destino, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-      signal: controlador.signal,
-      cache: 'no-store',
+  const pedir = (token: string) =>
+    wkRequestJson(destino, {
+      metodo: 'GET',
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+      timeoutMs: WK_TIMEOUT_MS,
     });
-    if (!resposta.ok) {
-      throw new Error(
-        `[WK] Radar.API respondeu HTTP ${resposta.status} para GET ${normalizado}`,
-      );
-    }
-    return (await resposta.json()) as T;
-  } catch (erro) {
-    if (erro instanceof Error && erro.name === 'AbortError') {
-      throw new Error(
-        `[WK] Timeout de ${WK_TIMEOUT_MS / 1000}s na Radar.API (GET ${normalizado})`,
-      );
-    }
-    throw erro;
-  } finally {
-    clearTimeout(timer);
+
+  let resposta = await pedir(auth.token);
+  if (resposta.status === 401 && !auth.estatico) {
+    // JWT expirado no meio da janela: renova e tenta UMA vez.
+    invalidarSessaoWk();
+    const nova = await autenticarWk();
+    resposta = await pedir(nova.token);
   }
+  if (resposta.status < 200 || resposta.status >= 300) {
+    throw new Error(
+      `[WK] Radar.API respondeu HTTP ${resposta.status} para GET ${normalizado}`,
+    );
+  }
+  return JSON.parse(resposta.corpo) as T;
 }
 
 /**
@@ -178,7 +279,7 @@ export function extrairListaWk<T = Record<string, unknown>>(json: unknown, profu
   if (Array.isArray(json)) return json as T[];
   if (json && typeof json === 'object' && profundidade > 0) {
     const rec = json as Record<string, unknown>;
-    for (const chave of ['data', 'items', 'rows', 'result', 'results', 'records', 'lista']) {
+    for (const chave of ['data', 'items', 'rows', 'result', 'results', 'records', 'lista', 'conteudo']) {
       const valor = rec[chave];
       if (Array.isArray(valor)) return valor as T[];
     }
@@ -190,4 +291,42 @@ export function extrairListaWk<T = Record<string, unknown>>(json: unknown, profu
     }
   }
   return [];
+}
+
+/**
+ * GET paginado nos endpoints de consulta da RadarAPI (envelope
+ * DadosConsulta*: { cabecalho, paginacao: { paginaAtual, temProxima, ... },
+ * conteudo: [...] }). Percorre NumPagina até esgotar (teto de segurança
+ * `maxPaginas`) e devolve o conteúdo concatenado. Endpoint sem paginação
+ * (array cru) devolve direto — tolerante.
+ */
+export async function wkGetPaginado<T = Record<string, unknown>>(
+  path: string,
+  opcoes?: WkGetOpcoes & { qtdItens?: number; maxPaginas?: number },
+): Promise<T[]> {
+  const qtdItens = opcoes?.qtdItens ?? 500;
+  const maxPaginas = opcoes?.maxPaginas ?? 40;
+  const todas: T[] = [];
+
+  for (let pagina = 1; pagina <= maxPaginas; pagina++) {
+    const json = await wkGet<unknown>(path, {
+      ...opcoes,
+      query: { ...opcoes?.query, NumPagina: pagina, QtdItens: qtdItens },
+    });
+    if (Array.isArray(json)) {
+      todas.push(...(json as T[]));
+      return todas;
+    }
+    const conteudo = (json as { conteudo?: T[] }).conteudo;
+    if (!Array.isArray(conteudo)) {
+      // Envelope inesperado: cai no extrator genérico e encerra.
+      todas.push(...extrairListaWk<T>(json));
+      return todas;
+    }
+    todas.push(...conteudo);
+    const paginacao = (json as { paginacao?: { temProxima?: boolean; paginaAtual?: number } })
+      .paginacao;
+    if (!paginacao?.temProxima) return todas;
+  }
+  return todas;
 }

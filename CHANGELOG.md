@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.85.0] - 2026-09-21
+
+### Importação WK Radar dentro do portal: matrícula eSocial e enriquecimento de fichas
+
+1. **Matrícula e-Social padronizada e completa**: as 251 fichas do GT agora têm `matricula_esocial` no formato `CNPJ.000000` (ex.: `17784306000189.000803`) — o mesmo que o módulo e-Social envia no XML (S-2200/S-2220/S-2230). Casos confirmados manualmente no e-Social (ex.: VINICIUS 803 → `…000783`) ficam intactos: o sistema nunca sobrescreve valor existente.
+2. **Fichas completas com o que o WK tem**: PIS/PASEP, data de nascimento, salário fixo (incluindo jovens aprendizes) e cargo preenchidos de duas fontes — RadarAPI ao vivo (768 funcionários: cargo e departamento) e backup do WK (cards de identidade com CPF/PIS/admissão/nascimento). Payroll ganhou `position` para 169 colaboradores.
+3. **Nova rota `POST /api/dp/wk/enriquecer`** (gate payroll `edit`, mesmo do sync): dry-run por padrão, `aplicar=true` grava. Fonte API (JSON) ou fonte backup (multipart com os cards `DF/CRMINFP*.dat` extraídos do zip). Idempotente — reexecutar não muda nada.
+4. **Integração RadarAPI de verdade**: o cliente do portal (`src/lib/wkradar/api-client.ts`) agora faz login (POST `/login` → JWT de 12h em cache, renovado automaticamente) com credenciais `wkradar_api_usuario/senha/empresa` em app_secrets, paths reais verificados ao vivo (`/v1/cards/empresarial/funcionarios` etc.) e paginação completa. O HTTPS do WK usa certificado autoassinado da WK — tratado isoladamente no cliente.
+5. **Ferramentas de importação**: `scripts/wk-extrair-api.ts` (extrator completo da RadarAPI), `scripts/enriquecer-portal-wk.ts` (enriquecimento offline por backup), `scripts/importar-wk-backup.ts` e o leitor de backup `src/lib/payroll/wk-backup.ts` compartilhado entre script e rota. Férias do WK seguem fora: o endpoint da RadarAPI responde 304 e os arquivos `FPFER*.xml` são cifrados sob licença do WK.
+
+
 ## [5.84.0] - 2026-09-21
 
 ### Folha calcula pelos dados do portal, com INSS e IR de 2026
