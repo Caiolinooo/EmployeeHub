@@ -185,6 +185,7 @@ export async function createColaborador(
       'embarcacao_atual_id',
       'data_admissao','data_demissao','motivo_demissao',
       'salario','tipo_salario','forma_pagamento','sindicato',
+      'salario_moeda','salario_periodo','salario_natureza',
       'cbo','jornada_semanal','jornada_mensal',
       'tipo_contrato','prazo_contrato','categoria_contrato',
       'tipo_trabalho','tipo_mao_de_obra','regime_trabalho',

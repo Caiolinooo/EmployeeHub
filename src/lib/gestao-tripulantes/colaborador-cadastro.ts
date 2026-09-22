@@ -21,6 +21,7 @@ export const ALLOWED_COLAB_FIELDS = [
   'cargo_id', 'centro_custo_id', 'empresa_id', 'embarcacao_atual_id',
   'data_admissao', 'data_demissao', 'motivo_demissao',
   'salario', 'tipo_salario', 'forma_pagamento', 'sindicato', 'cbo',
+  'salario_moeda', 'salario_periodo', 'salario_natureza',
   'jornada_semanal', 'jornada_mensal', 'tipo_contrato', 'prazo_contrato',
   'categoria_contrato', 'tipo_trabalho', 'tipo_mao_de_obra', 'regime_trabalho',
   'escala_embarque', 'escala_folga', 'status_embarque', 'standby', 'ativo',

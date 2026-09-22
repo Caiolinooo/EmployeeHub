@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.85.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.86.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -16,11 +16,11 @@ Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](
 
 ---
 
-## Nesta versão (5.85.0)
+## Nesta versão (5.86.0)
 
-- **Matrícula e-Social nas 251 fichas** no formato `CNPJ.000000` que o envio usa — e conferência automática: o sistema não sobrescreve exceções confirmadas pelo DP.
-- **Fichas completas com o WK**: PIS, nascimento, cargo e salário fixo importados da RadarAPI e do backup — incluindo a nova rota `POST /api/dp/wk/enriquecer` (dry-run por padrão).
-- **Login na RadarAPI pelo portal**: credenciais em app_secrets, JWT renovado sozinho, endpoints reais verificados — a sincronização WK da aba Folha funciona sem token manual.
+- **Folha paga administrativos**: quem não tem escala de embarque calcula junto — mês cheio ou proporcional à admissão/demissão.
+- **57 salários preenchidos** a partir da remuneração repetida do WK e novos campos **moeda/período/bruto-liquido** no cadastro (PJ em dólar, horista, diarista).
+- **Contracheque imprimível**: `GET /api/dp/folha/contracheque` — holerite CLT com rubricas, descontos e bases, pronto para baixar/imprimir em A4.
 
 ## Nesta versão (5.84.0)
 

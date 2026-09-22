@@ -212,7 +212,18 @@ async function main(): Promise<void> {
       .eq('origem', 'gt');
     check('1.6 itens origem=gt na sheet', (itensGt ?? []).length >= 1, true);
     check('1.7 férias lançadas como 005 (e/ou 006 1/3)', (itensGt ?? []).some((i) => i.code_id === codeMap['005'] || i.code_id === codeMap['006']), true);
-    check('1.8 itens gt pertencem ao colaborador casado (A)', (itensGt ?? []).every((i) => i.employee_id === empA!.id), true);
+    // Contrato: item gt só nasce de quem tem casamento CPF↔ficha (inclui os
+    // administrativos reais — escala_embarque=0 — que entram via fallback 001).
+    const idsItens = [...new Set((itensGt ?? []).map((i) => i.employee_id as string))];
+    const { data: empsItens } = await supabase.from('payroll_employees').select('id, cpf').in('id', idsItens);
+    const cpfsItens = (empsItens ?? []).map((e) => String(e.cpf ?? '').replace(/\D/g, ''));
+    const { data: colabsItens } = await supabase.from('gt_colaboradores').select('cpf').is('deleted_at', null);
+    const cpfsGt = new Set((colabsItens ?? []).map((c) => String(c.cpf ?? '').replace(/\D/g, '')));
+    check(
+      '1.8 itens gt só de employees com colaborador GT casado (CPF)',
+      cpfsItens.every((cpf) => cpfsGt.has(cpf)),
+      true,
+    );
 
     // ---- 2) Precedência WK > GT ----------------------------------------
     console.log('\n----- 2) Precedência: item wk do mesmo employee+code vence -----');

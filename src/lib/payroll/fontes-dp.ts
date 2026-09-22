@@ -428,7 +428,7 @@ export async function coletarRubricasEscala(
       pendencias.push({
         cpf: cpfNorm || (c.cpf || ''),
         nome,
-        motivo: 'Sem vínculo em payroll_employees para a empresa informada (CPF não casado) — escala não lançada',
+        motivo: 'Sem ficha na folha para esta empresa (CPF não casado) — escala não lançada. Rode "Sincronizar colaboradores do GT" para criar a ficha.',
       });
       continue;
     }
@@ -475,6 +475,57 @@ export async function coletarRubricasEscala(
           nome,
           motivo: 'Sem salário base (folha e cadastro GT) — dias apurados, mas os valores não foram lançados',
         });
+      }
+    }
+
+    // Administrativo (sem rotação, escala_embarque = 0) sem nenhum movimento
+    // offshore no período: paga o mês como CLT mensalista — rubrica 001 com os
+    // dias ativos (mês civil completo, ou proporcional admissão/demissão).
+    // Offshore com escala NxN mas sem embarque no mês NÃO entra aqui: ficou em
+    // casa e a folga é informativa, não paga.
+    const ehAdministrativo = !Number(c.escala_embarque) || Number(c.escala_embarque) === 0;
+    if (movimento === 0 && ehAdministrativo) {
+      const base = salarioMensal(employee.baseSalary, c.salario);
+      const inicioPeriodo = new Date(`${periodo.dataInicio}T00:00:00`);
+      const fimPeriodo = new Date(`${periodo.dataFim}T00:00:00`);
+      const adm = c.data_admissao ? new Date(`${c.data_admissao}T00:00:00`) : null;
+      const dem = c.data_demissao ? new Date(`${c.data_demissao}T00:00:00`) : null;
+      const inicioAtivo = adm && adm > inicioPeriodo ? adm : inicioPeriodo;
+      const fimAtivo = dem && dem < fimPeriodo ? dem : fimPeriodo;
+      const diasAtivos =
+        fimAtivo >= inicioAtivo
+          ? Math.round((fimAtivo.getTime() - inicioAtivo.getTime()) / 86_400_000) + 1
+          : 0;
+      if (diasAtivos > 0) {
+        quadros.push({
+          cpf: cpfNorm,
+          nome,
+          centroCusto: rubricas.centro_custo || 'NÃO DEFINIDO',
+          diasEmbarcado: 0,
+          diasDobra: 0,
+          diasFolga: 0,
+          diasFolgaIndenizada: 0,
+          diasFerias: 0,
+          diasStandby: 0,
+          diasTreinamento: 0,
+        });
+        if (base <= 0) {
+          pendencias.push({
+            cpf: cpfNorm,
+            nome,
+            motivo: 'Sem salário base (folha e cadastro GT) — administrativo apurado, mas os valores não foram lançados',
+          });
+        } else {
+          const diaria = round2(base / 30);
+          itens.push({
+            cpf: cpfNorm,
+            nome,
+            code: CODE_DIAS_NORMAIS,
+            quantity: diasAtivos,
+            referenceValue: diaria,
+            calculatedValue: round2(diaria * diasAtivos),
+          });
+        }
       }
     }
 
@@ -611,7 +662,7 @@ export async function coletarFerias(
       pendencias.push({
         cpf: cpfNorm || (colab?.cpf || ''),
         nome,
-        motivo: `Férias (${diasNoMes} dia(s) na competência) sem vínculo em payroll_employees (CPF não casado) — não lançada`,
+        motivo: `Férias (${diasNoMes} dia(s) na competência) sem ficha na folha (CPF não casado) — não lançada. Rode "Sincronizar colaboradores do GT".`,
       });
       continue;
     }

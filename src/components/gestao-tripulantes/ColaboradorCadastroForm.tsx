@@ -527,6 +527,9 @@ export default function ColaboradorCadastroForm({
             </>)}
             {section('Remuneração', <>
               <div>{label('Salário')}{input('salario', { type: 'number' })}</div>
+              <div>{label('Moeda')}{select('salario_moeda', ['BRL', 'USD', 'EUR', 'GBP'])}</div>
+              <div>{label('Período')}{select('salario_periodo', ['mes', 'ano', 'dia', 'hora'])}</div>
+              <div>{label('Natureza')}{select('salario_natureza', ['bruto', 'liquido'])}</div>
               <div>{label('Tipo de Salário')}{select('tipo_salario', ['Mensal', 'Por Hora', 'Por Dia', 'Comissionado'])}</div>
               <div>{label('Forma de Pagamento')}{select('forma_pagamento', ['Depósito', 'Cheque', 'Dinheiro', 'Pix'])}</div>
               <div>{label('Sindicato')}{input('sindicato')}</div>

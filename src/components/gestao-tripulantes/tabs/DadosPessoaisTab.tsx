@@ -201,7 +201,19 @@ export default function DadosPessoaisTab({ data, onUpdate, onRefresh }: Props) {
               <InfoField label="Departamento" value={data.departamento} />
               <InfoField label="Regime / Escala de Trabalho" value={formatRegimeDisplay(data)} />
               <InfoField label="Contrato" value={data.tipo_contrato} />
-              <InfoField label="Salário" value={data.salario != null && data.salario !== '' ? String(data.salario) : null} />
+              <InfoField
+                label="Salário"
+                value={
+                  data.salario != null && data.salario !== ''
+                    ? [
+                        String(data.salario),
+                        (data.salario_moeda as string) || 'BRL',
+                        (data.salario_periodo as string) || 'mes',
+                        (data.salario_natureza as string) || 'bruto',
+                      ].join(' · ')
+                    : null
+                }
+              />
               <InfoField label="Tipo de Salário" value={data.tipo_salario} />
               <InfoField label="Forma de Pagamento" value={data.forma_pagamento} />
               <InfoField label={t('gestaoTripulantes.personalData.admissionDate')} value={displayDate(data.data_admissao)} />

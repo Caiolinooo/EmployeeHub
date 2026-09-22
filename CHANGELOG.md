@@ -1,5 +1,14 @@
 # Changelog
 
+## [5.86.0] - 2026-09-21
+
+### Folha paga administrativos, salários preenchidos e contracheque imprimível
+
+1. **Administrativos na folha**: colaborador sem rotação (escala 0 — administrativo, onshore, sem escala) sem movimento offshore no mês recebe a rubrica 001 com os dias ativos do período (mês cheio ou proporcional admissão/demissão). Caio, Aislan, Ericka e os demais da ABZ passam a calcular junto com os marítimos. Offshore com escala NxN que ficou em casa o mês inteiro não entra — a folga continua informativa.
+2. **57 salários preenchidos**: moda da remuneração mensal do backup WK repetida ≥2x nos últimos 12 meses (sinal forte de salário fixo — incluindo os aprendizes de R$ 761,55). Offshore variável (moda única) fica vazio de propósito: um valor qualquer corromperia a diária da folha. Verificação: 18/18 checks de `verify-modulos-internos.ts`.
+3. **Salário com contexto**: `gt_colaboradores` ganha `salario_moeda` (BRL/USD/EUR/GBP), `salario_periodo` (hora/dia/mes/ano) e `salario_natureza` (bruto/liquido) — editáveis no cadastro do colaborador (aba Remuneração) e exibidos na ficha. PJ em dólar e horista agora têm onde registrar.
+4. **Contracheque (holerite) em HTML**: `GET /api/dp/folha/contracheque?sheetId=&employeeId=` — modelo CLT com dados do empregado, rubricas em proventos/descontos/informativos, totais, bases INSS/IRRF/FGTS e assinatura. Imprimível em A4 direto do navegador; gate folha `view`.
+
 ## [5.85.0] - 2026-09-21
 
 ### Importação WK Radar dentro do portal: matrícula eSocial e enriquecimento de fichas
