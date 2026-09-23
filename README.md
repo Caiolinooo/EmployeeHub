@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.87.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.87.1 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,10 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.87.1)
+
+- **TypeScript da onda A1/NFS-e**: a rota do certificado A1 apontava para um `_lib/http` que não existia; o parser das notas reais quebrava o `tsc` com `never[]`. Os dois erros fecharam — compile integral verde.
 
 ## Nesta versão (5.87.0)
 

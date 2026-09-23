@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { garantirNivelFinanceiro } from '@/lib/financeiro/financeiro-auth';
-import { finErro, finFail, finOk } from '../../_lib/http';
+import { finErro, finFail, finOk } from '../_lib/http';
 import { CertificadoA1Error, obterMetaCertificadoA1 } from '@/lib/certificado-a1';
 
 export const dynamic = 'force-dynamic';

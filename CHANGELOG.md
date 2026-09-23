@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.87.1] - 2026-09-23
+
+### TypeScript da onda A1/NFS-e fecha de verdade
+
+1. **Rota do A1 compilava no caminho errado**: GET /api/financeiro/certificado-a1 importava ../../_lib/http (cai em api/_lib, que nao existe). Agora usa ../_lib/http — o helper compartilhado de /api/financeiro.
+2. **Parser das CompNfse**: o fallback ?? [] virava never[] e o blocos.push quebrava o tsc. Tipado como string[]. npx tsc --noEmit integral 0 erros; 57/57 testes A1+NFS-e.
+
 ## [5.87.0] - 2026-09-23
 
 ### Certificado A1 unico, NFS-e Macae no padrao SPE e skills do Cursor no repo

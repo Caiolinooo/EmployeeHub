@@ -101,7 +101,7 @@ export function inventariarTags(xml: string): string[] {
 }
 
 export function parsearNotasCompNfse(xml: string): NfseLida[] {
-  const blocos = xml.match(/<CompNfse\b[\s\S]*?<\/CompNfse>/gi)
+  const blocos: string[] = xml.match(/<CompNfse\b[\s\S]*?<\/CompNfse>/gi)
     ?? xml.match(/<InfNfse\b[\s\S]*?<\/InfNfse>/gi)
     ?? [];
   if (blocos.length === 0 && /<InfNfse[\s>]/i.test(xml)) blocos.push(xml);

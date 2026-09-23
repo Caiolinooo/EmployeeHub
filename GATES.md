@@ -177,3 +177,7 @@ OWNS: src/lib/certificado-a1.ts, src/lib/financeiro/nfse/{consulta-somente-leitu
 
 - [x] G5: node scripts/check-financeiro-i18n.mjs → FIN_I18N_OK
   EVIDENCE: FIN_I18N_OK na onda do A1 único (certificadoUnico*). Sem chaves novas nesta adequação de template.
+
+- [x] G6: npx tsc --noEmit → TSC_OK
+  EXPECT: TSC_OK
+  EVIDENCE: TSC_OK (2026-09-23, v5.87.1) — 0 erros. Correções: import da rota A1 de `../../_lib/http` para `../_lib/http`; `blocos: string[]` em `parsearNotasCompNfse` (o `?? []` inferia `never[]`). 57/57 testes A1+NFS-e.
