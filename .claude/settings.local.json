@@ -39,5 +39,6 @@
     "deny": [],
     "ask": []
   },
-  "spinnerTipsEnabled": false
+  "spinnerTipsEnabled": false,
+  "outputStyle": "Concise"
 }

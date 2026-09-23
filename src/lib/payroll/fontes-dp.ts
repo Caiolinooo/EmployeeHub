@@ -196,6 +196,8 @@ interface ColabGtRow extends CamposEscalaColaborador {
   id: string;
   cpf: string | null;
   nome_completo: string | null;
+  data_admissao?: string | null;
+  data_demissao?: string | null;
   matricula: string | null;
   ativo: boolean | null;
   /** Salário mensal no cadastro GT. Usado quando a ficha da folha ainda não tem base. */

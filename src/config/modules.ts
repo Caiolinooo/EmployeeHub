@@ -584,6 +584,20 @@ export const SYSTEM_MODULES: ModuleDefinition[] = [
       acl('folha.admin', 'admin', 'Admin total', 3, ADMIN_ONLY),
     ],
   },
+  {
+    key: 'financeiro',
+    name: 'Financeiro',
+    description: 'Faturas, NFS-e, bancos, cobranças e conciliação (hub /folha-pagamento)',
+    defaultRoles: STAFF,
+    category: 'business',
+    href: '/folha-pagamento',
+    visible: true,
+    acl: [
+      acl('financeiro.view', 'view', 'Visualizar faturas, NFS-e, cobranças e conciliação', 1, STAFF),
+      acl('financeiro.edit', 'edit', 'Emitir faturas/NFS-e, gerar cobranças e conciliar', 2, STAFF),
+      acl('financeiro.admin', 'admin', 'Credenciais, certificados, municípios, templates e config NFS-e', 3, ADMIN_ONLY),
+    ],
+  },
 ];
 
 /** ACL resources that are not a sidebar module. */
@@ -738,6 +752,7 @@ const ACL_RESOURCE_LABELS: Record<string, string> = {
   avaliacao: 'Avaliação de Desempenho',
   dp: 'Departamento Pessoal',
   folha: 'Folha de Pagamento',
+  financeiro: 'Financeiro',
   calendario: 'Calendário',
   ponto: 'Ponto',
   chat: 'Chat',

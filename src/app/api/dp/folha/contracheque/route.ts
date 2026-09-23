@@ -62,11 +62,11 @@ export async function GET(request: NextRequest) {
     .eq('sheet_id', sheetId)
     .eq('employee_id', employeeId);
 
-  const empresaJoin = sheet.payroll_companies as { name: string; cnpj: string } | null;
-  const deptJoin = emp.payroll_departments as { name: string } | null;
+  const empresaJoin = sheet.payroll_companies as unknown as { name: string; cnpj: string } | null;
+  const deptJoin = emp.payroll_departments as unknown as { name: string } | null;
 
   const rubricas = (items ?? []).map((it) => {
-    const code = it.payroll_codes as { code: string; name: string; type: string } | null;
+    const code = it.payroll_codes as unknown as { code: string; name: string; type: string } | null;
     const tipo = code?.type;
     return {
       codigo: code?.code || '',

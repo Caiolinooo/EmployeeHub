@@ -92,7 +92,7 @@ export async function sincronizarColaboradoresGt(
   if (compErr) throw new Error(`payroll_companies: ${compErr.message}`);
   const empresas = compRows || [];
   const empresaPorNome = new Map(empresas.map((e) => [String(e.name).trim().toLowerCase(), e.id]));
-  const empresaPorCnpj = new Map(empresas.map((e) => [digitos(e.cnpj), e.id]).filter(([k]) => k));
+  const empresaPorCnpj = new Map(empresas.map((e) => [digitos(e.cnpj), e.id] as [string, string]).filter(([k]) => k));
   /** Uma empresa ativa só: o GT sem contraparte nominal ainda tem destino óbvio. */
   const empresaUnica = empresas.length === 1 ? empresas[0].id : null;
 

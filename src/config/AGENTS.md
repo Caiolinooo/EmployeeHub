@@ -17,6 +17,7 @@ Fonte única de módulos do portal + superfícies de permissão (flag de módulo
 - `src/constants/modules.ts` não duplica dados — só adapta `id`/`label`/`href`/`visible`.
 - Cards extras na tabela `cards` entram em available-modules / permission-catalog como módulo sem features/ACL até alguém registrá-los no catálogo.
 - ACL seed é insert-if-missing (`POST /api/acl/init`). Não apaga linhas existentes (GT / e-social / academy / social).
+- Módulo `financeiro` (2026-09, design financeiro §8): key `financeiro`, href `/folha-pagamento` (hub com abas), category `business`, ACL granular `financeiro.view|edit|admin` (nível 1/2/3, STAFF/STAFF/ADMIN). Gates das rotas `/api/financeiro/**` usam esses nomes via `garantirNivelFinanceiro`.
 - `users_unified` não tem coluna `cpf`. Identidade de portal é `tax_id` + e-mail.
 
 ## Work Guidance

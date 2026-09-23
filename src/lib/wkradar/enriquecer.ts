@@ -18,6 +18,8 @@ import {
   type FuncionarioApi,
 } from './enriquecer-regras';
 
+export type { BackupPessoa, FuncionarioApi } from './enriquecer-regras';
+
 export interface RelatorioEnriquecimento {
   fonte: 'api' | 'api+backup';
   funcionariosWk: number;

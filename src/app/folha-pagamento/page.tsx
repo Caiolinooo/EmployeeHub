@@ -1,15 +1,11 @@
-import React from 'react';
-import PayrollDashboard from '@/components/payroll/PayrollDashboard';
+'use client';
+
+import FinanceiroHub from '@/components/financeiro/FinanceiroHub';
 
 /**
- * Página principal do módulo de folha de pagamento
- * Sistema de Folha de Pagamento - Painel ABZ
+ * Hub do módulo Financeiro (§7.1): Visão geral · Folhas · Faturas · NFS-e ·
+ * Bancos/Recebimentos. Aba em ?tab=; deep-links: /folha-pagamento/faturas etc.
  */
-export default function PayrollPage() {
-  return <PayrollDashboard />;
+export default function FinanceiroPage() {
+  return <FinanceiroHub />;
 }
-
-export const metadata = {
-  title: 'Folha de Pagamento - Painel ABZ',
-  description: 'Gestão completa de folha de pagamento',
-};
