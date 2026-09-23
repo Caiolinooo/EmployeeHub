@@ -20,8 +20,8 @@ interface LinkCard {
 }
 
 const FOLHAS_LINKS: LinkCard[] = [
-  { href: '/folha-pagamento/sheets', labelKey: 'payroll.recentSheets', icon: <FiList className="h-6 w-6" /> },
-  { href: '/folha-pagamento/nova', labelKey: 'payroll.newPayrollSheet', icon: <FiPlusSquare className="h-6 w-6" /> },
+  { href: '/department/dp?tab=folha', labelKey: 'payroll.recentSheets', icon: <FiList className="h-6 w-6" /> },
+  { href: '/department/dp?tab=folha', labelKey: 'payroll.newPayrollSheet', icon: <FiPlusSquare className="h-6 w-6" /> },
   { href: '/folha-pagamento/funcionarios', labelKey: 'payroll.manageEmployees', icon: <FiUsers className="h-6 w-6" /> },
   { href: '/folha-pagamento/empresas', labelKey: 'payroll.manageCompanies', icon: <FiBriefcase className="h-6 w-6" /> },
   { href: '/folha-pagamento/relatorios/mensal', labelKey: 'payroll.monthlyReport', icon: <FiFileText className="h-6 w-6" /> },
@@ -38,7 +38,7 @@ export default function FolhasTab() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto">
-      <p className="text-sm text-gray-500 dark:text-gray-400">{t('financeiro.folhasDescricao')}</p>
+      <p className="text-sm text-gray-500">{t('financeiro.folhasDescricao')}</p>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {FOLHAS_LINKS.map((card) => (
           <Link
@@ -50,7 +50,7 @@ export default function FolhasTab() {
               {card.icon}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-bold text-gray-900 dark:text-gray-100">{t(card.labelKey)}</p>
+              <p className="truncate text-sm font-bold text-gray-900">{t(card.labelKey)}</p>
               <p className="mt-0.5 flex items-center gap-1 text-xs text-gray-400">
                 <FiExternalLink className="h-3 w-3" />
                 {card.href.replace('/folha-pagamento', '') || '/'}

@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.87.1 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.87.2 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,12 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.87.2)
+
+- **UI Folha no padrão ABZ**: `MainLayout` (sidebar + topbar) no layout de `/folha-pagamento`, cards brancos (`FIN_CARD_CLASS` sem `dark:bg-gray-800`).
+- **Fim do loop de redirecionamento**: `sheets`, `nova`, `funcionarios` e `empresas` restauradas como páginas reais sem `redirect()`.
+- **Folha operacional conectada ao DP**: cards de sheets/nova apontam para `/department/dp?tab=folha`, e a página do DP respeita o parâmetro `?tab=`.
 
 ## Nesta versão (5.87.1)
 

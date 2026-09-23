@@ -1,9 +1,13 @@
+'use client';
+
 import React from 'react';
+import MainLayout from '@/components/Layout/MainLayout';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 
 /**
  * Layout do módulo Financeiro (folha → fatura → NFS-e → bancos → conciliação).
- * Mantém ProtectedRoute do módulo de folha_pagamento (§7.1).
+ * MainLayout = sidebar + topbar (padrão /department/dp). Gate do módulo em
+ * ProtectedRoute (`folha_pagamento`, design §7.1).
  */
 export default function PayrollLayout({
   children,
@@ -11,15 +15,8 @@ export default function PayrollLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col bg-abz-background">
-      <ProtectedRoute moduleName="folha_pagamento">
-        <div className="flex min-h-0 flex-1 flex-col p-3 sm:p-4 md:p-6">{children}</div>
-      </ProtectedRoute>
-    </div>
+    <ProtectedRoute moduleName="folha_pagamento">
+      <MainLayout>{children}</MainLayout>
+    </ProtectedRoute>
   );
 }
-
-export const metadata = {
-  title: 'Financeiro - Painel ABZ',
-  description: 'Faturas, NFS-e, bancos, cobranças e conciliação do Painel ABZ',
-};

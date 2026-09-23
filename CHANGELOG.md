@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.87.2] - 2026-09-23
+
+### UI Folha/Financeiro no padrão ABZ e rotas restauradas
+
+1. **MainLayout na folha**: `src/app/folha-pagamento/layout.tsx` passa a usar `MainLayout` (sidebar + topbar, alinhado a `/department/dp`), mantendo o gate `ProtectedRoute moduleName="folha_pagamento"`. O menu lateral volta a ser exibido em `/folha-pagamento`.
+2. **Fim do loop de redirect nas rotas da folha**: `/folha-pagamento/sheets`, `/nova`, `/funcionarios` e `/empresas` deixam de chamar `redirect('/folha-pagamento?tab=...')`.
+   - `sheets` e `nova` renderizam `DpFolhaPanel` (o motor operacional da folha).
+   - `funcionarios` renderiza a lista de colaboradores via `EmployeeList` autenticado (`fetchWithToken`).
+   - `empresas` renderiza o CRUD completo via `EmpresasTab`.
+3. **Cards brancos no padrão ABZ**: `FIN_CARD_CLASS` em `shared.tsx` agora usa `bg-white` (sem `dark:bg-gray-800`), eliminando o contraste escuro no tema claro. Links de folhas recentes e nova folha apontam diretamente para `/department/dp?tab=folha`. A página do DP passa a reconhecer o parâmetro `?tab=` via deep-link.
+
 ## [5.87.1] - 2026-09-23
 
 ### TypeScript da onda A1/NFS-e fecha de verdade

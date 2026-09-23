@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { PayrollEmployee, PayrollEmployeeFilter } from '@/types/payroll';
 import { useI18n } from '@/contexts/I18nContext';
+import { fetchWithToken } from '@/lib/tokenStorage';
 
 interface EmployeeListProps {
   companyId?: string;
@@ -58,7 +59,7 @@ export default function EmployeeList({
       if (filter.position) params.append('position', filter.position);
       if (filter.status) params.append('status', filter.status);
 
-      const response = await fetch(`/api/payroll/employees?${params.toString()}`);
+      const response = await fetchWithToken(`/api/payroll/employees?${params.toString()}`);
       const data = await response.json();
 
       if (data.success) {
@@ -298,4 +299,5 @@ export default function EmployeeList({
       )}
     </div>
   );
+
 }

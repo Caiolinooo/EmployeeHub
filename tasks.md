@@ -1,3 +1,15 @@
+## UI Folha/Financeiro no padrão ABZ (2026-09-23)
+
+Hub `/folha-pagamento` sem sidebar, cards pretos e rotas `sheets/nova/funcionarios/empresas` em loop de redirect. Sem emitir NFS-e. Sem commit.
+
+- [x] `MainLayout` no layout de `/folha-pagamento` (padrão `/department/dp`) + gate `folha_pagamento`
+- [x] Restaurar páginas reais: `sheets`/`nova` (`DpFolhaPanel`), `funcionarios` (`EmployeeList`), `empresas` (`EmpresasTab`)
+- [x] Cards brancos (`FIN_CARD_CLASS` sem `dark:bg-gray-800`); clique abre página real
+- [x] Folha operacional: cards sheets/nova → `/department/dp?tab=folha`
+- [ ] Preview: sidebar no hub, cards brancos, quatro rotas sem loop
+
+---
+
 ## Cadastro DP do zero + edição total (2026-09-10)
 
 DP precisa criar funcionário e alterar qualquer dado do cadastro no banco interno já usado (`gt_colaboradores`), sem tabela paralela — base da próxima fase DP/folha.

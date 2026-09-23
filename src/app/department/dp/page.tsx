@@ -130,6 +130,17 @@ export default function DepartamentoPessoalPage() {
   const podeVerFolha = hasFeature('folha.view');
 
   const [activeTab, setActiveTab] = useState<'colaboradores' | 'fechamento' | 'asos' | 'folha'>('colaboradores');
+  // Deep-link /department/dp?tab=folha (cards do hub Financeiro).
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const tab = new URLSearchParams(window.location.search).get('tab');
+    if (tab === 'folha' && podeVerFolha) {
+      setActiveTab('folha');
+    } else if (tab === 'fechamento' || tab === 'asos' || tab === 'colaboradores') {
+      setActiveTab(tab);
+    }
+  }, [podeVerFolha]);
+
   const [colaboradores, setColaboradores] = useState<ColaboradorItem[]>([]);
   const [asosPendentes, setAsosPendentes] = useState<AsoVencimentoItem[]>([]);
   const [asoAntecedenciaDias, setAsoAntecedenciaDias] = useState(60);
