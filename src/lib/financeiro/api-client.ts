@@ -20,6 +20,7 @@ import type {
   FinBancoCatalogoItem,
   FinBancoTestarResultado,
   FinCertificadoUploadResultado,
+  FinCertificadoA1Meta,
   FinContaBancaria,
   FinContaBancariaForm,
   FinCobranca,
@@ -235,7 +236,12 @@ export function salvarNfseCredencial(id: string, input: FinNfseCredencialInput):
   return unwrap<{ ok: boolean }>(`/nfse/config/${id}/credenciais`, jsonInit('POST', input));
 }
 
-/** Upload do certificado A1 (.pfx multipart + senha) para NFS-e. */
+/** Metadados do A1 unico da empresa (e-Social). Sem senha. */
+export function getCertificadoA1(): Promise<FinCertificadoA1Meta> {
+  return unwrap<FinCertificadoA1Meta>('/certificado-a1');
+}
+
+/** Upload paralelo recusado pelo servidor (409). */
 export function uploadNfseCertificado(id: string, arquivo: File, senha: string): Promise<FinCertificadoUploadResultado> {
   const fd = new FormData();
   fd.append('arquivo', arquivo);

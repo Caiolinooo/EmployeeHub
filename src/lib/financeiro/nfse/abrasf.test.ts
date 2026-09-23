@@ -76,8 +76,6 @@ const INPUT: NfseRpsInput = {
   discriminacao: 'Fatura 42/2026 - medição setembro',
 };
 
-const RPS_202 = `<Rps><InfDeclaracaoPrestacaoServico Id="rps42"><Rps><IdentificacaoRps><Numero>42</Numero><Serie>1</Serie><Tipo>1</Tipo></IdentificacaoRps><DataEmissao>2026-09-22</DataEmissao><Status>1</Status></Rps><Competencia>2026-09</Competencia><Servico><Valores><ValorServicos>1500.00</ValorServicos><Aliquota>5.00</Aliquota><ValorIss>75.00</ValorIss></Valores><IssRetido>2</IssRetido><ItemListaServico>0107</ItemListaServico><Discriminacao>Fatura 42/2026 - medição setembro</Discriminacao><CodigoMunicipio>3304557</CodigoMunicipio><ExigibilidadeISS>1</ExigibilidadeISS></Servico><Prestador><CpfCnpj><Cnpj>12345678000199</Cnpj></CpfCnpj><InscricaoMunicipal>123456</InscricaoMunicipal></Prestador><Tomador><IdentificacaoTomador><CpfCnpj><Cnpj>98765432000155</Cnpj></CpfCnpj></IdentificacaoTomador><RazaoSocial>CLIENTE MARITIMO LTDA</RazaoSocial><Endereco><Logradouro>AV BRASIL</Logradouro><Numero>1000</Numero><Bairro>CENTRO</Bairro><CodigoMunicipio>3304557</CodigoMunicipio><Uf>RJ</Uf><Cep>24000000</Cep></Endereco><Contato><Email>financeiro@cliente.com</Email></Contato></Tomador><OptanteSimplesNacional>2</OptanteSimplesNacional><IncentivoFiscal>2</IncentivoFiscal></InfDeclaracaoPrestacaoServico></Rps>`;
-
 const RESPOSTA_RECEPCAO = `<?xml version="1.0"?><CompNfse><RecepcionarLoteRpsResposta><NumeroLote>42</NumeroLote><DataRecebimento>2026-09-22T10:00:00</DataRecebimento><Protocolo>PROT-9</Protocolo></RecepcionarLoteRpsResposta></CompNfse>`;
 const RESPOSTA_SITUACAO_OK = `<ConsultarSituacaoLoteRpsResposta><NumeroLote>42</NumeroLote><Situacao><Codigo>2</Codigo></Situacao></ConsultarSituacaoLoteRpsResposta>`;
 const RESPOSTA_SITUACAO_ERRO = `<ConsultarSituacaoLoteRpsResposta><Situacao><Codigo>3</Codigo></Situacao><MensagemRetorno><Codigo>E10</Codigo><Mensagem>Tomador inexistente</Mensagem></MensagemRetorno></ConsultarSituacaoLoteRpsResposta>`;
@@ -131,8 +129,50 @@ function mockSoap(respostas: string[]) {
 /* ------------------------------------------------------------------ */
 
 describe('abrasf templates — montagem pura', () => {
-  it('RPS 2.02 fixture determinística (valores, tomador, Uf derivada do IBGE)', () => {
-    assert.equal(montarRps(202, CTX.config, { ...INPUT, tomador: { ...INPUT.tomador } }), RPS_202);
+  it('RPS nacional ABZ/SPE (Endereco, LC116 com ponto, IBSCBS, competência data)', () => {
+    const xml = montarRps(202, CTX.config, { ...INPUT, tomador: { ...INPUT.tomador } });
+    assert.match(xml, /<InfDeclaracaoPrestacaoServico Id="rps42">/);
+    assert.match(xml, /<Competencia>2026-09-22<\/Competencia>/);
+    assert.match(xml, /<ItemListaServico>01\.07<\/ItemListaServico>/);
+    assert.match(xml, /<CodigoTributacaoMunicipio>01\.07<\/CodigoTributacaoMunicipio>/);
+    assert.match(xml, /<CodigoCnae>7020400<\/CodigoCnae>/);
+    assert.match(xml, /<CodigoNbs>114011300<\/CodigoNbs>/);
+    assert.match(xml, /<CodigoMunicipio>3302403<\/CodigoMunicipio>/);
+    assert.match(xml, /<MunicipioIncidencia>3302403<\/MunicipioIncidencia>/);
+    assert.match(xml, /<ExigibilidadeISS>1<\/ExigibilidadeISS>/);
+    assert.match(xml, /<DescontoIncondicionado>0\.00<\/DescontoIncondicionado>/);
+    assert.match(xml, /<IBSCBS><OperacaoUsoConsumoPessoal>0<\/OperacaoUsoConsumoPessoal><Operacao>100301<\/Operacao>/);
+    assert.match(xml, /<Endereco><Endereco>AV BRASIL<\/Endereco><Numero>1000<\/Numero>/);
+    assert.equal(/<Logradouro>/.test(xml), false);
+    assert.match(xml, /<IdentificacaoTomador><CpfCnpj><Cnpj>98765432000155<\/Cnpj>/);
+    assert.equal(/MotivoNifNaoInformado/.test(xml), false);
+  });
+
+  it('RPS exportação ABZ/SPE (NIF, CodigoPais, ISS 0, exigibilidade 4, sem IBSCBS)', () => {
+    const xml = montarRps(204, CTX.config, {
+      ...INPUT,
+      tomador: {
+        nome: 'MATRIX COMPOSITES LTD',
+        documento: '',
+        municipioIbge: '',
+        codigoPais: '0723',
+        motivoNifNaoInformado: '1',
+        endereco: { logradouro: '150 Quill Way', numero: '0', bairro: 'EXTERIOR', cep: '', codigoPais: '0723' },
+      },
+      itens: [{ codigoLc116: '17.01', descricao: 'CONSULTORIA', quantidade: 1, valorUnitario: 204081.45, tributavel: false }],
+      valorServicos: 204081.45,
+      aliquotaIss: 3.75,
+      discriminacao: '17.01 EXPORTACAO DE SERVICOS',
+    });
+    assert.match(xml, /<ExigibilidadeISS>4<\/ExigibilidadeISS>/);
+    assert.match(xml, /<ValorIss>0\.00<\/ValorIss>/);
+    assert.match(xml, /<CodigoNbs>114011900<\/CodigoNbs>/);
+    assert.match(xml, /<CodigoPais>0723<\/CodigoPais>/);
+    assert.match(xml, /<MotivoNifNaoInformado>1<\/MotivoNifNaoInformado>/);
+    assert.match(xml, /<RazaoSocial>MATRIX COMPOSITES LTD<\/RazaoSocial>/);
+    assert.equal(/IdentificacaoTomador/.test(xml), false);
+    assert.equal(/<IBSCBS>/.test(xml), false);
+    assert.equal(/<MunicipioIncidencia>/.test(xml), false);
   });
 
   it('lote 2.02 e 2.04 diferem apenas no atributo versao', () => {

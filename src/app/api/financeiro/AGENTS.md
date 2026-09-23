@@ -59,3 +59,6 @@ NFS-e (RPS transacional), bancos (integrações/contas/catálogo), cobranças
   `admin/financeiro-config` consome catalogo/integracoes/nfse-config/municipios/templates
 - api-client tipado: `src/lib/financeiro/api-client.ts` (dev-Front, importa `src/types/financeiro.ts`)
 - Gates de verificação: raiz `GATES.md` (G1–G6 dev-Back, §10 do design)
+
+- `GET /certificado-a1` (view) — metadados do A1 unico (e-Social). Sem senha.
+- `POST /nfse/config/[id]/credenciais` recusa multipart .pfx (409): A1 nao e paralelo.

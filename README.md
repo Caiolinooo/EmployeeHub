@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.86.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.87.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,12 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.87.0)
+
+- **Certificado A1 único**: o mesmo A1 do e-Social autentica a SPE de Macaé — sem segundo upload no financeiro.
+- **NFS-e no padrão real da SPE**: RPS nacional e de exportação batem com as notas já autorizadas (Endereco, LC `17.01`, IBSCBS / NIF). Emissão ainda desligada; só consulta.
+- **Skills do Cursor no repo**: `.cursor/skills` com as skills oficiais e a `sobe-o-git`.
 
 ## Nesta versão (5.86.0)
 

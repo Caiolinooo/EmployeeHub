@@ -7,15 +7,15 @@
  * o padrão exige, contador RPS somente leitura.
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { FiSave, FiUpload, FiPlus, FiSearch, FiAlertTriangle } from 'react-icons/fi';
+import { FiSave, FiPlus, FiSearch, FiAlertTriangle, FiCheckCircle } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import { useI18n } from '@/contexts/I18nContext';
 import {
-  createNfseConfig, listMunicipios, listNfseConfig, salvarNfseCredencial,
-  updateNfseConfig, uploadNfseCertificado,
+  createNfseConfig, getCertificadoA1, listMunicipios, listNfseConfig, salvarNfseCredencial,
+  updateNfseConfig,
 } from '@/lib/financeiro/api-client';
 import { fetchWithToken } from '@/lib/tokenStorage';
-import type { FinMunicipio, FinNfseConfig, FinNfseProviderKey } from '@/types/financeiro';
+import type { FinCertificadoA1Meta, FinMunicipio, FinNfseConfig, FinNfseProviderKey } from '@/types/financeiro';
 import {
   FIN_BTN_PRIMARY_CLASS,
   FIN_BTN_SECONDARY_CLASS,
@@ -158,8 +158,8 @@ function ConfigForm({
   // Credenciais proprietário (usuario/token) e cert A1
   const [credUsuario, setCredUsuario] = useState('');
   const [credToken, setCredToken] = useState('');
-  const [certArquivo, setCertArquivo] = useState<File | null>(null);
-  const [certSenha, setCertSenha] = useState('');
+  const [certUnico, setCertUnico] = useState<FinCertificadoA1Meta | null>(null);
+  const [certUnicoErro, setCertUnicoErro] = useState('');
 
   useEffect(() => {
     if (municipioBusca.trim().length < 2) {
@@ -173,6 +173,13 @@ function ConfigForm({
     }, 300);
     return () => clearTimeout(timer);
   }, [municipioBusca]);
+
+  useEffect(() => {
+    getCertificadoA1()
+      .then((meta) => { setCertUnico(meta); setCertUnicoErro(''); })
+      .catch((e) => { setCertUnico(null); setCertUnicoErro(mensagemErro(e, t('financeiro.certificadoUnicoAusente'))); });
+  }, [t]);
+
 
   const municipioSelecionado = useMemo(() => municipios.find((m) => m.codigo_ibge === municipioId), [municipios, municipioId]);
 
@@ -233,17 +240,6 @@ function ConfigForm({
     }
   }
 
-  async function enviarCertificado() {
-    if (!config || !certArquivo || !certSenha) return;
-    try {
-      await uploadNfseCertificado(config.id, certArquivo, certSenha);
-      toast.success(t('financeiro.sucessoSalvar'));
-      setCertArquivo(null);
-      setCertSenha('');
-    } catch (e) {
-      toast.error(mensagemErro(e, t('financeiro.erroSalvar')));
-    }
-  }
 
   const exigeA1 = PROVIDER_EXIGE_A1[providerKey];
 
@@ -366,30 +362,26 @@ function ConfigForm({
         </div>
       )}
 
-      {/* Cert A1 quando o padrão exige (§5.1) */}
-      {exigeA1 && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-3">
-          <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase text-amber-700">
-            <FiAlertTriangle className="h-4 w-4" /> {t('financeiro.cfgExigeCertA1')}
+      {/* A1 unico da empresa (e-Social) — sem upload paralelo */}
+      {(exigeA1 || providerKey === "proprietario") && (
+        <div className={`rounded-xl border p-3 ${certUnico ? 'border-emerald-200 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-900/20' : 'border-amber-200 bg-amber-50/50'}`}>
+          <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase text-gray-600 dark:text-gray-300">
+            {certUnico ? <FiCheckCircle className="h-4 w-4 text-emerald-600" /> : <FiAlertTriangle className="h-4 w-4 text-amber-700" />}
+            {t('financeiro.certificadoUnicoTitulo')}
           </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <label className={`${FIN_BTN_SECONDARY_CLASS} cursor-pointer`}>
-              <FiUpload className="h-4 w-4" /> {t('admin.certificadoUpload')}
-              <input type="file" accept=".pfx,.p12" className="hidden" onChange={(e) => setCertArquivo(e.target.files?.[0] ?? null)} />
-            </label>
-            {certArquivo && <span className="text-xs text-gray-500">{certArquivo.name}</span>}
-            <input
-              type="password"
-              placeholder={t('financeiro.cfgSenhaCertificado')}
-              value={certSenha}
-              onChange={(e) => setCertSenha(e.target.value)}
-              className={`${FIN_INPUT_CLASS} max-w-48`}
-              autoComplete="new-password"
-            />
-            <button type="button" onClick={enviarCertificado} disabled={!config || !certArquivo || !certSenha} className={FIN_BTN_SECONDARY_CLASS}>
-              <FiSave className="h-4 w-4" /> {t('financeiro.salvar')}
-            </button>
-          </div>
+          {certUnico ? (
+            <div className="space-y-1 text-sm text-gray-700 dark:text-gray-200">
+              <p className="font-semibold">{certUnico.nome}{certUnico.subjectCn ? ` · ${certUnico.subjectCn}` : ''}</p>
+              <p className="text-xs text-gray-500">{t('financeiro.certificadoUnicoValidade')}: {certUnico.validoAte || '—'}</p>
+              <p className="truncate font-mono text-xs text-gray-400" title={certUnico.fingerprint}>{certUnico.fingerprint}</p>
+              <p className="text-xs text-gray-500">{t('financeiro.certificadoUnicoHint')}</p>
+            </div>
+          ) : (
+            <p className="text-sm text-amber-800 dark:text-amber-200">{certUnicoErro || t('financeiro.certificadoUnicoAusente')}</p>
+          )}
+          <a href="/department/e-social" className={`${FIN_BTN_SECONDARY_CLASS} mt-3 inline-flex`}>
+            {t('financeiro.certificadoUnicoGerenciar')}
+          </a>
         </div>
       )}
 

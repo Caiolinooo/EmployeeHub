@@ -22,6 +22,7 @@ import path from 'path';
 import { Client } from 'pg';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getCredential, getAllCredentials } from '@/lib/secure-credentials';
+import { CertificadoA1Error, materializarCertificadoA1Temporario } from '@/lib/certificado-a1';
 import { getBankAdapter } from './banks/registry';
 import type {
   BankContext,
@@ -252,11 +253,21 @@ export async function montarNfseContext(nfseConfigId: string): Promise<{
     if (chave.startsWith(prefixo) && valor) credenciais[chave.slice(prefixo.length)] = valor;
   }
 
-  const certificado = await montarCertificado(
-    cfg.certificado_path,
-    cfg.certificado_fingerprint,
-    `${prefixo}pfx_senha`,
-  );
+  // A1 único da empresa (e-Social). NFS-e não usa certificado paralelo.
+  let certificado: CertContext | undefined;
+  try {
+    const a1 = await materializarCertificadoA1Temporario();
+    certificado = {
+      pfxPath: a1.pfxPath,
+      pfxPassphrase: a1.pfxPassphrase,
+      fingerprint: a1.fingerprint,
+    };
+  } catch (e) {
+    if (e instanceof CertificadoA1Error) {
+      throw erro400(e.code, e.message);
+    }
+    throw e;
+  }
 
   const configExtra: Record<string, unknown> = { ...(cfg.config || {}) };
   const municipio = cfg.municipio;

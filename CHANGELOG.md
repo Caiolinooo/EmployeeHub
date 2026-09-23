@@ -1,5 +1,14 @@
 # Changelog
 
+## [5.87.0] - 2026-09-23
+
+### Certificado A1 unico, NFS-e Macae no padrao SPE e skills do Cursor no repo
+
+1. **A1 unico da empresa**: o mesmo certificado ICP-Brasil do e-Social (tabela esocial_certificados) autentica a SPE de Macae. Sem segundo upload no financeiro; rota /api/financeiro/certificado-a1 so le metadados (nunca a senha).
+2. **RPS alinhado as 30 notas reais da SPE**: nacional usa tag Endereco (nao Logradouro), LC 116 17.01 com ponto, CNAE 7020400, NBS 114011300, IBSCBS e competencia YYYY-MM-DD. Exportacao: MotivoNifNaoInformado, CodigoPais, exigibilidade 4, ISS 0, NBS 114011900, sem IBSCBS. Parser le o tomador da declaracao -- nao o prestador.
+3. **Consulta somente-leitura**: ConsultarNfseServicoPrestado em janelas de 30 dias, mTLS do A1, operacoes Recepcionar/Gerar/Cancelar bloqueadas. URLs oficiais da SPE em fin_municipios 3302403. Emissao continua desligada.
+4. **Skills do Cursor no projeto**: 30 skills oficiais + do usuario (incluindo sobe-o-git) em .cursor/skills, versionadas com o repo.
+
 ## [5.86.0] - 2026-09-21
 
 ### Folha paga administrativos, salários preenchidos e contracheque imprimível

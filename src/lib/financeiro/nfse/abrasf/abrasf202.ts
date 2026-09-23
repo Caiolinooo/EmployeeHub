@@ -79,6 +79,12 @@ function resumoCtx(ctx: NfseContext) {
     optanteSimples: ctx.config.optanteSimples,
     incentivoFiscal: ctx.config.incentivoFiscal,
     rpsSerie: ctx.config.rpsSerie,
+    municipioIbge: ctx.config.municipioIbge,
+    padraoAbz: ctx.config.configExtra.padrao_abz === true
+      ? true
+      : ctx.config.configExtra.padrao_abz === false
+        ? false
+        : undefined,
   };
 }
 

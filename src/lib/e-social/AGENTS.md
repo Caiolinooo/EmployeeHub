@@ -11,6 +11,7 @@ Geração, validação e auto-correção de eventos e-Social (S-2220 e correlato
 - Matrícula do evento: `esocial-matricula.ts` (`resolverMatricula`)
 - Auto-correção: `esocialAutoCorrector.ts` (usado por `preEnvioGateway.ts` e `POST .../eventos/[id]/validar` e `/enviar`)
 - XML S-2220: `eventos/s-2220.ts` + `src/services/eSocialService.ts` (`generateEventXML`)
+- A1 da empresa: `src/lib/certificado-a1.ts` (fonte `esocial_certificados`). e-Social e NFS-e compartilham o mesmo certificado ativo.
 
 ## Local Contracts
 

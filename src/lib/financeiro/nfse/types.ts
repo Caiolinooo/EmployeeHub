@@ -27,21 +27,38 @@ export interface NfseItemInput {
   tributavel: boolean; aliquotaIss?: number;
 }
 export interface NfseTomador {
-  nome: string; documento: string;                // CPF (11) ou CNPJ (14), dígitos
+  nome: string; documento: string;                // CPF (11) ou CNPJ (14), dígitos; vazio = exterior
   email?: string; municipioIbge: string; inscricaoMunicipal?: string;
   endereco?: { logradouro: string; numero: string; complemento?: string;
-               bairro: string; cep: string };
+               bairro: string; cep: string; uf?: string; codigoPais?: string };
+  codigoPais?: string;                            // BACEN 4 dígitos (tomador exterior)
+  motivoNifNaoInformado?: string;                 // 1|2 — SPE Macaé exportação
 }
 export interface NfseRpsInput {
   rpsNumero: number; rpsSerie: string;            // alocados pelo service (contador transacional)
   dataEmissao: string;                            // YYYY-MM-DD
-  competencia: string;                            // YYYY-MM
+  competencia: string;                            // YYYY-MM ou YYYY-MM-DD (SPE usa data)
   tomador: NfseTomador;
   itens: NfseItemInput[];
-  valorServicos: number; descontosIncondicionais?: number; deducoes?: number;
+  valorServicos: number; descontosIncondicionais?: number; descontosCondicionados?: number; deducoes?: number;
   aliquotaIss: number; issRetido: boolean;
   discriminacao: string;                          // texto livre (referência à fatura)
   faturaId?: string; faturaNumero?: number;
+  codigoCnae?: string;
+  codigoNbs?: string;
+  codigoTributacaoMunicipio?: string;
+  exigibilidadeIss?: string;
+  codigoPaisServico?: string;
+  municipioIncidencia?: string;
+  valorIr?: number;
+  valorCsll?: number;
+  situacaoTributariaPisCofins?: string;
+  ibscbs?: {
+    operacao?: string;
+    operacaoUsoConsumoPessoal?: string;
+    situacaoTributaria?: string;
+    classificacaoTributaria?: string;
+  };
 }
 export interface NfseErro { codigo: string; mensagem: string }
 export interface NfseEmissaoResultado {

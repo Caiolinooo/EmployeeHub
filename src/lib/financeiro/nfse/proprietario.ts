@@ -20,8 +20,9 @@ import type {
   NfseRpsInput,
 } from './types';
 import { clienteHttp, sanitizarRaw, type HttpClient } from '../banks/http-mtls';
-import { MACAE_CONFIG, type ConfiguracaoMunicipioProprietario } from './municipios/macae';
-import { resolverCodigoCancelamento } from './abrasf/templates';
+import { MACAE_CODIGO_IBGE, MACAE_CONFIG, type ConfiguracaoMunicipioProprietario } from './municipios/macae';
+import { montarRps, resolverCodigoCancelamento } from './abrasf/templates';
+import { formatarItemLc116 } from './padrao-abz';
 
 export const PROPRIETARIO_META: NfseProvider['meta'] = {
   descricao:
@@ -108,7 +109,18 @@ export function renderTemplate(template: string, vars: Record<string, string | n
 function varsComuns(ctx: NfseContext, input: NfseRpsInput): Record<string, string | number | undefined> {
   const primeiroItem = input.itens[0];
   const valorIss = (input.valorServicos * input.aliquotaIss) / 100;
+  const rpsXml = montarRps(204, {
+    cnpj: ctx.config.cnpj,
+    razaoSocial: ctx.config.razaoSocial,
+    inscricaoMunicipal: ctx.config.inscricaoMunicipal,
+    optanteSimples: ctx.config.optanteSimples,
+    incentivoFiscal: ctx.config.incentivoFiscal,
+    rpsSerie: ctx.config.rpsSerie,
+    municipioIbge: ctx.config.municipioIbge,
+    padraoAbz: ctx.config.municipioIbge === MACAE_CODIGO_IBGE,
+  }, input);
   return {
+    rps_xml: rpsXml,
     rps_numero: input.rpsNumero,
     rps_serie: input.rpsSerie,
     data_emissao: input.dataEmissao,
@@ -126,7 +138,16 @@ function varsComuns(ctx: NfseContext, input: NfseRpsInput): Record<string, strin
     iss_retido: input.issRetido ? '1' : '2',
     optante_simples: ctx.config.optanteSimples ? '1' : '2',
     incentivo_fiscal: ctx.config.incentivoFiscal ? '1' : '2',
-    codigo_lc116: primeiroItem?.codigoLc116,
+    codigo_lc116: formatarItemLc116(primeiroItem?.codigoLc116),
+    codigo_tributacao_municipio: formatarItemLc116(String(ctx.config.configExtra.codigo_tributacao_municipio || primeiroItem?.codigoLc116 || '')),
+    exigibilidade_iss: String(ctx.config.configExtra.exigibilidade_iss || '1'),
+    tomador_logradouro: input.tomador.endereco?.logradouro,
+    tomador_numero: input.tomador.endereco?.numero,
+    tomador_complemento: input.tomador.endereco?.complemento,
+    tomador_bairro: input.tomador.endereco?.bairro,
+    tomador_ibge: input.tomador.municipioIbge,
+    tomador_uf: input.tomador.endereco?.uf,
+    tomador_cep: input.tomador.endereco?.cep,
     discriminacao: input.discriminacao,
     itens: input.itens
       .map(

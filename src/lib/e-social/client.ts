@@ -1,7 +1,7 @@
 import https from 'https';
 import { supabaseAdmin } from '@/lib/supabase';
-import { decryptPassword } from './certificado';
 import { signESocialXml, extractKeysFromPfx } from './signing';
+import { carregarCertificadoA1 } from '@/lib/certificado-a1';
 
 const ESOCIAL_PRODUCTION = {
   envio: 'https://webservices.envio.esocial.gov.br/servicos/empregador/enviarloteeventos/WsEnviarLoteEventos.svc',
@@ -141,59 +141,12 @@ function buildConsultaSoapEnvelope(protocolo: string): string {
 </soap:Envelope>`;
 }
 
-const pfxCache = new Map<string, { pfx: Buffer; passphrase: string }>();
-
 async function loadCert(certificadoId?: string): Promise<{ pfx: Buffer; passphrase: string } | null> {
-  let id = certificadoId;
-  
-  if (!id) {
-    const { data: activeCert } = await supabaseAdmin
-      .from('esocial_certificados')
-      .select('id')
-      .eq('ativo', true)
-      .maybeSingle();
-    
-    if (activeCert) id = activeCert.id;
-  }
-
-  if (!id) {
-    console.warn('[eSocialClient] Nenhum certificado ID fornecido e nenhum ativo encontrado');
-    return null;
-  }
-
-  const cached = pfxCache.get(id);
-  if (cached) return cached;
-
   try {
-    const { data: certRow } = await supabaseAdmin
-      .from('esocial_certificados')
-      .select('arquivo_path, senha_criptografada, nome')
-      .eq('id', id)
-      .maybeSingle();
-
-    if (!certRow?.arquivo_path || !certRow?.senha_criptografada) {
-      console.error(`[eSocialClient] Certificado ${id} não encontrado ou sem dados`, certRow);
-      return null;
-    }
-
-    console.log(`[eSocialClient] Carregando certificado: ${certRow.nome}`);
-
-    const { data: blob, error: downloadError } = await supabaseAdmin.storage
-      .from('esocial-certificados')
-      .download(certRow.arquivo_path);
-
-    if (downloadError || !blob) {
-      console.error(`[eSocialClient] Erro ao baixar certificado ${certRow.arquivo_path}:`, downloadError);
-      return null;
-    }
-
-    const passphrase = decryptPassword(certRow.senha_criptografada);
-    const pfx = Buffer.from(await blob.arrayBuffer());
-    const entry = { pfx, passphrase };
-    pfxCache.set(id, entry);
-    return entry;
+    const loaded = await carregarCertificadoA1(certificadoId ? { id: certificadoId } : {});
+    return { pfx: loaded.pfx, passphrase: loaded.passphrase };
   } catch (err) {
-    console.error(`[eSocialClient] Erro fatal ao carregar certificado ${id}:`, err);
+    console.error('[eSocialClient] Falha ao carregar o A1 unico da empresa:', err);
     return null;
   }
 }

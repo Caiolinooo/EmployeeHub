@@ -10,8 +10,16 @@
  *   próprio documento do lote (assinatura enveloped XMLDSig via xml-sign.ts).
  */
 
+import {
+  PADRAO_ABZ,
+  resolverCamposFiscaisAbz,
+} from '../padrao-abz';
+
 export const ABRASF_NS = 'http://www.abrasf.org.br/nfse.xsd';
-export const VERSOES = { 202: '2.02', 204: '2.04' } as const;
+export const ABRASF_SOAP_NS = 'http://nfse.abrasf.org.br';
+/** Namespace do WSDL SPE (barra final). Filhos nfseCabecMsg/nfseDadosMsg são unqualified. */
+export const ABRASF_SOAP_NS_SPE = 'http://nfse.abrasf.org.br/';
+export const VERSOES = { 202: '2.02', 203: '2.03', 204: '2.04' } as const;
 export type VersaoAbrasf = keyof typeof VERSOES;
 
 export interface ErroMensagem {
@@ -64,42 +72,104 @@ export interface CtxAbrasfResumo {
   optanteSimples: boolean;
   incentivoFiscal: boolean;
   rpsSerie: string;
+  municipioIbge?: string;
+  padraoAbz?: boolean;
 }
 
 function prestadorXml(cnpj: string, inscricaoMunicipal?: string): string {
   return `<Prestador><CpfCnpj><Cnpj>${cnpj}</Cnpj></CpfCnpj>${el('InscricaoMunicipal', inscricaoMunicipal)}</Prestador>`;
 }
 
-function tomadorXml(input: { nome: string; documento: string; municipioIbge: string; inscricaoMunicipal?: string; email?: string; endereco?: NfseEndereco }): string {
+function tomadorXml(input: RpsAbrasfInput['tomador'], exterior: boolean, motivoNif?: string): string {
+  if (exterior) {
+    const rua = input.endereco?.logradouro;
+    const numero = input.endereco?.numero || PADRAO_ABZ.numeroExteriorPadrao;
+    const bairro = input.endereco?.bairro || PADRAO_ABZ.bairroExterior;
+    const pais = input.endereco?.codigoPais || input.codigoPais;
+    const endereco = `<Endereco>${el('Endereco', rua)}${el('Numero', numero)}${el('Complemento', input.endereco?.complemento)}${el('Bairro', bairro)}${el('CodigoPais', pais)}</Endereco>`;
+    return `<Tomador>${el('MotivoNifNaoInformado', motivoNif)}<RazaoSocial>${xmlEscape(input.nome)}</RazaoSocial>${endereco}</Tomador>`;
+  }
   const dig = input.documento.length === 11 ? 'Cpf' : 'Cnpj';
   const uf = input.endereco?.uf ?? ufPorCodigoIbge(input.municipioIbge);
   const endereco = input.endereco
-    ? `<Endereco>${el('Logradouro', input.endereco.logradouro)}${el('Numero', input.endereco.numero)}${el('Complemento', input.endereco.complemento)}${el('Bairro', input.endereco.bairro)}${el('CodigoMunicipio', input.municipioIbge)}${el('Uf', uf)}${el('Cep', input.endereco.cep)}</Endereco>`
+    ? `<Endereco>${el('Endereco', input.endereco.logradouro)}${el('Numero', input.endereco.numero)}${el('Complemento', input.endereco.complemento)}${el('Bairro', input.endereco.bairro)}${el('CodigoMunicipio', input.municipioIbge)}${el('Uf', uf)}${el('Cep', input.endereco.cep)}</Endereco>`
     : '';
   const contato = input.email ? `<Contato><Email>${xmlEscape(input.email)}</Email></Contato>` : '';
-  return `<Tomador><IdentificacaoTomador><CpfCnpj><${dig}>${input.documento}</${dig}></CpfCnpj></IdentificacaoTomador>${el('RazaoSocial', input.nome)}${endereco}${contato}</Tomador>`;
+  const im = el('InscricaoMunicipal', input.inscricaoMunicipal);
+  return `<Tomador><IdentificacaoTomador><CpfCnpj><${dig}>${xmlEscape(input.documento)}</${dig}></CpfCnpj>${im}</IdentificacaoTomador>${el('RazaoSocial', input.nome)}${endereco}${contato}</Tomador>`;
 }
 
 export interface NfseEndereco {
   logradouro: string; numero: string; complemento?: string;
-  bairro: string; uf?: string; cep: string;
+  bairro: string; uf?: string; cep: string; codigoPais?: string;
 }
 
-/** Monta o <Rps> 2.02/2.04 (com <InfDeclaracaoPrestacaoServico Id="rps{n}">). */
-export function montarRps(
-  versao: VersaoAbrasf,
-  ctx: CtxAbrasfResumo,
-  input: {
-    rpsNumero: number; rpsSerie: string; dataEmissao: string; competencia: string;
-    tomador: { nome: string; documento: string; municipioIbge: string; inscricaoMunicipal?: string; email?: string; endereco?: NfseEndereco };
-    itens: Array<{ codigoLc116: string; descricao: string; quantidade: number; valorUnitario: number; tributavel: boolean; aliquotaIss?: number }>;
-    valorServicos: number; descontosIncondicionais?: number; deducoes?: number;
-    aliquotaIss: number; issRetido: boolean;
-    discriminacao: string;
-  },
+export interface RpsAbrasfInput {
+  rpsNumero: number; rpsSerie: string; dataEmissao: string; competencia: string;
+  tomador: {
+    nome: string; documento: string; municipioIbge: string;
+    inscricaoMunicipal?: string; email?: string; endereco?: NfseEndereco;
+    codigoPais?: string; motivoNifNaoInformado?: string;
+  };
+  itens: Array<{ codigoLc116: string; descricao: string; quantidade: number; valorUnitario: number; tributavel: boolean; aliquotaIss?: number }>;
+  valorServicos: number; descontosIncondicionais?: number; descontosCondicionados?: number; deducoes?: number;
+  aliquotaIss: number; issRetido: boolean;
+  discriminacao: string;
+  codigoTributacaoMunicipio?: string;
+  exigibilidadeIss?: string;
+  codigoCnae?: string;
+  codigoNbs?: string;
+  codigoPaisServico?: string;
+  municipioIncidencia?: string;
+  valorIr?: number;
+  valorCsll?: number;
+  situacaoTributariaPisCofins?: string;
+  ibscbs?: {
+    operacao?: string;
+    operacaoUsoConsumoPessoal?: string;
+    situacaoTributaria?: string;
+    classificacaoTributaria?: string;
+  };
+}
+
+function valoresServicoXml(
+  input: RpsAbrasfInput,
+  fiscal: ReturnType<typeof resolverCamposFiscaisAbz>,
 ): string {
-  const valorIss = (input.valorServicos * input.aliquotaIss) / 100;
-  return `<Rps><InfDeclaracaoPrestacaoServico Id="rps${input.rpsNumero}"><Rps><IdentificacaoRps><Numero>${input.rpsNumero}</Numero><Serie>${input.rpsSerie}</Serie><Tipo>1</Tipo></IdentificacaoRps><DataEmissao>${input.dataEmissao}</DataEmissao><Status>1</Status></Rps>${el('Competencia', input.competencia)}<Servico><Valores>${el('ValorServicos', moeda(input.valorServicos))}${el('ValorDeducoes', input.deducoes ? moeda(input.deducoes) : undefined)}${el('DescontosIncondicionados', input.descontosIncondicionais ? moeda(input.descontosIncondicionais) : undefined)}${el('Aliquota', input.aliquotaIss.toFixed(2))}${el('ValorIss', moeda(valorIss))}</Valores>${el('IssRetido', input.issRetido ? '1' : '2')}${el('ItemListaServico', input.itens[0]?.codigoLc116)}${el('Discriminacao', input.discriminacao)}${el('CodigoMunicipio', input.tomador.municipioIbge)}${el('ExigibilidadeISS', '1')}</Servico>${prestadorXml(ctx.cnpj, ctx.inscricaoMunicipal)}${tomadorXml(input.tomador)}${el('OptanteSimplesNacional', ctx.optanteSimples ? '1' : '2')}${el('IncentivoFiscal', ctx.incentivoFiscal ? '1' : '2')}</InfDeclaracaoPrestacaoServico></Rps>`;
+  return `<Valores>${el('ValorServicos', moeda(input.valorServicos))}${el('ValorDeducoes', input.deducoes ? moeda(input.deducoes) : undefined)}${el('ValorIr', input.valorIr != null ? moeda(input.valorIr) : undefined)}${el('ValorCsll', input.valorCsll != null ? moeda(input.valorCsll) : undefined)}${el('SituacaoTributariaPISCOFINS', fiscal.situacaoTributariaPisCofins)}${el('ValorIss', moeda(fiscal.valorIss))}${el('Aliquota', input.aliquotaIss.toFixed(2))}<DescontoIncondicionado>${moeda(input.descontosIncondicionais ?? 0)}</DescontoIncondicionado><DescontoCondicionado>${moeda(input.descontosCondicionados ?? 0)}</DescontoCondicionado></Valores>`;
+}
+
+function ibscbsXml(ibscbs: NonNullable<ReturnType<typeof resolverCamposFiscaisAbz>['ibscbs']>): string {
+  return `<IBSCBS><OperacaoUsoConsumoPessoal>${ibscbs.operacaoUsoConsumoPessoal}</OperacaoUsoConsumoPessoal><Operacao>${ibscbs.operacao}</Operacao><ValoresTributos><SituacaoTributaria>${ibscbs.situacaoTributaria}</SituacaoTributaria><ClassificacaoTributaria>${ibscbs.classificacaoTributaria}</ClassificacaoTributaria></ValoresTributos></IBSCBS>`;
+}
+
+/** Monta o <Rps> 2.02/2.04 alinhado ao CompNfse real da SPE Macaé. */
+export function montarRps(
+  _versao: VersaoAbrasf,
+  ctx: CtxAbrasfResumo,
+  input: RpsAbrasfInput,
+): string {
+  const fiscal = resolverCamposFiscaisAbz({
+    municipioIbgePrestador: ctx.municipioIbge,
+    municipioIbgeTomador: input.tomador.municipioIbge,
+    padraoAbz: ctx.padraoAbz,
+    competencia: input.competencia,
+    dataEmissao: input.dataEmissao,
+    tomador: input.tomador,
+    itemLc116: input.itens[0]?.codigoLc116,
+    valorServicos: input.valorServicos,
+    aliquotaIss: input.aliquotaIss,
+    exigibilidadeIss: input.exigibilidadeIss,
+    codigoCnae: input.codigoCnae,
+    codigoNbs: input.codigoNbs,
+    codigoTributacaoMunicipio: input.codigoTributacaoMunicipio,
+    codigoPaisServico: input.codigoPaisServico,
+    municipioIncidencia: input.municipioIncidencia,
+    situacaoTributariaPisCofins: input.situacaoTributariaPisCofins,
+    ibscbs: input.ibscbs,
+  });
+  const servico = `<Servico>${valoresServicoXml(input, fiscal)}${el('IssRetido', input.issRetido ? '1' : '2')}${el('ItemListaServico', fiscal.itemListaServico)}${el('CodigoCnae', fiscal.codigoCnae)}${el('CodigoTributacaoMunicipio', fiscal.codigoTributacaoMunicipio)}${el('CodigoNbs', fiscal.codigoNbs)}${el('Discriminacao', input.discriminacao)}${el('CodigoMunicipio', fiscal.codigoMunicipioPrestacao)}${el('CodigoPais', fiscal.codigoPaisServico)}${el('ExigibilidadeISS', fiscal.exigibilidadeIss)}${el('MunicipioIncidencia', fiscal.municipioIncidencia)}${fiscal.ibscbs ? ibscbsXml(fiscal.ibscbs) : ''}</Servico>`;
+  return `<Rps><InfDeclaracaoPrestacaoServico Id="rps${input.rpsNumero}"><Rps><IdentificacaoRps><Numero>${input.rpsNumero}</Numero><Serie>${input.rpsSerie}</Serie><Tipo>1</Tipo></IdentificacaoRps><DataEmissao>${input.dataEmissao}</DataEmissao><Status>1</Status></Rps>${el('Competencia', fiscal.competencia)}${servico}${prestadorXml(ctx.cnpj, ctx.inscricaoMunicipal)}${tomadorXml(input.tomador, fiscal.exterior, fiscal.motivoNifNaoInformado)}${el('OptanteSimplesNacional', ctx.optanteSimples ? '1' : '2')}${el('IncentivoFiscal', ctx.incentivoFiscal ? '1' : '2')}</InfDeclaracaoPrestacaoServico></Rps>`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -124,6 +194,47 @@ export function montarConsultarNfsePorRps(entrada: {
   cnpj: string; inscricaoMunicipal?: string; numero: number; serie: string;
 }): string {
   return `<ConsultarNfseRpsEnvio xmlns="${ABRASF_NS}"><IdentificacaoRps><Numero>${entrada.numero}</Numero><Serie>${entrada.serie}</Serie><Tipo>1</Tipo></IdentificacaoRps>${prestadorXml(entrada.cnpj, entrada.inscricaoMunicipal)}</ConsultarNfseRpsEnvio>`;
+}
+
+/** ABRASF 2.03 — ConsultarNfseServicoPrestado (somente leitura, por período). */
+export function montarConsultarNfseServicoPrestado(entrada: {
+  cnpj: string;
+  inscricaoMunicipal?: string;
+  dataInicial: string;
+  dataFinal: string;
+  pagina?: number;
+  numeroNfse?: string;
+}): string {
+  const numero = entrada.numeroNfse ? el('NumeroNfse', entrada.numeroNfse) : '';
+  return `<ConsultarNfseServicoPrestadoEnvio xmlns="${ABRASF_NS}">${prestadorXml(entrada.cnpj, entrada.inscricaoMunicipal)}${numero}<PeriodoEmissao><DataInicial>${entrada.dataInicial}</DataInicial><DataFinal>${entrada.dataFinal}</DataFinal></PeriodoEmissao><Pagina>${entrada.pagina ?? 1}</Pagina></ConsultarNfseServicoPrestadoEnvio>`;
+}
+
+/** Cabeçalho ABRASF 2.03 (nfseCabecMsg do modelo nacional / SPE Macaé). */
+export function montarCabecalhoAbrasf(versao = '2.03'): string {
+  return `<cabecalho versao="${versao}" xmlns="${ABRASF_NS}"><versaoDados>${versao}</versaoDados></cabecalho>`;
+}
+
+/**
+ * Envelope SOAP 1.1 do WSDL SPE (nfse.asmx):
+ *   <tns:OperacaoRequest xmlns:tns="http://nfse.abrasf.org.br/">
+ *     <nfseCabecMsg>…</nfseCabecMsg>   <!-- form=unqualified -->
+ *     <nfseDadosMsg>…</nfseDadosMsg>
+ *   </tns:OperacaoRequest>
+ * SOAPAction permanece http://nfse.abrasf.org.br/Operacao (sem Request, sem barra).
+ */
+export function nomeRequestSpe(operacao: string): string {
+  return operacao.endsWith('Request') ? operacao : `${operacao}Request`;
+}
+
+export function montarEnvelopeAbrasfNacional(operacao: string, dadosXml: string, versao = '2.03'): string {
+  const cabec = montarCabecalhoAbrasf(versao);
+  const request = nomeRequestSpe(operacao);
+  return `<?xml version="1.0" encoding="UTF-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:tns="${ABRASF_SOAP_NS_SPE}"><soap:Body><tns:${request}><nfseCabecMsg>${xmlEscape(cabec)}</nfseCabecMsg><nfseDadosMsg>${xmlEscape(dadosXml)}</nfseDadosMsg></tns:${request}></soap:Body></soap:Envelope>`;
+}
+
+/** Variante Tiplan com um único inputXML (espelha o outputXML da resposta). */
+export function montarEnvelopeAbrasfInputXml(operacao: string, dadosXml: string, namespace = ABRASF_SOAP_NS): string {
+  return `<?xml version="1.0" encoding="UTF-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><${operacao} xmlns="${namespace}"><inputXML>${xmlEscape(dadosXml)}</inputXML></${operacao}></soap:Body></soap:Envelope>`;
 }
 
 export function montarConsultarLoteRps(entrada: {
@@ -184,7 +295,12 @@ export function montarEnvelopeSoap(
 /* Parsing de respostas (tolerante a variações municipais)             */
 /* ------------------------------------------------------------------ */
 
-/** Conteúdo da primeira ocorrência de <tag>…</tag> (sem aninhamento igual). */
+/** Bloco completo da primeira ocorrência de <tag>…</tag>, inclusive as tags. */
+export function extrairBloco(xml: string, tag: string): string | undefined {
+  const m = new RegExp('<' + tag + '\\b[\\s\\S]*?</' + tag + '>', 'i').exec(xml);
+  return m?.[0];
+}
+
 export function extrairTag(xml: string, tag: string): string | undefined {
   const m = new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)</${tag}>`, 'i').exec(xml);
   return m ? m[1] : undefined;

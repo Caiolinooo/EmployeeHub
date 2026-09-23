@@ -59,7 +59,9 @@ scratch/
 
 # Patch rejects / local IDE
 *.rej
-.cursor/
+.cursor/*
+!.cursor/skills/
+!.cursor/skills/**
 
 # Token files
 .token

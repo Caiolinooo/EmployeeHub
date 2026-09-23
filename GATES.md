@@ -153,3 +153,27 @@ OWNS: scratch/dp-folha-design.md, supabase/migrations/20260923_000001_cadastros_
 - [x] I1: Revisão cruzada manual (reviewer agent caiu no socket) — wiring + segurança + fiscal + merge
   EVIDENCE: Sem P1. Contracheque 403 dono-only (GET+PDF+aceite); merge aditivo nos 5 call sites; sanitização \D só BR, IBGE sem fallback do prestador, LC116 por item. P2: escalaTravada usa gt_relatorios_aprovacoes (coluna bloqueado não existe); comentário de header em wkradar/sync.ts ainda fala upsert por matrícula.
   Limitações: clique-a-clique autenticado no /contracheque do portal não refeito nesta retomada (e2e + UI do DevContracheque no dev server já provaram). NFS-e em moeda != BRL continua bloqueada (invoice internacional só PDF/XLSX).
+
+
+# Gates: Certificado A1 único + consulta NFS-e Macaé (somente leitura)
+
+OWNS: src/lib/certificado-a1.ts, src/lib/financeiro/nfse/{consulta-somente-leitura,padrao-abz,proprietario}.ts, src/lib/financeiro/nfse/abrasf/templates.ts, src/lib/financeiro/nfse/municipios/macae.ts, src/app/api/financeiro/certificado-a1/route.ts, scripts/consultar-nfse-macae.ts, scripts/apply-nfse-macae-oficial.js, supabase/migrations/20260923_000004_nfse_certificado_unico_macae.sql
+
+- [x] G1: npx tsx --test src/lib/certificado-a1.test.ts src/lib/financeiro/nfse/consulta-somente-leitura.test.ts
+  EXPECT: testes verdes; consulta bloqueia Recepcionar/Gerar/Cancelar.
+  EVIDENCE: 2/2 certificado-a1 + 6/6 consulta-somente-leitura. Parser lê Tomador da declaração (não o prestador). Operações Recepcionar/Gerar/Cancelar/Substituir lançam.
+
+- [x] G2: npx tsx --test src/lib/financeiro/nfse/*.test.ts
+  EXPECT: NFSE_PROVIDER_TESTS_OK (URLs SPE oficiais, mTLS, CodigoTributacaoMunicipio).
+  EVIDENCE: 50/50 (abrasf + consulta + nacional + padrao-abz + proprietario). RPS nacional: Endereco (não Logradouro), LC116 `17.01`, IBSCBS, competência YYYY-MM-DD. RPS exportação: MotivoNifNaoInformado, CodigoPais, ExigibilidadeISS=4, ValorIss=0, sem IBSCBS.
+
+- [x] G3: node scripts/apply-nfse-macae-oficial.js
+  EXPECT: APPLY_NFSE_MACAE_OFICIAL_OK — wsdl_url SPE produção.
+  EVIDENCE: APPLY_NFSE_MACAE_OFICIAL_OK — `fin_municipios` 3302403 aponta `https://spe.macae.rj.gov.br/nfse/WSNacional2/nfse.asmx` (provider abrasf204).
+
+- [x] G4: npx tsx --env-file=.env.local scripts/consultar-nfse-macae.ts
+  EXPECT: CONSULTA_NFSE_LEITURA_OK ou PARCIAL (erro da prefeitura). Nunca emite.
+  EVIDENCE: CONSULTA_NFSE_LEITURA_OK — 30 CompNfse reais (5 nacionais / 25 exterior / 19 canceladas). Só `ConsultarNfseServicoPrestado` em janelas de 30 dias. Reparse local das amostras: 0 tomador invertido; `noRealAusenteNoNosso=[]` e `noNossoAusenteNoReal=[]` na InfDeclaracao.
+
+- [x] G5: node scripts/check-financeiro-i18n.mjs → FIN_I18N_OK
+  EVIDENCE: FIN_I18N_OK na onda do A1 único (certificadoUnico*). Sem chaves novas nesta adequação de template.

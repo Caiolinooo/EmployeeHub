@@ -461,6 +461,18 @@ export interface FinCertificadoUploadResultado {
   validade?: string | null;
 }
 
+
+/** GET /api/financeiro/certificado-a1 — A1 unico da empresa (sem senha). */
+export interface FinCertificadoA1Meta {
+  id: string;
+  nome: string;
+  emissor: string | null;
+  validoAte: string | null;
+  ativo: boolean;
+  fingerprint: string;
+  subjectCn: string;
+}
+
 /** POST /api/financeiro/cobrancas — cobrança gerada */
 export type FinCobrancaGeradaResponse = FinCobranca;
 

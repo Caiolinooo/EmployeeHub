@@ -24,7 +24,7 @@ fatura/NFS-e/cobrança/conciliação/pagamentos), regras puras e renderers de fa
   `secure-credentials` (convenções `fin_banco_<integracaoId>_<campo>` /
   `fin_nfse_<configId>_<campo>`; senha do pfx = `..._pfx_senha`); resolve
   `getBankAdapter` (`./banks/registry`) e `getNfseProvider` (`./nfse/registry`);
-  baixa .pfx do bucket privado `financeiro-certificados` para tmp server-side;
+  NFS-e usa o A1 unico da empresa (`src/lib/certificado-a1.ts` / `esocial_certificados`); bancos ainda podem ter pfx proprio em `financeiro-certificados`;
   nº de fatura transacional (pg advisory lock + BEGIN/COMMIT) e reserva de RPS +
   criação da emissão na MESMA transação (`criarEmissaoTransacional`, rollback
   libera o número — §5.2.2);

@@ -29,39 +29,9 @@ export interface ConfiguracaoMunicipioProprietario {
   templates: { emitir: string; consultar: string; cancelar: string };
 }
 
+/** Corpo = RPS ABRASF 2.03 gerado por montarRps (padrão extraído da SPE). */
 const TEMPLATE_EMISSAO_MACAE = `<?xml version="1.0" encoding="UTF-8"?>
-<Rps xmlns="http://www.abrasf.org.br/nfse.xsd">
-  <InfDeclaracaoPrestacaoServico Id="rps{{rps_numero}}">
-    <Rps>
-      <IdentificacaoRps><Numero>{{rps_numero}}</Numero><Serie>{{rps_serie}}</Serie><Tipo>1</Tipo></IdentificacaoRps>
-      <DataEmissao>{{data_emissao}}</DataEmissao>
-      <Status>1</Status>
-    </Rps>
-    <Competencia>{{competencia}}</Competencia>
-    <Servico>
-      <Valores>
-        <ValorServicos>{{valor_servicos}}</ValorServicos>
-        <Aliquota>{{aliquota}}</Aliquota>
-        <ValorIss>{{valor_iss}}</ValorIss>
-      </Valores>
-      <IssRetido>{{iss_retido}}</IssRetido>
-      <ItemListaServico>{{codigo_lc116}}</ItemListaServico>
-      <Discriminacao>{{discriminacao}}</Discriminacao>
-      <CodigoMunicipio>{{municipio_prestacao}}</CodigoMunicipio>
-      <ExigibilidadeISS>1</ExigibilidadeISS>
-    </Servico>
-    <Prestador>
-      <CpfCnpj><Cnpj>{{prestador_cnpj}}</Cnpj></CpfCnpj>
-      <InscricaoMunicipal>{{prestador_im}}</InscricaoMunicipal>
-    </Prestador>
-    <Tomador>
-      <IdentificacaoTomador><CpfCnpj><{{tomador_doc_tag}}>{{tomador_documento}}</{{tomador_doc_tag}}></CpfCnpj></IdentificacaoTomador>
-      <RazaoSocial>{{tomador_nome}}</RazaoSocial>
-    </Tomador>
-    <OptanteSimplesNacional>{{optante_simples}}</OptanteSimplesNacional>
-    <IncentivoFiscal>{{incentivo_fiscal}}</IncentivoFiscal>
-  </InfDeclaracaoPrestacaoServico>
-</Rps>`;
+{{rps_xml}}`;
 
 const TEMPLATE_CONSULTA_MACAE = `<?xml version="1.0" encoding="UTF-8"?>
 <ConsultarNfseRpsEnvio xmlns="http://www.abrasf.org.br/nfse.xsd">
@@ -86,13 +56,14 @@ const TEMPLATE_CANCELAMENTO_MACAE = `<?xml version="1.0" encoding="UTF-8"?>
 export const MACAE_CONFIG: ConfiguracaoMunicipioProprietario = {
   municipioIbge: MACAE_CODIGO_IBGE,
   nomeMunicipio: 'Macaé',
-  // Webservice municipal — confirmar host/versão com a prefeitura na ativação;
+  // SPE oficial (manual WsNFSeNacional 2.03, revisado 04/04/2024):
+  // autenticação = certificado A1 ICP-Brasil (o A1 único da empresa).
   // configExtra.wsdl_url / ambiente_urls da empresa SEMPRE sobrepõem estes valores.
   urls: {
-    homologacao: 'https://nfse-homologacao.macae.rj.gov.br/ws/nfse',
-    producao: 'https://nfse.macae.rj.gov.br/ws/nfse',
+    homologacao: 'https://macaehomologacao.nfe.com.br/nfse/wsnacional2/nfse.asmx',
+    producao: 'https://spe.macae.rj.gov.br/nfse/WSNacional2/nfse.asmx',
   },
-  authTipo: 'basic', // usuário/senha do portal da prefeitura (app_secrets)
+  authTipo: 'none', // mTLS do A1 único — não há usuário/senha no SPE
   authHeaderToken: 'Authorization',
   authPrefixoToken: '',
   contentType: 'application/xml',

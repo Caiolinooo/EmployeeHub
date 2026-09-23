@@ -70,7 +70,7 @@ describe('proprietario — configuração do município', () => {
     assert.equal(cfg.municipioIbge, MACAE_CODIGO_IBGE);
     assert.equal(cfg.nomeMunicipio, 'Macaé');
     assert.equal(cfg.authTipo, MACAE_CONFIG.authTipo);
-    assert.ok(cfg.templates.emitir.includes('InfDeclaracaoPrestacaoServico'));
+    assert.ok(cfg.templates.emitir.includes('{{rps_xml}}'));
     assert.equal(cfg.urls.homologacao.length > 0, true);
   });
 
@@ -161,9 +161,9 @@ describe('proprietario — ciclo com HTTP mock (Macaé default)', () => {
     assert.ok(corpo.includes('<IssRetido>2</IssRetido>'));
     assert.ok(corpo.includes('<OptanteSimplesNacional>1</OptanteSimplesNacional>'));
     assert.equal(chamadas[0].headers['Content-Type'], 'application/xml');
-    // auth basic default de Macaé:
-    assert.ok(chamadas[0].headers.Authorization!.startsWith('Basic '));
-    assert.ok(chamadas[0].url.startsWith('https://nfse-homologacao.macae.rj.gov.br'));
+    // SPE Macaé autentica por A1 (mTLS), não por usuário/senha:
+    assert.equal(chamadas[0].headers.Authorization, undefined);
+    assert.ok(chamadas[0].url.startsWith('https://macaehomologacao.nfe.com.br'));
   });
 
   it('wsdl_url da empresa sobrepõe a URL default', async () => {
@@ -204,7 +204,7 @@ describe('proprietario — ciclo com HTTP mock (Macaé default)', () => {
     assert.equal(resultado.ok, true);
     assert.ok(resultado.xmlCancelamento!.includes('<NumeroNfse>8080</NumeroNfse>'));
     assert.ok(resultado.xmlCancelamento!.includes('<CodigoCancelamento>1</CodigoCancelamento>'));
-    assert.ok(chamadas[0].url.includes('macae.rj.gov.br'));
+    assert.ok(/macaehomologacao\.nfe\.com\.br|spe\.macae\.rj\.gov\.br/.test(chamadas[0].url));
   });
 
   it('cancelar sem código de cancelamento resolve para 1', async () => {
@@ -224,6 +224,6 @@ describe('proprietario — ciclo com HTTP mock (Macaé default)', () => {
       { ...CTX_BASE, config: { ...CTX_BASE.config, ambiente: 'producao' } },
       INPUT,
     );
-    assert.ok(chamadas[0].url.startsWith('https://nfse.macae.rj.gov.br'));
+    assert.ok(chamadas[0].url.startsWith('https://spe.macae.rj.gov.br'));
   });
 });
