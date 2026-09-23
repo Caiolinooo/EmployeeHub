@@ -5,6 +5,7 @@
  * backup WK — nunca sobrescrevem (exceções confirmadas pelo DP ficam).
  */
 import { supabaseAdmin } from '@/lib/supabase';
+import { mergeColaborador } from '@/lib/payroll/colaborador-merge';
 import { WK_CANDIDATOS_FUNCIONARIOS, wkGetPaginado } from './api-client';
 import {
   calcularMudancasGt,
@@ -101,6 +102,9 @@ export async function enriquecerPortalWk(opcoes: {
   }
 
   // ---- payroll_employees ----
+  // Dry-run usa as regras puras para o relatório; a gravação (aplicar=true)
+  // passa pelo ponto único de merge (design §3) com os mesmos campos — o
+  // service refaz o match por CPF/matrícula e aplica o preenchimento aditivo.
   const departamentos = (depts ?? []) as DepartamentoPayroll[];
   for (const empRaw of (emps ?? []) as EmployeePayroll[]) {
     const cpf = digitos(empRaw.cpf);
@@ -113,11 +117,25 @@ export async function enriquecerPortalWk(opcoes: {
     }
     relatorio.payroll.atualizados++;
     if (aplicar) {
-      const { error } = await supabaseAdmin
-        .from('payroll_employees')
-        .update(changes)
-        .eq('id', empRaw.id);
-      if (error) throw new Error(`payroll_employees ${empRaw.id}: ${error.message}`);
+      if (!empRaw.company_id) {
+        relatorio.payroll.pendencias.push(
+          `payroll_employees ${empRaw.id} sem company_id — merge não aplicado`,
+        );
+        continue;
+      }
+      await mergeColaborador(
+        supabaseAdmin,
+        {
+          company_id: empRaw.company_id,
+          registration_number: empRaw.registration_number,
+          cpf: empRaw.cpf,
+          cargo: (changes.position as string | undefined) ?? null,
+          pis: (changes.pis_pasep as string | undefined) ?? null,
+          base_salary: (changes.base_salary as number | undefined) ?? null,
+          department_id: (changes.department_id as string | undefined) ?? null,
+        },
+        backup ? 'wk_backup' : 'wk_api',
+      );
     }
   }
 

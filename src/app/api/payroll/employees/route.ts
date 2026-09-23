@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { mergeColaborador } from '@/lib/payroll/colaborador-merge';
 import { PayrollEmployee, PayrollEmployeeForm, PayrollApiResponse, PayrollPaginatedResponse } from '@/types/payroll';
 import { garantirNivelPayroll } from '@/lib/payroll/payroll-auth';
 
@@ -123,47 +124,62 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Criar funcionário
-    const { data, error } = await supabaseAdmin
-      .from('payroll_employees')
-      .insert([{
-        employee_id: body.employeeId,
-        company_id: body.companyId,
-        department_id: body.departmentId,
-        registration_number: body.registrationNumber,
-        name: body.name,
-        cpf: body.cpf,
-        position: body.position,
-        base_salary: body.baseSalary,
-        admission_date: body.admissionDate,
-        termination_date: body.terminationDate,
-        status: body.status,
-        bank_code: body.bankCode,
-        bank_agency: body.bankAgency,
-        bank_account: body.bankAccount,
-        pis_pasep: body.pisPasep,
-        dependents: body.dependents
-      }])
-      .select(`
-        *,
-        company:payroll_companies(*),
-        department:payroll_departments(*)
-      `)
-      .single();
-
-    if (error) {
-      console.error('Erro ao criar funcionário:', error);
+    // Grava pelo ponto único de merge (design §3): match por CPF/matrícula,
+    // preenchimento aditivo, vínculo employee_id e auditoria no service.
+    let merge;
+    try {
+      merge = await mergeColaborador(
+        supabaseAdmin,
+        {
+          company_id: body.companyId,
+          registration_number: body.registrationNumber ?? null,
+          cpf: body.cpf ?? null,
+          name: body.name,
+          cargo: body.position ?? null,
+          data_admissao: body.admissionDate ? String(body.admissionDate) : null,
+          data_demissao: body.terminationDate ? String(body.terminationDate) : null,
+          gt_colaborador_id: body.employeeId ?? null,
+          status: body.status,
+          department_id: body.departmentId ?? null,
+          pis: body.pisPasep ?? null,
+          bank_code: body.bankCode ?? null,
+          bank_agency: body.bankAgency ?? null,
+          bank_account: body.bankAccount ?? null,
+        },
+        'manual',
+      );
+    } catch (err) {
+      console.error('Erro ao criar funcionário:', err);
       return NextResponse.json({
         success: false,
         error: 'Erro ao criar funcionário'
       } as PayrollApiResponse<null>, { status: 500 });
     }
 
+    const { data, error } = await supabaseAdmin
+      .from('payroll_employees')
+      .select(`
+        *,
+        company:payroll_companies(*),
+        department:payroll_departments(*)
+      `)
+      .eq('id', merge.id)
+      .single();
+
+    if (error) {
+      console.error('Erro ao reler funcionário:', error);
+      return NextResponse.json({
+        success: false,
+        error: 'Erro ao criar funcionário'
+      } as PayrollApiResponse<null>, { status: 500 });
+    }
+
+    const criado = merge.acao === 'criado';
     return NextResponse.json({
       success: true,
       data,
-      message: 'Funcionário criado com sucesso'
-    } as PayrollApiResponse<PayrollEmployee>, { status: 201 });
+      message: criado ? 'Funcionário criado com sucesso' : 'Funcionário atualizado com sucesso'
+    } as PayrollApiResponse<PayrollEmployee>, { status: criado ? 201 : 200 });
   } catch (error) {
     console.error('Erro interno:', error);
     return NextResponse.json({

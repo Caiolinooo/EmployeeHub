@@ -67,6 +67,11 @@ export interface FinCliente {
   condicao_pagamento?: string | null;
   categoria?: string | null;          // offshore | maritime | onshore
   subcategoria?: string | null;
+  inscricao_municipal?: string | null;
+  inscricao_estadual?: string | null;
+  pais?: string;                      // ISO 3166-1 alpha-2; default 'BR'
+  tax_id?: string | null;             // VAT/Tax ID alfanumérico (tomador exterior)
+  default_template_id?: string | null;
   metadados?: Record<string, unknown>;
   is_active: boolean;
   created_at: string;
@@ -84,6 +89,11 @@ export interface FinClienteForm {
   condicao_pagamento?: string;
   categoria?: string;
   subcategoria?: string;
+  inscricao_municipal?: string;
+  inscricao_estadual?: string;
+  pais?: string;
+  tax_id?: string;
+  default_template_id?: string | null;
   metadados?: Record<string, unknown>;
   is_active?: boolean;
 }
@@ -124,6 +134,8 @@ export interface FinFatura {
   data_vencimento?: string | null;
   condicao_pagamento?: string | null;
   call_off?: string | null;
+  vessel_name?: string | null;        // embarcação (offshore/maritime)
+  po_number?: string | null;          // purchase order do cliente
   cliente_snapshot?: Record<string, unknown> | null;
   observacoes?: string | null;
   status: FinFaturaStatus;
@@ -143,6 +155,9 @@ export interface FinFaturaItem {
   quantidade: number;
   valor_unitario: number;
   valor_total: number;
+  codigo_lc116?: string | null;       // LC 116/2003 por item; fallback config.codigo_lc116_padrao
+  aliquota_iss?: number | null;       // % por item; fallback fin_nfse_config.aliquota_iss
+  cnae?: string | null;
   origem: FinFaturaOrigem;
   created_at: string;
 }
@@ -153,6 +168,9 @@ export interface FinFaturaItemInput {
   quantidade?: number;
   valor_unitario: number;
   valor_total?: number;
+  codigo_lc116?: string;
+  aliquota_iss?: number;
+  cnae?: string;
   origem?: FinFaturaOrigem;
 }
 
@@ -210,6 +228,12 @@ export interface FinContaBancaria {
   tipo: FinContaTipo;
   titular_nome: string;
   titular_documento: string;
+  swift_bic?: string | null;          // SWIFT/BIC (internacional)
+  iban?: string | null;               // IBAN (Europa/UK)
+  routing_number?: string | null;     // EUA (9 dígitos)
+  sort_code?: string | null;          // UK (6 dígitos)
+  moeda?: string;                     // default 'BRL'
+  banco_correspondente?: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -226,6 +250,12 @@ export interface FinContaBancariaForm {
   tipo?: FinContaTipo;
   titular_nome: string;
   titular_documento: string;
+  swift_bic?: string;
+  iban?: string;
+  routing_number?: string;
+  sort_code?: string;
+  moeda?: string;
+  banco_correspondente?: string;
   is_active?: boolean;
 }
 

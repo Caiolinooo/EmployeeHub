@@ -36,7 +36,9 @@ const nextConfig = {
   },
 
   // Pacotes externos no servidor (estabilizado no Next 15; antes era experimental.serverComponentsExternalPackages)
-  serverExternalPackages: ['tesseract.js', 'pdfjs-dist', 'canvas', 'pdf-parse'],
+  // pdfkit: externo porque carrega fontes AFM via fs a partir de node_modules
+  // (bundle webpack quebra com ENOENT em vendor-chunks/data/*.afm).
+  serverExternalPackages: ['tesseract.js', 'pdfjs-dist', 'canvas', 'pdf-parse', 'pdfkit'],
 
   // Configurações experimentais
   experimental: {

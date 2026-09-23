@@ -20,6 +20,20 @@ export interface PayrollCompany {
   email?: string;
   contactPerson?: string;
   isActive: boolean;
+  // Cadastro fiscal/endereço estruturado (migration 20260923_000001_cadastros_fiscais)
+  razaoSocial?: string;
+  nomeFantasia?: string;
+  inscricaoEstadual?: string;
+  inscricaoMunicipal?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cep?: string;
+  municipio?: string;
+  uf?: string;
+  municipioIbge?: string;             // código IBGE (7 dígitos) do município do prestador
+  cnaePrincipal?: string;
   // Configurações específicas do cliente
   payrollType?: 'standard' | 'custom' | 'import_based';
   templateVersion?: string;
@@ -290,6 +304,20 @@ export interface PayrollCompanyForm {
   email?: string;
   contactPerson?: string;
   isActive: boolean;
+  // Cadastro fiscal/endereço estruturado (migration 20260923_000001_cadastros_fiscais)
+  razaoSocial?: string;
+  nomeFantasia?: string;
+  inscricaoEstadual?: string;
+  inscricaoMunicipal?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cep?: string;
+  municipio?: string;
+  uf?: string;
+  municipioIbge?: string;
+  cnaePrincipal?: string;
 }
 
 export interface PayrollEmployeeForm {

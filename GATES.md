@@ -131,3 +131,25 @@ Pré-condições: `.env.local` com creds Supabase service (G1–G3, G6, E2E). G4
 - [x] I3: Revisão ponta a ponta (Reviewer) + correções P1/P2
   EVIDENCE: Revisão completa em agent://Reviewer (13 P1 + 10 P2, file:linha). Corrigidos: conta exata no BankContext; fatura → 'paga' por soma de liquidadas ≥ total (e2e prova); nosso_numero gerado/persistido + txid persistido; XML só com ?xml=1 + nível edit (listagem sem XML); criação de fatura BEGIN/COMMIT; conciliação consome movimento (nunca 2 casam na mesma cobrança); vínculo manual rejeita movimento conciliado; is_active filtrado em ações; RPS reservado+emissão na mesma transação; cancelamento exige codigoCancelamento (resolver ABRASF 1–9); leak mTLS (Agent cache+evict, pfx temporário apagado, limparRecursosMtls); LC116 no config NFS-e (UI); deep-link ?tab=; filtro de clientes por empresa; 2ª config NFS-e; reset de config na troca de município; i18n residual. Revalidação pós-fix: FIN_LIB_TESTS_OK 32/32, BANK_ADAPTER_TESTS_OK 44/44, NFSE_PROVIDER_TESTS_OK 44/44, FIN_I18N_OK, FIN_FLUXO_E2E_OK, eslint escopado 0, tsc escopado 0.
   Limitações declaradas: clique-a-clique autenticado com credenciais reais de banco não executado (E2E usa sandbox fake/CSV); certificado_validade gravado como null até a primeira testagem (extração de validTo do PKCS#12 cifrado pendente de app_secrets decifrados); 403 com usuário sem permissão não exercitado.
+
+# Gates: Reforma Folha / DP / Contracheque / Vínculo (onda 3)
+
+OWNS: scratch/dp-folha-design.md, supabase/migrations/20260923_000001_cadastros_fiscais.sql, supabase/migrations/20260923_000002_contracheque_aceites.sql, supabase/migrations/20260923_000003_payroll_employees_cpf_unique.sql, src/lib/payroll/colaborador-merge.ts, src/lib/payroll/contracheque-self.ts, src/lib/payroll/contracheque-pdf.ts, src/app/api/contracheque/**, src/app/contracheque/page.tsx, src/components/dp/FechamentoDpWizard.tsx, src/components/financeiro/{EmpresasTab,ClientesTab}.tsx, src/app/api/payroll/sheets/[id]/{checklist,reabrir}/**
+
+- [x] G1: node scripts/apply-cadastros-fiscais.js (2x) → APPLY_CADASTROS_OK
+  EVIDENCE: APPLY_CADASTROS_OK — 30/30 colunas fiscais via pg direto; 2ª aplicação idempotente.
+- [x] G2: node scripts/apply-contracheque-aceites.js (3x) → CONTRACHEQUE_ACEITES_OK
+  EVIDENCE: CONTRACHEQUE_ACEITES_OK — tabela + UNIQUE(sheet_id,employee_id), RLS enabled, 0 policies.
+- [x] G3: npx tsx scripts/dedupe-payroll-employees.ts && node scripts/apply-payroll-cpf-unique.js → DEDUPE_OK + APPLY_PAYROLL_CPF_UNIQUE_OK
+  EVIDENCE: DEDUPE_OK — 251 fichas, 0 grupos duplicados; índice payroll_employees_company_cpf_key criado.
+- [x] G4: npx tsx --test src/lib/payroll/colaborador-merge.test.ts → 8/8
+  EVIDENCE: 8/8 — match CPF/matrícula, aditivo, salário 0 não zera, vínculo employee_id, demissão só wk/desligamento.
+- [x] G5: npx tsx --env-file=.env.local scripts/verify-contracheque-e2e.ts → CONTRACHEQUE_E2E_OK
+  EVIDENCE: CONTRACHEQUE_E2E_OK — HTML+PDF %PDF-, aceite SHA-256 idempotente, 403 não-dono (viewer/PDF/aceite).
+- [x] G6: npx tsc --noEmit → TSC_OK
+  EVIDENCE: TSC_OK — tsc integral 0 erros (2026-09-23).
+- [x] G7: eslint escopado (financeiro, dp, contracheque, folha-pagamento, merge, service) → LINT_OK
+  EVIDENCE: LINT_OK — 0 erros (1 warning legado unused Calendar em relatorios/mensal).
+- [x] I1: Revisão cruzada manual (reviewer agent caiu no socket) — wiring + segurança + fiscal + merge
+  EVIDENCE: Sem P1. Contracheque 403 dono-only (GET+PDF+aceite); merge aditivo nos 5 call sites; sanitização \D só BR, IBGE sem fallback do prestador, LC116 por item. P2: escalaTravada usa gt_relatorios_aprovacoes (coluna bloqueado não existe); comentário de header em wkradar/sync.ts ainda fala upsert por matrícula.
+  Limitações: clique-a-clique autenticado no /contracheque do portal não refeito nesta retomada (e2e + UI do DevContracheque no dev server já provaram). NFS-e em moeda != BRL continua bloqueada (invoice internacional só PDF/XLSX).

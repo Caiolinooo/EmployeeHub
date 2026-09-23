@@ -50,9 +50,10 @@ export async function PUT(
       if (!key) return finFail('client_key não pode ser vazio', 400);
       updates.client_key = key;
     }
-    for (const campo of ['documento', 'email', 'condicao_pagamento', 'categoria', 'subcategoria'] as const) {
+    for (const campo of ['documento', 'email', 'condicao_pagamento', 'categoria', 'subcategoria', 'tax_id', 'inscricao_municipal', 'inscricao_estadual', 'default_template_id'] as const) {
       if (campo in body) updates[campo] = texto(body[campo]) || null;
     }
+    if ('pais' in body) updates.pais = (texto(body.pais) || 'BR').toUpperCase();
     if ('condicaoPagamento' in body) updates.condicao_pagamento = texto(body.condicaoPagamento) || null;
     if ('endereco' in body) updates.endereco = body.endereco ?? null;
     if ('metadados' in body) updates.metadados = body.metadados ?? {};

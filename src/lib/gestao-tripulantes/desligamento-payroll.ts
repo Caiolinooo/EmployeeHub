@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase';
+import { mergeColaborador } from '@/lib/payroll/colaborador-merge';
 import { formatCpf, normalizeCpf } from '@/lib/utils/identity';
 import type { TipoRescisao, VerbaRescisaoPrevista } from './desligamento';
 
@@ -60,6 +61,12 @@ function cpfLookupValues(digits: string): string[] {
   return digits === masked ? [digits] : [digits, masked];
 }
 
+/**
+ * Localiza a ficha por CPF (qualquer empresa — comportamento legado) e aplica
+ * a rescisão pelo ponto único de merge (design §3, fonte 'desligamento':
+ * data_demissao e status SEMPRE atualizam; demais campos são aditivos).
+ * Sem ficha → cria na primeira empresa de folha ativa, já vinculada ao GT.
+ */
 async function localizarOuCriarEmployee(
   input: PayrollDesligamentoInput,
 ): Promise<{ employee: PayrollEmployeeRow | null; warning?: string }> {
@@ -79,66 +86,66 @@ async function localizarOuCriarEmployee(
     return { employee: null, warning: findErr.message };
   }
 
-  if (existing) {
-    const { error: updErr } = await supabaseAdmin
-      .from('payroll_employees')
-      .update({
-        status: 'terminated',
-        termination_date: input.dataDesligamento,
-        name: input.nomeCompleto,
-        base_salary: input.salario ?? undefined,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', existing.id);
+  let companyId = (existing as PayrollEmployeeRow | null)?.company_id ?? null;
+  if (!companyId) {
+    const { data: company, error: companyErr } = await supabaseAdmin
+      .from('payroll_companies')
+      .select('id')
+      .eq('is_active', true)
+      .limit(1)
+      .maybeSingle();
 
-    if (updErr) {
-      console.warn('[desligamento/payroll] update employee:', updErr.message);
+    if (companyErr || !company?.id) {
+      return {
+        employee: null,
+        warning: companyErr?.message || 'Nenhuma empresa de folha ativa — folha ignorada',
+      };
     }
-    return { employee: existing as PayrollEmployeeRow };
-  }
-
-  const { data: company, error: companyErr } = await supabaseAdmin
-    .from('payroll_companies')
-    .select('id')
-    .eq('is_active', true)
-    .limit(1)
-    .maybeSingle();
-
-  if (companyErr || !company?.id) {
-    return {
-      employee: null,
-      warning: companyErr?.message || 'Nenhuma empresa de folha ativa — folha ignorada',
-    };
+    companyId = company.id as string;
   }
 
   const registration =
     (input.matricula && String(input.matricula).trim()) || `GT-${digits.slice(-8)}`;
 
-  const { data: created, error: createErr } = await supabaseAdmin
-    .from('payroll_employees')
-    .insert({
-      employee_id: input.colaboradorId,
-      company_id: company.id,
-      registration_number: registration,
-      name: input.nomeCompleto,
-      cpf: formatCpf(digits),
-      position: input.cargoNome || null,
-      base_salary: input.salario ?? 0,
-      admission_date: input.dataAdmissao || null,
-      termination_date: input.dataDesligamento,
-      status: 'terminated',
-    })
-    .select('id, company_id, department_id, status')
-    .single();
-
-  if (createErr || !created) {
+  let merge;
+  try {
+    merge = await mergeColaborador(
+      supabaseAdmin,
+      {
+        company_id: companyId,
+        registration_number: registration,
+        cpf: digits,
+        name: input.nomeCompleto,
+        cargo: input.cargoNome || null,
+        base_salary: input.salario ?? null,
+        data_admissao: input.dataAdmissao || null,
+        data_demissao: input.dataDesligamento,
+        gt_colaborador_id: input.colaboradorId,
+        status: 'terminated',
+      },
+      'desligamento',
+    );
+  } catch (err) {
     return {
       employee: null,
-      warning: createErr?.message || 'Não foi possível criar o funcionário na folha',
+      warning: err instanceof Error ? err.message : 'Não foi possível gravar o funcionário na folha',
     };
   }
 
-  return { employee: created as PayrollEmployeeRow };
+  const { data: row, error: rowErr } = await supabaseAdmin
+    .from('payroll_employees')
+    .select('id, company_id, department_id, status')
+    .eq('id', merge.id)
+    .single();
+
+  if (rowErr || !row) {
+    return {
+      employee: null,
+      warning: rowErr?.message || 'Funcionário gravado, mas não foi possível relê-lo',
+    };
+  }
+
+  return { employee: row as PayrollEmployeeRow };
 }
 
 async function localizarOuCriarSheet(

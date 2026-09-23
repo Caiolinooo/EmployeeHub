@@ -1,13 +1,16 @@
 /**
  * Espelha os colaboradores do GT na folha.
- *   gt_colaboradores → payroll_employees (casamento por CPF; chave de gravação
- *   é UNIQUE(company_id, registration_number))
+ *   gt_colaboradores → payroll_employees via o ponto único de merge
+ *   (colaborador-merge.ts, design §3): match por CPF normalizado, senão por
+ *   (company_id, registration_number); preenchimento ADITIVO; employee_id
+ *   (vínculo GT ↔ folha) preenchido quando vazio.
  *
  * É o elo que faltava entre a logística e o DP: sem ficha em payroll_employees
  * o motor não tem em quem lançar os dias e todo mundo cai em "CPF não casado".
  *
  * Regras:
- * - GT é a fonte da verdade de nome, cargo, centro de custo, admissão e demissão.
+ * - GT é a fonte da vida funcional (nome, cargo, centro de custo, admissão) —
+ *   gravada de forma aditiva: só preenche campo vazio na ficha.
  * - `base_salary` NUNCA é rebaixado: valor já existente na folha (WK, digitado
  *   pelo DP) só é substituído por um salário GT maior que zero quando a ficha
  *   ainda está zerada. Salário é dinheiro — o portal não inventa nem zera.
@@ -16,11 +19,9 @@
  * - Idempotente: reexecutar não duplica.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { mergeColaborador } from './colaborador-merge';
 
 const digitos = (v: unknown): string => String(v ?? '').replace(/\D/g, '');
-
-const formatarCpf = (d: string): string =>
-  d.length === 11 ? `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}` : d;
 
 /** Mesma convenção de código do sync de estrutura: payroll_departments.code é VARCHAR(10). */
 const codigoDepartamento = (codigo: string | null, nome: string | null): string =>
@@ -125,7 +126,6 @@ export async function sincronizarColaboradoresGt(
     semSalario: [],
     pendencias: [],
   };
-  const agora = new Date().toISOString();
 
   for (const c of colaboradores) {
     const cpf = digitos(c.cpf);
@@ -164,45 +164,41 @@ export async function sincronizarColaboradoresGt(
 
     const existente = porCpf.get(`${companyId}|${cpf}`) || porMatricula.get(`${companyId}|${matricula}`);
 
-    if (!existente) {
-      const { error } = await supabase.from('payroll_employees').insert({
-        employee_id: c.id,
+    // Ponto único de merge (design §3): match por CPF/matrícula, preenchimento
+    // aditivo, vínculo employee_id e auditoria vivem no service.
+    const merge = await mergeColaborador(
+      supabase,
+      {
         company_id: companyId,
-        department_id: departmentId,
         registration_number: matricula,
+        cpf,
         name: nome,
-        cpf: formatarCpf(cpf),
-        position: cargo,
+        cargo,
         base_salary: salarioGt,
-        admission_date: c.data_admissao || null,
-        termination_date: c.data_demissao || null,
+        data_admissao: c.data_admissao || null,
+        data_demissao: c.data_demissao || null,
+        gt_colaborador_id: c.id,
+        department_id: departmentId,
         status,
-      });
-      if (error) throw new Error(`insert ${nome} (${cpf}): ${error.message}`);
+      },
+      'gt',
+    );
+
+    if (merge.acao === 'criado') {
       resultado.inseridos += 1;
       if (salarioGt <= 0) resultado.semSalario.push({ cpf, nome });
       continue;
     }
-
-    const baseAtual = Number(existente.base_salary) || 0;
-    const patch: Record<string, unknown> = {};
-    if (existente.name !== nome) patch.name = nome;
-    if (digitos(existente.cpf) !== cpf) patch.cpf = formatarCpf(cpf);
-    if (departmentId && existente.department_id !== departmentId) patch.department_id = departmentId;
-    if (existente.status !== status) patch.status = status;
-    // Salário só sobe de zero; valor já lançado na folha manda.
-    if (baseAtual <= 0 && salarioGt > 0) patch.base_salary = salarioGt;
-
-    if (Object.keys(patch).length === 0) {
-      resultado.inalterados += 1;
-    } else {
-      patch.updated_at = agora;
-      const { error } = await supabase.from('payroll_employees').update(patch).eq('id', existente.id);
-      if (error) throw new Error(`update ${nome} (${cpf}): ${error.message}`);
+    if (merge.acao === 'merged') {
       resultado.atualizados += 1;
+    } else {
+      resultado.inalterados += 1;
     }
 
-    const baseFinal = typeof patch.base_salary === 'number' ? patch.base_salary : baseAtual;
+    // Salário só sobe de zero; valor já lançado na folha manda.
+    const baseFinal = merge.campos_adicionados.includes('base_salary')
+      ? salarioGt
+      : Number(existente?.base_salary) || 0;
     if (baseFinal <= 0) resultado.semSalario.push({ cpf, nome });
   }
 

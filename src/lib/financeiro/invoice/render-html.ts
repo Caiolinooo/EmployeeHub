@@ -43,6 +43,8 @@ function metadados(d: FaturaRenderInput): string {
     ['Invoice Date', esc(d.fatura.dataEmissao || '—')],
   ];
   if (d.fatura.callOff) linhas.push(['Call Off', esc(d.fatura.callOff)]);
+  if (d.fatura.vesselName) linhas.push(['Vessel', esc(d.fatura.vesselName)]);
+  if (d.fatura.poNumber) linhas.push(['PO Number', esc(d.fatura.poNumber)]);
   if (d.fatura.dataVencimento) linhas.push(['Due Date', esc(d.fatura.dataVencimento)]);
   if (d.fatura.competencia) linhas.push(['Period', esc(d.fatura.competencia)]);
   return linhas
@@ -59,6 +61,13 @@ function contaBancariaHtml(d: FaturaRenderInput): string {
     ['Account', esc(c.conta)],
     ['Account Holder', esc(c.titularNome)],
   ];
+  // Dados internacionais (migration 20260923_000001): SWIFT/IBAN/routing/sort code.
+  if (c.swiftBic) campos.push(['SWIFT/BIC', esc(c.swiftBic)]);
+  if (c.iban) campos.push(['IBAN', esc(c.iban)]);
+  if (c.routingNumber) campos.push(['Routing Number', esc(c.routingNumber)]);
+  if (c.sortCode) campos.push(['Sort Code', esc(c.sortCode)]);
+  if (c.moeda) campos.push(['Currency', esc(c.moeda)]);
+  if (c.bancoCorrespondente) campos.push(['Correspondent Bank', esc(c.bancoCorrespondente)]);
   if (c.pixChave) campos.push(['Pix Key', esc(c.pixChave)]);
   return `
   <div class="conta">

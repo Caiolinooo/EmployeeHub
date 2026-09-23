@@ -80,7 +80,8 @@ export class FinanceiroHttpError extends Error {
 const erro400 = (code: string, message: string) => new FinanceiroHttpError(400, code, message);
 const erro404 = (code: string, message: string) => new FinanceiroHttpError(404, code, message);
 const erro409 = (code: string, message: string) => new FinanceiroHttpError(409, code, message);
-export { erro400, erro404, erro409 };
+const erro422 = (code: string, message: string) => new FinanceiroHttpError(422, code, message);
+export { erro400, erro404, erro409, erro422 };
 
 // ============================================================
 // pg direto (transacional)
@@ -459,7 +460,7 @@ export async function emitirFatura(id: string, ator: EventoAtor): Promise<FinFat
   if (fatura.cliente_id) {
     const { data: cliente } = await supabaseAdmin
       .from('fin_clientes')
-      .select('id, nome, documento, email, endereco, moeda, condicao_pagamento')
+      .select('id, nome, documento, email, endereco, moeda, condicao_pagamento, pais, tax_id, inscricao_municipal, inscricao_estadual')
       .eq('id', fatura.cliente_id)
       .maybeSingle();
     if (cliente) snapshot = cliente as unknown as Record<string, unknown>;
@@ -614,17 +615,63 @@ export async function criarEmissaoTransacional(
   });
 }
 
+/** Cadastro fiscal do tomador (fin_clientes) — §5 do design dp-folha. */
+interface TomadorCadastro {
+  nome?: string | null;
+  documento?: string | null;
+  email?: string | null;
+  pais?: string | null;
+  tax_id?: string | null;
+  inscricao_municipal?: string | null;
+  endereco?: {
+    codigo_ibge_municipio?: string;
+    logradouro?: string; numero?: string; complemento?: string; bairro?: string; cep?: string;
+  } | null;
+}
+
 function montarRpsInput(
   fatura: FinFatura,
   ctx: NfseContext,
   rpsNumero: number,
   codigoLc116Padrao: string,
+  tomadorCadastro: TomadorCadastro | null,
 ): NfseRpsInput {
   const snapshot = (fatura.cliente_snapshot || {}) as {
     nome?: string; documento?: string; email?: string;
     endereco?: { codigo_ibge_municipio?: string; logradouro?: string; numero?: string; complemento?: string; bairro?: string; cep?: string };
   };
-  const documento = String(snapshot.documento || '').replace(/\D/g, '');
+  // §5 (a): sanitização \D só para tomador BR; exterior preserva tax_id alfanumérico.
+  const pais = (tomadorCadastro?.pais || 'BR').toUpperCase();
+  const exterior = pais !== 'BR';
+  const documentoBruto = exterior
+    ? String(tomadorCadastro?.tax_id || tomadorCadastro?.documento || snapshot.documento || '')
+    : String(snapshot.documento || tomadorCadastro?.documento || '');
+  const documento = exterior ? documentoBruto.trim() : documentoBruto.replace(/\D/g, '');
+  // §5 (b): código IBGE do tomador vem do cadastro fin_clientes.endereco
+  // (snapshot é cópia do cadastro no dia da emissão); ausente + BR → 422,
+  // NUNCA fallback para o município do prestador; exterior → sem IBGE.
+  const enderecoCadastro = tomadorCadastro?.endereco || snapshot.endereco;
+  let municipioIbge = '';
+  let endereco: NfseRpsInput['tomador']['endereco'];
+  if (!exterior) {
+    const ibge = enderecoCadastro?.codigo_ibge_municipio;
+    if (!ibge) {
+      throw erro422(
+        'fatura_tomador_sem_ibge',
+        'Tomador sem código IBGE do município no cadastro (fin_clientes.endereco.codigo_ibge_municipio)',
+      );
+    }
+    municipioIbge = ibge;
+    endereco = enderecoCadastro?.logradouro
+      ? {
+          logradouro: enderecoCadastro.logradouro || '',
+          numero: enderecoCadastro.numero || '',
+          complemento: enderecoCadastro.complemento,
+          bairro: enderecoCadastro.bairro || '',
+          cep: enderecoCadastro.cep || '',
+        }
+      : undefined;
+  }
   const aliquotaIss = ctx.config.aliquotaIss ?? 0;
   return {
     rpsNumero,
@@ -634,28 +681,31 @@ function montarRpsInput(
       ? `${fatura.competencia_ano}-${String(fatura.competencia_mes).padStart(2, '0')}`
       : new Date().toISOString().slice(0, 7),
     tomador: {
-      nome: String(snapshot.nome || 'Tomador'),
+      nome: String(snapshot.nome || tomadorCadastro?.nome || 'Tomador'),
       documento,
-      email: snapshot.email || undefined,
-      municipioIbge: snapshot.endereco?.codigo_ibge_municipio || ctx.config.municipioIbge,
-      endereco: snapshot.endereco?.logradouro
-        ? {
-            logradouro: snapshot.endereco.logradouro || '',
-            numero: snapshot.endereco.numero || '',
-            complemento: snapshot.endereco.complemento,
-            bairro: snapshot.endereco.bairro || '',
-            cep: snapshot.endereco.cep || '',
-          }
-        : undefined,
+      email: snapshot.email || tomadorCadastro?.email || undefined,
+      municipioIbge,
+      inscricaoMunicipal: tomadorCadastro?.inscricao_municipal || undefined,
+      endereco,
     },
-    itens: (fatura.itens || []).map((it: FinFaturaItem) => ({
-      codigoLc116: codigoLc116Padrao,
-      descricao: it.descricao,
-      quantidade: Number(it.quantidade),
-      valorUnitario: Number(it.valor_unitario),
-      tributavel: true,
-      aliquotaIss,
-    })),
+    // §5 (c): LC 116 e alíquota por item, com fallback ao padrão da config.
+    itens: (fatura.itens || []).map((it: FinFaturaItem) => {
+      const codigoLc116 = it.codigo_lc116 || codigoLc116Padrao;
+      if (!codigoLc116) {
+        throw erro400(
+          'codigo_lc116_ausente',
+          `Item '${it.descricao}' sem codigo_lc116 e config.codigo_lc116_padrao ausente (LC 116/2003)`,
+        );
+      }
+      return {
+        codigoLc116,
+        descricao: it.descricao,
+        quantidade: Number(it.quantidade),
+        valorUnitario: Number(it.valor_unitario),
+        tributavel: true,
+        aliquotaIss: it.aliquota_iss != null ? Number(it.aliquota_iss) : aliquotaIss,
+      };
+    }),
     valorServicos: Number(fatura.valor_total),
     aliquotaIss,
     issRetido: ctx.config.issRetidoPadrao,
@@ -706,10 +756,9 @@ export async function emitirNfse(faturaId: string, ator: EventoAtor): Promise<Fi
   const { ctx } = await montarNfseContext(config.id);
   const provider = getNfseProvider(ctx.config.providerKey);
 
+  // §5 (c): o padrão da config é fallback — itens com codigo_lc116 próprio
+  // dispensam codigo_lc116_padrao; a exigência é validada por item em montarRpsInput.
   const codigoLc116Padrao = String((config.config || {}).codigo_lc116_padrao || '');
-  if (!codigoLc116Padrao) {
-    throw erro400('codigo_lc116_ausente', "config.codigo_lc116_padrao é obrigatório no config NFS-e (LC 116/2003)");
-  }
 
   // Reemissão mantém o RPS (§5.2.5); emissão nova reserva número + cria a
   // emissão numa única transação (rollback libera o número — §5.2.2).
@@ -726,7 +775,18 @@ export async function emitirNfse(faturaId: string, ator: EventoAtor): Promise<Fi
     });
   }
   const rpsNumero = emissao.rps_numero;
-  const rpsInput = montarRpsInput(fatura, ctx, rpsNumero, codigoLc116Padrao);
+  // §5 (a/b): país, tax_id, IM e código IBGE do tomador vêm do cadastro
+  // fin_clientes (snapshot é cópia do dia da emissão, usado como fallback).
+  let tomadorCadastro: TomadorCadastro | null = null;
+  if (fatura.cliente_id) {
+    const { data: tomador } = await supabaseAdmin
+      .from('fin_clientes')
+      .select('nome, documento, email, endereco, pais, tax_id, inscricao_municipal')
+      .eq('id', fatura.cliente_id)
+      .maybeSingle();
+    tomadorCadastro = (tomador as TomadorCadastro | null) ?? null;
+  }
+  const rpsInput = montarRpsInput(fatura, ctx, rpsNumero, codigoLc116Padrao, tomadorCadastro);
 
   // enviado
   const { data: enviadoRow } = await supabaseAdmin

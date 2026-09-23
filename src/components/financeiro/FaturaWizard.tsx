@@ -15,8 +15,11 @@ import { useI18n } from '@/contexts/I18nContext';
 import {
   listClientes, createCliente, createFatura, gerarFaturaDaFolha, listTemplates,
 } from '@/lib/financeiro/api-client';
+import {
+  ClienteFormFields, clienteFormPayload, clienteFormVazio, type ClienteFormState,
+} from '@/components/financeiro/ClientesTab';
 import { fetchWithToken } from '@/lib/tokenStorage';
-import type { FinCliente, FinClienteForm, FinFatura, FinFaturaItemInput, FinFaturaTemplate } from '@/types/financeiro';
+import type { FinCliente, FinFatura, FinFaturaItemInput, FinFaturaTemplate } from '@/types/financeiro';
 import {
   FIN_BTN_PRIMARY_CLASS,
   FIN_BTN_SECONDARY_CLASS,
@@ -108,7 +111,9 @@ export default function FaturaWizard({ onClose, onCriada }: { onClose: () => voi
   const [clientes, setClientes] = useState<FinCliente[]>([]);
   const [clienteId, setClienteId] = useState('');
   const [novoClienteAberto, setNovoClienteAberto] = useState(false);
-  const [nc, setNc] = useState({ nome: '', documento: '', email: '', moeda: 'BRL' });
+  // Toggle Nacional (BRL) / Exterior (moeda estrangeira) — design §4
+  const [tipoCliente, setTipoCliente] = useState<'nacional' | 'exterior'>('nacional');
+  const [nc, setNc] = useState<ClienteFormState>(clienteFormVazio());
   const [itens, setItens] = useState<ItemEditavel[]>([novoItem()]);
   const [templates, setTemplates] = useState<FinFaturaTemplate[]>([]);
   const [templateId, setTemplateId] = useState('');
@@ -186,23 +191,23 @@ export default function FaturaWizard({ onClose, onCriada }: { onClose: () => voi
 
   async function criarClienteInline() {
     if (!nc.nome.trim() || !empresaId) {
-      toast.error(t('financeiro.erroSalvar'));
+      toast.error(t('fin.erroClienteObrigatorios'));
       return;
     }
     try {
-      const form: FinClienteForm = {
-        empresa_id: empresaId,
-        client_key: nc.nome.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '_').slice(0, 60) || `CLI_${Date.now()}`,
-        nome: nc.nome.trim(),
-        documento: nc.documento.trim() || undefined,
-        email: nc.email.trim() || undefined,
-        moeda: nc.moeda || 'BRL',
-      };
-      const cliente = await createCliente(form);
+      // client_key derivada do nome quando o operador não preenche (atalho do wizard)
+      const comChave = nc.client_key.trim()
+        ? nc
+        : {
+            ...nc,
+            client_key: nc.nome.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '_').slice(0, 60) || `CLI_${Date.now()}`,
+          };
+      const cliente = await createCliente(clienteFormPayload(comChave, empresaId));
       setClientes((atual) => [...atual, cliente]);
       setClienteId(cliente.id);
+      if (cliente.moeda) setMoeda(cliente.moeda);
       setNovoClienteAberto(false);
-      setNc({ nome: '', documento: '', email: '', moeda: 'BRL' });
+      setNc(clienteFormVazio());
       toast.success(t('financeiro.sucessoSalvar'));
     } catch (e) {
       toast.error(mensagemErro(e, t('financeiro.erroSalvar')));
@@ -271,25 +276,24 @@ export default function FaturaWizard({ onClose, onCriada }: { onClose: () => voi
         role="dialog"
         aria-modal="true"
         aria-label={t('financeiro.novaFatura')}
-        className="flex h-[100dvh] w-full max-w-none flex-col overflow-hidden rounded-none border-0 bg-white shadow-2xl sm:h-[min(98dvh,calc(100dvh-1rem))] sm:rounded-2xl sm:border sm:border-gray-200 animate-in fade-in zoom-in-95 duration-150"
+        className="flex h-[100dvh] w-full max-w-none flex-col overflow-hidden rounded-none border-0 bg-white shadow-2xl dark:bg-gray-800 sm:h-[min(98dvh,calc(100dvh-1rem))] sm:rounded-2xl sm:border sm:border-gray-200 dark:sm:border-gray-700 animate-in fade-in zoom-in-95 duration-150"
       >
         {/* Header */}
-        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 sm:px-6">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-900 sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-abz-blue text-white shadow-sm">
               <FiFileText className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <h2 className="truncate text-base font-bold text-gray-900 sm:text-lg">{t('financeiro.novaFatura')}</h2>
-              <p className="text-xs text-gray-500">
+              <h2 className="truncate text-base font-bold text-gray-900 dark:text-gray-100 sm:text-lg">{t('financeiro.novaFatura')}</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 {t('financeiro.passo')} {passo}/4 — {passosLabels[passo - 1]}
               </p>
             </div>
           </div>
           <button
             type="button"
-            onClick={onClose}
-            className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-200 hover:text-gray-700"
+            className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-200 hover:text-gray-700 dark:hover:bg-gray-700 dark:hover:text-gray-200"
             aria-label={t('financeiro.fechar')}
           >
             <FiX className="h-5 w-5" />
@@ -311,8 +315,8 @@ export default function FaturaWizard({ onClose, onCriada }: { onClose: () => voi
                     }}
                     className={`rounded-xl border p-4 text-left text-sm font-semibold transition ${
                       origem === o
-                        ? 'border-abz-blue bg-abz-light-blue/40 text-abz-blue-dark'
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        ? 'border-abz-blue bg-abz-light-blue/40 text-abz-blue-dark dark:bg-abz-blue/20 dark:text-blue-200'
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:border-gray-500'
                     }`}
                   >
                     {labelOrigem(o)}
@@ -322,7 +326,7 @@ export default function FaturaWizard({ onClose, onCriada }: { onClose: () => voi
 
               {origem === 'folha' && (
                 <div>
-                  <label className="mb-1 block text-xs font-bold uppercase text-gray-500">{t('financeiro.selecionarFolha')}</label>
+                  <label className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.selecionarFolha')}</label>
                   <select
                     value={sheetId}
                     onChange={(e) => {
@@ -340,15 +344,15 @@ export default function FaturaWizard({ onClose, onCriada }: { onClose: () => voi
                       </option>
                     ))}
                   </select>
-                  <p className="mt-1 text-xs text-gray-400">{t('financeiro.erroFaturaNaoAprovada')}</p>
+                  <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{t('financeiro.erroFaturaNaoAprovada')}</p>
                 </div>
               )}
 
               {origem === 'medicao' && (
-                <label className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-gray-300 p-8 text-center transition hover:border-abz-blue hover:bg-abz-light-blue/20">
+                <label className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-gray-300 p-8 text-center transition hover:border-abz-blue hover:bg-abz-light-blue/20 dark:border-gray-600 dark:hover:bg-abz-blue/10">
                   <FiUpload className="h-8 w-8 text-abz-blue" />
-                  <span className="text-sm font-semibold text-gray-700">{t('financeiro.uploadMedicao')}</span>
-                  <span className="text-xs text-gray-400">{t('financeiro.medicaoHint')}</span>
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">{t('financeiro.uploadMedicao')}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">{t('financeiro.medicaoHint')}</span>
                   <input
                     type="file"
                     accept=".xlsx,.xls"
@@ -362,7 +366,7 @@ export default function FaturaWizard({ onClose, onCriada }: { onClose: () => voi
               )}
 
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase text-gray-500">{t('financeiro.empresa')}</label>
+                <label className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.empresa')}</label>
                 <select
                   value={empresaId}
                   onChange={(e) => setEmpresaId(e.target.value)}
@@ -382,10 +386,52 @@ export default function FaturaWizard({ onClose, onCriada }: { onClose: () => voi
 
           {passo === 2 && (
             <div className="space-y-4">
+              {/* Toggle Nacional (BRL) / Exterior — design §4 */}
+              <div className="flex flex-wrap gap-2">
+                {(['nacional', 'exterior'] as const).map((tipo) => (
+                  <button
+                    key={tipo}
+                    type="button"
+                    onClick={() => {
+                      setTipoCliente(tipo);
+                      setNc((atual) => ({
+                        ...atual,
+                        pais: tipo === 'nacional' ? 'BR' : 'GB',
+                        moeda: tipo === 'nacional' ? 'BRL' : 'GBP',
+                      }));
+                    }}
+                    aria-pressed={tipoCliente === tipo}
+                    className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+                      tipoCliente === tipo
+                        ? 'border-abz-blue bg-abz-light-blue/40 text-abz-blue-dark dark:bg-abz-blue/20 dark:text-blue-200'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    {t(tipo === 'nacional' ? 'fin.nacional' : 'fin.exterior')}
+                  </button>
+                ))}
+              </div>
+              {tipoCliente === 'exterior' && (
+                <p className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
+                  {t('fin.exteriorSemNfse')}
+                </p>
+              )}
+
               <div className="flex items-end gap-2">
                 <div className="min-w-0 flex-1">
-                  <label className="mb-1 block text-xs font-bold uppercase text-gray-500">{t('financeiro.cliente')}</label>
-                  <select value={clienteId} onChange={(e) => setClienteId(e.target.value)} className={FIN_INPUT_CLASS}>
+                  <label className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.cliente')}</label>
+                  <select
+                    value={clienteId}
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      setClienteId(id);
+                      const cli = clientes.find((c) => c.id === id);
+                      // Moeda e template padrão acompanham o cliente escolhido
+                      if (cli?.moeda) setMoeda(cli.moeda);
+                      if (cli?.default_template_id) setTemplateId(cli.default_template_id);
+                    }}
+                    className={FIN_INPUT_CLASS}
+                  >
                     <option value="">—</option>
                     {clientes.map((cli) => (
                       <option key={cli.id} value={cli.id}>
@@ -399,32 +445,9 @@ export default function FaturaWizard({ onClose, onCriada }: { onClose: () => voi
                 </button>
               </div>
               {novoClienteAberto && (
-                <div className="grid grid-cols-1 gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 sm:grid-cols-2">
-                  <input
-                    placeholder={t('financeiro.clienteNome')}
-                    value={nc.nome}
-                    onChange={(e) => setNc({ ...nc, nome: e.target.value })}
-                    className={FIN_INPUT_CLASS}
-                  />
-                  <input
-                    placeholder={t('financeiro.clienteDocumento')}
-                    value={nc.documento}
-                    onChange={(e) => setNc({ ...nc, documento: e.target.value })}
-                    className={FIN_INPUT_CLASS}
-                  />
-                  <input
-                    placeholder={t('financeiro.clienteEmail')}
-                    value={nc.email}
-                    onChange={(e) => setNc({ ...nc, email: e.target.value })}
-                    className={FIN_INPUT_CLASS}
-                  />
-                  <div className="flex gap-2">
-                    <input
-                      placeholder={t('financeiro.moeda')}
-                      value={nc.moeda}
-                      onChange={(e) => setNc({ ...nc, moeda: e.target.value.toUpperCase().slice(0, 3) })}
-                      className={FIN_INPUT_CLASS}
-                    />
+                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/40">
+                  <ClienteFormFields valor={nc} onChange={setNc} templates={templates} />
+                  <div className="mt-4 flex justify-end">
                     <button type="button" onClick={criarClienteInline} className={FIN_BTN_PRIMARY_CLASS}>
                       <FiCheck className="h-4 w-4" /> {t('financeiro.salvar')}
                     </button>
@@ -437,23 +460,23 @@ export default function FaturaWizard({ onClose, onCriada }: { onClose: () => voi
           {passo === 3 && (
             <div className="space-y-3">
               {origem === 'folha' ? (
-                <p className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
+                <p className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
                   {labelOrigem('folha')}: {t('financeiro.passoItens')} — {t('financeiro.totalItens')}: {formatarMoeda(totalItens, moeda)}
                 </p>
               ) : (
                 <>
-                  <table className="min-w-full divide-y divide-gray-200 text-sm">
+                  <table className="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-700">
                     <thead>
                       <tr>
-                        <th className="px-2 py-1 text-left text-xs font-bold uppercase text-gray-500">{t('financeiro.descricao')}</th>
-                        <th className="px-2 py-1 text-left text-xs font-bold uppercase text-gray-500">{t('financeiro.referencia')}</th>
-                        <th className="px-2 py-1 text-right text-xs font-bold uppercase text-gray-500">{t('financeiro.quantidade')}</th>
-                        <th className="px-2 py-1 text-right text-xs font-bold uppercase text-gray-500">{t('financeiro.valorUnitario')}</th>
-                        <th className="px-2 py-1 text-right text-xs font-bold uppercase text-gray-500">{t('financeiro.total')}</th>
+                        <th className="px-2 py-1 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.descricao')}</th>
+                        <th className="px-2 py-1 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.referencia')}</th>
+                        <th className="px-2 py-1 text-right text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.quantidade')}</th>
+                        <th className="px-2 py-1 text-right text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.valorUnitario')}</th>
+                        <th className="px-2 py-1 text-right text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.total')}</th>
                         <th className="px-2 py-1" />
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                       {itens.map((item, indice) => (
                         <tr key={item._id}>
                           <td className="px-2 py-1">
@@ -498,14 +521,14 @@ export default function FaturaWizard({ onClose, onCriada }: { onClose: () => voi
                               className={`${FIN_INPUT_CLASS} text-right`}
                             />
                           </td>
-                          <td className="px-2 py-1 text-right font-semibold text-gray-700">
+                          <td className="px-2 py-1 text-right font-semibold text-gray-700 dark:text-gray-200">
                             {formatarMoeda((item.quantidade ?? 1) * (item.valor_unitario ?? 0), moeda)}
                           </td>
                           <td className="px-2 py-1 text-right">
                             <button
                               type="button"
                               onClick={() => setItens((atual) => atual.filter((_, i) => i !== indice))}
-                              className="rounded-lg p-2 text-gray-400 transition hover:bg-rose-50 hover:text-rose-600"
+                              className="rounded-lg p-2 text-gray-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/30"
                               aria-label={t('financeiro.removerItem')}
                             >
                               <FiTrash2 className="h-4 w-4" />
@@ -515,7 +538,7 @@ export default function FaturaWizard({ onClose, onCriada }: { onClose: () => voi
                       ))}
                       {itens.length === 0 && (
                         <tr>
-                          <td colSpan={6} className="px-2 py-6 text-center text-sm text-gray-400">
+                          <td colSpan={6} className="px-2 py-6 text-center text-sm text-gray-400 dark:text-gray-500">
                             {t('financeiro.semItens')}
                           </td>
                         </tr>
@@ -534,7 +557,7 @@ export default function FaturaWizard({ onClose, onCriada }: { onClose: () => voi
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <div className="space-y-3">
                 <div>
-                  <label className="mb-1 block text-xs font-bold uppercase text-gray-500">{t('financeiro.template')}</label>
+                  <label className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.template')}</label>
                   <select value={templateId} onChange={(e) => setTemplateId(e.target.value)} className={FIN_INPUT_CLASS}>
                     <option value="">—</option>
                     {templates.map((tpl) => (
@@ -546,43 +569,43 @@ export default function FaturaWizard({ onClose, onCriada }: { onClose: () => voi
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="mb-1 block text-xs font-bold uppercase text-gray-500">{t('financeiro.moeda')}</label>
+                    <label className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.moeda')}</label>
                     <input value={moeda} onChange={(e) => setMoeda(e.target.value.toUpperCase().slice(0, 3))} className={FIN_INPUT_CLASS} />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-bold uppercase text-gray-500">{t('financeiro.dataVencimento')}</label>
+                    <label className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.dataVencimento')}</label>
                     <input type="date" value={dataVencimento} onChange={(e) => setDataVencimento(e.target.value)} className={FIN_INPUT_CLASS} />
                   </div>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-bold uppercase text-gray-500">{t('financeiro.callOff')}</label>
+                  <label className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.callOff')}</label>
                   <input value={callOff} onChange={(e) => setCallOff(e.target.value)} className={FIN_INPUT_CLASS} />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-bold uppercase text-gray-500">{t('financeiro.observacoes')}</label>
+                  <label className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.observacoes')}</label>
                   <textarea value={observacoes} onChange={(e) => setObservacoes(e.target.value)} rows={3} className={FIN_INPUT_CLASS} />
                 </div>
               </div>
               <div className={`${FIN_CARD_CLASS} space-y-2 p-4`}>
-                <p className="text-xs font-bold uppercase text-gray-400">{t('financeiro.passoConferencia')}</p>
+                <p className="text-xs font-bold uppercase text-gray-400 dark:text-gray-500">{t('financeiro.passoConferencia')}</p>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">{t('financeiro.origem')}</span>
-                  <span className="font-semibold text-gray-900">{labelOrigem(origem)}</span>
+                  <span className="text-gray-500 dark:text-gray-400">{t('financeiro.origem')}</span>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">{labelOrigem(origem)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">{t('financeiro.cliente')}</span>
-                  <span className="font-semibold text-gray-900">
+                  <span className="text-gray-500 dark:text-gray-400">{t('financeiro.cliente')}</span>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">
                     {clientes.find((c) => c.id === clienteId)?.nome ?? '—'}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">{t('financeiro.itens')}</span>
-                  <span className="font-semibold text-gray-900">
+                  <span className="text-gray-500 dark:text-gray-400">{t('financeiro.itens')}</span>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">
                     {origem === 'folha' ? t('financeiro.origemFolha') : itens.filter((it) => it.descricao.trim()).length}
                   </span>
                 </div>
-                <div className="flex justify-between border-t border-gray-100 pt-2 text-base">
-                  <span className="font-bold text-gray-700">{t('financeiro.totalItens')}</span>
+                <div className="flex justify-between border-t border-gray-100 pt-2 text-base dark:border-gray-700">
+                  <span className="font-bold text-gray-700 dark:text-gray-200">{t('financeiro.totalItens')}</span>
                   <span className="font-bold text-abz-blue">{formatarMoeda(totalItens, moeda)}</span>
                 </div>
               </div>
@@ -591,7 +614,7 @@ export default function FaturaWizard({ onClose, onCriada }: { onClose: () => voi
         </div>
 
         {/* Footer de navegação */}
-        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-gray-200 bg-gray-50 px-4 py-3 sm:px-6">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-900 sm:px-6">
           <button type="button" onClick={() => setPasso((p) => Math.max(1, p - 1))} disabled={passo === 1} className={FIN_BTN_SECONDARY_CLASS}>
             <FiChevronLeft className="h-4 w-4" /> {t('financeiro.anterior')}
           </button>

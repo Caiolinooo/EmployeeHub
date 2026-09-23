@@ -102,4 +102,32 @@ describe('renderFaturaHtml (função pura, layout 1_Invoice)', () => {
     });
     assert.match(html, /£ 2\.500,00/);
   });
+
+  it('dados offshore: vessel e PO number aparecem nos metadados quando presentes', () => {
+    const html = renderFaturaHtml({
+      ...FIXTURE,
+      fatura: { ...FIXTURE.fatura, vesselName: 'VOE VANGUARD', poNumber: 'PO-998877' },
+    });
+    assert.ok(html.includes('Vessel'));
+    assert.ok(html.includes('VOE VANGUARD'));
+    assert.ok(html.includes('PO Number'));
+    assert.ok(html.includes('PO-998877'));
+  });
+
+  it('bloco bancário internacional: SWIFT/IBAN/sort code só quando a conta tem', () => {
+    const html = renderFaturaHtml({
+      ...FIXTURE,
+      contaBancaria: {
+        bancoNome: 'Barclays', agencia: '', conta: '12345678', titularNome: 'ABZ',
+        swiftBic: 'BARCGB22', iban: 'GB29NWBK60161331926819', sortCode: '601613',
+        moeda: 'GBP', bancoCorrespondente: 'Citi NY',
+      },
+    });
+    for (const trecho of ['SWIFT/BIC', 'BARCGB22', 'IBAN', 'GB29NWBK60161331926819', 'Sort Code', '601613', 'Correspondent Bank', 'Citi NY']) {
+      assert.ok(html.includes(trecho), `faltou: ${trecho}`);
+    }
+    const semInternacional = renderFaturaHtml(FIXTURE);
+    assert.ok(!semInternacional.includes('SWIFT/BIC'));
+    assert.ok(!semInternacional.includes('IBAN'));
+  });
 });

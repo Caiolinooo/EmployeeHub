@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import {
   FiAlertTriangle, FiCheckCircle, FiChevronDown, FiChevronLeft, FiChevronRight,
-  FiDollarSign, FiRefreshCw, FiSend, FiUpload, FiXCircle,
+  FiDollarSign, FiRefreshCw, FiSearch, FiSend, FiUpload, FiXCircle,
 } from 'react-icons/fi';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -233,8 +233,70 @@ function formatDataBR(iso: string | null | undefined): string {
   return d.toLocaleString('pt-BR');
 }
 
+// ─── Rubricas em 2 colunas (layout holerite: Proventos | Descontos) ──────────
+
+interface RubricaLinha {
+  chave: string;
+  code: string;
+  name: string;
+  type: string;
+  quantity: number;
+  valor: number;
+  origem?: string;
+}
+
+function RubricasDuasColunas({ itens, tf }: { itens: RubricaLinha[]; tf: (key: string, fallback: string) => string }) {
+  const proventos = itens.filter((i) => i.type === 'provento');
+  const descontos = itens.filter((i) => i.type === 'desconto');
+  const outros = itens.filter((i) => i.type !== 'provento' && i.type !== 'desconto');
+
+  const coluna = (titulo: string, linhas: RubricaLinha[], vazio: string, classeTitulo: string) => (
+    <div className="rounded-lg border border-gray-200 overflow-hidden">
+      <div className={`px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider flex items-center justify-between ${classeTitulo}`}>
+        <span>{titulo}</span>
+        <span className="tabular-nums">{formatBRL(linhas.reduce((acc, i) => acc + (Number(i.valor) || 0), 0))}</span>
+      </div>
+      {linhas.length === 0 ? (
+        <p className="px-2.5 py-2 text-[11px] text-gray-400">{vazio}</p>
+      ) : (
+        <table className="w-full text-left text-[11px]">
+          <tbody className="divide-y divide-gray-50">
+            {linhas.map((item) => (
+              <tr key={item.chave}>
+                <td className="py-1 pl-2.5 pr-2 font-mono font-bold text-gray-800 whitespace-nowrap">{item.code}</td>
+                <td className="py-1 pr-2 text-gray-700">
+                  {item.name}
+                  {item.origem && (
+                    <span className={`ml-1.5 inline-flex px-1 py-0 rounded-full text-[9px] font-bold ${ORIGEM_CLASS[item.origem] || 'bg-gray-100 text-gray-700'}`}>
+                      {item.origem === 'wk' ? tf('dp.folha.origemWk', 'WK')
+                        : item.origem === 'gt' ? tf('dp.folha.origemGt', 'Interno')
+                          : tf('dp.folha.origemManual', 'Manual')}
+                    </span>
+                  )}
+                </td>
+                <td className="py-1 pr-2 text-right tabular-nums text-gray-500 whitespace-nowrap">{item.quantity}</td>
+                <td className="py-1 pr-2.5 text-right tabular-nums font-bold text-gray-900 whitespace-nowrap">{formatBRL(item.valor)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="space-y-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        {coluna(tf('dp.folha.proventos', 'Proventos'), proventos, tf('dp.folha.semProventos', 'Sem proventos'), 'bg-emerald-50 text-emerald-800')}
+        {coluna(tf('dp.folha.descontos', 'Descontos'), descontos, tf('dp.folha.semDescontos', 'Sem descontos'), 'bg-red-50 text-red-800')}
+      </div>
+      {outros.length > 0 && coluna(tf('dp.folha.outros', 'Outros'), outros, '', 'bg-gray-50 text-gray-700')}
+    </div>
+  );
+}
 /** Painel "Rubricas & Folha" da aba DP — sincroniza WK/módulos internos, calcula e envia para aprovação. */
 export default function DpFolhaPanel() {
+
   const { user, hasFeature } = useSupabaseAuth();
   const { t } = useI18n();
 
@@ -266,6 +328,9 @@ export default function DpFolhaPanel() {
   const [colabWkTotal, setColabWkTotal] = useState(0);
   const [colabWkPage, setColabWkPage] = useState(1);
   const [colabWkCarregando, setColabWkCarregando] = useState(false);
+  const [colabWkBusca, setColabWkBusca] = useState('');
+  const [colabWkBuscaServidor, setColabWkBuscaServidor] = useState('');
+  const [relatorioBusca, setRelatorioBusca] = useState('');
 
   const [sincronizando, setSincronizando] = useState(false);
   const [importando, setImportando] = useState(false);
@@ -397,10 +462,10 @@ export default function DpFolhaPanel() {
     }
   }, []);
 
-  const carregarColaboradoresWk = useCallback(async (page: number, empresaId: string, deptId: string) => {
+  const carregarColaboradoresWk = useCallback(async (page: number, empresaId: string, deptId: string, busca: string) => {
     setColabWkCarregando(true);
     try {
-      const filtros = `${empresaId ? `&companyId=${encodeURIComponent(empresaId)}` : ''}${deptId ? `&departmentId=${encodeURIComponent(deptId)}` : ''}`;
+      const filtros = `${empresaId ? `&companyId=${encodeURIComponent(empresaId)}` : ''}${deptId ? `&departmentId=${encodeURIComponent(deptId)}` : ''}${busca.trim() ? `&q=${encodeURIComponent(busca.trim())}` : ''}`;
       const res = await fetchWithToken(`/api/dp/wk/colaboradores?page=${page}&limit=${COLAB_WK_LIMIT}${filtros}`);
       const json = await res.json();
       if (res.ok && json.success) {
@@ -441,7 +506,7 @@ export default function DpFolhaPanel() {
     setRelatorio(null);
     carregarCentrosCusto(companyId);
     carregarStatusWk(companyId);
-    carregarColaboradoresWk(1, companyId, centroCustoId);
+    carregarColaboradoresWk(1, companyId, centroCustoId, colabWkBuscaServidor);
     if (companyId) {
       carregarFolhaDaCompetencia(companyId, competencia, centroCustoId);
       carregarFuncionarios(companyId, centroCustoId);
@@ -453,6 +518,18 @@ export default function DpFolhaPanel() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, companyId, centroCustoId, mesAnoInput]);
+
+  // Debounce da busca WK (300ms) → nova consulta server-side na página 1.
+  useEffect(() => {
+    const handle = setTimeout(() => setColabWkBuscaServidor(colabWkBusca), 300);
+    return () => clearTimeout(handle);
+  }, [colabWkBusca]);
+
+  useEffect(() => {
+    if (!user) return;
+    carregarColaboradoresWk(1, companyId, centroCustoId, colabWkBuscaServidor);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [colabWkBuscaServidor]);
 
   // Estado de aprovação quando a sheet muda (só faz sentido em calculated/approved).
   useEffect(() => {
@@ -617,6 +694,25 @@ export default function DpFolhaPanel() {
   }, [statusWk, companyId, competencia]);
 
   const colabWkTotalPages = Math.max(1, Math.ceil(colabWkTotal / COLAB_WK_LIMIT));
+
+  // Busca de colaborador dentro do relatório (sanfonas) — client-side sobre a competência carregada.
+  const relatorioColaboradoresFiltrados = useMemo(() => {
+    if (!relatorio) return [];
+    const q = relatorioBusca.trim().toLowerCase();
+    if (!q) return relatorio.colaboradores;
+    const qDigits = q.replace(/\D/g, '');
+    return relatorio.colaboradores.filter((c) =>
+      c.nome.toLowerCase().includes(q)
+      || (qDigits.length > 0 && c.cpf.replace(/\D/g, '').includes(qDigits))
+    );
+  }, [relatorio, relatorioBusca]);
+
+  const relatorioCentrosVisiveis = useMemo(() => {
+    if (!relatorio) return [];
+    return relatorio.centros.filter((centro) =>
+      relatorioColaboradoresFiltrados.some((c) => c.centroCusto === centro.centroCusto)
+    );
+  }, [relatorio, relatorioColaboradoresFiltrados]);
 
   const desabilitadoEdicao = !podeEditar;
   const tituloEdicao = desabilitadoEdicao ? tf('dp.folha.requerEdicao', 'Requer permissão folha.edit') : undefined;
@@ -898,6 +994,16 @@ export default function DpFolhaPanel() {
         <div className="bg-white rounded-xl border border-gray-200 shadow-xs shrink-0">
           <div className="px-4 py-3 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-bold text-gray-900">{tf('dp.folha.relatorioTitulo', 'Relatório da competência')}</h3>
+            <div className="relative order-last w-full md:order-none md:w-56">
+              <FiSearch className="absolute left-2.5 top-2 text-gray-400 w-3.5 h-3.5" />
+              <input
+                type="text"
+                value={relatorioBusca}
+                onChange={(e) => setRelatorioBusca(e.target.value)}
+                placeholder={tf('dp.folha.buscarColaborador', 'Buscar por nome ou CPF...')}
+                className="w-full pl-8 pr-2 py-1 text-[11px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-abz-blue"
+              />
+            </div>
             <span className="text-[11px] font-semibold text-gray-600">
               {relatorio.totais.colaboradores} {tf('dp.folha.totalColaboradores', 'Colaboradores')}
               {' · '}{tf('dp.folha.brutos', 'Bruto')} {formatBRL(relatorio.totais.bruto)}
@@ -908,9 +1014,13 @@ export default function DpFolhaPanel() {
             <p className="p-6 text-xs text-gray-500 text-center">
               {tf('dp.folha.relatorioVazio', 'Nenhum embarque, dobra, folga ou férias nesta competência.')}
             </p>
+          ) : relatorioColaboradoresFiltrados.length === 0 ? (
+            <p className="p-6 text-xs text-gray-500 text-center">
+              {tf('dp.folha.nenhumBusca', 'Nenhum colaborador encontrado para a busca.')}
+            </p>
           ) : (
             <div className="divide-y divide-gray-100">
-              {relatorio.centros.map((centro) => (
+              {relatorioCentrosVisiveis.map((centro) => (
                 <section key={centro.centroCusto}>
                   <div className="px-4 py-2 bg-slate-50 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
                     <span className="font-black text-gray-900 uppercase">{centro.centroCusto}</span>
@@ -924,7 +1034,7 @@ export default function DpFolhaPanel() {
                     <span className="font-black text-emerald-800">{formatBRL(centro.liquido)}</span>
                   </div>
                   <ul className="divide-y divide-gray-50">
-                    {relatorio.colaboradores.filter((c) => c.centroCusto === centro.centroCusto).map((c) => {
+                    {relatorioColaboradoresFiltrados.filter((c) => c.centroCusto === centro.centroCusto).map((c) => {
                       const aberto = expandidos.has(c.employeeId);
                       return (
                         <li key={c.employeeId}>
@@ -954,18 +1064,17 @@ export default function DpFolhaPanel() {
                                 {' · '}{tf('dp.folha.liquidos', 'Líquido')} {formatBRL(c.liquido)}
                               </p>
                               {c.itens.length > 0 && (
-                                <table className="w-full text-left">
-                                  <tbody className="divide-y divide-gray-50">
-                                    {c.itens.map((item) => (
-                                      <tr key={`${c.employeeId}-${item.code}-${item.name}`}>
-                                        <td className="py-1 pr-2 font-mono font-bold text-gray-800">{item.code}</td>
-                                        <td className="py-1 pr-2 text-gray-700">{item.name}</td>
-                                        <td className="py-1 pr-2 text-right tabular-nums">{item.quantity}</td>
-                                        <td className="py-1 text-right tabular-nums font-bold text-gray-900">{formatBRL(item.valor)}</td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
+                                <RubricasDuasColunas
+                                  tf={tf}
+                                  itens={c.itens.map((item, idx) => ({
+                                    chave: `${c.employeeId}-${item.code}-${idx}`,
+                                    code: item.code,
+                                    name: item.name,
+                                    type: item.type,
+                                    quantity: item.quantity,
+                                    valor: item.valor,
+                                  }))}
+                                />
                               )}
                             </div>
                           )}
@@ -1011,48 +1120,18 @@ export default function DpFolhaPanel() {
                       </button>
                       {aberto && (
                         <div className="px-4 pb-3">
-                          <table className="w-full text-left text-[11px]">
-                            <thead className="text-gray-500 uppercase font-bold">
-                              <tr>
-                                <th className="py-1 pr-2">Cód.</th>
-                                <th className="py-1 pr-2">{tf('dp.folha.nome', 'Nome')}</th>
-                                <th className="py-1 pr-2">Tipo</th>
-                                <th className="py-1 pr-2 text-right">{tf('dp.folha.quantidade', 'Qtd')}</th>
-                                <th className="py-1 pr-2 text-right">{tf('dp.folha.valorReferencia', 'Ref.')}</th>
-                                <th className="py-1 pr-2 text-right">{tf('dp.folha.valorCalculado', 'Valor')}</th>
-                                <th className="py-1">{tf('dp.folha.origemLancamentos', 'Lançamentos na folha')}</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-50">
-                              {r.items.map((item) => (
-                                <tr key={`${r.employeeId}-${item.codeId}-${item.code}`}>
-                                  <td className="py-1 pr-2 font-mono font-bold text-gray-800">{item.code}</td>
-                                  <td className="py-1 pr-2 text-gray-700">{item.name}</td>
-                                  <td className="py-1 pr-2">
-                                    <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                                      item.type === 'provento' ? 'bg-emerald-50 text-emerald-700'
-                                        : item.type === 'desconto' ? 'bg-red-50 text-red-700'
-                                          : 'bg-gray-100 text-gray-700'
-                                    }`}>
-                                      {item.type}
-                                    </span>
-                                  </td>
-                                  <td className="py-1 pr-2 text-right tabular-nums text-gray-700">{item.quantity}</td>
-                                  <td className="py-1 pr-2 text-right tabular-nums text-gray-500">{formatBRL(item.referenceValue)}</td>
-                                  <td className="py-1 pr-2 text-right tabular-nums font-bold text-gray-900">{formatBRL(item.calculatedValue)}</td>
-                                  <td className="py-1">
-                                    {item.origem && (
-                                      <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-bold ${ORIGEM_CLASS[item.origem] || 'bg-gray-100 text-gray-700'}`}>
-                                        {item.origem === 'wk' ? tf('dp.folha.origemWk', 'WK')
-                                          : item.origem === 'gt' ? tf('dp.folha.origemGt', 'Interno')
-                                            : tf('dp.folha.origemManual', 'Manual')}
-                                      </span>
-                                    )}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                          <RubricasDuasColunas
+                            tf={tf}
+                            itens={r.items.map((item) => ({
+                              chave: `${r.employeeId}-${item.codeId}-${item.code}`,
+                              code: item.code,
+                              name: item.name,
+                              type: item.type,
+                              quantity: item.quantity,
+                              valor: item.calculatedValue,
+                              origem: item.origem,
+                            }))}
+                          />
                         </div>
                       )}
                     </li>
@@ -1068,10 +1147,20 @@ export default function DpFolhaPanel() {
       <div className="bg-white rounded-xl border border-gray-200 shadow-xs shrink-0">
         <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-2">
           <h3 className="text-sm font-bold text-gray-900">{tf('dp.folha.colaboradoresWkTitulo', 'Colaboradores WK Radar')}</h3>
+          <div className="relative flex-1 max-w-xs">
+            <FiSearch className="absolute left-2.5 top-2 text-gray-400 w-3.5 h-3.5" />
+            <input
+              type="text"
+              value={colabWkBusca}
+              onChange={(e) => setColabWkBusca(e.target.value)}
+              placeholder={tf('dp.folha.buscarColaborador', 'Buscar por nome ou CPF...')}
+              className="w-full pl-8 pr-2 py-1 text-[11px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-abz-blue"
+            />
+          </div>
           <div className="flex items-center gap-1.5">
             <button
               type="button"
-              onClick={() => carregarColaboradoresWk(colabWkPage - 1, companyId, centroCustoId)}
+              onClick={() => carregarColaboradoresWk(colabWkPage - 1, companyId, centroCustoId, colabWkBuscaServidor)}
               disabled={colabWkPage <= 1 || colabWkCarregando}
               className="p-1.5 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-40"
               title={tf('dp.folha.anterior', 'Anterior')}
@@ -1083,7 +1172,7 @@ export default function DpFolhaPanel() {
             </span>
             <button
               type="button"
-              onClick={() => carregarColaboradoresWk(colabWkPage + 1, companyId, centroCustoId)}
+              onClick={() => carregarColaboradoresWk(colabWkPage + 1, companyId, centroCustoId, colabWkBuscaServidor)}
               disabled={colabWkPage >= colabWkTotalPages || colabWkCarregando}
               className="p-1.5 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-40"
               title={tf('dp.folha.proxima', 'Próxima')}

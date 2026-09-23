@@ -1,27 +1,33 @@
 'use client';
 
 /**
- * Hub do módulo Financeiro (§7.1): abas Visão geral · Folhas · Faturas ·
- * NFS-e · Bancos/Recebimentos. Estado da aba em ?tab= (deep-link friendly);
- * as rotas /folha-pagamento/{faturas,nfse,bancos} entram com tabInicial.
+ * Hub do módulo Financeiro (§7.1 + reforma §4): abas Visão geral · Folhas ·
+ * Empresas · Clientes · Faturas · NFS-e · Bancos/Recebimentos. Estado da aba
+ * em ?tab= (deep-link friendly); as rotas /folha-pagamento/{faturas,nfse,bancos}
+ * entram com tabInicial. Casca no padrão GtPageShell + GT_PAGE_SCROLLPORT_CLASS.
  */
 import React from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { FiBarChart2, FiList, FiFileText, FiFilePlus, FiCreditCard } from 'react-icons/fi';
+import { FiBarChart2, FiList, FiFileText, FiFilePlus, FiCreditCard, FiBriefcase, FiUsers } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
+import GtPageShell, { GT_PAGE_SCROLLPORT_CLASS } from '@/components/gestao-tripulantes/GtPageShell';
 import CompetenciaOverview from '@/components/financeiro/CompetenciaOverview';
 import FolhasTab from '@/components/financeiro/FolhasTab';
+import EmpresasTab from '@/components/financeiro/EmpresasTab';
+import ClientesTab from '@/components/financeiro/ClientesTab';
 import FaturasList from '@/components/financeiro/FaturasList';
 import NfseEmissoesList from '@/components/financeiro/NfseEmissoesList';
 import BancosRecebimentosTab from '@/components/financeiro/BancosRecebimentosTab';
 
-export type FinanceiroTab = 'visao-geral' | 'folhas' | 'faturas' | 'nfse' | 'bancos';
+export type FinanceiroTab = 'visao-geral' | 'folhas' | 'empresas' | 'clientes' | 'faturas' | 'nfse' | 'bancos';
 
-const TAB_IDS: FinanceiroTab[] = ['visao-geral', 'folhas', 'faturas', 'nfse', 'bancos'];
+const TAB_IDS: FinanceiroTab[] = ['visao-geral', 'folhas', 'empresas', 'clientes', 'faturas', 'nfse', 'bancos'];
 
 const TAB_META: Record<FinanceiroTab, { labelKey: string; icon: React.ReactNode }> = {
   'visao-geral': { labelKey: 'financeiro.tabVisaoGeral', icon: <FiBarChart2 className="h-4 w-4" /> },
   folhas: { labelKey: 'financeiro.tabFolhas', icon: <FiList className="h-4 w-4" /> },
+  empresas: { labelKey: 'fin.tabEmpresas', icon: <FiBriefcase className="h-4 w-4" /> },
+  clientes: { labelKey: 'fin.tabClientes', icon: <FiUsers className="h-4 w-4" /> },
   faturas: { labelKey: 'financeiro.tabFaturas', icon: <FiFileText className="h-4 w-4" /> },
   nfse: { labelKey: 'financeiro.tabNfse', icon: <FiFilePlus className="h-4 w-4" /> },
   bancos: { labelKey: 'financeiro.tabBancos', icon: <FiCreditCard className="h-4 w-4" /> },
@@ -47,7 +53,7 @@ export default function FinanceiroHub({ tabInicial }: { tabInicial?: FinanceiroT
   }
 
   return (
-    <div className="flex flex-col min-h-0 flex-1 gap-4">
+    <GtPageShell>
       {/* Cabeçalho + abas */}
       <div className="shrink-0 space-y-3">
         <div>
@@ -79,13 +85,15 @@ export default function FinanceiroHub({ tabInicial }: { tabInicial?: FinanceiroT
       </div>
 
       {/* Conteúdo da aba */}
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className={GT_PAGE_SCROLLPORT_CLASS}>
         {tab === 'visao-geral' && <CompetenciaOverview onDrill={(destino) => trocarAba(destino)} />}
         {tab === 'folhas' && <FolhasTab />}
+        {tab === 'empresas' && <EmpresasTab />}
+        {tab === 'clientes' && <ClientesTab />}
         {tab === 'faturas' && <FaturasList />}
         {tab === 'nfse' && <NfseEmissoesList />}
         {tab === 'bancos' && <BancosRecebimentosTab />}
       </div>
-    </div>
+    </GtPageShell>
   );
 }

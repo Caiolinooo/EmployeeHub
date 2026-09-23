@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { PayrollCompany, PayrollCompanyForm, PayrollApiResponse, PayrollPaginatedResponse } from '@/types/payroll';
 import { garantirNivelPayroll } from '@/lib/payroll/payroll-auth';
+import { extrairCamposFiscaisEmpresa } from './_lib/fiscal';
 
 export const dynamic = 'force-dynamic';
 
@@ -118,7 +119,8 @@ export async function POST(request: NextRequest) {
         phone: body.phone,
         email: body.email,
         contact_person: body.contactPerson,
-        is_active: body.isActive
+        is_active: body.isActive,
+        ...extrairCamposFiscaisEmpresa(body as unknown as Record<string, unknown>)
       }])
       .select()
       .single();

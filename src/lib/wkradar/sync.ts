@@ -13,6 +13,8 @@
  *   7. auditoria payroll_audit_log com origem_evento='wk_sync'.
  */
 import { supabaseAdmin } from '@/lib/supabase';
+import { mergeColaborador } from '@/lib/payroll/colaborador-merge';
+import { formatCpf } from '@/lib/utils/identity';
 import { analisarWorkbook } from '@/lib/indicadores/xlsx-import';
 import {
   ErroWkCredencial,
@@ -298,10 +300,12 @@ async function garantirSheet(
 }
 
 /**
- * Grava os funcionários no payroll_employees. Com matrícula → upsert batch
- * por UNIQUE(company_id, registration_number). Sem matrícula → casa por CPF
- * com funcionário existente (update); sem correspondência → aviso, nunca
- * inventa matrícula. Retorna quantidade gravada.
+ * Grava os funcionários no payroll_employees pelo ponto único de merge
+ * (design §3): match por CPF normalizado → senão (company_id, registration_number);
+ * preenchimento ADITIVO (nunca sobrescreve dado existente); data_demissao e
+ * status sempre atualizam (fonte wk — precedência fiscal de rescisão).
+ * Sem matrícula → só grava com correspondência por CPF; sem correspondência →
+ * aviso, nunca inventa matrícula. Retorna quantidade gravada.
  */
 async function upsertFuncionarios(
   funcionarios: WkFuncionario[],
@@ -311,66 +315,50 @@ async function upsertFuncionarios(
 ): Promise<number> {
   if (funcionarios.length === 0) return 0;
 
-  const agora = new Date().toISOString();
   const dept = departmentId ?? null;
-  const porMatricula = new Map<string, Record<string, unknown>>();
-  for (const f of funcionarios) {
-    if (!f.matricula) continue;
-    porMatricula.set(f.matricula.trim(), {
-      company_id: companyId,
-      department_id: dept,
-      registration_number: f.matricula.trim(),
-      name: f.nome || `Colaborador ${f.matricula.trim()}`,
-      cpf: f.cpf,
-      position: f.cargo,
-      base_salary: f.salarioBase,
-      admission_date: f.admissao,
-      termination_date: f.demissao,
-      status: f.status,
-      updated_at: agora,
-    });
-  }
-
   let gravados = 0;
-  for (const chunk of dividirEmChunks([...porMatricula.values()], TAMANHO_CHUNK)) {
-    const { error } = await supabaseAdmin
-      .from('payroll_employees')
-      .upsert(chunk, { onConflict: 'company_id,registration_number' });
-    if (error) throw new Error(`Falha ao gravar funcionários (payroll_employees): ${error.message}`);
-    gravados += chunk.length;
-  }
 
-  const semMatricula = funcionarios.filter((f) => !f.matricula && f.cpf);
-  for (const f of semMatricula) {
-    const { data: existente, error } = await supabaseAdmin
-      .from('payroll_employees')
-      .select('id')
-      .eq('company_id', companyId)
-      .eq('cpf', f.cpf as string)
-      .limit(1);
-    if (error) throw new Error(`Falha ao buscar funcionário por CPF: ${error.message}`);
-    const linha = (existente || [])[0] as { id?: string } | undefined;
-    if (!linha?.id) {
-      const mascaraCpf = f.cpf ? `***${f.cpf.slice(-3)}` : '?';
-      avisos.push(
-        `Funcionário '${f.nome}' (CPF ${mascaraCpf}) sem matrícula WK e sem correspondência por CPF — não gravado.`,
-      );
-      continue;
+  for (const f of funcionarios) {
+    const matricula = (f.matricula || '').trim();
+    const cpfDigits = (f.cpf || '').replace(/\D/g, '');
+
+    if (!matricula) {
+      if (!f.cpf) continue;
+      // Sem matrícula: só grava se já houver ficha por CPF — nunca cria.
+      // Tolerante à forma de armazenamento (dígitos puros ou com máscara).
+      const candidatos = cpfDigits.length === 11 ? [cpfDigits, formatCpf(cpfDigits)] : [f.cpf as string];
+      const { data: existente, error } = await supabaseAdmin
+        .from('payroll_employees')
+        .select('id')
+        .eq('company_id', companyId)
+        .in('cpf', candidatos)
+        .limit(1);
+      if (error) throw new Error(`Falha ao buscar funcionário por CPF: ${error.message}`);
+      if (!(existente || [])[0]?.id) {
+        const mascaraCpf = f.cpf ? `***${f.cpf.slice(-3)}` : '?';
+        avisos.push(
+          `Funcionário '${f.nome}' (CPF ${mascaraCpf}) sem matrícula WK e sem correspondência por CPF — não gravado.`,
+        );
+        continue;
+      }
     }
-    const { error: erroUpdate } = await supabaseAdmin
-      .from('payroll_employees')
-      .update({
-        department_id: dept,
-        name: f.nome,
-        position: f.cargo,
+
+    await mergeColaborador(
+      supabaseAdmin,
+      {
+        company_id: companyId,
+        registration_number: matricula || null,
+        cpf: f.cpf,
+        name: f.nome || (matricula ? `Colaborador ${matricula}` : null),
+        cargo: f.cargo,
         base_salary: f.salarioBase,
-        admission_date: f.admissao,
-        termination_date: f.demissao,
+        data_admissao: f.admissao,
+        data_demissao: f.demissao,
         status: f.status,
-        updated_at: agora,
-      })
-      .eq('id', linha.id);
-    if (erroUpdate) throw new Error(`Falha ao atualizar funcionário por CPF: ${erroUpdate.message}`);
+        department_id: dept,
+      },
+      'wk_xlsx',
+    );
     gravados += 1;
   }
 

@@ -8,13 +8,30 @@ import { obterFatura, erro404 } from '@/lib/financeiro/service';
 import type { FaturaRenderInput, FaturaItemRender } from '@/lib/financeiro/invoice/types';
 import type { FinFatura, FinFaturaItem } from '@/types/financeiro';
 
-function enderecoLinha(endereco: unknown): string | undefined {
+function enderecoLinha(endereco: unknown, pais?: string | null): string | undefined {
   if (!endereco || typeof endereco !== 'object') return undefined;
   const e = endereco as Record<string, unknown>;
-  return [e.logradouro, e.numero, e.bairro, e.cidade, e.uf, e.cep]
+  // Tomador no exterior: endereço internacional (street/city/state/postcode/country).
+  const partes = (pais || 'BR').toUpperCase() !== 'BR'
+    ? [e.street, e.city, e.state, e.postcode, e.country]
+    : [e.logradouro, e.numero, e.bairro, e.cidade, e.uf, e.cep];
+  return partes
     .filter(Boolean)
     .map(String)
     .join(', ') || undefined;
+}
+
+/** Endereço da empresa emissora: colunas estruturadas (migration 20260923_000001) com fallback ao address TEXT legado. */
+function enderecoEmpresa(emp: {
+  logradouro?: string | null; numero?: string | null; complemento?: string | null;
+  bairro?: string | null; cep?: string | null; municipio?: string | null; uf?: string | null;
+  address?: string | null;
+}): string | undefined {
+  const estruturado = [emp.logradouro, emp.numero, emp.complemento, emp.bairro, emp.cep, emp.municipio, emp.uf]
+    .filter(Boolean)
+    .map(String)
+    .join(', ');
+  return estruturado || emp.address || undefined;
 }
 
 export async function montarFaturaRenderInput(faturaId: string): Promise<FaturaRenderInput> {
@@ -23,32 +40,45 @@ export async function montarFaturaRenderInput(faturaId: string): Promise<FaturaR
 
   const { data: empresa } = await supabaseAdmin
     .from('payroll_companies')
-    .select('name, cnpj, address, email, phone')
+    .select('name, cnpj, address, email, phone, razao_social, logradouro, numero, complemento, bairro, cep, municipio, uf')
     .eq('id', fin.empresa_id)
     .maybeSingle();
   if (!empresa) throw erro404('empresa_ausente', 'Empresa emissora não encontrada');
-  const emp = empresa as { name: string; cnpj: string; address?: string; email?: string; phone?: string };
+  const emp = empresa as {
+    name: string; cnpj: string; address?: string; email?: string; phone?: string;
+    razao_social?: string | null; logradouro?: string | null; numero?: string | null;
+    complemento?: string | null; bairro?: string | null; cep?: string | null;
+    municipio?: string | null; uf?: string | null;
+  };
 
   const snapshot = (fin.cliente_snapshot || null) as
-    | { nome?: string; documento?: string; endereco?: unknown }
+    | { nome?: string; documento?: string; endereco?: unknown; pais?: string; tax_id?: string }
     | null;
   let clienteNome = snapshot?.nome;
   let clienteDocumento = snapshot?.documento;
-  let clienteEndereco = enderecoLinha(snapshot?.endereco);
+  let clientePais = snapshot?.pais;
+  let clienteTaxId = snapshot?.tax_id;
+  let clienteEndereco = enderecoLinha(snapshot?.endereco, clientePais);
   if (fin.cliente_id) {
     const { data: cliente } = await supabaseAdmin
       .from('fin_clientes')
-      .select('nome, documento, endereco')
+      .select('nome, documento, endereco, pais, tax_id')
       .eq('id', fin.cliente_id)
       .maybeSingle();
     if (cliente) {
-      const c = cliente as { nome: string; documento?: string; endereco?: unknown };
+      const c = cliente as { nome: string; documento?: string; endereco?: unknown; pais?: string; tax_id?: string };
       clienteNome = c.nome;
       clienteDocumento = c.documento;
-      clienteEndereco = enderecoLinha(c.endereco);
+      clientePais = c.pais;
+      clienteTaxId = c.tax_id;
+      clienteEndereco = enderecoLinha(c.endereco, c.pais);
     }
   }
   if (!clienteNome) throw erro404('cliente_ausente', 'Fatura sem cliente vinculado');
+  // Tomador exterior: exibe o Tax ID/VAT alfanumérico no lugar do documento BR.
+  const clienteDocumentoExibicao = (clientePais || 'BR').toUpperCase() !== 'BR'
+    ? clienteTaxId || clienteDocumento
+    : clienteDocumento;
 
   const itens: FaturaItemRender[] = (fin.itens || []).map((it) => ({
     descricao: it.descricao,
@@ -60,7 +90,7 @@ export async function montarFaturaRenderInput(faturaId: string): Promise<FaturaR
 
   const { data: conta } = await supabaseAdmin
     .from('fin_contas_bancarias')
-    .select('banco_nome, agencia, conta, titular_nome, integracao_id')
+    .select('banco_nome, agencia, conta, titular_nome, integracao_id, swift_bic, iban, routing_number, sort_code, moeda, banco_correspondente')
     .eq('empresa_id', fin.empresa_id)
     .eq('is_active', true)
     .order('created_at', { ascending: true })
@@ -71,15 +101,22 @@ export async function montarFaturaRenderInput(faturaId: string): Promise<FaturaR
     const c = conta as {
       banco_nome: string | null; agencia: string | null; conta: string | null;
       titular_nome: string; integracao_id: string | null;
+      swift_bic: string | null; iban: string | null; routing_number: string | null;
+      sort_code: string | null; moeda: string | null; banco_correspondente: string | null;
     };
     contaBancaria = {
       bancoNome: c.banco_nome || '',
       agencia: c.agencia || '',
       conta: c.conta || '',
       titularNome: c.titular_nome,
+      swiftBic: c.swift_bic || undefined,
+      iban: c.iban || undefined,
+      routingNumber: c.routing_number || undefined,
+      sortCode: c.sort_code || undefined,
+      moeda: c.moeda || undefined,
+      bancoCorrespondente: c.banco_correspondente || undefined,
     };
   }
-
   return {
     fatura: {
       numero: fin.numero,
@@ -89,6 +126,8 @@ export async function montarFaturaRenderInput(faturaId: string): Promise<FaturaR
       moeda: fin.moeda,
       valorTotal: Number(fin.valor_total),
       callOff: fin.call_off || undefined,
+      vesselName: fin.vessel_name || undefined,
+      poNumber: fin.po_number || undefined,
       observacoes: fin.observacoes || undefined,
       competencia:
         fin.competencia_ano && fin.competencia_mes
@@ -97,15 +136,15 @@ export async function montarFaturaRenderInput(faturaId: string): Promise<FaturaR
       status: fin.status,
     },
     emissor: {
-      razaoSocial: emp.name,
+      razaoSocial: emp.razao_social || emp.name,
       cnpj: emp.cnpj,
-      endereco: emp.address || undefined,
+      endereco: enderecoEmpresa(emp),
       email: emp.email || undefined,
       telefone: emp.phone || undefined,
     },
     cliente: {
       nome: clienteNome,
-      documento: clienteDocumento || undefined,
+      documento: clienteDocumentoExibicao || undefined,
       endereco: clienteEndereco,
     },
     itens,
