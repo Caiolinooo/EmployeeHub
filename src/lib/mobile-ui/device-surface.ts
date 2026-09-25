@@ -25,6 +25,8 @@ export type SurfaceDecision = {
   reason:
     | 'already-mobile-prefix'
     | 'not-implemented'
+    | 'query-desktop'
+    | 'query-mobile'
     | 'cookie-desktop'
     | 'cookie-mobile'
     | 'bot-desktop'
@@ -97,12 +99,13 @@ export function isMobileDirectPath(pathname: string): boolean {
 export function shouldRedirectMobilePrefix(input: {
   pathname: string;
   uiCookie?: string | null;
+  uiQuery?: string | null;
   uaDeviceType?: string | undefined;
   isBot?: boolean;
 }): boolean {
   if (!isMobilePrefix(input.pathname)) return false;
   if (isMobileDirectPath(input.pathname)) return false;
-  const ui = parseUiCookie(input.uiCookie);
+  const ui = parseUiCookie(input.uiQuery) ?? parseUiCookie(input.uiCookie);
   if (ui === 'mobile') return false;
   if (ui === 'desktop') return true;
   if (input.isBot) return true;
@@ -112,6 +115,7 @@ export function shouldRedirectMobilePrefix(input: {
 export function decideMobileSurface(input: {
   pathname: string;
   uiCookie?: string | null;
+  uiQuery?: string | null;
   secChUaMobile?: string | null;
   uaDeviceType?: string | undefined;
   isBot?: boolean;
@@ -122,6 +126,12 @@ export function decideMobileSurface(input: {
   }
   if (!isMobileImplemented(path)) {
     return { rewritePath: null, reason: 'not-implemented' };
+  }
+
+  const uiQuery = parseUiCookie(input.uiQuery);
+  if (uiQuery === 'desktop') return { rewritePath: null, reason: 'query-desktop' };
+  if (uiQuery === 'mobile') {
+    return { rewritePath: toMobileRewritePath(path), reason: 'query-mobile' };
   }
 
   const ui = parseUiCookie(input.uiCookie);

@@ -21,7 +21,8 @@ Decidir se o pedido serve o front mobile (`/m/...`) ou o desktop atual. Desktop 
 - Allowlist P0: `/login`. Fora da lista = desktop. Home mobile é `/m` (sem rewrite de `/`). `/m/preview` é direto; em produção o rewrite devolve HTTP 404.
 - Desktop em `/m/*`: Edge redireciona `/m` → `/`, `/m/login` → `/login`. Sem o ficheiro na raiz o Edge não entra no bundle; com `middleware.ts` na raiz o rewrite de `/login` volta a correr. `next.config.js` `beforeFiles` permanece como fallback.
 - Tablet = desktop. Middleware: `device.type === 'tablet'`. Fallback `next.config`: `TABLET_UA_VALUE` (iPad, Tablet, PlayBook, SM-T/SM-X, Nexus 7/9/10, Kindle, Silk, Lenovo TB, Pixel Tablet). Telefone = `PHONE_REWRITE_UA_VALUE` (ancora `^$`; tablet vence mesmo com `Mobile`).
-- Cookie `ui=desktop|mobile` vence UA/CH.
+- Cookie `ui=desktop|mobile` vence UA/CH. Query `?ui=desktop|mobile` vence o rewrite (e o cookie) e grava o cookie.
+- Redirect `/m/*` → URL pública via `request.nextUrl.clone()` + `pathname = stripMobilePrefix`. Sem `new URL(stripMobilePrefix…)`.
 - Bot = desktop.
 - Rewrite interno; URL pública não muda.
 - Pedido desktop: `NextResponse.next()` sem header extra.
@@ -38,6 +39,7 @@ Decidir se o pedido serve o front mobile (`/m/...`) ou o desktop atual. Desktop 
 - UA desktop em `/login` → HTML desktop.
 - UA iPhone em `/login` → rewrite `/m/login`.
 - Cookie `ui=desktop` no iPhone → desktop.
+- Query `?ui=desktop` no iPhone → desktop + cookie `ui=desktop`.
 
 ## Child DOX Index
 

@@ -68,6 +68,23 @@ describe('decideMobileSurface', () => {
     assert.equal(d.reason, 'ua-mobile');
   });
 
+  it('query ui=desktop forces desktop on mobile UA and beats cookie mobile', () => {
+    const d = decideMobileSurface({
+      pathname: '/login',
+      uiQuery: 'desktop',
+      uiCookie: 'mobile',
+      ...mobileUa,
+    });
+    assert.equal(d.rewritePath, null);
+    assert.equal(d.reason, 'query-desktop');
+  });
+
+  it('query ui=mobile forces mobile on desktop UA', () => {
+    const d = decideMobileSurface({ pathname: '/login', uiQuery: 'mobile', uaDeviceType: undefined });
+    assert.equal(d.rewritePath, '/m/login');
+    assert.equal(d.reason, 'query-mobile');
+  });
+
   it('cookie ui=desktop forces desktop on mobile UA', () => {
     const d = decideMobileSurface({ pathname: '/login', uiCookie: 'desktop', ...mobileUa });
     assert.equal(d.rewritePath, null);
@@ -138,6 +155,13 @@ describe('shouldRedirectMobilePrefix', () => {
     assert.equal(shouldRedirectMobilePrefix({ pathname: '/m', uaDeviceType: 'mobile' }), false);
   });
 
+  it('query ui=desktop redirects /m/login even on mobile UA', () => {
+    assert.equal(
+      shouldRedirectMobilePrefix({ pathname: '/m/login', uiQuery: 'desktop', uaDeviceType: 'mobile' }),
+      true,
+    );
+  });
+
   it('cookie ui=mobile keeps /m/login on desktop UA', () => {
     assert.equal(
       shouldRedirectMobilePrefix({ pathname: '/m/login', uiCookie: 'mobile' }),
@@ -202,6 +226,7 @@ describe('tablet vs phone UA (next.config + middleware)', () => {
     const cfg = readFileSync(new URL('../../../next.config.js', import.meta.url), 'utf8');
     assert.match(cfg, /PHONE_REWRITE_UA_VALUE/);
     assert.match(cfg, /TABLET_UA_VALUE/);
+    assert.match(cfg, /type: 'query', key: 'ui', value: 'desktop'/);
     assert.match(cfg, /productionMobilePreviewRewrites/);
     assert.equal(typeof PHONE_REWRITE_UA_VALUE, 'string');
     assert.equal(typeof TABLET_UA_VALUE, 'string');
@@ -217,6 +242,16 @@ describe('tablet vs phone UA (next.config + middleware)', () => {
     }
     assert.equal(tabletRe.test(iphone), false);
     assert.equal(phoneRe.test(desktop), false);
+  });
+});
+
+describe('apply-mobile-surface', () => {
+  it('redirects /m with nextUrl.clone, not new URL(stripMobilePrefix)', () => {
+    const src = readFileSync(new URL('./apply-mobile-surface.ts', import.meta.url), 'utf8');
+    assert.match(src, /nextUrl\.clone\(\)/);
+    assert.doesNotMatch(src, /new URL\(stripMobilePrefix/);
+    assert.match(src, /searchParams\.get\('ui'\)/);
+    assert.match(src, /cookies\.set\(UI_COOKIE/);
   });
 });
 

@@ -133,7 +133,7 @@ const nextConfig = {
   // beforeFiles: fallback do P0 `/login` (cookie `ui` + CH + UA).
   // A detecção já corre no middleware (`applyMobileSurface`) agora que o
   // Edge volta a entrar no bundle. Não mover o rewrite só para o middleware:
-  // `ui=desktop` está em `missing` aqui (override intacto); Next.js
+  // `ui=desktop` (cookie e query) está em `missing` aqui (override intacto); Next.js
   // `userAgent().device.type` e o regex de telefone podem discordar; se o
   // Edge falhar de novo, `/login` mobile quebra sem este fallback.
   // Cookie `ui=desktop` vence. Tablet (iPad + Android) = desktop. Desktop UA não casa.
@@ -151,6 +151,7 @@ const nextConfig = {
           has: [{ type: 'header', key: 'sec-ch-ua-mobile', value: '\\?1' }],
           missing: [
             { type: 'cookie', key: 'ui', value: 'desktop' },
+            { type: 'query', key: 'ui', value: 'desktop' },
             { type: 'header', key: 'user-agent', value: TABLET_UA_VALUE },
           ],
           destination: '/m/login',
@@ -160,6 +161,7 @@ const nextConfig = {
           has: [{ type: 'header', key: 'user-agent', value: PHONE_REWRITE_UA_VALUE }],
           missing: [
             { type: 'cookie', key: 'ui', value: 'desktop' },
+            { type: 'query', key: 'ui', value: 'desktop' },
             { type: 'header', key: 'user-agent', value: TABLET_UA_VALUE },
           ],
           destination: '/m/login',

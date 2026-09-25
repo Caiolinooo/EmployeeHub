@@ -79,13 +79,13 @@ export default function NoticiasPage() {
         <div className="md:hidden flex items-center space-x-2 mb-6 overflow-x-auto pb-2 scrollbar-hide px-1">
           <button
             onClick={() => setShowFeaturedOnly(false)}
-            className={`min-h-11 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${!showFeaturedOnly ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'}`}
+            className={`max-md:min-h-11 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${!showFeaturedOnly ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'}`}
           >
             Todos
           </button>
           <button
             onClick={() => setShowFeaturedOnly(true)}
-            className={`min-h-11 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${showFeaturedOnly ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'}`}
+            className={`max-md:min-h-11 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${showFeaturedOnly ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'}`}
           >
             Destaques
           </button>

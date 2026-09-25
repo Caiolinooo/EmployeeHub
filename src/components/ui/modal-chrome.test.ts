@@ -36,11 +36,13 @@ describe('modal chrome mobile-only', () => {
     assert.equal((css.match(/@media \(max-width: 767px\)/g) || []).length, 1);
   });
 
-  it('ModalCloseButton exposes data-modal-close and optional md:hidden', () => {
+  it('ModalCloseButton exposes data-modal-close, optional md:hidden and 44px mobile', () => {
     const src = readFileSync(new URL('./ModalCloseButton.tsx', import.meta.url), 'utf8');
     assert.match(src, /data-modal-close/);
     assert.match(src, /mobileOnly/);
     assert.match(src, /md:hidden/);
+    assert.match(src, /mountOnlyWhenMobile/);
+    assert.match(src, /max-md:h-11/);
     assert.match(src, /aria-label/);
   });
 });
@@ -59,10 +61,11 @@ describe('GT mobile scrollports', () => {
 });
 
 describe('modals without visible X now expose mobile close', () => {
-  it('ConfirmationModal renders ModalCloseButton mobileOnly', () => {
+  it('ConfirmationModal mounts X only on mobile (no desktop display:none)', () => {
     const src = readFileSync(new URL('./ConfirmationModal.tsx', import.meta.url), 'utf8');
     assert.match(src, /ModalCloseButton/);
-    assert.match(src, /mobileOnly/);
+    assert.match(src, /mountOnlyWhenMobile/);
+    assert.doesNotMatch(src, /mobileOnly/);
     assert.match(src, /useEscapeToClose/);
     assert.match(src, /data-modal-panel/);
   });
@@ -73,6 +76,36 @@ describe('modals without visible X now expose mobile close', () => {
     assert.match(src, /mobileOnly/);
     assert.match(src, /useEscapeToClose/);
     assert.match(src, /data-modal-panel/);
+  });
+
+  it('AddShortcut, Desligamento, ConfirmarExclusao, Fechamento and CompleteProfile close on Esc', () => {
+    const files = [
+      '../dashboard/AddShortcutModal.tsx',
+      '../gestao-tripulantes/DesligamentoModal.tsx',
+      '../gestao-tripulantes/ConfirmarExclusaoMarcacaoModal.tsx',
+      '../gestao-tripulantes/ModalAprovacaoFechamento.tsx',
+      '../Profile/CompleteProfilePrompt.tsx',
+    ];
+    for (const file of files) {
+      const src = readFileSync(new URL(file, import.meta.url), 'utf8');
+      assert.match(src, /useEscapeToClose/, file);
+    }
+  });
+
+  it('GT schedule mounts from ?tab=schedule without a click', () => {
+    const src = readFileSync(
+      new URL('../../app/department/gestao-tripulantes/page.tsx', import.meta.url),
+      'utf8',
+    );
+    assert.match(src, /useState\(\(\) => searchParams\?\.get\('tab'\) === 'schedule'\)/);
+    assert.match(src, /tab === 'schedule'/);
+    assert.match(src, /setScheduleMounted\(true\)/);
+  });
+
+  it('noticias chips use max-md:min-h-11', () => {
+    const src = readFileSync(new URL('../../app/noticias/page.tsx', import.meta.url), 'utf8');
+    assert.match(src, /max-md:min-h-11/);
+    assert.equal((src.match(/[^:]min-h-11/g) || []).length, 0);
   });
 
   it('SetPasswordModal keeps no X (gate obrigatório) and scrolls in 100dvh', () => {

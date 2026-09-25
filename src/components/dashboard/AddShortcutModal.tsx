@@ -5,6 +5,7 @@ import ReactDOM from 'react-dom';
 import { FiX, FiSearch, FiPlus, FiCheck } from 'react-icons/fi';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
 import * as FaIcons from 'react-icons/fa';
 import * as FiIcons from 'react-icons/fi';
 import * as HiIcons from 'react-icons/hi';
@@ -48,6 +49,7 @@ export default function AddShortcutModal({ onClose, onAdd, existingShortcuts }: 
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const modalRef = useRef<HTMLDivElement>(null);
+    useEscapeToClose(true, onClose);
 
     useEffect(() => {
         const loadData = async () => {

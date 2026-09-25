@@ -1,0 +1,66 @@
+{
+  "base": "http://127.0.0.1:3041",
+  "http": {
+    "mLogin": {
+      "status": 200,
+      "location": null,
+      "setCookie": null,
+      "xAbzUi": null
+    },
+    "mLoginDesktop": {
+      "status": 307,
+      "location": "http://localhost:3041/login",
+      "setCookie": null,
+      "xAbzUi": null
+    },
+    "loginPhone": {
+      "status": 200,
+      "location": null,
+      "setCookie": null,
+      "xAbzUi": "mobile"
+    },
+    "loginQueryDesktop": {
+      "status": 200,
+      "location": null,
+      "setCookie": "ui=desktop; Path=/; Expires=Wed, 24 Mar 2027 14:40:43 GMT; Max-Age=15552000; SameSite=lax",
+      "xAbzUi": null
+    },
+    "loginCookieDesktop": {
+      "status": 200,
+      "location": null,
+      "setCookie": null,
+      "xAbzUi": null
+    }
+  },
+  "confirm": {
+    "v390": {
+      "hasPanel": true,
+      "hasClose": true,
+      "display": "flex",
+      "w": 44,
+      "h": 44
+    },
+    "v375": {
+      "hasPanel": true,
+      "hasClose": true,
+      "display": "flex",
+      "w": 44,
+      "h": 44
+    },
+    "v1280": {
+      "hasPanel": true,
+      "hasClose": false,
+      "display": null,
+      "w": 0,
+      "h": 0
+    }
+  },
+  "schedule": {
+    "href": "http://127.0.0.1:3041/department/gestao-tripulantes?tab=schedule",
+    "hasScheduleDom": true,
+    "hasCol": true,
+    "error": false
+  },
+  "ok": true,
+  "fails": []
+}

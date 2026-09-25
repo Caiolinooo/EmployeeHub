@@ -6,7 +6,7 @@ Fechar overlays no celular sem mudar o desktop em 1440×900.
 
 ## Ownership
 
-- `ModalCloseButton.tsx` — X com `data-modal-close` (44×44 via `globals.css` ≤767px). `mobileOnly` = `md:hidden`.
+- `ModalCloseButton.tsx` — X com `data-modal-close` (44×44 via `globals.css` ≤767px e `max-md:h-11`). `mobileOnly` = `md:hidden`. `mountOnlyWhenMobile` = não monta no desktop (Confirmation sem `display:none`).
 - `src/hooks/useEscapeToClose.ts` — Esc.
 - `globals.css` `@media (max-width: 767px)` — `[data-modal-close]`, `[data-modal-panel]`, `div[data-gt-kpi-cards]` (`!important` vence `.grid`), `[data-portal-main]`, `[data-fab-companion]`, `[data-fab-help]`, `[data-fab-companion-panel]`, `[data-fab-companion-action]`. Nenhum desses seletores fora do media.
 
@@ -14,9 +14,10 @@ Fechar overlays no celular sem mudar o desktop em 1440×900.
 
 - Desktop 0 px: regras só no media query ou `md:hidden`.
 - Overlay: toque fora só se já era o padrão (não em form sujo).
-- Sem X no desktop e no celular: `LanguageDialog`, `ConfirmationModal`, `ThankYouModal`, `DeleteCourseModal`, `LanguageSelector` (variant modal) — X só `md:hidden`.
-- `SetPasswordModal` sem X de propósito (senha obrigatória). Só `data-modal-panel`.
-- Não editar `src/middleware.ts` nem rewrites de `next.config.js`.
+- Sem X no desktop: `LanguageDialog`, `ThankYouModal`, `DeleteCourseModal`, `LanguageSelector` (variant modal) — X só `md:hidden`. `ConfirmationModal` usa `mountOnlyWhenMobile` (portal sem X no desktop; no celular X ≥44).
+- Esc também em `AddShortcutModal`, `CompleteProfilePrompt`, `DesligamentoModal`, `ConfirmarExclusaoMarcacaoModal`, `ModalAprovacaoFechamento`. Esc no `ConfirmationModal` no desktop é intencional.
+- `SetPasswordModal` sem X, sem Esc e sem clique fora (senha obrigatória). Só `data-modal-panel`.
+- Não editar `src/middleware.ts`. Em `next.config.js` só o `missing` query `ui=desktop` nos rewrites `beforeFiles` de `/login` (1º pedido vence o rewrite; o cookie sozinho não chega a tempo). Sem outros rewrites.
 
 ## Verification
 
