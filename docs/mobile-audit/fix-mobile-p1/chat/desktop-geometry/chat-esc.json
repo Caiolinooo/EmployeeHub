@@ -1,0 +1,78 @@
+{
+  "viewports": {
+    "390x844": {
+      "chat-create-server": {
+        "before": 2,
+        "after": 0,
+        "closed": true
+      },
+      "chat-create-channel": {
+        "before": 2,
+        "after": 0,
+        "closed": true
+      },
+      "chat-server-settings": {
+        "before": 0,
+        "after": 0,
+        "closed": false
+      },
+      "chat-start-dm": {
+        "before": 2,
+        "after": 0,
+        "closed": true
+      },
+      "chat-settings": {
+        "before": 2,
+        "after": 0,
+        "closed": true
+      },
+      "ia-exchange": {
+        "before": 0,
+        "after": 0,
+        "closed": false
+      },
+      "ia-voice": {
+        "before": 0,
+        "after": 0,
+        "closed": false
+      }
+    },
+    "1440x900": {
+      "chat-create-server": {
+        "before": 2,
+        "after": 0,
+        "closed": true
+      },
+      "chat-create-channel": {
+        "before": 2,
+        "after": 0,
+        "closed": true
+      },
+      "chat-server-settings": {
+        "before": 2,
+        "after": 0,
+        "closed": true
+      },
+      "chat-start-dm": {
+        "before": 2,
+        "after": 0,
+        "closed": true
+      },
+      "chat-settings": {
+        "before": 2,
+        "after": 0,
+        "closed": true
+      },
+      "ia-exchange": {
+        "before": 0,
+        "after": 0,
+        "closed": false
+      },
+      "ia-voice": {
+        "before": 0,
+        "after": 0,
+        "closed": false
+      }
+    }
+  }
+}

@@ -1,0 +1,477 @@
+{
+  "login": {
+    "status": 200,
+    "href": "http://127.0.0.1:3060/login",
+    "title": "Painel ABZ Group",
+    "body": "Acesse Sua Conta\nEN\nPT\nEmail\n\nDigite seu email\n\nTenho um código de convite\nContinuar\nou entre com biometria\nEntrar com Biometria\nImpressão digital, reconhecimento facial ou Windows Hello\nABZ Group\n\nAinda não tem cadastro? Criar conta\n\n© 2026 ABZ Group. Todos os direitos reservado",
+    "boxes": {
+      "header": null,
+      "sidebar": null,
+      "main": null,
+      "loginCard": {
+        "x": 328,
+        "y": 212,
+        "w": 368,
+        "h": 360
+      },
+      "loginTitle": null,
+      "newsTitle": null,
+      "newsFechar": null,
+      "academyTitle": null,
+      "academyCancel": null,
+      "academyOk": null,
+      "chatTitle": null,
+      "chatCancel": null,
+      "searchPanel": null,
+      "modalPanel": null,
+      "modalClose": null,
+      "fabHelp": null,
+      "fabCompanion": null
+    }
+  },
+  "dashboard": {
+    "status": 200,
+    "href": "http://127.0.0.1:3060/dashboard",
+    "title": "Painel ABZ Group",
+    "body": "PT\nPM\nOlá, Prova!\n\nBem-vindo ao Hub da ABZ Group. Reunimos as principais ferramentas em um único local para facilitar o dia a dia dos nossos colaboradores.\n\nPost de prova\nSMS\nLinks Rápidos\nPonto\n\nRegistro de Ponto\n\nReembolso\n\nSolicitações\n\nContracheque\n\nHolerites\n\nABZ Academy\n\nCu",
+    "boxes": {
+      "header": {
+        "x": 80,
+        "y": 0,
+        "w": 944,
+        "h": 64
+      },
+      "sidebar": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 768
+      },
+      "main": {
+        "x": 80,
+        "y": 64,
+        "w": 944,
+        "h": 704
+      },
+      "loginCard": null,
+      "loginTitle": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "newsTitle": null,
+      "newsFechar": null,
+      "academyTitle": null,
+      "academyCancel": null,
+      "academyOk": null,
+      "chatTitle": null,
+      "chatCancel": null,
+      "searchPanel": {
+        "x": 160,
+        "y": 304,
+        "w": 576,
+        "h": 60
+      },
+      "modalPanel": {
+        "x": 160,
+        "y": 304,
+        "w": 576,
+        "h": 60
+      },
+      "modalClose": null,
+      "fabHelp": {
+        "x": 944,
+        "y": 688,
+        "w": 56,
+        "h": 56
+      },
+      "fabCompanion": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "chat": {
+    "status": 200,
+    "href": "http://127.0.0.1:3060/chat",
+    "title": "Painel ABZ Group",
+    "body": "AB\nABZ Prova\nCANAIS DE TEXTO\nMENSAGENS DIRETAS\nNenhuma conversa ainda\nCANAIS DE VOZ\nP\nProva Mobile\nOnline\nBem-vindo ao Chat\n\nSelecione um servidor e um canal para começar a colaborar com sua equipe com estilo e eficiência.\n\nMEMBROS ONLINE\n\n0 online",
+    "boxes": {
+      "header": null,
+      "sidebar": null,
+      "main": null,
+      "loginCard": null,
+      "loginTitle": null,
+      "newsTitle": null,
+      "newsFechar": null,
+      "academyTitle": null,
+      "academyCancel": null,
+      "academyOk": null,
+      "chatTitle": null,
+      "chatCancel": null,
+      "searchPanel": null,
+      "modalPanel": null,
+      "modalClose": null,
+      "fabHelp": null,
+      "fabCompanion": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "chat-create-server": {
+    "status": 200,
+    "href": "http://127.0.0.1:3060/chat",
+    "title": "Painel ABZ Group",
+    "body": "AB\nABZ Prova\nCANAIS DE TEXTO\nMENSAGENS DIRETAS\nNenhuma conversa ainda\nCANAIS DE VOZ\nP\nProva Mobile\nOnline\nBem-vindo ao Chat\n\nSelecione um servidor e um canal para começar a colaborar com sua equipe com estilo e eficiência.\n\nMEMBROS ONLINE\n\n0 online\n\nCriar Servidor\nNome do Servido",
+    "boxes": {
+      "header": null,
+      "sidebar": null,
+      "main": null,
+      "loginCard": {
+        "x": 289,
+        "y": 257,
+        "w": 446,
+        "h": 254
+      },
+      "loginTitle": null,
+      "newsTitle": null,
+      "newsFechar": null,
+      "academyTitle": null,
+      "academyCancel": {
+        "x": 440,
+        "y": 447,
+        "w": 101,
+        "h": 40
+      },
+      "academyOk": null,
+      "chatTitle": {
+        "x": 365,
+        "y": 287,
+        "w": 132,
+        "h": 28
+      },
+      "chatCancel": {
+        "x": 440,
+        "y": 447,
+        "w": 101,
+        "h": 40
+      },
+      "searchPanel": null,
+      "modalPanel": {
+        "x": 288,
+        "y": 256,
+        "w": 448,
+        "h": 256
+      },
+      "modalClose": null,
+      "fabHelp": null,
+      "fabCompanion": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "chat-create-channel": {
+    "status": 200,
+    "href": "http://127.0.0.1:3060/chat",
+    "title": "Painel ABZ Group",
+    "body": "AB\nABZ Prova\nCANAIS DE TEXTO\nMENSAGENS DIRETAS\nNenhuma conversa ainda\nCANAIS DE VOZ\nP\nProva Mobile\nOnline\nBem-vindo ao Chat\n\nSelecione um servidor e um canal para começar a colaborar com sua equipe com estilo e eficiência.\n\nMEMBROS ONLINE\n\n0 online\n\nCriar Novo Canal\nNOME DO CANAL",
+    "boxes": {
+      "header": null,
+      "sidebar": null,
+      "main": null,
+      "loginCard": {
+        "x": 289,
+        "y": 171.5,
+        "w": 446,
+        "h": 494
+      },
+      "loginTitle": null,
+      "newsTitle": null,
+      "newsFechar": null,
+      "academyTitle": null,
+      "academyCancel": {
+        "x": 459,
+        "y": 597.5,
+        "w": 101,
+        "h": 44
+      },
+      "academyOk": null,
+      "chatTitle": null,
+      "chatCancel": {
+        "x": 459,
+        "y": 597.5,
+        "w": 101,
+        "h": 44
+      },
+      "searchPanel": null,
+      "modalPanel": null,
+      "modalClose": null,
+      "fabHelp": null,
+      "fabCompanion": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "chat-server-settings": {
+    "status": 200,
+    "href": "http://127.0.0.1:3060/chat",
+    "title": "Painel ABZ Group",
+    "body": "AB\nABZ Prova\nCANAIS DE TEXTO\nMENSAGENS DIRETAS\nNenhuma conversa ainda\nCANAIS DE VOZ\nP\nProva Mobile\nOnline\nBem-vindo ao Chat\n\nSelecione um servidor e um canal para começar a colaborar com sua equipe com estilo e eficiência.\n\nMEMBROS ONLINE\n\n0 online\n\nConfigurações do Servidor\nNOME",
+    "boxes": {
+      "header": null,
+      "sidebar": null,
+      "main": null,
+      "loginCard": {
+        "x": 313,
+        "y": 111,
+        "w": 398,
+        "h": 452
+      },
+      "loginTitle": null,
+      "newsTitle": null,
+      "newsFechar": null,
+      "academyTitle": null,
+      "academyCancel": null,
+      "academyOk": {
+        "x": 313,
+        "y": 640,
+        "w": 398,
+        "h": 46
+      },
+      "chatTitle": null,
+      "chatCancel": null,
+      "searchPanel": null,
+      "modalPanel": null,
+      "modalClose": null,
+      "fabHelp": null,
+      "fabCompanion": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "chat-start-dm": {
+    "status": 200,
+    "href": "http://127.0.0.1:3060/chat",
+    "title": "Painel ABZ Group",
+    "body": "AB\nABZ Prova\nCANAIS DE TEXTO\nMENSAGENS DIRETAS\nNenhuma conversa ainda\nCANAIS DE VOZ\nP\nProva Mobile\nOnline\nBem-vindo ao Chat\n\nSelecione um servidor e um canal para começar a colaborar com sua equipe com estilo e eficiência.\n\nMEMBROS ONLINE\n\n0 online\n\nNova Conversa\nP\nProva Mobile\np",
+    "boxes": {
+      "header": null,
+      "sidebar": null,
+      "main": null,
+      "loginCard": null,
+      "loginTitle": null,
+      "newsTitle": null,
+      "newsFechar": null,
+      "academyTitle": null,
+      "academyCancel": null,
+      "academyOk": null,
+      "chatTitle": {
+        "x": 361,
+        "y": 296,
+        "w": 132,
+        "h": 28
+      },
+      "chatCancel": null,
+      "searchPanel": null,
+      "modalPanel": {
+        "x": 288,
+        "y": 275,
+        "w": 448,
+        "h": 218
+      },
+      "modalClose": null,
+      "fabHelp": null,
+      "fabCompanion": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "chat-settings": {
+    "status": 200,
+    "href": "http://127.0.0.1:3060/chat",
+    "title": "Painel ABZ Group",
+    "body": "AB\nABZ Prova\nCANAIS DE TEXTO\nMENSAGENS DIRETAS\nNenhuma conversa ainda\nCANAIS DE VOZ\nP\nProva Mobile\nOnline\nBem-vindo ao Chat\n\nSelecione um servidor e um canal para começar a colaborar com sua equipe com estilo e eficiência.\n\nMEMBROS ONLINE\n\n0 online\n\nConfigurações do Chat\nInterfac",
+    "boxes": {
+      "header": null,
+      "sidebar": null,
+      "main": null,
+      "loginCard": null,
+      "loginTitle": null,
+      "newsTitle": null,
+      "newsFechar": null,
+      "academyTitle": null,
+      "academyCancel": {
+        "x": 468,
+        "y": 602,
+        "w": 101,
+        "h": 40
+      },
+      "academyOk": null,
+      "chatTitle": null,
+      "chatCancel": {
+        "x": 468,
+        "y": 602,
+        "w": 101,
+        "h": 40
+      },
+      "searchPanel": null,
+      "modalPanel": null,
+      "modalClose": null,
+      "fabHelp": null,
+      "fabCompanion": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "ia-exchange": {
+    "status": 200,
+    "href": "http://127.0.0.1:3060/dashboard",
+    "title": "Painel ABZ Group",
+    "body": "PT\nPM\nOlá, Prova!\n\nBem-vindo ao Hub da ABZ Group. Reunimos as principais ferramentas em um único local para facilitar o dia a dia dos nossos colaboradores.\n\nPost de prova\nSMS\nLinks Rápidos\nPonto\n\nRegistro de Ponto\n\nReembolso\n\nSolicitações\n\nContracheque\n\nHolerites\n\nABZ Academy\n\nCu",
+    "boxes": {
+      "header": {
+        "x": 80,
+        "y": 0,
+        "w": 944,
+        "h": 64
+      },
+      "sidebar": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 768
+      },
+      "main": {
+        "x": 80,
+        "y": 64,
+        "w": 944,
+        "h": 704
+      },
+      "loginCard": null,
+      "loginTitle": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "newsTitle": null,
+      "newsFechar": null,
+      "academyTitle": null,
+      "academyCancel": null,
+      "academyOk": null,
+      "chatTitle": null,
+      "chatCancel": null,
+      "searchPanel": {
+        "x": 160,
+        "y": 304,
+        "w": 576,
+        "h": 60
+      },
+      "modalPanel": {
+        "x": 160,
+        "y": 304,
+        "w": 576,
+        "h": 60
+      },
+      "modalClose": null,
+      "fabHelp": {
+        "x": 944,
+        "y": 688,
+        "w": 56,
+        "h": 56
+      },
+      "fabCompanion": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "ia-voice": {
+    "status": 200,
+    "href": "http://127.0.0.1:3060/dashboard",
+    "title": "Painel ABZ Group",
+    "body": "PT\nPM\nOlá, Prova!\n\nBem-vindo ao Hub da ABZ Group. Reunimos as principais ferramentas em um único local para facilitar o dia a dia dos nossos colaboradores.\n\nPost de prova\nSMS\nLinks Rápidos\nPonto\n\nRegistro de Ponto\n\nReembolso\n\nSolicitações\n\nContracheque\n\nHolerites\n\nABZ Academy\n\nCu",
+    "boxes": {
+      "header": {
+        "x": 80,
+        "y": 0,
+        "w": 944,
+        "h": 64
+      },
+      "sidebar": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 768
+      },
+      "main": {
+        "x": 80,
+        "y": 64,
+        "w": 944,
+        "h": 704
+      },
+      "loginCard": null,
+      "loginTitle": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "newsTitle": null,
+      "newsFechar": null,
+      "academyTitle": null,
+      "academyCancel": null,
+      "academyOk": null,
+      "chatTitle": null,
+      "chatCancel": null,
+      "searchPanel": {
+        "x": 160,
+        "y": 304,
+        "w": 576,
+        "h": 60
+      },
+      "modalPanel": {
+        "x": 160,
+        "y": 304,
+        "w": 576,
+        "h": 60
+      },
+      "modalClose": null,
+      "fabHelp": {
+        "x": 944,
+        "y": 688,
+        "w": 56,
+        "h": 56
+      },
+      "fabCompanion": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      }
+    }
+  }
+}
