@@ -1,3 +1,29 @@
+## Middleware regression (PR #96) + QHSE 404 (2026-09-25)
+
+Sem merge, sem promote, sem Vercel Production, sem PR #95. Supabase real = read-only.
+
+- [x] Audit matcher + branches (`src/lib/middleware-gates.ts`): login/register/reset/set-password/lista-presenca public/static/`_next`/API
+- [x] Fix prefixo `startsWith('/avaliacao')` que pegava `/avaliacoes-avancadas`
+- [x] Não regravar cookies `abzToken` (TTL 1d vs 30d do `saveToken`)
+- [x] Teste `src/lib/middleware-gates.test.ts` no PR #96
+- [x] Login não chama `GET /api/auth/ensure-admin` (401 gated; catch só logava — login não lia a resposta)
+- [x] `test-user-management` parou de pedir JWT em `/api/admin/ensure-admin`
+- [ ] QHSE “Colaborador não encontrado”: `CATALOG_COLAB_SELECT` pedia `cargo_nome` em `gt_colaboradores` (alias da view) — PR separado off `portal`
+
+## Middleware ausente no bundle de produção (2026-09-25)
+
+`src/middleware.ts` não entra no `next build`. Manifesto sai `{ middleware: {} }`. Sem merge, sem promote, sem Vercel Production, sem PR #95.
+
+- [x] Hipótese: `pages/` na raiz (`pages/api/check-env.js`) faz Next usar `pagesDir=./pages` e procurar `middleware.ts` no root, ignorando `src/middleware.ts`
+- [x] Reproduzir `next build` e gravar `middleware-manifest.json` (antes) — `{ middleware: {} }`
+- [x] GET unauthenticated em `portal.groupabz.com` (páginas + APIs sensíveis)
+- [x] Mapa de rotas (a/b/c) com paths
+- [x] Fix: `middleware.ts` na raiz (parent de `pagesDir=./pages`); stub 401 em `pages/api/check-env.js` (apagar `pages/` quebra o build — conflito `src/pages` vs `src/app`)
+- [x] Build depois: manifesto com `middleware["/"]` + `server/middleware.js`; matcher correto
+- [x] PR draft #96 contra `portal`
+
+---
+
 ## UI Folha/Financeiro no padrão ABZ (2026-09-23)
 
 Hub `/folha-pagamento` sem sidebar, cards pretos e rotas `sheets/nova/funcionarios/empresas` em loop de redirect. Sem emitir NFS-e. Sem commit.
