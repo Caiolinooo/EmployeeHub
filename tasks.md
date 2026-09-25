@@ -6,6 +6,8 @@ Sem merge, sem promote, sem Vercel Production, sem PR #95. Supabase real = read-
 - [x] Fix prefixo `startsWith('/avaliacao')` que pegava `/avaliacoes-avancadas`
 - [x] Não regravar cookies `abzToken` (TTL 1d vs 30d do `saveToken`)
 - [x] Teste `src/lib/middleware-gates.test.ts` no PR #96
+- [x] Login não chama `GET /api/auth/ensure-admin` (401 gated; catch só logava — login não lia a resposta)
+- [x] `test-user-management` parou de pedir JWT em `/api/admin/ensure-admin`
 - [ ] QHSE “Colaborador não encontrado”: `CATALOG_COLAB_SELECT` pedia `cargo_nome` em `gt_colaboradores` (alias da view) — PR separado off `portal`
 
 ## Middleware ausente no bundle de produção (2026-09-25)

@@ -22,7 +22,6 @@ export const PUBLIC_API_PATHS = [
   '/api/auth/verify-token',
   '/api/auth/token-refresh',
   '/api/auth/fix-token',
-  '/api/auth/ensure-admin',
   '/api/lista-presenca/public',
   '/api/lista-presenca/registros',
 ] as const;

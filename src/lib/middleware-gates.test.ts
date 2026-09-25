@@ -7,6 +7,7 @@ import {
   isAuthPassthroughPath,
   isExcludedByMiddlewareMatcher,
   isListaPresencaPublicPath,
+  isPublicApiPath,
   isPublicPagePath,
   isStaticAssetPath,
 } from './middleware-gates';
@@ -63,6 +64,8 @@ describe('middleware public / static / lista-presenca', () => {
     assert.equal(isStaticAssetPath('/_next/webpack-hmr'), true);
     assert.equal(isAuthPassthroughPath('/lista-presenca/public/link-1'), true);
     assert.equal(isAuthPassthroughPath('/api/auth/login-password'), true);
+    assert.equal(isPublicApiPath('/api/auth/ensure-admin'), false);
+    assert.equal(isPublicApiPath('/api/admin/ensure-admin'), false);
   });
 });
 
