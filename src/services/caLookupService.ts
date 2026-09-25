@@ -20,6 +20,7 @@ import {
     buildConsultaCaLookupUrl,
     UnsafeUrlError,
 } from '@/lib/security/safe-url';
+import { logCaLookupError } from './ca-lookup-log';
 
 // ==================== CONSTANTS ====================
 
@@ -49,7 +50,7 @@ export async function lookupCA(caNumber: string): Promise<CALookupResult | null>
         // 1. Check cache first
         const cached = await getCachedCA(cleanCA);
         if (cached) {
-            console.log(`[CA Lookup] Cache hit for CA ${cleanCA}`);
+            console.log('[CA Lookup] Cache hit for CA %s', cleanCA);
             return cached;
         }
 
@@ -64,7 +65,7 @@ export async function lookupCA(caNumber: string): Promise<CALookupResult | null>
         // 2. Try official MTE site scraping
         if (ENABLE_SCRAPING) {
             for (const variant of variants) {
-                console.log(`[CA Lookup] Cache miss, trying MTE for CA ${variant}...`);
+                console.log('[CA Lookup] Cache miss, trying MTE for CA %s...', variant);
                 result = await scrapeMTEConsulta(variant);
                 if (result) {
                     result.ca_number = cleanCA; // Normalize back to original
@@ -75,7 +76,7 @@ export async function lookupCA(caNumber: string): Promise<CALookupResult | null>
 
             // 3. Try consultaca.com as fallback (independent of MTE success)
             for (const variant of variants) {
-                console.log(`[CA Lookup] MTE miss, trying consultaca.com for CA ${variant}...`);
+                console.log('[CA Lookup] MTE miss, trying consultaca.com for CA %s...', variant);
                 result = await scrapeConsultaCA(variant);
                 if (result) {
                     result.ca_number = cleanCA;
@@ -84,13 +85,13 @@ export async function lookupCA(caNumber: string): Promise<CALookupResult | null>
                 }
             }
         } else {
-            console.log(`[CA Lookup] Scraping disabled (set ENABLE_CA_SCRAPING=true to enable). Skipping MTE and consultaca.com.`);
+            console.log('[CA Lookup] Scraping disabled (set ENABLE_CA_SCRAPING=true to enable). Skipping MTE and consultaca.com.');
         }
 
         // 4. Try open-source API if configured
         if (getApiBaseCaepiUrl()) {
             for (const variant of variants) {
-                console.log(`[CA Lookup] Trying API_BaseCAEPI for CA ${variant}...`);
+                console.log('[CA Lookup] Trying API_BaseCAEPI for CA %s...', variant);
                 result = await queryAPIBaseCAEPI(variant);
                 if (result) {
                     result.ca_number = cleanCA;
@@ -100,10 +101,10 @@ export async function lookupCA(caNumber: string): Promise<CALookupResult | null>
             }
         }
 
-        console.log(`[CA Lookup] No result found for CA ${cleanCA}`);
+        console.log('[CA Lookup] No result found for CA %s', cleanCA);
         return null;
     } catch (error) {
-        console.error(`[CA Lookup] Error looking up CA ${cleanCA}:`, error);
+        logCaLookupError(cleanCA, error);
         return null;
     }
 }
@@ -126,7 +127,7 @@ async function getCachedCA(caNumber: string): Promise<CALookupResult | null> {
         const hoursDiff = (now.getTime() - lastSynced.getTime()) / (1000 * 60 * 60);
 
         if (hoursDiff > CACHE_TTL_HOURS) {
-            console.log(`[CA Lookup] Cache expired for CA ${caNumber} (${hoursDiff.toFixed(1)}h old)`);
+            console.log('[CA Lookup] Cache expired for CA %s (%sh old)', caNumber, hoursDiff.toFixed(1));
             return null;
         }
 
@@ -209,12 +210,12 @@ async function scrapeMTEConsulta(caNumber: string): Promise<CALookupResult | nul
 
         clearTimeout(timeout1);
         if (!getResponse.ok) {
-            console.warn(`[CA Lookup] MTE GET returned ${getResponse.status}`);
+            console.warn('[CA Lookup] MTE GET returned %s', getResponse.status);
             return null;
         }
 
         const html = await getResponse.text();
-        console.log(`[CA Lookup] MTE GET OK (${html.length} bytes)`);
+        console.log('[CA Lookup] MTE GET OK (%s bytes)', html.length);
 
         // Extract ASP.NET hidden fields
         const viewState = extractHiddenField(html, '__VIEWSTATE');
@@ -231,7 +232,7 @@ async function scrapeMTEConsulta(caNumber: string): Promise<CALookupResult | nul
         const equipDefault = extractFirstOptionValue(html, 'cboEquipamento');
         const fabDefault = extractFirstOptionValue(html, 'cboFabricante');
         const tipoDefault = extractFirstOptionValue(html, 'cboTipoProtecao');
-        console.log(`[CA Lookup] MTE dropdown defaults: equip="${equipDefault}", fab="${fabDefault}", tipo="${tipoDefault}"`);
+        console.log('[CA Lookup] MTE dropdown defaults: equip=%s fab=%s tipo=%s', equipDefault, fabDefault, tipoDefault);
 
         // Extract cookies from GET response
         const setCookie = getResponse.headers.get('set-cookie') || '';
@@ -275,12 +276,12 @@ async function scrapeMTEConsulta(caNumber: string): Promise<CALookupResult | nul
 
         clearTimeout(timeout2);
         if (!postResponse.ok) {
-            console.warn(`[CA Lookup] MTE POST returned ${postResponse.status}`);
+            console.warn('[CA Lookup] MTE POST returned %s', postResponse.status);
             return null;
         }
 
         const resultHtml = await postResponse.text();
-        console.log(`[CA Lookup] MTE POST OK (${resultHtml.length} bytes)`);
+        console.log('[CA Lookup] MTE POST OK (%s bytes)', resultHtml.length);
 
         // Check for result indicators in the full HTML response
         const hasResults = resultHtml.includes('lblSituacao') ||
@@ -294,13 +295,13 @@ async function scrapeMTEConsulta(caNumber: string): Promise<CALookupResult | nul
 
         if (!hasResults) {
             const snippet = resultHtml.substring(0, 1000).replace(/\s+/g, ' ');
-            console.warn(`[CA Lookup] MTE POST: no result indicators found. Snippet: ${snippet}`);
+            console.warn('[CA Lookup] MTE POST: no result indicators found. Snippet: %s', snippet);
             return null;
         }
 
         return parseMTEResultHTML(caNumber, resultHtml);
     } catch (error: any) {
-        console.warn(`[CA Lookup] MTE scraping failed:`, error.message);
+        console.warn('[CA Lookup] MTE scraping failed:', error.message);
         return null;
     }
 }
@@ -429,7 +430,7 @@ function parseMTEResultHTML(caNumber: string, html: string): CALookupResult | nu
         if (status === 'DESCONHECIDO' && !validity_date && !equipamento) {
             // Check if the page has a "not found" message
             if (html.toLowerCase().includes('não encontrado') || html.toLowerCase().includes('nenhum registro')) {
-                console.log(`[CA Lookup] MTE: CA ${caNumber} not found`);
+                console.log('[CA Lookup] MTE: CA %s not found', caNumber);
             }
             return null;
         }
@@ -484,7 +485,7 @@ export async function scrapeConsultaCA(
         clearTimeout(timeout);
 
         if (!response.ok) {
-            console.warn(`[CA Lookup] consultaca.com returned status ${response.status}`);
+            console.warn('[CA Lookup] consultaca.com returned status %s', response.status);
             return null;
         }
 
@@ -492,10 +493,10 @@ export async function scrapeConsultaCA(
         return parseConsultaCAHTML(caNumber, html);
     } catch (error: any) {
         if (error instanceof UnsafeUrlError) {
-            console.warn(`[CA Lookup] consultaca.com URL blocked:`, error.message);
+            console.warn('[CA Lookup] consultaca.com URL blocked:', error.message);
             return null;
         }
-        console.warn(`[CA Lookup] consultaca.com scraping failed:`, error.message);
+        console.warn('[CA Lookup] consultaca.com scraping failed:', error.message);
         return null;
     }
 }
@@ -621,10 +622,10 @@ export async function queryAPIBaseCAEPI(
         };
     } catch (error: any) {
         if (error instanceof UnsafeUrlError) {
-            console.warn(`[CA Lookup] API_BaseCAEPI URL blocked:`, error.message);
+            console.warn('[CA Lookup] API_BaseCAEPI URL blocked:', error.message);
             return null;
         }
-        console.warn(`[CA Lookup] API_BaseCAEPI failed:`, error.message);
+        console.warn('[CA Lookup] API_BaseCAEPI failed:', error.message);
         return null;
     }
 }
@@ -666,7 +667,7 @@ export async function syncCADatabase(): Promise<{ synced: number; errors: number
         types.forEach(t => { if (t.ca_number) caNumbers.add(t.ca_number.trim().replace(/\D/g, '')); });
         if (regs) regs.forEach(r => { if (r.equipment_ca) caNumbers.add(r.equipment_ca.trim().replace(/\D/g, '')); });
 
-        console.log(`[CA Sync] Syncing ${caNumbers.size} unique CA numbers...`);
+        console.log('[CA Sync] Syncing %s unique CA numbers...', caNumbers.size);
 
         for (const ca of caNumbers) {
             if (!ca) continue;
@@ -710,12 +711,12 @@ export async function syncCADatabase(): Promise<{ synced: number; errors: number
                 // Rate limiting: wait 1 second between requests
                 await new Promise(resolve => setTimeout(resolve, 1000));
             } catch (e) {
-                console.error(`[CA Sync] Error syncing CA ${ca}:`, e);
+                console.error('[CA Sync] Error syncing CA %s:', ca, e);
                 errors++;
             }
         }
 
-        console.log(`[CA Sync] Complete: ${synced} synced, ${errors} errors`);
+        console.log('[CA Sync] Complete: %s synced, %s errors', synced, errors);
         return { synced, errors };
     } catch (error) {
         console.error('[CA Sync] Sync failed:', error);

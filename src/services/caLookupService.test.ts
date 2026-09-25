@@ -6,6 +6,7 @@ import {
   buildApiBaseCaepiLookupUrl,
   buildConsultaCaLookupUrl,
 } from '../lib/security/safe-url';
+import { CA_LOOKUP_ERROR_FORMAT, logCaLookupError } from './ca-lookup-log';
 
 async function fetchConsultaCa(
   caNumber: string,
@@ -74,5 +75,24 @@ describe('caLookupService outbound', () => {
     );
     await assert.rejects(() => fetchConsultaCa('abc', fetchImpl), UnsafeUrlError);
     assert.equal(fetched, false);
+  });
+});
+
+describe('caLookupService format string (#116)', () => {
+  it('logs CA numbers as %s args, never in the format string', () => {
+    const calls: unknown[][] = [];
+    const write = ((...args: unknown[]) => {
+      calls.push(args);
+    }) as typeof console.error;
+    const hostile = '12%s%s%x';
+    const err = new Error('boom');
+    logCaLookupError(hostile, err, write);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0][0], CA_LOOKUP_ERROR_FORMAT);
+    assert.equal(typeof calls[0][0], 'string');
+    assert.equal(String(calls[0][0]).includes(hostile), false);
+    assert.equal(String(calls[0][0]).includes('${'), false);
+    assert.equal(calls[0][1], hostile);
+    assert.equal(calls[0][2], err);
   });
 });
