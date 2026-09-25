@@ -300,9 +300,9 @@ const CreateCoursePage: React.FC = () => {
             {t('academy.voltarAoEditor')}
           </button>
 
-          <div className="flex items-center min-w-0">
-            <PlusIcon className="w-8 h-8 text-blue-600 mr-3 shrink-0" />
-            <div className="min-w-0">
+          <div className="flex items-center max-md:min-w-0">
+            <PlusIcon className="w-8 h-8 text-blue-600 mr-3 max-md:shrink-0" />
+            <div className="max-md:min-w-0">
               <h1 className="text-3xl max-md:text-xl font-bold text-gray-900">{t('academy.criarNovoCurso')}</h1>
               <p className="text-gray-600 mt-1">
                 {t('academy.preenchaAsInformacoesParaCriar')}

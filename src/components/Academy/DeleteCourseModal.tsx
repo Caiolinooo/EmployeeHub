@@ -1,9 +1,10 @@
-import React, { useState, useRef, useCallback, useLayoutEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { useI18n } from '@/contexts/I18nContext';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
 import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 import ModalCloseButton from '@/components/ui/ModalCloseButton';
 
 interface DeleteCourseModalProps {
@@ -21,7 +22,6 @@ export default function DeleteCourseModal({
 }: DeleteCourseModalProps) {
     const { t } = useI18n();
     const [deleteCertificates, setDeleteCertificates] = useState(false);
-    const openerRef = useRef<HTMLElement | null>(null);
 
     // Reset state when opening
     React.useEffect(() => {
@@ -30,22 +30,9 @@ export default function DeleteCourseModal({
         }
     }, [isOpen]);
 
-    useLayoutEffect(() => {
-        if (!isOpen) return;
-        const active = document.activeElement;
-        if (active instanceof HTMLElement && active !== document.body) {
-            openerRef.current = active;
-        }
-    }, [isOpen]);
-
-    const handleClose = useCallback(() => {
-        onClose();
-        const opener = openerRef.current;
-        requestAnimationFrame(() => opener?.focus());
-    }, [onClose]);
-
-    useEscapeToClose(isOpen, handleClose);
-    useEscapeCapture(isOpen, handleClose);
+    useEscapeToClose(isOpen, onClose);
+    useEscapeCapture(isOpen, onClose);
+    useRestoreFocus(isOpen);
 
     if (!isOpen) return null;
 
@@ -57,7 +44,7 @@ export default function DeleteCourseModal({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    onClick={handleClose}
+                    onClick={onClose}
                     className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                 />
 
@@ -69,7 +56,7 @@ export default function DeleteCourseModal({
                     data-modal-panel=""
                     className="relative w-full max-w-lg bg-white rounded-xl shadow-xl overflow-hidden"
                 >
-                    <ModalCloseButton onClick={handleClose} mobileOnly mountOnlyWhenMobile className="absolute right-1 top-1" />
+                    <ModalCloseButton onClick={onClose} mobileOnly mountOnlyWhenMobile className="absolute right-1 top-1" />
                     <div className="p-6">
                         <div className="flex items-start">
                             <div className="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
@@ -119,7 +106,7 @@ export default function DeleteCourseModal({
                         <button
                             type="button"
                             className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 max-md:min-h-11 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                            onClick={handleClose}
+                            onClick={onClose}
                         >
                             {t('academy.cancelar') || 'Cancelar'}
                         </button>

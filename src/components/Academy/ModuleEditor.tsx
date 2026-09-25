@@ -228,7 +228,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ courseId }) => {
                     {!showAddForm && !editingId && (
                         <button
                             onClick={() => { setShowAddForm(true); setEditingId(null); setFormData({ title: '', description: '', video_url: '', thumbnail_url: '', duration: 0 }); }}
-                            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                            className="inline-flex items-center px-4 py-2 max-md:min-h-11 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
                         >
                             <PlusIcon className="w-4 h-4 mr-1" />
                             Adicionar Módulo

@@ -350,9 +350,9 @@ const AcademyEditor: React.FC = () => {
           </button>
 
           <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3">
-            <div className="flex items-center min-w-0">
-              <PencilIcon className="w-8 h-8 text-blue-600 mr-3 shrink-0" />
-              <div className="min-w-0">
+            <div className="flex items-center max-md:min-w-0">
+              <PencilIcon className="w-8 h-8 text-blue-600 mr-3 max-md:shrink-0" />
+              <div className="max-md:min-w-0">
                 <h1 className="text-3xl max-md:text-xl font-bold text-gray-900">{t('academy.editorDoAcademy')}</h1>
                 <p className="text-gray-600 mt-1">
                   {t('academy.gerencieCursosEConteudo')}
@@ -362,7 +362,7 @@ const AcademyEditor: React.FC = () => {
 
             <button
               onClick={() => router.push('/academy/editor/create')}
-              className="bg-blue-600 text-white px-4 py-2 max-md:min-h-11 max-md:w-full rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+              className="bg-blue-600 text-white px-4 py-2 max-md:min-h-11 max-md:w-full rounded-lg hover:bg-blue-700 transition-colors flex items-center max-md:justify-center space-x-2"
             >
               <PlusIcon className="w-5 h-5" />
               <span>{t('academy.novoCurso')}</span>
@@ -423,7 +423,7 @@ const AcademyEditor: React.FC = () => {
 
         {/* Filtros */}
         <div className="mb-6">
-          <div className="flex flex-wrap gap-1 bg-gray-100 p-1 rounded-lg w-fit">
+          <div className="flex max-md:flex-wrap max-md:gap-1 bg-gray-100 p-1 rounded-lg w-fit">
             <button
               onClick={() => setFilter('all')}
               className={`px-4 py-2 max-md:min-h-11 rounded-md text-sm font-medium transition-colors ${filter === 'all'
