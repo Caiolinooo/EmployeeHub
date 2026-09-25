@@ -5,6 +5,8 @@ Aba QHSE/EPI da ficha GT em produção chama `GET /api/document-catalog?colabora
 - [x] Causa: `CATALOG_COLAB_SELECT` em `identity-match.ts` vs tabela (`cargo_id`) / view (`cargo_nome`)
 - [x] Fix: `cargo:gt_cargos(nome)` + `flattenCatalogColabRow` + `catalogColabSelectIsSafe`
 - [x] Testes `document-catalog.test.ts` (sem DB)
+- [x] Residual: `findFullColaboradorByCpf` + sweep de aliases só da view em `.from('gt_colaboradores')`
+- [x] Guard compartilhado `gtColaboradoresTableSelectIsSafe` + scan `gt-colaboradores-columns.test.ts`
 - [ ] Preview autenticado: aba QHSE lista docs; lista GT e outras abas inalteradas
 
 ---

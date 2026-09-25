@@ -33,7 +33,8 @@ Registrar fonte futura (código, sem over-engineering):
 
 ## Verification
 
-- `npx tsx --test src/lib/document-catalog/document-catalog.test.ts src/config/modules.test.ts src/lib/gestao-tripulantes/validade-civil.test.ts`
+- `npx tsx --test src/lib/document-catalog/document-catalog.test.ts src/lib/gestao-tripulantes/gt-colaboradores-columns.test.ts src/config/modules.test.ts src/lib/gestao-tripulantes/validade-civil.test.ts`
+- `catalogColabSelectIsSafe` delega a `gtColaboradoresTableSelectIsSafe` (`gt-colaboradores-columns.ts`). O teste de scan rejeita select/filter de aliases só da view em `.from('gt_colaboradores')`.
 - `catalogColabSelectIsSafe(CATALOG_COLAB_SELECT)` rejeita `cargo_nome` na tabela; flatten cobre `cargo:gt_cargos(nome)`
 - Modal GT com módulo `epi`: aba **QHSE / EPI** lista ficha AN-HSE-005 e listas QHSE e **não** lista ASO/laudo. Sem o módulo, a aba não aparece.
 - `/admin/users` → editor: seção QHSE se o admin/editor tem `epi`; permissões do colaborador editado = checkbox EPI.
