@@ -11,6 +11,9 @@ import type {
 import { supabaseAdmin } from '@/lib/supabase';
 import { IA_TOOLS_DEFINITION, executeToolCall } from './tools';
 import { routeToSubAgent, sanitizeToolsForLLM } from './agents-router';
+import { resolveLlmFetchUrl } from './llm-endpoint';
+
+export { normalizeEndpoint } from './llm-endpoint';
 
 // Cache da config para evitar queries repetidas
 let configCache: IAConfig | null = null;
@@ -261,14 +264,15 @@ export async function chatCompletion(
       ? AbortSignal.any([controller.signal, options.signal]) 
       : controller.signal;
 
-    const baseEndpoint = normalizeEndpoint(config!.endpoint);
-    const response = await fetch(`${baseEndpoint}/chat/completions`, {
+    const completionUrl = resolveLlmFetchUrl(config!.endpoint, 'chat/completions');
+    const response = await fetch(completionUrl.href, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${config!.api_key}`,
       },
       body: JSON.stringify(body),
+      redirect: 'error',
     });
 
     if (!response.ok) {
@@ -541,8 +545,8 @@ export async function chatCompletionStream(
       return;
     }
 
-    const baseEndpoint = normalizeEndpoint(config!.endpoint);
-    const response = await fetch(`${baseEndpoint}/chat/completions`, {
+    const completionUrl = resolveLlmFetchUrl(config!.endpoint, 'chat/completions');
+    const response = await fetch(completionUrl.href, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -553,6 +557,7 @@ export async function chatCompletionStream(
         messages: currentMessages,
       }),
       signal: combinedSignal,
+      redirect: 'error',
     });
 
     if (!response.ok || !response.body) {
@@ -762,26 +767,6 @@ export async function chatCompletionStream(
 }
 
 /**
- * Normalizar URL de endpoint de IA (e.g. adiciona /v1beta/openai para Google Gemini se necessário)
- */
-export function normalizeEndpoint(rawEndpoint: string): string {
-  let ep = (rawEndpoint || '').trim().replace(/\/+$/, '');
-  if (!ep) return ep;
-  
-  // Normalização para Google Gemini OpenAI Compatibility API
-  if (ep.includes('generativelanguage.googleapis.com')) {
-    if (!ep.includes('/openai')) {
-      if (ep.endsWith('/v1beta')) {
-        ep += '/openai';
-      } else if (!ep.includes('/v1beta')) {
-        ep += '/v1beta/openai';
-      }
-    }
-  }
-  return ep;
-}
-
-/**
  * Listar modelos disponíveis no endpoint LLM
  */
 export async function listModels(
@@ -798,8 +783,8 @@ export async function listModels(
     apiKey = config.api_key;
   }
 
-  endpoint = normalizeEndpoint(endpoint);
   if (!endpoint) throw new Error('Endpoint da IA não informado.');
+  const modelsUrl = resolveLlmFetchUrl(endpoint, 'models');
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12_000);
@@ -810,9 +795,10 @@ export async function listModels(
       headers['Authorization'] = `Bearer ${apiKey}`;
     }
 
-    const response = await fetch(`${endpoint}/models`, {
+    const response = await fetch(modelsUrl.href, {
       headers,
       signal: controller.signal,
+      redirect: 'error',
     });
 
     if (!response.ok) throw new Error(`Erro ao listar modelos (${response.status})`);

@@ -464,9 +464,14 @@ function avaliarItem(
       }
 
     case 'formula': {
-      const formula = item.formula ? FORMULAS_FOLHA[item.formula] : undefined;
-      if (!formula || !contexto) {
+      const formulaNome = item.formula;
+      const formula =
+        formulaNome && Object.hasOwn(FORMULAS_FOLHA, formulaNome)
+          ? FORMULAS_FOLHA[formulaNome]
+          : undefined;
+      if (typeof formula !== 'function' || !contexto) {
         // Fórmula ausente do mapa ou sem contexto: NUNCA inventa valor.
+        // Object.hasOwn bloqueia __proto__/constructor e chaves da cadeia.
         return { valor: 0, aviso: 'formula_nao_implementada' };
       }
       const resultado = formula(contexto);

@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     console.error('[API IA Dashboard GET]', err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Erro interno' },
+      { error: 'Erro ao gerar o dashboard' },
       { status: 500 }
     );
   }

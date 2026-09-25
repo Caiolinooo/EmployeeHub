@@ -6,6 +6,8 @@ Ferramentas LLM do portal (`tools.ts`, cliente Microsoft Graph, geradores Excel/
 
 ## Ownership
 
+- `src/lib/ia/client.ts` + `llm-endpoint.ts` — fetch LLM (`chat/completions`, `/models`) via `resolveLlmFetchUrl`
+- `src/lib/ia/chat-href.ts` — href canônico das bolhas Markdown (`sanitizeChatHref`)
 - `src/lib/ia/tools.ts` — caminho ativo do chat (`executeToolCall`)
 - `src/lib/ia/tool-result-format.ts` — `_summary` + truncagem de resultados para o LLM
 - `src/lib/ia/graph-comms-format.ts` — enrichers e-mail/Teams (datas ISO+pt-BR, participantes, preview, webLink)
@@ -21,6 +23,12 @@ Ferramentas LLM do portal (`tools.ts`, cliente Microsoft Graph, geradores Excel/
 - `src/lib/ia/user-skills.ts` — skills procedurais `ia_user_skills` (Hermes Agent–like)
 
 ## Local Contracts
+
+### Outbound LLM URL
+
+- `resolveLlmFetchUrl` (`parseSafeUrl` / `joinSafeUrl` + denylist). Host Gemini = hostname exact/suffix com ponto, nunca `includes()` na string crua.
+- `fetch(..., { redirect: 'error' })`. Sem helper de redirects do PR #112.
+- `GET /api/ia/dashboard`: erro genérico no JSON; detalhe só em `console.error`.
 
 ### Anti-alucinação (obrigatório)
 
@@ -114,6 +122,7 @@ Ferramentas LLM do portal (`tools.ts`, cliente Microsoft Graph, geradores Excel/
 - `navegar_portal` typo `feririas` → `/ferias`; `kpi` → `/kpi`
 - Companion tour → `NAVIGATE` `/dashboard`; board create/open/delete conforme DOX
 - Registry bridge + FAB dashboard metadata
+- `npx tsx --test src/lib/ia/llm-endpoint.test.ts src/lib/ia/chat-href.test.ts`
 
 ## Child DOX Index
 

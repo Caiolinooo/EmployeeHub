@@ -1,4 +1,7 @@
 import React from 'react';
+import { sanitizeChatHref } from '../../lib/ia/chat-href';
+
+export { sanitizeChatHref } from '../../lib/ia/chat-href';
 
 /**
  * Lightweight markdown for IA chat bubbles (Assistant MessageBubble + Companion FAB).
@@ -8,20 +11,6 @@ import React from 'react';
  * (#…####), bullet/numbered lists (incl. `- **Title**: description` rows with
  * hanging indent) and paragraphs. Inline: **bold**, *italic*, `code`, safe links.
  */
-
-/** Safe URL for markdown links — http(s), mailto, or same-origin relative path. */
-function isSafeHref(href: string): boolean {
-  const t = href.trim();
-  if (!t) return false;
-  if (t.startsWith('/') && !t.startsWith('//')) return true;
-  if (/^mailto:[^\s]+$/i.test(t)) return true;
-  try {
-    const u = new URL(t);
-    return u.protocol === 'http:' || u.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
 
 function processInline(text: string): React.ReactNode {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g);
@@ -43,12 +32,13 @@ function processInline(text: string): React.ReactNode {
     const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
     if (linkMatch) {
       const [, label, href] = linkMatch;
-      if (isSafeHref(href)) {
-        const external = /^https?:\/\//i.test(href.trim());
+      const safeHref = sanitizeChatHref(href);
+      if (safeHref) {
+        const external = safeHref.startsWith('http://') || safeHref.startsWith('https://');
         return (
           <a
             key={i}
-            href={href.trim()}
+            href={safeHref}
             className="text-blue-600 underline underline-offset-2 hover:text-blue-800 break-all"
             {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
           >
