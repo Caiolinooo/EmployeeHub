@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import jwt from 'jsonwebtoken';
+import { hasCronOrSetupSecret, unauthorizedDebugResponse } from '@/lib/public-debug-guard';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    if (!hasCronOrSetupSecret(request)) {
+      return unauthorizedDebugResponse();
+    }
+
     console.log('Iniciando verificação e criação do perfil de administrador');
 
     // Obter configurações do Supabase

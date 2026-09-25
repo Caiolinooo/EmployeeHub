@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { applyMobileSurface } from './lib/mobile-ui/apply-mobile-surface';
+import { applyMobileSurface } from './src/lib/mobile-ui/apply-mobile-surface';
 
 // Rotas que não precisam de autenticação
 const publicRoutes = [
@@ -35,18 +35,10 @@ const staticRoutes = [
   '/api/_next/',
 ];
 
-// Rotas que precisam de permissão de administrador
-const adminRoutes = [
-  '/admin',
-  '/admin/cards',
-  '/admin/menu',
-  '/admin/documents',
-  '/admin/news',
-  '/admin/users',
-  '/admin/settings',
-  '/admin/reimbursement-settings',
-  '/api/admin',
-];
+function markMiddleware(response: NextResponse): NextResponse {
+  response.headers.set('x-abz-middleware', '1');
+  return response;
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -59,13 +51,13 @@ export function middleware(request: NextRequest) {
 
   // Verificar se é uma rota pública
   if (publicRoutes.includes(pathname)) {
-    return applyMobileSurface(request, NextResponse.next());
+    return markMiddleware(applyMobileSurface(request, NextResponse.next()));
   }
 
   // Verificar se é uma rota de arquivo estático
   for (const route of staticRoutes) {
     if (pathname.startsWith(route)) {
-      return NextResponse.next();
+      return markMiddleware(NextResponse.next());
     }
   }
 
@@ -76,7 +68,7 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/api/_next/') ||
     pathname.startsWith('/lista-presenca/public/')
   ) {
-    return NextResponse.next();
+    return markMiddleware(NextResponse.next());
   }
 
   // Verificar se há um token nos cookies
@@ -85,22 +77,22 @@ export function middleware(request: NextRequest) {
   // Redirecionar rotas específicas para evitar problemas
   if (pathname === '/avaliacao/avaliacoes' || pathname === '/avaliacao/avaliacoes/') {
     console.log('Middleware: Redirecionando /avaliacao/avaliacoes para /avaliacao');
-    return NextResponse.redirect(new URL('/avaliacao', request.url));
+    return markMiddleware(NextResponse.redirect(new URL('/avaliacao', request.url)));
   }
 
   if (pathname === '/avaliacao/lista-avaliacoes' || pathname === '/avaliacao/lista-avaliacoes/') {
     console.log('Middleware: Redirecionando /avaliacao/lista-avaliacoes para /avaliacao');
-    return NextResponse.redirect(new URL('/avaliacao', request.url));
+    return markMiddleware(NextResponse.redirect(new URL('/avaliacao', request.url)));
   }
 
   if (pathname === '/avaliacao/nova-avaliacao' || pathname === '/avaliacao/nova-avaliacao/') {
     console.log('Middleware: Redirecionando /avaliacao/nova-avaliacao para /avaliacao (criação manual desabilitada)');
-    return NextResponse.redirect(new URL('/avaliacao', request.url));
+    return markMiddleware(NextResponse.redirect(new URL('/avaliacao', request.url)));
   }
 
   if (pathname === '/avaliacao/avaliacoes/lixeira' || pathname === '/avaliacao/avaliacoes/lixeira/') {
     console.log('Middleware: Redirecionando /avaliacao/avaliacoes/lixeira para /avaliacao/lixeira');
-    return NextResponse.redirect(new URL('/avaliacao/lixeira', request.url));
+    return markMiddleware(NextResponse.redirect(new URL('/avaliacao/lixeira', request.url)));
   }
 
   // Verificar se é uma rota de avaliação e se não há token
@@ -112,7 +104,7 @@ export function middleware(request: NextRequest) {
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
 
-      return NextResponse.redirect(loginUrl);
+      return markMiddleware(NextResponse.redirect(loginUrl));
     } else {
       console.log('Root Middleware: Token encontrado nos cookies, permitindo acesso à rota de avaliação');
 
@@ -142,7 +134,7 @@ export function middleware(request: NextRequest) {
         maxAge: 60 * 60 * 24 // 1 dia
       });
 
-      return response;
+      return markMiddleware(response);
     }
   }
 
@@ -163,7 +155,7 @@ export function middleware(request: NextRequest) {
 
   // Para simplificar e evitar problemas com o Twilio, vamos permitir outras requisições
   // A autenticação será verificada nas rotas de API e páginas
-  return applyMobileSurface(request, response);
+  return markMiddleware(applyMobileSurface(request, response));
 }
 
 export const config = {

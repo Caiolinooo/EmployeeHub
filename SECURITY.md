@@ -169,6 +169,7 @@ crypto-browserify@3.12.1 (devDependency + next.config webpack fallback)
 - CI: `.github/workflows/secret-scanning.yml` + `.gitleaks.toml`
 - Docs/scripts com segredos redigidos
 - **RLS GT (2026-09-01):** `gt_afastamentos`, `gt_acidentes`, `gt_relatorios_aprovacoes` — `ENABLE ROW LEVEL SECURITY` sem policy para anon (acesso só `service_role` / APIs). Ver `tasks.md` e `src/app/api/gestao-tripulantes/AGENTS.md`.
+- **Middleware + debug GETs (2026-09-25):** `pages/` na raiz fazia Next 15.5 ignorar `src/middleware.ts` (`middleware-manifest.middleware = {}`). `middleware.ts` vive na raiz; stub 401 em `pages/api/check-env.js`. GET de `ensure-admin`, `test-users*`, `supabase-status`, `acl/init` e POST `execute-sql` exigem `CRON_SECRET` ou JWT ADMIN. Rotacionar JWT_SECRET e service role se esses endpoints foram acessados sem auth.
 
 ### Ações manuais obrigatórias (fora do código)
 
@@ -176,5 +177,5 @@ Ver checklist em `tasks.md` (seção O365 / GitHub / DPO): tornar privado o repo
 
 ---
 
-**Última atualização**: 2026-09-01
+**Última atualização**: 2026-09-25
 **Responsável**: Security remediation (O365 credential exposure + GT RLS)

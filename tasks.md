@@ -1,3 +1,16 @@
+## Middleware bundle + QHSE 404 (2026-09-25)
+
+Port do PR #96 para `feat/mobile-first-fase2` + fix da aba QHSE / EPI. Draft contra `#95`. Sem merge, sem Vercel Production.
+
+- [x] `middleware.ts` na raiz (parent de `pagesDir=./pages`); stub 401 em `pages/api/check-env.js`
+- [x] Preservar `/api/mobile/preview-disabled` público e `applyMobileSurface`
+- [x] Device detection: já no middleware; **manter** `next.config.js` `beforeFiles` (cookie `ui=desktop` + fallback se Edge falhar)
+- [x] Gates: `ensure-admin` (`CRON_SECRET`), `test-users*`, `supabase-status`, `acl/init`, POST `execute-sql` (JWT ADMIN)
+- [x] QHSE 404: `CATALOG_COLAB_SELECT` pedia `cargo_nome` (só existe na view) → embed `cargo:gt_cargos(nome)`
+- [ ] Preview: `/avaliacao` sem cookie → 302 `/login` + `x-abz-middleware: 1`; QHSE tab com colaborador GT válido → 200
+
+---
+
 ## Mobile-first Fase 1 — inventário e plano (2026-09-25)
 
 Adaptar o portal para celular em todos os módulos; dono consulta nas decisões. Esta fatia é **só plano**. Sem UI.

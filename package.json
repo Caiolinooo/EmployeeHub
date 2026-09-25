@@ -76,6 +76,7 @@
     "generate:vapid": "npx web-push generate-vapid-keys",
     "db:setup-gestao-tripulantes": "node scripts/run-gestao-tripulantes-migration.js",
     "mio:assert-local-first": "node scripts/assert-mio-local-first.mjs",
+    "assert:middleware": "node scripts/assert-middleware-location.mjs",
     "mio:pull": "npx tsx scripts/mio-full-pull.ts",
     "mio:pull:dry": "npx tsx scripts/mio-full-pull.ts --dry-run"
   },
