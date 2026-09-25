@@ -94,4 +94,28 @@ describe('resolveLlmFetchUrl', () => {
     assert.throws(() => resolveLlmFetchUrl('javascript:alert(1)', 'models'), UnsafeUrlError);
     assert.throws(() => resolveLlmFetchUrl('file:///etc/passwd', 'models'), UnsafeUrlError);
   });
+
+  it('rejects IPv4-mapped IPv6 loopback, link-local and RFC1918 (dotted and hex)', () => {
+    const blocked = [
+      '[::ffff:127.0.0.1]',
+      '[::ffff:7f00:1]',
+      '[::ffff:a9fe:a9fe]',
+      '[::ffff:a00:5]',
+      '[::ffff:c0a8:101]',
+    ];
+    const leaked: string[] = [];
+    for (const host of blocked) {
+      const raw = `http://${host}/v1`;
+      try {
+        resolveLlmFetchUrl(raw, 'models');
+        leaked.push(host);
+      } catch (err) {
+        assert.ok(err instanceof UnsafeUrlError, host);
+      }
+    }
+    assert.deepEqual(leaked, [], `IPv4-mapped IPv6 allowed: ${leaked.join(', ')}`);
+
+    const publicUrl = resolveLlmFetchUrl('https://api.openai.com/v1', 'models');
+    assert.equal(publicUrl.href, 'https://api.openai.com/v1/models');
+  });
 });
