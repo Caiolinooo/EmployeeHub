@@ -37,7 +37,7 @@ const AppDownloadButton = ({ href, storeName }: { href: string; storeName: strin
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md font-medium hover:bg-gray-200 transition duration-150 text-xs shadow-sm mr-2 mb-2"
+      className="inline-flex items-center px-3 py-1.5 max-md:min-h-11 bg-gray-100 text-gray-700 rounded-md font-medium hover:bg-gray-200 transition duration-150 text-xs shadow-sm mr-2 mb-2"
     >
       {/* Render Icon only if it's valid */}
       {Icon && <Icon className="mr-1.5 h-4 w-4" />}

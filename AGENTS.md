@@ -119,7 +119,8 @@ When the user requests a durable behavior change, record it here or in the relev
 - `src/app/department/dp/AGENTS.md` — DP: cadastro do zero (`/novo`), edição total via `gt_*`, lista achatada, ASO vencimentos + agendamento (60d), viewport `GtPageShell`
 - `src/app/department/e-social/AGENTS.md` — e-Social: listas no pane (`GtPageShell`), `fetchWithToken`
 - `src/lib/e-social/AGENTS.md` — `TS_nome` / `nmMed` + datas PT-BR (`dtExm`/`dtAso`) e rebuild XML S-2220
-- `src/components/gestao-tripulantes/AGENTS.md` — lookups criáveis, KPIs ativos, viewport dia/semana, inbox ASO logística, scroll horizontal + sticky da escala (`min-w-0`), `GtPageShell` das páginas GT-family
+- `src/components/gestao-tripulantes/AGENTS.md` — lookups criáveis, KPIs ativos, viewport dia/semana, inbox ASO logística, scroll horizontal + sticky da escala (`min-w-0`), `GtPageShell` das páginas GT-family, `max-lg:min-h-[50vh]` na Matriz/Escala
+- `src/components/ui/AGENTS.md` — modal chrome mobile (`data-modal-close` / `data-modal-panel`, Esc)
 - `src/app/calendario/AGENTS.md` — só feriados + ICS compartilhado; sem MIO/embarque/curso
 - `src/app/api/calendar/AGENTS.md` — ICS `from`/`to` vs `rangeDays` (futuros)
 - `src/lib/employee-hub/AGENTS.md` — ficha unificada (`gt_*` + portal via `tax_id`/e-mail + férias + reembolso)

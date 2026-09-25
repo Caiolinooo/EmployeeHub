@@ -377,7 +377,9 @@ export default function ModalAprovacaoFechamento({
               {statusBadgeLabel}
             </span>
             <button
+              type="button"
               onClick={onClose}
+              data-modal-close=""
               className="min-h-[44px] min-w-[44px] p-2 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-200 transition"
               aria-label={t('gtFechV2.acoes.fechar', 'Fechar')}
             >

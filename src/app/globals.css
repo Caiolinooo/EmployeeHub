@@ -323,3 +323,19 @@ error, success {
   background-color: #d1d5db;
 }
 
+/* Modais no celular: X ≥ 44×44 e painel dentro de 100dvh. Desktop (md+) intacto. */
+@media (max-width: 767px) {
+  [data-modal-close] {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  [data-modal-panel] {
+    max-height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+

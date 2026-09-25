@@ -20,10 +20,10 @@ function Modal({ open, onClose, children }: { open: boolean; onClose: () => void
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
+      <div data-modal-panel="" className="w-full max-w-md rounded-lg bg-white shadow-xl">
         <div className="flex items-center justify-between border-b px-4 py-3">
           <h3 className="text-lg font-semibold text-gray-900">Completar Perfil</h3>
-          <button onClick={onClose} className="rounded p-1 text-gray-500 hover:bg-gray-100">✕</button>
+          <button type="button" onClick={onClose} data-modal-close="" aria-label="Fechar" className="rounded p-1 text-gray-500 hover:bg-gray-100">✕</button>
         </div>
         <div className="p-4">{children}</div>
       </div>

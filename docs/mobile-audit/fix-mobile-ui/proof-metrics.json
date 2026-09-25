@@ -1,0 +1,77 @@
+{
+  "report": {
+    "matrix390_before": {
+      "height": 193,
+      "width": 366,
+      "visible": true,
+      "hasRows": true,
+      "rowVisible": true
+    },
+    "matrix390_after": {
+      "height": 422,
+      "width": 366,
+      "visible": true,
+      "hasRows": true,
+      "rowVisible": true
+    },
+    "schedule390_before": {
+      "height": 193,
+      "width": 366,
+      "visible": true,
+      "hasRows": true,
+      "rowVisible": true
+    },
+    "schedule390_after": {
+      "height": 422,
+      "width": 366,
+      "visible": true,
+      "hasRows": true,
+      "rowVisible": true
+    },
+    "lang_before": {
+      "has": false
+    },
+    "lang_after": {
+      "has": true,
+      "w": 44,
+      "h": 44,
+      "visible": true
+    },
+    "confirm_after": {
+      "has": true,
+      "w": 44,
+      "h": 44,
+      "visible": true
+    }
+  },
+  "shots": [
+    "/workspace/docs/mobile-audit/fix-mobile-ui/gt-matriz-antes-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/gt-matriz-depois-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/gt-escala-antes-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/gt-escala-depois-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/gt-abas-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/modal-language-antes-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/modal-language-depois-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/modal-confirmacao-depois-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/dashboard-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/noticias-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/ferias-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/reembolso-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/contracheque-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/ponto-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/gt-matriz-antes-375x812.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/gt-matriz-depois-375x812.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/gt-escala-antes-375x812.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/gt-escala-depois-375x812.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/gt-abas-375x812.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/modal-language-antes-375x812.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/modal-language-depois-375x812.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/modal-confirmacao-depois-375x812.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/dashboard-375x812.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/noticias-375x812.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/ferias-375x812.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/reembolso-375x812.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/contracheque-375x812.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/ponto-375x812.png"
+  ]
+}

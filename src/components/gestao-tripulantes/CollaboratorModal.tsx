@@ -10,6 +10,7 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { QHSE_MODULE_KEY } from '@/lib/document-catalog/permissions';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import { toast } from 'react-hot-toast';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
 import { enviarOcrDocumento } from '@/components/gestao-tripulantes/ocr-client';
 import SugestaoBackModal from './SugestaoBackModal';
 import DesligamentoModal, { DesligamentoHistorico } from './DesligamentoModal';
@@ -248,6 +249,7 @@ export default function CollaboratorModal({ colaboradorId, onClose, initialTab, 
   const [loading, setLoading] = useState(true);
   const [showBackModal, setShowBackModal] = useState(false);
   const [showDesligamentoModal, setShowDesligamentoModal] = useState(false);
+  useEscapeToClose(!showBackModal && !showDesligamentoModal, onClose);
   const [desligamento, setDesligamento] = useState<GTDesligamento | null>(null);
   const [podeDesligar, setPodeDesligar] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
@@ -521,6 +523,7 @@ export default function CollaboratorModal({ colaboradorId, onClose, initialTab, 
           onClick={e => e.stopPropagation()}
           className={COLLABORATOR_MODAL_PANEL_CLASS}
           data-testid="collaborator-modal-panel"
+          data-modal-panel=""
         >
           {/* Header */}
           <div className={`${COLLABORATOR_MODAL_HEADER_CLASS} bg-gradient-to-r ${gradientClass} px-4 py-3 sm:px-6 sm:py-4`}>
@@ -612,7 +615,10 @@ export default function CollaboratorModal({ colaboradorId, onClose, initialTab, 
                 ) : null}
 
                 <button
+                  type="button"
                   onClick={onClose}
+                  data-modal-close=""
+                  aria-label="Fechar"
                   className="p-1.5 hover:bg-white/20 rounded-lg transition-colors ml-1"
                 >
                   <FiX className="w-5 h-5 text-white" />

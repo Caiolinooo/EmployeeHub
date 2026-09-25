@@ -6,6 +6,8 @@ import { FiGlobe, FiCheck } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
 import { Locale } from '@/i18n';
 import { usePathname } from 'next/navigation';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import ModalCloseButton from '@/components/ui/ModalCloseButton';
 
 export default function LanguageDialog() {
   const { locale, setLocale, t, availableLocales } = useI18n();
@@ -51,6 +53,8 @@ export default function LanguageDialog() {
     setHasShown(true);
   };
 
+  useEscapeToClose(isOpen, handleClose);
+
   const getLanguageName = (localeCode: Locale) => {
     switch (localeCode) {
       case 'pt-BR':
@@ -90,8 +94,12 @@ export default function LanguageDialog() {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+            data-modal-panel=""
+            className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6"
           >
+            <div className="absolute right-1 top-1">
+              <ModalCloseButton onClick={handleClose} mobileOnly />
+            </div>
             <div className="flex items-center justify-center mb-6">
               <div className="bg-blue-100 p-3 rounded-full">
                 <FiGlobe className="h-8 w-8 text-blue-600" />

@@ -1,5 +1,9 @@
+'use client';
+
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import ModalCloseButton from '@/components/ui/ModalCloseButton';
 
 interface ConfirmationModalProps {
     isOpen: boolean;
@@ -24,6 +28,7 @@ export default function ConfirmationModal({
     isDestructive = false,
     confirmButtonClass,
 }: ConfirmationModalProps) {
+    useEscapeToClose(isOpen, onClose);
     return (
         <AnimatePresence>
             {isOpen && (
@@ -39,8 +44,12 @@ export default function ConfirmationModal({
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        data-modal-panel=""
                         className="relative w-full max-w-md overflow-hidden rounded-2xl bg-[#1A1A1A] border border-white/10 shadow-2xl"
                     >
+                        <div className="absolute right-2 top-2">
+                            <ModalCloseButton onClick={onClose} className="text-white/70 hover:text-white hover:bg-white/10" mobileOnly />
+                        </div>
                         <div className="p-6">
                             <h3 className="text-xl font-semibold text-white mb-2">{title}</h3>
                             <p className="text-gray-400 mb-6">{message}</p>

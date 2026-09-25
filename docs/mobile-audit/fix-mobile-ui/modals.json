@@ -1,0 +1,1217 @@
+[
+  {
+    "modal": "page",
+    "arquivo": "src/app/admin/api-mobile/page.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/admin/avaliacao/periodos/page.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/admin/compras/page.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/admin/epi/page.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/admin/epi/settings/page.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/admin/feedback/page.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/admin/integracao-erp/page.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "layout",
+    "arquivo": "src/app/admin/layout.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/admin/leave-requests/page.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/admin/metrics/engagement/page.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/admin/purchase-orders/page.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/admin/sectors/page.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/admin/setores/page.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/admin/users/page.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/assinatura/[token]/page.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "FillEvaluationClient",
+    "arquivo": "src/app/avaliacao/preencher/[id]/FillEvaluationClient.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/chat/page.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/contracheque/page.tsx",
+    "tinhaX": true,
+    "esc": true,
+    "toqueFora": false,
+    "panel": true,
+    "status": "corrigido"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/contratos/[id]/assinar/page.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/contratos/[id]/page.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/dashboard-bi/page.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/ferias/page.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/folha-pagamento/configuracoes/codigos/page.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/lista-presenca/page.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/lista-presenca/public/[linkUnico]/page.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/login/page.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/poliweb/page.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/register/page.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/relatorios-pdf/page.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "page",
+    "arquivo": "src/app/wkradar/page.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "DeleteCourseModal",
+    "arquivo": "src/components/Academy/DeleteCourseModal.tsx",
+    "tinhaX": true,
+    "esc": true,
+    "toqueFora": true,
+    "panel": true,
+    "status": "corrigido"
+  },
+  {
+    "modal": "ACLManagementPanel",
+    "arquivo": "src/components/admin/ACLManagementPanel.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "AuthorizedUsersManager",
+    "arquivo": "src/components/admin/AuthorizedUsersManager.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "BannedUsersManager",
+    "arquivo": "src/components/admin/BannedUsersManager.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "CardEditModal",
+    "arquivo": "src/components/admin/CardEditModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "EPIReportModal",
+    "arquivo": "src/components/admin/EPI/EPIReportModal.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "EPIStockReportModal",
+    "arquivo": "src/components/admin/EPI/EPIStockReportModal.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "KitManagement",
+    "arquivo": "src/components/admin/EPI/KitManagement.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "StockManagement",
+    "arquivo": "src/components/admin/EPI/StockManagement.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "MenuCustomizer",
+    "arquivo": "src/components/admin/MenuCustomizer.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "PainelGerenciamentoLideres",
+    "arquivo": "src/components/admin/PainelGerenciamentoLideres.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "PainelPeriodosAvaliacao",
+    "arquivo": "src/components/admin/PainelPeriodosAvaliacao.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "ReimbursementDetailModal",
+    "arquivo": "src/components/admin/ReimbursementDetailModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "UnifiedUserManager",
+    "arquivo": "src/components/admin/UnifiedUserManager.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "UserAccessHistory",
+    "arquivo": "src/components/admin/UserAccessHistory.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "UserEditor",
+    "arquivo": "src/components/admin/UserEditor.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "DuplicatesModal",
+    "arquivo": "src/components/admin/UserImport/DuplicatesModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "ValidationWarnings",
+    "arquivo": "src/components/admin/UserImport/ValidationWarnings.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "UserPasswordReset",
+    "arquivo": "src/components/admin/UserPasswordReset.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "UserPermissionManager",
+    "arquivo": "src/components/admin/UserPermissionManager.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "UserRoleManager",
+    "arquivo": "src/components/admin/UserRoleManager.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "PasswordRequiredGuard",
+    "arquivo": "src/components/Auth/PasswordRequiredGuard.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "PostLoginBiometricPrompt",
+    "arquivo": "src/components/Auth/PostLoginBiometricPrompt.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "SetPasswordModal",
+    "arquivo": "src/components/Auth/SetPasswordModal.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": true,
+    "panel": true,
+    "status": "sem X de propósito (form obrigatório)"
+  },
+  {
+    "modal": "InterfaceAprovacaoGerente",
+    "arquivo": "src/components/avaliacao/InterfaceAprovacaoGerente.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "WelcomeModal",
+    "arquivo": "src/components/avaliacao/WelcomeModal.tsx",
+    "tinhaX": true,
+    "esc": true,
+    "toqueFora": true,
+    "panel": true,
+    "status": "corrigido"
+  },
+  {
+    "modal": "BasicPdfViewer",
+    "arquivo": "src/components/BasicPdfViewer.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "AdminCalendarManager",
+    "arquivo": "src/components/Calendar/AdminCalendarManager.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "GoogleCalendarIntegration",
+    "arquivo": "src/components/Calendar/GoogleCalendarIntegration.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "ChangelogModal",
+    "arquivo": "src/components/ChangelogModal.tsx",
+    "tinhaX": true,
+    "esc": true,
+    "toqueFora": true,
+    "panel": true,
+    "status": "corrigido"
+  },
+  {
+    "modal": "ChatSettingsModal",
+    "arquivo": "src/components/chat/ChatSettingsModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "CreateChannelModal",
+    "arquivo": "src/components/chat/CreateChannelModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "CreateServerModal",
+    "arquivo": "src/components/chat/CreateServerModal.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "ServerSettingsModal",
+    "arquivo": "src/components/chat/ServerSettingsModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "StartDMModal",
+    "arquivo": "src/components/chat/StartDMModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "ContactPopup",
+    "arquivo": "src/components/ContactPopup.tsx",
+    "tinhaX": true,
+    "esc": true,
+    "toqueFora": true,
+    "panel": true,
+    "status": "corrigido"
+  },
+  {
+    "modal": "DocumentUploadModal",
+    "arquivo": "src/components/contratos/DocumentUploadModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "AddShortcutModal",
+    "arquivo": "src/components/dashboard/AddShortcutModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": true,
+    "status": "X + painel; Esc pendente"
+  },
+  {
+    "modal": "DocumentPicker",
+    "arquivo": "src/components/DocumentPicker.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "EventoRevisao",
+    "arquivo": "src/components/e-social/EventoRevisao.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "ImportarASOModal",
+    "arquivo": "src/components/e-social/ImportarASOModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "NovoColaboradorModal",
+    "arquivo": "src/components/e-social/NovoColaboradorModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "NovoEventoModal",
+    "arquivo": "src/components/e-social/NovoEventoModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "EnhancedPdfViewer",
+    "arquivo": "src/components/EnhancedPdfViewer.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "SignaturePad",
+    "arquivo": "src/components/epi/SignaturePad.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "FallbackPdfViewer",
+    "arquivo": "src/components/FallbackPdfViewer.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "ClientesTab",
+    "arquivo": "src/components/financeiro/ClientesTab.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "CobrancaModal",
+    "arquivo": "src/components/financeiro/CobrancaModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "EmpresasTab",
+    "arquivo": "src/components/financeiro/EmpresasTab.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "FaturaViewer",
+    "arquivo": "src/components/financeiro/FaturaViewer.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "FaturaWizard",
+    "arquivo": "src/components/financeiro/FaturaWizard.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "NfseDetailModal",
+    "arquivo": "src/components/financeiro/NfseDetailModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "NfseEmissoesList",
+    "arquivo": "src/components/financeiro/NfseEmissoesList.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "CentrosCustoAdminTab",
+    "arquivo": "src/components/gestao-tripulantes/admin/CentrosCustoAdminTab.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "MatrizTreinamentoConfigTab",
+    "arquivo": "src/components/gestao-tripulantes/admin/MatrizTreinamentoConfigTab.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "AsoOcrDetailsModal",
+    "arquivo": "src/components/gestao-tripulantes/AsoOcrDetailsModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "ConfirmarExclusaoMarcacaoModal",
+    "arquivo": "src/components/gestao-tripulantes/ConfirmarExclusaoMarcacaoModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": true,
+    "status": "X + painel; Esc pendente"
+  },
+  {
+    "modal": "DesligamentoModal",
+    "arquivo": "src/components/gestao-tripulantes/DesligamentoModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": true,
+    "status": "X + painel; Esc pendente"
+  },
+  {
+    "modal": "ModalAprovacaoFechamento",
+    "arquivo": "src/components/gestao-tripulantes/ModalAprovacaoFechamento.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "ModalListaPresencaTreinamento",
+    "arquivo": "src/components/gestao-tripulantes/ModalListaPresencaTreinamento.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "SugestaoBackModal",
+    "arquivo": "src/components/gestao-tripulantes/SugestaoBackModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "ASOTab",
+    "arquivo": "src/components/gestao-tripulantes/tabs/ASOTab.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "TreinamentosTab",
+    "arquivo": "src/components/gestao-tripulantes/tabs/TreinamentosTab.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "GlobalSearch",
+    "arquivo": "src/components/GlobalSearch.tsx",
+    "tinhaX": false,
+    "esc": true,
+    "toqueFora": true,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "GoogleDocsViewer",
+    "arquivo": "src/components/GoogleDocsViewer.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "HelpWidget",
+    "arquivo": "src/components/Help/HelpWidget.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "ChatWindow",
+    "arquivo": "src/components/IA/ChatWindow.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "ExchangeIntegrationModal",
+    "arquivo": "src/components/IA/ExchangeIntegrationModal.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "VoiceAssistantModal",
+    "arquivo": "src/components/IA/VoiceAssistantModal.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "ConfirmacaoModal",
+    "arquivo": "src/components/indicadores/ConfirmacaoModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "ImportadorPlanilhasModal",
+    "arquivo": "src/components/indicadores/ImportadorPlanilhasModal.tsx",
+    "tinhaX": true,
+    "esc": true,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "WorkspaceAbaModal",
+    "arquivo": "src/components/indicadores/WorkspaceAbaModal.tsx",
+    "tinhaX": true,
+    "esc": true,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "InstructionsPanel",
+    "arquivo": "src/components/InstructionsPanel.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "LanguageDialog",
+    "arquivo": "src/components/LanguageDialog.tsx",
+    "tinhaX": true,
+    "esc": true,
+    "toqueFora": true,
+    "panel": true,
+    "status": "corrigido"
+  },
+  {
+    "modal": "LanguageSelector",
+    "arquivo": "src/components/LanguageSelector.tsx",
+    "tinhaX": true,
+    "esc": true,
+    "toqueFora": true,
+    "panel": true,
+    "status": "corrigido"
+  },
+  {
+    "modal": "MainLayout",
+    "arquivo": "src/components/Layout/MainLayout.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "LibraryManager",
+    "arquivo": "src/components/library/LibraryManager.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "MultiPdfViewer",
+    "arquivo": "src/components/MultiPdfViewer.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "EventCreator",
+    "arquivo": "src/components/news/EventCreator.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "HighlightCreator",
+    "arquivo": "src/components/news/HighlightCreator.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "InstagramStylePostCreator",
+    "arquivo": "src/components/news/InstagramStylePostCreator.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "MediaUploadWithFilters",
+    "arquivo": "src/components/news/MediaUploadWithFilters.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "NewsAdminPanel",
+    "arquivo": "src/components/news/NewsAdminPanel.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "NewsHighlights",
+    "arquivo": "src/components/news/NewsHighlights.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "NewsPostEditorFullScreen",
+    "arquivo": "src/components/news/NewsPostEditorFullScreen.tsx",
+    "tinhaX": false,
+    "esc": true,
+    "toqueFora": true,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "PostTypeSelector",
+    "arquivo": "src/components/news/PostTypeSelector.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "TextPostCreator",
+    "arquivo": "src/components/news/TextPostCreator.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "UserProfileModal",
+    "arquivo": "src/components/news/UserProfileModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "AprovacaoFolhaModal",
+    "arquivo": "src/components/payroll/AprovacaoFolhaModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "PdfViewer",
+    "arquivo": "src/components/PdfViewer.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "PdfViewerComponent",
+    "arquivo": "src/components/PdfViewerComponent.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "CompleteProfilePrompt",
+    "arquivo": "src/components/Profile/CompleteProfilePrompt.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": true,
+    "status": "X + painel; Esc pendente"
+  },
+  {
+    "modal": "PhotoUploadModal",
+    "arquivo": "src/components/Profile/PhotoUploadModal.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "ReactPdfViewer",
+    "arquivo": "src/components/ReactPdfViewer.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "ReimbursementApproval",
+    "arquivo": "src/components/ReimbursementApproval.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "ReminderManager",
+    "arquivo": "src/components/reminders/ReminderManager.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": false,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "SimplePdfIframeViewer",
+    "arquivo": "src/components/SimplePdfIframeViewer.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "SimplePdfViewer2",
+    "arquivo": "src/components/SimplePdfViewer2.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "PostCreator",
+    "arquivo": "src/components/Social/PostCreator.tsx",
+    "tinhaX": false,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "sem X visível"
+  },
+  {
+    "modal": "StartupExperience",
+    "arquivo": "src/components/StartupExperience.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "ThankYouModal",
+    "arquivo": "src/components/ThankYouModal.tsx",
+    "tinhaX": true,
+    "esc": true,
+    "toqueFora": true,
+    "panel": true,
+    "status": "corrigido"
+  },
+  {
+    "modal": "ConfirmationModal",
+    "arquivo": "src/components/ui/ConfirmationModal.tsx",
+    "tinhaX": true,
+    "esc": true,
+    "toqueFora": true,
+    "panel": true,
+    "status": "corrigido"
+  },
+  {
+    "modal": "SignatureModal",
+    "arquivo": "src/components/ui/SignatureModal.tsx",
+    "tinhaX": true,
+    "esc": true,
+    "toqueFora": true,
+    "panel": true,
+    "status": "corrigido"
+  },
+  {
+    "modal": "UniversalPdfViewer",
+    "arquivo": "src/components/UniversalPdfViewer.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  },
+  {
+    "modal": "AlertContext",
+    "arquivo": "src/contexts/AlertContext.tsx",
+    "tinhaX": true,
+    "esc": false,
+    "toqueFora": true,
+    "panel": false,
+    "status": "tinha X; chrome mobile parcial"
+  }
+]
