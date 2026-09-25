@@ -40,17 +40,17 @@ const MODAL_CSS = `
     scroll-snap-align: start;
     flex-shrink: 0;
   }
-  [data-portal-main] {
+  main[data-portal-main] {
     padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
   }
-  [data-fab-companion],
-  [data-fab-help] {
-    width: 2.75rem;
-    height: 2.75rem;
-    bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  button[data-fab-companion],
+  button[data-fab-help] {
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+    bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px)) !important;
   }
-  [data-fab-help] { right: calc(0.75rem + env(safe-area-inset-right, 0px)); }
-  [data-fab-companion] { right: calc(4rem + env(safe-area-inset-right, 0px)); }
+  button[data-fab-help] { right: calc(0.75rem + env(safe-area-inset-right, 0px)) !important; }
+  button[data-fab-companion] { right: calc(4rem + env(safe-area-inset-right, 0px)) !important; }
 }
 `;
 
@@ -400,13 +400,19 @@ async function measureTabs(html) {
   await page.setContent(html, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(400);
   return page.evaluate(() => {
-    const shell = document.querySelector('[data-testid="collaborator-modal-tablist"]')?.parentElement;
+    const inner = document.querySelector('[data-testid="collaborator-modal-tablist"]');
+    const shell = inner?.parentElement;
     const qhse = [...document.querySelectorAll('button')].find((b) => b.textContent?.includes('QHSE'));
+    if (shell && qhse) shell.scrollLeft = shell.scrollWidth;
     const qr = qhse?.getBoundingClientRect();
+    const sr = shell?.getBoundingClientRect();
+    const overflowX = shell ? getComputedStyle(shell).overflowX : '';
     return {
+      overflowX,
+      canSwipe: overflowX === 'auto' || overflowX === 'scroll',
       shellScrollable: shell ? shell.scrollWidth > shell.clientWidth + 2 : false,
       qhseInDom: !!qhse,
-      qhseClipped: qr ? qr.right > (shell?.getBoundingClientRect().right ?? window.innerWidth) + 1 : true,
+      qhseVisibleAfterSwipe: !!(qr && sr && qr.left >= sr.left - 1 && qr.right <= sr.right + 1),
     };
   });
 }
@@ -416,7 +422,9 @@ async function measureFabs(html) {
   await page.setContent(html, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(400);
   return page.evaluate(() => {
-    const help = document.querySelector('[data-fab-help], button:last-of-type');
+    const main = document.querySelector('main');
+    if (main) main.scrollTop = main.scrollHeight;
+    const help = document.querySelector('[data-fab-help]') || document.querySelector('button:last-of-type');
     const last = document.querySelector('[data-last-item]');
     const hr = help?.getBoundingClientRect();
     const lr = last?.getBoundingClientRect();
@@ -425,7 +433,7 @@ async function measureFabs(html) {
       helpH: hr ? Math.round(hr.height) : 0,
       lastBottom: lr ? Math.round(lr.bottom) : 0,
       helpTop: hr ? Math.round(hr.top) : 0,
-      lastAboveFab: lr && hr ? lr.bottom <= hr.top + 4 : false,
+      lastAboveFab: lr && hr ? lr.bottom <= hr.top + 8 : false,
     };
   });
 }
