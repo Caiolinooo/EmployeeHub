@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { FiSave, FiRefreshCw, FiUpload } from 'react-icons/fi';
 import { useSiteConfig } from '@/contexts/SiteConfigContext';
 import { useI18n } from '@/contexts/I18nContext';
+import { safeImageSrc } from '@/lib/safe-image-src';
 
 interface SiteConfig {
   id: string;
@@ -447,13 +448,13 @@ export default function SettingsPage() {
                   {logoFile ? (
                     <img
                       className="h-16 w-16 object-contain rounded-lg border border-gray-200 bg-gray-50"
-                      src={URL.createObjectURL(logoFile)}
+                      src={safeImageSrc(URL.createObjectURL(logoFile))}
                       alt="New logo preview"
                     />
                   ) : (
                     <img
                       className="h-16 w-16 object-contain rounded-lg border border-gray-200 bg-gray-50"
-                      src={config.logo || '/images/LC1_Azul.png'}
+                      src={safeImageSrc(config.logo || '/images/LC1_Azul.png')}
                       alt="Current logo"
                     />
                   )}
@@ -487,9 +488,9 @@ export default function SettingsPage() {
               <div className="flex items-center space-x-6">
                 <div className="shrink-0 relative group">
                   {loginLogoFile ? (
-                    <img className="h-16 w-16 object-contain rounded-lg border border-gray-200 bg-gray-50" src={URL.createObjectURL(loginLogoFile)} alt="Preview" />
+                    <img className="h-16 w-16 object-contain rounded-lg border border-gray-200 bg-gray-50" src={safeImageSrc(URL.createObjectURL(loginLogoFile))} alt="Preview" />
                   ) : (
-                    <img className="h-16 w-16 object-contain rounded-lg border border-gray-200 bg-gray-50" src={config.login_logo || '/images/LC1_Azul.png'} alt="Current" />
+                    <img className="h-16 w-16 object-contain rounded-lg border border-gray-200 bg-gray-50" src={safeImageSrc(config.login_logo || '/images/LC1_Azul.png')} alt="Current" />
                   )}
                   {config.login_logo && <button type="button" onClick={() => handleRemoveImage('login_logo')} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600">x</button>}
                 </div>
@@ -509,9 +510,9 @@ export default function SettingsPage() {
               <div className="flex items-center space-x-6">
                 <div className="shrink-0 relative group">
                   {sidebarLogoFile ? (
-                    <img className="h-16 w-16 object-contain rounded-lg border border-gray-200 bg-gray-50" src={URL.createObjectURL(sidebarLogoFile)} alt="Preview" />
+                    <img className="h-16 w-16 object-contain rounded-lg border border-gray-200 bg-gray-50" src={safeImageSrc(URL.createObjectURL(sidebarLogoFile))} alt="Preview" />
                   ) : (
-                    <img className="h-16 w-16 object-contain rounded-lg border border-gray-200 bg-gray-50" src={config.sidebar_logo || '/images/LC1_Azul.png'} alt="Current" />
+                    <img className="h-16 w-16 object-contain rounded-lg border border-gray-200 bg-gray-50" src={safeImageSrc(config.sidebar_logo || '/images/LC1_Azul.png')} alt="Current" />
                   )}
                   {config.sidebar_logo && <button type="button" onClick={() => handleRemoveImage('sidebar_logo')} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600">x</button>}
                 </div>
@@ -531,9 +532,9 @@ export default function SettingsPage() {
               <div className="flex items-center space-x-6">
                 <div className="shrink-0 relative group">
                   {widgetLogoFile ? (
-                    <img className="h-16 w-16 object-contain rounded-lg border border-gray-200 bg-gray-50" src={URL.createObjectURL(widgetLogoFile)} alt="Preview" />
+                    <img className="h-16 w-16 object-contain rounded-lg border border-gray-200 bg-gray-50" src={safeImageSrc(URL.createObjectURL(widgetLogoFile))} alt="Preview" />
                   ) : (
-                    <img className="h-16 w-16 object-contain rounded-lg border border-gray-200 bg-gray-50" src={config.widget_logo || '/images/LC1_Azul.png'} alt="Current" />
+                    <img className="h-16 w-16 object-contain rounded-lg border border-gray-200 bg-gray-50" src={safeImageSrc(config.widget_logo || '/images/LC1_Azul.png')} alt="Current" />
                   )}
                   {config.widget_logo && <button type="button" onClick={() => handleRemoveImage('widget_logo')} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600">x</button>}
                 </div>
