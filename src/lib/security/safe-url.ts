@@ -327,15 +327,42 @@ function isPrivateIpv4(ip: string): boolean {
   return false;
 }
 
+function hextetPairToIpv4(hi: string, lo: string): string | null {
+  if (!/^[0-9a-f]{1,4}$/.test(hi) || !/^[0-9a-f]{1,4}$/.test(lo)) return null;
+  const a = parseInt(hi, 16);
+  const b = parseInt(lo, 16);
+  return `${(a >> 8) & 255}.${a & 255}.${(b >> 8) & 255}.${b & 255}`;
+}
+
+/**
+ * Node WHATWG URL canonicalizes IPv4-mapped IPv6 to `[::ffff:7f00:1]`
+ * (hex hextets), not dotted `::ffff:127.0.0.1`.
+ */
+function ipv4FromMappedIpv6(host: string): string | null {
+  const h = host.toLowerCase();
+  if (h.startsWith('::ffff:')) {
+    const rest = h.slice('::ffff:'.length);
+    if (isIpv4Address(rest)) return rest;
+    const parts = rest.split(':');
+    if (parts.length === 2) return hextetPairToIpv4(parts[0], parts[1]);
+    return null;
+  }
+  const expandedDotted = h.match(/^(?:0:){5}ffff:(\d{1,3}(?:\.\d{1,3}){3})$/);
+  if (expandedDotted && isIpv4Address(expandedDotted[1])) {
+    return expandedDotted[1];
+  }
+  const expandedHex = h.match(/^(?:0:){5}ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+  if (expandedHex) return hextetPairToIpv4(expandedHex[1], expandedHex[2]);
+  return null;
+}
+
 function isBlockedIpv6(host: string): boolean {
   if (!host.includes(':')) return false;
   const h = host.toLowerCase();
-  if (h === '::1' || h === '::') return true;
+  if (h === '::1' || h === '::' || h === '0:0:0:0:0:0:0:1') return true;
   if (h.startsWith('fe80:')) return true;
   if (h.startsWith('fc') || h.startsWith('fd')) return true;
-  if (h.startsWith('::ffff:')) {
-    const mapped = h.slice('::ffff:'.length);
-    return isIpv4Address(mapped) && isPrivateIpv4(mapped);
-  }
+  const mapped = ipv4FromMappedIpv6(h);
+  if (mapped) return isPrivateIpv4(mapped);
   return false;
 }

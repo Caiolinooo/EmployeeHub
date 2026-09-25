@@ -54,6 +54,25 @@ describe('parseSafeUrl', () => {
     }
   });
 
+  it('rejects IPv4-mapped IPv6 even when the canonical hostname is allowlisted', () => {
+    const mapped = [
+      'https://[::ffff:127.0.0.1]/x',
+      'https://[::ffff:10.0.0.1]/x',
+      'https://[::ffff:169.254.169.254]/latest/meta-data',
+      'https://[::ffff:7f00:1]/x',
+      'https://[::ffff:a00:1]/x',
+    ];
+    for (const raw of mapped) {
+      const hostname = new URL(raw).hostname;
+      assert.equal(isBlockedHostname(hostname), true, raw);
+      assertUnsafe(() =>
+        parseSafeUrl(raw, {
+          allowedHosts: [hostname, '127.0.0.1', '10.0.0.1', '169.254.169.254', '[::ffff:7f00:1]', '[::ffff:a00:1]'],
+        }),
+      );
+    }
+  });
+
   it('rejects non-https schemes', () => {
     assertUnsafe(() =>
       parseSafeUrl('http://example.com/x', { allowedHosts: ALLOW_EXAMPLE }),
@@ -140,6 +159,8 @@ describe('CA lookup URLs', () => {
   it('rejects a private API_BaseCAEPI base', () => {
     assertUnsafe(() => buildApiBaseCaepiLookupUrl('https://127.0.0.1:8000', '99'));
     assertUnsafe(() => buildApiBaseCaepiLookupUrl('http://caepi.example.com', '99'));
+    assertUnsafe(() => buildApiBaseCaepiLookupUrl('https://[::ffff:127.0.0.1]:8000', '99'));
+    assertUnsafe(() => buildApiBaseCaepiLookupUrl('https://[::ffff:7f00:1]/api', '99'));
   });
 });
 
@@ -227,6 +248,9 @@ describe('isBlockedHostname', () => {
     assert.equal(isBlockedHostname('10.1.2.3'), true);
     assert.equal(isBlockedHostname('169.254.1.1'), true);
     assert.equal(isBlockedHostname('::1'), true);
+    assert.equal(isBlockedHostname('[::ffff:7f00:1]'), true);
+    assert.equal(isBlockedHostname('::ffff:7f00:1'), true);
+    assert.equal(isBlockedHostname('::ffff:a9fe:a9fe'), true);
     assert.equal(isBlockedHostname('example.com'), false);
   });
 });
