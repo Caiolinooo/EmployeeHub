@@ -1,3 +1,17 @@
+## Middleware ausente no bundle de produção (2026-09-25)
+
+`src/middleware.ts` não entra no `next build`. Manifesto sai `{ middleware: {} }`. Sem merge, sem promote, sem Vercel Production, sem PR #95.
+
+- [x] Hipótese: `pages/` na raiz (`pages/api/check-env.js`) faz Next usar `pagesDir=./pages` e procurar `middleware.ts` no root, ignorando `src/middleware.ts`
+- [x] Reproduzir `next build` e gravar `middleware-manifest.json` (antes) — `{ middleware: {} }`
+- [x] GET unauthenticated em `portal.groupabz.com` (páginas + APIs sensíveis)
+- [x] Mapa de rotas (a/b/c) com paths
+- [x] Fix mínimo: remover `pages/` raiz para Next usar `src/` e bundlar middleware
+- [ ] Build depois: manifesto não vazio; lint/typecheck/testes
+- [ ] PR draft contra `portal`
+
+---
+
 ## UI Folha/Financeiro no padrão ABZ (2026-09-23)
 
 Hub `/folha-pagamento` sem sidebar, cards pretos e rotas `sheets/nova/funcionarios/empresas` em loop de redirect. Sem emitir NFS-e. Sem commit.
