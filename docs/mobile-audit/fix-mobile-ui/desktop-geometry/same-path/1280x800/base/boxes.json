@@ -1,0 +1,737 @@
+{
+  "dashboard": {
+    "status": 200,
+    "href": "http://127.0.0.1:3020/dashboard",
+    "title": "Painel ABZ Group",
+    "body": "PT\nPM\nOlá, Prova!\n\nBem-vindo ao Hub da ABZ Group. Reunimos as principais ferramentas em um único local para facilitar o dia a dia dos nossos colaboradores.\n\nBem-vindo ao Portal\n\nFique atento às novidades por aqui.\n\nLinks Rápidos\nPonto\n\nRegistro de Ponto\n\nReembolso\n\nSolicitações\n\n",
+    "boxes": {
+      "header": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "sidebar": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "main": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "shell": null,
+      "tabnav": null,
+      "tablist": null,
+      "kpi": null,
+      "table": null,
+      "schedule": null,
+      "toolbar": null,
+      "dateStart": null,
+      "dateEnd": null,
+      "fichaTablist": null,
+      "fichaBody": null,
+      "fichaPanel": null,
+      "modalPanel": null,
+      "modalClose": null,
+      "confirmTitle": null,
+      "confirmCancel": null,
+      "confirmOk": null,
+      "languagePanel": null,
+      "loginCard": null,
+      "loginTitle": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "fabHelp": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "fabCompanion": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "gt-lista": {
+    "status": 200,
+    "href": "http://127.0.0.1:3020/department/gestao-tripulantes",
+    "title": "Painel ABZ Group",
+    "body": "PT\nPM\nGestão de Tripulantes\n\nDashboard inteligente de tripulantes e escala offshore\n\nMatriz de Treinamentos\nNovo Colaborador\nMatriz de Conformidade\nMan Schedule (Escala MIO)\nASO Logística\nHistórico de alterações\nMatriz de Treinamentos\n\nTotal de Tripulantes (ativos)\n\n4\n\nClique par",
+    "boxes": {
+      "header": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "sidebar": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "main": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "shell": {
+        "x": 112,
+        "y": 88,
+        "w": 1136,
+        "h": 688
+      },
+      "tabnav": {
+        "x": 112,
+        "y": 154,
+        "w": 1136,
+        "h": 36
+      },
+      "tablist": null,
+      "kpi": {
+        "x": 112,
+        "y": 202,
+        "w": 1136,
+        "h": 118.5
+      },
+      "table": {
+        "x": 113,
+        "y": 517.5,
+        "w": 1134,
+        "h": 102
+      },
+      "schedule": null,
+      "toolbar": null,
+      "dateStart": null,
+      "dateEnd": null,
+      "fichaTablist": null,
+      "fichaBody": null,
+      "fichaPanel": null,
+      "modalPanel": null,
+      "modalClose": null,
+      "confirmTitle": null,
+      "confirmCancel": null,
+      "confirmOk": null,
+      "languagePanel": null,
+      "loginCard": null,
+      "loginTitle": {
+        "x": 112,
+        "y": 88,
+        "w": 354,
+        "h": 32
+      },
+      "fabHelp": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "fabCompanion": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "gt-escala": {
+    "status": 200,
+    "href": "http://127.0.0.1:3020/department/gestao-tripulantes",
+    "title": "Painel ABZ Group",
+    "body": "PT\nPM\nGestão de Tripulantes\n\nDashboard inteligente de tripulantes e escala offshore\n\nMatriz de Treinamentos\nNovo Colaborador\nMatriz de Conformidade\nMan Schedule (Escala MIO)\nASO Logística\nHistórico de alterações\nMatriz de Treinamentos\nBuscar\nEmpresa\nEmbarcação\nTodas as Embarcaçõe",
+    "boxes": {
+      "header": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "sidebar": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "main": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "shell": {
+        "x": 112,
+        "y": 88,
+        "w": 1136,
+        "h": 688
+      },
+      "tabnav": {
+        "x": 112,
+        "y": 154,
+        "w": 1136,
+        "h": 36
+      },
+      "tablist": null,
+      "kpi": null,
+      "table": {
+        "x": 113,
+        "y": 350,
+        "w": 1134,
+        "h": 188
+      },
+      "schedule": {
+        "x": 113,
+        "y": 350,
+        "w": 1134,
+        "h": 390
+      },
+      "toolbar": {
+        "x": 125,
+        "y": 211,
+        "w": 1110,
+        "h": 116
+      },
+      "dateStart": {
+        "x": 1060,
+        "y": 213,
+        "w": 120,
+        "h": 16
+      },
+      "dateEnd": {
+        "x": 125,
+        "y": 275,
+        "w": 120,
+        "h": 16
+      },
+      "fichaTablist": null,
+      "fichaBody": null,
+      "fichaPanel": null,
+      "modalPanel": null,
+      "modalClose": null,
+      "confirmTitle": null,
+      "confirmCancel": null,
+      "confirmOk": null,
+      "languagePanel": null,
+      "loginCard": null,
+      "loginTitle": {
+        "x": 112,
+        "y": 88,
+        "w": 354,
+        "h": 32
+      },
+      "fabHelp": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "fabCompanion": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "ferias": {
+    "status": 200,
+    "href": "http://127.0.0.1:3020/ferias",
+    "title": "Painel ABZ Group",
+    "body": "PT\nPM\nMódulo de Férias\n\nGerencie seus períodos de descanso.\n\nMinhas Solicitações\nFormulário\nNova Solicitação\n\nCadastre sua assinatura digital\n\nEla será usada nos formulários de férias (PDF) e outros documentos do portal. Ver no perfil\n\nAgora não\nCadastrar assinatura\nTodos os stat",
+    "boxes": {
+      "header": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "sidebar": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "main": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "shell": null,
+      "tabnav": null,
+      "tablist": null,
+      "kpi": null,
+      "table": null,
+      "schedule": null,
+      "toolbar": null,
+      "dateStart": null,
+      "dateEnd": null,
+      "fichaTablist": null,
+      "fichaBody": null,
+      "fichaPanel": null,
+      "modalPanel": null,
+      "modalClose": null,
+      "confirmTitle": null,
+      "confirmCancel": null,
+      "confirmOk": null,
+      "languagePanel": null,
+      "loginCard": null,
+      "loginTitle": {
+        "x": 230,
+        "y": 88,
+        "w": 287,
+        "h": 32
+      },
+      "fabHelp": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "fabCompanion": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "reembolso": {
+    "status": 200,
+    "href": "http://127.0.0.1:3020/reembolso",
+    "title": "Painel ABZ Group",
+    "body": "PT\nPM\nReembolso\nSolicitar Reembolso\nMeus Reembolsos\nAprovar Reembolsos\nVer Política de Reembolso\nPolítica de Reembolso - ABZ Group\n\nEste documento estabelece as diretrizes e procedimentos para solicitação e processamento de reembolsos de despesas relacionadas às atividades profis",
+    "boxes": {
+      "header": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "sidebar": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "main": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "shell": null,
+      "tabnav": {
+        "x": 112,
+        "y": 144,
+        "w": 1136,
+        "h": 54
+      },
+      "tablist": null,
+      "kpi": null,
+      "table": null,
+      "schedule": null,
+      "toolbar": null,
+      "dateStart": null,
+      "dateEnd": null,
+      "fichaTablist": null,
+      "fichaBody": null,
+      "fichaPanel": null,
+      "modalPanel": null,
+      "modalClose": null,
+      "confirmTitle": null,
+      "confirmCancel": null,
+      "confirmOk": null,
+      "languagePanel": null,
+      "loginCard": {
+        "x": 168,
+        "y": 412,
+        "w": 1024,
+        "h": 1663
+      },
+      "loginTitle": {
+        "x": 144,
+        "y": 88,
+        "w": 133,
+        "h": 32
+      },
+      "fabHelp": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "fabCompanion": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "contracheque": {
+    "status": 200,
+    "href": "http://127.0.0.1:3020/contracheque",
+    "title": "Painel ABZ Group",
+    "body": "PT\nPM\nContracheques\n\nAcesse seus contracheques e informações salariais\n\nAtualizar\n\nNenhum contracheque disponível no momento.\n\nContracheques aparecem aqui após a aprovação da folha de pagamento pelo DP.",
+    "boxes": {
+      "header": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "sidebar": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "main": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "shell": {
+        "x": 112,
+        "y": 88,
+        "w": 1136,
+        "h": 688
+      },
+      "tabnav": null,
+      "tablist": null,
+      "kpi": null,
+      "table": null,
+      "schedule": null,
+      "toolbar": null,
+      "dateStart": null,
+      "dateEnd": null,
+      "fichaTablist": null,
+      "fichaBody": null,
+      "fichaPanel": null,
+      "modalPanel": null,
+      "modalClose": null,
+      "confirmTitle": null,
+      "confirmCancel": null,
+      "confirmOk": null,
+      "languagePanel": null,
+      "loginCard": null,
+      "loginTitle": {
+        "x": 169,
+        "y": 105,
+        "w": 290,
+        "h": 28
+      },
+      "fabHelp": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "fabCompanion": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "ficha": {
+    "status": 200,
+    "href": "http://127.0.0.1:3020/department/gestao-tripulantes",
+    "title": "Painel ABZ Group",
+    "body": "PT\nPM\nGestão de Tripulantes\n\nDashboard inteligente de tripulantes e escala offshore\n\nMatriz de Treinamentos\nNovo Colaborador\nMatriz de Conformidade\nMan Schedule (Escala MIO)\nASO Logística\nHistórico de alterações\nMatriz de Treinamentos\n\nTotal de Tripulantes (ativos)\n\n4\n\nClique par",
+    "boxes": {
+      "header": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "sidebar": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "main": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "shell": {
+        "x": 112,
+        "y": 88,
+        "w": 1136,
+        "h": 688
+      },
+      "tabnav": {
+        "x": 112,
+        "y": 154,
+        "w": 1136,
+        "h": 36
+      },
+      "tablist": {
+        "x": 64,
+        "y": 104,
+        "w": 1152,
+        "h": 38
+      },
+      "kpi": {
+        "x": 112,
+        "y": 202,
+        "w": 1136,
+        "h": 118.5
+      },
+      "table": {
+        "x": 113,
+        "y": 517.5,
+        "w": 1134,
+        "h": 102
+      },
+      "schedule": null,
+      "toolbar": null,
+      "dateStart": null,
+      "dateEnd": null,
+      "fichaTablist": {
+        "x": 64,
+        "y": 104,
+        "w": 1152,
+        "h": 38
+      },
+      "fichaBody": {
+        "x": 64,
+        "y": 143,
+        "w": 1152,
+        "h": 641
+      },
+      "fichaPanel": {
+        "x": 64,
+        "y": 16,
+        "w": 1152,
+        "h": 768
+      },
+      "modalPanel": null,
+      "modalClose": null,
+      "confirmTitle": null,
+      "confirmCancel": null,
+      "confirmOk": null,
+      "languagePanel": null,
+      "loginCard": null,
+      "loginTitle": {
+        "x": 112,
+        "y": 88,
+        "w": 354,
+        "h": 32
+      },
+      "fabHelp": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "fabCompanion": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "confirm": {
+    "status": 200,
+    "href": "http://127.0.0.1:3020/admin/setores",
+    "title": "Painel ABZ Group",
+    "body": "prova.mobile@example.com\n\nProva Mobile\n\nEN\nPT\nPainel\nSair\nGerenciamento de Setores\n\nCrie setores e defina quais módulos eles podem acessar.\n\nNovo Setor\nOperações\n\nSetor mockado para prova do ConfirmationModal\n\nGerenciar Módulos\nExcluir Setor\n\nTem certeza que deseja excluir este s",
+    "boxes": {
+      "header": null,
+      "sidebar": {
+        "x": 0,
+        "y": 0,
+        "w": 64,
+        "h": 800
+      },
+      "main": {
+        "x": 64,
+        "y": 0,
+        "w": 1216,
+        "h": 747
+      },
+      "shell": null,
+      "tabnav": null,
+      "tablist": null,
+      "kpi": null,
+      "table": null,
+      "schedule": null,
+      "toolbar": null,
+      "dateStart": null,
+      "dateEnd": null,
+      "fichaTablist": null,
+      "fichaBody": null,
+      "fichaPanel": null,
+      "modalPanel": {
+        "x": 0,
+        "y": 0,
+        "w": 1280,
+        "h": 800
+      },
+      "modalClose": null,
+      "confirmTitle": {
+        "x": 441,
+        "y": 313,
+        "w": 398,
+        "h": 28
+      },
+      "confirmCancel": {
+        "x": 642,
+        "y": 445,
+        "w": 101,
+        "h": 42
+      },
+      "confirmOk": {
+        "x": 755,
+        "y": 445,
+        "w": 84,
+        "h": 42
+      },
+      "languagePanel": null,
+      "loginCard": null,
+      "loginTitle": {
+        "x": 136,
+        "y": 72,
+        "w": 431,
+        "h": 32
+      },
+      "fabHelp": null,
+      "fabCompanion": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "login": {
+    "status": 200,
+    "href": "http://127.0.0.1:3020/login",
+    "title": "Painel ABZ Group",
+    "body": "Acesse Sua Conta\nEN\nPT\nEmail\n\nDigite seu email\n\nTenho um código de convite\nContinuar\nou entre com biometria\nEntrar com Biometria\nImpressão digital, reconhecimento facial ou Windows Hello\nABZ Group\n\nAinda não tem cadastro? Criar conta\n\n© 2026 ABZ Group. Todos os direitos reservado",
+    "boxes": {
+      "header": null,
+      "sidebar": null,
+      "main": null,
+      "shell": null,
+      "tabnav": null,
+      "tablist": null,
+      "kpi": null,
+      "table": null,
+      "schedule": null,
+      "toolbar": null,
+      "dateStart": null,
+      "dateEnd": null,
+      "fichaTablist": null,
+      "fichaBody": null,
+      "fichaPanel": null,
+      "modalPanel": null,
+      "modalClose": null,
+      "confirmTitle": null,
+      "confirmCancel": null,
+      "confirmOk": null,
+      "languagePanel": null,
+      "loginCard": {
+        "x": 456,
+        "y": 212,
+        "w": 368,
+        "h": 360
+      },
+      "loginTitle": null,
+      "fabHelp": null,
+      "fabCompanion": null
+    }
+  },
+  "language": {
+    "status": 200,
+    "href": "http://127.0.0.1:3020/dashboard",
+    "title": "Painel ABZ Group",
+    "body": "Choose Your Language\n\nEscolha seu idioma\n\n🇺🇸\nInglês\n🇧🇷\nPortuguês\nContinue\nPT\nPM\nOlá, Prova!\n\nBem-vindo ao Hub da ABZ Group. Reunimos as principais ferramentas em um único local para facilitar o dia a dia dos nossos colaboradores.\n\nBem-vindo ao Portal\n\nFique atento às novidade",
+    "boxes": {
+      "header": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "sidebar": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "main": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "shell": null,
+      "tabnav": null,
+      "tablist": null,
+      "kpi": null,
+      "table": null,
+      "schedule": null,
+      "toolbar": null,
+      "dateStart": null,
+      "dateEnd": null,
+      "fichaTablist": null,
+      "fichaBody": null,
+      "fichaPanel": null,
+      "modalPanel": {
+        "x": 0,
+        "y": 0,
+        "w": 1280,
+        "h": 800
+      },
+      "modalClose": null,
+      "confirmTitle": null,
+      "confirmCancel": null,
+      "confirmOk": null,
+      "languagePanel": {
+        "x": 0,
+        "y": 0,
+        "w": 1280,
+        "h": 800
+      },
+      "loginCard": null,
+      "loginTitle": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "fabHelp": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "fabCompanion": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "kpi": {
+    "clientWidth": 366,
+    "scrollWidth": 990,
+    "overflowX": "auto"
+  },
+  "tabs": {
+    "navScroll": 897,
+    "navClient": 897,
+    "shellOverflowX": "auto"
+  },
+  "confirmEsc": {
+    "before": 2,
+    "after": 0
+  },
+  "deslig": {
+    "opened": true,
+    "before": 4,
+    "after": 2
+  },
+  "fechamento": {
+    "opened": true,
+    "before": 2,
+    "after": 0
+  },
+  "addShortcut": {
+    "opened": true,
+    "btn": 1,
+    "before": 2,
+    "after": 0
+  }
+}

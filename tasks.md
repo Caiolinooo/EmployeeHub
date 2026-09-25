@@ -5,7 +5,7 @@ QA reprovou `79b9166d` no `next start` real: wrap da toolbar GT em 1280 + alega�
 - [x] Abas GT/`ficha`: nowrap/shrink/overflow só `max-lg:`; `tablistRef` no inner (portal)
 - [x] Esc em AddShortcut, Desligamento, ConfirmarExclusao, ModalAprovacao
 - [x] Merge `origin/portal` `71bd3534` (conflito só em `tasks.md`; `AGENTS.md` auto-merge)
-- [ ] Prova geometria 1280/1440 (`next build`+`start`, mesmo caminho)
+- [x] Prova geometria 1280/1440 (`next build`+`start`, mesmo caminho) — ver `docs/mobile-audit/fix-mobile-ui/desktop-geometry/`
 - [ ] Um push em `fix/mobile-ui-portal` quando a prova local fechar
 - [ ] Refazer prova desktop #108–#111 no mesmo método
 
