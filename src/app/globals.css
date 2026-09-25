@@ -64,8 +64,9 @@ img.object-cover {
 
 /* Definições básicas da fonte e cores */
 :root {
-  --font-plus-jakarta: 'Plus Jakarta Sans', system-ui, sans-serif;
-
+  /* --font-plus-jakarta vem de next/font em <html className={plusJakartaSans.variable}>.
+     Não redeclarar aqui: :root e a classe gerada têm a mesma especificidade; a ordem
+     dos chunks decide o vencedor. 'Plus Jakarta Sans' sem @font-face cai em system-ui. */
   /* Estas variáveis serão atualizadas dinamicamente pelo SiteConfigContext */
   --primary-color: #005dff;
   --secondary-color: #6339F5;
