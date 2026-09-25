@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react';
 import { FiX, FiArrowLeft, FiImage, FiVideo, FiSmile, FiMapPin, FiTag, FiUsers, FiCheck } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
 import { fetchWithToken } from '@/lib/tokenStorage';
+import { toSafeMediaUrl } from '@/lib/security/safe-media-url';
 import { compressVideo, needsCompression } from '@/lib/videoCompression';
 
 interface InstagramStylePostCreatorProps {
@@ -401,13 +402,13 @@ const InstagramStylePostCreator: React.FC<InstagramStylePostCreatorProps> = ({
                 {previewUrls.length > 0 && (
                   isVideoFile(currentImageIndex) ? (
                     <video
-                      src={previewUrls[currentImageIndex]}
+                      src={toSafeMediaUrl(previewUrls[currentImageIndex])}
                       controls
                       className="max-w-full max-h-full object-contain"
                     />
                   ) : (
                     <img
-                      src={previewUrls[currentImageIndex]}
+                      src={toSafeMediaUrl(previewUrls[currentImageIndex])}
                       alt="Preview"
                       className="max-w-full max-h-full object-contain"
                     />
@@ -431,7 +432,7 @@ const InstagramStylePostCreator: React.FC<InstagramStylePostCreatorProps> = ({
                         </div>
                       ) : (
                         <img
-                          src={url}
+                          src={toSafeMediaUrl(url)}
                           alt={`Thumbnail ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
@@ -451,13 +452,13 @@ const InstagramStylePostCreator: React.FC<InstagramStylePostCreatorProps> = ({
                 {previewUrls.length > 0 && (
                   isVideoFile(currentImageIndex) ? (
                     <video
-                      src={previewUrls[currentImageIndex]}
+                      src={toSafeMediaUrl(previewUrls[currentImageIndex])}
                       controls
                       className="max-w-full max-h-full object-contain"
                     />
                   ) : (
                     <img
-                      src={previewUrls[currentImageIndex]}
+                      src={toSafeMediaUrl(previewUrls[currentImageIndex])}
                       alt="Preview"
                       className="max-w-full max-h-full object-contain"
                     />
