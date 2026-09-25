@@ -1,9 +1,12 @@
 ﻿'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { DocumentTextIcon, NewspaperIcon, UserIcon, RectangleStackIcon, CurrencyDollarIcon } from '@heroicons/react/24/solid';
 import { useI18n } from '@/contexts/I18nContext';
+import ModalCloseButton from '@/components/ui/ModalCloseButton';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
 
 interface SearchResult {
   id: string;
@@ -35,36 +38,55 @@ const GlobalSearch: React.FC = () => {
   const [selectedType, setSelectedType] = useState<string>('all');
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [isNarrow767, setIsNarrow767] = useState(false);
 
-  // Fechar busca ao clicar fora
   useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const sync = () => setIsNarrow767(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
+  const close = useCallback(() => {
+    setIsOpen(false);
+    requestAnimationFrame(() => triggerRef.current?.focus());
+  }, []);
+  useEscapeToClose(isOpen, close);
+  useEscapeCapture(isOpen, close);
+
+  useEffect(() => {
+    if (!isNarrow767 && isOpen) setIsOpen(false);
+  }, [isNarrow767, isOpen]);
+
+  // Fechar busca ao clicar fora — só com overlay aberto
+  useEffect(() => {
+    if (!isOpen) return;
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+        close();
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isOpen, close]);
 
-  // Atalho de teclado Ctrl+K
+  // Ctrl+K só ≤767 — acima de md não registra listener (desktop = portal)
   useEffect(() => {
+    if (!isNarrow767) return;
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
         event.preventDefault();
         setIsOpen(true);
         setTimeout(() => inputRef.current?.focus(), 100);
       }
-      
-      if (event.key === 'Escape') {
-        setIsOpen(false);
-      }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [isNarrow767]);
 
   // Buscar com debounce
   useEffect(() => {
@@ -160,11 +182,14 @@ const GlobalSearch: React.FC = () => {
     <>
       {/* Botão de busca */}
       <button
+        ref={triggerRef}
+        type="button"
         onClick={() => setIsOpen(true)}
-        className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+        data-global-search-trigger=""
+        className="flex items-center space-x-2 px-3 py-2 max-md:min-h-11 max-md:min-w-11 max-md:justify-center max-md:px-0 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
       >
         <MagnifyingGlassIcon className="w-4 h-4" />
-        <span>{t('components.buscar', 'Buscar...')}</span>
+        <span className="max-md:hidden">{t('components.buscar', 'Buscar...')}</span>
         <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-gray-500 bg-white border border-gray-300 rounded">
           Ctrl K
         </kbd>
@@ -173,10 +198,14 @@ const GlobalSearch: React.FC = () => {
       {/* Modal de busca */}
       {isOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-start justify-center min-h-screen pt-16 px-4">
-            <div className="fixed inset-0 bg-black bg-opacity-25" onClick={() => setIsOpen(false)} />
+          <div className="flex items-start justify-center min-h-screen pt-16 px-4 max-md:pt-4 max-md:px-3">
+            <div className="fixed inset-0 bg-black bg-opacity-25" onClick={close} />
             
-            <div ref={searchRef} className="relative w-full max-w-2xl bg-white rounded-xl shadow-2xl">
+            <div
+              ref={searchRef}
+              data-modal-panel=""
+              className="relative w-full max-w-2xl bg-white rounded-xl shadow-2xl max-md:max-h-[100dvh]"
+            >
               {/* Header */}
               <div className="flex items-center px-4 py-3 border-b">
                 <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 mr-3" />
@@ -186,15 +215,17 @@ const GlobalSearch: React.FC = () => {
                   placeholder={t('components.digiteparaBuscar', 'Digite para buscar...')}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="flex-1 text-lg outline-none"
+                  className="flex-1 text-lg outline-none max-md:min-w-0 max-md:text-base"
                   autoFocus
+                  onKeyDown={(event) => {
+                    if (event.key === 'Escape' || event.key === 'Esc') {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      close();
+                    }
+                  }}
                 />
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="ml-3 p-1 text-gray-400 hover:text-gray-600"
-                >
-                  <XMarkIcon className="w-5 h-5" />
-                </button>
+                <ModalCloseButton onClick={close} className="ml-3" />
               </div>
 
               {/* Filtros */}
@@ -218,8 +249,9 @@ const GlobalSearch: React.FC = () => {
                   ].map((type) => (
                     <button
                       key={type.value}
+                      type="button"
                       onClick={() => setSelectedType(type.value)}
-                      className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                      className={`px-3 py-1 max-md:min-h-11 max-md:px-3 max-md:py-2 max-md:text-sm text-xs rounded-full transition-colors ${
                         selectedType === type.value
                           ? 'bg-blue-500 text-white'
                           : 'bg-white text-gray-600 hover:bg-gray-100'
@@ -232,7 +264,7 @@ const GlobalSearch: React.FC = () => {
               </div>
 
               {/* Resultados */}
-              <div className="max-h-96 overflow-y-auto">
+              <div className="max-h-96 max-md:max-h-[min(50dvh,24rem)] overflow-y-auto">
                 {loading && (
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
@@ -253,7 +285,7 @@ const GlobalSearch: React.FC = () => {
                       <button
                         key={`${result.type}-${result.id}`}
                         onClick={() => handleResultClick(result)}
-                        className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                        className="w-full px-4 py-3 max-md:min-h-11 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                       >
                         <div className="flex items-start space-x-3">
                           {getIcon(result.type)}
