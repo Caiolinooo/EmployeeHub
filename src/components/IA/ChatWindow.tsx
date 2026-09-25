@@ -40,6 +40,27 @@ export default function ChatWindow({ token }: Props) {
   
   const [showVoiceModal, setShowVoiceModal] = useState(false);
   const { markTrigger, restoreFocus } = useRestoreFocus();
+  const closeMobileSidebar = useCallback(() => {
+    setSidebarOpen(false);
+    restoreFocus();
+  }, [restoreFocus]);
+
+  useEffect(() => {
+    if (!sidebarOpen) return undefined;
+    const mq = window.matchMedia('(max-width: 1023px)');
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (!mq.matches) return;
+      event.stopPropagation();
+      closeMobileSidebar();
+    };
+    window.addEventListener('keydown', onKey);
+    document.addEventListener('keydown', onKey, true);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.removeEventListener('keydown', onKey, true);
+    };
+  }, [sidebarOpen, closeMobileSidebar]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -376,18 +397,18 @@ export default function ChatWindow({ token }: Props) {
           >
             <div data-modal-panel="" className="relative w-72 bg-white shadow-2xl h-full">
               <div className="absolute right-1 top-1 z-10">
-                <ModalCloseButton onClick={() => setSidebarOpen(false)} />
+                <ModalCloseButton onClick={closeMobileSidebar} />
               </div>
               <ChatSidebar 
                 sessions={sessions} 
                 activeSessionId={activeSessionId}
-                onSelectSession={(id) => { handleSelectSession(id); setSidebarOpen(false); }} 
-                onNewSession={() => { handleNewSession(); setSidebarOpen(false); }}
+                onSelectSession={(id) => { handleSelectSession(id); closeMobileSidebar(); }} 
+                onNewSession={() => { handleNewSession(); closeMobileSidebar(); }}
                 onDeleteSession={handleDeleteSession} 
                 isLoading={sessionsLoading} 
               />
             </div>
-            <div className="flex-1 bg-black/20 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+            <div className="flex-1 bg-black/20 backdrop-blur-sm" onClick={closeMobileSidebar} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -416,7 +437,11 @@ export default function ChatWindow({ token }: Props) {
         <div className="h-14 border-b border-gray-100 px-4 flex items-center justify-between bg-white/80 backdrop-blur-sm sticky top-0 z-20">
           <div className="flex items-center gap-3">
             <button 
-              onClick={() => setSidebarOpen(!sidebarOpen)}
+              onClick={(event) => {
+                if (!sidebarOpen) markTrigger(event.currentTarget);
+                else restoreFocus();
+                setSidebarOpen((open) => !open);
+              }}
               className="p-2 max-md:min-h-11 max-md:min-w-11 hover:bg-gray-100 rounded-lg transition-colors text-gray-500"
               title="Menu Lateral"
             >
