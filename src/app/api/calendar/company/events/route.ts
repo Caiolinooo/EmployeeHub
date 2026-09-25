@@ -1,10 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { parseIcs, IcsEvent } from '@/lib/ics';
 import { dedupeSimilarCalendarEvents } from '@/lib/calendar-event-dedupe';
 import { UnsafeUrlError, resolveCompanyCalendarIcsUrl } from '@/lib/security/safe-url';
 
 export const dynamic = 'force-dynamic';
+
+function authenticateRequest(request: NextRequest) {
+    const authHeader = request.headers.get('authorization');
+    let token = extractTokenFromHeader(authHeader || undefined);
+    if (!token) {
+        const cookie = request.cookies.get('abzToken') || request.cookies.get('token');
+        if (cookie) token = cookie.value;
+    }
+    if (!token) return null;
+    const payload = verifyToken(token);
+    if (!payload?.userId) return null;
+    return payload;
+}
 
 // Simple in-memory cache (per lambda instance)
 let CACHE: { key: string; ts: number; events: IcsEvent[]; duplicatesHidden: number } | null = null;
@@ -27,6 +41,11 @@ const DEFAULT_GCAL_URL = "https://calendar.google.com/calendar/u/0?cid=YWJ6Lm1pZ
 
 export async function GET(req: NextRequest) {
   try {
+    const payload = authenticateRequest(req);
+    if (!payload) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const rangeDays = parseInt(searchParams.get('rangeDays') || '365', 10);
     const fromParam = searchParams.get('from');
