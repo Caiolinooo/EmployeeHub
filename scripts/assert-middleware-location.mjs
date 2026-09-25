@@ -3,6 +3,8 @@
  * Fail if Next.js would look for middleware.ts in a directory that does not
  * contain it. Root `pages/` (or `app/`) makes findDir prefer ./pages over
  * ./src/pages, and Next 15.5 searches middleware in path.join(pagesDir, '..').
+ * With the current stub at pages/api/check-env.js, middleware.ts must live
+ * at the repo root — not in src/.
  */
 import fs from 'node:fs';
 import path from 'node:path';
