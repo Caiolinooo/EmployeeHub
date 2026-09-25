@@ -22,6 +22,19 @@ describe('isSafeImageSrc', () => {
     assert.equal(isSafeImageSrc('http://insecure.example/logo.png'), false);
     assert.equal(isSafeImageSrc('vbscript:msgbox(1)'), false);
   });
+
+  it('blocks scheme tricks: case, space, tab, newline, vbscript, data svg', () => {
+    assert.equal(isSafeImageSrc('  JAVASCRIPT:alert(1)'), false);
+    assert.equal(isSafeImageSrc('\tjavascript:alert(1)'), false);
+    assert.equal(isSafeImageSrc('\njavascript:alert(1)'), false);
+    assert.equal(isSafeImageSrc('java\tscript:alert(1)'), false);
+    assert.equal(isSafeImageSrc('java\nscript:alert(1)'), false);
+    assert.equal(isSafeImageSrc('  vbscript:msgbox(1)'), false);
+    assert.equal(isSafeImageSrc('\tvbscript:msgbox(1)'), false);
+    assert.equal(isSafeImageSrc('data:image/svg+xml,<svg></svg>'), false);
+    assert.equal(isSafeImageSrc('DATA:IMAGE/SVG+XML;base64,PHN2Zz4='), false);
+    assert.equal(isSafeImageSrc('data:text/html;base64,PHNjcmlwdD4='), false);
+  });
 });
 
 describe('safeImageSrc', () => {

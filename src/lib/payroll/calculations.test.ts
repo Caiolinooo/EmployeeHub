@@ -91,3 +91,38 @@ describe('redutor da Lei 15.270/2025', () => {
     assert.equal(r.inssValue, 641.51);
   });
 });
+
+describe('FORMULAS_FOLHA lookup', () => {
+  const formulaItem = (formula: string, quantity = 1): PayrollItem => ({
+    codeId: 'f1',
+    code: '999',
+    type: 'provento',
+    name: 'Fórmula',
+    calculationType: 'formula',
+    formula,
+    value: 0,
+    quantity,
+  });
+
+  it('calcula dsr só para chave própria do mapa', () => {
+    const r = calculateEmployeePayroll(
+      { id: 'f', name: 'F', baseSalary: 3000 },
+      [formulaItem('dsr', 2)],
+    );
+    const item = r.items.find((i) => i.code === '999');
+    assert.equal(item?.calculatedValue, 200);
+    assert.equal(item?.aviso, undefined);
+  });
+
+  it('não invoca __proto__, constructor nem toString', () => {
+    for (const chave of ['__proto__', 'constructor', 'toString']) {
+      const r = calculateEmployeePayroll(
+        { id: 'evil', name: 'E', baseSalary: 3000 },
+        [formulaItem(chave)],
+      );
+      const item = r.items.find((i) => i.code === '999');
+      assert.equal(item?.calculatedValue, 0, chave);
+      assert.equal(item?.aviso, 'formula_nao_implementada', chave);
+    }
+  });
+});

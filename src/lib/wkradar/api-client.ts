@@ -12,45 +12,17 @@
  * sequencial) — mesmo espírito do throttle do pull do MIO.
  */
 import { getCredential } from '@/lib/secure-credentials';
-import https from 'node:https';
-import http from 'node:http';
+import { trimTrailingChar, wkHttpsRequestJson } from './tls-pin';
 
 /**
- * HTTPS da RadarAPI usa certificado AUTOASSINADO (CN=WKSistemas, emissão WK —
- * não há CA pública). fetch/global rejected; aqui `rejectUnauthorized:false`
- * só para este host WK, never usado em outro cliente do portal.
+ * HTTPS da RadarAPI: validação LIGADA + pin SHA-256 (CN=WKSistemas).
+ * Ver src/lib/wkradar/AGENTS.md.
  */
 function wkRequestJson(
   destino: string,
   opcoes: { metodo: 'GET' | 'POST'; headers: Record<string, string>; corpo?: string; timeoutMs: number },
 ): Promise<{ status: number; corpo: string }> {
-  const { promise, resolve, reject } = Promise.withResolvers<{ status: number; corpo: string }>();
-  const url = new URL(destino);
-  const transporte = url.protocol === 'http:' ? http : https;
-  const req = transporte.request(
-    {
-      method: opcoes.metodo,
-      hostname: url.hostname,
-      port: url.port || (url.protocol === 'http:' ? 80 : 443),
-      path: `${url.pathname}${url.search}`,
-      headers: opcoes.headers,
-      rejectUnauthorized: false,
-    },
-    (res) => {
-      const chunks: Buffer[] = [];
-      res.on('data', (c: Buffer) => chunks.push(c));
-      res.on('end', () =>
-        resolve({ status: res.statusCode ?? 0, corpo: Buffer.concat(chunks).toString('utf8') }),
-      );
-    },
-  );
-  req.setTimeout(opcoes.timeoutMs, () => {
-    req.destroy(new Error(`[WK] Timeout de ${opcoes.timeoutMs / 1000}s na Radar.API (${destino})`));
-  });
-  req.on('error', reject);
-  if (opcoes.corpo) req.write(opcoes.corpo);
-  req.end();
-  return promise;
+  return wkHttpsRequestJson(destino, opcoes);
 }
 
 /** Chaves de credencial em app_secrets (mesmo formato que getCredential consome). */
@@ -167,7 +139,7 @@ async function autenticarWk(): Promise<{ url: string; token: string; estatico: b
     getCredential(WK_EMPRESA_CREDENTIAL_KEY),
   ]);
   if (!urlCrua) throw new ErroWkCredencial();
-  const url = urlCrua.trim().replace(/\/+$/, '');
+  const url = trimTrailingChar(urlCrua.trim(), '/');
 
   if (tokenEstatico) return { url, token: tokenEstatico.trim(), estatico: true };
   if (usuario && senha) {

@@ -5,15 +5,13 @@
  *       (credenciais também via env WK_USUARIO / WK_SENHA; defaults embutidos abaixo)
  *
  * Saída: wk-export/wk-export.json (contrato compartilhado com editor/importador)
+ *
+ * TLS: pin SHA-256 via wkHttpsRequestJson (validação ligada). Sem fetch global.
  */
-
-// O WK Radar expõe HTTPS com certificado autoassinado. Sem isto, o TLS do Node
-// rejeita o handshake. O escopo é apenas este processo; os dados trafegam
-// criptografados da mesma forma.
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { wkHttpsRequestJson } from '../src/lib/wkradar/tls-pin';
 
 const BASE = 'https://wk.groupabz.com/RadarAPI';
 const TIMEOUT_MS = 20_000;
@@ -51,14 +49,17 @@ async function httpJson(
   if (opts.token) headers.Authorization = `Bearer ${opts.token}`;
   if (opts.body !== undefined) headers['Content-Type'] = 'application/json';
 
-  let res: Response;
+  let status: number;
+  let texto: string;
   try {
-    res = await fetch(url, {
-      method,
+    const resposta = await wkHttpsRequestJson(url.href, {
+      metodo: method,
       headers,
-      body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
-      signal: AbortSignal.timeout(TIMEOUT_MS),
+      corpo: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+      timeoutMs: TIMEOUT_MS,
     });
+    status = resposta.status;
+    texto = resposta.corpo;
   } catch (err) {
     const e = err as { name?: string; message?: string; cause?: { message?: string } };
     const causa = e?.name === 'TimeoutError' || e?.name === 'AbortError'
@@ -67,9 +68,8 @@ async function httpJson(
     throw new Error(`Falha de rede em ${method} ${path}: ${causa}`);
   }
 
-  const texto = await res.text();
-  if (!res.ok) {
-    throw new Error(`${method} ${path} → HTTP ${res.status}: ${texto.slice(0, 300)}`);
+  if (status < 200 || status >= 300) {
+    throw new Error(`${method} ${path} → HTTP ${status}: ${texto.slice(0, 300)}`);
   }
   try {
     return texto ? JSON.parse(texto) : null;

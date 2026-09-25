@@ -1,4 +1,58 @@
 import React from 'react';
+import { parseSafeChatLink, type SafeChatLink } from '../../lib/ia/chat-href';
+
+export { sanitizeChatHref } from '../../lib/ia/chat-href';
+
+const LINK_CLASS = 'text-blue-600 underline underline-offset-2 hover:text-blue-800 break-all';
+
+function renderSafeAnchor(key: number, link: SafeChatLink, label: string): React.ReactNode {
+  switch (link.kind) {
+    case 'https':
+      return (
+        <a
+          key={key}
+          href={'https://' + encodeURI(link.host) + encodeURI(link.path) + encodeURI(link.search) + encodeURI(link.hash)}
+          className={LINK_CLASS}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {label}
+        </a>
+      );
+    case 'http':
+      return (
+        <a
+          key={key}
+          href={'http://' + encodeURI(link.host) + encodeURI(link.path) + encodeURI(link.search) + encodeURI(link.hash)}
+          className={LINK_CLASS}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {label}
+        </a>
+      );
+    case 'mailto':
+      return (
+        <a
+          key={key}
+          href={'mailto:' + encodeURI(link.address) + encodeURI(link.query)}
+          className={LINK_CLASS}
+        >
+          {label}
+        </a>
+      );
+    case 'relative':
+      return (
+        <a key={key} href={encodeURI(link.path)} className={LINK_CLASS}>
+          {label}
+        </a>
+      );
+    default: {
+      const exhaustive: never = link;
+      return exhaustive;
+    }
+  }
+}
 
 /**
  * Lightweight markdown for IA chat bubbles (Assistant MessageBubble + Companion FAB).
@@ -8,20 +62,6 @@ import React from 'react';
  * (#…####), bullet/numbered lists (incl. `- **Title**: description` rows with
  * hanging indent) and paragraphs. Inline: **bold**, *italic*, `code`, safe links.
  */
-
-/** Safe URL for markdown links — http(s), mailto, or same-origin relative path. */
-function isSafeHref(href: string): boolean {
-  const t = href.trim();
-  if (!t) return false;
-  if (t.startsWith('/') && !t.startsWith('//')) return true;
-  if (/^mailto:[^\s]+$/i.test(t)) return true;
-  try {
-    const u = new URL(t);
-    return u.protocol === 'http:' || u.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
 
 function processInline(text: string): React.ReactNode {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g);
@@ -42,20 +82,9 @@ function processInline(text: string): React.ReactNode {
       );
     const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
     if (linkMatch) {
-      const [, label, href] = linkMatch;
-      if (isSafeHref(href)) {
-        const external = /^https?:\/\//i.test(href.trim());
-        return (
-          <a
-            key={i}
-            href={href.trim()}
-            className="text-blue-600 underline underline-offset-2 hover:text-blue-800 break-all"
-            {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-          >
-            {label}
-          </a>
-        );
-      }
+      const [, label, rawHref] = linkMatch;
+      const link = parseSafeChatLink(rawHref);
+      if (link) return renderSafeAnchor(i, link, label);
       return <span key={i}>{label}</span>;
     }
     return part;
