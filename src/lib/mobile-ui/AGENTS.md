@@ -9,6 +9,7 @@ Decidir se o pedido serve o front mobile (`/m/...`) ou o desktop atual. Desktop 
 - `device-surface.ts` — allowlist, cookie `ui`, CH, UA, tablet, `/m` home, `/m/preview` (404 em produção)
 - `preview-block.js` — rewrite de produção `/m/preview` → `/api/mobile/preview-disabled`
 - `apply-mobile-surface.ts` — usado pelo `middleware.ts` da raiz
+- Path gates: `src/lib/middleware-gates.ts` (`isAvaliacaoPagePath`, `isAuthPassthroughPath`, `/api/mobile/preview-disabled` público)
 - Fallback P0: `next.config.js` `rewrites.beforeFiles` (`/login` + cookie/CH/UA; `/m/preview` 404 em produção). Mantido de propósito depois do Edge voltar a bundlar — `ui=desktop` em `missing`; regex de telefone cobre UA que o `userAgent()` do Next classifica como desktop.
 - `ua-patterns.js` — tablet/phone regex (next.config + testes)
 - API: `src/app/api/ui-surface/route.ts` — cookie `ui`
@@ -33,7 +34,7 @@ Decidir se o pedido serve o front mobile (`/m/...`) ou o desktop atual. Desktop 
 
 ## Verification
 
-- `npx tsx --test src/lib/mobile-ui/device-surface.test.ts src/lib/mobile-ui/preview-block.test.ts src/lib/mobile-ui/middleware-contract.test.ts`
+- `npx tsx --test src/lib/mobile-ui/device-surface.test.ts src/lib/mobile-ui/preview-block.test.ts src/lib/mobile-ui/middleware-contract.test.ts src/lib/middleware-gates.test.ts`
 - UA desktop em `/login` → HTML desktop.
 - UA iPhone em `/login` → rewrite `/m/login`.
 - Cookie `ui=desktop` no iPhone → desktop.

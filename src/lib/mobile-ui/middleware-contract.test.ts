@@ -16,10 +16,12 @@ describe('root middleware contract', () => {
   });
 
   it('keeps mobile public routes and applyMobileSurface', () => {
-    assert.match(middlewareSource, /'\/api\/mobile\/preview-disabled'/);
-    assert.match(middlewareSource, /'\/m\/login'/);
     assert.match(middlewareSource, /applyMobileSurface/);
+    assert.match(middlewareSource, /isAuthPassthroughPath/);
+    assert.match(middlewareSource, /isAvaliacaoPagePath/);
     assert.match(middlewareSource, /x-abz-middleware/);
+    assert.match(middlewareSource, /Do not rewrite abzToken/);
+    assert.doesNotMatch(middlewareSource, /maxAge: 60 \* 60 \* 24/);
     assert.doesNotMatch(middlewareSource, /from '\.\/lib\/mobile-ui/);
   });
 

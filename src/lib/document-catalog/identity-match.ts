@@ -11,30 +11,67 @@ export const CATALOG_USER_SELECT =
   'id, email, first_name, last_name, name, tax_id, position, department, sector_id, phone_number';
 
 /**
- * Real columns on `gt_colaboradores`. `cargo_nome` exists only on
- * `gt_vw_colaboradores_completo` — selecting it here makes PostgREST
- * fail and the QHSE catalog returns 404 "Colaborador não encontrado".
+ * Table columns on `gt_colaboradores` only.
+ * `cargo_nome` / `empresa_nome` / `embarcacao_nome` are aliases on
+ * `gt_vw_colaboradores_completo` — selecting them on the table makes
+ * PostgREST error and `fetchColaboradorById` return null → HTTP 404
+ * "Colaborador não encontrado" on GET /api/document-catalog?colaboradorId=.
  */
 export const CATALOG_COLAB_SELECT =
   'id, nome_completo, cpf, email, telefone, user_id, cargo:gt_cargos(nome)';
 
-export function catalogColabSelectIsSafe(select: string = CATALOG_COLAB_SELECT): boolean {
-  return !/(^|[,\s])cargo_nome([,\s]|$)/i.test(select);
-}
-
-export function cargoNomeFromEmbed(
-  cargo: { nome?: string | null } | Array<{ nome?: string | null }> | null | undefined
-): string | null {
-  if (!cargo) return null;
-  const row = Array.isArray(cargo) ? cargo[0] : cargo;
-  const nome = (row?.nome || '').trim();
-  return nome || null;
-}
+const GT_COLAB_VIEW_ALIASES = [
+  'cargo_nome',
+  'empresa_nome',
+  'embarcacao_nome',
+  'centro_custo_nome',
+  'cargo_nivel',
+  'cargo_ordem',
+];
 
 export function catalogUserSelectIsSafe(select: string = CATALOG_USER_SELECT): boolean {
   return !/(^|[,\s])cpf([,\s]|$)/i.test(select)
     && !/(^|[,\s])full_name([,\s]|$)/i.test(select)
     && !/(^|[,\s])phone([,\s]|$)/i.test(select);
+}
+
+export function catalogColabSelectIsSafe(select: string = CATALOG_COLAB_SELECT): boolean {
+  return GT_COLAB_VIEW_ALIASES.every((alias) => {
+    const re = new RegExp(`(^|[,\\s])${alias}([,\\s]|$)`, 'i');
+    return !re.test(select);
+  });
+}
+
+export type CatalogColabSelectRow = {
+  id: string;
+  nome_completo?: string | null;
+  cpf?: string | null;
+  email?: string | null;
+  telefone?: string | null;
+  user_id?: string | null;
+  cargo_nome?: string | null;
+  cargo?: { nome?: string | null } | { nome?: string | null }[] | null;
+};
+
+export function flattenCatalogColabRow(row: CatalogColabSelectRow): {
+  id: string;
+  nome_completo: string | null;
+  cpf: string | null;
+  email: string | null;
+  telefone: string | null;
+  user_id: string | null;
+  cargo_nome: string | null;
+} {
+  const cargo = Array.isArray(row.cargo) ? row.cargo[0] : row.cargo;
+  return {
+    id: row.id,
+    nome_completo: row.nome_completo ?? null,
+    cpf: row.cpf ?? null,
+    email: row.email ?? null,
+    telefone: row.telefone ?? null,
+    user_id: row.user_id ?? null,
+    cargo_nome: row.cargo_nome ?? cargo?.nome ?? null,
+  };
 }
 
 export function digitsOrNull(raw: string | null | undefined): string | null {

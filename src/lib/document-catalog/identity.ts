@@ -6,7 +6,8 @@ import type { CollaboratorIdentity } from './types';
 import {
   CATALOG_COLAB_SELECT,
   CATALOG_USER_SELECT,
-  cargoNomeFromEmbed,
+  flattenCatalogColabRow,
+  type CatalogColabSelectRow,
   digitsOrNull,
   firstNonEmpty,
   nameLookupTokens,
@@ -15,7 +16,12 @@ import {
   taxIdOrFilter,
 } from './identity-match';
 
-export { CATALOG_USER_SELECT, catalogUserSelectIsSafe } from './identity-match';
+export {
+  CATALOG_USER_SELECT,
+  CATALOG_COLAB_SELECT,
+  catalogUserSelectIsSafe,
+  catalogColabSelectIsSafe,
+} from './identity-match';
 export { normalizePersonName } from './names';
 
 interface UserRow {
@@ -39,15 +45,15 @@ interface ColabRow {
   telefone?: string | null;
   user_id?: string | null;
   cargo_nome?: string | null;
-  cargo?: { nome?: string | null } | Array<{ nome?: string | null }> | null;
 }
 
-function normalizeColabRow(row: ColabRow | null | undefined): ColabRow | null {
-  if (!row) return null;
-  return {
-    ...row,
-    cargo_nome: cargoNomeFromEmbed(row.cargo) || row.cargo_nome || null,
-  };
+function toColabRow(row: CatalogColabSelectRow | null | undefined): ColabRow | null {
+  if (!row?.id) return null;
+  return flattenCatalogColabRow(row);
+}
+
+function toColabRows(rows: CatalogColabSelectRow[] | null | undefined): ColabRow[] {
+  return (rows || []).map(flattenCatalogColabRow);
 }
 
 function userDisplayName(user: UserRow): string | null {
@@ -107,7 +113,7 @@ async function findColaboradorByUserId(userId: string): Promise<ColabRow | null>
     console.error('[document-catalog] findColaboradorByUserId:', error.message);
     return null;
   }
-  return normalizeColabRow(data?.[0]);
+  return toColabRow((data?.[0] as CatalogColabSelectRow | undefined) || null);
 }
 
 async function findColaboradorByPhone(phone: string | null | undefined): Promise<ColabRow | null> {
@@ -124,8 +130,10 @@ async function findColaboradorByPhone(phone: string | null | undefined): Promise
     console.error('[document-catalog] findColaboradorByPhone:', error.message);
     return null;
   }
-  const matches = (data || []).filter((row) => phonesMatch(row.telefone, phone));
-  return matches.length === 1 ? normalizeColabRow(matches[0]) : null;
+  const matches = toColabRows((data || []) as CatalogColabSelectRow[]).filter((row) =>
+    phonesMatch(row.telefone, phone)
+  );
+  return matches.length === 1 ? matches[0] : null;
 }
 
 async function findColaboradorByUniqueName(fullName: string | null | undefined): Promise<ColabRow | null> {
@@ -142,7 +150,11 @@ async function findColaboradorByUniqueName(fullName: string | null | undefined):
     console.error('[document-catalog] findColaboradorByUniqueName:', error.message);
     return null;
   }
-  return normalizeColabRow(pickUniqueNameMatch(data || [], (row) => row.nome_completo, fullName));
+  return pickUniqueNameMatch(
+    toColabRows((data || []) as CatalogColabSelectRow[]),
+    (row) => row.nome_completo,
+    fullName
+  );
 }
 
 async function findColaboradorByCpfOrEmailOrPhone(
@@ -160,7 +172,7 @@ async function findColaboradorByCpfOrEmailOrPhone(
         .eq('id', hit.id)
         .maybeSingle();
       if (error) console.error('[document-catalog] colab by cpf id:', error.message);
-      if (data) return normalizeColabRow(data);
+      if (data) return toColabRow(data as CatalogColabSelectRow);
     }
   }
   if (emailLower) {
@@ -171,10 +183,11 @@ async function findColaboradorByCpfOrEmailOrPhone(
       .ilike('email', emailLower)
       .limit(2);
     if (error) console.error('[document-catalog] colab by email:', error.message);
-    if (data?.length === 1) return normalizeColabRow(data[0]);
-    if ((data || []).length > 1 && fullName) {
-      const named = pickUniqueNameMatch(data || [], (row) => row.nome_completo, fullName);
-      if (named) return normalizeColabRow(named);
+    const emailRows = toColabRows((data || []) as CatalogColabSelectRow[]);
+    if (emailRows.length === 1) return emailRows[0];
+    if (emailRows.length > 1 && fullName) {
+      const named = pickUniqueNameMatch(emailRows, (row) => row.nome_completo, fullName);
+      if (named) return named;
     }
   }
   const byPhone = await findColaboradorByPhone(phone);
@@ -268,7 +281,7 @@ async function fetchColaboradorById(colaboradorId: string): Promise<ColabRow | n
     console.error('[document-catalog] gt_colaboradores by id:', error.message);
     return null;
   }
-  return normalizeColabRow(data);
+  return toColabRow(data as CatalogColabSelectRow | null);
 }
 
 export async function resolveCollaboratorIdentity(opts: {

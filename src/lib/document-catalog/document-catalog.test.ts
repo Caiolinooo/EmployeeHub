@@ -13,8 +13,8 @@ import {
   CATALOG_USER_SELECT,
   catalogColabSelectIsSafe,
   catalogUserSelectIsSafe,
-  cargoNomeFromEmbed,
   digitsOrNull,
+  flattenCatalogColabRow,
   phonesMatch,
   pickUniqueNameMatch,
   taxIdOrFilter,
@@ -56,14 +56,38 @@ describe('document-catalog identity', () => {
     assert.equal(/\bcpf\b/.test(CATALOG_USER_SELECT), false);
   });
 
-  it('never selects cargo_nome on gt_colaboradores (column is view-only)', () => {
+  it('never selects view aliases like cargo_nome on gt_colaboradores', () => {
     assert.equal(catalogColabSelectIsSafe(CATALOG_COLAB_SELECT), true);
-    assert.equal(catalogColabSelectIsSafe('id, nome_completo, cargo_nome'), false);
+    assert.equal(
+      catalogColabSelectIsSafe('id, nome_completo, cpf, email, telefone, user_id, cargo_nome'),
+      false
+    );
+    assert.equal(catalogColabSelectIsSafe('id, empresa_nome'), false);
+    assert.equal(catalogColabSelectIsSafe('id, embarcacao_nome'), false);
+    assert.equal(catalogColabSelectIsSafe('id, centro_custo_nome'), false);
+    assert.equal(catalogColabSelectIsSafe('id, cargo_nivel'), false);
+    assert.equal(catalogColabSelectIsSafe('id, cargo_ordem'), false);
     assert.ok(CATALOG_COLAB_SELECT.includes('cargo:gt_cargos(nome)'));
     assert.equal(/\bcargo_nome\b/.test(CATALOG_COLAB_SELECT), false);
-    assert.equal(cargoNomeFromEmbed({ nome: ' Taifeiro ' }), 'Taifeiro');
-    assert.equal(cargoNomeFromEmbed([{ nome: 'Oficial' }]), 'Oficial');
-    assert.equal(cargoNomeFromEmbed(null), null);
+  });
+
+  it('flattens cargo:gt_cargos(nome) into cargo_nome', () => {
+    const flat = flattenCatalogColabRow({
+      id: 'c1',
+      nome_completo: 'Ana Souza',
+      cpf: '12345678909',
+      email: 'ana@example.com',
+      telefone: '22999487751',
+      user_id: 'u1',
+      cargo: { nome: 'Taifeiro' },
+    });
+    assert.equal(flat.cargo_nome, 'Taifeiro');
+    assert.equal(flat.id, 'c1');
+    const fromArray = flattenCatalogColabRow({
+      id: 'c2',
+      cargo: [{ nome: 'Marinheiro' }],
+    });
+    assert.equal(fromArray.cargo_nome, 'Marinheiro');
   });
 
   it('matches tax_id in digits and masked form', () => {
