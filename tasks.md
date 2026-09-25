@@ -19,6 +19,10 @@ Sem merge, sem promote, sem Vercel Production, sem PR #95. Supabase real = read-
 - [x] Teste `src/lib/middleware-gates.test.ts` no PR #96
 - [x] Login não chama `GET /api/auth/ensure-admin` (401 gated; catch só logava — login não lia a resposta)
 - [x] `test-user-management` parou de pedir JWT em `/api/admin/ensure-admin`
+- [x] Fechou mint JWT / PII debug ainda públicos: `test-token` (ADMIN), `admin/generate-token` (`CRON_SECRET`), `test-supabase-users` + `debug-supabase-auth` (ADMIN); `fix-token` sem mint ADMIN em token vazio/inválido; `fix-auth` com `verifyToken`; `test-users` GET só leitura; `execute-sql` sem CREATE SECURITY DEFINER
+- [x] QHSE “Colaborador não encontrado”: `CATALOG_COLAB_SELECT` pedia `cargo_nome` em `gt_colaboradores` (alias da view) — feito em #98 (`51803cf9`) no `portal`
+- [ ] Inventário aberto em prod: `GET /api/admin/role-permissions` devolve 200 sem sessão. Callers sem `Authorization`: `src/contexts/SupabaseAuthContext.tsx` (mount global; alimenta `hasAccess`), `UserEditor.tsx`, `RolePermissionsEditor.tsx` (+ PUT no mesmo fetch nu). Gate JWT ADMIN quebraria o desktop. Sem gate neste PR.
+- [ ] Follow-up (não agora): middleware de `/avaliacao*` só testa se o cookie `abzToken`/`token` existe. Sem `verifyToken` no edge. Cookie inválido passa a página. Matcher já exclui `/api`.
 - [x] QHSE “Colaborador não encontrado”: `CATALOG_COLAB_SELECT` pedia `cargo_nome` em `gt_colaboradores` (alias da view) — feito neste PR #98
 
 ## Middleware ausente no bundle de produção (2026-09-25)
