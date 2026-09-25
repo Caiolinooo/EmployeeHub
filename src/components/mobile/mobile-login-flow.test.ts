@@ -1,5 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import {
   assertEmail,
   formatQuickRegisterPhone,
@@ -77,5 +79,20 @@ describe('quick register helpers', () => {
       t,
     );
     assert.equal(ok, null);
+  });
+});
+
+describe('login pages do not call gated ensure-admin', () => {
+  it('desktop and mobile login never GET /api/auth/ensure-admin', () => {
+    const files = [
+      'src/app/login/page.tsx',
+      'src/components/mobile/MobileLoginForm.tsx',
+      'src/components/mobile/mobile-login-flow.ts',
+      'src/app/(mobile)/m/login/page.tsx',
+    ];
+    for (const rel of files) {
+      const source = fs.readFileSync(path.join(process.cwd(), rel), 'utf8');
+      assert.doesNotMatch(source, /ensure-admin|ensureAdminExists/, rel);
+    }
   });
 });

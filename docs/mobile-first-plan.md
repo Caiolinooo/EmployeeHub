@@ -385,9 +385,9 @@ Ordem (primeira que decide):
 
 ### 11.4 Middleware
 
-`src/middleware.ts` mantém o fluxo atual (públicas, estáticos, auth de `/avaliacao`, locale). Redirects não são reescritos.
+`middleware.ts` na raiz (Next 15.5 procura ao lado de `pages/`) mantém o fluxo atual (públicas, estáticos, auth de `/avaliacao`, locale). Redirects não são reescritos. `/api/mobile/preview-disabled` continua nas `publicRoutes`.
 
-Fallback de roteamento (P0 `/login`): `next.config.js` `rewrites.beforeFiles` com `has` de cookie/`Sec-CH-UA-Mobile`/UA `Mobile` (exceto iPad/Tablet). Cobre `next dev` quando o Edge middleware não entra no bundle. Pedido desktop não casa essas regras.
+Fallback de roteamento (P0 `/login`): `next.config.js` `rewrites.beforeFiles` com `has` de cookie/`Sec-CH-UA-Mobile`/UA `Mobile` (exceto iPad/Tablet). Mantido mesmo com o Edge de volta no bundle (`ui=desktop` em `missing`; regex vs `userAgent()`). Pedido desktop não casa essas regras.
 
 Só `NextResponse.next()` passa por `applyMobileSurface`:
 
@@ -435,8 +435,8 @@ Aplicadas **só** em `src/components/mobile/**`:
 
 | Arquivo | Motivo |
 |---------|--------|
-| `src/middleware.ts` | Rewrite + preserve redirects atuais. |
-| `next.config.js` | `rewrites.beforeFiles` do P0 `/login` (UA/CH/cookie) se o middleware Edge não compilou. Regras guacamole/poliweb iguais em `afterFiles`. |
+| `middleware.ts` (raiz) | Rewrite + preserve redirects atuais. `src/middleware.ts` é ignorado enquanto existir `pages/`. |
+| `next.config.js` | `rewrites.beforeFiles` do P0 `/login` (UA/CH/cookie) como fallback. Regras guacamole/poliweb iguais em `afterFiles`. |
 | `src/app/login/layout.tsx` | **Não criar.** Um layout extra em `/login` reordena os `<link>` CSS e `:root` ganha de `next/font` (desktop troca de fonte). |
 | `src/components/ClientProviders.tsx` | **Revertido.** Sem toque. |
 | `src/contexts/CompanionSessionContext.tsx` | **Revertido.** P0: login é rota auth (FAB já some); preview sem sessão. |

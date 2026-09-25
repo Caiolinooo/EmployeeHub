@@ -140,20 +140,6 @@ export default function Login() {
     }
   }, [isAuthenticated, passwordExpired, router, searchParams, isWebAuthnAvailable, hasRegisteredPasskey]);
 
-  // Garantir que o usuário administrador exista
-  useEffect(() => {
-    const ensureAdmin = async () => {
-      try {
-        const data = await fetchWrapper.get('/api/auth/ensure-admin');
-        console.log('Verificação de admin:', data);
-      } catch (error) {
-        console.error('Erro ao verificar admin:', error);
-      }
-    };
-
-    ensureAdmin();
-  }, []);
-
   // Listener para evento de email não verificado
   useEffect(() => {
     const handleEmailNotVerified = (event: CustomEvent) => {

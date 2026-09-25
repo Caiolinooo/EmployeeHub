@@ -76,6 +76,7 @@ API routes for crew management (colaboradores, documentos, ASO, embarques, tipos
 ### Cadastro de colaborador (`gt_colaboradores`)
 
 - Fonte única: tabela `gt_colaboradores` via `POST|PUT|DELETE /api/gestao-tripulantes/colaboradores`. Sem store paralelo no DP.
+- **Tabela ≠ view**: `gt_vw_colaboradores_completo` adiciona aliases (`cargo_nome`, `empresa_nome`, `empresa_cnpj`, `embarcacao_nome`, `centro_custo_nome`, `cargo_nivel`, `cargo_ordem`, `user_email`, `qtd_docs_*`, … — `GT_COLAB_VIEW_ALIASES`). Select/update na **tabela** usa FK + embed (`cargo:gt_cargos(nome)`) e flatten. `findFullColaboradorByCpf` (`cpf-lookup.ts`) usa `FULL_COLAB_BY_CPF_SELECT` + `flattenFullColaboradorRow`. Export GT (`export-service.ts`) lê `empresa_id`/`cargo_id` e resolve nomes via lookup. `updateColaborador` faz `stripGtColabViewAliases` antes do UPDATE. Guard: `npx tsx --test src/lib/gestao-tripulantes/gt-colab-table-select.test.ts`.
 - Payload compartilhado: `montarPayloadCadastro` / `validarCadastroMinimo` (`colaborador-cadastro.ts`). Whitelist de colunas editáveis; ignora PK/sistema/`mio_*`/`esocial_*`/`deleted_at`.
 - Auth mutação: `podeMutarCadastroColaborador` = mesmo gate do desligamento (ADMIN/MANAGER/SUPERADMIN **ou** setor DP/RH + módulo GT). GET autenticado continua aberto a quem já lê a lista.
 - Create: CPF Módulo 11 (`isValidCpf` + `normalizeCpf`); 409 se CPF já existe; `origem=manual`; `matricula_esocial` vazio copia `matricula`. Enrich `mio_cache` só em background (nunca live MIO).

@@ -16,7 +16,6 @@ import { useI18n } from '@/contexts/I18nContext';
 import { useSiteConfig } from '@/contexts/SiteConfigContext';
 import {
   assertEmail,
-  ensureAdminExists,
   loginWithWebAuthn,
   mapInitiateFailure,
   mapVerifyFailure,
@@ -86,10 +85,6 @@ export default function MobileLoginForm() {
       setIsWebAuthnAvailable(true);
       setHasRegisteredPasskey(localStorage.getItem('hasPasskey') === 'true');
     }
-  }, []);
-
-  useEffect(() => {
-    ensureAdminExists().catch(() => {});
   }, []);
 
   useEffect(() => {

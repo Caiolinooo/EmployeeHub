@@ -189,6 +189,3 @@ export async function loginWithWebAuthn(email: string | undefined): Promise<{
   return { success: false, error: verificationResult.error || 'verify' };
 }
 
-export async function ensureAdminExists(): Promise<void> {
-  await fetchWrapper.get('/api/auth/ensure-admin');
-}

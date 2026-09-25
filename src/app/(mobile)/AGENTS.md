@@ -19,7 +19,7 @@ Segmento interno do front mobile. URL pública não muda no rewrite de `/login`.
 - Pedido `/m` ou `/m/login` com UA desktop: redirect para `/` ou `/login` quando o Edge bundle existe. Sem Edge, a página mobile renderiza — não quebra `/login` desktop.
 - `/m/preview` não redireciona (rota direta). Em produção: rewrite `beforeFiles` → HTTP 404 (`/api/mobile/preview-disabled`).
 - `/m/*` sem página: `m/[...slug]/route.ts` tira o prefixo `/m` e redireciona. Sem Edge e sem catch-all, caía no 404 mobile.
-- Auth/APIs iguais ao desktop.
+- Auth/APIs iguais ao desktop. Login (`m/login`) não chama `GET /api/auth/ensure-admin`.
 
 ## Work Guidance
 

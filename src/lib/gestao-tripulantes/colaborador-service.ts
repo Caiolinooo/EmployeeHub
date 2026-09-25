@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import type { GTColaborador } from '@/types/gestao-tripulantes';
 import { persistirCamposEscala } from '@/lib/gestao-tripulantes/regime-escala';
+import { stripGtColabViewAliases } from '@/lib/gestao-tripulantes/gt-colab-view-aliases';
 
 export interface ColaboradorFilters {
   search?: string;
@@ -238,10 +239,13 @@ export async function updateColaborador(
   try {
     const supabase = supabaseAdmin;
 
-    const updateData = { ...data, updated_at: new Date().toISOString() };
-    delete (updateData as any).id;
-    delete (updateData as any).created_at;
-    delete (updateData as any).deleted_at;
+    const updateData: Record<string, unknown> = stripGtColabViewAliases({
+      ...(data as Record<string, unknown>),
+      updated_at: new Date().toISOString(),
+    });
+    delete updateData.id;
+    delete updateData.created_at;
+    delete updateData.deleted_at;
 
     if ('regime_trabalho' in updateData) {
       const escalaPatch = updateData as {

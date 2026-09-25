@@ -12,6 +12,7 @@ const UI_VARY = 'User-Agent, Sec-CH-UA-Mobile, Cookie';
 /**
  * Aplica rewrite mobile só quando a decisão pede.
  * Redirects e o `next()` desktop saem intactos (sem headers extras).
+ * Usado pelo `middleware.ts` da raiz (Next 15.5 procura ao lado de `pages/`).
  */
 export function applyMobileSurface(request: NextRequest, response: NextResponse): NextResponse {
   if (isRedirect(response)) return response;

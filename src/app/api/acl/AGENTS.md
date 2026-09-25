@@ -14,6 +14,7 @@ Seed e listagem de `acl_permissions` / `role_acl_permissions`.
 
 - Seed só insere o que falta. Nunca dropar GT / e-social / academy / social já persistidos.
 - Resources e actions novas vêm do catálogo vivo, não de array morto nesta rota.
+- `GET|POST /api/acl/init` exigem JWT ADMIN (`requirePermission(..., 'admin')`). Sem token → 401.
 
 - Grant ACL no UserEditor persiste em `user_acl_permissions`. O alvo lê os nomes em `GET /api/user/effective-permissions` (`acl_permission_names` + `effective_features`). `hasFeature` não depende só do JSONB.
 

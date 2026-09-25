@@ -21,7 +21,7 @@ UI só do front mobile. Desktop não importa estes arquivos.
 ## Local Contracts
 
 - Sem mudança visual no desktop. Sem `import '*.css'` e sem segundo `next/font`.
-- Login mobile: mesmas APIs e mesmos destinos (`/dashboard` ou `/set-password`). Sem bypass commitado.
+- Login mobile: mesmas APIs e mesmos destinos (`/dashboard` ou `/set-password`). Sem bypass commitado. **Não** chamar `GET /api/auth/ensure-admin` no mount (`MobileLoginForm` / `mobile-login-flow`) — a rota fica gated (`CRON_SECRET`). Desktop `/login` igual. Sem mudança visual.
 - Home `/m`: atalhos reais. Sem copy de dev e sem dados fake.
 - `/m/preview`: vitrine de kit. Em produção, rewrite `beforeFiles` → `GET /api/mobile/preview-disabled` (HTTP 404). `notFound()` no page é reserva (layout já pode ter feito stream).
 - Companion: entrada no Mais (D7 — sem FAB cobrindo nav/atalhos). Login sem FAB.
