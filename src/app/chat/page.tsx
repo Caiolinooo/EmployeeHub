@@ -1123,6 +1123,8 @@ export default function ChatPage() {
               {selectedServer && (isAdmin || selectedServer.created_by === user?.id) && (
                 <>
                   <button
+                    type="button"
+                    data-confirm-trigger="server"
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowServerSettingsModal(true);
@@ -1154,33 +1156,40 @@ export default function ChatPage() {
                 {channels
                   .filter(c => c.type !== 'voice')
                   .map(channel => (
-                    <button
+                    <div
                       key={channel.id}
-                      onClick={() => {
-                        setSelectedChannel(channel);
-                        loadMessages(channel.id);
-                        setShowMobileSidebar(false); // Close on selection
-                      }}
                       className={`w-full flex items-center px-2.5 py-1.5 rounded-md mx-0 group transition-all duration-200 ${selectedChannel?.id === channel.id
                         ? 'bg-indigo-500/10 text-white font-medium shadow-[inset_2px_0_0_0_#6366f1]'
                         : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
                         }`}
                     >
-                      <FiHash className={`w-4 h-4 mr-2 ${selectedChannel?.id === channel.id ? 'text-indigo-400' : 'text-zinc-500'}`} />
-                      <span className="truncate flex-1 text-left text-sm">{channel.name}</span>
-                      {channel.unreadCount > 0 && (
-                        <div className="bg-red-500 text-white text-[10px] px-1.5 h-4 flex items-center justify-center rounded-full mr-1 font-bold shadow-md">{channel.unreadCount}</div>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedChannel(channel);
+                          loadMessages(channel.id);
+                          setShowMobileSidebar(false); // Close on selection
+                        }}
+                        className="flex items-center flex-1 min-w-0 text-left bg-transparent border-0 p-0 text-inherit"
+                      >
+                        <FiHash className={`w-4 h-4 mr-2 ${selectedChannel?.id === channel.id ? 'text-indigo-400' : 'text-zinc-500'}`} />
+                        <span className="truncate flex-1 text-left text-sm">{channel.name}</span>
+                        {channel.unreadCount > 0 && (
+                          <div className="bg-red-500 text-white text-[10px] px-1.5 h-4 flex items-center justify-center rounded-full mr-1 font-bold shadow-md">{channel.unreadCount}</div>
+                        )}
+                      </button>
                       {(isAdmin || isManager) && (
-                        <div
+                        <button
+                          type="button"
+                          data-confirm-trigger="channel"
                           onClick={(e) => deleteChannel(channel.id, e)}
                           className="p-1 text-zinc-500 hover:text-red-400 rounded opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all"
                           title="Excluir Canal"
                         >
                           <FiTrash2 className="w-3.5 h-3.5" />
-                        </div>
+                        </button>
                       )}
-                    </button>
+                    </div>
                   ))}
               </div>
             </div>
@@ -1255,29 +1264,36 @@ export default function ChatPage() {
                 {channels
                   .filter(c => c.type === 'voice')
                   .map(channel => (
-                    <button
+                    <div
                       key={channel.id}
-                      onClick={() => {
-                        setSelectedChannel(channel);
-                        setShowMobileSidebar(false);
-                      }}
                       className={`w-full flex items-center px-2.5 py-1.5 rounded-md mx-0 group transition-all duration-200 ${selectedChannel?.id === channel.id
                         ? 'bg-indigo-500/10 text-white font-medium shadow-[inset_2px_0_0_0_#6366f1]'
                         : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
                         }`}
                     >
-                      <FiVolume2 className={`w-4 h-4 mr-2 ${selectedChannel?.id === channel.id ? 'text-indigo-400' : 'text-zinc-500'}`} />
-                      <span className="truncate flex-1 text-left text-sm">{channel.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedChannel(channel);
+                          setShowMobileSidebar(false);
+                        }}
+                        className="flex items-center flex-1 min-w-0 text-left bg-transparent border-0 p-0 text-inherit"
+                      >
+                        <FiVolume2 className={`w-4 h-4 mr-2 ${selectedChannel?.id === channel.id ? 'text-indigo-400' : 'text-zinc-500'}`} />
+                        <span className="truncate flex-1 text-left text-sm">{channel.name}</span>
+                      </button>
                       {(isAdmin || isManager) && (
-                        <div
+                        <button
+                          type="button"
+                          data-confirm-trigger="channel"
                           onClick={(e) => deleteChannel(channel.id, e)}
                           className="p-1 text-zinc-500 hover:text-red-400 rounded opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all"
                           title="Excluir Canal"
                         >
                           <FiTrash2 className="w-3.5 h-3.5" />
-                        </div>
+                        </button>
                       )}
-                    </button>
+                    </div>
                   ))}
               </div>
             </div>
@@ -1757,6 +1773,8 @@ export default function ChatPage() {
           server={selectedServer}
           onUpdate={handleUpdateServer}
           onDelete={(id) => {
+            const gear = document.querySelector('button[title="Configurações do Servidor"]');
+            if (gear instanceof HTMLElement) gear.focus();
             setShowServerSettingsModal(false);
             setConfirmationModal({
               isOpen: true,

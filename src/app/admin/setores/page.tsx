@@ -242,6 +242,8 @@ export default function SectorsPage() {
                                             <FiEdit2 size={18} />
                                         </button>
                                         <button
+                                            type="button"
+                                            data-confirm-trigger="sector"
                                             onClick={() => setDeleteId(sector.id)}
                                             className="text-gray-400 hover:text-red-500 transition-colors"
                                             title="Excluir"
