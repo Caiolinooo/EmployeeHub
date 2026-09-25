@@ -10,8 +10,26 @@ import { namesCorroborate } from '@/lib/employee-hub/portal-user-match';
 export const CATALOG_USER_SELECT =
   'id, email, first_name, last_name, name, tax_id, position, department, sector_id, phone_number';
 
+/**
+ * Real columns on `gt_colaboradores`. `cargo_nome` exists only on
+ * `gt_vw_colaboradores_completo` — selecting it here makes PostgREST
+ * fail and the QHSE catalog returns 404 "Colaborador não encontrado".
+ */
 export const CATALOG_COLAB_SELECT =
-  'id, nome_completo, cpf, email, telefone, user_id, cargo_nome';
+  'id, nome_completo, cpf, email, telefone, user_id, cargo:gt_cargos(nome)';
+
+export function catalogColabSelectIsSafe(select: string = CATALOG_COLAB_SELECT): boolean {
+  return !/(^|[,\s])cargo_nome([,\s]|$)/i.test(select);
+}
+
+export function cargoNomeFromEmbed(
+  cargo: { nome?: string | null } | Array<{ nome?: string | null }> | null | undefined
+): string | null {
+  if (!cargo) return null;
+  const row = Array.isArray(cargo) ? cargo[0] : cargo;
+  const nome = (row?.nome || '').trim();
+  return nome || null;
+}
 
 export function catalogUserSelectIsSafe(select: string = CATALOG_USER_SELECT): boolean {
   return !/(^|[,\s])cpf([,\s]|$)/i.test(select)

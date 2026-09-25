@@ -9,8 +9,11 @@ import {
 } from './qhse';
 import { normalizePersonName } from './names';
 import {
+  CATALOG_COLAB_SELECT,
   CATALOG_USER_SELECT,
+  catalogColabSelectIsSafe,
   catalogUserSelectIsSafe,
+  cargoNomeFromEmbed,
   digitsOrNull,
   phonesMatch,
   pickUniqueNameMatch,
@@ -51,6 +54,16 @@ describe('document-catalog identity', () => {
     assert.ok(CATALOG_USER_SELECT.includes('tax_id'));
     assert.ok(CATALOG_USER_SELECT.includes('phone_number'));
     assert.equal(/\bcpf\b/.test(CATALOG_USER_SELECT), false);
+  });
+
+  it('never selects cargo_nome on gt_colaboradores (column is view-only)', () => {
+    assert.equal(catalogColabSelectIsSafe(CATALOG_COLAB_SELECT), true);
+    assert.equal(catalogColabSelectIsSafe('id, nome_completo, cargo_nome'), false);
+    assert.ok(CATALOG_COLAB_SELECT.includes('cargo:gt_cargos(nome)'));
+    assert.equal(/\bcargo_nome\b/.test(CATALOG_COLAB_SELECT), false);
+    assert.equal(cargoNomeFromEmbed({ nome: ' Taifeiro ' }), 'Taifeiro');
+    assert.equal(cargoNomeFromEmbed([{ nome: 'Oficial' }]), 'Oficial');
+    assert.equal(cargoNomeFromEmbed(null), null);
   });
 
   it('matches tax_id in digits and masked form', () => {
