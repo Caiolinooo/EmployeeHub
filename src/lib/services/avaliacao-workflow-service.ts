@@ -818,7 +818,7 @@ export class AvaliacaoWorkflowService {
       data_fim: string;
     }
   ): Promise<string> {
-    console.log(`Abrindo ciclo anual ${ano}`, dados);
+    console.log('Abrindo ciclo anual %s', ano, dados);
     return `ciclo-${ano}-${Date.now()}`;
   }
 
@@ -833,7 +833,7 @@ export class AvaliacaoWorkflowService {
       departamento?: string;
     }
   ): Promise<any> {
-    console.log(`Gerando relatorio para ciclo ${cicloId}`, filtros);
+    console.log('Gerando relatorio para ciclo %s', cicloId, filtros);
     return {
       total: 0,
       concluidas: 0,

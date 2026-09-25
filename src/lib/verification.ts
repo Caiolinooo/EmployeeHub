@@ -29,7 +29,7 @@ export async function sendVerificationCode(
     const { code: verificationCode, expires: verificationCodeExpires } = registerCode(identifier, method);
 
     // Registrar o código no console para facilitar o desenvolvimento
-    console.log(`[VERIFICATION] Código para ${identifier} via ${method}: ${verificationCode}`);
+    console.log('[VERIFICATION] Código gerado para %s via %s (código redigido)', identifier, method);
     console.log(`[VERIFICATION] Expira em: ${verificationCodeExpires.toISOString()}`);
     console.log(`[VERIFICATION] Acesse http://localhost:3000/debug/codes para ver todos os códigos`);
 
@@ -61,7 +61,7 @@ export async function sendVerificationCode(
 
     // Se o envio falhou, retornar erro
     if (!sendResult.success) {
-      console.error(`Falha ao enviar código por ${method}:`, sendResult.message);
+      console.error('Falha ao enviar código por %s:', method, sendResult.message);
       return {
         success: false,
         message: `Erro ao enviar código de verificação por ${method === 'email' ? 'email' : 'SMS'}: ${sendResult.message}`

@@ -49,7 +49,7 @@ export async function POST(request: Request) {
               .download(fileName);
 
             if (error) {
-              console.error(`Erro ao baixar anexo ${fileName}:`, error);
+              console.error('Erro ao baixar anexo %s:', fileName, error);
               continue;
             }
 

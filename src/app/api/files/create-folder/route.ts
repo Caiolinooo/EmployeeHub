@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { isAdminFromRequest } from '@/lib/auth';
+import { resolveInside } from '@/lib/path-safe';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,25 +31,37 @@ export async function POST(request: NextRequest) {
 
     console.log('Criando pasta:', { folderPath, folderName });
 
-    // Normalizar o caminho para evitar ataques de path traversal
-    const normalizedPath = path.normalize(folderPath).replace(/^(\.\.(\/|\\|$))+/, '');
-
-    // Verificar se o caminho é relativo à pasta public
-    let requestedPath = normalizedPath;
-    if (!normalizedPath.startsWith('public/') && !normalizedPath.startsWith('public\\')) {
-      // Se não começar com public/, assumir que é relativo à pasta public
-      requestedPath = path.join('public', normalizedPath);
+    if (typeof folderPath !== 'string' || typeof folderName !== 'string') {
+      return NextResponse.json(
+        { success: false, error: 'Caminho da pasta e nome da pasta são obrigatórios' },
+        { status: 400 }
+      );
     }
 
-    // Normalizar o nome da pasta
-    const normalizedFolderName = folderName.replace(/[<>:"/\\|?*]/g, '_');
+    const publicBase = path.resolve(process.cwd(), 'public');
+    const relativeInput = folderPath.replace(/\\/g, '/').replace(/^(\.\/)+/, '').replace(/^public\//, '');
+    const parent = resolveInside(publicBase, relativeInput);
+    if (!parent.ok) {
+      return NextResponse.json(
+        { success: false, error: parent.error },
+        { status: 400 }
+      );
+    }
 
-    // Caminho completo da nova pasta
-    const newFolderPath = path.join(requestedPath, normalizedFolderName);
+    const child = resolveInside(parent.resolved, folderName, { asName: true });
+    if (!child.ok) {
+      return NextResponse.json(
+        { success: false, error: child.error },
+        { status: 400 }
+      );
+    }
 
-    console.log('Caminho da nova pasta:', newFolderPath);
+    const requestedPath = parent.resolved;
+    const newFolderPath = child.resolved;
+    const responsePath = path.relative(process.cwd(), newFolderPath);
 
-    // Verificar se a pasta já existe
+    console.log('Caminho da nova pasta:', responsePath);
+
     if (fs.existsSync(newFolderPath)) {
       return NextResponse.json(
         { success: false, error: 'A pasta já existe' },
@@ -56,7 +69,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar se o diretório pai existe
     if (!fs.existsSync(requestedPath)) {
       return NextResponse.json(
         { success: false, error: 'Diretório pai não encontrado' },
@@ -64,13 +76,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Criar a pasta
     fs.mkdirSync(newFolderPath, { recursive: true });
 
     return NextResponse.json({
       success: true,
       message: 'Pasta criada com sucesso',
-      path: newFolderPath
+      path: responsePath
     });
   } catch (error) {
     console.error('Erro ao criar pasta:', error);

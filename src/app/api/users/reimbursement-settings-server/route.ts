@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     // Atualizar configurações do usuário
     try {
       const settings = { enabled, recipients };
-      console.log(`Atualizando configurações para o usuário ${userIdToUse}:`, settings);
+      console.log('Atualizando configurações para o usuário %s:', userIdToUse, settings);
 
       try {
         const { data, error } = await supabaseAdmin
