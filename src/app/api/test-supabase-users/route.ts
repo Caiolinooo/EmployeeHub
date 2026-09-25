@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { requirePermission } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +10,11 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || '';
 
 export async function GET(request: NextRequest) {
   try {
+    const { error: authError } = await requirePermission(request, 'admin');
+    if (authError) {
+      return authError;
+    }
+
     console.log('Teste de conexão com Supabase iniciado');
     console.log('URL do Supabase:', supabaseUrl);
     console.log('Chave de serviço presente:', supabaseServiceKey ? 'Sim' : 'Não');
