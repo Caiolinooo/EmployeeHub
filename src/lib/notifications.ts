@@ -1,4 +1,5 @@
 import { sendEmail } from './email';
+import { htmlToPlainText } from './html-to-plain-text';
 import { supabase } from './supabase';
 import {
   accessApprovalTemplate,
@@ -137,7 +138,7 @@ export async function sendCustomEmail(
     console.log(`Assunto: ${subject}`);
 
     // Preparar o conteúdo do email
-    const text = htmlContent.replace(/<[^>]*>/g, ''); // Versão texto simples removendo tags HTML
+    const text = htmlToPlainText(htmlContent);
 
     console.log('Opções de email configuradas, chamando função de envio...');
 

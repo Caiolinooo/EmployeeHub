@@ -24,6 +24,21 @@ import { findColaboradorByCpf, getColaboradorCpfNormalized } from '@/lib/gestao-
 import { calcularStatusValidacaoPorValidade } from '@/lib/gestao-tripulantes/documento-integrity';
 import type { TipoDocumento } from '@/types/gestao-tripulantes';
 import type { OCRExtractResult, OCRTipoDocumento } from '@/types/ocr';
+import {
+  CLINICA_OCR_RE,
+  CNPJ_OCR_RE,
+  crmComUfRe,
+  crmSemUfRe,
+  MEDICO_NOME_RE,
+  MEDICO_PREFIXO_INICIO_RE,
+  MEDICO_PREFIXO_MEIO_RE,
+  extrairNumeroDocumentoDoTexto,
+  isTabelaHeaderLinha,
+  stripCrmPrefix,
+  tokenValidoComoNumeroDocumento,
+} from './ocr-linear';
+
+export { extrairNumeroDocumentoDoTexto, tokenValidoComoNumeroDocumento } from './ocr-linear';
 
 export type { OCRExtractResult };
 
@@ -103,84 +118,7 @@ function extrairDataDoTexto(texto: string): string | null {
 // FALLBACK para documentos sem numeração intrínseca.
 // ---------------------------------------------------------------------------
 
-/** Tokens que NÃO podem ser tratados como número próprio do documento. */
-function tokenValidoComoNumeroDocumento(raw: string): string | null {
-  const token = (raw || '').trim().replace(/\s+/g, '').toUpperCase();
-  if (!token) return null;
-  if (token.length < 4 || token.length > 30) return null;
-  if (!/\d/.test(token)) return null; // precisa ter ao menos um dígito
-  if (/^\d{11}$/.test(token)) return null; // parece CPF
-  if (/^\d{14}$/.test(token)) return null; // parece CNPJ
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(token)) return null; // data
-  if (token.includes('@@') || token.startsWith('HTTP')) return null;
-  return token;
-}
-
-/**
- * Extrai o número próprio impresso no documento a partir do texto OCR,
- * conforme o tipo de documento:
- *  - aso: "ASO nº ...", "Nº do exame/laudo" (CRM/CNPJ nunca são o nº do doc)
- *  - passaporte: campo "Passport No"/"Nº do passaporte", formato letras+números
- *  - certificado/treinamento: "Certificado nº ...", "NR-XX ..."
- *  - demais: rótulos genéricos "Nº do documento/certificado"
- */
-export function extrairNumeroDocumentoDoTexto(
-  texto: string,
-  tipoDocumento?: string | null
-): string | null {
-  const t = texto || '';
-  if (!t.trim()) return null;
-
-  const padroes: RegExp[] = [];
-
-  const tipo = String(tipoDocumento || '').toLowerCase();
-
-  if (tipo === 'aso' || tipo === '') {
-    padroes.push(
-      // "ASO nº 01234/2025", "ASO n°: ABC-1234"
-      /(?:ASO|ATESTADO\s+DE\s+SA[UÚ]DE\s+OCUPACIONAL)[^\n]{0,40}?\bN[ºo°.]?\s*[:\-]?\s*([A-Z0-9][A-Z0-9\/\-. ]{2,24}\d|\d[A-Z0-9\/\-. ]{2,24})/i,
-      // "Nº do exame: ...", "Número do laudo: ...", "Nº do ASO ..."
-      /\bN[ºo°.]?\s*(?:[UÚ]MERO\s*)?(?:DO|DA|DE)?\s*(?:EXAME|LAUDO|ASO)\s*[:\-]?\s*([A-Z0-9][A-Z0-9\/\-. ]{2,24})/i
-    );
-  }
-
-  if (tipo === 'passaporte' || tipo === '') {
-    padroes.push(
-      // Campo rotulado: Passport No / Passport Number / Nº do Passaporte
-      /(?:PASSPORT\s*(?:NO\.?|NUMBER|#)|P\.?\s*ASSAPORTE\s*N[ºo°.]?|\bN[ºo°.]?\s*(?:DO\s+)?PASSAPORTE)\s*[:\-]?\s*([A-Z0-9][A-Z0-9 ]{4,12})/i,
-      // Formato ICAO 9303 típico: BR123456 / XX1234567
-      /\b([A-Z]{2}\d{6,7})\b/
-    );
-  }
-
-  if (tipo === 'certificado' || tipo === 'treinamento' || tipo === '') {
-    padroes.push(
-      // "Certificado nº ...", "Certificado N° 12345"
-      /\bCERTIFICADO[^\n:]{0,60}?\bN[ºo°.]?\s*[:\-]?\s*([A-Z0-9][A-Z0-9\/\-. ]{2,29})/i,
-      // "NR-35 nº ...", "Treinamento NR-35 - Certificado nº ..."
-      /\b(?:TREINAMENTO|NR\s*-?\s*\d{1,2})[^\n]{0,80}?\bN[ºo°.]?\s*[:\-]?\s*([A-Z0-9][A-Z0-9\/\-. ]{2,29})/i
-    );
-  }
-
-  // Genérico para qualquer tipo com numeração própria rotulada
-  padroes.push(
-    /\bN[ºo°.]?\s*(?:[UÚ]MERO\s*)?(?:DO\s+|DA\s+|DE\s+)?(?:DOCUMENTO|CERTIFICADO|REGISTRO)\s*[:\-]?\s*([A-Z0-9][A-Z0-9\/\-. ]{2,29})/i,
-    /\b(?:NUMBER|DOC\s*NO\.?|DOCUMENT\s*NO\.?)\s*[:\-#]\s*([A-Z0-9][A-Z0-9\/\-. ]{2,29})/i
-  );
-
-  for (const re0 of padroes) {
-    const re = new RegExp(re0.source, re0.flags.includes('g') ? re0.flags : re0.flags + 'g');
-    for (const m of t.matchAll(re)) {
-      const ctxAntes = t.substring(Math.max(0, (m.index || 0) - 30), m.index || 0).toUpperCase();
-      // CRM/RQE/CNPJ/CPF jamais são o número do próprio documento
-      if (/(CRM|RQE|CNPJ|C\.N\.P\.J|CPF|C\.P\.F\.?)\s*[:\-]?\s*$/.test(ctxAntes)) continue;
-      const token = tokenValidoComoNumeroDocumento(m[1]);
-      if (token) return token;
-    }
-  }
-
-  return null;
-}
+// Número próprio do documento: `extrairNumeroDocumentoDoTexto` / `tokenValidoComoNumeroDocumento` em ocr-linear.ts
 
 const FALLBACK_RASTREIO_RE = /^GT-/;
 
@@ -312,10 +250,8 @@ function normalizarCRM(raw: string): string {
 
 function extrairCRMsDoTexto(texto: string): { crm: string; uf: string; contexto: string; indice: number }[] {
   const crmPatterns = [
-    // CRM-UF: 99999 ou CRM UF 99999 — greedy quantifier to capture full number
-    /(?:CRM|C\.R\.M\.|RM|IM|REGISTRO)\s*(?:-?\s*([A-Z]{2}))?\s*[:|I\-\s]*\s*([\d][\d.\s-]{4,}\d)/gi,
-    // Just numbers near "CRM" context (catch corrupted ones)
-    /(?:CRM|C\.R\.M\.)\s*[:|I\-\s]*\s*(\d[\d.\s]{4,}\d)/gi,
+    crmComUfRe(),
+    crmSemUfRe(),
   ];
 
   const resultados: { crm: string; uf: string; contexto: string; indice: number }[] = [];
@@ -324,7 +260,7 @@ function extrairCRMsDoTexto(texto: string): { crm: string; uf: string; contexto:
     const matches = [...texto.matchAll(pattern)];
     for (const m of matches) {
       const uf = m[1] ? m[1].toUpperCase() : '';
-      const crmRaw = m[2] || m[1] || m[0].replace(/^.*?(CRM|C\.R\.M\.|RM|IM|REGISTRO)\s*[:|\-]*\s*/i, '');
+      const crmRaw = m[2] || m[1] || stripCrmPrefix(m[0]);
       const crmNormalizado = normalizarCRM(crmRaw);
       if (crmNormalizado.length < 4) continue;
 
@@ -379,13 +315,13 @@ function extrairNomeMedicoDoContexto(texto: string, crmIndice: number, tipo: 'pc
     // Clean common prefixes
     let linhaLimpa = linha
       .replace(/^(?:Nome do Médico Coordenador|Nome do Médico|Nome do Medico|Nome|Médico\s+Responsável\s+pelo\s+PCMSO|Médico\s+Examinador|Medico\s+Examinador|Assinatura\s*\/?[Cc]arimbo\s*[Mm]édico\s*[Examinador]*|Assinatura\s+do\s+candidato|Colaborador)[\s:]*/i, '')
-      .replace(/^(?:M[eé]dica?\b\s*|Dra?\.?\s*[ºª]?\s*|Drª\s*|Drº\s*|DRA?\.?\s*)/i, '')
+      .replace(MEDICO_PREFIXO_INICIO_RE, '')
       .replace(/[\[\]|_:]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
 
     // If it contains DRA or Dr or Dra not at the beginning, clean it
-    linhaLimpa = linhaLimpa.replace(/\b(?:Dra?\.?\s*[ºª]?\s*|Drª\s*|Drº\s*|DRA?\.?\s*)\b/i, '').trim();
+    linhaLimpa = linhaLimpa.replace(MEDICO_PREFIXO_MEIO_RE, '').trim();
 
     // Truncate at common OCR noise words or instructions
     const noiseWords = ['valide', 'validacao', 'validação', 'validate', 'validation', 'or code', 'code', 'link', 'http', 'https', 'www', 'aso', 'rqe', 'crm', 'assinatura', 'carimbo', 'médico', 'medico', 'colaborador', 'exame realizado'];
@@ -401,7 +337,7 @@ function extrairNomeMedicoDoContexto(texto: string, crmIndice: number, tipo: 'pc
     }
   }
 
-  const regex = /(?:Dr\.?\s*[ºª]?\s*|Dra\.?\s*[ºª]?\s*|Drª\s*|Drº\s*)([A-Za-zÀ-ÖØ-öø-ÿçãõ\s]{10,60})/i;
+  const regex = MEDICO_NOME_RE;
   if (tipo === 'pcmso') {
     const pcmsoIdx = texto.toLowerCase().indexOf('pcmso');
     if (pcmsoIdx !== -1) {
@@ -590,7 +526,7 @@ function extrairExamesDoTexto(texto: string, dataAso: string | null): { nome: st
       continue;
     }
     
-    if (/^(?:procedimentos|data|procedimento|exame|exames|\s*\|\s*)+$/i.test(linhaLimpa)) {
+    if (isTabelaHeaderLinha(linhaLimpa)) {
       continue;
     }
 
@@ -849,9 +785,7 @@ export async function extrairDadosASODoTexto(
   let nome_clinica = dadosExtraidos?.nome_clinica || '';
 
   if (!cnpj_clinica) {
-    const cnpjMatch = texto.match(
-      /(?:CNPJ|C\.N\.P\.J)\s*[:|I\s-]*\s*(\d{2}\s*\.\s*\d{3}\s*\.\s*\d{3}\s*\/\s*\d{4}\s*-\s*\d{2}|\d{14})/i
-    );
+    const cnpjMatch = texto.match(CNPJ_OCR_RE);
     if (cnpjMatch) {
       cnpj_clinica = cnpjMatch[1].replace(/[^\d]/g, '');
     }
@@ -861,9 +795,7 @@ export async function extrairDadosASODoTexto(
     if (/policlínica|policlinica/i.test(texto)) {
       nome_clinica = 'Policlínica';
     } else {
-      const clinicaMatch = texto.match(
-        /(?:Clínica|Clinica|Centro\s+Médico|Laboratório|Laboratorio)\s*:?\s*([A-Za-zÀ-ÖØ-öø-ÿ\s]+)/i
-      );
+      const clinicaMatch = texto.match(CLINICA_OCR_RE);
       if (clinicaMatch) {
         nome_clinica = clinicaMatch[1].trim().split('\n')[0];
       }
