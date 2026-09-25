@@ -9,14 +9,15 @@ Decidir se o pedido serve o front mobile (`/m/...`) ou o desktop atual. Desktop 
 - `device-surface.ts` — allowlist, cookie `ui`, CH, UA, tablet, `/m/preview`
 - `apply-mobile-surface.ts` — usado só por `src/middleware.ts`
 - Fallback P0: `next.config.js` `rewrites.beforeFiles` (`/login` + cookie/CH/UA)
-- `mobile-surface-context.tsx` — flag cliente para esconder FAB desktop
+- `ua-patterns.js` — tablet/phone regex (next.config + testes)
 - API: `src/app/api/ui-surface/route.ts` — cookie `ui`
+- “Voltar ao mobile”: `src/app/login/layout.tsx` (switch null sem cookie)
 - Testes: `device-surface.test.ts`
 
 ## Local Contracts
 
 - Allowlist P0: `/login`. Fora da lista = desktop. `/m/preview` é direto (QA).
-- Tablet (`device.type === 'tablet'`) = desktop.
+- Tablet = desktop. Middleware: `device.type === 'tablet'`. Fallback `next.config`: `TABLET_UA_VALUE` (iPad, Tablet, PlayBook, SM-T/SM-X, Nexus 7/9/10, Kindle, Silk, Lenovo TB, Pixel Tablet). Telefone = `PHONE_REWRITE_UA_VALUE` (ancora `^$`; tablet vence mesmo com `Mobile`).
 - Cookie `ui=desktop|mobile` vence UA/CH.
 - Bot = desktop.
 - Rewrite interno; URL pública não muda.

@@ -437,8 +437,9 @@ Aplicadas **só** em `src/components/mobile/**`:
 |---------|--------|
 | `src/middleware.ts` | Rewrite + preserve redirects atuais. |
 | `next.config.js` | `rewrites.beforeFiles` do P0 `/login` (UA/CH/cookie) se o middleware Edge não compilou. Regras guacamole/poliweb iguais em `afterFiles`. |
-| `src/components/ClientProviders.tsx` | Monta `UiSurfaceSwitch` (render `null` sem cookie `ui=desktop` em móvel). |
-| `src/contexts/CompanionSessionContext.tsx` | Esconde o FAB desktop quando `data-abz-ui=mobile` (evita dois Companions). Sem o atributo, o JSX desktop é o mesmo. |
+| `src/app/login/layout.tsx` | **Novo.** Só envolve o login. `UiSurfaceSwitch` é null sem cookie. `page.tsx` desktop intacto. |
+| `src/components/ClientProviders.tsx` | **Revertido.** Sem toque. |
+| `src/contexts/CompanionSessionContext.tsx` | **Revertido.** P0: login é rota auth (FAB já some); preview sem sessão. |
 | Este doc | Contrato. |
 
 Nenhum outro page/component desktop deve mudar.

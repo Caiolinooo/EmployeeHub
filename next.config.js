@@ -1,4 +1,8 @@
 const packageJson = require('./package.json');
+const {
+  PHONE_REWRITE_UA_VALUE,
+  TABLET_UA_VALUE,
+} = require('./src/lib/mobile-ui/ua-patterns');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -126,7 +130,7 @@ const nextConfig = {
 
   // Proxy para o Guacamole (WKRadar) para permitir acesso Same-Origin e Auto-Login.
   // beforeFiles: rewrite mobile do P0 (/login) se o middleware Edge não compilou no `next dev`.
-  // Cookie `ui=desktop` vence. Tablet (iPad) não entra. Desktop UA não casa.
+  // Cookie `ui=desktop` vence. Tablet (iPad + Android) = desktop. Desktop UA não casa.
   async rewrites() {
     return {
       beforeFiles: [
@@ -138,13 +142,19 @@ const nextConfig = {
         {
           source: '/login',
           has: [{ type: 'header', key: 'sec-ch-ua-mobile', value: '\\?1' }],
-          missing: [{ type: 'cookie', key: 'ui', value: 'desktop' }],
+          missing: [
+            { type: 'cookie', key: 'ui', value: 'desktop' },
+            { type: 'header', key: 'user-agent', value: TABLET_UA_VALUE },
+          ],
           destination: '/m/login',
         },
         {
           source: '/login',
-          has: [{ type: 'header', key: 'user-agent', value: '(?<ua>(?!.*(?:iPad|Tablet|PlayBook)).*Mobile.*)' }],
-          missing: [{ type: 'cookie', key: 'ui', value: 'desktop' }],
+          has: [{ type: 'header', key: 'user-agent', value: PHONE_REWRITE_UA_VALUE }],
+          missing: [
+            { type: 'cookie', key: 'ui', value: 'desktop' },
+            { type: 'header', key: 'user-agent', value: TABLET_UA_VALUE },
+          ],
           destination: '/m/login',
         },
       ],

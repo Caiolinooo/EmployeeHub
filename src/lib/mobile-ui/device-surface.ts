@@ -3,6 +3,11 @@
  * Sem I/O. Usado pelo middleware e pelos testes.
  */
 
+export {
+  isPhoneUserAgent,
+  isTabletUserAgent,
+} from './ua-patterns';
+
 export const UI_COOKIE = 'ui';
 export const MOBILE_PATH_PREFIX = '/m';
 

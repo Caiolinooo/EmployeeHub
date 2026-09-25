@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { isPhoneUserAgent, isTabletUserAgent } from '@/lib/mobile-ui/device-surface';
 
 function readUiCookie(): string | undefined {
   if (typeof document === 'undefined') return undefined;
@@ -15,11 +16,11 @@ function readUiCookie(): string | undefined {
 
 function isMobileDevice(): boolean {
   if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  if (isTabletUserAgent(ua)) return false;
   const uaData = (navigator as Navigator & { userAgentData?: { mobile?: boolean } }).userAgentData;
   if (typeof uaData?.mobile === 'boolean') return uaData.mobile;
-  const ua = navigator.userAgent;
-  if (/iPad|Tablet|PlayBook/i.test(ua)) return false;
-  return /Mobi|Android|iPhone|iPod/i.test(ua);
+  return isPhoneUserAgent(ua);
 }
 
 /**

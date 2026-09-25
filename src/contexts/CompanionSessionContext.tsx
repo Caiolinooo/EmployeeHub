@@ -15,7 +15,6 @@ import React, {
 } from 'react';
 import { usePathname } from 'next/navigation';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { useMobileSurface } from '@/lib/mobile-ui/mobile-surface-context';
 import AICompanionWidget from '@/components/IA/AICompanionWidget';
 import {
   clearCompanionSession,
@@ -45,7 +44,6 @@ const DEFAULT_GREETING: CompanionChatMsg = {
 
 export function CompanionSessionProvider({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoading } = useSupabaseAuth();
-  const { isMobileSurface } = useMobileSurface();
   const pathname = usePathname();
   const userId = user?.id || null;
 
@@ -121,14 +119,7 @@ export function CompanionSessionProvider({ children }: { children: React.ReactNo
       pathname.startsWith('/verify-email') ||
       pathname.startsWith('/auth'));
 
-  const showCompanion =
-    hydrated &&
-    isAuthenticated &&
-    !isLoading &&
-    !isAuthRoute &&
-    !!userId &&
-    !isMobileSurface &&
-    !pathname?.startsWith('/m');
+  const showCompanion = hydrated && isAuthenticated && !isLoading && !isAuthRoute && !!userId;
 
   return (
     <CompanionSessionContext.Provider value={value}>

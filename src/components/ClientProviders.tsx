@@ -23,8 +23,6 @@ import { usePathname } from 'next/navigation';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import StartupExperience from '@/components/StartupExperience';
 import GlobalTimeTracker from '@/components/tracking/GlobalTimeTracker';
-import UiSurfaceSwitch from '@/components/mobile/UiSurfaceSwitch';
-import { MobileSurfaceProvider } from '@/lib/mobile-ui/mobile-surface-context';
 function ProfilePromptGate({ isMounted, pathname }: { isMounted: boolean; pathname?: string | null }) {
   const { isAuthenticated, isLoading, profile, user } = useSupabaseAuth();
   const isAuthRoute = pathname?.startsWith('/login') || pathname?.startsWith('/register') || pathname?.startsWith('/set-password') || pathname?.startsWith('/reset-password');
@@ -77,7 +75,6 @@ export default function ClientProviders({ children }: { children: React.ReactNod
   return (
     <>
       <GlobalErrorHandler />
-      <MobileSurfaceProvider>
       <SupabaseAuthProvider>
         <CompanionSessionProvider>
           <I18nProvider>
@@ -92,7 +89,6 @@ export default function ClientProviders({ children }: { children: React.ReactNod
                   {isMounted && <Toaster position="top-right" />}
                   {isMounted && <ChangelogModal />}
                   <ProfilePromptGate isMounted={isMounted} pathname={pathname} />
-                  <UiSurfaceSwitch />
                   {children}
                 </SignatureProvider>
               </AlertProvider>
@@ -100,7 +96,6 @@ export default function ClientProviders({ children }: { children: React.ReactNod
           </I18nProvider>
         </CompanionSessionProvider>
       </SupabaseAuthProvider>
-      </MobileSurfaceProvider>
     </>
   );
 }

@@ -12,7 +12,7 @@ UI só do front mobile. Desktop não importa estes arquivos.
 - `MobileShell.tsx` — nav híbrida Home/Notícias/Férias/Mais
 - `MobileCompanion.tsx` — um FAB + sheet full-width
 - `MobileLoginForm.tsx` — login P0 (mesmos hooks de auth)
-- `UiSurfaceSwitch.tsx` — “voltar ao mobile” só com `ui=desktop` em aparelho móvel
+- `UiSurfaceSwitch.tsx` — montado em `src/app/login/layout.tsx`; null sem `ui=desktop` em móvel
 - `mobile.css` — tokens `--touch-min: 44px`
 
 ## Local Contracts
