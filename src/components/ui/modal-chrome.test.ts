@@ -12,6 +12,30 @@ describe('modal chrome mobile-only', () => {
     assert.match(css, /max-height: 100dvh/);
   });
 
+  it('globals.css keeps mobile-only data selectors inside max-width 767px', () => {
+    const css = readFileSync(new URL('../../app/globals.css', import.meta.url), 'utf8');
+    const marker = '@media (max-width: 767px)';
+    const mediaIdx = css.indexOf(marker);
+    assert.ok(mediaIdx >= 0);
+    const outside = css.slice(0, mediaIdx);
+    const inside = css.slice(mediaIdx);
+    const selectors = [
+      '[data-modal-close]',
+      '[data-modal-panel]',
+      '[data-gt-kpi-cards]',
+      '[data-portal-main]',
+      '[data-fab-companion]',
+      '[data-fab-help]',
+      '[data-fab-companion-panel]',
+      '[data-fab-companion-action]',
+    ];
+    for (const sel of selectors) {
+      assert.equal(outside.includes(sel), false, `${sel} fora do media`);
+      assert.ok(inside.includes(sel), `${sel} ausente no media`);
+    }
+    assert.equal((css.match(/@media \(max-width: 767px\)/g) || []).length, 1);
+  });
+
   it('ModalCloseButton exposes data-modal-close and optional md:hidden', () => {
     const src = readFileSync(new URL('./ModalCloseButton.tsx', import.meta.url), 'utf8');
     assert.match(src, /data-modal-close/);

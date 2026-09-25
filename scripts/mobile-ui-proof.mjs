@@ -27,6 +27,30 @@ const MODAL_CSS = `
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
+  [data-gt-kpi-cards] {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 0.625rem;
+  }
+  [data-gt-kpi-cards] > * {
+    min-width: min(70vw, 15rem);
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+  [data-portal-main] {
+    padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  }
+  [data-fab-companion],
+  [data-fab-help] {
+    width: 2.75rem;
+    height: 2.75rem;
+    bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  }
+  [data-fab-help] { right: calc(0.75rem + env(safe-area-inset-right, 0px)); }
+  [data-fab-companion] { right: calc(4rem + env(safe-area-inset-right, 0px)); }
 }
 `;
 
@@ -87,7 +111,7 @@ function pageShell({ title, tabs, filters, body, after }) {
   </head><body class="h-[100dvh] overflow-hidden bg-gray-100">
     <div class="flex flex-col h-full">
       <header class="shrink-0 bg-white border-b px-3 py-2 font-bold text-sm">Portal ABZ · ${title}</header>
-      <main class="flex flex-col flex-1 min-h-0 px-3 py-3 overflow-hidden">
+      <main data-portal-main="" class="flex flex-col flex-1 min-h-0 px-3 py-3 overflow-hidden">
         <div class="flex flex-col flex-1 min-h-0 min-w-0 overflow-y-auto lg:overflow-hidden">
           <div class="${tablist}">
             <nav class="${tabClass}">
@@ -112,6 +136,28 @@ const TABS = `
   <button class="pb-3 text-sm font-bold border-b-2 border-transparent shrink-0 whitespace-nowrap">Matriz de treinamentos</button>
 `;
 
+function kpiCards({ after }) {
+  const cards = [
+    ['Total', '128'],
+    ['Embarcados', '54'],
+    ['Disponíveis', '41'],
+    ['Docs vencidos', '11'],
+  ]
+    .map(
+      ([label, value]) =>
+        `<button type="button" class="bg-white rounded-xl p-3 border border-gray-100 flex items-center justify-between text-left">
+          <div><p class="text-gray-500 text-xs font-medium">${label}</p><p class="text-xl font-bold">${value}</p></div>
+          <div class="w-8 h-8 rounded-xl bg-blue-50"></div>
+        </button>`,
+    )
+    .join('');
+  const wrap = after
+    ? 'grid grid-cols-2 lg:grid-cols-4 gap-2.5'
+    : 'grid grid-cols-2 lg:grid-cols-4 gap-2.5';
+  const attr = after ? ' data-gt-kpi-cards=""' : '';
+  return `<div${attr} class="${wrap}">${cards}</div>`;
+}
+
 const FILTERS = `
   <div class="shrink-0 space-y-2">
     <div class="grid grid-cols-1 gap-2">
@@ -121,17 +167,76 @@ const FILTERS = `
       <select class="border rounded px-2 py-2 text-sm"><option>Todos os centros de custo</option></select>
       <select class="border rounded px-2 py-2 text-sm"><option>Todos os status</option></select>
     </div>
-    <div class="grid grid-cols-2 gap-2 text-xs">
-      <div class="bg-white border rounded p-3">Total 128</div>
-      <div class="bg-white border rounded p-3">Embarcados 54</div>
-      <div class="bg-white border rounded p-3">Disponíveis 41</div>
-      <div class="bg-white border rounded p-3">Docs vencidos 11</div>
-      <div class="bg-white border rounded p-3">Docs vencendo 7</div>
-      <div class="bg-white border rounded p-3">ASO pendente 3</div>
-    </div>
+    ${kpiCards({ after: true })}
     <div class="h-40 bg-white border rounded p-3 text-xs text-gray-500">Marcados / ações em lote (barra extra no mobile)</div>
   </div>
 `;
+
+function kpiPage({ after }) {
+  const parent = after
+    ? 'flex flex-col flex-1 min-h-0 overflow-hidden'
+    : 'flex flex-col flex-1 min-h-0 overflow-hidden';
+  return `<!doctype html><html><head>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <script src="${TAILWIND}"></script>
+    <style>html,body{height:100%;margin:0} ${MODAL_CSS}</style>
+  </head><body class="h-[100dvh] overflow-hidden bg-gray-100">
+    <div class="flex flex-col h-full">
+      <header class="shrink-0 bg-white border-b px-3 py-2 font-bold text-sm">GT Matriz · KPI</header>
+      <main class="flex flex-col flex-1 min-h-0 px-3 py-3 overflow-hidden">
+        <div class="${parent}">
+          <div class="shrink-0">${kpiCards({ after })}</div>
+          <div class="flex-1 min-h-0 overflow-hidden bg-white border rounded mt-2 p-2 text-xs text-gray-500">Lista (pai overflow-hidden — 2ª linha de cards cortava antes)</div>
+        </div>
+      </main>
+    </div>
+  </body></html>`;
+}
+
+function qhseTabs({ after }) {
+  const labels = ['Dados Pessoais', 'Ficha', 'Treinamentos', 'ASO', 'Passaportes', 'Documentos', 'QHSE / EPI', 'Embarques', 'Substituições', 'Desligamento'];
+  const buttons = labels
+    .map((l, i) => `<button type="button" class="flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-xs font-medium shrink-0 ${i === 6 ? 'text-blue-600 border-blue-600' : 'text-gray-500 border-transparent'}">${l}</button>`)
+    .join('');
+  const shell = after
+    ? 'relative z-20 shrink-0 min-w-0 overflow-x-auto border-b border-gray-200 bg-gray-50/80'
+    : 'relative z-20 shrink-0 border-b border-gray-200 bg-gray-50/80 overflow-hidden';
+  const inner = after
+    ? 'flex flex-nowrap min-w-max'
+    : 'flex flex-nowrap';
+  return `<!doctype html><html><head>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <script src="${TAILWIND}"></script>
+  </head><body class="min-h-[100dvh] bg-gray-200">
+    <div class="mx-auto mt-8 w-[390px] max-w-full bg-white rounded-xl overflow-hidden shadow">
+      <div class="bg-blue-700 text-white px-3 py-2 text-sm font-bold">Ficha · Ana Souza</div>
+      <div class="${shell}">
+        <div role="tablist" data-testid="collaborator-modal-tablist" class="${inner}">${buttons}</div>
+      </div>
+      <div class="p-4 text-sm text-gray-600">Aba QHSE / EPI — swipe no tablist</div>
+    </div>
+  </body></html>`;
+}
+
+function fabsPage({ after, title }) {
+  const css = after ? MODAL_CSS : '';
+  const fabC = after ? ' data-fab-companion=""' : '';
+  const fabH = after ? ' data-fab-help=""' : '';
+  const mainAttr = after ? ' data-portal-main=""' : '';
+  return `<!doctype html><html><head>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <script src="${TAILWIND}"></script>
+    <style>html,body{height:100%;margin:0} ${css}</style>
+  </head><body class="h-[100dvh] bg-gray-100 relative">
+    <main${mainAttr} class="h-full overflow-y-auto px-3 py-3">
+      <h1 class="text-xl font-bold mb-3">${title}</h1>
+      ${Array.from({ length: 12 }, (_, i) => `<div class="bg-white border rounded-xl p-4 mb-2">Item ${i + 1} da lista</div>`).join('')}
+      <div data-last-item class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 font-medium">Último item — não pode ficar sob os FABs</div>
+    </main>
+    <button${fabC} type="button" class="fixed bottom-6 right-[5.25rem] z-[60] w-16 h-16 rounded-full bg-blue-700 text-white text-xs">C</button>
+    <button${fabH} type="button" class="fixed bottom-6 right-4 z-50 w-14 h-14 rounded-full bg-blue-600 text-white text-lg">?</button>
+  </body></html>`;
+}
 
 function languageDialog({ after }) {
   const close = after
@@ -271,6 +376,60 @@ const scheduleAfter = pageShell({
   after: true,
 });
 
+async function measureKpi(html) {
+  await page.setViewportSize(SIZE_390);
+  await page.setContent(html, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(400);
+  return page.evaluate(() => {
+    const wrap = document.querySelector('[data-gt-kpi-cards]') || document.querySelector('main .grid, main [class*="grid"]');
+    const cards = [...document.querySelectorAll('main button')];
+    const last = cards[cards.length - 1];
+    const wr = wrap?.getBoundingClientRect();
+    const lr = last?.getBoundingClientRect();
+    return {
+      wrapOverflowX: wrap ? wrap.scrollWidth > wrap.clientWidth + 2 : false,
+      lastFullyVisible: lr ? lr.right <= window.innerWidth + 1 && lr.bottom <= window.innerHeight + 1 : false,
+      cardCount: cards.length,
+      wrapWidth: wr ? Math.round(wr.width) : 0,
+    };
+  });
+}
+
+async function measureTabs(html) {
+  await page.setViewportSize(SIZE_390);
+  await page.setContent(html, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(400);
+  return page.evaluate(() => {
+    const shell = document.querySelector('[data-testid="collaborator-modal-tablist"]')?.parentElement;
+    const qhse = [...document.querySelectorAll('button')].find((b) => b.textContent?.includes('QHSE'));
+    const qr = qhse?.getBoundingClientRect();
+    return {
+      shellScrollable: shell ? shell.scrollWidth > shell.clientWidth + 2 : false,
+      qhseInDom: !!qhse,
+      qhseClipped: qr ? qr.right > (shell?.getBoundingClientRect().right ?? window.innerWidth) + 1 : true,
+    };
+  });
+}
+
+async function measureFabs(html) {
+  await page.setViewportSize(SIZE_390);
+  await page.setContent(html, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(400);
+  return page.evaluate(() => {
+    const help = document.querySelector('[data-fab-help], button:last-of-type');
+    const last = document.querySelector('[data-last-item]');
+    const hr = help?.getBoundingClientRect();
+    const lr = last?.getBoundingClientRect();
+    return {
+      helpW: hr ? Math.round(hr.width) : 0,
+      helpH: hr ? Math.round(hr.height) : 0,
+      lastBottom: lr ? Math.round(lr.bottom) : 0,
+      helpTop: hr ? Math.round(hr.top) : 0,
+      lastAboveFab: lr && hr ? lr.bottom <= hr.top + 4 : false,
+    };
+  });
+}
+
 const report = {
   matrix390_before: await measureScrollport(page, matrixBefore, SIZE_390),
   matrix390_after: await measureScrollport(page, matrixAfter, SIZE_390),
@@ -279,6 +438,12 @@ const report = {
   lang_before: await measureClose(page, languageDialog({ after: false }), SIZE_390),
   lang_after: await measureClose(page, languageDialog({ after: true }), SIZE_390),
   confirm_after: await measureClose(page, confirmationModal({ after: true }), SIZE_390),
+  kpi390_before: await measureKpi(kpiPage({ after: false })),
+  kpi390_after: await measureKpi(kpiPage({ after: true })),
+  qhse390_before: await measureTabs(qhseTabs({ after: false })),
+  qhse390_after: await measureTabs(qhseTabs({ after: true })),
+  fab390_before: await measureFabs(fabsPage({ after: false, title: 'Dashboard' })),
+  fab390_after: await measureFabs(fabsPage({ after: true, title: 'Dashboard' })),
 };
 
 const shots = [];
@@ -297,6 +462,14 @@ for (const size of [SIZE_390, SIZE_375]) {
   shots.push(await shot(page, 'reembolso', simpleModule('Reembolso', `<div class="bg-white rounded-lg shadow p-4 min-h-[40vh]"><p class="font-semibold mb-2">Protocolo RE-1042</p><p>Almoço operacional — R$ 87,40</p></div>`), size));
   shots.push(await shot(page, 'contracheque', simpleModule('Contracheque', `<div class="bg-white border rounded-xl p-4 space-y-2"><p>09/2026 — ABZ Offshore</p><button class="min-h-11 px-3 rounded-lg bg-blue-600 text-white">Ver</button></div>`), size));
   shots.push(await shot(page, 'ponto', simpleModule('Ponto', `<a class="inline-flex items-center px-3 py-1.5 min-h-11 bg-gray-100 rounded-md text-xs">App Store</a> <a class="inline-flex items-center px-3 py-1.5 min-h-11 bg-gray-100 rounded-md text-xs">Google Play</a>`), size));
+  shots.push(await shot(page, 'gt-kpi-antes', kpiPage({ after: false }), size));
+  shots.push(await shot(page, 'gt-kpi-depois', kpiPage({ after: true }), size));
+  shots.push(await shot(page, 'ficha-qhse-antes', qhseTabs({ after: false }), size));
+  shots.push(await shot(page, 'ficha-qhse-depois', qhseTabs({ after: true }), size));
+  shots.push(await shot(page, 'fab-gt-antes', fabsPage({ after: false, title: 'GT Matriz' }), size));
+  shots.push(await shot(page, 'fab-gt-depois', fabsPage({ after: true, title: 'GT Matriz' }), size));
+  shots.push(await shot(page, 'fab-dashboard-antes', fabsPage({ after: false, title: 'Dashboard' }), size));
+  shots.push(await shot(page, 'fab-dashboard-depois', fabsPage({ after: true, title: 'Dashboard' }), size));
 }
 
 await browser.close();

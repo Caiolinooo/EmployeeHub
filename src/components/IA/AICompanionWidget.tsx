@@ -192,7 +192,7 @@ export default function AICompanionWidget() {
   return (
     <>
       {actionLabel && (
-        <div className="fixed bottom-24 right-24 z-[70] bg-gray-900/90 backdrop-blur-md text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-2xl border border-blue-500/40 flex items-center gap-2.5 animate-bounce">
+        <div data-fab-companion-action="" className="fixed bottom-24 right-24 z-[70] bg-gray-900/90 backdrop-blur-md text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-2xl border border-blue-500/40 flex items-center gap-2.5 animate-bounce">
           <FiZap className="w-4 h-4 text-emerald-400 animate-spin" />
           <span>{actionLabel}</span>
         </div>
@@ -201,6 +201,7 @@ export default function AICompanionWidget() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
+        data-fab-companion=""
         className={`fixed bottom-6 right-[5.25rem] md:right-24 z-[60] w-16 h-16 rounded-full flex items-center justify-center transition-transform duration-300 bg-transparent border-0 p-0 ${
           status === 'executing'
             ? 'scale-110'
@@ -224,7 +225,7 @@ export default function AICompanionWidget() {
       </button>
 
       {isOpen && (
-        <div className="fixed bottom-24 right-24 z-[70] w-[390px] h-[520px] max-h-[85vh] bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300">
+        <div data-fab-companion-panel="" className="fixed bottom-24 right-24 z-[70] w-[390px] h-[520px] max-h-[85vh] bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300">
           <div className="bg-gradient-to-r from-[#005B96] via-[#0A7AB8] to-[#005B96] p-4 text-white flex items-center justify-between shadow-md">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-inner overflow-hidden">

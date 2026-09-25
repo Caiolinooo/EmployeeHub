@@ -629,12 +629,12 @@ export default function CollaboratorModal({ colaboradorId, onClose, initialTab, 
 
           {/* Tabs */}
           <div
+            ref={tablistRef}
             className={COLLABORATOR_MODAL_TABLIST_SHELL_CLASS}
             data-overflow-left={tabOverflow.left ? 'true' : 'false'}
             data-overflow-right={tabOverflow.right ? 'true' : 'false'}
           >
             <div
-              ref={tablistRef}
               role="tablist"
               aria-label="Abas do colaborador"
               data-testid="collaborator-modal-tablist"
