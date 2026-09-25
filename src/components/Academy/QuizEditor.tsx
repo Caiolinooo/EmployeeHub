@@ -218,7 +218,7 @@ export default function QuizEditor({ courseId }: { courseId: string }) {
                                         placeholder={`Opção ${idx + 1}`}
                                         required
                                     />
-                                    <button type="button" onClick={() => removeOption(idx)} className="text-red-500 hover:text-red-700 p-2">
+                                    <button type="button" onClick={() => removeOption(idx)} className="text-red-500 hover:text-red-700 p-2 max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center">
                                         <TrashIcon className="w-5 h-5" />
                                     </button>
                                 </div>
@@ -226,7 +226,7 @@ export default function QuizEditor({ courseId }: { courseId: string }) {
                             <button
                                 type="button"
                                 onClick={addOption}
-                                className="mt-2 text-sm text-blue-600 hover:text-blue-800 flex items-center"
+                                className="mt-2 text-sm text-blue-600 hover:text-blue-800 flex items-center max-md:min-h-11"
                             >
                                 <PlusIcon className="w-4 h-4 mr-1" /> Adicionar Opção
                             </button>
@@ -242,7 +242,7 @@ export default function QuizEditor({ courseId }: { courseId: string }) {
                         <button
                             type="submit"
                             disabled={saving}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
+                            className="px-4 py-2 max-md:min-h-11 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
                         >
                             {saving ? 'Salvando...' : editingId ? 'Salvar Alterações' : 'Criar Questão'}
                         </button>
@@ -268,10 +268,10 @@ export default function QuizEditor({ courseId }: { courseId: string }) {
                                         </span>
                                     </div>
                                     <div className="flex space-x-2">
-                                        <button onClick={() => handleEdit(q)} className="text-blue-600 hover:text-blue-800">
+                                        <button onClick={() => handleEdit(q)} className="text-blue-600 hover:text-blue-800 max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center">
                                             <PencilIcon className="w-4 h-4" />
                                         </button>
-                                        <button onClick={() => handleDelete(q.id)} className="text-red-600 hover:text-red-800">
+                                        <button onClick={() => handleDelete(q.id)} className="text-red-600 hover:text-red-800 max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center">
                                             <TrashIcon className="w-4 h-4" />
                                         </button>
                                     </div>

@@ -294,16 +294,16 @@ const CreateCoursePage: React.FC = () => {
         <div className="mb-8">
           <button
             onClick={() => router.push('/academy/editor')}
-            className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
+            className="flex items-center text-gray-600 hover:text-gray-900 mb-4 max-md:min-h-11"
           >
             <ArrowLeftIcon className="h-5 w-5 mr-2" />
             {t('academy.voltarAoEditor')}
           </button>
 
-          <div className="flex items-center">
-            <PlusIcon className="w-8 h-8 text-blue-600 mr-3" />
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">{t('academy.criarNovoCurso')}</h1>
+          <div className="flex items-center max-md:min-w-0">
+            <PlusIcon className="w-8 h-8 text-blue-600 mr-3 max-md:shrink-0" />
+            <div className="max-md:min-w-0">
+              <h1 className="text-3xl max-md:text-xl font-bold text-gray-900">{t('academy.criarNovoCurso')}</h1>
               <p className="text-gray-600 mt-1">
                 {t('academy.preenchaAsInformacoesParaCriar')}
               </p>
@@ -486,7 +486,7 @@ const CreateCoursePage: React.FC = () => {
                 <button
                   type="button"
                   onClick={addTag}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-4 py-2 max-md:min-h-11 max-md:min-w-11 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
                   <PlusIcon className="w-4 h-4" />
                 </button>
@@ -503,9 +503,9 @@ const CreateCoursePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => removeTag(tag)}
-                    className="ml-2 text-blue-600 hover:text-blue-800"
+                    className="ml-2 text-blue-600 hover:text-blue-800 max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center"
                   >
-                    <XMarkIcon className="w-3 h-3" />
+                    <XMarkIcon className="w-3 h-3 max-md:w-4 max-md:h-4" />
                   </button>
                 </span>
               ))}
@@ -530,7 +530,7 @@ const CreateCoursePage: React.FC = () => {
                 <button
                   type="button"
                   onClick={addPrerequisite}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-4 py-2 max-md:min-h-11 max-md:min-w-11 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
                   <PlusIcon className="w-4 h-4" />
                 </button>
@@ -547,7 +547,7 @@ const CreateCoursePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => removePrerequisite(prereq)}
-                    className="text-red-600 hover:text-red-800"
+                    className="text-red-600 hover:text-red-800 max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center"
                   >
                     <XMarkIcon className="w-4 h-4" />
                   </button>
@@ -574,7 +574,7 @@ const CreateCoursePage: React.FC = () => {
                 <button
                   type="button"
                   onClick={addObjective}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-4 py-2 max-md:min-h-11 max-md:min-w-11 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
                   <PlusIcon className="w-4 h-4" />
                 </button>
@@ -591,7 +591,7 @@ const CreateCoursePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => removeObjective(objective)}
-                    className="text-red-600 hover:text-red-800"
+                    className="text-red-600 hover:text-red-800 max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center"
                   >
                     <XMarkIcon className="w-4 h-4" />
                   </button>

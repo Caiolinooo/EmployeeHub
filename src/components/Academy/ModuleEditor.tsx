@@ -228,7 +228,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ courseId }) => {
                     {!showAddForm && !editingId && (
                         <button
                             onClick={() => { setShowAddForm(true); setEditingId(null); setFormData({ title: '', description: '', video_url: '', thumbnail_url: '', duration: 0 }); }}
-                            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                            className="inline-flex items-center px-4 py-2 max-md:min-h-11 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
                         >
                             <PlusIcon className="w-4 h-4 mr-1" />
                             Adicionar Módulo
@@ -246,7 +246,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ courseId }) => {
             {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                     <p className="text-sm text-red-800">{error}</p>
-                    <button onClick={() => setError(null)} className="text-sm text-red-600 underline mt-1">Fechar</button>
+                    <button onClick={() => setError(null)} className="text-sm text-red-600 underline mt-1 max-md:min-h-11">Fechar</button>
                 </div>
             )}
 
@@ -317,7 +317,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ courseId }) => {
                             <button
                                 type="button"
                                 onClick={resetForm}
-                                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                                className="px-4 py-2 max-md:min-h-11 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
                             >
                                 <XMarkIcon className="w-4 h-4 inline mr-1" />
                                 Cancelar
@@ -326,7 +326,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ courseId }) => {
                                 type="button"
                                 onClick={editingId ? handleUpdate : handleCreate}
                                 disabled={saving || !formData.title.trim()}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center"
+                                className="px-4 py-2 max-md:min-h-11 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center"
                             >
                                 {saving && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>}
                                 <CheckIcon className="w-4 h-4 mr-1" />
@@ -386,7 +386,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ courseId }) => {
                                     <button
                                         onClick={() => handleReorder(mod.id, 'up')}
                                         disabled={index === 0}
-                                        className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                                        className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center"
                                         title="Mover para cima"
                                     >
                                         <ArrowUpIcon className="w-4 h-4 text-gray-600" />
@@ -394,7 +394,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ courseId }) => {
                                     <button
                                         onClick={() => handleReorder(mod.id, 'down')}
                                         disabled={index === modules.length - 1}
-                                        className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                                        className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center"
                                         title="Mover para baixo"
                                     >
                                         <ArrowDownIcon className="w-4 h-4 text-gray-600" />
@@ -405,14 +405,14 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ courseId }) => {
                                 <div className="flex-shrink-0 flex items-center gap-1">
                                     <button
                                         onClick={() => startEdit(mod)}
-                                        className="p-1.5 rounded hover:bg-blue-50 text-blue-600"
+                                        className="p-1.5 rounded hover:bg-blue-50 text-blue-600 max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center"
                                         title="Editar módulo"
                                     >
                                         <PencilIcon className="w-4 h-4" />
                                     </button>
                                     <button
                                         onClick={() => handleDelete(mod.id)}
-                                        className="p-1.5 rounded hover:bg-red-50 text-red-600"
+                                        className="p-1.5 rounded hover:bg-red-50 text-red-600 max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center"
                                         title="Excluir módulo"
                                     >
                                         <TrashIcon className="w-4 h-4" />

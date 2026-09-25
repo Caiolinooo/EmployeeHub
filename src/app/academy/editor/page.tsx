@@ -343,17 +343,17 @@ const AcademyEditor: React.FC = () => {
         <div className="mb-8">
           <button
             onClick={() => router.push('/academy')}
-            className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
+            className="flex items-center text-gray-600 hover:text-gray-900 mb-4 max-md:min-h-11"
           >
             <ArrowLeftIcon className="h-5 w-5 mr-2" />
             {t('academy.voltarAoAcademy')}
           </button>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <PencilIcon className="w-8 h-8 text-blue-600 mr-3" />
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">{t('academy.editorDoAcademy')}</h1>
+          <div className="flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3">
+            <div className="flex items-center max-md:min-w-0">
+              <PencilIcon className="w-8 h-8 text-blue-600 mr-3 max-md:shrink-0" />
+              <div className="max-md:min-w-0">
+                <h1 className="text-3xl max-md:text-xl font-bold text-gray-900">{t('academy.editorDoAcademy')}</h1>
                 <p className="text-gray-600 mt-1">
                   {t('academy.gerencieCursosEConteudo')}
                 </p>
@@ -362,7 +362,7 @@ const AcademyEditor: React.FC = () => {
 
             <button
               onClick={() => router.push('/academy/editor/create')}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              className="bg-blue-600 text-white px-4 py-2 max-md:min-h-11 max-md:w-full rounded-lg hover:bg-blue-700 transition-colors flex items-center max-md:justify-center space-x-2"
             >
               <PlusIcon className="w-5 h-5" />
               <span>{t('academy.novoCurso')}</span>
@@ -423,10 +423,10 @@ const AcademyEditor: React.FC = () => {
 
         {/* Filtros */}
         <div className="mb-6">
-          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+          <div className="flex space-x-1 max-md:space-x-0 max-md:flex-wrap max-md:gap-1 bg-gray-100 p-1 rounded-lg w-fit">
             <button
               onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${filter === 'all'
+              className={`px-4 py-2 max-md:min-h-11 rounded-md text-sm font-medium transition-colors ${filter === 'all'
                 ? 'bg-white text-gray-900 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
                 }`}
@@ -435,7 +435,7 @@ const AcademyEditor: React.FC = () => {
             </button>
             <button
               onClick={() => setFilter('published')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${filter === 'published'
+              className={`px-4 py-2 max-md:min-h-11 rounded-md text-sm font-medium transition-colors ${filter === 'published'
                 ? 'bg-white text-gray-900 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
                 }`}
@@ -444,7 +444,7 @@ const AcademyEditor: React.FC = () => {
             </button>
             <button
               onClick={() => setFilter('draft')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${filter === 'draft'
+              className={`px-4 py-2 max-md:min-h-11 rounded-md text-sm font-medium transition-colors ${filter === 'draft'
                 ? 'bg-white text-gray-900 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
                 }`}
@@ -582,28 +582,29 @@ const AcademyEditor: React.FC = () => {
                         <div className="flex items-center justify-end space-x-2">
                           <button
                             onClick={() => router.push(`/academy/course/${course.id}`)}
-                            className="text-gray-600 hover:text-gray-900"
+                            className="text-gray-600 hover:text-gray-900 max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center"
                             title={t('academy.visualizar')}
                           >
                             <EyeIcon className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => router.push(`/academy/editor/edit/${course.id}`)}
-                            className="text-blue-600 hover:text-blue-900"
+                            className="text-blue-600 hover:text-blue-900 max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center"
                             title={t('academy.editar')}
                           >
                             <PencilIcon className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleTogglePublish(course.id, course.is_published)}
-                            className={`${course.is_published ? 'text-yellow-600 hover:text-yellow-900' : 'text-green-600 hover:text-green-900'}`}
+                            className={`${course.is_published ? 'text-yellow-600 hover:text-yellow-900' : 'text-green-600 hover:text-green-900'} max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center`}
                             title={course.is_published ? t('academy.despublicar') : t('academy.publicar')}
                           >
                             {course.is_published ? <XCircleIcon className="h-4 w-4" /> : <CheckCircleIcon className="h-4 w-4" />}
                           </button>
                           <button
                             onClick={() => promptDeleteCourse(course)}
-                            className="text-red-600 hover:text-red-900"
+                            data-academy-delete-trigger=""
+                            className="text-red-600 hover:text-red-900 max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center"
                             title={t('academy.excluir')}
                           >
                             <TrashIcon className="h-4 w-4" />
