@@ -11,6 +11,8 @@ import {
 } from "@/lib/nameValidation";
 import { FiAlertTriangle, FiCheckCircle, FiInfo, FiX } from "react-icons/fi";
 import { useEscapeToClose } from "@/hooks/useEscapeToClose";
+import { useEscapeCapture } from "@/hooks/useEscapeCapture";
+import { useRestoreFocus } from "@/hooks/useRestoreFocus";
 
 interface Props {
   reminderMinutes?: number; // default 2
@@ -19,6 +21,8 @@ interface Props {
 // Simple modal component (local to this file)
 function Modal({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
   useEscapeToClose(open, onClose);
+  useEscapeCapture(open, onClose);
+  useRestoreFocus(open);
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40 p-4">

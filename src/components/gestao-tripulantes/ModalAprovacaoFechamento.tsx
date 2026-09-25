@@ -26,6 +26,8 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useSignature } from '@/contexts/SignatureContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 import { useGtLiveProbe } from '@/hooks/useGtLiveProbe';
 import {
   assinaturaCobreAprovador,
@@ -86,6 +88,8 @@ export default function ModalAprovacaoFechamento({
 }: ModalAprovacaoFechamentoProps) {
   const { t } = useI18n();
   useEscapeToClose(isOpen, onClose);
+  useEscapeCapture(isOpen, onClose);
+  useRestoreFocus(isOpen);
   // Mês civil local (BRT): toISOString() viraria o mês em 21h do fim de mês.
   const [mesAno, setMesAno] = useState(initialMesAno || mesAnoAtualBRT());
   const [aba, setAba] = useState<AbaFechamento>('resumo');

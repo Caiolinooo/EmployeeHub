@@ -5,6 +5,8 @@ import { FiGlobe, FiCheck, FiLoader } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
 import { Locale } from '@/i18n';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 import ModalCloseButton from '@/components/ui/ModalCloseButton';
 
 interface LanguageSelectorProps {
@@ -18,7 +20,10 @@ export default function LanguageSelector({
   const [isOpen, setIsOpen] = useState(false);
   const [isChanging, setIsChanging] = useState(false);
 
-  useEscapeToClose(variant === 'modal' && isOpen, () => setIsOpen(false));
+  const modalOpen = variant === 'modal' && isOpen;
+  useEscapeToClose(modalOpen, () => setIsOpen(false));
+  useEscapeCapture(modalOpen, () => setIsOpen(false));
+  useRestoreFocus(modalOpen);
 
   // Reset changing state when locale actually changes
   useEffect(() => {

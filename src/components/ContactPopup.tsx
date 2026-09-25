@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import { FiX, FiMail, FiPhone, FiMessageSquare } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 
 interface ContactPopupProps {
   onClose: () => void;
@@ -13,6 +15,8 @@ interface ContactPopupProps {
 const ContactPopup: React.FC<ContactPopupProps> = ({ onClose }) => {
   const { t } = useI18n();
   useEscapeToClose(true, onClose);
+  useEscapeCapture(true, onClose);
+  useRestoreFocus(true);
   return (
     <motion.div
       initial={{ opacity: 0 }}

@@ -6,6 +6,8 @@ import { FiX, FiAlertTriangle, FiCheckCircle, FiMinusCircle } from 'react-icons/
 import { fetchWithToken } from '@/lib/tokenStorage';
 import { toast } from 'react-hot-toast';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 import {
   LABEL_AVISO_PREVIO,
   LABEL_TIPO_RESCISAO,
@@ -121,6 +123,8 @@ export default function DesligamentoModal({
   onConcluido,
 }: Props) {
   useEscapeToClose(true, onClose);
+  useEscapeCapture(true, onClose);
+  useRestoreFocus(true);
   const [step, setStep] = useState<Step>('form');
   const [saving, setSaving] = useState(false);
   const [tipo, setTipo] = useState<TipoRescisao>('sem_justa_causa');

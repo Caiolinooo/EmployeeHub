@@ -4,6 +4,8 @@ import React from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 
 /**
  * Modal de confirmação de exclusão de marcação de escala (grade + ficha).
@@ -69,6 +71,8 @@ export default function ConfirmarExclusaoMarcacaoModal({
 }: ConfirmarExclusaoMarcacaoModalProps) {
     const { t } = useI18n();
     useEscapeToClose(open, onCancelar);
+    useEscapeCapture(open, onCancelar);
+    useRestoreFocus(open);
 
     if (!open) return null;
 

@@ -6,6 +6,8 @@ import { FiX, FiSearch, FiPlus, FiCheck } from 'react-icons/fi';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 import * as FaIcons from 'react-icons/fa';
 import * as FiIcons from 'react-icons/fi';
 import * as HiIcons from 'react-icons/hi';
@@ -50,6 +52,8 @@ export default function AddShortcutModal({ onClose, onAdd, existingShortcuts }: 
     const [searchQuery, setSearchQuery] = useState('');
     const modalRef = useRef<HTMLDivElement>(null);
     useEscapeToClose(true, onClose);
+    useEscapeCapture(true, onClose);
+    useRestoreFocus(true);
 
     useEffect(() => {
         const loadData = async () => {
@@ -163,8 +167,16 @@ export default function AddShortcutModal({ onClose, onAdd, existingShortcuts }: 
     if (!mounted) return null;
 
     const modalContent = (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-            <div ref={modalRef} data-modal-panel="" className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl ring-1 ring-black/5 animate-in zoom-in-95 duration-200 relative">
+        <div
+            className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200"
+            onClick={onClose}
+        >
+            <div
+                ref={modalRef}
+                data-modal-panel=""
+                onClick={(event) => event.stopPropagation()}
+                className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl ring-1 ring-black/5 animate-in zoom-in-95 duration-200 relative"
+            >
 
                 {/* Header */}
                 <div className="p-6 border-b border-gray-100 flex items-center justify-between">

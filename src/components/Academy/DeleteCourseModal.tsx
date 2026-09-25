@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { useI18n } from '@/contexts/I18nContext';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 import ModalCloseButton from '@/components/ui/ModalCloseButton';
 
 interface DeleteCourseModalProps {
@@ -29,6 +31,8 @@ export default function DeleteCourseModal({
     }, [isOpen]);
 
     useEscapeToClose(isOpen, onClose);
+    useEscapeCapture(isOpen, onClose);
+    useRestoreFocus(isOpen);
 
     if (!isOpen) return null;
 

@@ -8,6 +8,8 @@ import { useI18n } from '@/contexts/I18nContext';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import { toast } from 'react-hot-toast';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 import {
   FiAlertTriangle,
   FiCheckCircle,
@@ -47,10 +49,16 @@ export default function ContrachequePage() {
   const [busyAceite, setBusyAceite] = useState(false);
   const [busyPdf, setBusyPdf] = useState<string | null>(null);
 
-  useEscapeToClose(!!modal && !confirmando, () => setModal(null));
-  useEscapeToClose(!!confirmando, () => {
+  const closeModal = () => setModal(null);
+  const closeConfirm = () => {
     if (!busyAceite) setConfirmando(null);
-  });
+  };
+  useEscapeToClose(!!modal && !confirmando, closeModal);
+  useEscapeCapture(!!modal && !confirmando, closeModal);
+  useRestoreFocus(!!modal && !confirmando);
+  useEscapeToClose(!!confirmando, closeConfirm);
+  useEscapeCapture(!!confirmando, closeConfirm);
+  useRestoreFocus(!!confirmando);
 
   const carregar = useCallback(async () => {
     setCarregando(true);

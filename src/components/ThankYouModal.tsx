@@ -6,6 +6,8 @@ import { FiCheckCircle, FiCopy } from 'react-icons/fi';
 import Confetti from 'react-confetti';
 import { useI18n } from '@/contexts/I18nContext';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 import ModalCloseButton from '@/components/ui/ModalCloseButton';
 
 interface ThankYouModalProps {
@@ -34,6 +36,8 @@ const ThankYouModal: React.FC<ThankYouModalProps> = ({ protocol, onClose }) => {
   }, []);
 
   useEscapeToClose(true, onClose);
+  useEscapeCapture(true, onClose);
+  useRestoreFocus(true);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(protocol);

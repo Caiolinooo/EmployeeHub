@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { FiX, FiKey, FiCheck, FiEdit3, FiShield } from 'react-icons/fi';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 import SignaturePad from '@/components/ui/SignaturePad';
 import toast from 'react-hot-toast';
 import { useI18n } from '@/contexts/I18nContext';
@@ -59,6 +61,8 @@ export default function SignatureModal({
     }, [isOpen, userSignatureUrl]);
 
     useEscapeToClose(isOpen, onClose);
+    useEscapeCapture(isOpen, onClose);
+    useRestoreFocus(isOpen);
 
     if (!isOpen) return null;
 

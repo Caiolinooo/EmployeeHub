@@ -9,6 +9,8 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { usePathname } from 'next/navigation';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 
 interface ChangelogRelease {
     version: string;
@@ -79,6 +81,8 @@ export default function ChangelogModal() {
     };
 
     useEscapeToClose(isOpen, handleClose);
+    useEscapeCapture(isOpen, handleClose);
+    useRestoreFocus(isOpen);
 
     const isMajorOrMinorUpdate = (v: string) => {
         // Simple heuristic: ends with .0 ?

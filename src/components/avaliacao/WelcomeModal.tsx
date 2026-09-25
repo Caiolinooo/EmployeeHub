@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiCheckCircle, FiClock, FiUser, FiStar, FiArrowRight } from 'react-icons/fi';
 import { cn } from '@/lib/utils';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 
 interface WelcomeModalProps {
   isOpen: boolean;
@@ -30,6 +32,8 @@ export default function WelcomeModal({ isOpen, onClose, userRole = 'collaborator
   };
 
   useEscapeToClose(isOpen, handleClose);
+  useEscapeCapture(isOpen, handleClose);
+  useRestoreFocus(isOpen);
 
   const collaboratorSteps = [
     {

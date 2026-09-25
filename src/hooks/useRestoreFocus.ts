@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 /** Restaura foco no gatilho depois de fechar overlay (Esc, X, backdrop). */
-export function useRestoreFocus() {
+export function useRestoreFocus(open?: boolean) {
   const triggerRef = useRef<HTMLElement | null>(null);
 
   const markTrigger = useCallback((el: EventTarget | null) => {
@@ -21,6 +21,18 @@ export function useRestoreFocus() {
       });
     });
   }, []);
+
+  useEffect(() => {
+    if (open === undefined) return undefined;
+    if (!open) return undefined;
+    const el = document.activeElement;
+    if (el instanceof HTMLElement && el !== document.body && el !== document.documentElement) {
+      triggerRef.current = el;
+    }
+    return () => {
+      restoreFocus();
+    };
+  }, [open, restoreFocus]);
 
   return { markTrigger, restoreFocus, triggerRef };
 }

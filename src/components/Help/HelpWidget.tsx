@@ -15,6 +15,7 @@ import { getHelpCategories, searchHelpArticles, HelpCategory, HelpArticle } from
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
 import { useEscapeCapture } from '@/hooks/useEscapeCapture';
 import { useRestoreFocus } from '@/hooks/useRestoreFocus';
+import { useSiteConfig } from '@/contexts/SiteConfigContext';
 
 // Icon mapping
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -86,8 +87,6 @@ function HelpImage({ src, alt }: { src: string; alt: string }) {
         </>
     );
 }
-
-import { useSiteConfig } from '@/contexts/SiteConfigContext';
 
 export default function HelpWidget() {
     const { user, profile } = useSupabaseAuth();
