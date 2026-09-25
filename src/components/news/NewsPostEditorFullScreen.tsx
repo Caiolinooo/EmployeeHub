@@ -29,7 +29,19 @@ const NewsPostEditorFullScreen: React.FC<Props> = ({ userId, postId, onClose }) 
   const { markTrigger, restoreFocus } = useRestoreFocus();
   useLayoutEffect(() => {
     const el = document.activeElement;
-    if (el instanceof HTMLElement && el !== document.body) markTrigger(el);
+    const stable = document.querySelector('[data-news-more], [data-news-create]');
+    const menuItemGone = el instanceof HTMLElement
+      && /^\s*(Editar|Edit)\s*$/i.test((el.textContent || '').trim());
+    if (
+      el instanceof HTMLElement
+      && el !== document.body
+      && !menuItemGone
+      && document.contains(el)
+    ) {
+      markTrigger(el);
+      return;
+    }
+    if (stable instanceof HTMLElement) markTrigger(stable);
   }, [markTrigger]);
   const handleClose = () => {
     onClose?.();

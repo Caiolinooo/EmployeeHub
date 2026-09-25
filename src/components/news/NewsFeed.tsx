@@ -595,6 +595,8 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
             </div>
             <div className="relative">
               <button
+                type="button"
+                data-news-more=""
                 onClick={() => setOpenMenuPostId(openMenuPostId === post.id ? null : post.id)}
                 className="p-2 hover:bg-gray-100 rounded-full"
               >
@@ -611,7 +613,15 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
                   {/* Editar post inline (somente autorizado) */}
                   {(hasPermission('news.edit') || hasPermission('news.publish')) && (
                     <button
-                      onClick={() => { setEditingPost(post); setShowEditModal(true); setOpenMenuPostId(null); }}
+                      type="button"
+                      onClick={(e) => {
+                        const more = (e.currentTarget.closest('.relative') as HTMLElement | null)
+                          ?.querySelector('[data-news-more]');
+                        if (more instanceof HTMLElement) more.focus();
+                        setEditingPost(post);
+                        setShowEditModal(true);
+                        setOpenMenuPostId(null);
+                      }}
                       className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
                     > {t('newsSystem.post.edit')}</button>
                   )}
