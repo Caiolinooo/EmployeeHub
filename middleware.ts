@@ -1,34 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// Rotas que não precisam de autenticação
-const publicRoutes = [
-  '/',
-  '/login',
-  '/set-password',
-  '/api/auth/login',
-  '/api/auth/login-password',
-  '/api/auth/register',
-  '/api/auth/register-supabase',
-  '/api/auth/resend-code',
-  '/api/auth/verify-token',
-  '/api/auth/token-refresh',
-  '/api/auth/fix-token',
-  '/api/auth/ensure-admin',
-  '/api/lista-presenca/public',
-  '/api/lista-presenca/registros',
-];
-
-// Rotas de arquivos estáticos
-const staticRoutes = [
-  '/_next/',
-  '/images/',
-  '/favicon.ico',
-  '/robots.txt',
-  '/fonts/',
-  '/documentos/',
-  '/public/',
-  '/api/_next/',
-];
+import {
+  avaliacaoLegacyRedirect,
+  isAvaliacaoPagePath,
+  isAuthPassthroughPath,
+} from './src/lib/middleware-gates';
 
 function markMiddleware(response: NextResponse) {
   response.headers.set('x-abz-middleware', '1');
@@ -44,112 +19,43 @@ export function middleware(request: NextRequest) {
   //   return NextResponse.redirect(new URL('/admin/', request.url));
   // }
 
-  // Verificar se é uma rota pública
-  if (publicRoutes.includes(pathname)) {
+  if (isAuthPassthroughPath(pathname)) {
     return markMiddleware(NextResponse.next());
   }
 
-  // Verificar se é uma rota de arquivo estático
-  for (const route of staticRoutes) {
-    if (pathname.startsWith(route)) {
-      return markMiddleware(NextResponse.next());
-    }
-  }
-
-  // Verificar se é uma rota de API pública
-  if (
-    pathname.startsWith('/api/auth/') ||
-    pathname.startsWith('/_next/') ||
-    pathname.startsWith('/api/_next/') ||
-    pathname.startsWith('/lista-presenca/public/')
-  ) {
-    return markMiddleware(NextResponse.next());
-  }
-
-  // Verificar se há um token nos cookies
   const token = request.cookies.get('abzToken')?.value || request.cookies.get('token')?.value;
 
-  // Redirecionar rotas específicas para evitar problemas
-  if (pathname === '/avaliacao/avaliacoes' || pathname === '/avaliacao/avaliacoes/') {
-    console.log('Middleware: Redirecionando /avaliacao/avaliacoes para /avaliacao');
-    return markMiddleware(NextResponse.redirect(new URL('/avaliacao', request.url)));
+  const legacyTarget = avaliacaoLegacyRedirect(pathname);
+  if (legacyTarget) {
+    return markMiddleware(NextResponse.redirect(new URL(legacyTarget, request.url)));
   }
 
-  if (pathname === '/avaliacao/lista-avaliacoes' || pathname === '/avaliacao/lista-avaliacoes/') {
-    console.log('Middleware: Redirecionando /avaliacao/lista-avaliacoes para /avaliacao');
-    return markMiddleware(NextResponse.redirect(new URL('/avaliacao', request.url)));
-  }
-
-  if (pathname === '/avaliacao/nova-avaliacao' || pathname === '/avaliacao/nova-avaliacao/') {
-    console.log('Middleware: Redirecionando /avaliacao/nova-avaliacao para /avaliacao (criação manual desabilitada)');
-    return markMiddleware(NextResponse.redirect(new URL('/avaliacao', request.url)));
-  }
-
-  if (pathname === '/avaliacao/avaliacoes/lixeira' || pathname === '/avaliacao/avaliacoes/lixeira/') {
-    console.log('Middleware: Redirecionando /avaliacao/avaliacoes/lixeira para /avaliacao/lixeira');
-    return markMiddleware(NextResponse.redirect(new URL('/avaliacao/lixeira', request.url)));
-  }
-
-  // Verificar se é uma rota de avaliação e se não há token
-  if (pathname.startsWith('/avaliacao')) {
+  // Só `/avaliacao` e `/avaliacao/...`. `/avaliacoes-avancadas` não entra aqui.
+  if (isAvaliacaoPagePath(pathname)) {
     if (!token) {
-      console.log('Middleware: Redirecionando para login (rota de avaliação sem token)');
-
-      // Adicionar um parâmetro de redirecionamento para que o login saiba para onde voltar
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
-
       return markMiddleware(NextResponse.redirect(loginUrl));
-    } else {
-      console.log('Root Middleware: Token encontrado nos cookies, permitindo acesso à rota de avaliação');
-
-      // Adicionar o token ao cabeçalho de autorização para que as APIs possam acessá-lo
-      const requestHeaders = new Headers(request.headers);
-      requestHeaders.set('Authorization', `Bearer ${token}`);
-
-      // Adicionar também como cookie para garantir que esteja disponível
-      const response = NextResponse.next({
-        request: {
-          headers: requestHeaders,
-        },
-      });
-
-      // Definir o cookie no response também
-      response.cookies.set('abzToken', token, {
-        path: '/',
-        sameSite: 'lax',
-        secure: request.url.startsWith('https:'),
-        maxAge: 60 * 60 * 24 // 1 dia
-      });
-
-      response.cookies.set('token', token, {
-        path: '/',
-        sameSite: 'lax',
-        secure: request.url.startsWith('https:'),
-        maxAge: 60 * 60 * 24 // 1 dia
-      });
-
-      return markMiddleware(response);
     }
+
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('Authorization', `Bearer ${token}`);
+    // Do not rewrite abzToken/token cookies: saveToken already sets 30d expiry.
+    // Re-setting maxAge=1d here would shrink sessions on every /avaliacao visit.
+    return markMiddleware(
+      NextResponse.next({
+        request: { headers: requestHeaders },
+      })
+    );
   }
 
-  // Create the base response
   const response = NextResponse.next();
 
-  // --- Locale Management ---
-  // Obter o locale do cookie ou usar o padrão pt-BR
-  const defaultLocale = 'pt-BR'; // Fallback if i18n config is not easily imported
+  const defaultLocale = 'pt-BR';
   const locale = request.cookies.get('NEXT_LOCALE')?.value || defaultLocale;
-
-  // Add locale to response headers for client-side access
   response.headers.set('x-locale', locale);
-
-  // Definir o locale como variável global para acesso no cliente
   response.cookies.set('NEXT_LOCALE', locale);
-  // -------------------------
 
-  // Para simplificar e evitar problemas com o Twilio, vamos permitir outras requisições
-  // A autenticação será verificada nas rotas de API e páginas
   return markMiddleware(response);
 }
 
@@ -157,12 +63,9 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public (public files)
-     *
-     * Adicionando mais exceções para evitar problemas com rotas estáticas
+     * - api (API routes — auth is per-route)
+     * - _next/static, _next/image, _next/data
+     * - favicon.ico, public, images, fonts, documentos
      */
     '/((?!api|_next/static|_next/image|_next/data|favicon.ico|public|images|fonts|documentos).*)',
   ],

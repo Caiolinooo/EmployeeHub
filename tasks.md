@@ -1,3 +1,13 @@
+## Middleware regression (PR #96) + QHSE 404 (2026-09-25)
+
+Sem merge, sem promote, sem Vercel Production, sem PR #95. Supabase real = read-only.
+
+- [x] Audit matcher + branches (`src/lib/middleware-gates.ts`): login/register/reset/set-password/lista-presenca public/static/`_next`/API
+- [x] Fix prefixo `startsWith('/avaliacao')` que pegava `/avaliacoes-avancadas`
+- [x] Não regravar cookies `abzToken` (TTL 1d vs 30d do `saveToken`)
+- [x] Teste `src/lib/middleware-gates.test.ts` no PR #96
+- [ ] QHSE “Colaborador não encontrado”: `CATALOG_COLAB_SELECT` pedia `cargo_nome` em `gt_colaboradores` (alias da view) — PR separado off `portal`
+
 ## Middleware ausente no bundle de produção (2026-09-25)
 
 `src/middleware.ts` não entra no `next build`. Manifesto sai `{ middleware: {} }`. Sem merge, sem promote, sem Vercel Production, sem PR #95.
