@@ -1,3 +1,19 @@
+## Middleware bundle + QHSE 404 (2026-09-25)
+
+Port do PR #96 para `feat/mobile-first-fase2` + fix da aba QHSE / EPI. Draft contra `#95`. Sem merge, sem Vercel Production.
+
+- [x] `middleware.ts` na raiz (parent de `pagesDir=./pages`); stub 401 em `pages/api/check-env.js`
+- [x] Preservar `/api/mobile/preview-disabled` público e `applyMobileSurface`
+- [x] Device detection: já no middleware; **manter** `next.config.js` `beforeFiles` (cookie `ui=desktop` + fallback se Edge falhar)
+- [x] Gates: `ensure-admin` (`CRON_SECRET`), `test-users*`, `supabase-status`, `acl/init`, POST `execute-sql` (JWT ADMIN)
+- [x] QHSE 404: `CATALOG_COLAB_SELECT` pedia `cargo_nome` (só existe na view) → embed `cargo:gt_cargos(nome)` + `flattenCatalogColabRow` + `catalogColabSelectIsSafe` rejeita aliases da view (alinhado PR #98)
+- [x] Middleware-gates (`src/lib/middleware-gates.ts`): `/avaliacao` exact+prefix (não `/avaliacoes-avancadas`); com token só `Authorization` (sem reescrever `abzToken` maxAge 1d)
+- [x] Login desktop + `MobileLoginForm` + `mobile-login-flow`: sem `GET /api/auth/ensure-admin` (rota continua gated)
+- [x] Sweep tabela `gt_colaboradores` vs aliases da view: `findFullColaboradorByCpf` join-and-flatten; `updateColaborador` strip; guard `gt-colab-table-select.test.ts`
+- [ ] Preview: `/avaliacao` sem cookie → 302 `/login` + `x-abz-middleware: 1`; QHSE tab com colaborador GT válido → 200
+
+---
+
 ## Mobile-first Fase 1 — inventário e plano (2026-09-25)
 
 Adaptar o portal para celular em todos os módulos; dono consulta nas decisões. Esta fatia é **só plano**. Sem UI.
@@ -7,7 +23,11 @@ Adaptar o portal para celular em todos os módulos; dono consulta nas decisões.
 - [x] Auditoria 375×812 e 390×844 (código + Playwright em rotas públicas)
 - [x] Plano por fases + decisões D1–D8
 - [x] Dono aprovou; D4 invertida (desktop congelado; front mobile separado)
-- [ ] Fase 2: rewrite + shell + login P0 em `feat/mobile-first-fase2`
+- [x] Fase 2: rewrite + shell + login P0 em `feat/mobile-first-fase2` (PR contra `feat/mobile-first`)
+- [x] PR #95: prova desktop produção (`proofs-prod.md`). Dashboard 0 px. Outras rotas = raster de fonte (ordem `<link>`). Sem overlay/modal.
+- [x] PR #95 QA: alvos login ≥ 44×44 (wrappers mobile); `/m/preview` HTTP 404 no `next start`; `/m/rota-inexistente` → desktop; prova 0 px `/tmp` vs `870924dc`.
+- [x] Reverter `ClientProviders.tsx` e `CompanionSessionContext.tsx` (sem layout extra em `/login`)
+- [x] Tablet next.config = middleware (iPad + Android) + testes UA
 
 ---
 

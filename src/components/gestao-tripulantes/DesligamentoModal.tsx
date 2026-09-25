@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiAlertTriangle, FiCheckCircle, FiMinusCircle } from 'react-icons/fi';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import { toast } from 'react-hot-toast';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
 import {
   LABEL_AVISO_PREVIO,
   LABEL_TIPO_RESCISAO,
@@ -119,6 +120,7 @@ export default function DesligamentoModal({
   onClose,
   onConcluido,
 }: Props) {
+  useEscapeToClose(true, onClose);
   const [step, setStep] = useState<Step>('form');
   const [saving, setSaving] = useState(false);
   const [tipo, setTipo] = useState<TipoRescisao>('sem_justa_causa');
@@ -203,6 +205,7 @@ export default function DesligamentoModal({
         <motion.div
           initial={{ opacity: 0, y: 12, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
+          data-modal-panel=""
           className="relative flex max-h-[min(92dvh,40rem)] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
@@ -211,7 +214,7 @@ export default function DesligamentoModal({
               <h3 className="text-base font-bold text-red-900">Desligar colaborador</h3>
               <p className="text-xs text-red-700 truncate">{colaboradorNome}</p>
             </div>
-            <button type="button" onClick={onClose} className="rounded-lg p-1.5 hover:bg-red-100">
+            <button type="button" onClick={onClose} data-modal-close="" aria-label="Fechar" className="rounded-lg p-1.5 hover:bg-red-100">
               <FiX className="h-5 w-5 text-red-800" />
             </button>
           </div>

@@ -150,7 +150,7 @@ export default function GTMatrix({
   };
 
   return (
-    <div className={cn('bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col min-h-0 min-w-0 overflow-hidden', className)}>
+    <div className={cn('bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col min-h-0 min-w-0 overflow-hidden max-lg:overflow-x-auto', className)}>
       <div className={GT_PAGE_SCROLLPORT_CLASS}>
         <table className="w-full min-w-[760px] text-sm text-left border-separate border-spacing-0">
           <thead className="text-xs text-gray-500 uppercase sticky top-0 z-30">

@@ -4,6 +4,13 @@
 
 import { supabaseAdmin } from '@/lib/supabase';
 import { formatCpf, normalizeCpf } from '@/lib/gestao-tripulantes/cpf';
+import {
+  FULL_COLAB_BY_CPF_SELECT,
+  flattenFullColaboradorRow,
+  type FullColabSelectRow,
+} from '@/lib/gestao-tripulantes/gt-colab-view-aliases';
+
+export { FULL_COLAB_BY_CPF_SELECT, flattenFullColaboradorRow } from '@/lib/gestao-tripulantes/gt-colab-view-aliases';
 
 /** Lookup colaborador by CPF trying digits-only and masked forms (backfill-safe). */
 export async function findColaboradorByCpf(
@@ -55,10 +62,7 @@ export async function findFullColaboradorByCpf(
   const formatted = formatCpf(digits);
   const { data, error } = await supabaseAdmin
     .from('gt_colaboradores')
-    .select(`
-      id, cpf, nome_completo, matricula, matricula_esocial, data_admissao,
-      cargo_nome, funcao, cbo, cargo_cbo, empresa_cnpj, empresa_nome
-    `)
+    .select(FULL_COLAB_BY_CPF_SELECT)
     .or(`cpf.eq.${digits},cpf.eq.${formatted}`)
     .is('deleted_at', null)
     .limit(2);
@@ -70,8 +74,9 @@ export async function findFullColaboradorByCpf(
 
   if (!data || data.length === 0) return null;
 
-  const exact = data.find((c) => normalizeCpf(c.cpf || '') === digits);
-  return exact || data[0];
+  const rows = (data as FullColabSelectRow[]).map(flattenFullColaboradorRow);
+  const exact = rows.find((c) => normalizeCpf(c.cpf || '') === digits);
+  return exact || rows[0];
 }
 
 export async function getColaboradorCpfNormalized(colaboradorId: string): Promise<string | null> {

@@ -35,7 +35,7 @@ export default function DashboardCards({ data, activeKpi = '', onKpiClick }: Das
 
   if (!data) {
     return (
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+      <div data-gt-kpi-cards="" className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         {[1, 2, 3, 4].map(i => <Skeleton key={i} />)}
       </div>
     );
@@ -93,7 +93,7 @@ export default function DashboardCards({ data, activeKpi = '', onKpiClick }: Das
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+    <div data-gt-kpi-cards="" className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
       {cards.map((card) => {
         const active = activeKpi === card.kpi;
         return (

@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { requirePermission } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    const { error: authError } = await requirePermission(request, 'admin');
+    if (authError) {
+      return authError;
+    }
+
     console.log('Teste de API de usuários iniciado');
 
     // Verificar se o cliente Supabase está inicializado

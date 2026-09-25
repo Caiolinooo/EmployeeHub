@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { useI18n } from '@/contexts/I18nContext';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import ModalCloseButton from '@/components/ui/ModalCloseButton';
 
 interface DeleteCourseModalProps {
     isOpen: boolean;
@@ -26,6 +28,8 @@ export default function DeleteCourseModal({
         }
     }, [isOpen]);
 
+    useEscapeToClose(isOpen, onClose);
+
     if (!isOpen) return null;
 
     return (
@@ -45,8 +49,12 @@ export default function DeleteCourseModal({
                     initial={{ opacity: 0, scale: 0.95, y: 10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                    data-modal-panel=""
                     className="relative w-full max-w-lg bg-white rounded-xl shadow-xl overflow-hidden"
                 >
+                    <div className="absolute right-1 top-1">
+                        <ModalCloseButton onClick={onClose} mobileOnly />
+                    </div>
                     <div className="p-6">
                         <div className="flex items-start">
                             <div className="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">

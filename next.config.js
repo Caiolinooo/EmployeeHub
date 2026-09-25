@@ -1,4 +1,9 @@
 const packageJson = require('./package.json');
+const {
+  PHONE_REWRITE_UA_VALUE,
+  TABLET_UA_VALUE,
+} = require('./src/lib/mobile-ui/ua-patterns');
+const { productionMobilePreviewRewrites } = require('./src/lib/mobile-ui/preview-block');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -124,18 +129,55 @@ const nextConfig = {
     ];
   },
 
-  // Proxy para o Guacamole (WKRadar) para permitir acesso Same-Origin e Auto-Login
+  // Proxy para o Guacamole (WKRadar) para permitir acesso Same-Origin e Auto-Login.
+  // beforeFiles: fallback do P0 `/login` (cookie `ui` + CH + UA).
+  // A detecção já corre no middleware (`applyMobileSurface`) agora que o
+  // Edge volta a entrar no bundle. Não mover o rewrite só para o middleware:
+  // `ui=desktop` (cookie e query) está em `missing` aqui (override intacto); Next.js
+  // `userAgent().device.type` e o regex de telefone podem discordar; se o
+  // Edge falhar de novo, `/login` mobile quebra sem este fallback.
+  // Cookie `ui=desktop` vence. Tablet (iPad + Android) = desktop. Desktop UA não casa.
   async rewrites() {
-    return [
-      {
-        source: '/guacamole/:path*',
-        destination: 'https://vm.groupabz.com/guacamole/:path*',
-      },
-      {
-        source: '/poliweb-external/:path*',
-        destination: 'https://poliweb.policlinicamacae.com.br/:path*',
-      },
-    ];
+    return {
+      beforeFiles: [
+        ...(process.env.NODE_ENV === 'production' ? productionMobilePreviewRewrites() : []),
+        {
+          source: '/login',
+          has: [{ type: 'cookie', key: 'ui', value: 'mobile' }],
+          destination: '/m/login',
+        },
+        {
+          source: '/login',
+          has: [{ type: 'header', key: 'sec-ch-ua-mobile', value: '\\?1' }],
+          missing: [
+            { type: 'cookie', key: 'ui', value: 'desktop' },
+            { type: 'query', key: 'ui', value: 'desktop' },
+            { type: 'header', key: 'user-agent', value: TABLET_UA_VALUE },
+          ],
+          destination: '/m/login',
+        },
+        {
+          source: '/login',
+          has: [{ type: 'header', key: 'user-agent', value: PHONE_REWRITE_UA_VALUE }],
+          missing: [
+            { type: 'cookie', key: 'ui', value: 'desktop' },
+            { type: 'query', key: 'ui', value: 'desktop' },
+            { type: 'header', key: 'user-agent', value: TABLET_UA_VALUE },
+          ],
+          destination: '/m/login',
+        },
+      ],
+      afterFiles: [
+        {
+          source: '/guacamole/:path*',
+          destination: 'https://vm.groupabz.com/guacamole/:path*',
+        },
+        {
+          source: '/poliweb-external/:path*',
+          destination: 'https://poliweb.policlinicamacae.com.br/:path*',
+        },
+      ],
+    };
   },
 };
 

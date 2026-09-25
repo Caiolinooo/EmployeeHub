@@ -5,6 +5,7 @@ import ReactDOM from 'react-dom';
 import { FiX, FiSearch, FiPlus, FiCheck } from 'react-icons/fi';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
 import * as FaIcons from 'react-icons/fa';
 import * as FiIcons from 'react-icons/fi';
 import * as HiIcons from 'react-icons/hi';
@@ -48,6 +49,7 @@ export default function AddShortcutModal({ onClose, onAdd, existingShortcuts }: 
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const modalRef = useRef<HTMLDivElement>(null);
+    useEscapeToClose(true, onClose);
 
     useEffect(() => {
         const loadData = async () => {
@@ -162,7 +164,7 @@ export default function AddShortcutModal({ onClose, onAdd, existingShortcuts }: 
 
     const modalContent = (
         <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-            <div ref={modalRef} className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl ring-1 ring-black/5 animate-in zoom-in-95 duration-200 relative">
+            <div ref={modalRef} data-modal-panel="" className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl ring-1 ring-black/5 animate-in zoom-in-95 duration-200 relative">
 
                 {/* Header */}
                 <div className="p-6 border-b border-gray-100 flex items-center justify-between">
@@ -171,7 +173,10 @@ export default function AddShortcutModal({ onClose, onAdd, existingShortcuts }: 
                         <p className="text-sm text-gray-500 mt-1">{t('dashboard.selectModule', 'Selecione um módulo para adicionar aos seus atalhos')}</p>
                     </div>
                     <button
+                        type="button"
                         onClick={onClose}
+                        data-modal-close=""
+                        aria-label="Fechar"
                         className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                     >
                         <FiX className="w-5 h-5 text-gray-500" />

@@ -323,3 +323,76 @@ error, success {
   background-color: #d1d5db;
 }
 
+@media (max-width: 767px) {
+  /* Só celular (≤767). Desktop (md+) intacto — nenhum seletor desta lista fora do media. */
+  [data-modal-close] {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+  [data-modal-panel] {
+    max-height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  div[data-gt-kpi-cards] {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 0.625rem;
+  }
+  div[data-gt-kpi-cards] > * {
+    min-width: min(70vw, 15rem) !important;
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+
+  main[data-portal-main] {
+    padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  button[data-fab-companion],
+  button[data-fab-help] {
+    width: 2.75rem;
+    height: 2.75rem;
+    bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  }
+  button[data-fab-help] {
+    right: calc(0.75rem + env(safe-area-inset-right, 0px));
+  }
+  button[data-fab-companion] {
+    right: calc(4rem + env(safe-area-inset-right, 0px));
+  }
+  button[data-fab-companion] > * {
+    max-width: 2.5rem;
+    max-height: 2.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  [data-fab-companion-panel] {
+    left: 0.75rem;
+    right: 0.75rem;
+    width: auto;
+    max-width: none;
+    bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+    max-height: min(70dvh, 28rem);
+    height: min(70dvh, 28rem);
+  }
+
+  [data-fab-companion-action] {
+    left: 0.75rem;
+    right: 0.75rem;
+    width: auto;
+    bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+

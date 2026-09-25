@@ -3,6 +3,7 @@
 import React from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
 
 /**
  * Modal de confirmação de exclusão de marcação de escala (grade + ficha).
@@ -67,6 +68,7 @@ export default function ConfirmarExclusaoMarcacaoModal({
     onCancelar,
 }: ConfirmarExclusaoMarcacaoModalProps) {
     const { t } = useI18n();
+    useEscapeToClose(open, onCancelar);
 
     if (!open) return null;
 
@@ -110,6 +112,7 @@ export default function ConfirmarExclusaoMarcacaoModal({
                 role="dialog"
                 aria-modal="true"
                 aria-label={t('gtEscalaV2.excluirMarcacaoTitulo', 'Excluir marcação')}
+                data-modal-panel=""
                 className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
             >
                 <div className="flex shrink-0 items-center justify-between border-b border-red-100 bg-red-50 px-5 py-3">
@@ -124,6 +127,7 @@ export default function ConfirmarExclusaoMarcacaoModal({
                     <button
                         type="button"
                         onClick={onCancelar}
+                        data-modal-close=""
                         disabled={submitting}
                         className="rounded-lg p-1.5 hover:bg-red-100 disabled:opacity-50"
                         aria-label={t('gtEscalaV2.fechar', 'Fechar')}

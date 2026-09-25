@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiCheckCircle, FiClock, FiUser, FiStar, FiArrowRight } from 'react-icons/fi';
 import { cn } from '@/lib/utils';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
 
 interface WelcomeModalProps {
   isOpen: boolean;
@@ -27,6 +28,8 @@ export default function WelcomeModal({ isOpen, onClose, userRole = 'collaborator
     localStorage.setItem('evaluation_welcome_seen', 'true');
     onClose();
   };
+
+  useEscapeToClose(isOpen, handleClose);
 
   const collaboratorSteps = [
     {
@@ -114,10 +117,14 @@ export default function WelcomeModal({ isOpen, onClose, userRole = 'collaborator
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             onClick={(e) => e.stopPropagation()}
+            data-modal-panel=""
             className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden"
           >
             <button
+              type="button"
               onClick={handleClose}
+              data-modal-close=""
+              aria-label="Fechar"
               className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-gray-100 transition-colors"
             >
               <FiX className="w-5 h-5 text-gray-500" />
