@@ -6,8 +6,8 @@ Adaptar o portal para celular em todos os módulos; dono consulta nas decisões.
 - [x] Inventário de módulos/rotas (`docs/mobile-first-plan.md`)
 - [x] Auditoria 375×812 e 390×844 (código + Playwright em rotas públicas)
 - [x] Plano por fases + decisões D1–D8
-- [ ] Dono responde D1–D8
-- [ ] Fase 2: fundação (tokens, nav, Companion sheet) — outra PR
+- [x] Dono aprovou; D4 invertida (desktop congelado; front mobile separado)
+- [ ] Fase 2: rewrite + shell + login P0 em `feat/mobile-first-fase2`
 
 ---
 

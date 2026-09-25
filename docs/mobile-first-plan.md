@@ -1,8 +1,8 @@
 # Portal ABZ — Plano mobile-first (Fase 1)
 
-**Status:** só inventário, auditoria e plano. Nenhuma mudança de UI nesta branch.  
-**Branch:** `feat/mobile-first` (a partir de `portal`). Sem merge, sem PR.  
-**Data da auditoria:** 2026-09-25.  
+**Status:** Fase 1 (inventário) aprovada. Fase 2 = front mobile **separado** no mesmo Next.js; desktop congelado.  
+**Branches:** `feat/mobile-first` (plano) → `feat/mobile-first-fase2` (implementação, PR contra `feat/mobile-first`, **não** contra `portal`).  
+**Data da auditoria:** 2026-09-25. Decisão do dono: 2026-09-25 (D4 invertida: desktop não muda).  
 **App:** Next.js 15 App Router, React 19, TypeScript, Tailwind CSS, Radix UI. Catálogo vivo em `src/config/modules.ts`.
 
 ---
@@ -273,13 +273,7 @@ Ordem: o que o colaborador abre **no bolso** (offshore / em trânsito), depois o
 
 ### D4 — Desktop pode mudar?
 
-| Opção | Prós | Contras |
-|-------|------|---------|
-| A. Desktop congelado; só &lt;`md` muda | Zero regressão de grade | Dois designs para sempre |
-| B. Desktop pode evoluir (tokens, sheets em tablet, cards opcionais) | Um sistema | Risco em Man Schedule / fechamento |
-| C. Tudo vira mobile-first e desktop “estica” | Consistência | Inaceitável para grade de escala |
-
-**Recomendação: B com cerca:** tokens e primitivos globais; **não** converter Man Schedule / indicadores / fechamento em cards no desktop. `lg:` continua dono da grade.
+**Decisão do dono (2026-09-25): desktop não muda.** Front mobile é arquivo novo + rewrite. Página/componente desktop existente fica pixel-idêntico. A recomendação B da Fase 1 foi **substituída**.
 
 ### D5 — Lib de componentes
 
@@ -342,12 +336,109 @@ Dashboard (widgets), notícias (feed logado), calendário, `/ia`, ponto, contrac
 
 ---
 
-## 9. Próximo passo (Fase 2, depois das decisões)
+## 9. Próximo passo
 
-1. Dono responde D1–D8 (mesmo que “vai com a recomendação”).  
-2. Abrir PR de **fundação** (A1–A7 + P0) a partir desta branch ou de `portal`.  
-3. Uma PR por fatia P1 (férias, reembolso, …) — sem big-bang.  
-4. Não alterar `portal` até o dono pedir merge.
+Fase 2 está em `feat/mobile-first-fase2` (ver §11). Sem merge em `portal`. Preview Vercel só.
+
+---
+
+## 11. Arquitetura Fase 2 — front mobile separado
+
+Dono aprovou o plano e **inverteu D4**: o desktop não pode ser afetado. Mobile não é breakpoint no mesmo JSX. É um front paralelo no mesmo app.
+
+### 11.1 Contrato
+
+| Regra | Como |
+|-------|------|
+| URL do usuário | Igual (`/login`). Rewrite interno para `/m/login`. |
+| Auth / APIs / sessão | Os mesmos (`useSupabaseAuth`, cookies `abzToken`, rotas `/api/**`). |
+| Desktop | Páginas atuais em `src/app/**` **não** mudam de visual. |
+| Mobile | Arquivos novos em `src/app/(mobile)/m/**` + `src/components/mobile/**` + `src/lib/mobile-ui/**`. |
+| Fallback | Rota fora da allowlist → desktop (libera módulo a módulo). |
+| Tablet | Default **desktop**. |
+| Override | Cookie `ui=desktop\|mobile`. |
+| Produção | Sem `vercel --prod`, sem promote, sem merge em `portal`. |
+
+### 11.2 Detecção de dispositivo
+
+Ordem (primeira que decide):
+
+1. Cookie `ui=desktop` → desktop (mesmo no iPhone).  
+2. Cookie `ui=mobile` → mobile **se** a rota está na allowlist; senão desktop.  
+3. Bot (`userAgent(request).isBot`) → desktop (SEO vê o HTML atual).  
+4. `userAgent(request).device.type === 'tablet'` → desktop.  
+5. Client Hint `Sec-CH-UA-Mobile: ?1` → mobile.  
+6. `device.type === 'mobile'` → mobile.  
+7. Senão → desktop.
+
+`userAgent()` do `next/server` (ua-parser-js). Hint só chega em HTTPS + Chromium depois de `Accept-CH: Sec-CH-UA-Mobile`. Primeira request usa só UA.
+
+**Tablet:** iPad/Android tablet = desktop. iPadOS 13+ que se declara `Macintosh` cai em desktop (limite conhecido do UA).
+
+**Allowlist P0:** só `/login` (mais `/m/preview` direto, sem rewrite, para QA do shell). Qualquer outra rota (dashboard, férias, …) permanece desktop até entrar na lista em `src/lib/mobile-ui/device-surface.ts`.
+
+### 11.3 Cookie e links
+
+- `GET/POST /api/ui-surface?to=desktop|mobile&next=/login` grava `ui` (path `/`, `SameSite=Lax`, 180 dias) e redireciona.  
+- Mobile: link **Ver versão completa** (seta `ui=desktop`).  
+- Desktop: link **Voltar para o mobile** **somente** se `ui=desktop` **e** o dispositivo é móvel. Sem cookie, o desktop não ganha nenhum pixel extra.
+
+### 11.4 Middleware
+
+`src/middleware.ts` mantém o fluxo atual (públicas, estáticos, auth de `/avaliacao`, locale). Redirects não são reescritos.
+
+Só `NextResponse.next()` passa por `applyMobileSurface`:
+
+- desktop / tablet / cookie desktop / rota não listada → **o mesmo** `next()` de hoje (sem header extra).  
+- mobile + allowlist → `NextResponse.rewrite(/m` + pathname) + `Vary: User-Agent, Sec-CH-UA-Mobile, Cookie` + `Accept-CH` / `Critical-CH: Sec-CH-UA-Mobile`.
+
+Pedido desktop **não** é reescrito. Pedido `/m/*` com UA desktop redireciona para a URL sem prefixo (a menos que `ui=mobile`).
+
+### 11.5 Riscos (cache, SEO, prefetch)
+
+| Risco | Efeito | Mitigação |
+|-------|--------|-----------|
+| CDN/cache sem `Vary` | Celular recebe HTML desktop ou o contrário | `Vary` só na resposta reescrita. Vercel costuma cachear por cookie/UA em preview; em prod o dono precisa confirmar. |
+| `Vary: Cookie` | Cache fragmenta | Cookie `ui` é curto. Sem cookie, só UA + CH. |
+| SEO / canonical | Duas árvores HTML na mesma URL | Bots → desktop. Sem `noindex` no mobile. Canonical continua a URL pública. |
+| Client Hints | Ausente em HTTP, Safari, Firefox | UA é fallback. |
+| Prefetch do Next | `<Link>` no mobile pode prefetchar `/dashboard` desktop | Esperado: dashboard ainda é desktop. |
+| iPad “desktop UA” | Tablet some como desktop | Aceito (regra tablet). |
+
+### 11.6 PWA (não feito nesta Fase 2)
+
+Não mexer em `src/app/manifest.ts`, `public/notifications-sw.js` nem no `layout.tsx` raiz (viewport/theme-color).
+
+Para o dono decidir depois:
+
+1. `start_url` / `display` já existem. Ícone único 192/512 (`LC1_Azul.png`) — gerar maskable 192 e 512.  
+2. Prompt “Adicionar à tela inicial” só no front mobile (componente novo). Sem `next-pwa`.  
+3. Offline (Fase C): SW com precache do **shell mobile** (`/m/login`) e never-cache de `/api/**`. SW global hoje é só push — misturar exige desenho para não quebrar notificações.  
+4. Qualquer mudança no layout raiz (theme-color, apple-touch) afeta desktop: só com aprovação.
+
+### 11.7 Decisões D1–D8 no front mobile
+
+Aplicadas **só** em `src/components/mobile/**`:
+
+- D1 C: bottom nav (Home, Notícias, Férias, Mais) + sheet Mais com o menu completo.  
+- D2 B: PWA install depois; offline depois. Sem toque global agora.  
+- D3: P0 = login + shell.  
+- D4: desktop congelado.  
+- D5 B: `TouchButton`, `BottomSheet`, `DataCard` (Radix Slot no botão; sheet sem lib nova).  
+- D6: cards para listas; swipe reservado para grades (ainda não na P0).  
+- D7 B: um FAB Companion + bottom sheet full-width. Sem Help FAB no mobile.  
+- D8: chat ainda desktop (allowlist). Quando existir: membros fechados.
+
+### 11.8 Arquivos existentes que a Fase 2 pode tocar
+
+| Arquivo | Motivo |
+|---------|--------|
+| `src/middleware.ts` | Rewrite + preserve redirects atuais. |
+| `src/components/ClientProviders.tsx` | Monta `UiSurfaceSwitch` (render `null` sem cookie `ui=desktop` em móvel). |
+| `src/contexts/CompanionSessionContext.tsx` | Esconde o FAB desktop quando `data-abz-ui=mobile` (evita dois Companions). Sem o atributo, o JSX desktop é o mesmo. |
+| Este doc | Contrato. |
+
+Nenhum outro page/component desktop deve mudar.
 
 ---
 
