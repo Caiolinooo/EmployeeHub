@@ -14,18 +14,24 @@
 
 import { supabaseAdmin } from '@/lib/db';
 import type { CALookupResult, CAStatus } from '@/types/epi';
+import {
+    CONSULTA_CA_HOST,
+    buildApiBaseCaepiLookupUrl,
+    buildConsultaCaLookupUrl,
+    UnsafeUrlError,
+} from '@/lib/security/safe-url';
 
 // ==================== CONSTANTS ====================
 
 const MTE_CONSULTA_URL = 'https://caepi.mte.gov.br/internet/ConsultaCAInternet.aspx';
-const CONSULTA_CA_URL = 'https://consultaca.com';
 const CACHE_TTL_HOURS = 24;
 
 // Scraping toggle: enable by default, disable via env var ENABLE_CA_SCRAPING=false
 const ENABLE_SCRAPING = process.env.ENABLE_CA_SCRAPING !== 'false';
 
-// Open-source API fallback (if someone hosts API_BaseCAEPI Docker)
-const API_BASE_CAEPI_URL = process.env.API_BASE_CAEPI_URL || '';
+function getApiBaseCaepiUrl(): string {
+    return (process.env.API_BASE_CAEPI_URL || '').trim();
+}
 
 // ==================== MAIN LOOKUP FUNCTION ====================
 
@@ -82,7 +88,7 @@ export async function lookupCA(caNumber: string): Promise<CALookupResult | null>
         }
 
         // 4. Try open-source API if configured
-        if (API_BASE_CAEPI_URL) {
+        if (getApiBaseCaepiUrl()) {
             for (const variant of variants) {
                 console.log(`[CA Lookup] Trying API_BaseCAEPI for CA ${variant}...`);
                 result = await queryAPIBaseCAEPI(variant);
@@ -449,13 +455,19 @@ function parseMTEResultHTML(caNumber: string, html: string): CALookupResult | nu
 
 // ==================== CONSULTACA.COM SCRAPING ====================
 
-async function scrapeConsultaCA(caNumber: string): Promise<CALookupResult | null> {
+export async function scrapeConsultaCA(
+    caNumber: string,
+    fetchImpl: typeof fetch = fetch,
+): Promise<CALookupResult | null> {
     try {
-        const url = `${CONSULTA_CA_URL}/${caNumber}`;
+        const url = buildConsultaCaLookupUrl(caNumber);
+        if (url.protocol !== 'https:' || url.hostname !== CONSULTA_CA_HOST) {
+            return null;
+        }
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 15000);
 
-        const response = await fetch(url, {
+        const response = await fetchImpl(url.href, {
             signal: controller.signal,
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -479,6 +491,10 @@ async function scrapeConsultaCA(caNumber: string): Promise<CALookupResult | null
         const html = await response.text();
         return parseConsultaCAHTML(caNumber, html);
     } catch (error: any) {
+        if (error instanceof UnsafeUrlError) {
+            console.warn(`[CA Lookup] consultaca.com URL blocked:`, error.message);
+            return null;
+        }
         console.warn(`[CA Lookup] consultaca.com scraping failed:`, error.message);
         return null;
     }
@@ -548,14 +564,22 @@ function parseConsultaCAHTML(caNumber: string, html: string): CALookupResult | n
  * GitHub: https://github.com/JoaoAugustoMV/API_BaseCAEPI
  * Docker: https://hub.docker.com/r/joaoaugustomv/api_base_ca_epi
  */
-async function queryAPIBaseCAEPI(caNumber: string): Promise<CALookupResult | null> {
-    if (!API_BASE_CAEPI_URL) return null;
+export async function queryAPIBaseCAEPI(
+    caNumber: string,
+    fetchImpl: typeof fetch = fetch,
+): Promise<CALookupResult | null> {
+    const configured = getApiBaseCaepiUrl();
+    if (!configured) return null;
 
     try {
+        const url = buildApiBaseCaepiLookupUrl(configured, caNumber);
+        if (url.protocol !== 'https:' || url.hostname !== new URL(configured).hostname) {
+            return null;
+        }
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 10000);
 
-        const response = await fetch(`${API_BASE_CAEPI_URL}/ca/${caNumber}`, {
+        const response = await fetchImpl(url.href, {
             signal: controller.signal,
             headers: { 'Accept': 'application/json' }
         });
@@ -596,6 +620,10 @@ async function queryAPIBaseCAEPI(caNumber: string): Promise<CALookupResult | nul
             last_synced: new Date().toISOString()
         };
     } catch (error: any) {
+        if (error instanceof UnsafeUrlError) {
+            console.warn(`[CA Lookup] API_BaseCAEPI URL blocked:`, error.message);
+            return null;
+        }
         console.warn(`[CA Lookup] API_BaseCAEPI failed:`, error.message);
         return null;
     }
@@ -653,7 +681,7 @@ export async function syncCADatabase(): Promise<{ synced: number; errors: number
                         result = await scrapeConsultaCA(ca);
                     }
                 }
-                if (!result && API_BASE_CAEPI_URL) {
+                if (!result && getApiBaseCaepiUrl()) {
                     result = await queryAPIBaseCAEPI(ca);
                 }
 
