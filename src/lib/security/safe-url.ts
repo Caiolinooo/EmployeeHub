@@ -327,15 +327,56 @@ function isPrivateIpv4(ip: string): boolean {
   return false;
 }
 
+function hextetPairToIpv4(hi: string, lo: string): string | null {
+  if (!/^[0-9a-f]{1,4}$/.test(hi) || !/^[0-9a-f]{1,4}$/.test(lo)) return null;
+  const a = parseInt(hi, 16);
+  const b = parseInt(lo, 16);
+  return `${(a >> 8) & 255}.${a & 255}.${(b >> 8) & 255}.${b & 255}`;
+}
+
+function ipv4FromTail(tail: string): string | null {
+  if (isIpv4Address(tail)) return tail;
+  const parts = tail.split(':');
+  if (parts.length === 2) return hextetPairToIpv4(parts[0], parts[1]);
+  return null;
+}
+
+/**
+ * Node WHATWG URL canonicalizes IPv4-mapped IPv6 to `[::ffff:7f00:1]`
+ * (hex hextets), not dotted `::ffff:127.0.0.1`. Same for IPv4-compatible
+ * `::/96` (`[::127.0.0.1]` → `[::7f00:1]`) and NAT64 `64:ff9b::/96`.
+ */
+function ipv4FromEmbeddedIpv6(host: string): string | null {
+  const h = host.toLowerCase();
+
+  if (h.startsWith('::ffff:')) {
+    return ipv4FromTail(h.slice('::ffff:'.length));
+  }
+  const mappedExpanded = h.match(/^(?:0:){5}ffff:(.+)$/);
+  if (mappedExpanded) return ipv4FromTail(mappedExpanded[1]);
+
+  if (h.startsWith('64:ff9b::')) {
+    return ipv4FromTail(h.slice('64:ff9b::'.length));
+  }
+  const nat64Expanded = h.match(/^64:ff9b:(?:0:){4}(.+)$/);
+  if (nat64Expanded) return ipv4FromTail(nat64Expanded[1]);
+
+  if (h.startsWith('::')) {
+    return ipv4FromTail(h.slice(2));
+  }
+  const compatibleExpanded = h.match(/^(?:0:){6}(.+)$/);
+  if (compatibleExpanded) return ipv4FromTail(compatibleExpanded[1]);
+
+  return null;
+}
+
 function isBlockedIpv6(host: string): boolean {
   if (!host.includes(':')) return false;
   const h = host.toLowerCase();
-  if (h === '::1' || h === '::') return true;
+  if (h === '::1' || h === '::' || h === '0:0:0:0:0:0:0:1') return true;
   if (h.startsWith('fe80:')) return true;
   if (h.startsWith('fc') || h.startsWith('fd')) return true;
-  if (h.startsWith('::ffff:')) {
-    const mapped = h.slice('::ffff:'.length);
-    return isIpv4Address(mapped) && isPrivateIpv4(mapped);
-  }
+  const embedded = ipv4FromEmbeddedIpv6(h);
+  if (embedded) return isPrivateIpv4(embedded);
   return false;
 }

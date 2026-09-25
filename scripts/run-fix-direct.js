@@ -21,11 +21,11 @@ async function runDirectFix() {
     // Executar SQL 1
     console.log('\n1️⃣ Adicionando deleted_at à users_unified...');
     try {
-      const response = await fetch(\`\${supabaseUrl}/rest/v1/\`, {
+      const response = await fetch(`${supabaseUrl}/rest/v1/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': \`Bearer \${supabaseServiceKey}\`,
+          'Authorization': `Bearer ${supabaseServiceKey}`,
           'apikey': supabaseServiceKey,
           'Accept': 'application/vnd.pgrst.object+json'
         },
@@ -64,7 +64,7 @@ async function runDirectFix() {
       } else {
         if (userData && userData.length > 0) {
           const hasDeletedAt = userData[0].hasOwnProperty('deleted_at');
-          console.log(\`✅ users_unified.deleted_at: \${hasDeletedAt ? 'Presente' : 'Ausente'}\`);
+          console.log(`✅ users_unified.deleted_at: ${hasDeletedAt ? 'Presente' : 'Ausente'}`);
         } else {
           console.log('ℹ️  Nenhum usuário encontrado para verificação');
         }

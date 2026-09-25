@@ -128,6 +128,7 @@ When the user requests a durable behavior change, record it here or in the relev
 - `src/config/AGENTS.md` — catálogo vivo de módulos + permissões (UserEditor / ACL)
 - `src/app/api/acl/AGENTS.md` — seed ACL a partir do catálogo vivo
 - `src/lib/wkradar/AGENTS.md` — TLS pin WK Radar (fingerprint SHA-256, notAfter, handshake-only re-pin)
+- `src/lib/security/AGENTS.md` — guard SSRF `parseSafeUrl` (https + allowlist; IPv4 mapped/`::/96`/NAT64 privado bloqueado) e `fetchWithSafeRedirects` (máx. 3 hops)
 
 ## Index of Modules
 
