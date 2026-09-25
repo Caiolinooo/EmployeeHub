@@ -135,6 +135,31 @@ function mockApi(urlString) {
   const url = new URL(urlString);
   const p = url.pathname;
 
+  if (p.includes('/api/config')) {
+    return json({
+      title: 'Painel ABZ Group',
+      description: 'Painel centralizado',
+      logo: '',
+      favicon: '/favicon.ico',
+      primaryColor: '#005dff',
+      secondaryColor: '#6339F5',
+      login_logo: '',
+      sidebar_logo: '',
+      widget_logo: '',
+      companyName: 'ABZ Group',
+      contactEmail: 'contato@example.com',
+      footerText: '© 2026 ABZ Group',
+      dashboardTitle: 'Centro de Recursos',
+      dashboardDescription: 'Bem-vindo',
+      sidebarTitle: 'Painel ABZ',
+      googleClientId: '',
+      googleClientSecret: '',
+      googleRedirectUri: '',
+    });
+  }
+  if (p.includes('/api/i18n')) {
+    return json({ data: [] });
+  }
   if (p.includes('/api/auth/verify-token')) {
     return json({ success: true, userId: USER_ID, role: 'ADMIN', timestamp: '2026-09-25T00:00:00.000Z' });
   }
@@ -205,18 +230,22 @@ function mockApi(urlString) {
   if (p.includes('/api/leave/config')) return json({ success: true, days: 30 });
   if (p.includes('/api/admin/leave-approvals')) return json({ isApprover: false, requests: [] });
   if (p.includes('/api/admin/leave-requests')) return json([]);
-  if (p.includes('/api/news/posts')) return json({ posts: [], total: 0, page: 1 });
+  if (p.includes('/api/news/posts')) {
+    return json({ posts: [], total: 0, page: 1, pagination: { page: 1, hasNext: false, hasPrev: false, total: 0 } });
+  }
   if (p.includes('/api/reembolso/user')) return json({ data: [], pagination: { total: 0 } });
   if (p.includes('/api/reembolso/')) return json({ success: true, data: [] });
   if (p.includes('/api/contracheque')) return json({ success: true, data: [] });
   if (p.includes('/api/calendar')) return json({ events: [], data: [] });
-  if (p.includes('/api/dashboard/pendencies')) return json({ success: true, data: [] });
-  if (p.includes('/api/user-shortcuts')) return json({ success: true, data: [] });
-  if (p.includes('/api/cards')) return json({ success: true, data: [] });
+  if (p.includes('/api/user-shortcuts')) return json([]);
+  if (p.includes('/api/cards')) return json([]);
   if (p.includes('/api/purchase-orders')) return json({ success: true, data: [] });
+  if (p.includes('/api/dashboard/pendencies')) return json({ emails_nao_lidos: 0, ferias_pendentes: 0, reembolsos_pendentes: 0 });
   if (p.includes('/api/ia/')) return json({ success: true, sessionId: 'proof', messages: [] });
   if (p.includes('/api/notifications')) return json({ success: true, data: [] });
-  if (p.includes('/api/')) return json({ success: true, data: [], items: [], requests: [] });
+  if (p.includes('/api/')) {
+    return json({ success: true, data: [], items: [], requests: [], posts: [] });
+  }
 
   if (p.includes('/rest/v1/users_unified')) return json(USER);
   if (p.includes('/rest/v1/')) return json([]);
@@ -246,6 +275,9 @@ async function attachMocks(page, { showLanguage }) {
     ({ token, showLanguage: showLang }) => {
       localStorage.setItem('abzToken', token);
       localStorage.setItem('token', token);
+      localStorage.setItem('main-sidebar-collapsed', 'true');
+      localStorage.setItem('sidebar-meurh-open', 'false');
+      localStorage.setItem('sidebar-dept-open', 'false');
       if (showLang) localStorage.removeItem('languageDialogShown');
       else localStorage.setItem('languageDialogShown', 'true');
     },
@@ -269,12 +301,14 @@ async function settle(page) {
     if (document.fonts?.ready) await document.fonts.ready;
   });
   await page.addStyleTag({
-    content: '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}',
+    content: '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}[data-help-trigger],[data-fab-companion],[data-fab-help],[aria-label="Abrir Companion ABZ"]{visibility:hidden!important}',
   });
   await page.waitForTimeout(400);
 }
 
 async function shotPage(page, baseUrl, path, outFile, extra) {
+  const errors = [];
+  page.once('pageerror', (err) => errors.push(String(err)));
   const url = new URL(path, baseUrl).toString();
   const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await settle(page);
@@ -291,7 +325,7 @@ async function shotPage(page, baseUrl, path, outFile, extra) {
     hasTablist: !!document.querySelector('[data-testid="collaborator-modal-tablist"]'),
     bodyText: document.body.innerText.slice(0, 240),
   }));
-  return { status: resp?.status() ?? 0, ...info, file: outFile };
+  return { status: resp?.status() ?? 0, ...info, errors, file: outFile };
 }
 
 async function runSide(baseUrl, outDir, label) {
@@ -324,14 +358,14 @@ async function runSide(baseUrl, outDir, label) {
     '/department/gestao-tripulantes',
     join(outDir, 'ficha.png'),
     async (p) => {
-      const row = p.locator('text=Ana Souza').first();
-      if (await row.count()) {
-        await row.click({ timeout: 8_000 }).catch(() => {});
-        await p.waitForTimeout(800);
-        const qhse = p.locator('[data-tab-key="qhse"], text=QHSE').first();
-        if (await qhse.count()) await qhse.click({ timeout: 4_000 }).catch(() => {});
-        await p.waitForTimeout(600);
-      }
+        const row = p.getByText('Ana Souza').first();
+        if (await row.count()) {
+          await row.click({ timeout: 8_000 }).catch(() => {});
+          await p.waitForTimeout(800);
+          const qhse = p.locator('[data-tab-key="qhse"]');
+          if (await qhse.count()) await qhse.click({ timeout: 4_000 }).catch(() => {});
+          await p.waitForTimeout(600);
+        }
     },
   );
 

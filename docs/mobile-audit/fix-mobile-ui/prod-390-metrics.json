@@ -1,0 +1,102 @@
+{
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "before": {
+    "kpi": {
+      "hasKpi": false
+    },
+    "fabGt": {
+      "help": {
+        "w": 56,
+        "h": 56,
+        "top": 764,
+        "right": 374
+      },
+      "companion": {
+        "w": 64,
+        "h": 64,
+        "top": 756,
+        "right": 306
+      },
+      "mainPb": "12px"
+    },
+    "gtFile": "/workspace/docs/mobile-audit/fix-mobile-ui/prod-390-antes-gt-matriz.png",
+    "fichaFile": "/workspace/docs/mobile-audit/fix-mobile-ui/prod-390-antes-ficha-qhse.png",
+    "fichaSwipeFile": "/workspace/docs/mobile-audit/fix-mobile-ui/prod-390-antes-ficha-qhse-swipe.png",
+    "tabs": {
+      "hasTablist": true,
+      "overflowX": "visible",
+      "canSwipe": false,
+      "scrollable": false
+    },
+    "fabDash": {
+      "help": {
+        "w": 56,
+        "h": 56,
+        "top": 764,
+        "right": 374
+      },
+      "companion": {
+        "w": 64,
+        "h": 64,
+        "top": 756,
+        "right": 306
+      },
+      "mainPb": "12px"
+    },
+    "dashFile": "/workspace/docs/mobile-audit/fix-mobile-ui/prod-390-antes-dashboard.png"
+  },
+  "after": {
+    "kpi": {
+      "hasKpi": true,
+      "display": "flex",
+      "overflowX": "auto",
+      "wrapOverflowX": true,
+      "cardCount": 4,
+      "lastRight": 1002,
+      "viewport": 390
+    },
+    "fabGt": {
+      "help": {
+        "w": 44,
+        "h": 44,
+        "top": 788,
+        "right": 378
+      },
+      "companion": {
+        "w": 44,
+        "h": 44,
+        "top": 788,
+        "right": 326
+      },
+      "mainPb": "92px"
+    },
+    "gtFile": "/workspace/docs/mobile-audit/fix-mobile-ui/prod-390-depois-gt-matriz.png",
+    "fichaFile": "/workspace/docs/mobile-audit/fix-mobile-ui/prod-390-depois-ficha-qhse.png",
+    "fichaSwipeFile": "/workspace/docs/mobile-audit/fix-mobile-ui/prod-390-depois-ficha-qhse-swipe.png",
+    "tabs": {
+      "hasTablist": true,
+      "overflowX": "auto",
+      "canSwipe": true,
+      "scrollable": true
+    },
+    "fabDash": {
+      "help": {
+        "w": 44,
+        "h": 44,
+        "top": 788,
+        "right": 378
+      },
+      "companion": {
+        "w": 44,
+        "h": 44,
+        "top": 788,
+        "right": 326
+      },
+      "mainPb": "92px"
+    },
+    "dashFile": "/workspace/docs/mobile-audit/fix-mobile-ui/prod-390-depois-dashboard.png"
+  }
+}

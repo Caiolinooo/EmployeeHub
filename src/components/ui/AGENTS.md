@@ -8,7 +8,7 @@ Fechar overlays no celular sem mudar o desktop em 1440×900.
 
 - `ModalCloseButton.tsx` — X com `data-modal-close` (44×44 via `globals.css` ≤767px). `mobileOnly` = `md:hidden`.
 - `src/hooks/useEscapeToClose.ts` — Esc.
-- `globals.css` `@media (max-width: 767px)` — `[data-modal-close]`, `[data-modal-panel]`, `[data-gt-kpi-cards]`, `[data-portal-main]`, `[data-fab-companion]`, `[data-fab-help]`, `[data-fab-companion-panel]`, `[data-fab-companion-action]`. Nenhum desses seletores fora do media.
+- `globals.css` `@media (max-width: 767px)` — `[data-modal-close]`, `[data-modal-panel]`, `div[data-gt-kpi-cards]` (`!important` vence `.grid`), `[data-portal-main]`, `[data-fab-companion]`, `[data-fab-help]`, `[data-fab-companion-panel]`, `[data-fab-companion-action]`. Nenhum desses seletores fora do media.
 
 ## Local Contracts
 
