@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiLoader, FiAlertCircle } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
+import { fetchWithToken } from '@/lib/tokenStorage';
 
 interface PdfContentExtractorProps {
   filePath: string;
@@ -57,7 +58,7 @@ const PdfContentExtractor: React.FC<PdfContentExtractorProps> = ({ filePath }) =
         }
 
         // Extrair conteúdo do PDF usando a API
-        const response = await fetch(`/api/pdf-extract?url=${encodeURIComponent(normalizedPath)}`);
+        const response = await fetchWithToken(`/api/pdf-extract?url=${encodeURIComponent(normalizedPath)}`);
 
         if (!response.ok) {
           throw new Error(`${t('viewer.extractError', 'Erro ao extrair conteúdo')}: ${response.status} ${response.statusText}`);

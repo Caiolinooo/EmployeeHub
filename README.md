@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.87.2 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.88.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,31 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.88.0)
+
+- **Middleware no bundle**: o `middleware.ts` da raiz entra no manifesto de produção; rotas de debug/admin deixam de responder sem JWT ADMIN ou `CRON_SECRET`.
+- **Allowlist anti-SSRF**: buscas externas só falam com host em `src/lib/security/safe-url.ts` (e no resolvedor da rota).
+- **e-Social valida TLS**: cadeia de certificado exigida; `NODE_TLS_REJECT_UNAUTHORIZED=0` só como escape de emergência.
+- **QHSE/EPI**: a aba deixa de mostrar “Colaborador não encontrado” por select inválido em `gt_colaboradores`.
+- **Mídias das notícias**: `img`/`video` `src` passam por `toSafeMediaUrl` (`src/lib/security/safe-media-url.ts`); bloqueia `javascript:`, `data:` e `http:`.
+- **Scratch e scripts**: apagados one-offs sem runtime (`scratch/mio_api_doc.html`, `scratch/test-ocr-aso.ts`, `scripts/discover-mio.js`); os que ficam foram endurecidos.
+- **Login**: não chama `fix-token` nem `ensure-admin`. Token do storage vai para `verify-token`. `fix-token` só depois do refresh falhar **e** existir sessão Supabase — sem mint ADMIN em token morto.
+- **Visão geral financeira**: “Todas as empresas” (sem `empresaId`) soma todas as empresas; o 500 do filtro nulo some.
+- **Calendário e pdf-extract**: `GET /api/calendar/company/events` e `GET /api/pdf-extract` exigem JWT; anônimo recebe **401**.
+
+## Segurança
+
+Versão atual: **5.88.0**. Detalhe das correções: [CHANGELOG.md](CHANGELOG.md). Política: [SECURITY.md](SECURITY.md).
+
+- Middleware vive em `middleware.ts` na raiz (Next 15.5 procura ao lado do `pagesDir`). Sem isso o bundle ia sem gate.
+- Debug/admin públicos (`ensure-admin`, `test-users`, `supabase-status`, `acl/init`, `execute-sql`) exigem JWT ADMIN ou `CRON_SECRET`.
+- Fetch de saída usa allowlist em `src/lib/security/safe-url.ts`. Host fora da lista, IP privado e `http://` são recusados.
+- Editores de notícias sanitizam mídia com `toSafeMediaUrl` (`src/lib/security/safe-media-url.ts`).
+- Scratch e scripts one-off que só geravam alerta saíram; os scripts que restam foram endurecidos.
+- Cliente e-Social valida TLS (CAs do Node + ICP-Brasil). Não desligar a validação no dia a dia.
+- Login: token do storage → `verify-token`. `fix-token` só após falha de refresh com sessão Supabase. `/login` não chama `ensure-admin`.
+- `GET /api/calendar/company/events` e `GET /api/pdf-extract` exigem JWT (header ou cookie). Sem token / inválido / sem `userId` → **401**.
 
 ## Nesta versão (5.87.2)
 
