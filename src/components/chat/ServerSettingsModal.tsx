@@ -3,6 +3,7 @@ import { FiX, FiSave, FiTrash2, FiImage, FiGlobe, FiLock } from 'react-icons/fi'
 import toast from 'react-hot-toast';
 import ModalCloseButton from '@/components/ui/ModalCloseButton';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
 
 interface ServerSettingsModalProps {
     isOpen: boolean;
@@ -31,6 +32,7 @@ export default function ServerSettingsModal({
     const [isPublic, setIsPublic] = useState(server.is_public);
     const [isLoading, setIsLoading] = useState(false);
     useEscapeToClose(isOpen, onClose);
+    useEscapeCapture(isOpen, onClose);
 
     useEffect(() => {
         if (isOpen) {
@@ -65,19 +67,25 @@ export default function ServerSettingsModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-            <div data-modal-panel="" className="relative bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={onClose}
+        >
+            <div
+                data-modal-panel=""
+                className="relative bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/50">
-                    <h2 className="text-lg font-semibold text-white min-w-0 truncate">Configurações do Servidor</h2>
+                    <h2 className="text-lg font-semibold text-white max-md:min-w-0 max-md:truncate">Configurações do Servidor</h2>
                     <button
                         type="button"
                         onClick={onClose}
-                        className="hidden md:inline-flex p-2 hover:bg-zinc-800 rounded-lg transition-colors text-zinc-400 hover:text-white"
+                        className="p-2 hover:bg-zinc-800 rounded-lg transition-colors text-zinc-400 hover:text-white max-md:hidden"
                     >
                         <FiX size={20} />
                     </button>
-                    <ModalCloseButton onClick={onClose} mobileOnly className="text-zinc-400 hover:text-white hover:bg-zinc-800" />
+                    <ModalCloseButton onClick={onClose} mobileOnly mountOnlyWhenMobile className="text-zinc-400 hover:text-white hover:bg-zinc-800" />
                 </div>
 
                 <div className="p-6 space-y-6">

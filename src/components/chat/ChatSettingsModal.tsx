@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FiX, FiMonitor, FiSpeaker, FiMic, FiSettings, FiBell, FiCamera } from 'react-icons/fi';
 import ModalCloseButton from '@/components/ui/ModalCloseButton';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
 
 interface ChatSettingsModalProps {
     isOpen: boolean;
@@ -19,6 +20,7 @@ export default function ChatSettingsModal({ isOpen, onClose, prefs, onSave }: Ch
     const [selectedVideoDevice, setSelectedVideoDevice] = useState('');
 
     useEscapeToClose(isOpen, onClose);
+    useEscapeCapture(isOpen, onClose);
 
     useEffect(() => {
         setLocalPrefs(prefs);
@@ -57,21 +59,27 @@ export default function ChatSettingsModal({ isOpen, onClose, prefs, onSave }: Ch
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center max-md:p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-            <div data-modal-panel="" className="relative bg-zinc-900 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col h-[550px] max-md:h-auto max-md:max-h-[100dvh] border border-white/10 animate-in fade-in zoom-in duration-200">
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm max-md:p-4"
+            onClick={onClose}
+        >
+            <div
+                data-modal-panel=""
+                className="relative bg-zinc-900 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col h-[550px] max-md:h-auto max-md:max-h-[100dvh] border border-white/10 animate-in fade-in zoom-in duration-200"
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-zinc-900/80">
-                    <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-lg bg-violet-500/10 flex items-center justify-center shrink-0">
+                    <div className="flex items-center gap-3 max-md:min-w-0">
+                        <div className="w-9 h-9 rounded-lg bg-violet-500/10 flex items-center justify-center max-md:shrink-0">
                             <FiSettings className="w-5 h-5 text-violet-400" />
                         </div>
-                        <h3 className="font-semibold text-lg text-white truncate">Configurações do Chat</h3>
+                        <h3 className="font-semibold text-lg text-white max-md:truncate">Configurações do Chat</h3>
                     </div>
-                    <button type="button" onClick={onClose} className="hidden md:inline-flex p-2 hover:bg-white/5 rounded-lg transition-colors text-zinc-400 hover:text-white">
+                    <button type="button" onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg transition-colors text-zinc-400 hover:text-white max-md:hidden">
                         <FiX className="w-5 h-5" />
                     </button>
-                    <ModalCloseButton onClick={onClose} mobileOnly className="text-zinc-400 hover:text-white hover:bg-white/5" />
+                    <ModalCloseButton onClick={onClose} mobileOnly mountOnlyWhenMobile className="text-zinc-400 hover:text-white hover:bg-white/5" />
                 </div>
 
                 {/* Sidebar + Content Layout */}

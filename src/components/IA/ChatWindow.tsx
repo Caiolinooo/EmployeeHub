@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Mic } from 'lucide-react';
 import VoiceAssistantModal from './VoiceAssistantModal';
 import ModalCloseButton from '@/components/ui/ModalCloseButton';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 
 interface Props {
   token: string;
@@ -38,6 +39,7 @@ export default function ChatWindow({ token }: Props) {
   const [showDashboard, setShowDashboard] = useState(false);
   
   const [showVoiceModal, setShowVoiceModal] = useState(false);
+  const { markTrigger, restoreFocus } = useRestoreFocus();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -110,14 +112,22 @@ export default function ChatWindow({ token }: Props) {
 
   useEffect(() => {
     if (!sidebarOpen) return;
+    const mq = window.matchMedia('(max-width: 1023px)');
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
-      if (!window.matchMedia('(max-width: 1023px)').matches) return;
       event.stopPropagation();
       setSidebarOpen(false);
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    const apply = () => {
+      window.removeEventListener('keydown', onKey);
+      if (mq.matches) window.addEventListener('keydown', onKey);
+    };
+    apply();
+    mq.addEventListener('change', apply);
+    return () => {
+      mq.removeEventListener('change', apply);
+      window.removeEventListener('keydown', onKey);
+    };
   }, [sidebarOpen]);
 
   // Listen for dashboard actions
@@ -386,13 +396,19 @@ export default function ChatWindow({ token }: Props) {
       <div className="flex-1 flex flex-col min-w-0 bg-white relative">
         <ExchangeIntegrationModal 
           isOpen={showExchangeModal} 
-          onClose={() => setShowExchangeModal(false)} 
+          onClose={() => {
+            setShowExchangeModal(false);
+            restoreFocus();
+          }} 
           token={token} 
         />
 
         <VoiceAssistantModal 
           isOpen={showVoiceModal}
-          onClose={() => setShowVoiceModal(false)}
+          onClose={() => {
+            setShowVoiceModal(false);
+            restoreFocus();
+          }}
           authToken={token}
         />
 
@@ -432,7 +448,10 @@ export default function ChatWindow({ token }: Props) {
               </button>
             )}
             <button 
-              onClick={() => setShowVoiceModal(true)} 
+              onClick={(event) => {
+                markTrigger(event.currentTarget);
+                setShowVoiceModal(true);
+              }} 
               className="p-2 max-md:min-h-11 max-md:min-w-11 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors text-gray-500" 
               title="Conversa por Voz em Tempo Real"
             >
@@ -525,7 +544,10 @@ export default function ChatWindow({ token }: Props) {
               </div>
             </div>
             <button 
-              onClick={() => setShowVoiceModal(true)}
+              onClick={(event) => {
+                markTrigger(event.currentTarget);
+                setShowVoiceModal(true);
+              }}
               className="flex-shrink-0 w-14 h-14 bg-slate-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-200 text-slate-600 hover:text-blue-600 rounded-2xl transition-all flex items-center justify-center group active:scale-95 shadow-sm hover:shadow"
               title="Iniciar conversa por Voz em Tempo Real"
             >

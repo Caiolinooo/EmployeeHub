@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import ModalCloseButton from '@/components/ui/ModalCloseButton';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
 
 interface Props {
   isOpen: boolean;
@@ -15,6 +16,7 @@ export default function ExchangeIntegrationModal({ isOpen, onClose, token }: Pro
   const [error, setError] = useState('');
 
   useEscapeToClose(isOpen, onClose);
+  useEscapeCapture(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -42,11 +44,17 @@ export default function ExchangeIntegrationModal({ isOpen, onClose, token }: Pro
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center max-md:p-4 p-4 animate-in fade-in duration-200">
-      <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onClick={onClose} />
-      <div data-modal-panel="" className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200">
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        data-modal-panel=""
+        className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="absolute right-2 top-2">
-          <ModalCloseButton onClick={onClose} mobileOnly />
+          <ModalCloseButton onClick={onClose} mobileOnly mountOnlyWhenMobile />
         </div>
         <div className="p-6 text-center">
           <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">

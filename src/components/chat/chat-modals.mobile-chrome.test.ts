@@ -37,6 +37,26 @@ describe('767 media block (helpers #99)', () => {
     assert.match(src, /fixed inset-0 z-50 flex items-center justify-center bg-black\/60 backdrop-blur-sm max-md:p-4/);
     assert.doesNotMatch(src, /absolute inset-0[\s\S]*backdrop-blur-sm/);
   });
+
+  it('ChatSettings overlay stacking matches portal (blur on same fixed layer)', () => {
+    const src = readFileSync(new URL('./ChatSettingsModal.tsx', import.meta.url), 'utf8');
+    assert.match(src, /fixed inset-0 z-50 flex items-center justify-center bg-black\/60 backdrop-blur-sm max-md:p-4/);
+    assert.doesNotMatch(src, /absolute inset-0[\s\S]*backdrop-blur-sm/);
+    assert.doesNotMatch(src, /md:inline-flex/);
+  });
+
+  it('CreateChannel overlay stacking matches portal (blur on same fixed layer)', () => {
+    const src = readFileSync(new URL('./CreateChannelModal.tsx', import.meta.url), 'utf8');
+    assert.match(src, /fixed inset-0 z-50 flex items-center justify-center bg-black\/60 backdrop-blur-sm max-md:p-4/);
+    assert.doesNotMatch(src, /absolute inset-0[\s\S]*backdrop-blur-sm/);
+    assert.doesNotMatch(src, /md:inline-flex/);
+  });
+
+  it('CreateServer H3 flex is mobile-only', () => {
+    const src = readFileSync(new URL('./CreateServerModal.tsx', import.meta.url), 'utf8');
+    assert.match(src, /max-md:flex-1 max-md:min-w-0/);
+    assert.doesNotMatch(src, /h3 className="[^"]*\bflex-1\b(?![^"]*max-md)/);
+  });
 });
 
 describe('Chat create/settings + IA overlays', () => {
@@ -66,5 +86,7 @@ describe('Chat create/settings + IA overlays', () => {
     assert.match(src, /Escape/);
     assert.match(src, /data-modal-panel/);
     assert.match(src, /max-width: 1023px/);
+    assert.match(src, /mq\.addEventListener\('change'/);
+    assert.match(src, /if \(mq\.matches\) window\.addEventListener\('keydown'/);
   });
 });

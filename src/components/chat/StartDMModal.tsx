@@ -3,6 +3,7 @@ import { FiX, FiSearch, FiMessageCircle } from 'react-icons/fi';
 import { supabase } from '@/lib/supabase';
 import ModalCloseButton from '@/components/ui/ModalCloseButton';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
 
 interface User {
     id: string;
@@ -26,6 +27,7 @@ export default function StartDMModal({ isOpen, onClose, currentUserId, onStartCo
     const [loading, setLoading] = useState(false);
     const [starting, setStarting] = useState<string | null>(null);
     useEscapeToClose(isOpen, onClose);
+    useEscapeCapture(isOpen, onClose);
 
     useEffect(() => {
         if (isOpen) {
@@ -102,7 +104,7 @@ export default function StartDMModal({ isOpen, onClose, currentUserId, onStartCo
                     <button type="button" onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg transition-colors text-zinc-400 hover:text-white max-md:hidden">
                         <FiX className="w-5 h-5" />
                     </button>
-                    <ModalCloseButton onClick={onClose} mobileOnly className="text-zinc-400 hover:text-white hover:bg-white/5" />
+                    <ModalCloseButton onClick={onClose} mobileOnly mountOnlyWhenMobile className="text-zinc-400 hover:text-white hover:bg-white/5" />
                 </div>
 
                 {/* Search */}
@@ -116,6 +118,13 @@ export default function StartDMModal({ isOpen, onClose, currentUserId, onStartCo
                             placeholder="Buscar usuário..."
                             className="w-full bg-zinc-950/50 border border-white/5 rounded-lg pl-10 pr-4 py-2.5 text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all"
                             autoFocus
+                            onKeyDown={(event) => {
+                                if (event.key === 'Escape' || event.key === 'Esc') {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    onClose();
+                                }
+                            }}
                         />
                     </div>
                 </div>

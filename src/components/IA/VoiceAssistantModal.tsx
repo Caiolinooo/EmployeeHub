@@ -15,6 +15,7 @@ import { Track, ConnectionState } from 'livekit-client';
 import { X, Mic, MicOff, PhoneOff, Loader2, Wifi, Volume2, ShieldAlert } from 'lucide-react';
 import ModalCloseButton from '@/components/ui/ModalCloseButton';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
 
 // Interface do token retornado pelo nosso backend
 interface LiveKitConnectionDetails {
@@ -141,6 +142,7 @@ export default function VoiceAssistantModal({ isOpen, onClose, authToken }: Prop
   }, [authToken]);
 
   useEscapeToClose(isOpen, onClose);
+  useEscapeCapture(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -171,13 +173,14 @@ export default function VoiceAssistantModal({ isOpen, onClose, authToken }: Prop
               }`} />
               <span className="text-xs font-medium uppercase tracking-widest text-slate-400">ABZ Live Voice</span>
             </div>
-            <button 
+            <button
+              type="button"
               onClick={onClose}
-              className="hidden md:inline-flex p-2 hover:bg-slate-800/50 rounded-full transition-all text-slate-400 hover:text-white"
+              className="p-2 hover:bg-slate-800/50 rounded-full transition-all text-slate-400 hover:text-white max-md:hidden"
             >
               <X className="w-5 h-5" />
             </button>
-            <ModalCloseButton onClick={onClose} mobileOnly className="text-slate-400 hover:text-white hover:bg-slate-800/50" />
+            <ModalCloseButton onClick={onClose} mobileOnly mountOnlyWhenMobile className="text-slate-400 hover:text-white hover:bg-slate-800/50" />
           </div>
 
           {/* Conteúdo Principal */}

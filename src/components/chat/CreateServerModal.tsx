@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FaServer, FaPlus } from 'react-icons/fa';
 import ModalCloseButton from '@/components/ui/ModalCloseButton';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
 
 interface CreateServerModalProps {
     isOpen: boolean;
@@ -14,6 +15,7 @@ export default function CreateServerModal({ isOpen, onClose, onCreate }: CreateS
     const [name, setName] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     useEscapeToClose(isOpen, onClose);
+    useEscapeCapture(isOpen, onClose);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -54,8 +56,8 @@ export default function CreateServerModal({ isOpen, onClose, onCreate }: CreateS
                                 <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
                                     <FaServer className="text-blue-500 text-lg" />
                                 </div>
-                                <h3 className="text-xl font-semibold text-white flex-1 min-w-0">Criar Servidor</h3>
-                                <ModalCloseButton onClick={onClose} mobileOnly className="text-zinc-400 hover:text-white hover:bg-white/10" />
+                                <h3 className="text-xl font-semibold text-white max-md:flex-1 max-md:min-w-0">Criar Servidor</h3>
+                                <ModalCloseButton onClick={onClose} mobileOnly mountOnlyWhenMobile className="text-zinc-400 hover:text-white hover:bg-white/10" />
                             </div>
 
                             <div className="space-y-4">
@@ -70,6 +72,13 @@ export default function CreateServerModal({ isOpen, onClose, onCreate }: CreateS
                                         placeholder="Ex: Projetos Internos"
                                         className="w-full px-4 py-2 bg-black/30 border border-white/10 rounded-lg text-white focus:outline-none focus:border-blue-500 transition-colors"
                                         autoFocus
+                                        onKeyDown={(event) => {
+                                            if (event.key === 'Escape' || event.key === 'Esc') {
+                                                event.preventDefault();
+                                                event.stopPropagation();
+                                                onClose();
+                                            }
+                                        }}
                                     />
                                 </div>
                             </div>
