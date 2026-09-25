@@ -2,6 +2,9 @@
  * CollaboratorModal chrome: viewport-filling panel, sticky header/tablist,
  * one body scrollport, inner table scrollports (same overflow-auto + min-h-0
  * model as Man Schedule — no border-collapse tricks).
+ * Tablist desktop (= portal): overflow-x-auto on the inner tablist.
+ * Mobile (`max-lg:`): shell is the scrollport; inner is `min-w-max`.
+ * Do not put overflow-x-auto + min-w-max on the same node.
  */
 
 export const COLLABORATOR_MODAL_OVERLAY_CLASS =
@@ -13,13 +16,13 @@ export const COLLABORATOR_MODAL_PANEL_CLASS =
 export const COLLABORATOR_MODAL_HEADER_CLASS = 'relative z-20 shrink-0';
 
 export const COLLABORATOR_MODAL_TABLIST_SHELL_CLASS =
-  'collaborator-modal-tablist-shell relative z-20 shrink-0 border-b border-gray-200 bg-gray-50/80';
+  'collaborator-modal-tablist-shell relative z-20 shrink-0 border-b border-gray-200 bg-gray-50/80 max-lg:min-w-0 max-lg:overflow-x-auto max-lg:no-scrollbar max-lg:touch-scroll';
 
 export const COLLABORATOR_MODAL_TABLIST_CLASS =
-  'collaborator-modal-tablist flex flex-nowrap overflow-x-auto overscroll-contain no-scrollbar';
+  'collaborator-modal-tablist flex flex-nowrap overflow-x-auto overscroll-contain no-scrollbar max-lg:min-w-max max-lg:overflow-x-visible';
 
 export const COLLABORATOR_MODAL_TAB_BUTTON_CLASS =
-  'flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-xs sm:text-sm font-medium transition-colors shrink-0 sm:px-4';
+  'flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-xs sm:text-sm font-medium transition-colors shrink-0 sm:px-4 max-md:min-h-11';
 
 export const COLLABORATOR_MODAL_BODY_CLASS =
   'collaborator-modal-body custom-scrollbar flex flex-1 min-h-0 min-w-0 flex-col overflow-auto overscroll-contain';

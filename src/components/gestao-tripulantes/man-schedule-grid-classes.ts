@@ -10,7 +10,7 @@
  */
 
 export const MAN_SCHEDULE_SCROLL_CLASS =
-    'man-schedule-scroll flex-1 min-h-0 min-w-0 overflow-x-scroll overflow-y-auto overscroll-contain relative isolate w-full min-h-[360px] touch-scroll';
+    'man-schedule-scroll flex-1 min-h-0 min-w-0 overflow-x-scroll overflow-y-auto overscroll-contain relative isolate w-full min-h-[360px] touch-scroll max-lg:flex-none max-lg:min-h-[50vh]';
 
 /** Synced top horizontal bar — same width source as the grid (`table.scrollWidth`). */
 export const MAN_SCHEDULE_TOP_SCROLL_CLASS =

@@ -8,6 +8,9 @@ import confetti from 'canvas-confetti';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { usePathname } from 'next/navigation';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 
 interface ChangelogRelease {
     version: string;
@@ -77,6 +80,10 @@ export default function ChangelogModal() {
         setIsOpen(false);
     };
 
+    useEscapeToClose(isOpen, handleClose);
+    useEscapeCapture(isOpen, handleClose);
+    useRestoreFocus(isOpen);
+
     const isMajorOrMinorUpdate = (v: string) => {
         // Simple heuristic: ends with .0 ?
         return v.endsWith('.0');
@@ -127,6 +134,7 @@ export default function ChangelogModal() {
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.9, opacity: 0, y: 20 }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                        data-modal-panel=""
                         className="relative w-full max-w-2xl max-h-[85vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
                     >
                         {/* Header */}
@@ -168,7 +176,10 @@ export default function ChangelogModal() {
                                     )}
                                 </div>
                                 <button
+                                    type="button"
                                     onClick={handleClose}
+                                    data-modal-close=""
+                                    aria-label={t('changelog.close', 'Fechar')}
                                     className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors backdrop-blur-md"
                                 >
                                     <FiX size={20} />

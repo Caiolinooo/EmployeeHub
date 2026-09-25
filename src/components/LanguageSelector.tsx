@@ -4,6 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { FiGlobe, FiCheck, FiLoader } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
 import { Locale } from '@/i18n';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
+import ModalCloseButton from '@/components/ui/ModalCloseButton';
 
 interface LanguageSelectorProps {
   variant?: 'dropdown' | 'modal' | 'inline';
@@ -15,6 +19,11 @@ export default function LanguageSelector({
   const { locale, setLocale, t, availableLocales } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [isChanging, setIsChanging] = useState(false);
+
+  const modalOpen = variant === 'modal' && isOpen;
+  useEscapeToClose(modalOpen, () => setIsOpen(false));
+  useEscapeCapture(modalOpen, () => setIsOpen(false));
+  useRestoreFocus(modalOpen);
 
   // Reset changing state when locale actually changes
   useEffect(() => {
@@ -117,7 +126,10 @@ export default function LanguageSelector({
 
         {isOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div data-modal-panel="" className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+              <div className="absolute right-1 top-1">
+                <ModalCloseButton onClick={() => setIsOpen(false)} mobileOnly />
+              </div>
               <h2 className="text-xl font-semibold mb-4">{t('common.chooseLanguage')}</h2>
               <div className="space-y-2">
                 {availableLocales.map((localeCode) => (

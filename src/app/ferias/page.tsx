@@ -1412,8 +1412,8 @@ export default function FeriasPage() {
                         </div>
 
                         {/* Data Table */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-1 min-h-0 flex flex-col">
-                            <div className="flex-1 min-h-0 overflow-auto">
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-1 min-h-0 flex flex-col max-lg:flex-none max-lg:min-h-[40vh] max-lg:overflow-x-auto">
+                            <div className="flex-1 min-h-0 overflow-auto max-lg:min-h-[40vh]">
                                 <table className="w-full min-w-[800px]">
                                     <thead className="bg-gray-50 border-b sticky top-0 z-10">
                                         <tr>

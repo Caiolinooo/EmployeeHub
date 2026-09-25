@@ -7,6 +7,9 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import { toast } from 'react-hot-toast';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 import {
   FiAlertTriangle,
   FiCheckCircle,
@@ -45,6 +48,17 @@ export default function ContrachequePage() {
   const [confirmando, setConfirmando] = useState<ContrachequeItem | null>(null);
   const [busyAceite, setBusyAceite] = useState(false);
   const [busyPdf, setBusyPdf] = useState<string | null>(null);
+
+  const closeModal = () => setModal(null);
+  const closeConfirm = () => {
+    if (!busyAceite) setConfirmando(null);
+  };
+  useEscapeToClose(!!modal && !confirmando, closeModal);
+  useEscapeCapture(!!modal && !confirmando, closeModal);
+  useRestoreFocus(!!modal && !confirmando);
+  useEscapeToClose(!!confirmando, closeConfirm);
+  useEscapeCapture(!!confirmando, closeConfirm);
+  useRestoreFocus(!!confirmando);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -233,7 +247,10 @@ export default function ContrachequePage() {
         {/* Modal de visualização */}
         {modal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 sm:p-4">
-            <div className="flex h-full w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-2xl">
+            <div
+              data-modal-panel=""
+              className="flex h-full w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-2xl max-lg:max-h-[100dvh]"
+            >
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 dark:border-gray-700 px-4 py-3 shrink-0">
                 <div className="flex min-w-0 items-center gap-2">
                   <FiFileText className="h-5 w-5 shrink-0 text-abz-blue" />
@@ -279,6 +296,7 @@ export default function ContrachequePage() {
                   <button
                     type="button"
                     onClick={() => setModal(null)}
+                    data-modal-close=""
                     className="min-h-[40px] min-w-[40px] rounded-lg p-2 text-gray-400 transition hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-200"
                     aria-label={t('contracheque.fechar', 'Fechar')}
                   >
@@ -299,6 +317,7 @@ export default function ContrachequePage() {
         {confirmando && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
             <div
+              data-modal-panel=""
               className="w-full max-w-md rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-2xl"
               role="alertdialog"
               aria-modal="true"
@@ -317,6 +336,7 @@ export default function ContrachequePage() {
                   type="button"
                   onClick={() => setConfirmando(null)}
                   disabled={busyAceite}
+                  data-modal-close=""
                   className="min-h-[44px] min-w-[44px] rounded-lg p-2 text-gray-400 transition hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-50"
                   aria-label={t('contracheque.fechar', 'Fechar')}
                 >
