@@ -24,8 +24,8 @@ describe('modal chrome mobile-only', () => {
       '[data-modal-panel]',
       '[data-gt-kpi-cards]',
       '[data-portal-main]',
-      '[data-fab-companion]',
-      '[data-fab-help]',
+      'button[data-fab-companion]',
+      'button[data-fab-help]',
       '[data-fab-companion-panel]',
       '[data-fab-companion-action]',
     ];

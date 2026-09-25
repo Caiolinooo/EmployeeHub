@@ -352,23 +352,23 @@ error, success {
     flex-shrink: 0;
   }
 
-  [data-portal-main] {
+  main[data-portal-main] {
     padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
   }
 
-  [data-fab-companion],
-  [data-fab-help] {
+  button[data-fab-companion],
+  button[data-fab-help] {
     width: 2.75rem;
     height: 2.75rem;
     bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
   }
-  [data-fab-help] {
+  button[data-fab-help] {
     right: calc(0.75rem + env(safe-area-inset-right, 0px));
   }
-  [data-fab-companion] {
+  button[data-fab-companion] {
     right: calc(4rem + env(safe-area-inset-right, 0px));
   }
-  [data-fab-companion] > * {
+  button[data-fab-companion] > * {
     max-width: 2.5rem;
     max-height: 2.5rem;
     width: 2.5rem;

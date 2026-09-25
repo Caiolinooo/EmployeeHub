@@ -1,7 +1,7 @@
 {
   "report": {
     "matrix390_before": {
-      "height": 193,
+      "height": 105,
       "width": 366,
       "visible": true,
       "hasRows": true,
@@ -15,7 +15,7 @@
       "rowVisible": true
     },
     "schedule390_before": {
-      "height": 193,
+      "height": 105,
       "width": 366,
       "visible": true,
       "hasRows": true,
@@ -42,6 +42,46 @@
       "w": 44,
       "h": 44,
       "visible": true
+    },
+    "kpi390_before": {
+      "wrapOverflowX": false,
+      "lastFullyVisible": true,
+      "cardCount": 4,
+      "wrapWidth": 366
+    },
+    "kpi390_after": {
+      "wrapOverflowX": true,
+      "lastFullyVisible": false,
+      "cardCount": 4,
+      "wrapWidth": 366
+    },
+    "qhse390_before": {
+      "overflowX": "hidden",
+      "canSwipe": false,
+      "shellScrollable": true,
+      "qhseInDom": true,
+      "qhseVisibleAfterSwipe": true
+    },
+    "qhse390_after": {
+      "overflowX": "auto",
+      "canSwipe": true,
+      "shellScrollable": true,
+      "qhseInDom": true,
+      "qhseVisibleAfterSwipe": true
+    },
+    "fab390_before": {
+      "helpW": 56,
+      "helpH": 56,
+      "lastBottom": 832,
+      "helpTop": 764,
+      "lastAboveFab": false
+    },
+    "fab390_after": {
+      "helpW": 44,
+      "helpH": 44,
+      "lastBottom": 752,
+      "helpTop": 788,
+      "lastAboveFab": true
     }
   },
   "shots": [
@@ -59,6 +99,14 @@
     "/workspace/docs/mobile-audit/fix-mobile-ui/reembolso-390x844.png",
     "/workspace/docs/mobile-audit/fix-mobile-ui/contracheque-390x844.png",
     "/workspace/docs/mobile-audit/fix-mobile-ui/ponto-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/gt-kpi-antes-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/gt-kpi-depois-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/ficha-qhse-antes-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/ficha-qhse-depois-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/fab-gt-antes-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/fab-gt-depois-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/fab-dashboard-antes-390x844.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/fab-dashboard-depois-390x844.png",
     "/workspace/docs/mobile-audit/fix-mobile-ui/gt-matriz-antes-375x812.png",
     "/workspace/docs/mobile-audit/fix-mobile-ui/gt-matriz-depois-375x812.png",
     "/workspace/docs/mobile-audit/fix-mobile-ui/gt-escala-antes-375x812.png",
@@ -72,6 +120,14 @@
     "/workspace/docs/mobile-audit/fix-mobile-ui/ferias-375x812.png",
     "/workspace/docs/mobile-audit/fix-mobile-ui/reembolso-375x812.png",
     "/workspace/docs/mobile-audit/fix-mobile-ui/contracheque-375x812.png",
-    "/workspace/docs/mobile-audit/fix-mobile-ui/ponto-375x812.png"
+    "/workspace/docs/mobile-audit/fix-mobile-ui/ponto-375x812.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/gt-kpi-antes-375x812.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/gt-kpi-depois-375x812.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/ficha-qhse-antes-375x812.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/ficha-qhse-depois-375x812.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/fab-gt-antes-375x812.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/fab-gt-depois-375x812.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/fab-dashboard-antes-375x812.png",
+    "/workspace/docs/mobile-audit/fix-mobile-ui/fab-dashboard-depois-375x812.png"
   ]
 }
