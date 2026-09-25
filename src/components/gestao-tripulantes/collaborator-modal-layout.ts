@@ -19,7 +19,7 @@ export const COLLABORATOR_MODAL_TABLIST_CLASS =
   'collaborator-modal-tablist flex flex-nowrap overflow-x-auto overscroll-contain no-scrollbar';
 
 export const COLLABORATOR_MODAL_TAB_BUTTON_CLASS =
-  'flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-xs sm:text-sm font-medium transition-colors shrink-0 sm:px-4';
+  'flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-xs sm:text-sm font-medium transition-colors shrink-0 sm:px-4 max-md:min-h-11';
 
 export const COLLABORATOR_MODAL_BODY_CLASS =
   'collaborator-modal-body custom-scrollbar flex flex-1 min-h-0 min-w-0 flex-col overflow-auto overscroll-contain';

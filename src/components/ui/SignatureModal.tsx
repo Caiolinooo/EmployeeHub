@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { FiX, FiKey, FiCheck, FiEdit3, FiShield } from 'react-icons/fi';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
 import SignaturePad from '@/components/ui/SignaturePad';
 import toast from 'react-hot-toast';
 import { useI18n } from '@/contexts/I18nContext';
@@ -56,6 +57,8 @@ export default function SignatureModal({
             setNewSignatureBase64(null);
         }
     }, [isOpen, userSignatureUrl]);
+
+    useEscapeToClose(isOpen, onClose);
 
     if (!isOpen) return null;
 
@@ -128,7 +131,7 @@ export default function SignatureModal({
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-            <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div data-modal-panel="" className="bg-white rounded-xl max-w-lg w-full shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
                     <div className="flex items-center gap-3">
@@ -141,8 +144,11 @@ export default function SignatureModal({
                         </div>
                     </div>
                     <button
+                        type="button"
                         onClick={onClose}
+                        data-modal-close=""
                         disabled={isSubmitting || isRegistering || isPasskeyLoading}
+                        aria-label={t('common.close', 'Fechar')}
                         className="text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-gray-100 transition-colors"
                     >
                         <FiX className="w-5 h-5" />
