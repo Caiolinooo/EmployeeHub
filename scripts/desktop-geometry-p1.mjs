@@ -124,13 +124,20 @@ const SURFACES = {
     ['dashboard', '/dashboard', null],
     ['chat', '/chat', null],
     ['chat-create-server', '/chat', openCreateServer],
+    ['chat-create-channel', '/chat', openCreateChannel],
+    ['chat-server-settings', '/chat', openServerSettings],
     ['chat-start-dm', '/chat', openStartDm],
+    ['chat-settings', '/chat', openChatSettings],
+    ['ia-exchange', '/ia', openIaExchange],
+    ['ia-voice', '/ia', openIaVoice],
   ],
   academy: [
     ['login', '/login', null, { authed: false }],
     ['dashboard', '/dashboard', null],
     ['academy-editor', '/academy/editor', null],
     ['academy-delete', '/academy/editor', openAcademyDelete],
+    ['academy-modules', '/academy/editor/edit/course-1', openAcademyModules],
+    ['academy-quiz', '/academy/editor/edit/course-1', openAcademyQuiz],
   ],
 };
 
@@ -384,6 +391,69 @@ async function openAcademyDelete(page) {
   await page.waitForTimeout(400);
 }
 
+async function openAcademyModules(page) {
+  await page.getByText('NR-1 Prova').first().waitFor({ timeout: 12_000 }).catch(() => {});
+  await page.getByRole('button', { name: /^Módulos$/ }).click().catch(() => {});
+  await page.getByText('Módulos do Curso').first().waitFor({ timeout: 8_000 }).catch(() => {});
+  const add = page.getByRole('button', { name: /Adicionar Módulo/i });
+  if (await add.count()) await add.first().click();
+  await page.getByText(/Novo Módulo|Editar Módulo/i).first().waitFor({ timeout: 4_000 }).catch(() => {});
+  await page.waitForTimeout(400);
+}
+
+async function openAcademyQuiz(page) {
+  await page.getByText('NR-1 Prova').first().waitFor({ timeout: 12_000 }).catch(() => {});
+  await page.getByRole('button', { name: /Criar Avaliação/i }).click().catch(() => {});
+  await page.getByText(/Questões do Curso|Enunciado/i).first().waitFor({ timeout: 8_000 }).catch(() => {});
+  await page.waitForTimeout(400);
+}
+
+async function openCreateChannel(page) {
+  await page.waitForTimeout(600);
+  await page.evaluate(() => {
+    const row = [...document.querySelectorAll('div')].find((el) => {
+      const t = (el.textContent || '').trim();
+      return t === 'Canais de Texto' || (t.startsWith('Canais de Texto') && t.length < 24);
+    });
+    const plus = row?.parentElement?.querySelector('svg');
+    if (plus) plus.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  });
+  await page.getByText('Criar Novo Canal').first().waitFor({ timeout: 8_000 }).catch(() => {});
+  await page.waitForTimeout(400);
+}
+
+async function openServerSettings(page) {
+  await page.waitForTimeout(600);
+  await page.locator('button[title="Configurações do Servidor"]').first().click({ force: true, timeout: 8_000 }).catch(() => {});
+  await page.getByText(/Configurações do Servidor/i).first().waitFor({ timeout: 8_000 }).catch(() => {});
+  await page.waitForTimeout(400);
+}
+
+async function openChatSettings(page) {
+  await page.waitForTimeout(600);
+  await page.evaluate(() => {
+    const mute = document.querySelector('button[title="Desativar áudio"], button[title="Ativar áudio"]');
+    const settings = mute?.nextElementSibling;
+    if (settings instanceof HTMLElement) settings.click();
+  });
+  await page.getByText(/Interface|Áudio|digitação|Preferências/i).first().waitFor({ timeout: 8_000 }).catch(() => {});
+  await page.waitForTimeout(400);
+}
+
+async function openIaExchange(page) {
+  await page.waitForTimeout(1800);
+}
+
+async function openIaVoice(page) {
+  await page.waitForTimeout(1800);
+  const close = page.locator('[data-modal-close]').first();
+  if (await close.count()) await close.click().catch(() => {});
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(400);
+  await page.locator('button[title="Conversa por Voz em Tempo Real"]').first().click({ timeout: 8_000 }).catch(() => {});
+  await page.waitForTimeout(500);
+}
+
 async function collectBoxes(page) {
   return page.evaluate(() => {
     const box = (el) => {
@@ -396,23 +466,9 @@ async function collectBoxes(page) {
         h: Number(r.height.toFixed(2)),
       };
     };
-    const visible = (el) => {
-      if (!el) return null;
-      const r = el.getBoundingClientRect();
-      const s = getComputedStyle(el);
-      if (r.width < 8 || r.height < 8) return null;
-      if (s.display === 'none' || s.visibility === 'hidden' || Number(s.opacity) === 0) return null;
-      const hidden = el.closest('.md\\:hidden, .lg\\:hidden, .sm\\:hidden');
-      if (hidden) {
-        const hs = getComputedStyle(hidden);
-        if (hs.display === 'none' || hs.visibility === 'hidden') return null;
-      }
-      return el;
-    };
-    const first = (sel) => visible(document.querySelector(sel));
-    const firstAny = (sel) => [...document.querySelectorAll(sel)].find((el) => visible(el));
+    const first = (sel) => document.querySelector(sel);
     const byText = (tag, re) =>
-      [...document.querySelectorAll(tag)].find((n) => visible(n) && re.test(n.textContent || ''));
+      [...document.querySelectorAll(tag)].find((n) => re.test(n.textContent || ''));
     const keep = (b) => (b && b.w >= 0.5 && b.h >= 0.5 ? b : null);
     const notOverlay = (b) => {
       const k = keep(b);
@@ -424,14 +480,18 @@ async function collectBoxes(page) {
     const newsTitle = byText('h1', /Editor do ABZ News/i);
     const academyTitle = byText('h3,h1,h2', /Excluir Curso/i);
     const chatTitle = byText('h3,h2', /Criar Servidor|Iniciar|Nova conversa/i);
-    const searchPanelEl = firstAny('[data-modal-panel]');
-    const searchInput = firstAny('input[placeholder*="buscar" i], input[placeholder*="Buscar" i]');
-    const closeBtn = [...document.querySelectorAll('button[aria-label="Fechar"], [data-modal-close]')].find((el) => visible(el));
+    const searchInput = first('input[placeholder*="buscar" i], input[placeholder*="Buscar" i]');
+    const closeBtn = [...document.querySelectorAll('button[aria-label="Fechar"], [data-modal-close]')].find((el) => {
+      const r = el.getBoundingClientRect();
+      const s = getComputedStyle(el);
+      return r.width >= 16 && r.height >= 16 && s.display !== 'none' && s.visibility !== 'hidden';
+    });
     const panelEl =
-      searchPanelEl ||
+      first('[data-modal-panel]') ||
       newsTitle?.closest('[data-modal-panel], .fixed') ||
       academyTitle?.closest('[data-modal-panel], .bg-white') ||
-      chatTitle?.closest('[data-modal-panel], [class*="rounded"]');
+      chatTitle?.closest('[data-modal-panel], [class*="rounded"]') ||
+      searchInput?.closest('[data-modal-panel], .bg-white');
 
     return {
       header: keep(box(first('header'))),
@@ -446,7 +506,7 @@ async function collectBoxes(page) {
       academyOk: keep(box(byText('button', /Sim, excluir|Excluir/i))),
       chatTitle: keep(box(chatTitle)),
       chatCancel: keep(box(byText('button', /^Cancelar$/i))),
-      searchPanel: notOverlay(box(searchPanelEl || (searchInput && searchInput.closest('[data-modal-panel]')))),
+      searchPanel: notOverlay(box(searchInput?.closest('[data-modal-panel], .max-w-2xl, .bg-white'))),
       modalPanel: notOverlay(box(panelEl)),
       modalClose: keep(box(closeBtn)),
       fabHelp: keep(box(first('[data-help-trigger], [data-fab-help], [aria-label="Ajuda"]'))),
@@ -643,6 +703,52 @@ if (process.env.MODE === 'mobile-esc') {
   }
   mkdirSync(DOCS, { recursive: true });
   writeFileSync(join(DOCS, 'mobile-esc.json'), JSON.stringify(out, null, 2));
+  console.log(JSON.stringify(out, null, 2));
+  await browser.close();
+  process.exit(0);
+}
+
+if (process.env.MODE === 'chat-esc') {
+  const headUrl = process.env.HEAD_URL;
+  const browser = await chromium.launch({ headless: true });
+  const surfaces = [
+    ['chat-create-server', '/chat', openCreateServer],
+    ['chat-create-channel', '/chat', openCreateChannel],
+    ['chat-server-settings', '/chat', openServerSettings],
+    ['chat-start-dm', '/chat', openStartDm],
+    ['chat-settings', '/chat', openChatSettings],
+    ['ia-exchange', '/ia', openIaExchange],
+    ['ia-voice', '/ia', openIaVoice],
+  ];
+  const out = { viewports: {} };
+  for (const viewport of [
+    { width: 390, height: 844, mobile: true },
+    { width: 1440, height: 900, mobile: false },
+  ]) {
+    const rec = {};
+    for (const [name, path, extra] of surfaces) {
+      const ctx = await browser.newContext({
+        viewport: { width: viewport.width, height: viewport.height },
+        locale: 'pt-BR',
+        isMobile: viewport.mobile,
+        hasTouch: viewport.mobile,
+      });
+      const page = await ctx.newPage();
+      await attachMocks(page, { authed: true });
+      await page.goto(`${headUrl}${path}`, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+      await settle(page);
+      await extra(page);
+      const before = await page.evaluate(visFn);
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(500);
+      const after = await page.evaluate(visFn);
+      rec[name] = { before, after, closed: before > 0 && after < before };
+      await ctx.close();
+    }
+    out.viewports[`${viewport.width}x${viewport.height}`] = rec;
+  }
+  mkdirSync(DOCS, { recursive: true });
+  writeFileSync(join(DOCS, 'chat-esc.json'), JSON.stringify(out, null, 2));
   console.log(JSON.stringify(out, null, 2));
   await browser.close();
   process.exit(0);

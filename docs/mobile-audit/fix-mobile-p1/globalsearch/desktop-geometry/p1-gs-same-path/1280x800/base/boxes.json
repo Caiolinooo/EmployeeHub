@@ -1,7 +1,7 @@
 {
   "login": {
     "status": 200,
-    "href": "http://127.0.0.1:3020/login",
+    "href": "http://127.0.0.1:3060/login",
     "title": "Painel ABZ Group",
     "body": "Acesse Sua Conta\nEN\nPT\nEmail\n\nDigite seu email\n\nTenho um código de convite\nContinuar\nou entre com biometria\nEntrar com Biometria\nImpressão digital, reconhecimento facial ou Windows Hello\nABZ Group\n\nAinda não tem cadastro? Criar conta\n\n© 2026 ABZ Group. Todos os direitos reservado",
     "boxes": {
@@ -31,7 +31,7 @@
   },
   "dashboard": {
     "status": 200,
-    "href": "http://127.0.0.1:3020/dashboard",
+    "href": "http://127.0.0.1:3060/dashboard",
     "title": "Painel ABZ Group",
     "body": "PT\nPM\nOlá, Prova!\n\nBem-vindo ao Hub da ABZ Group. Reunimos as principais ferramentas em um único local para facilitar o dia a dia dos nossos colaboradores.\n\nPost de prova\nSMS\nLinks Rápidos\nPonto\n\nRegistro de Ponto\n\nReembolso\n\nSolicitações\n\nContracheque\n\nHolerites\n\nABZ Academy\n\nCu",
     "boxes": {
@@ -67,8 +67,18 @@
       "academyOk": null,
       "chatTitle": null,
       "chatCancel": null,
-      "searchPanel": null,
-      "modalPanel": null,
+      "searchPanel": {
+        "x": 160,
+        "y": 304,
+        "w": 576,
+        "h": 60
+      },
+      "modalPanel": {
+        "x": 160,
+        "y": 304,
+        "w": 576,
+        "h": 60
+      },
       "modalClose": null,
       "fabHelp": {
         "x": 1200,
@@ -86,7 +96,7 @@
   },
   "globalsearch-ctrlk": {
     "status": 200,
-    "href": "http://127.0.0.1:3020/dashboard",
+    "href": "http://127.0.0.1:3060/dashboard",
     "title": "Painel ABZ Group",
     "body": "PT\nPM\nOlá, Prova!\n\nBem-vindo ao Hub da ABZ Group. Reunimos as principais ferramentas em um único local para facilitar o dia a dia dos nossos colaboradores.\n\nPost de prova\nSMS\nLinks Rápidos\nPonto\n\nRegistro de Ponto\n\nReembolso\n\nSolicitações\n\nContracheque\n\nHolerites\n\nABZ Academy\n\nCu",
     "boxes": {
@@ -122,8 +132,18 @@
       "academyOk": null,
       "chatTitle": null,
       "chatCancel": null,
-      "searchPanel": null,
-      "modalPanel": null,
+      "searchPanel": {
+        "x": 160,
+        "y": 304,
+        "w": 576,
+        "h": 60
+      },
+      "modalPanel": {
+        "x": 160,
+        "y": 304,
+        "w": 576,
+        "h": 60
+      },
       "modalClose": null,
       "fabHelp": {
         "x": 1200,
