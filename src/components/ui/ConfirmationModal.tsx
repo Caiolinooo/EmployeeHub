@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
 import ModalCloseButton from '@/components/ui/ModalCloseButton';
 
 interface ConfirmationModalProps {
@@ -29,6 +30,7 @@ export default function ConfirmationModal({
     confirmButtonClass,
 }: ConfirmationModalProps) {
     useEscapeToClose(isOpen, onClose);
+    useEscapeCapture(isOpen, onClose);
     return (
         <AnimatePresence>
             {isOpen && (

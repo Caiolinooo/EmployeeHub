@@ -7,6 +7,7 @@ import { useI18n } from '@/contexts/I18nContext';
 import { Locale } from '@/i18n';
 import { usePathname } from 'next/navigation';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
 import ModalCloseButton from '@/components/ui/ModalCloseButton';
 
 export default function LanguageDialog() {
@@ -54,6 +55,7 @@ export default function LanguageDialog() {
   };
 
   useEscapeToClose(isOpen, handleClose);
+  useEscapeCapture(isOpen, handleClose);
 
   const getLanguageName = (localeCode: Locale) => {
     switch (localeCode) {

@@ -12,6 +12,9 @@ import {
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { getHelpCategories, searchHelpArticles, HelpCategory, HelpArticle } from '@/data/helpContent';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 
 // Icon mapping
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -91,6 +94,13 @@ export default function HelpWidget() {
     const { t } = useI18n();
     const { config } = useSiteConfig();
     const [isOpen, setIsOpen] = useState(false);
+    const { markTrigger, restoreFocus } = useRestoreFocus();
+    const closeHelp = () => {
+        setIsOpen(false);
+        restoreFocus();
+    };
+    useEscapeToClose(isOpen, closeHelp);
+    useEscapeCapture(isOpen, closeHelp);
     const [activeTab, setActiveTab] = useState<Tab>('home');
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<HelpArticle[]>([]);
@@ -423,7 +433,11 @@ export default function HelpWidget() {
             <button
                 data-help-trigger
                 data-fab-help=""
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={(event) => {
+                    if (!isOpen) markTrigger(event.currentTarget);
+                    if (isOpen) closeHelp();
+                    else setIsOpen(true);
+                }}
                 className={`fixed bottom-6 right-4 md:right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 ${isOpen
                     ? 'hidden md:flex bg-gray-600 hover:bg-gray-700'
                     : 'flex bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800'
@@ -443,10 +457,11 @@ export default function HelpWidget() {
                     {/* Mobile backdrop */}
                     <div
                         className="fixed inset-0 bg-black/40 z-[50] md:hidden transition-opacity"
-                        onClick={() => setIsOpen(false)}
+                        onClick={closeHelp}
                     />
                     <div
                         ref={widgetRef}
+                        data-modal-panel=""
                         className="fixed bottom-0 left-0 right-0 md:bottom-24 md:left-auto md:right-6 z-[60] md:w-[400px] h-[85vh] md:h-[600px] max-h-[800px] bg-white rounded-t-2xl md:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300 font-plus-jakarta"
                         style={{ boxShadow: '0 -4px 25px rgba(0, 0, 0, 0.15)' }}
                     >
@@ -458,7 +473,7 @@ export default function HelpWidget() {
                                     {/* Header with gradient */}
                                     <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-5 md:p-6 text-white relative overflow-hidden flex flex-col">
                                         <div className="absolute top-0 right-0 p-4 z-20 md:hidden">
-                                            <button onClick={() => setIsOpen(false)} className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
+                                            <button onClick={closeHelp} className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
                                                 <FiX className="w-5 h-5" />
                                             </button>
                                         </div>
