@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import toast from 'react-hot-toast';
 import { useI18n } from '@/contexts/I18nContext';
+import { toSafeMediaUrl } from '@/lib/security/safe-media-url';
 import { compressVideo, needsCompression } from '@/lib/videoCompression';
 
 interface MediaUploadWithFiltersProps {
@@ -320,14 +321,14 @@ const MediaUploadWithFilters: React.FC<MediaUploadWithFiltersProps> = ({
                 <div className="relative aspect-square bg-black rounded-lg overflow-hidden">
                   {selectedFile?.type.startsWith('video/') ? (
                     <video
-                      src={previewUrl}
+                      src={toSafeMediaUrl(previewUrl)}
                       className={`w-full h-full object-contain ${selectedFilter}`}
                       controls
                       playsInline
                     />
                   ) : (
                     <img
-                      src={previewUrl}
+                      src={toSafeMediaUrl(previewUrl)}
                       alt="Preview"
                       className={`w-full h-full object-contain ${selectedFilter}`}
                     />
@@ -351,14 +352,14 @@ const MediaUploadWithFilters: React.FC<MediaUploadWithFiltersProps> = ({
                       <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 border-gray-200 shadow-sm">
                         {selectedFile?.type.startsWith('video/') ? (
                           <video
-                            src={previewUrl}
+                            src={toSafeMediaUrl(previewUrl)}
                             className={`w-full h-full object-cover ${filter.class}`}
                             muted
                             playsInline
                           />
                         ) : (
                           <img
-                            src={previewUrl}
+                            src={toSafeMediaUrl(previewUrl)}
                             alt={filter.name}
                             className={`w-full h-full object-cover ${filter.class}`}
                             loading="lazy"
@@ -383,14 +384,14 @@ const MediaUploadWithFilters: React.FC<MediaUploadWithFiltersProps> = ({
               <div className="relative aspect-square bg-black rounded-lg overflow-hidden">
                 {selectedFile?.type.startsWith('video/') ? (
                   <video
-                    src={previewUrl}
+                    src={toSafeMediaUrl(previewUrl)}
                     className={`w-full h-full object-contain ${selectedFilter}`}
                     controls
                     playsInline
                   />
                 ) : (
                   <img
-                    src={previewUrl}
+                    src={toSafeMediaUrl(previewUrl)}
                     alt="Preview"
                     className={`w-full h-full object-contain ${selectedFilter}`}
                   />

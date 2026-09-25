@@ -4,6 +4,7 @@
  */
 import nodemailer from 'nodemailer';
 import { emailTlsOptions, resolveEmailAuth } from '@/lib/email-env';
+import { stripHtmlTags } from '@/lib/html-text';
 
 // Configuração do transporter
 async function getTransporter() {
@@ -76,7 +77,7 @@ export async function sendEmailWithNodemailer(options: SendEmailOptions): Promis
       from: auth.from || process.env.EMAIL_FROM,
       to,
       subject: options.subject,
-      text: options.text || options.html?.replace(/<[^>]*>/g, ''),
+      text: options.text || (options.html ? stripHtmlTags(options.html) : undefined),
       html: options.html,
       attachments: options.attachments,
     });

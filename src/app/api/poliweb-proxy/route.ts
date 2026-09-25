@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  POLIWEB_BASE,
+  POLIWEB_HOST,
+  resolvePoliwebUrl,
+  shouldRewriteProxiedHtmlUrl,
+} from '@/lib/security/safe-url';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-
-const POLIWEB_BASE = 'https://poliweb.policlinicamacae.com.br';
 
 /**
  * GET /api/poliweb-proxy
@@ -12,10 +16,15 @@ const POLIWEB_BASE = 'https://poliweb.policlinicamacae.com.br';
 export async function GET(request: NextRequest) {
     try {
         const url = new URL(request.url);
-        const targetPath = url.searchParams.get('path') || '/PainelEmpresa';
-        const targetUrl = `${POLIWEB_BASE}${targetPath}`;
+        const targetUrl = resolvePoliwebUrl(url.searchParams.get('path'));
+        if (targetUrl.protocol !== 'https:' || targetUrl.hostname !== POLIWEB_HOST) {
+            return NextResponse.json(
+                { error: 'Erro ao conectar ao Poliweb' },
+                { status: 502 }
+            );
+        }
 
-        const response = await fetch(targetUrl, {
+        const response = await fetch(targetUrl.href, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -149,8 +158,7 @@ function rewriteHtml(html: string): string {
 
     // Rewrite relative URLs to go through our proxy
     result = result.replace(/(href|src|action)="(\/(?!\/))/g, (match, attr, path) => {
-        // Skip data URIs, javascript:, mailto:, etc.
-        if (path.startsWith('data:') || path.startsWith('javascript:') || path.startsWith('mailto:') || path.startsWith('#')) {
+        if (!shouldRewriteProxiedHtmlUrl(path)) {
             return match;
         }
         return `${attr}="/api/poliweb-proxy?path=${path}"`;

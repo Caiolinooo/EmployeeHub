@@ -1,18 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
 import jwt from 'jsonwebtoken';
+import { hasCronOrSetupSecret, unauthorizedDebugResponse } from '@/lib/public-debug-guard';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
+    if (!hasCronOrSetupSecret(request)) {
+      return unauthorizedDebugResponse();
+    }
+
     console.log('Gerando token JWT para o administrador...');
     
     // Obter configurações
     const DATABASE_URL = process.env.DATABASE_URL;
     const JWT_SECRET = process.env.JWT_SECRET;
     const ADMIN_EMAIL = process.env.ADMIN_EMAIL || (process.env.ADMIN_EMAIL || process.env.NEXT_PUBLIC_ADMIN_EMAIL || '');
-    const ADMIN_PHONE_NUMBER = process.env.ADMIN_PHONE_NUMBER || '+5522997847289';
+    const ADMIN_PHONE_NUMBER = process.env.ADMIN_PHONE_NUMBER || '';
     
     // Verificar configurações
     if (!DATABASE_URL || !JWT_SECRET) {

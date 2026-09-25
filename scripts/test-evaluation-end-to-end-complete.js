@@ -11,9 +11,9 @@
  * 7. Original issue resolution verification
  */
 
+const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 const { Client } = require('pg');
-const { v4: uuidv4 } = require('uuid');
 require('dotenv').config();
 
 // Configuration
@@ -34,9 +34,9 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
 
 // Test data - Generate valid UUIDs and unique emails and phone numbers
 const timestamp = Date.now();
-const randomSuffix = Math.floor(Math.random() * 10000);
-const TEST_FUNCIONARIO_ID = uuidv4();
-const TEST_AVALIADOR_ID = uuidv4();
+const randomSuffix = crypto.randomInt(0, 10000);
+const TEST_FUNCIONARIO_ID = crypto.randomUUID();
+const TEST_AVALIADOR_ID = crypto.randomUUID();
 const TEST_FUNCIONARIO_EMAIL = `funcionario.e2e.${timestamp}@example.com`;
 const TEST_AVALIADOR_EMAIL = `avaliador.e2e.${timestamp}@example.com`;
 const TEST_FUNCIONARIO_PHONE = `+55119${randomSuffix.toString().padStart(8, '0')}`;
@@ -757,8 +757,8 @@ async function testOriginalIssueResolution() {
     console.log('\n5.3 Testing foreign key relationships...');
     
     // Try to create an evaluation with invalid foreign keys
-    const invalidFuncionarioId = uuidv4();
-    const invalidAvaliadorId = uuidv4();
+    const invalidFuncionarioId = crypto.randomUUID();
+    const invalidAvaliadorId = crypto.randomUUID();
     
     const { data: invalidEval, error: invalidError } = await supabaseAdmin
       .from('avaliacoes_desempenho')
