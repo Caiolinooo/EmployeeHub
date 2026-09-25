@@ -2,6 +2,7 @@ import https from 'https';
 import { supabaseAdmin } from '@/lib/supabase';
 import { signESocialXml, extractKeysFromPfx } from './signing';
 import { carregarCertificadoA1 } from '@/lib/certificado-a1';
+import { buildEsocialHttpsTlsOptions } from './tls';
 
 const ESOCIAL_PRODUCTION = {
   envio: 'https://webservices.envio.esocial.gov.br/servicos/empregador/enviarloteeventos/WsEnviarLoteEventos.svc',
@@ -163,10 +164,7 @@ function makeSoapRequest(url: string, soapXml: string, soapAction: string, certi
         'SOAPAction': soapAction,
         'Content-Length': Buffer.byteLength(soapXml, 'utf8'),
       },
-      // Para e-Social, mutual TLS é mandatório. rejectUnauthorized true é recomendado com CAs ICP-Brasil.
-      // No entanto, para debug do 403, vamos manter false por enquanto para isolar o certificado cliente.
-      rejectUnauthorized: false,
-      minVersion: 'TLSv1.2',
+      ...buildEsocialHttpsTlsOptions(),
     };
 
     if (certificado) {

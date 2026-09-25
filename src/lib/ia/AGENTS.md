@@ -37,6 +37,7 @@ Ferramentas LLM do portal (`tools.ts`, cliente Microsoft Graph, geradores Excel/
   - Listas: tipicamente 20–50 itens completos (não thin stubs); `detalhe: "completo"`
 - Tools: `meus_emails`, `ler_email_funcionario`, `pesquisar_emails_outlook`, `minhas_conversas_teams`, `pesquisar_mensagens_teams`, `buscar_sinais_kpi_comunicacao`
 - `formatToolResultForLLM`: tools de comms usam cap ~28k e **preservam** arrays `emails`/`mensagens` (não só `_summary`)
+- Texto fallback de e-mail (`email-tool.ts`): `stripHtmlTags` em `src/lib/html-text.ts` (loop até estabilizar; sem `/<[^>]*>/g` de um passe)
 - Teams: `listTeamsChats(user)`, `searchTeamsMessages(user, consulta)` → chats com participantes + msgs com datas/preview
 
 ### KPIs + comunicação
