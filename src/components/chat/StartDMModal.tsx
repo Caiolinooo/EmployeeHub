@@ -95,11 +95,11 @@ export default function StartDMModal({ isOpen, onClose, currentUserId, onStartCo
             >
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-zinc-900/80">
-                    <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-lg bg-violet-500/10 flex items-center justify-center shrink-0">
+                    <div className="flex items-center gap-3 max-md:min-w-0">
+                        <div className="w-9 h-9 rounded-lg bg-violet-500/10 flex items-center justify-center max-md:shrink-0">
                             <FiMessageCircle className="w-5 h-5 text-violet-400" />
                         </div>
-                        <h3 className="font-semibold text-lg text-white truncate">Nova Conversa</h3>
+                        <h3 className="font-semibold text-lg text-white max-md:truncate">Nova Conversa</h3>
                     </div>
                     <button type="button" onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg transition-colors text-zinc-400 hover:text-white max-md:hidden">
                         <FiX className="w-5 h-5" />
