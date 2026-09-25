@@ -1,8 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useLayoutEffect } from 'react';
 import NewsPostEditor from './NewsPostEditor';
 import NewsPostPreview, { NewsPostDraft } from './NewsPostPreview';
+import ModalCloseButton from '@/components/ui/ModalCloseButton';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 
 interface Props {
   userId: string;
@@ -22,6 +26,25 @@ const NewsPostEditorFullScreen: React.FC<Props> = ({ userId, postId, onClose }) 
     pinned: false,
   });
 
+  const { markTrigger, restoreFocus } = useRestoreFocus();
+  useLayoutEffect(() => {
+    const el = document.activeElement;
+    if (
+      el instanceof HTMLElement
+      && el !== document.body
+      && el !== document.documentElement
+      && document.contains(el)
+    ) {
+      markTrigger(el);
+    }
+  }, [markTrigger]);
+  const handleClose = () => {
+    onClose?.();
+    restoreFocus();
+  };
+  useEscapeToClose(Boolean(onClose), onClose ? handleClose : () => {});
+  useEscapeCapture(Boolean(onClose), onClose ? handleClose : () => {});
+
   // Atalhos de teclado: salvar rascunho (Ctrl/Cmd+S) e publicar (Ctrl/Cmd+Enter)
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -39,24 +62,27 @@ const NewsPostEditorFullScreen: React.FC<Props> = ({ userId, postId, onClose }) 
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 bg-white">
+    <div className="fixed inset-0 z-50 bg-white" data-modal-panel="">
       {/* Topbar */}
       <div className="sticky top-0 z-20 border-b border-gray-200 bg-white/90 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <h1 className="text-lg font-semibold">Editor do ABZ News</h1>
-          <div className="flex items-center gap-3 text-sm text-gray-600">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between max-md:gap-3">
+          <h1 className="text-lg font-semibold max-md:min-w-0 max-md:truncate">Editor do ABZ News</h1>
+          <div className="flex items-center gap-3 text-sm text-gray-600 max-md:shrink-0">
             <span className="hidden sm:inline">Atalhos: Ctrl/Cmd+S (Salvar), Ctrl/Cmd+Enter (Publicar)</span>
             {onClose && (
-              <button onClick={onClose} className="text-gray-500 hover:text-gray-700">Fechar</button>
+              <>
+                <button type="button" onClick={handleClose} className="text-gray-500 hover:text-gray-700 max-md:hidden">Fechar</button>
+                <ModalCloseButton onClick={handleClose} mobileOnly mountOnlyWhenMobile />
+              </>
             )}
           </div>
         </div>
       </div>
 
       {/* Content: Editor + Preview */}
-      <div className="max-w-7xl mx-auto px-4 py-4 grid grid-cols-1 lg:grid-cols-2 gap-4 h-[calc(100vh-56px)]">
-        <div className="h-full overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="h-full overflow-y-auto">
+      <div className="max-w-7xl mx-auto px-4 py-4 grid grid-cols-1 lg:grid-cols-2 gap-4 h-[calc(100vh-56px)] max-md:h-auto max-md:max-h-[calc(100dvh-56px)] max-md:overflow-y-auto">
+        <div className="h-full overflow-hidden rounded-lg border border-gray-200 bg-white max-md:min-h-[50vh] max-md:overflow-visible">
+          <div className="h-full overflow-y-auto max-md:overflow-visible">
             <NewsPostEditor
               userId={userId}
               postId={postId}
@@ -77,7 +103,7 @@ const NewsPostEditorFullScreen: React.FC<Props> = ({ userId, postId, onClose }) 
             />
           </div>
         </div>
-        <div className="h-full overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+        <div className="h-full overflow-hidden rounded-lg border border-gray-200 bg-gray-50 max-md:min-h-[40vh]">
           <NewsPostPreview draft={draft} />
         </div>
       </div>
@@ -86,4 +112,3 @@ const NewsPostEditorFullScreen: React.FC<Props> = ({ userId, postId, onClose }) 
 };
 
 export default NewsPostEditorFullScreen;
-
