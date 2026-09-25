@@ -1,0 +1,91 @@
+{
+  "module": "academy",
+  "before": {
+    "label": "before",
+    "views": {
+      "375": {
+        "file": "/tmp/p1-academy/docs/mobile-audit/fix-mobile-p1/academy/before-375.png",
+        "close": {
+          "found": true,
+          "w": 48,
+          "h": 44,
+          "label": "Fechar menu"
+        },
+        "overflow": {
+          "scrollW": 375,
+          "clientW": 375,
+          "bodyText": "close\nBuscar...\nPT\nPM\nVoltar ao Academy\nEditor do Academy\n\nGerencie cursos e conteúdo educacional\n\nNovo Curso\n\nTotal de Cursos\n\n1\n\nPublicados\n\n0\n\nRascunhos\n\n1\n\nEm Destaque\n\n0\n\nTodo"
+        },
+        "href": "http://127.0.0.1:3010/academy/editor"
+      },
+      "390": {
+        "file": "/tmp/p1-academy/docs/mobile-audit/fix-mobile-p1/academy/before-390.png",
+        "close": {
+          "found": true,
+          "w": 48,
+          "h": 44,
+          "label": "Fechar menu"
+        },
+        "overflow": {
+          "scrollW": 390,
+          "clientW": 390,
+          "bodyText": "close\nBuscar...\nPT\nPM\nVoltar ao Academy\nEditor do Academy\n\nGerencie cursos e conteúdo educacional\n\nNovo Curso\n\nTotal de Cursos\n\n1\n\nPublicados\n\n0\n\nRascunhos\n\n1\n\nEm Destaque\n\n0\n\nTodo"
+        },
+        "href": "http://127.0.0.1:3010/academy/editor"
+      }
+    },
+    "desktop": {
+      "file": "/tmp/p1-academy/docs/mobile-audit/fix-mobile-p1/academy/before-1440.png",
+      "href": "http://127.0.0.1:3010/academy/editor"
+    }
+  },
+  "after": {
+    "label": "after",
+    "views": {
+      "375": {
+        "file": "/tmp/p1-academy/docs/mobile-audit/fix-mobile-p1/academy/after-375.png",
+        "close": {
+          "found": true,
+          "w": 44,
+          "h": 44,
+          "label": "Fechar"
+        },
+        "overflow": {
+          "scrollW": 375,
+          "clientW": 375,
+          "bodyText": "close\nPT\nPM\nVoltar ao Academy\nEditor do Academy\n\nGerencie cursos e conteúdo educacional\n\nNovo Curso\n\nTotal de Cursos\n\n1\n\nPublicados\n\n0\n\nRascunhos\n\n1\n\nEm Destaque\n\n0\n\nTodos (1)\nPubl"
+        },
+        "href": "http://127.0.0.1:3011/academy/editor"
+      },
+      "390": {
+        "file": "/tmp/p1-academy/docs/mobile-audit/fix-mobile-p1/academy/after-390.png",
+        "close": {
+          "found": true,
+          "w": 44,
+          "h": 44,
+          "label": "Fechar"
+        },
+        "overflow": {
+          "scrollW": 390,
+          "clientW": 390,
+          "bodyText": "close\nPT\nPM\nVoltar ao Academy\nEditor do Academy\n\nGerencie cursos e conteúdo educacional\n\nNovo Curso\n\nTotal de Cursos\n\n1\n\nPublicados\n\n0\n\nRascunhos\n\n1\n\nEm Destaque\n\n0\n\nTodos (1)\nPubl"
+        },
+        "href": "http://127.0.0.1:3011/academy/editor"
+      }
+    },
+    "esc": {
+      "beforeEsc": 1,
+      "afterEsc": 0,
+      "closed": true
+    },
+    "desktop": {
+      "file": "/tmp/p1-academy/docs/mobile-audit/fix-mobile-p1/academy/after-1440.png",
+      "href": "http://127.0.0.1:3011/academy/editor"
+    }
+  },
+  "desktop": {
+    "diffPx": 0,
+    "width": 1440,
+    "height": 900
+  }
+}
