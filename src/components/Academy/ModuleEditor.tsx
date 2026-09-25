@@ -246,7 +246,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ courseId }) => {
             {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                     <p className="text-sm text-red-800">{error}</p>
-                    <button onClick={() => setError(null)} className="text-sm text-red-600 underline mt-1">Fechar</button>
+                    <button onClick={() => setError(null)} className="text-sm text-red-600 underline mt-1 max-md:min-h-11">Fechar</button>
                 </div>
             )}
 
@@ -317,7 +317,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ courseId }) => {
                             <button
                                 type="button"
                                 onClick={resetForm}
-                                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                                className="px-4 py-2 max-md:min-h-11 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
                             >
                                 <XMarkIcon className="w-4 h-4 inline mr-1" />
                                 Cancelar
@@ -326,7 +326,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ courseId }) => {
                                 type="button"
                                 onClick={editingId ? handleUpdate : handleCreate}
                                 disabled={saving || !formData.title.trim()}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center"
+                                className="px-4 py-2 max-md:min-h-11 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center"
                             >
                                 {saving && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>}
                                 <CheckIcon className="w-4 h-4 mr-1" />

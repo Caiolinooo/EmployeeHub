@@ -361,16 +361,16 @@ const EditCoursePage: React.FC = () => {
         <div className="mb-8">
           <button
             onClick={() => router.push('/academy/editor')}
-            className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
+            className="flex items-center text-gray-600 hover:text-gray-900 mb-4 max-md:min-h-11"
           >
             <ArrowLeftIcon className="h-5 w-5 mr-2" />
             {t('academy.voltarAoEditor')}
           </button>
 
-          <div className="flex items-center">
-            <PencilIcon className="w-8 h-8 text-blue-600 mr-3" />
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">{t('academy.editarCurso')}</h1>
+          <div className="flex items-center min-w-0">
+            <PencilIcon className="w-8 h-8 text-blue-600 mr-3 shrink-0" />
+            <div className="min-w-0">
+              <h1 className="text-3xl max-md:text-xl font-bold text-gray-900">{t('academy.editarCurso')}</h1>
               <p className="text-gray-600 mt-1">
                 {course.title}
               </p>
@@ -380,11 +380,11 @@ const EditCoursePage: React.FC = () => {
 
         {/* Tabs */}
         <div className="border-b border-gray-200 mb-8">
-          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+          <nav className="-mb-px flex space-x-8 max-md:space-x-4 overflow-x-auto" aria-label="Tabs">
             <button
               onClick={(e) => { e.preventDefault(); setActiveTab('info'); }}
               className={`
-                whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                whitespace-nowrap py-4 px-1 max-md:min-h-11 border-b-2 font-medium text-sm transition-colors
                 ${activeTab === 'info'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
@@ -395,7 +395,7 @@ const EditCoursePage: React.FC = () => {
             <button
               onClick={(e) => { e.preventDefault(); setActiveTab('modules'); }}
               className={`
-                whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                whitespace-nowrap py-4 px-1 max-md:min-h-11 border-b-2 font-medium text-sm transition-colors
                 ${activeTab === 'modules'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
@@ -406,7 +406,7 @@ const EditCoursePage: React.FC = () => {
             <button
               onClick={(e) => { e.preventDefault(); setActiveTab('quiz'); }}
               className={`
-                whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                whitespace-nowrap py-4 px-1 max-md:min-h-11 border-b-2 font-medium text-sm transition-colors
                 ${activeTab === 'quiz'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
@@ -417,7 +417,7 @@ const EditCoursePage: React.FC = () => {
             <button
               onClick={(e) => { e.preventDefault(); setActiveTab('grading'); }}
               className={`
-                whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                whitespace-nowrap py-4 px-1 max-md:min-h-11 border-b-2 font-medium text-sm transition-colors
                 ${activeTab === 'grading'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
@@ -594,7 +594,7 @@ const EditCoursePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={addTag}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    className="px-4 py-2 max-md:min-h-11 max-md:min-w-11 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                   >
                     <PlusIcon className="w-4 h-4" />
                   </button>
@@ -611,9 +611,9 @@ const EditCoursePage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => removeTag(tag)}
-                      className="ml-2 text-blue-600 hover:text-blue-800"
+                      className="ml-2 text-blue-600 hover:text-blue-800 max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center"
                     >
-                      <XMarkIcon className="w-3 h-3" />
+                      <XMarkIcon className="w-3 h-3 max-md:w-4 max-md:h-4" />
                     </button>
                   </span>
                 ))}
@@ -638,7 +638,7 @@ const EditCoursePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={addPrerequisite}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    className="px-4 py-2 max-md:min-h-11 max-md:min-w-11 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                   >
                     <PlusIcon className="w-4 h-4" />
                   </button>
@@ -655,7 +655,7 @@ const EditCoursePage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => removePrerequisite(prereq)}
-                      className="text-red-600 hover:text-red-800"
+                      className="text-red-600 hover:text-red-800 max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center"
                     >
                       <XMarkIcon className="w-4 h-4" />
                     </button>
@@ -682,7 +682,7 @@ const EditCoursePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={addObjective}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    className="px-4 py-2 max-md:min-h-11 max-md:min-w-11 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                   >
                     <PlusIcon className="w-4 h-4" />
                   </button>
@@ -699,7 +699,7 @@ const EditCoursePage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => removeObjective(objective)}
-                      className="text-red-600 hover:text-red-800"
+                      className="text-red-600 hover:text-red-800 max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center"
                     >
                       <XMarkIcon className="w-4 h-4" />
                     </button>
