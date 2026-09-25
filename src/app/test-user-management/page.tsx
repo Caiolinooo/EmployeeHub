@@ -85,10 +85,12 @@ export default function TestUserManagementPage() {
     setError(null);
 
     try {
+      const existing = localStorage.getItem('token') || localStorage.getItem('abzToken');
       const response = await fetch('/api/test-token', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(existing ? { Authorization: `Bearer ${existing}` } : {}),
         },
         body: JSON.stringify({
           userId,
@@ -128,7 +130,10 @@ export default function TestUserManagementPage() {
     setError(null);
 
     try {
-      const response = await fetch('/api/debug-supabase-auth');
+      const abzToken = localStorage.getItem('token') || localStorage.getItem('abzToken');
+      const response = await fetch('/api/debug-supabase-auth', {
+        headers: abzToken ? { Authorization: `Bearer ${abzToken}` } : {},
+      });
       const result = await response.json();
 
       console.log('Resultado do diagnóstico de autenticação:', result);

@@ -66,6 +66,7 @@ describe('middleware public / static / lista-presenca', () => {
     assert.equal(isAuthPassthroughPath('/api/auth/login-password'), true);
     assert.equal(isPublicApiPath('/api/auth/ensure-admin'), false);
     assert.equal(isPublicApiPath('/api/admin/ensure-admin'), false);
+    assert.equal(isPublicApiPath('/api/auth/fix-token'), false);
   });
 });
 

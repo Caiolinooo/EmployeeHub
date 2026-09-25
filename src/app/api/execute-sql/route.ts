@@ -27,8 +27,6 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    console.log('Executando SQL:', sql);
-    
     // Tentar executar o SQL usando a função execute_sql
     try {
       const { error } = await supabaseAdmin.rpc('execute_sql', { query: sql });
@@ -36,51 +34,11 @@ export async function POST(request: NextRequest) {
       if (error) {
         console.error('Erro ao executar SQL via RPC:', error);
         
-        // Tentar criar a função execute_sql se ela não existir
         if (error.message.includes('function execute_sql') && error.message.includes('does not exist')) {
-          console.log('Função execute_sql não existe, tentando criar...');
-          
-          // SQL para criar a função execute_sql
-          const createFunctionSQL = `
-            CREATE OR REPLACE FUNCTION execute_sql(query text)
-            RETURNS VOID AS $$
-            BEGIN
-              EXECUTE query;
-            END;
-            $$ LANGUAGE plpgsql SECURITY DEFINER;
-          `;
-          
-          // Executar SQL diretamente via API REST do Supabase
-          const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/rpc/execute_sql`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': process.env.SUPABASE_SERVICE_KEY || '',
-              'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY || ''}`
-            },
-            body: JSON.stringify({ query: createFunctionSQL })
-          });
-          
-          if (!response.ok) {
-            console.error('Erro ao criar função execute_sql:', await response.text());
-            return NextResponse.json(
-              { error: 'Erro ao criar função execute_sql' },
-              { status: 500 }
-            );
-          }
-          
-          console.log('Função execute_sql criada com sucesso, tentando executar SQL novamente...');
-          
-          // Tentar executar o SQL novamente
-          const { error: retryError } = await supabaseAdmin.rpc('execute_sql', { query: sql });
-          
-          if (retryError) {
-            console.error('Erro ao executar SQL após criar função:', retryError);
-            return NextResponse.json(
-              { error: `Erro ao executar SQL: ${retryError.message}` },
-              { status: 500 }
-            );
-          }
+          return NextResponse.json(
+            { error: 'Função execute_sql não existe. Não será criada automaticamente.' },
+            { status: 501 }
+          );
         } else {
           return NextResponse.json(
             { error: `Erro ao executar SQL: ${error.message}` },
