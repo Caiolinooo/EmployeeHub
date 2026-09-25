@@ -124,18 +124,41 @@ const nextConfig = {
     ];
   },
 
-  // Proxy para o Guacamole (WKRadar) para permitir acesso Same-Origin e Auto-Login
+  // Proxy para o Guacamole (WKRadar) para permitir acesso Same-Origin e Auto-Login.
+  // beforeFiles: rewrite mobile do P0 (/login) se o middleware Edge não compilou no `next dev`.
+  // Cookie `ui=desktop` vence. Tablet (iPad) não entra. Desktop UA não casa.
   async rewrites() {
-    return [
-      {
-        source: '/guacamole/:path*',
-        destination: 'https://vm.groupabz.com/guacamole/:path*',
-      },
-      {
-        source: '/poliweb-external/:path*',
-        destination: 'https://poliweb.policlinicamacae.com.br/:path*',
-      },
-    ];
+    return {
+      beforeFiles: [
+        {
+          source: '/login',
+          has: [{ type: 'cookie', key: 'ui', value: 'mobile' }],
+          destination: '/m/login',
+        },
+        {
+          source: '/login',
+          has: [{ type: 'header', key: 'sec-ch-ua-mobile', value: '\\?1' }],
+          missing: [{ type: 'cookie', key: 'ui', value: 'desktop' }],
+          destination: '/m/login',
+        },
+        {
+          source: '/login',
+          has: [{ type: 'header', key: 'user-agent', value: '(?<ua>(?!.*(?:iPad|Tablet|PlayBook)).*Mobile.*)' }],
+          missing: [{ type: 'cookie', key: 'ui', value: 'desktop' }],
+          destination: '/m/login',
+        },
+      ],
+      afterFiles: [
+        {
+          source: '/guacamole/:path*',
+          destination: 'https://vm.groupabz.com/guacamole/:path*',
+        },
+        {
+          source: '/poliweb-external/:path*',
+          destination: 'https://poliweb.policlinicamacae.com.br/:path*',
+        },
+      ],
+    };
   },
 };
 

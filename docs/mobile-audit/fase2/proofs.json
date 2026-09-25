@@ -1,0 +1,75 @@
+{
+  "base": "http://127.0.0.1:3000",
+  "createdAt": "2026-09-25T03:35:36.380Z",
+  "desktopDiffs": {
+    "login-1440x900.png": {
+      "ok": false,
+      "changed": 7793,
+      "total": 1296000
+    },
+    "register-1440x900.png": {
+      "ok": false,
+      "changed": 2523,
+      "total": 1296000
+    },
+    "unauthorized-1440x900.png": {
+      "ok": false,
+      "changed": 1195208,
+      "total": 1296000
+    },
+    "reset-password-1440x900.png": {
+      "ok": false,
+      "changed": 85374,
+      "total": 1296000
+    }
+  },
+  "rewrite": {
+    "desktopUa": {
+      "status": 200,
+      "location": null,
+      "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding",
+      "ui": null
+    },
+    "mobileUa": {
+      "status": 200,
+      "location": null,
+      "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding",
+      "ui": null
+    },
+    "cookieDesktopOnIphone": {
+      "status": 200,
+      "location": null,
+      "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding",
+      "ui": null
+    },
+    "bodyHasMobileTree": {
+      "desktopUa": {
+        "status": 200,
+        "has": false,
+        "ui": null
+      },
+      "mobileUa": {
+        "status": 200,
+        "has": true,
+        "ui": null
+      },
+      "cookieDesktopOnIphone": {
+        "status": 200,
+        "has": false,
+        "ui": null
+      }
+    },
+    "bodyHasDesktopTree": {
+      "desktopUa": {
+        "status": 200,
+        "has": true,
+        "ui": null
+      },
+      "cookieDesktopOnIphone": {
+        "status": 200,
+        "has": true,
+        "ui": null
+      }
+    }
+  }
+}

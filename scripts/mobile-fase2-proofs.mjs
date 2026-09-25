@@ -63,6 +63,7 @@ async function pixelDiff(aPath, bPath, outPath) {
 async function shot(page, url, file, wait = 2500) {
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
   await page.waitForTimeout(wait);
+  await page.locator('nextjs-portal').evaluateAll((nodes) => nodes.forEach((n) => n.remove())).catch(() => {});
   await page.screenshot({ path: file, fullPage: false });
 }
 
@@ -95,10 +96,17 @@ async function bodyHas(url, ua, cookie, needle) {
 
 const browser = await chromium.launch({ headless: true });
 
-const desktopCtx = await browser.newContext({
+async function newCtx(opts) {
+  const ctx = await browser.newContext(opts);
+  await ctx.addInitScript(() => {
+    localStorage.setItem('languageDialogShown', 'true');
+  });
+  return ctx;
+}
+
+const desktopCtx = await newCtx({
   viewport: { width: 1440, height: 900 },
   userAgent: DESKTOP,
-  locale: 'pt-BR',
 });
 const desktop = await desktopCtx.newPage();
 desktop.setDefaultTimeout(45000);
@@ -131,7 +139,7 @@ const mobileViewports = [
 ];
 
 for (const vp of mobileViewports) {
-  const ctx = await browser.newContext({
+  const ctx = await newCtx({
     viewport: { width: vp.w, height: vp.h },
     userAgent: IPHONE,
     locale: 'pt-BR',
@@ -153,9 +161,11 @@ await browser.close();
 const uaDesktop = await headers(`${BASE}/login`, DESKTOP);
 const uaMobile = await headers(`${BASE}/login`, IPHONE);
 const cookieForce = await headers(`${BASE}/login`, IPHONE, 'ui=desktop');
-const bodyDesktop = await bodyHas(`${BASE}/login`, DESKTOP, null, 'data-abz-mobile-login');
-const bodyMobile = await bodyHas(`${BASE}/login`, IPHONE, null, 'data-abz-mobile-login');
-const bodyForced = await bodyHas(`${BASE}/login`, IPHONE, 'ui=desktop', 'data-abz-mobile-login');
+const bodyDesktop = await bodyHas(`${BASE}/login`, DESKTOP, null, '(mobile)/m/login');
+const bodyMobile = await bodyHas(`${BASE}/login`, IPHONE, null, '(mobile)/m/login');
+const bodyForced = await bodyHas(`${BASE}/login`, IPHONE, 'ui=desktop', '(mobile)/m/login');
+const bodyDesktopPage = await bodyHas(`${BASE}/login`, DESKTOP, null, 'app/login/page');
+const bodyForcedDesktop = await bodyHas(`${BASE}/login`, IPHONE, 'ui=desktop', 'app/login/page');
 
 const report = {
   base: BASE,
@@ -165,10 +175,14 @@ const report = {
     desktopUa: uaDesktop,
     mobileUa: uaMobile,
     cookieDesktopOnIphone: cookieForce,
-    bodyHasMobileMarker: {
+    bodyHasMobileTree: {
       desktopUa: bodyDesktop,
       mobileUa: bodyMobile,
       cookieDesktopOnIphone: bodyForced,
+    },
+    bodyHasDesktopTree: {
+      desktopUa: bodyDesktopPage,
+      cookieDesktopOnIphone: bodyForcedDesktop,
     },
   },
 };

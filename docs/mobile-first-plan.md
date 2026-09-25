@@ -387,6 +387,8 @@ Ordem (primeira que decide):
 
 `src/middleware.ts` mantém o fluxo atual (públicas, estáticos, auth de `/avaliacao`, locale). Redirects não são reescritos.
 
+Fallback de roteamento (P0 `/login`): `next.config.js` `rewrites.beforeFiles` com `has` de cookie/`Sec-CH-UA-Mobile`/UA `Mobile` (exceto iPad/Tablet). Cobre `next dev` quando o Edge middleware não entra no bundle. Pedido desktop não casa essas regras.
+
 Só `NextResponse.next()` passa por `applyMobileSurface`:
 
 - desktop / tablet / cookie desktop / rota não listada → **o mesmo** `next()` de hoje (sem header extra).  
@@ -434,6 +436,7 @@ Aplicadas **só** em `src/components/mobile/**`:
 | Arquivo | Motivo |
 |---------|--------|
 | `src/middleware.ts` | Rewrite + preserve redirects atuais. |
+| `next.config.js` | `rewrites.beforeFiles` do P0 `/login` (UA/CH/cookie) se o middleware Edge não compilou. Regras guacamole/poliweb iguais em `afterFiles`. |
 | `src/components/ClientProviders.tsx` | Monta `UiSurfaceSwitch` (render `null` sem cookie `ui=desktop` em móvel). |
 | `src/contexts/CompanionSessionContext.tsx` | Esconde o FAB desktop quando `data-abz-ui=mobile` (evita dois Companions). Sem o atributo, o JSX desktop é o mesmo. |
 | Este doc | Contrato. |

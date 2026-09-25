@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { applyMobileSurface } from '@/lib/mobile-ui/apply-mobile-surface';
+import { applyMobileSurface } from './lib/mobile-ui/apply-mobile-surface';
 
 // Rotas que não precisam de autenticação
 const publicRoutes = [

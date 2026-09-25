@@ -48,7 +48,7 @@ export default function BottomSheet({ open, onClose, title, children, className 
           <h2 className="text-base font-semibold text-gray-900">{title}</h2>
           <TouchButton variant="ghost" onClick={onClose} className="h-11 min-w-11 px-3 text-sm">
             Fechar
-          </TouchButton
+          </TouchButton>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">{children}</div>
       </div>

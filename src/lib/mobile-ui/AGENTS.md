@@ -8,6 +8,7 @@ Decidir se o pedido serve o front mobile (`/m/...`) ou o desktop atual. Desktop 
 
 - `device-surface.ts` — allowlist, cookie `ui`, CH, UA, tablet, `/m/preview`
 - `apply-mobile-surface.ts` — usado só por `src/middleware.ts`
+- Fallback P0: `next.config.js` `rewrites.beforeFiles` (`/login` + cookie/CH/UA)
 - `mobile-surface-context.tsx` — flag cliente para esconder FAB desktop
 - API: `src/app/api/ui-surface/route.ts` — cookie `ui`
 - Testes: `device-surface.test.ts`
