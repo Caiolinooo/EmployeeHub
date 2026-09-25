@@ -7,8 +7,9 @@ Decidir se o pedido serve o front mobile (`/m/...`) ou o desktop atual. Desktop 
 ## Ownership
 
 - `device-surface.ts` — allowlist, cookie `ui`, CH, UA, tablet, `/m` home, `/m/preview` (404 em produção)
+- `preview-block.js` — rewrite de produção `/m/preview` → `/api/mobile/preview-disabled`
 - `apply-mobile-surface.ts` — usado só por `src/middleware.ts`
-- Fallback P0: `next.config.js` `rewrites.beforeFiles` (`/login` + cookie/CH/UA)
+- Fallback P0: `next.config.js` `rewrites.beforeFiles` (`/login` + cookie/CH/UA; `/m/preview` 404 em produção)
 - `ua-patterns.js` — tablet/phone regex (next.config + testes)
 - API: `src/app/api/ui-surface/route.ts` — cookie `ui`
 - “Voltar ao mobile”: `UiSurfaceSwitch` só no front mobile. Sem layout extra em `/login` (reordena CSS).
@@ -16,7 +17,7 @@ Decidir se o pedido serve o front mobile (`/m/...`) ou o desktop atual. Desktop 
 
 ## Local Contracts
 
-- Allowlist P0: `/login`. Fora da lista = desktop. Home mobile é `/m` (sem rewrite de `/`). `/m/preview` é direto e 404 em produção.
+- Allowlist P0: `/login`. Fora da lista = desktop. Home mobile é `/m` (sem rewrite de `/`). `/m/preview` é direto; em produção o rewrite devolve HTTP 404.
 - Desktop em `/m/*`: Edge redireciona `/m` → `/`, `/m/login` → `/login`. Sem Edge (este Next 15.5) a URL `/m/*` renderiza o mobile; `/login` público continua desktop.
 - Tablet = desktop. Middleware: `device.type === 'tablet'`. Fallback `next.config`: `TABLET_UA_VALUE` (iPad, Tablet, PlayBook, SM-T/SM-X, Nexus 7/9/10, Kindle, Silk, Lenovo TB, Pixel Tablet). Telefone = `PHONE_REWRITE_UA_VALUE` (ancora `^$`; tablet vence mesmo com `Mobile`).
 - Cookie `ui=desktop|mobile` vence UA/CH.
@@ -32,7 +33,7 @@ Decidir se o pedido serve o front mobile (`/m/...`) ou o desktop atual. Desktop 
 
 ## Verification
 
-- `npx tsx --test src/lib/mobile-ui/device-surface.test.ts`
+- `npx tsx --test src/lib/mobile-ui/device-surface.test.ts src/lib/mobile-ui/preview-block.test.ts`
 - UA desktop em `/login` → HTML desktop.
 - UA iPhone em `/login` → rewrite `/m/login`.
 - Cookie `ui=desktop` no iPhone → desktop.

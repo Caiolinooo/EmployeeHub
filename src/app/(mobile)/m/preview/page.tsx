@@ -4,6 +4,7 @@ import DataCard from '@/components/mobile/DataCard';
 import MobileShell from '@/components/mobile/MobileShell';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 function PreviewBody() {
   return (

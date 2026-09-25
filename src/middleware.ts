@@ -8,6 +8,7 @@ const publicRoutes = [
   '/m',
   '/m/login',
   '/m/preview',
+  '/api/mobile/preview-disabled',
   '/set-password',
   '/api/auth/login',
   '/api/auth/login-password',

@@ -9,6 +9,7 @@ Adaptar o portal para celular em todos os módulos; dono consulta nas decisões.
 - [x] Dono aprovou; D4 invertida (desktop congelado; front mobile separado)
 - [x] Fase 2: rewrite + shell + login P0 em `feat/mobile-first-fase2` (PR contra `feat/mobile-first`)
 - [x] PR #95: prova desktop produção (`proofs-prod.md`). Dashboard 0 px. Outras rotas = raster de fonte (ordem `<link>`). Sem overlay/modal.
+- [ ] PR #95 QA: alvos login ≥ 44×44 (wrappers mobile); `/m/preview` HTTP 404 no `next start`; `/m/rota-inexistente` → desktop; prova 0 px `/tmp` vs `870924dc`.
 - [x] Reverter `ClientProviders.tsx` e `CompanionSessionContext.tsx` (sem layout extra em `/login`)
 - [x] Tablet next.config = middleware (iPad + Android) + testes UA
 

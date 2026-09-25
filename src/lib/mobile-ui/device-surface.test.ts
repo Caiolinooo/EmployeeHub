@@ -202,6 +202,7 @@ describe('tablet vs phone UA (next.config + middleware)', () => {
     const cfg = readFileSync(new URL('../../../next.config.js', import.meta.url), 'utf8');
     assert.match(cfg, /PHONE_REWRITE_UA_VALUE/);
     assert.match(cfg, /TABLET_UA_VALUE/);
+    assert.match(cfg, /productionMobilePreviewRewrites/);
     assert.equal(typeof PHONE_REWRITE_UA_VALUE, 'string');
     assert.equal(typeof TABLET_UA_VALUE, 'string');
     const phoneRe = new RegExp(PHONE_REWRITE_UA_VALUE);

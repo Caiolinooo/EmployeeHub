@@ -5,12 +5,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
-import InviteCodeInput from '@/components/Auth/InviteCodeInput';
 import ForgotPasswordForm from '@/components/Auth/ForgotPasswordForm';
 import { SetPasswordModal } from '@/components/Auth/SetPasswordModal';
 import EmailVerificationPrompt from '@/components/Auth/EmailVerificationPrompt';
 import PostLoginBiometricPrompt from '@/components/Auth/PostLoginBiometricPrompt';
-import LanguageSelector from '@/components/LanguageSelector';
+import MobileInviteCodeInput from './MobileInviteCodeInput';
+import MobileLanguageSelector from './MobileLanguageSelector';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { useSiteConfig } from '@/contexts/SiteConfigContext';
@@ -404,7 +404,7 @@ export default function MobileLoginForm() {
         <div className="mb-6 flex flex-col items-center gap-3 pt-4">
           <Image src={logo} alt="ABZ Group" width={64} height={64} priority unoptimized />
           <h1 className="text-2xl font-extrabold text-[#005B96]">{title}</h1>
-          <LanguageSelector variant="inline" />
+          <MobileLanguageSelector />
         </div>
 
         <div className="rounded-3xl bg-white p-5 shadow-sm">
@@ -434,7 +434,7 @@ export default function MobileLoginForm() {
                 placeholder={t('auth.emailPlaceholder')}
                 className="touch-target w-full rounded-xl border border-gray-200 px-3 text-base"
               />
-              <InviteCodeInput
+              <MobileInviteCodeInput
                 inviteCode={inviteCode}
                 setInviteCode={setInviteCode}
                 showInviteField={showInviteField}
@@ -663,7 +663,7 @@ export default function MobileLoginForm() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="touch-target w-full rounded-xl border border-gray-200 px-3 text-base"
               />
-              <InviteCodeInput
+              <MobileInviteCodeInput
                 inviteCode={inviteCode}
                 setInviteCode={setInviteCode}
                 showInviteField={showInviteField}
@@ -681,7 +681,11 @@ export default function MobileLoginForm() {
           {loginStep === 'phone' ? (
             <p className="mt-4 text-center text-sm text-gray-600">
               {t('auth.notRegistered')}{' '}
-              <Link href="/register" className="font-semibold text-[#005B96]">
+              <Link
+                href="/register"
+                className="touch-target inline-flex items-center justify-center font-semibold text-[#005B96]"
+                data-abz-touch="create-account"
+              >
                 {t('auth.createAccount')}
               </Link>
             </p>

@@ -3,6 +3,7 @@ const {
   PHONE_REWRITE_UA_VALUE,
   TABLET_UA_VALUE,
 } = require('./src/lib/mobile-ui/ua-patterns');
+const { productionMobilePreviewRewrites } = require('./src/lib/mobile-ui/preview-block');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -134,6 +135,7 @@ const nextConfig = {
   async rewrites() {
     return {
       beforeFiles: [
+        ...(process.env.NODE_ENV === 'production' ? productionMobilePreviewRewrites() : []),
         {
           source: '/login',
           has: [{ type: 'cookie', key: 'ui', value: 'mobile' }],
