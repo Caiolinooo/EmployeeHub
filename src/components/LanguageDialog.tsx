@@ -93,12 +93,14 @@ export default function LanguageDialog() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+          onClick={handleClose}
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             data-modal-panel=""
+            onClick={(event) => event.stopPropagation()}
             className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6"
           >
             <div className="absolute right-1 top-1">
