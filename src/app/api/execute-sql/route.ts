@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
+import { requirePermission } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
 // POST - Executar SQL diretamente
 export async function POST(request: NextRequest) {
   try {
+    const { error: authError } = await requirePermission(request, 'admin');
+    if (authError) {
+      return authError;
+    }
+
     console.log('POST /api/execute-sql - Iniciando processamento');
     
     // Obter dados do corpo da requisição

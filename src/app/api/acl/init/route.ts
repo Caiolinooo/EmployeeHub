@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getAclRoleGrants, getAclSeedPermissions } from '@/config/modules';
+import { requirePermission } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
 // POST - Inicializar permissões ACL básicas
 export async function POST(request: NextRequest) {
   try {
+    const { error: authError } = await requirePermission(request, 'admin');
+    if (authError) {
+      return authError;
+    }
+
     console.log('🔄 Inicializando sistema ACL...');
 
     // Verificar se as tabelas existem tentando fazer uma query simples
@@ -120,8 +126,13 @@ export async function POST(request: NextRequest) {
 }
 
 // GET - Verificar status do sistema ACL
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { error: authError } = await requirePermission(request, 'admin');
+    if (authError) {
+      return authError;
+    }
+
     // Verificar quantas permissões existem
     const { data: permissions, error: permError } = await supabaseAdmin
       .from('acl_permissions')

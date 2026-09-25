@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ensureAdminUser } from '@/lib/admin-utils';
+import { hasCronOrSetupSecret, unauthorizedDebugResponse } from '@/lib/public-debug-guard';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    if (!hasCronOrSetupSecret(request)) {
+      return unauthorizedDebugResponse();
+    }
+
     const result = await ensureAdminUser();
     
     if (result) {
