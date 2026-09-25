@@ -1,0 +1,85 @@
+{
+  "module": "chat",
+  "before": {
+    "label": "before",
+    "views": {
+      "375": {
+        "file": "/tmp/p1-chat/docs/mobile-audit/fix-mobile-p1/chat/before-375.png",
+        "close": {
+          "found": false
+        },
+        "overflow": {
+          "scrollW": 375,
+          "clientW": 375,
+          "bodyText": "AB\nABZ Prova\nCANAIS DE TEXTO\nMENSAGENS DIRETAS\nNenhuma conversa ainda\nCANAIS DE VOZ\nP\nProva Mobile\nOnline\nBem-vindo ao Chat\n\nSelecione um servidor e um canal para começar a colabor"
+        },
+        "href": "http://127.0.0.1:3010/chat"
+      },
+      "390": {
+        "file": "/tmp/p1-chat/docs/mobile-audit/fix-mobile-p1/chat/before-390.png",
+        "close": {
+          "found": false
+        },
+        "overflow": {
+          "scrollW": 390,
+          "clientW": 390,
+          "bodyText": "AB\nABZ Prova\nCANAIS DE TEXTO\nMENSAGENS DIRETAS\nNenhuma conversa ainda\nCANAIS DE VOZ\nP\nProva Mobile\nOnline\nBem-vindo ao Chat\n\nSelecione um servidor e um canal para começar a colabor"
+        },
+        "href": "http://127.0.0.1:3010/chat"
+      }
+    },
+    "desktop": {
+      "file": "/tmp/p1-chat/docs/mobile-audit/fix-mobile-p1/chat/before-1440.png",
+      "href": "http://127.0.0.1:3010/chat"
+    }
+  },
+  "after": {
+    "label": "after",
+    "views": {
+      "375": {
+        "file": "/tmp/p1-chat/docs/mobile-audit/fix-mobile-p1/chat/after-375.png",
+        "close": {
+          "found": true,
+          "w": 44,
+          "h": 44,
+          "label": "Fechar"
+        },
+        "overflow": {
+          "scrollW": 375,
+          "clientW": 375,
+          "bodyText": "AB\nABZ Prova\nCANAIS DE TEXTO\nMENSAGENS DIRETAS\nNenhuma conversa ainda\nCANAIS DE VOZ\nP\nProva Mobile\nOnline\nBem-vindo ao Chat\n\nSelecione um servidor e um canal para começar a colabor"
+        },
+        "href": "http://127.0.0.1:3011/chat"
+      },
+      "390": {
+        "file": "/tmp/p1-chat/docs/mobile-audit/fix-mobile-p1/chat/after-390.png",
+        "close": {
+          "found": true,
+          "w": 44,
+          "h": 44,
+          "label": "Fechar"
+        },
+        "overflow": {
+          "scrollW": 390,
+          "clientW": 390,
+          "bodyText": "AB\nABZ Prova\nCANAIS DE TEXTO\nMENSAGENS DIRETAS\nNenhuma conversa ainda\nCANAIS DE VOZ\nP\nProva Mobile\nOnline\nBem-vindo ao Chat\n\nSelecione um servidor e um canal para começar a colabor"
+        },
+        "href": "http://127.0.0.1:3011/chat"
+      }
+    },
+    "esc": {
+      "beforeEsc": 1,
+      "afterEsc": 1,
+      "closed": false
+    },
+    "desktop": {
+      "file": "/tmp/p1-chat/docs/mobile-audit/fix-mobile-p1/chat/after-1440.png",
+      "href": "http://127.0.0.1:3011/chat"
+    }
+  },
+  "desktop": {
+    "diffPx": 0,
+    "width": 1440,
+    "height": 900
+  }
+}
