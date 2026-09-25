@@ -6,6 +6,7 @@ import { FiPlus, FiX, FiEye, FiTrash2 } from 'react-icons/fi';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import { useACLPermissions } from '@/hooks/useACLPermissions';
 import HighlightCreator from './HighlightCreator';
+import { toSafeMediaUrl } from '@/lib/security/safe-media-url';
 
 interface Highlight {
     id: string;
@@ -164,14 +165,14 @@ const NewsHighlights: React.FC<NewsHighlightsProps> = ({ userId, canCreate }) =>
                                 {highlight.media_urls?.[0] ? (
                                     isVideo(highlight.media_urls[0]) ? (
                                         <video
-                                            src={highlight.media_urls[0]}
+                                            src={toSafeMediaUrl(highlight.media_urls[0])}
                                             className="w-full h-full object-contain bg-gray-900"
                                             muted
                                             playsInline
                                         />
                                     ) : (
                                         <img
-                                            src={highlight.media_urls[0]}
+                                            src={toSafeMediaUrl(highlight.media_urls[0])}
                                             alt={highlight.title}
                                             className="w-full h-full object-cover"
                                         />

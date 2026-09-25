@@ -9,6 +9,7 @@ import { useACLPermissions } from '@/hooks/useACLPermissions';
 import { NewsPost } from '@/types/news';
 import NewsCommentSection from './NewsCommentSection';
 import { fetchWithToken } from '@/lib/tokenStorage';
+import { toSafeMediaUrl } from '@/lib/security/safe-media-url';
 
 interface NewsPostCardProps {
     post: NewsPost;
@@ -263,7 +264,7 @@ const NewsPostCard: React.FC<NewsPostCardProps> = ({
                                 onDoubleClick={handleDoubleClick}
                             >
                                 <img
-                                    src={url}
+                                    src={toSafeMediaUrl(url)}
                                     alt={`Mídia ${index + 1}`}
                                     className="w-full h-auto cursor-pointer select-none"
                                 />

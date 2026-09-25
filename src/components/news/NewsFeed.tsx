@@ -20,6 +20,7 @@ import useNewsRealtime from '@/hooks/useNewsRealtime';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import NewsHighlights from './NewsHighlights';
 import ViewTracker from './ViewTracker';
+import { toSafeMediaUrl } from '@/lib/security/safe-media-url';
 
 interface NewsCategory { id: string; name: string; color: string; }
 
@@ -730,7 +731,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
                       {/* Detectar se é vídeo pela extensão ou tipo MIME */}
                       {url.match(/\.(mp4|webm|ogg|mov)$/i) ? (
                         <video
-                          src={url}
+                          src={toSafeMediaUrl(url)}
                           className="w-full h-auto cursor-pointer select-none"
                           controls
                           playsInline
@@ -738,7 +739,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
                         />
                       ) : (
                         <img
-                          src={url}
+                          src={toSafeMediaUrl(url)}
                           alt={t('newsSystem.post.mediaAlt', { index: index + 1 })}
                           className="w-full h-auto cursor-pointer select-none"
                         />
