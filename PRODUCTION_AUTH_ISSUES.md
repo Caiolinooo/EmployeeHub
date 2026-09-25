@@ -33,7 +33,6 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'document.g
 ### 1. **✅ Scripts de Diagnóstico Criados**
 - `scripts/fix-production-auth.js` - Diagnóstico completo
 - `scripts/check-admin-password.js` - Verificação específica de senha
-- `scripts/migrate-hardcoded-data.js` - Migração de dados hardcoded
 
 ### 2. **✅ Código Corrigido**
 - Atualizado `src/lib/auth.ts` para buscar credenciais do Supabase
@@ -52,9 +51,6 @@ node scripts/check-admin-password.js
 
 # Diagnóstico completo
 node scripts/fix-production-auth.js
-
-# Migrar dados hardcoded
-node scripts/migrate-hardcoded-data.js
 ```
 
 ### **Passo 2: Verificar Tabela users_unified**

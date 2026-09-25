@@ -177,8 +177,9 @@ async function createAdminUser() {
   // Verificar se o usuário já existe na autenticação do Supabase
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminPassword = process.env.ADMIN_PASSWORD;
-  if (!adminEmail || !adminPassword) {
-    console.error('Defina ADMIN_EMAIL e ADMIN_PASSWORD no ambiente antes de criar o admin.');
+  const adminPhone = process.env.ADMIN_PHONE_NUMBER;
+  if (!adminEmail || !adminPassword || !adminPhone) {
+    console.error('Defina ADMIN_EMAIL, ADMIN_PHONE_NUMBER e ADMIN_PASSWORD no ambiente antes de criar o admin.');
     return false;
   }
 
@@ -189,7 +190,7 @@ async function createAdminUser() {
       data: {
         first_name: process.env.ADMIN_FIRST_NAME || 'Admin',
         last_name: process.env.ADMIN_LAST_NAME || 'User',
-        phone_number: ***REMOVED*** || '',
+        phone_number: adminPhone,
         role: 'ADMIN'
       }
     }
