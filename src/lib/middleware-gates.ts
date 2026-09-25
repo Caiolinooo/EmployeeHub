@@ -1,6 +1,6 @@
 /**
  * Pure path gates for root `middleware.ts`.
- * Keep this file free of `next/server` so node:test can import it.
+ * Do not import `next/server`; the node:test runner loads this module.
  */
 
 export const PUBLIC_PAGE_PATHS = [

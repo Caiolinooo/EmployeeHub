@@ -1,0 +1,4 @@
+# False positives (not secrets). Rule abz-gmail-app-password-spaced
+# matches any four spaced 4-letter words. Gitleaks scans every commit in the PR range.
+e252ac94d10ca03f375d12810ea926eb7da441c0:src/lib/middleware-gates.ts:abz-gmail-app-password-spaced:3
+efdb4f5c60d01c281e41fa38f472f7f9da6e2fcf:tasks.md:abz-gmail-app-password-spaced:9
