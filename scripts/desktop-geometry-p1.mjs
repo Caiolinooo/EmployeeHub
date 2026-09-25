@@ -124,13 +124,20 @@ const SURFACES = {
     ['dashboard', '/dashboard', null],
     ['chat', '/chat', null],
     ['chat-create-server', '/chat', openCreateServer],
+    ['chat-create-channel', '/chat', openCreateChannel],
+    ['chat-server-settings', '/chat', openServerSettings],
     ['chat-start-dm', '/chat', openStartDm],
+    ['chat-settings', '/chat', openChatSettings],
+    ['ia-exchange', '/ia', openIaExchange],
+    ['ia-voice', '/ia', openIaVoice],
   ],
   academy: [
     ['login', '/login', null, { authed: false }],
     ['dashboard', '/dashboard', null],
     ['academy-editor', '/academy/editor', null],
     ['academy-delete', '/academy/editor', openAcademyDelete],
+    ['academy-modules', '/academy/editor/edit/course-1', openAcademyModules],
+    ['academy-quiz', '/academy/editor/edit/course-1', openAcademyQuiz],
   ],
 };
 
@@ -384,6 +391,69 @@ async function openAcademyDelete(page) {
   await page.waitForTimeout(400);
 }
 
+async function openAcademyModules(page) {
+  await page.getByText('NR-1 Prova').first().waitFor({ timeout: 12_000 }).catch(() => {});
+  await page.getByRole('button', { name: /^Módulos$/ }).click().catch(() => {});
+  await page.getByText('Módulos do Curso').first().waitFor({ timeout: 8_000 }).catch(() => {});
+  const add = page.getByRole('button', { name: /Adicionar Módulo/i });
+  if (await add.count()) await add.first().click();
+  await page.getByText(/Novo Módulo|Editar Módulo/i).first().waitFor({ timeout: 4_000 }).catch(() => {});
+  await page.waitForTimeout(400);
+}
+
+async function openAcademyQuiz(page) {
+  await page.getByText('NR-1 Prova').first().waitFor({ timeout: 12_000 }).catch(() => {});
+  await page.getByRole('button', { name: /Criar Avaliação/i }).click().catch(() => {});
+  await page.getByText(/Questões do Curso|Enunciado/i).first().waitFor({ timeout: 8_000 }).catch(() => {});
+  await page.waitForTimeout(400);
+}
+
+async function openCreateChannel(page) {
+  await page.waitForTimeout(600);
+  await page.evaluate(() => {
+    const row = [...document.querySelectorAll('div')].find((el) => {
+      const t = (el.textContent || '').trim();
+      return t === 'Canais de Texto' || (t.startsWith('Canais de Texto') && t.length < 24);
+    });
+    const plus = row?.parentElement?.querySelector('svg');
+    if (plus) plus.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  });
+  await page.getByText('Criar Novo Canal').first().waitFor({ timeout: 8_000 }).catch(() => {});
+  await page.waitForTimeout(400);
+}
+
+async function openServerSettings(page) {
+  await page.waitForTimeout(600);
+  await page.locator('button[title="Configurações do Servidor"]').first().click({ force: true, timeout: 8_000 }).catch(() => {});
+  await page.getByText(/Configurações do Servidor/i).first().waitFor({ timeout: 8_000 }).catch(() => {});
+  await page.waitForTimeout(400);
+}
+
+async function openChatSettings(page) {
+  await page.waitForTimeout(600);
+  await page.evaluate(() => {
+    const mute = document.querySelector('button[title="Desativar áudio"], button[title="Ativar áudio"]');
+    const settings = mute?.nextElementSibling;
+    if (settings instanceof HTMLElement) settings.click();
+  });
+  await page.getByText(/Interface|Áudio|digitação|Preferências/i).first().waitFor({ timeout: 8_000 }).catch(() => {});
+  await page.waitForTimeout(400);
+}
+
+async function openIaExchange(page) {
+  await page.waitForTimeout(1800);
+}
+
+async function openIaVoice(page) {
+  await page.waitForTimeout(1800);
+  const close = page.locator('[data-modal-close]').first();
+  if (await close.count()) await close.click().catch(() => {});
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(400);
+  await page.locator('button[title="Conversa por Voz em Tempo Real"]').first().click({ timeout: 8_000 }).catch(() => {});
+  await page.waitForTimeout(500);
+}
+
 async function collectBoxes(page) {
   return page.evaluate(() => {
     const box = (el) => {
@@ -633,6 +703,52 @@ if (process.env.MODE === 'mobile-esc') {
   }
   mkdirSync(DOCS, { recursive: true });
   writeFileSync(join(DOCS, 'mobile-esc.json'), JSON.stringify(out, null, 2));
+  console.log(JSON.stringify(out, null, 2));
+  await browser.close();
+  process.exit(0);
+}
+
+if (process.env.MODE === 'chat-esc') {
+  const headUrl = process.env.HEAD_URL;
+  const browser = await chromium.launch({ headless: true });
+  const surfaces = [
+    ['chat-create-server', '/chat', openCreateServer],
+    ['chat-create-channel', '/chat', openCreateChannel],
+    ['chat-server-settings', '/chat', openServerSettings],
+    ['chat-start-dm', '/chat', openStartDm],
+    ['chat-settings', '/chat', openChatSettings],
+    ['ia-exchange', '/ia', openIaExchange],
+    ['ia-voice', '/ia', openIaVoice],
+  ];
+  const out = { viewports: {} };
+  for (const viewport of [
+    { width: 390, height: 844, mobile: true },
+    { width: 1440, height: 900, mobile: false },
+  ]) {
+    const rec = {};
+    for (const [name, path, extra] of surfaces) {
+      const ctx = await browser.newContext({
+        viewport: { width: viewport.width, height: viewport.height },
+        locale: 'pt-BR',
+        isMobile: viewport.mobile,
+        hasTouch: viewport.mobile,
+      });
+      const page = await ctx.newPage();
+      await attachMocks(page, { authed: true });
+      await page.goto(`${headUrl}${path}`, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+      await settle(page);
+      await extra(page);
+      const before = await page.evaluate(visFn);
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(500);
+      const after = await page.evaluate(visFn);
+      rec[name] = { before, after, closed: before > 0 && after < before };
+      await ctx.close();
+    }
+    out.viewports[`${viewport.width}x${viewport.height}`] = rec;
+  }
+  mkdirSync(DOCS, { recursive: true });
+  writeFileSync(join(DOCS, 'chat-esc.json'), JSON.stringify(out, null, 2));
   console.log(JSON.stringify(out, null, 2));
   await browser.close();
   process.exit(0);

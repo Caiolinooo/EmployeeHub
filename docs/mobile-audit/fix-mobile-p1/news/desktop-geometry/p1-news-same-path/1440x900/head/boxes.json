@@ -1,7 +1,7 @@
 {
   "login": {
     "status": 200,
-    "href": "http://127.0.0.1:3031/login",
+    "href": "http://127.0.0.1:3071/login",
     "title": "Painel ABZ Group",
     "body": "Acesse Sua Conta\nEN\nPT\nEmail\n\nDigite seu email\n\nTenho um código de convite\nContinuar\nou entre com biometria\nEntrar com Biometria\nImpressão digital, reconhecimento facial ou Windows Hello\nABZ Group\n\nAinda não tem cadastro? Criar conta\n\n© 2026 ABZ Group. Todos os direitos reservado",
     "boxes": {
@@ -31,7 +31,7 @@
   },
   "dashboard": {
     "status": 200,
-    "href": "http://127.0.0.1:3031/dashboard",
+    "href": "http://127.0.0.1:3071/dashboard",
     "title": "Painel ABZ Group",
     "body": "PT\nPM\nOlá, Prova!\n\nBem-vindo ao Hub da ABZ Group. Reunimos as principais ferramentas em um único local para facilitar o dia a dia dos nossos colaboradores.\n\nPost de prova\nSMS\nLinks Rápidos\nPonto\n\nRegistro de Ponto\n\nReembolso\n\nSolicitações\n\nContracheque\n\nHolerites\n\nABZ Academy\n\nCu",
     "boxes": {
@@ -96,7 +96,7 @@
   },
   "noticias": {
     "status": 200,
-    "href": "http://127.0.0.1:3031/noticias",
+    "href": "http://127.0.0.1:3071/noticias",
     "title": "Painel ABZ Group",
     "body": "PT\nPM\nABZ News\nDestaques\nNovo\nNo que você está pensando? Compartilhe uma notícia...\nFoto/Vídeo\nEvento\nDestaque\nP\nProva Mobile\nSMS\n01/09/2026\n•\n1 pessoa viu\nPost de prova\n\nResumo\n\n#prova\n0\n0\nCompartilhar\nVocê viu todos os posts disponíveis",
     "boxes": {
@@ -151,7 +151,7 @@
   },
   "news-fullscreen": {
     "status": 200,
-    "href": "http://127.0.0.1:3031/noticias",
+    "href": "http://127.0.0.1:3071/noticias",
     "title": "Painel ABZ Group",
     "body": "PT\nPM\nABZ News\nDestaques\nNovo\nNo que você está pensando? Compartilhe uma notícia...\nFoto/Vídeo\nEvento\nDestaque\nP\nProva Mobile\nSMS\n01/09/2026\n•\n1 pessoa viu\nPost de prova\n\nResumo\n\n#prova\n0\n0\nCompartilhar\nVocê viu todos os posts disponíveis\nEditor do ABZ News\nAtalhos: Ctrl/Cmd+S (S",
     "boxes": {
