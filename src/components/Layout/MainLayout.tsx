@@ -15,7 +15,6 @@ import {
   FiChevronDown,
   FiChevronUp,
   FiMenu,
-  FiSearch,
   FiBell,
   FiGlobe,
   FiSettings,
@@ -45,6 +44,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import UserAvatar from '@/components/UserAvatar';
 import HelpWidget from '@/components/Help/HelpWidget';
 import MenuCustomizer from '@/components/admin/MenuCustomizer'; // Import
+import GlobalSearch from '@/components/GlobalSearch';
 import { useEffectivePermissions } from '@/hooks/useEffectivePermissions';
 import { SYSTEM_MODULES, MODULE_CATEGORIES, SystemModule } from '@/constants/modules';
 import { getModuleIcon } from '@/constants/moduleIcons';
@@ -361,7 +361,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           {/* Top Header */}
           <header className="h-16 shrink-0 px-4 md:px-8 flex items-center justify-between md:justify-end bg-gray-50/90 backdrop-blur-md border-b border-gray-200/50 z-20 sticky top-0 transition-colors">
             {/* Mobile Menu Toggle (Left Side) */}
-            <div className="md:hidden">
+            <div className="md:hidden flex items-center gap-2 min-w-0">
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
                 aria-label={t('gtMobileV2.openMenu', 'Abrir menu') as string}
@@ -369,6 +369,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               >
                 <FiMenu className="w-5 h-5" />
               </button>
+              <GlobalSearch />
             </div>
 
             {/* Right Side Actions */}
