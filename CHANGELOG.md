@@ -1,5 +1,32 @@
 # Changelog
 
+## [Unreleased]
+
+## [5.88.0] - 2026-09-25
+
+### Segurança, correções e limpeza (PRs #100, #102, #98, #106, #107, #103)
+
+#### Segurança
+
+1. **Middleware no bundle e rotas de debug/admin fechadas** (#100, `bc124831`): o manifesto de produção do Next 15.5 saía sem middleware (`pages/` na raiz fazia o finder procurar no lugar errado). O `middleware.ts` volta a ir no bundle (arquivo na raiz, ao lado do `pagesDir`). GETs públicos de debug/admin — `ensure-admin`, `test-users`, `supabase-status`, `acl/init`, `execute-sql` — passam a exigir JWT ADMIN ou `CRON_SECRET`. Login deixa de chamar `GET /api/auth/ensure-admin` no mount.
+2. **Mídias dos editores de notícias** (#102, `37b8ad77`): `img`/`video` `src` passam por `toSafeMediaUrl` (`src/lib/security/safe-media-url.ts`). Aceita `blob:`, `https:` e caminhos relativos; bloqueia `javascript:`, qualquer `data:` e `http:`. Sem mudança visual no fluxo válido.
+3. **e-Social com TLS validado, logos e CA seguros** (#106, `36c0d0e5`): o cliente do e-Social valida a cadeia TLS por padrão (CAs do Node + raízes públicas ICP-Brasil). Logos em `/admin/settings` passam por `safeImageSrc`. Link de consulta de CA só sai de dígitos (`buildConsultaCaHref`). Sanitizers de HTML (PoliWeb e e-mail da IA) e format strings das férias deixam de interpolar dado do usuário na string de formato.
+4. **Allowlist anti-SSRF nas buscas externas** (#107, `1d82e588`): fetch de saída só aceita host da allowlist. Helper em `src/lib/security/safe-url.ts`; cada rota resolve o próprio host (PoliWeb, consulta CA / CAEPI, ICS da empresa, extração de PDF). Host estrangeiro, IP privado, não-https e `javascript:` são recusados.
+
+#### Corrigido
+
+1. **“Colaborador não encontrado” na aba QHSE/EPI** (#98, `51803cf9`): o catálogo selecionava `cargo_nome` em `gt_colaboradores` — coluna que só existe na view. PostgREST falhava e a aba devolvia 404. O select agora usa as colunas da tabela + join `cargo:gt_cargos(nome)`, no mesmo padrão da ficha e da lista.
+
+#### Removido
+
+1. **Scratch e scripts que só geravam alerta** (#103, `71bd3534`): apagados `scratch/mio_api_doc.html`, `scratch/test-ocr-aso.ts` e `scripts/discover-mio.js` (não entram no runtime). Os scripts que precisam ficar (`run-translation`, `test-evaluation-end-to-end-complete`, `test-push-notifications`) foram endurecidos no lugar — escape de string, `crypto.randomUUID` / `randomInt`, log sem valor de token.
+
+#### Atenção ao atualizar
+
+- Logo com URL `http://` cai no logo padrão. Só URL segura entra (`https`, relativa, `blob:`, `data:image/*`).
+- e-Social exige cadeia TLS válida. `NODE_TLS_REJECT_UNAUTHORIZED=0` é só escape de emergência, não configuração normal.
+- Buscas externas só aceitam host da allowlist em `src/lib/security/safe-url.ts` (e o resolvedor de cada rota). Host fora da lista deixa de responder.
+
 ## [5.87.2] - 2026-09-23
 
 ### UI Folha/Financeiro no padrão ABZ e rotas restauradas
