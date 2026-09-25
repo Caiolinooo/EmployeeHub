@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import type { GTColaborador } from '@/types/gestao-tripulantes';
 import { persistirCamposEscala } from '@/lib/gestao-tripulantes/regime-escala';
+import { stripGtColaboradoresViewAliases } from '@/lib/gestao-tripulantes/gt-colaboradores-columns';
 
 export interface ColaboradorFilters {
   search?: string;
@@ -212,7 +213,7 @@ export async function createColaborador(
 
     const { data: novo, error } = await supabase
       .from('gt_colaboradores')
-      .insert(payload)
+      .insert(stripGtColaboradoresViewAliases(payload))
       .select('*')
       .single();
 
@@ -261,7 +262,7 @@ export async function updateColaborador(
 
     const { data: updated, error } = await supabase
       .from('gt_colaboradores')
-      .update(updateData)
+      .update(stripGtColaboradoresViewAliases(updateData as Record<string, unknown>))
       .eq('id', id)
       .select('*')
       .single();

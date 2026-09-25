@@ -1,3 +1,14 @@
+## QHSE “Colaborador não encontrado” (2026-09-25)
+
+Aba QHSE/EPI da ficha GT em produção chama `GET /api/document-catalog?colaboradorId=&qhse=1`. Select `cargo_nome` em `gt_colaboradores` (coluna só na view) → PostgREST error → identity null → 404. Sem writes no DB real. Sem UI. Sem PR #95 / #96.
+
+- [x] Causa: `CATALOG_COLAB_SELECT` em `identity-match.ts` vs tabela (`cargo_id`) / view (`cargo_nome`)
+- [x] Fix: `cargo:gt_cargos(nome)` + `flattenCatalogColabRow` + `catalogColabSelectIsSafe`
+- [x] Testes `document-catalog.test.ts` (sem DB)
+- [x] Residual: `findFullColaboradorByCpf` + sweep de aliases só da view em `.from('gt_colaboradores')`
+- [x] Guard compartilhado `gtColaboradoresTableSelectIsSafe` + scan `gt-colaboradores-columns.test.ts`
+- [ ] Preview autenticado: aba QHSE lista docs; lista GT e outras abas inalteradas
+
 ## Middleware regression (PR #96) + QHSE 404 (2026-09-25)
 
 Sem merge, sem promote, sem Vercel Production, sem PR #95. Supabase real = read-only.
@@ -8,7 +19,7 @@ Sem merge, sem promote, sem Vercel Production, sem PR #95. Supabase real = read-
 - [x] Teste `src/lib/middleware-gates.test.ts` no PR #96
 - [x] Login não chama `GET /api/auth/ensure-admin` (401 gated; catch só logava — login não lia a resposta)
 - [x] `test-user-management` parou de pedir JWT em `/api/admin/ensure-admin`
-- [ ] QHSE “Colaborador não encontrado”: `CATALOG_COLAB_SELECT` pedia `cargo_nome` em `gt_colaboradores` (alias da view) — PR separado off `portal`
+- [x] QHSE “Colaborador não encontrado”: `CATALOG_COLAB_SELECT` pedia `cargo_nome` em `gt_colaboradores` (alias da view) — feito neste PR #98
 
 ## Middleware ausente no bundle de produção (2026-09-25)
 

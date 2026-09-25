@@ -20,6 +20,7 @@ import {
     buildConsultaCaLookupUrl,
     UnsafeUrlError,
 } from '@/lib/security/safe-url';
+import { fetchWithSafeRedirects } from '@/lib/security/fetch-with-safe-redirects';
 import { logCaLookupError } from './ca-lookup-log';
 
 // ==================== CONSTANTS ====================
@@ -468,7 +469,7 @@ export async function scrapeConsultaCA(
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 15000);
 
-        const response = await fetchImpl(url.href, {
+        const response = await fetchWithSafeRedirects(url, {
             signal: controller.signal,
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -480,6 +481,10 @@ export async function scrapeConsultaCA(
                 'Sec-Ch-Ua-Mobile': '?0',
                 'Sec-Ch-Ua-Platform': '"Windows"'
             }
+        }, {
+            allowedHosts: [CONSULTA_CA_HOST],
+            allowedProtocols: ['https:'],
+            fetchImpl,
         });
 
         clearTimeout(timeout);

@@ -12,6 +12,7 @@ Geração, validação e auto-correção de eventos e-Social (S-2220 e correlato
 - Auto-correção: `esocialAutoCorrector.ts` (usado por `preEnvioGateway.ts` e `POST .../eventos/[id]/validar` e `/enviar`)
 - XML S-2220: `eventos/s-2220.ts` + `src/services/eSocialService.ts` (`generateEventXML`)
 - A1 da empresa: `src/lib/certificado-a1.ts` (fonte `esocial_certificados`). e-Social e NFS-e compartilham o mesmo certificado ativo.
+- TLS do SOAP (`client.ts` / `tls.ts`): validação ligada por padrão. `ca` = CAs padrão do Node + raízes públicas ICP-Brasil v5/v10 (`icp-brasil-cas.ts`, cópias em `certs/*.pem`). Inseguro só com env já existente `NODE_TLS_REJECT_UNAUTHORIZED=0`. Sem env var nova.
 
 ## Local Contracts
 
@@ -30,7 +31,7 @@ Geração, validação e auto-correção de eventos e-Social (S-2220 e correlato
 
 ## Verification
 
-- `npx tsx --test src/lib/e-social/ts-nome.test.ts src/lib/e-social/esocialAutoCorrector.test.ts src/lib/e-social/esocial-date.test.ts`
+- `npx tsx --test src/lib/e-social/ts-nome.test.ts src/lib/e-social/esocialAutoCorrector.test.ts src/lib/e-social/esocial-date.test.ts src/lib/e-social/tls.test.ts`
 - `resolverMatricula` prefere `evento.matricula` à cópia velha em `dados_evento`.
 - Caso Renan / Thalia: `Thalia Leal Dibo\nMédica\nà Á` → `Thalia Leal Dibo` no XML. Validar Auto-Correção + Enviar.
 - Caso datas: XML com `dtAso=2026-08-10` e `dtExm=2026-10-08` → Validar Auto-Correção deixa todos `dtExm=2026-08-10`.

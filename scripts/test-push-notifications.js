@@ -37,7 +37,7 @@ async function testPushConfiguration() {
     // 2. Verificar chaves VAPID
     const { data: vapidKeys, error: vapidError } = await supabase
       .from('app_secrets')
-      .select('key, value, description')
+      .select('key')
       .like('key', 'VAPID_%');
 
     if (vapidError) {
@@ -51,10 +51,8 @@ async function testPushConfiguration() {
 
     requiredKeys.forEach(key => {
       const found = foundKeys.includes(key);
-      const keyData = vapidKeys.find(k => k.key === key);
-      
       if (found) {
-        console.log(`✅ ${key}: ${key === 'VAPID_PRIVATE_KEY' ? '***HIDDEN***' : keyData.value.substring(0, 30) + '...'}`);
+        console.log(`✅ ${key}: present`);
       } else {
         console.log(`❌ ${key}: NÃO ENCONTRADA`);
       }

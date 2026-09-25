@@ -8,6 +8,13 @@
  */
 import { syncAllFromMIO, syncUsuariosPortal } from '@/lib/gestao-tripulantes/mio-sync';
 
+export {
+  emailDomainMatches,
+  hostnameMatches,
+  isValidNonPlaceholderEmail,
+  urlHostnameMatches,
+} from './url-host';
+
 export class MioSyncService {
     /**
      * Compat: executa o fluxo consolidado completo (idempotente, sem duplicar)

@@ -7,6 +7,7 @@ import { runMioPull } from '@/lib/mio/pull-context';
 import { v4 as uuidv4 } from 'uuid';
 import { sendEmailVerificationLink } from '@/lib/email-verification';
 import { findColaboradorByCpf } from '@/lib/gestao-tripulantes/cpf-lookup';
+import { isValidNonPlaceholderEmail } from '@/lib/mio/url-host';
 import { garantirNumeroRastreioUnico } from '@/lib/gestao-tripulantes/documento-integrity';
 import {
   baixarAnexoMioParaLocal,
@@ -865,7 +866,7 @@ export async function syncUsuariosPortal(): Promise<{
         continue;
       }
 
-      const hasValidEmail = !!email && email.includes('@') && !email.includes('placeholder.com');
+      const hasValidEmail = !!email && isValidNonPlaceholderEmail(email);
       const firstName = integrante.nome.split(' ')[0];
       const lastName = integrante.nome.split(' ').slice(1).join(' ');
       const protocol = `REG-MIO-${new Date().toISOString().replace(/\D/g, '').slice(2, 10)}-${uuidv4().slice(0, 4).toUpperCase()}`;
