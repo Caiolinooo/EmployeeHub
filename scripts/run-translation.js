@@ -23,6 +23,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { escapeSingleQuotedJsString } = require('./escape-single-quoted-js-string');
 const { CONFIG, TranslationState, Logger } = require('./auto-translate');
 const {
   shouldIgnore,
@@ -282,7 +283,7 @@ class TranslationManager {
           
           // Adicionar traduções antes do }
           const translationsStr = Object.entries(moduleTranslations)
-            .map(([key, value]) => `    ${key}: '${value.replace(/'/g, "\\'")}',`)
+            .map(([key, value]) => `    ${key}: '${escapeSingleQuotedJsString(value)}',`)
             .join('\n');
           
           content = 
@@ -295,7 +296,7 @@ class TranslationManager {
           this.logger.info(`   Criando novo módulo: ${module}`);
           
           const translationsStr = Object.entries(moduleTranslations)
-            .map(([key, value]) => `    ${key}: '${value.replace(/'/g, "\\'")}',`)
+            .map(([key, value]) => `    ${key}: '${escapeSingleQuotedJsString(value)}',`)
             .join('\n');
           
           const newModule = `  ${module}: {\n${translationsStr}\n  },\n`;

@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { join } from 'path';
-import { writeFile, mkdir } from 'fs/promises';
-import { v4 as uuidv4 } from 'uuid';
+import { UnsafeUrlError, resolvePdfExtractUrl } from '@/lib/security/safe-url';
 
 // Force this route to be dynamic
 export const dynamic = 'force-dynamic';
@@ -47,36 +45,31 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Normalizar o caminho do PDF
-    // Se o caminho não começar com http ou https, considerar como caminho relativo
-    if (!pdfUrl.startsWith('http://') && !pdfUrl.startsWith('https://')) {
-      // Garantir que o caminho comece com /
-      if (!pdfUrl.startsWith('/')) {
-        pdfUrl = `/${pdfUrl}`;
+    let safePdfUrl: URL;
+    try {
+      safePdfUrl = resolvePdfExtractUrl(pdfUrl);
+    } catch (error) {
+      if (error instanceof UnsafeUrlError) {
+        return NextResponse.json(
+          { error: 'URL do PDF não permitida' },
+          { status: 400 }
+        );
       }
-
-      // Construir URL completa com verificação de runtime
-      let host = 'localhost:3000';
-      let protocol = 'http';
-      
-      try {
-        if (request.headers) {
-          host = request.headers.get('host') || 'localhost:3000';
-          protocol = host.includes('localhost') ? 'http' : 'https';
-        }
-      } catch (error) {
-        console.error('Erro ao obter host:', error);
-        // Use valores padrão se houver erro
-      }
-      
-      pdfUrl = `${protocol}://${host}${pdfUrl}`;
+      throw error;
     }
+    if (safePdfUrl.protocol !== 'https:') {
+      return NextResponse.json(
+        { error: 'URL do PDF não permitida' },
+        { status: 400 }
+      );
+    }
+    pdfUrl = safePdfUrl.href;
 
     console.log(`Extraindo conteúdo do PDF: ${pdfUrl}`);
 
     // Verificar se o arquivo existe
     try {
-      const response = await fetch(pdfUrl, {
+      const response = await fetch(safePdfUrl.href, {
         method: 'HEAD',
         cache: 'no-cache'
       });

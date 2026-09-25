@@ -1,4 +1,5 @@
 import { supabase, supabaseAdmin } from '@/lib/db';
+import { LEAVE_ERROR_FORMAT, leaveConsoleError } from './leave-log';
 
 export interface LeaveSectorConfig {
     id: string;
@@ -74,7 +75,7 @@ export async function getLeaveConfigForSector(sectorId: string): Promise<LeaveSe
         .single();
 
     if (error && error.code !== 'PGRST116') {
-        console.error(`Error fetching leave config for sector ${sectorId}:`, error);
+        leaveConsoleError(LEAVE_ERROR_FORMAT.fetchConfig, sectorId, error);
         return null;
     }
 
@@ -92,7 +93,7 @@ export async function upsertLeaveSectorConfig(sectorId: string, leaderId: string
             .eq('sector_id', sectorId);
 
         if (error) {
-            console.error(`Error updating leave config for sector ${sectorId}:`, error);
+            leaveConsoleError(LEAVE_ERROR_FORMAT.updateConfig, sectorId, error);
             return false;
         }
     } else {
@@ -101,7 +102,7 @@ export async function upsertLeaveSectorConfig(sectorId: string, leaderId: string
             .insert([{ sector_id: sectorId, leader_id: leaderId, manager_id: managerId }]);
 
         if (error) {
-            console.error(`Error creating leave config for sector ${sectorId}:`, error);
+            leaveConsoleError(LEAVE_ERROR_FORMAT.createConfig, sectorId, error);
             return false;
         }
     }
@@ -124,7 +125,7 @@ export async function getUserLeaveRequests(userId: string): Promise<LeaveRequest
         .order('created_at', { ascending: false });
 
     if (error) {
-        console.error(`Error fetching leave requests for user ${userId}:`, error);
+        leaveConsoleError(LEAVE_ERROR_FORMAT.fetchUserRequests, userId, error);
         return [];
     }
 
@@ -248,7 +249,7 @@ export async function getUserLeaveRequestsFiltered(
     const { data, error } = await query.limit(200);
 
     if (error) {
-        console.error(`Error fetching leave requests for user ${userId}:`, error);
+        leaveConsoleError(LEAVE_ERROR_FORMAT.fetchUserRequests, userId, error);
         return [];
     }
 
@@ -346,7 +347,7 @@ export async function updateLeaveRequestStatus(
         .eq('id', requestId);
 
     if (error) {
-        console.error(`Error updating leave request ${requestId} to ${status}:`, error);
+        leaveConsoleError(LEAVE_ERROR_FORMAT.updateStatus, requestId, status, error);
         return false;
     }
 
