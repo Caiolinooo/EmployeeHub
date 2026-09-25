@@ -28,6 +28,7 @@ describe('ocr-field-extract characterization', () => {
     assert.equal(extrairNomeOcr(upper('TRABALHADOR: PEDRO ALVES')), 'PEDRO ALVES');
     assert.equal(extrairNomeOcr(upper('PACIENTE JOAO')), 'JOAO');
     assert.equal(extrairNomeOcr(upper('NOME:   ANA PAULA')), 'ANA PAULA');
+    assert.equal(extrairNomeOcr(upper('NOME : JOAO DA SILVA')), 'JOAO DA SILVA');
     assert.equal(extrairNomeOcr(upper('SEM LABEL AQUI')), null);
   });
 
@@ -35,6 +36,7 @@ describe('ocr-field-extract characterization', () => {
     assert.equal(extrairNomeMaeOcr(upper('FILIAÇÃO: MARIA DAS DORES PAI JOAO')), 'MARIA DAS DORES');
     assert.equal(extrairNomeMaeOcr(upper('MÃE: ANA PAULA SILVA')), 'ANA PAULA SILVA');
     assert.equal(extrairNomeMaeOcr(upper('MAE: ROSA LIMA CPF 000')), 'ROSA LIMA');
+    assert.equal(extrairNomeMaeOcr(upper('MAE : ROSA LIMA')), 'ROSA LIMA');
     assert.equal(extrairNomeMaeOcr(upper('MÃE....---  CARLA SOUZA')), 'CARLA SOUZA');
     assert.equal(extrairNomePaiOcr(upper('PAI: JOSE DA SILVA MAE MARIA')), 'JOSE DA SILVA');
     assert.equal(extrairNomePaiOcr(upper('PAI: CARLOS ALBERTO RG 12')), 'CARLOS ALBERTO');
@@ -43,6 +45,8 @@ describe('ocr-field-extract characterization', () => {
 
   it('matches current CTPS / CNH / PIS / logradouro samples', () => {
     assert.equal(extrairCtpsOcr(upper('CTPS: 1234567')), '1234567');
+    assert.equal(extrairCtpsOcr(upper('CTPS : 1234567')), '1234567');
+    assert.equal(extrairCtpsOcr(upper('CTPS    : 1234567')), '1234567');
     assert.equal(extrairCtpsOcr(upper('CTPS 999')), '999');
     assert.equal(extrairCtpsOcr(upper('CTPS:...|  55555')), '55555');
     assert.equal(extrairCtpsOcr(upper('CTPS12345')), '12345');

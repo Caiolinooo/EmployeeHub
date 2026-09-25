@@ -5,14 +5,14 @@
  */
 
 export function crmComUfRe(): RegExp {
-  return /(?:CRM|C\.R\.M\.|RM|IM|REGISTRO)(?:\s{0,3}-?\s{0,3}([A-Z]{2}))?[:|I\-]{0,4}\s{0,8}(\d[\d.\s-]{4,40}\d)/gi;
+  return /(?:CRM|C\.R\.M\.|RM|IM|REGISTRO)(?:\s{0,3}-?\s{0,3}([A-Z]{2}))?\s{0,8}[:|I\-]{0,4}\s{0,8}(\d[\d.\s-]{4,40}\d)/gi;
 }
 
 export function crmSemUfRe(): RegExp {
-  return /(?:CRM|C\.R\.M\.)[:|I\-]{0,4}\s{0,8}(\d[\d.\s]{4,40}\d)/gi;
+  return /(?:CRM|C\.R\.M\.)\s{0,8}[:|I\-]{0,4}\s{0,8}(\d[\d.\s]{4,40}\d)/gi;
 }
 
-export const CRM_PREFIX_RE = /^(?:CRM|C\.R\.M\.|RM|IM|REGISTRO)[:|\-]{0,4}\s{0,8}/i;
+export const CRM_PREFIX_RE = /^(?:CRM|C\.R\.M\.|RM|IM|REGISTRO)\s{0,8}[:|\-]{0,4}\s{0,8}/i;
 
 export const MEDICO_PREFIXO_INICIO_RE =
   /^(?:M[eé]dica?\b\s{0,3}|Dra?\.?\s{0,3}[ºª]?\s{0,3}|Dr[ªº]\s{0,3}|DRA?\.?\s{0,3})/i;
@@ -24,7 +24,7 @@ export const MEDICO_NOME_RE =
   /(?:Dra?\.?\s{0,3}[ºª]?\s{0,3}|Dr[ªº]\s{0,3})([A-Za-zÀ-ÖØ-öø-ÿçãõ][A-Za-zÀ-ÖØ-öø-ÿçãõ\s]{9,59})/i;
 
 export const CNPJ_OCR_RE =
-  /(?:CNPJ|C\.N\.P\.J)[:|I\-]{0,4}\s{0,8}(\d{2}\s{0,3}\.\s{0,3}\d{3}\s{0,3}\.\s{0,3}\d{3}\s{0,3}\/\s{0,3}\d{4}\s{0,3}-\s{0,3}\d{2}|\d{14})/i;
+  /(?:CNPJ|C\.N\.P\.J)\s{0,8}[:|I\-]{0,4}\s{0,8}(\d{2}\s{0,3}\.\s{0,3}\d{3}\s{0,3}\.\s{0,3}\d{3}\s{0,3}\/\s{0,3}\d{4}\s{0,3}-\s{0,3}\d{2}|\d{14})/i;
 
 export const CLINICA_OCR_RE =
   /(?:Clínica|Clinica|Centro\s{1,3}Médico|Laboratório|Laboratorio)\s{0,3}:?\s{0,3}([A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ\s]{3,79})/i;

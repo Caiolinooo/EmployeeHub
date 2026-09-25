@@ -29,9 +29,13 @@ describe('ocr-linear characterization', () => {
     assert.deepEqual(crmMatches(crmComUfRe(), 'CRM-SP: 123456'), [['SP', '123456']]);
     assert.deepEqual(crmMatches(crmComUfRe(), 'CRM SP 123456'), [['SP', '123456']]);
     assert.deepEqual(crmMatches(crmComUfRe(), 'CRM: 123456'), [['', '123456']]);
+    assert.deepEqual(crmMatches(crmComUfRe(), 'CRM : 123456'), [['', '123456']]);
+    assert.deepEqual(crmMatches(crmComUfRe(), 'CRM    : 123456'), [['', '123456']]);
     assert.deepEqual(crmMatches(crmComUfRe(), 'C.R.M. 12.345-6'), [['', '12.345-6']]);
     assert.deepEqual(crmMatches(crmComUfRe(), 'CRM 99999'), []);
     assert.deepEqual(crmMatches(crmSemUfRe(), 'CRM: 123456'), [['123456']]);
+    assert.deepEqual(crmMatches(crmSemUfRe(), 'CRM : 123456'), [['123456']]);
+    assert.deepEqual(crmMatches(crmSemUfRe(), 'CRM    : 123456'), [['123456']]);
     assert.deepEqual(crmMatches(crmSemUfRe(), 'C.R.M. 12.345-6'), [['12.345']]);
   });
 
@@ -76,17 +80,64 @@ describe('ocr-linear characterization', () => {
   it('matches CNPJ / clínica OCR samples', () => {
     const cnpj = 'CNPJ: 17.784.306/0001-89'.match(CNPJ_OCR_RE);
     assert.equal(cnpj?.[1]?.replace(/[^\d]/g, ''), '17784306000189');
+    const cnpjSpace = 'CNPJ : 17.784.306/0001-89'.match(CNPJ_OCR_RE);
+    assert.equal(cnpjSpace?.[1]?.replace(/[^\d]/g, ''), '17784306000189');
+    const cnpjDots = 'C.N.P.J : 17784306000189'.match(CNPJ_OCR_RE);
+    assert.equal(cnpjDots?.[1]?.replace(/[^\d]/g, ''), '17784306000189');
     const clinica = 'Clínica: Policlínica do Trabalhador'.match(CLINICA_OCR_RE);
     assert.equal(clinica?.[1]?.trim(), 'Policlínica do Trabalhador');
+    const clinicaSpace = 'Clínica : Policlínica do Trabalhador'.match(CLINICA_OCR_RE);
+    assert.equal(clinicaSpace?.[1]?.trim(), 'Policlínica do Trabalhador');
   });
 
   it('rejects 50k pathological OCR inputs in under 100ms', () => {
     const spaces = ' '.repeat(50_000);
     assertFast(() => {
       assert.deepEqual(crmMatches(crmComUfRe(), `CRM${spaces}1`), []);
+      assert.deepEqual(crmMatches(crmSemUfRe(), `CRM${spaces}:`), []);
+      assert.equal(`CNPJ${spaces}:`.match(CNPJ_OCR_RE), null);
       assert.equal(`Dr${spaces}X`.match(MEDICO_NOME_RE), null);
       assert.equal(isTabelaHeaderLinha(`${'|'.repeat(50_000)}`), true);
       assert.equal(extrairNumeroDocumentoDoTexto(`ASO${spaces}nº 1`, 'aso'), null);
     });
+  });
+});
+
+describe('BASE vs HEAD differential (whitespace before separator)', () => {
+  const BASE_CRM_UF =
+    /(?:CRM|C\.R\.M\.|RM|IM|REGISTRO)\s*(?:-?\s*([A-Z]{2}))?\s*[:|I\-\s]*\s*([\d][\d.\s-]{4,}\d)/gi;
+  const BASE_CRM_SEM = /(?:CRM|C\.R\.M\.)\s*[:|I\-\s]*\s*(\d[\d.\s]{4,}\d)/gi;
+  const BASE_CNPJ =
+    /(?:CNPJ|C\.N\.P\.J)\s*[:|I\s-]*\s*(\d{2}\s*\.\s*\d{3}\s*\.\s*\d{3}\s*\/\s*\d{4}\s*-\s*\d{2}|\d{14})/i;
+
+  const samples = [
+    'CRM-SP: 123456',
+    'CRM SP 123456',
+    'CRM: 123456',
+    'CRM : 123456',
+    'CRM    : 123456',
+    'C.R.M. 12.345-6',
+    'CRM 99999',
+  ];
+
+  it('CRM captures match BASE on all samples including space-before-colon', () => {
+    for (const s of samples) {
+      assert.deepEqual(crmMatches(crmComUfRe(), s), crmMatches(BASE_CRM_UF, s), `crm-uf ${s}`);
+      assert.deepEqual(crmMatches(crmSemUfRe(), s), crmMatches(BASE_CRM_SEM, s), `crm-sem ${s}`);
+    }
+  });
+
+  it('CNPJ captures match BASE including space-before-colon', () => {
+    const cnpjSamples = [
+      'CNPJ: 17.784.306/0001-89',
+      'CNPJ : 17.784.306/0001-89',
+      'C.N.P.J : 17784306000189',
+      'CNPJ 17784306000189',
+    ];
+    for (const s of cnpjSamples) {
+      const base = s.match(BASE_CNPJ)?.[1] ?? null;
+      const head = s.match(CNPJ_OCR_RE)?.[1] ?? null;
+      assert.equal(head, base, s);
+    }
   });
 });

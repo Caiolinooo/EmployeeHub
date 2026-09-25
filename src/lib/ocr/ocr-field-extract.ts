@@ -4,7 +4,7 @@
  * Bounds replace open-ended `*` / `+` on overlapping sets.
  */
 
-const SEP = '[:.\\-|]{0,8}[\\s\\t]{0,20}';
+const SEP = '[\\s\\t]{0,8}[:.\\-|]{0,8}[\\s\\t]{0,20}';
 
 const NOME_RE = new RegExp(
   String.raw`(?:NOME|NOME\s{0,3}COMPLETO|TRABALHADOR|PACIENTE)${SEP}([A-ZÀ-Ú][A-ZÀ-Ú\x20\t]{2,59})`,
