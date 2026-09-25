@@ -19,12 +19,13 @@ export const GT_PAGE_SCROLLPORT_CLASS =
 
 /** Abas de página GT: swipe horizontal no celular; desktop igual. */
 export const GT_PAGE_TABLIST_CLASS =
-  'border-b border-gray-200 shrink-0 overflow-x-auto no-scrollbar touch-scroll';
+  'border-b border-gray-200 shrink-0 overflow-x-auto no-scrollbar max-lg:touch-scroll';
 
-export const GT_PAGE_TABNAV_CLASS = 'flex flex-nowrap space-x-4 sm:space-x-6 -mb-px min-w-max pb-0.5';
+export const GT_PAGE_TABNAV_CLASS =
+  'flex space-x-4 sm:space-x-6 -mb-px min-w-max pb-0.5 max-lg:flex-nowrap';
 
 export const GT_PAGE_TAB_BUTTON_CLASS =
-  'pb-3 text-sm font-bold border-b-2 transition-all shrink-0 whitespace-nowrap max-md:min-h-11 max-md:inline-flex max-md:items-center max-md:px-1';
+  'pb-3 text-sm font-bold border-b-2 transition-all max-lg:shrink-0 max-lg:whitespace-nowrap max-md:min-h-11 max-md:inline-flex max-md:items-center max-md:px-1';
 
 interface GtPageShellProps {
   children: React.ReactNode;

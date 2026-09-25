@@ -15,7 +15,8 @@ Fechar overlays no celular sem mudar o desktop em 1440×900.
 - Desktop 0 px: regras só no media query ou `md:hidden`.
 - Overlay: toque fora só se já era o padrão (não em form sujo).
 - Sem X no desktop e no celular: `LanguageDialog`, `ConfirmationModal`, `ThankYouModal`, `DeleteCourseModal`, `LanguageSelector` (variant modal) — X só `md:hidden`.
-- `SetPasswordModal` sem X de propósito (senha obrigatória). Só `data-modal-panel`.
+- Esc também em `AddShortcutModal`, `DesligamentoModal`, `ConfirmarExclusaoMarcacaoModal`, `ModalAprovacaoFechamento`. Esc no `ConfirmationModal` no desktop é intencional.
+- `SetPasswordModal` sem X, sem Esc e sem clique fora (senha obrigatória). Só `data-modal-panel`.
 - Não editar `src/middleware.ts` nem rewrites de `next.config.js`.
 
 ## Verification

@@ -56,6 +56,53 @@ describe('GT mobile scrollports', () => {
     );
     assert.match(grid, /max-lg:min-h-\[50vh\]/);
   });
+
+  it('scopes page tab nowrap/shrink to max-lg so desktop matches portal', () => {
+    const shell = readFileSync(new URL('../gestao-tripulantes/GtPageShell.tsx', import.meta.url), 'utf8');
+    assert.match(shell, /max-lg:flex-nowrap/);
+    assert.match(shell, /max-lg:shrink-0 max-lg:whitespace-nowrap/);
+    assert.match(shell, /max-lg:touch-scroll/);
+    assert.doesNotMatch(shell, /export const GT_PAGE_TABNAV_CLASS = 'flex flex-nowrap/);
+    assert.doesNotMatch(
+      shell,
+      /transition-all shrink-0 whitespace-nowrap max-md:min-h-11/,
+    );
+  });
+
+  it('keeps collaborator tab overflow split mobile-only (desktop = portal inner overflow)', () => {
+    const layout = readFileSync(
+      new URL('../gestao-tripulantes/collaborator-modal-layout.ts', import.meta.url),
+      'utf8',
+    );
+    assert.match(
+      layout,
+      /TABLIST_SHELL_CLASS =\n  'collaborator-modal-tablist-shell relative z-20 shrink-0 border-b border-gray-200 bg-gray-50\/80 max-lg:min-w-0 max-lg:overflow-x-auto/,
+    );
+    assert.match(
+      layout,
+      /flex flex-nowrap overflow-x-auto overscroll-contain no-scrollbar max-lg:min-w-max/,
+    );
+    const modal = readFileSync(
+      new URL('../gestao-tripulantes/CollaboratorModal.tsx', import.meta.url),
+      'utf8',
+    );
+    assert.match(modal, /ref=\{tablistRef\}/);
+    assert.match(modal, /role="tablist"/);
+    const tablistBlock = modal.slice(
+      modal.indexOf('role="tablist"') - 80,
+      modal.indexOf('role="tablist"') + 40,
+    );
+    assert.match(tablistBlock, /ref=\{tablistRef\}/);
+  });
+
+  it('schedule toolbar keeps portal flex-wrap on desktop and nowrap only max-lg', () => {
+    const src = readFileSync(
+      new URL('../gestao-tripulantes/GTManScheduleTab.tsx', import.meta.url),
+      'utf8',
+    );
+    assert.match(src, /flex items-end gap-2\.5 w-full flex-wrap max-lg:flex-nowrap/);
+    assert.doesNotMatch(src, /(?<!max-)lg:flex-nowrap/);
+  });
 });
 
 describe('modals without visible X now expose mobile close', () => {
@@ -80,5 +127,19 @@ describe('modals without visible X now expose mobile close', () => {
     assert.doesNotMatch(src, /ModalCloseButton/);
     assert.match(src, /impedir que o usuário feche/);
     assert.match(src, /data-modal-panel/);
+    assert.doesNotMatch(src, /useEscapeToClose/);
+  });
+
+  it('AddShortcut, Desligamento, ConfirmarExclusao and Fechamento close on Esc', () => {
+    const files = [
+      '../dashboard/AddShortcutModal.tsx',
+      '../gestao-tripulantes/DesligamentoModal.tsx',
+      '../gestao-tripulantes/ConfirmarExclusaoMarcacaoModal.tsx',
+      '../gestao-tripulantes/ModalAprovacaoFechamento.tsx',
+    ];
+    for (const file of files) {
+      const src = readFileSync(new URL(file, import.meta.url), 'utf8');
+      assert.match(src, /useEscapeToClose/, file);
+    }
   });
 });

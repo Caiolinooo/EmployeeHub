@@ -1,3 +1,15 @@
+## PR #99 desktop geometry (2026-09-25)
+
+QA reprovou `79b9166d` no `next start` real: wrap da toolbar GT em 1280 + alegação 0 px não reproduziu.
+
+- [x] Abas GT/`ficha`: nowrap/shrink/overflow só `max-lg:`; `tablistRef` no inner (portal)
+- [x] Esc em AddShortcut, Desligamento, ConfirmarExclusao, ModalAprovacao
+- [ ] Merge `origin/portal` `71bd3534` + prova geometria 1280/1440 (`next build`+`start`, mesmo caminho)
+- [ ] Um push em `fix/mobile-ui-portal` quando a prova local fechar
+- [ ] Refazer prova desktop #108–#111 no mesmo método
+
+---
+
 ## UI Folha/Financeiro no padrão ABZ (2026-09-23)
 
 Hub `/folha-pagamento` sem sidebar, cards pretos e rotas `sheets/nova/funcionarios/empresas` em loop de redirect. Sem emitir NFS-e. Sem commit.

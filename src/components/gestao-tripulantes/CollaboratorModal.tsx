@@ -255,6 +255,7 @@ export default function CollaboratorModal({ colaboradorId, onClose, initialTab, 
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [tabOverflow, setTabOverflow] = useState({ left: false, right: false });
   const tablistRef = useRef<HTMLDivElement>(null);
+  const tablistShellRef = useRef<HTMLDivElement>(null);
 
   const fetchData = useCallback(async (opts?: { silent?: boolean }) => {
     try {
@@ -318,7 +319,10 @@ export default function CollaboratorModal({ colaboradorId, onClose, initialTab, 
   }, []);
 
   const updateTabOverflow = useCallback(() => {
-    const el = tablistRef.current;
+    const shell = tablistShellRef.current;
+    const inner = tablistRef.current;
+    const el =
+      shell && shell.scrollWidth > shell.clientWidth + 2 ? shell : inner;
     if (!el) return;
     const { scrollLeft, scrollWidth, clientWidth } = el;
     setTabOverflow({
@@ -328,14 +332,20 @@ export default function CollaboratorModal({ colaboradorId, onClose, initialTab, 
   }, []);
 
   useEffect(() => {
-    const el = tablistRef.current;
-    if (!el) return;
+    const targets = [tablistShellRef.current, tablistRef.current].filter(
+      (el): el is HTMLDivElement => Boolean(el),
+    );
+    if (targets.length === 0) return;
     updateTabOverflow();
-    el.addEventListener('scroll', updateTabOverflow, { passive: true });
     const ro = new ResizeObserver(updateTabOverflow);
-    ro.observe(el);
+    for (const el of targets) {
+      el.addEventListener('scroll', updateTabOverflow, { passive: true });
+      ro.observe(el);
+    }
     return () => {
-      el.removeEventListener('scroll', updateTabOverflow);
+      for (const el of targets) {
+        el.removeEventListener('scroll', updateTabOverflow);
+      }
       ro.disconnect();
     };
   }, [updateTabOverflow, visibleTabs, activeTab]);
@@ -629,12 +639,13 @@ export default function CollaboratorModal({ colaboradorId, onClose, initialTab, 
 
           {/* Tabs */}
           <div
-            ref={tablistRef}
+            ref={tablistShellRef}
             className={COLLABORATOR_MODAL_TABLIST_SHELL_CLASS}
             data-overflow-left={tabOverflow.left ? 'true' : 'false'}
             data-overflow-right={tabOverflow.right ? 'true' : 'false'}
           >
             <div
+              ref={tablistRef}
               role="tablist"
               aria-label="Abas do colaborador"
               data-testid="collaborator-modal-tablist"
