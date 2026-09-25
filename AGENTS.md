@@ -127,6 +127,7 @@ When the user requests a durable behavior change, record it here or in the relev
 - `src/lib/document-catalog/AGENTS.md` — catálogo global de documentos (QHSE/EPI, lista de presença, GT, academy)
 - `src/config/AGENTS.md` — catálogo vivo de módulos + permissões (UserEditor / ACL)
 - `src/app/api/acl/AGENTS.md` — seed ACL a partir do catálogo vivo
+- `src/lib/wkradar/AGENTS.md` — TLS pin WK Radar (fingerprint SHA-256, notAfter, handshake-only re-pin)
 
 ## Index of Modules
 

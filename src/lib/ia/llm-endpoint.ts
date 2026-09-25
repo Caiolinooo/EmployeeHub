@@ -1,6 +1,7 @@
 /**
  * Normalize and guard outbound LLM endpoint URLs (SSRF).
  * Host checks use parsed hostname (exact / leading-dot suffix), never raw includes().
+ * Trailing `/` and `.` are stripped with a linear scan — no `/X+$/` on user input.
  */
 import { joinSafeUrl, parseSafeUrl, UnsafeUrlError } from '../security/safe-url';
 
@@ -9,9 +10,19 @@ export { UnsafeUrlError };
 const GEMINI_OPENAI_HOST = 'generativelanguage.googleapis.com';
 const LLM_PROTOCOLS = ['https:', 'http:'] as const;
 
+/** Linear trim of a trailing character. Avoids polynomial `/X+$/` on untrusted input. */
+export function trimTrailingChar(value: string, ch: string): string {
+  const code = ch.charCodeAt(0);
+  let end = value.length;
+  while (end > 0 && value.charCodeAt(end - 1) === code) {
+    end -= 1;
+  }
+  return end === value.length ? value : value.slice(0, end);
+}
+
 export function hostnameEqualsOrSuffix(hostname: string, allowed: string): boolean {
-  const host = hostname.toLowerCase().replace(/\.+$/, '');
-  const needle = allowed.toLowerCase().replace(/\.+$/, '');
+  const host = trimTrailingChar(hostname.toLowerCase(), '.');
+  const needle = trimTrailingChar(allowed.toLowerCase(), '.');
   if (!host || !needle) return false;
   return host === needle || host.endsWith(`.${needle}`);
 }
@@ -20,7 +31,7 @@ export function hostnameEqualsOrSuffix(hostname: string, allowed: string): boole
  * Normalize an LLM base URL (e.g. append /v1beta/openai for Gemini).
  */
 export function normalizeEndpoint(rawEndpoint: string): string {
-  const ep = (rawEndpoint || '').trim().replace(/\/+$/, '');
+  const ep = trimTrailingChar((rawEndpoint || '').trim(), '/');
   if (!ep) return ep;
 
   let parsed: URL;
@@ -34,7 +45,7 @@ export function normalizeEndpoint(rawEndpoint: string): string {
     return ep;
   }
 
-  const path = parsed.pathname.replace(/\/+$/, '');
+  const path = trimTrailingChar(parsed.pathname, '/');
   if (path.includes('/openai')) {
     return ep;
   }
@@ -43,7 +54,7 @@ export function normalizeEndpoint(rawEndpoint: string): string {
   } else if (!path.includes('/v1beta')) {
     parsed.pathname = `${path}/v1beta/openai`;
   }
-  return parsed.href.replace(/\/+$/, '');
+  return trimTrailingChar(parsed.href, '/');
 }
 
 /**

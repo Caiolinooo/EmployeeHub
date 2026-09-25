@@ -27,6 +27,7 @@ Ferramentas LLM do portal (`tools.ts`, cliente Microsoft Graph, geradores Excel/
 ### Outbound LLM URL
 
 - `resolveLlmFetchUrl` (`parseSafeUrl` / `joinSafeUrl` + denylist). Host Gemini = hostname exact/suffix com ponto, nunca `includes()` na string crua.
+- Trim de `/` e `.` no endpoint: `trimTrailingChar` linear. Sem `/X+$/` em input do usuário.
 - `fetch(..., { redirect: 'error' })`. Sem helper de redirects do PR #112.
 - `GET /api/ia/dashboard`: erro genérico no JSON; detalhe só em `console.error`.
 

@@ -1,12 +1,19 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { sanitizeChatHref } from './chat-href';
+import { hrefFromSafeLink, parseSafeChatLink, sanitizeChatHref } from './chat-href';
 
 describe('sanitizeChatHref', () => {
   it('allows http(s), mailto and relative paths as canonical hrefs', () => {
     assert.equal(sanitizeChatHref('https://example.com/a'), 'https://example.com/a');
     assert.equal(sanitizeChatHref('/dashboard'), '/dashboard');
     assert.ok(sanitizeChatHref('mailto:user@example.com')?.startsWith('mailto:'));
+  });
+
+  it('rebuilds from protocol literals, not the raw string', () => {
+    const link = parseSafeChatLink('https://example.com/a?q=1#h');
+    assert.ok(link && link.kind === 'https');
+    assert.equal(hrefFromSafeLink(link), 'https://example.com/a?q=1#h');
+    assert.equal(sanitizeChatHref('https://example.com/a'), 'https://example.com/a');
   });
 
   it('rejects javascript, vbscript, data, credentials and tricks', () => {

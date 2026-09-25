@@ -1,7 +1,58 @@
 import React from 'react';
-import { sanitizeChatHref } from '../../lib/ia/chat-href';
+import { parseSafeChatLink, type SafeChatLink } from '../../lib/ia/chat-href';
 
 export { sanitizeChatHref } from '../../lib/ia/chat-href';
+
+const LINK_CLASS = 'text-blue-600 underline underline-offset-2 hover:text-blue-800 break-all';
+
+function renderSafeAnchor(key: number, link: SafeChatLink, label: string): React.ReactNode {
+  switch (link.kind) {
+    case 'https':
+      return (
+        <a
+          key={key}
+          href={'https://' + encodeURI(link.host) + encodeURI(link.path) + encodeURI(link.search) + encodeURI(link.hash)}
+          className={LINK_CLASS}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {label}
+        </a>
+      );
+    case 'http':
+      return (
+        <a
+          key={key}
+          href={'http://' + encodeURI(link.host) + encodeURI(link.path) + encodeURI(link.search) + encodeURI(link.hash)}
+          className={LINK_CLASS}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {label}
+        </a>
+      );
+    case 'mailto':
+      return (
+        <a
+          key={key}
+          href={'mailto:' + encodeURI(link.address) + encodeURI(link.query)}
+          className={LINK_CLASS}
+        >
+          {label}
+        </a>
+      );
+    case 'relative':
+      return (
+        <a key={key} href={encodeURI(link.path)} className={LINK_CLASS}>
+          {label}
+        </a>
+      );
+    default: {
+      const exhaustive: never = link;
+      return exhaustive;
+    }
+  }
+}
 
 /**
  * Lightweight markdown for IA chat bubbles (Assistant MessageBubble + Companion FAB).
@@ -31,21 +82,9 @@ function processInline(text: string): React.ReactNode {
       );
     const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
     if (linkMatch) {
-      const [, label, href] = linkMatch;
-      const safeHref = sanitizeChatHref(href);
-      if (safeHref) {
-        const external = safeHref.startsWith('http://') || safeHref.startsWith('https://');
-        return (
-          <a
-            key={i}
-            href={safeHref}
-            className="text-blue-600 underline underline-offset-2 hover:text-blue-800 break-all"
-            {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-          >
-            {label}
-          </a>
-        );
-      }
+      const [, label, rawHref] = linkMatch;
+      const link = parseSafeChatLink(rawHref);
+      if (link) return renderSafeAnchor(i, link, label);
       return <span key={i}>{label}</span>;
     }
     return part;
