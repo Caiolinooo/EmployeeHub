@@ -46,7 +46,7 @@ export const MOBILE_SURFACE_CSS = `
   box-shadow: inset 0 3px 0 var(--mobile-blue);
 }
 [data-abz-ui='mobile'] .abz-m-main {
-  padding-bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px) + 80px);
+  padding-bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
 }
 [data-abz-ui='mobile'] .abz-m-fab {
   position: fixed;

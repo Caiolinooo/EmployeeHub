@@ -74,7 +74,7 @@ export function mapVerifyFailure(authStatus: LoginAuthStatus, t: Translate): str
 }
 
 export function assertEmail(email: string, t: Translate): string | null {
-  if (!email || !validateEmail(email)) return t('auth.invalidEmail');
+  if (!email || !validateEmail(email)) return t('auth.invalidEmail', 'Informe um e-mail válido.');
   return null;
 }
 

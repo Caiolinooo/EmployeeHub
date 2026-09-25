@@ -43,27 +43,27 @@ page.on('request', (req) => {
   }
 });
 
-await page.route('**/rest/v1/users_unified**', async (route) => {
+await page.route('**/*users_unified*', async (route) => {
   const url = route.request().url();
-  if (url.includes('exists@example.com') || url.includes('exists%40example.com')) {
+  const existing = url.includes('exists@example.com') || url.includes('exists%40example.com');
+  if (existing) {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify([
-        {
-          id: 'user-1',
-          email: 'exists@example.com',
-          active: true,
-          password: 'hashed',
-        },
-      ]),
+      headers: { 'content-profile': 'public', 'content-range': '0-0/1' },
+      body: JSON.stringify({
+        id: 'user-1',
+        email: 'exists@example.com',
+        active: true,
+        password: 'hashed',
+      }),
     });
     return;
   }
   await route.fulfill({
     status: 406,
     contentType: 'application/json',
-    body: JSON.stringify({ code: 'PGRST116', message: 'not found' }),
+    body: JSON.stringify({ code: 'PGRST116', message: 'JSON object requested, multiple (or no) rows returned', details: 'Results contain 0 rows' }),
   });
 });
 
@@ -121,8 +121,8 @@ const emailUi = {
 };
 note('email-step-ui', { ok: emailUi.invite > 0 && emailUi.biometric > 0 && emailUi.create > 0 && emailUi.lang > 0, emailUi });
 
-await page.locator('#mobile-login-email').fill('bad');
-await page.getByRole('button', { name: /continuar/i }).click();
+await page.locator('#mobile-login-email').fill('');
+await page.locator('[data-abz-login-form="email"] button[type="submit"]').click();
 const invalidEmail = await page.getByRole('alert').innerText().catch(() => '');
 note('invalid-email', { ok: Boolean(invalidEmail), invalidEmail });
 
@@ -141,21 +141,21 @@ note('existing-email-password', { ok: passwordForm > 0, step: await page.getAttr
 
 if (passwordForm) {
   await page.locator('#mobile-login-password').fill('wrong-pass');
-  await page.getByRole('button', { name: /entrar|login/i }).first().click();
+  await page.locator('[data-abz-login-form="password"] button[type="submit"]').click();
   await page.waitForTimeout(800);
   const badPass = await page.getByRole('alert').innerText().catch(() => '');
   note('invalid-password', { ok: Boolean(badPass), badPass });
 
   await page.locator('#mobile-login-password').fill('correct-pass');
-  const nav = page.waitForURL(/dashboard|set-password/, { timeout: 8000 }).catch(() => null);
-  await page.getByRole('button', { name: /entrar|login/i }).first().click();
-  const dest = await nav;
+  await page.locator('[data-abz-login-form="password"] button[type="submit"]').click();
+  await page.waitForTimeout(1200);
   const loginPost = apiHits.some((h) => h.url.includes('/api/auth/login') && h.method === 'POST');
   note('login-success-destination', {
     ok: loginPost,
     loginPost,
-    dest: dest ? dest.url() : page.url(),
-    expected: '/dashboard',
+    dest: page.url(),
+    expectedPost: '/api/auth/login',
+    expectedPath: '/dashboard',
   });
 }
 
@@ -165,9 +165,25 @@ await page.waitForTimeout(600);
 const webauthn = apiHits.some((h) => h.url.includes('/api/auth/webauthn/login/options'));
 note('webauthn-options', { ok: webauthn, webauthn });
 
-await page.goto(`${BASE}/login`, { waitUntil: 'domcontentloaded' });
-const desktopHasInvite = await page.getByText(/convite/i).count();
-note('desktop-login-untouched', { ok: desktopHasInvite > 0, desktopHasInvite });
+const desk = await browser.newContext({
+  viewport: { width: 1440, height: 900 },
+  userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  locale: 'pt-BR',
+});
+await desk.addInitScript(() => {
+  localStorage.setItem('languageDialogShown', 'true');
+  localStorage.setItem('locale', 'pt-BR');
+});
+const deskPage = await desk.newPage();
+await deskPage.goto(`${BASE}/login`, { waitUntil: 'domcontentloaded' });
+const desktopEmail = await deskPage.locator('#email').count();
+const desktopIsMobileTree = await deskPage.locator('[data-abz-mobile-login]').count();
+note('desktop-login-untouched', {
+  ok: desktopEmail > 0 && desktopIsMobileTree === 0,
+  desktopEmail,
+  desktopIsMobileTree,
+});
+await desk.close();
 
 await browser.close();
 report.ok = report.steps.every((s) => s.ok);

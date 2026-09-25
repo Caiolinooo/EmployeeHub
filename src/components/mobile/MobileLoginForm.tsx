@@ -420,7 +420,7 @@ export default function MobileLoginForm() {
           ) : null}
 
           {loginStep === 'phone' ? (
-            <form onSubmit={onEmail} className="flex flex-col gap-3" data-abz-login-form="email">
+            <form onSubmit={onEmail} noValidate className="flex flex-col gap-3" data-abz-login-form="email">
               <label className="text-sm font-semibold text-gray-700" htmlFor="mobile-login-email">
                 {t('auth.email')}
               </label>

@@ -7,26 +7,30 @@ type MobileCompanionProps = {
   defaultOpen?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  showFab?: boolean;
 };
 
 export default function MobileCompanion({
   defaultOpen = false,
   open,
   onOpenChange,
+  showFab = false,
 }: MobileCompanionProps) {
   const controlled = open !== undefined;
   const isOpen = controlled ? Boolean(open) : defaultOpen;
 
   return (
     <>
-      <TouchButton
-        aria-label="Abrir Companion"
-        onClick={() => onOpenChange?.(true)}
-        className="abz-m-fab z-[40] h-14 w-14 rounded-full px-0 shadow-lg"
-        data-abz-mobile-companion-fab=""
-      >
-        IA
-      </TouchButton>
+      {showFab ? (
+        <TouchButton
+          aria-label="Abrir Companion"
+          onClick={() => onOpenChange?.(true)}
+          className="abz-m-fab z-[40] h-14 w-14 rounded-full px-0 shadow-lg"
+          data-abz-mobile-companion-fab=""
+        >
+          IA
+        </TouchButton>
+      ) : null}
       <BottomSheet
         open={isOpen}
         onClose={() => onOpenChange?.(false)}

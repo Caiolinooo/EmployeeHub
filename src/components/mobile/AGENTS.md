@@ -23,7 +23,7 @@ UI só do front mobile. Desktop não importa estes arquivos.
 - Login mobile: mesmas APIs e mesmos destinos (`/dashboard` ou `/set-password`). Sem bypass commitado.
 - Home `/m`: atalhos reais. Sem copy de dev e sem dados fake.
 - `/m/preview`: vitrine de kit. `notFound()` em produção.
-- Companion: um FAB (`bottom: nav + safe-area + 12px`). Login **não** monta FAB.
+- Companion: entrada no Mais (D7 — sem FAB cobrindo nav/atalhos). Login sem FAB.
 - `/m/*` no desktop: com Edge, `shouldRedirectMobilePrefix` manda `/m` → `/` e `/m/login` → `/login`. Sem Edge (Next 15.5 neste repo) a URL `/m/*` renderiza o front mobile; URLs públicas do desktop não mudam.
 
 ## Work Guidance

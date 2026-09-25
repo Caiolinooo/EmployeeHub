@@ -38,11 +38,17 @@ for (const vp of [
     localStorage.setItem('languageDialogShown', 'true');
     localStorage.setItem('locale', 'pt-BR');
   });
-  await ctx.route('**/rest/v1/users_unified**', async (route) => {
+  await ctx.route('**/*users_unified*', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify([{ id: 'user-1', email: 'exists@example.com', active: true, password: 'x' }]),
+      headers: { 'content-range': '0-0/1' },
+      body: JSON.stringify({
+        id: 'user-1',
+        email: 'exists@example.com',
+        active: true,
+        password: 'x',
+      }),
     });
   });
   await ctx.route('**/api/auth/ensure-admin', async (route) => {

@@ -3,6 +3,8 @@ import { Suspense } from 'react';
 import DataCard from '@/components/mobile/DataCard';
 import MobileShell from '@/components/mobile/MobileShell';
 
+export const dynamic = 'force-dynamic';
+
 function PreviewBody() {
   return (
     <MobileShell title="Kit mobile (dev)">
