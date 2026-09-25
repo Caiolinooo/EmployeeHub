@@ -46,13 +46,13 @@ const NewsPostEditorFullScreen: React.FC<Props> = ({ userId, postId, onClose }) 
     <div className="fixed inset-0 z-50 bg-white" data-modal-panel="">
       {/* Topbar */}
       <div className="sticky top-0 z-20 border-b border-gray-200 bg-white/90 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <h1 className="text-lg font-semibold min-w-0 truncate">Editor do ABZ News</h1>
-          <div className="flex items-center gap-3 text-sm text-gray-600 shrink-0">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between max-md:gap-3">
+          <h1 className="text-lg font-semibold max-md:min-w-0 max-md:truncate">Editor do ABZ News</h1>
+          <div className="flex items-center gap-3 text-sm text-gray-600 max-md:shrink-0">
             <span className="hidden sm:inline">Atalhos: Ctrl/Cmd+S (Salvar), Ctrl/Cmd+Enter (Publicar)</span>
             {onClose && (
               <>
-                <button type="button" onClick={onClose} className="hidden md:inline text-gray-500 hover:text-gray-700">Fechar</button>
+                <button type="button" onClick={onClose} className="text-gray-500 hover:text-gray-700 max-md:hidden">Fechar</button>
                 <ModalCloseButton onClick={onClose} mobileOnly />
               </>
             )}

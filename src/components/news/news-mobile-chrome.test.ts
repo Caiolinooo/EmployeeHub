@@ -9,5 +9,7 @@ describe('NewsPostEditorFullScreen mobile chrome', () => {
     assert.match(src, /data-modal-panel/);
     assert.match(src, /ModalCloseButton/);
     assert.match(src, /mobileOnly/);
+    assert.match(src, /max-md:hidden/);
+    assert.doesNotMatch(src, /hidden md:inline/);
   });
 });
