@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { DocumentTextIcon, NewspaperIcon, UserIcon, RectangleStackIcon, CurrencyDollarIcon } from '@heroicons/react/24/solid';
 import { useI18n } from '@/contexts/I18nContext';
@@ -37,24 +37,43 @@ const GlobalSearch: React.FC = () => {
   const [selectedType, setSelectedType] = useState<string>('all');
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [isNarrow767, setIsNarrow767] = useState(false);
 
-  const close = () => setIsOpen(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const sync = () => setIsNarrow767(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
+  const close = useCallback(() => {
+    setIsOpen(false);
+    requestAnimationFrame(() => triggerRef.current?.focus());
+  }, []);
   useEscapeToClose(isOpen, close);
 
-  // Fechar busca ao clicar fora
   useEffect(() => {
+    if (!isNarrow767 && isOpen) setIsOpen(false);
+  }, [isNarrow767, isOpen]);
+
+  // Fechar busca ao clicar fora — só com overlay aberto
+  useEffect(() => {
+    if (!isOpen) return;
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+        close();
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isOpen, close]);
 
-  // Atalho de teclado Ctrl+K
+  // Ctrl+K só ≤767 — acima de md não registra listener (desktop = portal)
   useEffect(() => {
+    if (!isNarrow767) return;
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
         event.preventDefault();
@@ -65,7 +84,7 @@ const GlobalSearch: React.FC = () => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [isNarrow767]);
 
   // Buscar com debounce
   useEffect(() => {
@@ -161,6 +180,7 @@ const GlobalSearch: React.FC = () => {
     <>
       {/* Botão de busca */}
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setIsOpen(true)}
         data-global-search-trigger=""

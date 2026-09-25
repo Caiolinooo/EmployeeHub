@@ -10,5 +10,8 @@ describe('GlobalSearch mobile chrome', () => {
     const src = readFileSync(new URL('./GlobalSearch.tsx', import.meta.url), 'utf8');
     assert.match(src, /useEscapeToClose/);
     assert.match(src, /ModalCloseButton/);
+    assert.match(src, /max-width: 767px/);
+    assert.match(src, /if \(!isNarrow767\) return/);
+    assert.match(src, /triggerRef\.current\?\.focus/);
   });
 });
