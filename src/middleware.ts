@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { applyMobileSurface } from '@/lib/mobile-ui/apply-mobile-surface';
 
 // Rotas que não precisam de autenticação
 const publicRoutes = [
   '/',
   '/login',
+  '/m/login',
+  '/m/preview',
   '/set-password',
   '/api/auth/login',
   '/api/auth/login-password',
@@ -54,7 +57,7 @@ export function middleware(request: NextRequest) {
 
   // Verificar se é uma rota pública
   if (publicRoutes.includes(pathname)) {
-    return NextResponse.next();
+    return applyMobileSurface(request, NextResponse.next());
   }
 
   // Verificar se é uma rota de arquivo estático
@@ -158,7 +161,7 @@ export function middleware(request: NextRequest) {
 
   // Para simplificar e evitar problemas com o Twilio, vamos permitir outras requisições
   // A autenticação será verificada nas rotas de API e páginas
-  return response;
+  return applyMobileSurface(request, response);
 }
 
 export const config = {

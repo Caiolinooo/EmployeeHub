@@ -7,8 +7,10 @@ Screenshots e métricas da Fase 1 mobile-first (viewports 375×812 e 390×844). 
 ## Ownership
 
 - Pasta: `docs/mobile-audit/`
+- Fase 2: `docs/mobile-audit/fase2/` (before/after/diff/mobile + `proofs.md`)
 - Plano: `docs/mobile-first-plan.md`
 - Script: `scripts/mobile-audit-screenshots.mjs`
+- Provas Fase 2: `scripts/mobile-fase2-proofs.mjs`
 
 ## Local Contracts
 

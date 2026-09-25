@@ -1,0 +1,13 @@
+/* Tokens só do front mobile — importado pelo layout (mobile), não pelo desktop. */
+[data-abz-ui='mobile'] {
+  --touch-min: 44px;
+  --mobile-nav-h: 64px;
+  --mobile-blue: #005b96;
+  --mobile-bg: #f3f6fb;
+  font-size: 16px;
+}
+
+[data-abz-ui='mobile'] .touch-target {
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+}

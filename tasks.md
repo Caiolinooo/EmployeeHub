@@ -7,7 +7,7 @@ Adaptar o portal para celular em todos os módulos; dono consulta nas decisões.
 - [x] Auditoria 375×812 e 390×844 (código + Playwright em rotas públicas)
 - [x] Plano por fases + decisões D1–D8
 - [x] Dono aprovou; D4 invertida (desktop congelado; front mobile separado)
-- [ ] Fase 2: rewrite + shell + login P0 em `feat/mobile-first-fase2`
+- [x] Fase 2: rewrite + shell + login P0 em `feat/mobile-first-fase2` (PR contra `feat/mobile-first`)
 
 ---
 

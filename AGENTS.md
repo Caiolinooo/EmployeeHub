@@ -129,6 +129,9 @@ When the user requests a durable behavior change, record it here or in the relev
 - `src/app/api/acl/AGENTS.md` — seed ACL a partir do catálogo vivo
 - `docs/mobile-first-plan.md` — inventário + arquitetura do front mobile separado (§11)
 - `docs/mobile-audit/AGENTS.md` — screenshots e métricas da auditoria mobile
+- `src/lib/mobile-ui/AGENTS.md` — detecção, rewrite, cookie `ui`, allowlist
+- `src/components/mobile/AGENTS.md` — kit/shell/login do front mobile
+- `src/app/(mobile)/AGENTS.md` — rotas internas `/m`
 
 ## Index of Modules
 
