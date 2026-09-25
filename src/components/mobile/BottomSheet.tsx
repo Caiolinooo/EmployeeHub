@@ -30,23 +30,23 @@ export default function BottomSheet({ open, onClose, title, children, className 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[80]" role="dialog" aria-modal="true" aria-label={title}>
+    <div className="abz-m-dialog" role="dialog" aria-modal="true" aria-label={title}>
       <button
         type="button"
-        className="absolute inset-0 bg-black/45"
+        className="abz-m-scrim"
         aria-label="Fechar"
         onClick={onClose}
       />
       <div
         className={cn(
-          'absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-3xl bg-white shadow-2xl pb-safe',
+          'abz-m-sheet absolute inset-x-0 bottom-0 flex flex-col bg-white shadow-2xl pb-safe',
           className,
         )}
       >
         <div className="mx-auto mt-2 h-1.5 w-12 rounded-full bg-gray-300" />
         <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-100">
           <h2 className="text-base font-semibold text-gray-900">{title}</h2>
-          <TouchButton variant="ghost" onClick={onClose} className="h-11 min-w-11 px-3 text-sm">
+          <TouchButton variant="ghost" onClick={onClose} className="h-11 touch-target px-3 text-sm">
             Fechar
           </TouchButton>
         </div>

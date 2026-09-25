@@ -46,7 +46,7 @@ export default function UiSurfaceSwitch() {
   return (
     <a
       href={`/api/ui-surface?to=mobile&next=${encodeURIComponent(next)}`}
-      className="fixed bottom-3 right-3 z-[70] rounded-full bg-[#005B96] px-3 py-2 text-sm font-semibold text-white shadow-lg"
+      className="fixed abz-m-switch right-3 z-[70] rounded-full bg-[#005B96] px-3 py-2 text-sm font-semibold text-white shadow-lg"
       data-abz-ui-switch="back-to-mobile"
     >
       Voltar para o mobile

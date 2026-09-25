@@ -20,7 +20,7 @@ function PreviewBody() {
 
 export default function MobilePreviewPage() {
   return (
-    <Suspense fallback={<div className="min-h-dvh bg-[#f3f6fb]" />}>
+    <Suspense fallback={<div className="min-h-dvh abz-m-bg" />}>
       <PreviewBody />
     </Suspense>
   );

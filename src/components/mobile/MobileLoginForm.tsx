@@ -87,7 +87,7 @@ export default function MobileLoginForm() {
   };
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[var(--mobile-bg,#f3f6fb)] px-4 py-6" data-abz-mobile-login="">
+    <div className="flex min-h-dvh flex-col abz-m-bg px-4 py-6" data-abz-mobile-login="">
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
         <div className="mb-6 flex flex-col items-center gap-3 pt-6">
           <Image src="/images/LC1_Azul.png" alt="ABZ Group" width={64} height={64} priority />
@@ -115,7 +115,7 @@ export default function MobileLoginForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="karen.d@example.net"
-                className="touch-target min-h-11 rounded-xl border border-gray-200 px-3 text-base"
+                className="touch-target rounded-xl border border-gray-200 px-3 text-base"
               />
               <TouchButton type="submit" disabled={busy || isLoading} className="w-full">
                 Continuar
@@ -135,9 +135,9 @@ export default function MobileLoginForm() {
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="touch-target min-h-11 rounded-xl border border-gray-200 px-3 text-base"
+                className="touch-target rounded-xl border border-gray-200 px-3 text-base"
               />
-              <label className="flex min-h-11 items-center gap-2 text-sm text-gray-700">
+              <label className="flex touch-target items-center gap-2 text-sm text-gray-700">
                 <input
                   type="checkbox"
                   checked={rememberMe}
@@ -175,7 +175,7 @@ export default function MobileLoginForm() {
                 autoComplete="one-time-code"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                className="touch-target min-h-11 rounded-xl border border-gray-200 px-3 text-base tracking-widest"
+                className="touch-target rounded-xl border border-gray-200 px-3 text-base tracking-widest"
               />
               <TouchButton type="submit" disabled={busy || isLoading} className="w-full">
                 Verificar

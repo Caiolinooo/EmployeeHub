@@ -437,7 +437,7 @@ Aplicadas **só** em `src/components/mobile/**`:
 |---------|--------|
 | `src/middleware.ts` | Rewrite + preserve redirects atuais. |
 | `next.config.js` | `rewrites.beforeFiles` do P0 `/login` (UA/CH/cookie) se o middleware Edge não compilou. Regras guacamole/poliweb iguais em `afterFiles`. |
-| `src/app/login/layout.tsx` | **Novo.** Só envolve o login. `UiSurfaceSwitch` é null sem cookie. `page.tsx` desktop intacto. |
+| `src/app/login/layout.tsx` | **Não criar.** Um layout extra em `/login` reordena os `<link>` CSS e `:root` ganha de `next/font` (desktop troca de fonte). |
 | `src/components/ClientProviders.tsx` | **Revertido.** Sem toque. |
 | `src/contexts/CompanionSessionContext.tsx` | **Revertido.** P0: login é rota auth (FAB já some); preview sem sessão. |
 | Este doc | Contrato. |

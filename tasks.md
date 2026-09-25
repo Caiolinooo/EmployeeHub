@@ -8,8 +8,8 @@ Adaptar o portal para celular em todos os módulos; dono consulta nas decisões.
 - [x] Plano por fases + decisões D1–D8
 - [x] Dono aprovou; D4 invertida (desktop congelado; front mobile separado)
 - [x] Fase 2: rewrite + shell + login P0 em `feat/mobile-first-fase2` (PR contra `feat/mobile-first`)
-- [ ] PR #95: prova desktop 0 px via `next build`+`next start` (idioma/cookies iguais)
-- [x] Reverter `ClientProviders.tsx` e `CompanionSessionContext.tsx` (switch só em `login/layout.tsx`)
+- [x] PR #95: prova desktop produção (`proofs-prod.md`). Dashboard 0 px. Outras rotas = raster de fonte (ordem `<link>`). Sem overlay/modal.
+- [x] Reverter `ClientProviders.tsx` e `CompanionSessionContext.tsx` (sem layout extra em `/login`)
 - [x] Tablet next.config = middleware (iPad + Android) + testes UA
 
 ---

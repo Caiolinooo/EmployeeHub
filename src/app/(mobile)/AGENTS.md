@@ -6,7 +6,7 @@ Segmento interno do front mobile. URL pública não muda (rewrite).
 
 ## Ownership
 
-- `layout.tsx` — `data-abz-ui=mobile` + tokens
+- `layout.tsx` — `data-abz-ui=mobile` + tokens via `<style>` (`mobile-styles.ts`). Sem `import '*.css'` — CSS global reordena `--font-plus-jakarta` no desktop.
 - `m/login/page.tsx` — P0 allowlist
 - `m/preview/page.tsx` — QA do shell (sem rewrite; UA desktop pode abrir)
 

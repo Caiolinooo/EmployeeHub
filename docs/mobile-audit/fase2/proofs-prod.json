@@ -1,0 +1,76 @@
+{
+  "createdAt": "2026-09-25T03:56:13.819Z",
+  "beforeBase": "http://127.0.0.1:3001",
+  "afterBase": "http://127.0.0.1:3002",
+  "beforeUrls": {
+    "login-1440x900.png": "http://127.0.0.1:3001/login",
+    "register-1440x900.png": "http://127.0.0.1:3001/register",
+    "reset-password-1440x900.png": "http://127.0.0.1:3001/reset-password",
+    "unauthorized-1440x900.png": "http://127.0.0.1:3001/unauthorized",
+    "dashboard-1440x900.png": "http://127.0.0.1:3001/dashboard"
+  },
+  "afterUrls": {
+    "login-1440x900.png": "http://127.0.0.1:3002/login",
+    "register-1440x900.png": "http://127.0.0.1:3002/register",
+    "reset-password-1440x900.png": "http://127.0.0.1:3002/reset-password",
+    "unauthorized-1440x900.png": "http://127.0.0.1:3002/unauthorized",
+    "dashboard-1440x900.png": "http://127.0.0.1:3002/dashboard"
+  },
+  "diffs": {
+    "login-1440x900.png": {
+      "ok": false,
+      "changed": 20066,
+      "total": 1296000,
+      "bbox": {
+        "minX": 536,
+        "minY": 135,
+        "maxX": 879,
+        "maxY": 816
+      },
+      "percent": 1.5483
+    },
+    "register-1440x900.png": {
+      "ok": false,
+      "changed": 23666,
+      "total": 1296000,
+      "bbox": {
+        "minX": 527,
+        "minY": 49,
+        "maxX": 928,
+        "maxY": 840
+      },
+      "percent": 1.8261
+    },
+    "reset-password-1440x900.png": {
+      "ok": false,
+      "changed": 7800,
+      "total": 1296000,
+      "bbox": {
+        "minX": 584,
+        "minY": 379,
+        "maxX": 880,
+        "maxY": 594
+      },
+      "percent": 0.6019
+    },
+    "unauthorized-1440x900.png": {
+      "ok": false,
+      "changed": 7060,
+      "total": 1296000,
+      "bbox": {
+        "minX": 530,
+        "minY": 414,
+        "maxX": 908,
+        "maxY": 553
+      },
+      "percent": 0.5448
+    },
+    "dashboard-1440x900.png": {
+      "ok": true,
+      "changed": 0,
+      "total": 1296000,
+      "bbox": null,
+      "percent": 0
+    }
+  }
+}

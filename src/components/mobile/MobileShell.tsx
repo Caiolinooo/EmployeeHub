@@ -43,15 +43,15 @@ export default function MobileShell({ title, children, showCompanion = true }: M
   );
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[var(--mobile-bg,#f3f6fb)]" data-abz-mobile-shell="">
+    <div className="flex min-h-dvh flex-col abz-m-bg" data-abz-mobile-shell="">
       <header className="sticky top-0 z-20 shrink-0 border-b border-gray-100 bg-white px-4 py-3">
         <h1 className="text-lg font-bold text-[#005B96]">{title}</h1>
       </header>
-      <main className="min-h-0 flex-1 overflow-y-auto px-4 py-4 pb-[calc(var(--mobile-nav-h)+16px)]">
+      <main className="abz-m-main min-h-0 flex-1 overflow-y-auto px-4 py-4">
         {children}
       </main>
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 grid h-[var(--mobile-nav-h)] grid-cols-4 border-t border-gray-200 bg-white pb-safe"
+        className="abz-m-nav fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-gray-200 bg-white pb-safe"
         data-abz-mobile-nav=""
         aria-label="Navegação mobile"
       >
@@ -82,7 +82,7 @@ export default function MobileShell({ title, children, showCompanion = true }: M
         <div className="flex flex-col gap-2" data-abz-mobile-mais-sheet="">
           {modules.map((mod) => (
             <DataCard key={mod.key} title={mod.name} subtitle={mod.description} meta={mod.href}>
-              <Link href={mod.href} className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-[#005B96]">
+              <Link href={mod.href} className="mt-2 inline-flex touch-target items-center text-sm font-semibold text-[#005B96]">
                 Abrir
               </Link>
             </DataCard>

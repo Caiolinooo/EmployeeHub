@@ -11,7 +11,7 @@ Decidir se o pedido serve o front mobile (`/m/...`) ou o desktop atual. Desktop 
 - Fallback P0: `next.config.js` `rewrites.beforeFiles` (`/login` + cookie/CH/UA)
 - `ua-patterns.js` — tablet/phone regex (next.config + testes)
 - API: `src/app/api/ui-surface/route.ts` — cookie `ui`
-- “Voltar ao mobile”: `src/app/login/layout.tsx` (switch null sem cookie)
+- “Voltar ao mobile”: `UiSurfaceSwitch` só no front mobile. Sem layout extra em `/login` (reordena CSS).
 - Testes: `device-surface.test.ts`
 
 ## Local Contracts
@@ -27,6 +27,7 @@ Decidir se o pedido serve o front mobile (`/m/...`) ou o desktop atual. Desktop 
 
 - Novo módulo mobile: página em `src/app/(mobile)/m/<rota>` **e** entrada na allowlist.
 - Não importar isto em componentes desktop.
+- Não adicionar `import '*.css'` no front mobile: o CSS global do Next reordena `:root --font-plus-jakarta` e o desktop deixa de usar `next/font`.
 
 ## Verification
 

@@ -20,7 +20,7 @@ export default function DataCard({ title, subtitle, meta, onClick, className, ch
       onClick={onClick}
       className={cn(
         'w-full text-left rounded-2xl border border-gray-100 bg-white p-4 shadow-sm',
-        onClick && 'touch-target min-h-[64px]',
+        onClick && 'touch-target abz-m-card',
         className,
       )}
     >
