@@ -11,7 +11,7 @@ Screenshots e métricas da Fase 1 mobile-first (viewports 375×812 e 390×844). 
 - Plano: `docs/mobile-first-plan.md`
 - Script: `scripts/mobile-audit-screenshots.mjs`
 - Provas Fase 2 (dev): `scripts/mobile-fase2-proofs.mjs`
-- Provas desktop (produção): `scripts/mobile-fase2-prod-diff.mjs` + `fase2/proofs-prod.md` (`next build` + `next start`; leftover = ordem dos `<link>` next/font vs `:root`, não layout)
+- Provas desktop (produção): `scripts/mobile-fase2-prod-diff.mjs` + `fase2/proofs-prod.md` (`next build` + `next start` dos dois refs como irmãos sob `/tmp/mf-*`; 0 px nas 5 rotas. Comparar `/workspace` vs `/tmp` é inválido: o sort de CSS do Next 15.5 depende do path absoluto)
 
 ## Local Contracts
 
