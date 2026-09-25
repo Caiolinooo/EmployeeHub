@@ -20,6 +20,7 @@ Fechar overlays no celular sem mudar o desktop em 1440×900.
 
 ## Verification
 
+- Desktop P1: `next build` + `next start` no mesmo path absoluto; geometria em `docs/mobile-audit/fix-mobile-p1/*/desktop-geometry/`. Sem harness estático.
 - `npx tsx --test src/components/ui/modal-chrome.test.ts`
 - `node scripts/mobile-ui-proof.mjs` — prints 390/375 em `docs/mobile-audit/fix-mobile-ui/`
 - `node scripts/mobile-modal-inventory.mjs` — tabela em `docs/mobile-audit/fix-mobile-ui/modals.md`
