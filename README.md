@@ -22,6 +22,8 @@ Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](
 - **Allowlist anti-SSRF**: buscas externas só falam com host em `src/lib/security/safe-url.ts` (e no resolvedor da rota).
 - **e-Social valida TLS**: cadeia de certificado exigida; `NODE_TLS_REJECT_UNAUTHORIZED=0` só como escape de emergência.
 - **QHSE/EPI**: a aba deixa de mostrar “Colaborador não encontrado” por select inválido em `gt_colaboradores`.
+- **Login**: não chama `fix-token` nem `ensure-admin`. Token do storage vai para `verify-token`. `fix-token` só depois do refresh falhar **e** existir sessão Supabase — sem mint ADMIN em token morto.
+- **Visão geral financeira**: “Todas as empresas” (sem `empresaId`) soma todas as empresas; o 500 do filtro nulo some.
 
 ## Segurança
 
@@ -31,6 +33,7 @@ Versão atual: **5.88.0**. Detalhe das correções: [CHANGELOG.md](CHANGELOG.md)
 - Debug/admin públicos (`ensure-admin`, `test-users`, `supabase-status`, `acl/init`, `execute-sql`) exigem JWT ADMIN ou `CRON_SECRET`.
 - Fetch de saída usa allowlist em `src/lib/security/safe-url.ts`. Host fora da lista, IP privado e `http://` são recusados.
 - Cliente e-Social valida TLS (CAs do Node + ICP-Brasil). Não desligar a validação no dia a dia.
+- Login: token do storage → `verify-token`. `fix-token` só após falha de refresh com sessão Supabase. `/login` não chama `ensure-admin`.
 
 ## Nesta versão (5.87.2)
 
