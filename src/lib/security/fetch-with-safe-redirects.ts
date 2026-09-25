@@ -3,7 +3,12 @@
  * Each hop re-runs `parseSafeUrl` (allowlist + private/mapped IP checks).
  */
 
-import { parseSafeUrl, UnsafeUrlError, type ParseSafeUrlOptions } from './safe-url';
+import {
+  isBlockedHostname,
+  parseSafeUrl,
+  UnsafeUrlError,
+  type ParseSafeUrlOptions,
+} from './safe-url';
 
 export const MAX_SAFE_REDIRECT_HOPS = 3;
 
@@ -40,7 +45,19 @@ export async function fetchWithSafeRedirects(
   let hops = 0;
 
   while (true) {
-    const response = await fetchImpl(current.href, { ...init, redirect: 'manual' });
+    const safe = parseSafeUrl(current.href, guard);
+    if (isBlockedHostname(safe.hostname)) {
+      throw new UnsafeUrlError('Host privado ou loopback não é permitido');
+    }
+    const allowed = guard.allowedHosts.map((host) => host.toLowerCase());
+    if (!allowed.includes(safe.hostname.toLowerCase())) {
+      throw new UnsafeUrlError('Host não permitido');
+    }
+    const protocols = guard.allowedProtocols ?? ['https:'];
+    if (!protocols.includes(safe.protocol)) {
+      throw new UnsafeUrlError('Protocolo não permitido');
+    }
+    const response = await fetchImpl(safe.href, { ...init, redirect: 'manual' });
     if (!isRedirectStatus(response.status)) {
       return response;
     }
