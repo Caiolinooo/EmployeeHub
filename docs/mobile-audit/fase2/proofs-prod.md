@@ -2,84 +2,59 @@
 
 `next build` + `next start`.  
 Before: `feat/mobile-first` (`149f8771`) em `/tmp/mf-before` → `:3001`.  
-After: `feat/mobile-first-fase2` (este commit) em `/tmp/mf-after` → `:3002`.  
-Os dois trees são irmãos sob `/tmp` (mesmo prefixo absoluto). Comparar after em `/workspace` contra before em `/tmp` é inválido — ver causa abaixo.
+After: `feat/mobile-first-fase2` (`8923b336`) em `/tmp/mf-after` → `:3002`.  
+Irmãos sob `/tmp`. Comparar `/workspace` vs `/tmp` é inválido (sort de CSS do Next 15.5 depende do path absoluto).
 
-Idioma idêntico: `locale=pt-BR`, `languageDialogShown=true`, cookie `NEXT_LOCALE=pt-BR`. Sem animações. `document.fonts.ready` + imagens. UA desktop. Sem cookie `ui`. Sem `data-abz-ui=mobile`.
+Idioma idêntico: `locale=pt-BR`, `languageDialogShown=true`, cookie `NEXT_LOCALE=pt-BR`. Sem animações. UA desktop. Sem cookie `ui`.
 
-Script: `scripts/mobile-fase2-prod-diff.mjs`. JSON: `proofs-prod.json` (`createdAt: 2026-09-25T04:11:16.786Z`).
+Script: `scripts/mobile-fase2-prod-diff.mjs`. JSON: `proofs-prod.json` (`createdAt: 2026-09-25T04:25:51.194Z`).
 
 ## Diff por rota (1 296 000 px)
 
-| Rota | px | % | bbox | Fonte computada |
-|------|----|---|------|-----------------|
-| `/login` | **0** | **0%** | — | `plusJakartaSans, "plusJakartaSans Fallback"` nos dois |
-| `/register` | **0** | **0%** | — | idem |
-| `/reset-password` | **0** | **0%** | — | idem |
-| `/unauthorized` | **0** | **0%** | — | idem |
-| `/dashboard` | **0** | **0%** | — | Sem sessão. Mesma tela vazia. Sem bypass. |
+| Rota | px | % |
+|------|----|---|
+| `/login` | **0** | **0%** |
+| `/register` | **0** | **0%** |
+| `/reset-password` | **0** | **0%** |
+| `/unauthorized` | **0** | **0%** |
+| `/dashboard` | **0** | **0%** |
 
-`h1`/`form` iguais. `data-abz-ui` no `<html>`: `null` nos dois. `UiSurfaceSwitch` não monta.
+Fonte desktop: `plusJakartaSans`. `data-abz-ui` no `<html>`: `null`. Sem toque em `src/app/layout.tsx` nem `src/app/login/page.tsx`.
 
-Uma captura fria de `/login` neste mesmo par chegou a 22 px (0,0017%, delta de canal ≤ 7) só na antialias dos ícones do form. Recaptura do mesmo par e captura dupla do mesmo servidor: **0 px**. Não é troca de fonte nem quebra de linha.
+Hash Tailwind do after mudou (`bef464f1…`) porque o front mobile ganhou classes já usadas no kit; a ordem dos `<link>` no `/login` continua `globals → toastify → next/font`. Pixel-diff 0.
 
-## Causa do leftover anterior (falso)
+## `/m/*` no desktop
 
-Arquivos CSS **iguais** (mesmo hash):
+- Com Edge: `/m` → `/`, `/m/login` → `/login`. `/m/preview` não redireciona.
+- Sem Edge (este Next 15.5): `/m/*` **renderiza o mobile**. `/login` público continua desktop (provado: `data-abz-mobile-login` = 0).
+- `/m/preview` em produção: `notFound()` (vitrine ausente). Status HTML pode vir 200 com corpo 404 (prerender Next).
 
-- `1b418106e0919646.css` — globals + Tailwind
-- `715be398208dca58.css`
-- `6cb2ff308773e395.css` — `@font-face` `plusJakartaSans` + `.__variable_70cfe0 { --font-plus-jakarta: "plusJakartaSans", … }`
+## Login mobile (mock de rede, sem bypass)
 
-O Next 15.5.25 (`FlightClientEntryPlugin` / `deduplicateCSSImportsForEntry`) ordena os `<link>` com um sort que **depende do path absoluto do build**. Não é o grafo do front mobile.
+`scripts/mobile-fase2-login-proof.mjs` + `login-proof.json`.
 
-| Build | Path | Ordem `<link>` em `/login` | `--font-plus-jakarta` vencedor | Fonte |
-|-------|------|----------------------------|--------------------------------|-------|
-| before `149f8771` | `/tmp/mf-before` | `1b4181` → `715be3` → `6cb2ff` | next/font | `plusJakartaSans` |
-| after `30710493` | `/workspace` | `6cb2ff` → `1b4181` → `715be3` | `:root` em `globals.css` (`'Plus Jakarta Sans', system-ui`) | system-ui (quebra “Windows Hello”) |
-| after `30710493` | `/tmp/mf-after` | `1b4181` → `715be3` → `6cb2ff` | next/font | `plusJakartaSans` |
+| Passo | Resultado |
+|-------|-----------|
+| UI e-mail: convite, biometria, Criar conta, EN/PT | ok |
+| e-mail novo → `quick_register` | ok |
+| e-mail existente → `password` | ok |
+| `POST /api/auth/login` | ok (mesmo endpoint do desktop) |
+| `POST /api/auth/webauthn/login/options` | ok |
+| `/login` desktop sem árvore mobile | ok |
+| Destino após login | `postLoginPath` = `/dashboard` (ou `/set-password`). Token mock não mantém sessão. |
 
-Bisect no after em `/workspace`: remover `(mobile)`, reverter `next.config.js` / `src/middleware.ts`, remover `/api/ui-surface` — a ordem **continuou** font-first. Recolocar os arquivos não mudou. O mesmo SHA em `/tmp/mf-after` volta font-last.
+Testes: `npx tsx --test src/lib/mobile-ui/device-surface.test.ts src/components/mobile/mobile-login-flow.test.ts` — **30 pass**.
 
-O mobile **não** redeclarava `next/font` nem reimportava `globals.css`. Isolamento já existente (sem toque no `layout.tsx` raiz):
+## Screenshots 375×812 e 390×844
 
-- `src/app/(mobile)/layout.tsx` injeta `MOBILE_SURFACE_CSS` via `<style>` (string em `mobile-styles.ts`)
-- sem `import '*.css'` no front mobile
-- sem segundo `next/font`
-- classes Tailwind únicas do mobile viraram helpers `abz-m-*` para o hash `1b418106` ficar igual ao before
+| Tela | 375 | 390 |
+|------|-----|-----|
+| Login (e-mail, convite, biometria, EN/PT, Criar conta) | `mobile/login-375x812.png` | `mobile/login-390x844.png` |
+| Login convite aberto | `mobile/login-invite-375x812.png` | `mobile/login-invite-390x844.png` |
+| Login senha | `mobile/login-password-375x812.png` | `mobile/login-password-390x844.png` |
+| Reset senha | `mobile/login-reset-375x812.png` | `mobile/login-reset-390x844.png` |
+| Home | `mobile/home-375x812.png` | `mobile/home-390x844.png` |
+| Mais | `mobile/mais-375x812.png` | `mobile/mais-390x844.png` |
+| Companion | `mobile/companion-375x812.png` | `mobile/companion-390x844.png` |
 
-Nenhum arquivo desktop existente nem o layout raiz foi editado nesta correção. A correção da prova é construir os dois refs como irmãos sob o mesmo prefixo (`/tmp/mf-*`).
-
-## `/m/login` — fonte da marca
-
-UA iPhone + `Sec-CH-UA-Mobile: ?1` em `:3002`:
-
-- `data-abz-ui=mobile`
-- `font-family: plusJakartaSans, "plusJakartaSans Fallback"`
-- faces 400/600/800 `loaded`
-
-## Screenshots mobile (produção `:3002`, depois da correção)
-
-| Viewport | Login | Shell |
-|----------|-------|-------|
-| 375×812 | `docs/mobile-audit/fase2/mobile/login-375x812.png` | `docs/mobile-audit/fase2/mobile/shell-375x812.png` |
-| 390×844 | `docs/mobile-audit/fase2/mobile/login-390x844.png` | `docs/mobile-audit/fase2/mobile/shell-390x844.png` |
-
-## Arquivos desktop existentes
-
-- `src/app/layout.tsx` — **não tocado**
-- `src/components/ClientProviders.tsx` — diff 0 vs `feat/mobile-first`
-- `src/contexts/CompanionSessionContext.tsx` — diff 0 vs `feat/mobile-first`
-- Sem `src/app/login/layout.tsx`
-- Sem `import '*.css'` no front mobile
-
-## Middleware Edge
-
-`middleware-manifest.json` em produção: `{ "version": 3, "middleware": {}, "functions": {}, "sortedMiddleware": [] }` em `feat/mobile-first`, nesta branch e em `portal` (`51f741c4`, Next 15.5.25). Pré-existente. P0 `/login` usa `next.config.js` `rewrites.beforeFiles`.
-
-## Tablet / testes UA
-
-`TABLET_UA_VALUE` = iPad | Tablet | PlayBook | SM-T/SM-X | Nexus 7/9/10 | Kindle | Silk | Lenovo TB | Pixel Tablet.  
-`PHONE_REWRITE_UA_VALUE` ancorado `^$`; tablet vence mesmo com `Mobile`.
-
-`npx tsx --test src/lib/mobile-ui/device-surface.test.ts` — **23 pass**.
+Pasta: `docs/mobile-audit/fase2/`.

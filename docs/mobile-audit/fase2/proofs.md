@@ -1,6 +1,6 @@
 # Fase 2 — provas (2026-09-25)
 
-Prova de produção 1440×900 (0 px): `proofs-prod.md`. Este arquivo é o lote em `next dev` (overlay/i18n ruidosos).
+Prova de produção 1440×900 (0 px) + login mobile: `proofs-prod.md`. Este arquivo é o lote em `next dev` (overlay/i18n ruidosos).
 
 App local `http://127.0.0.1:3000` com `.env.local` fake (não commitado). Playwright + `scripts/mobile-fase2-proofs.mjs`.
 

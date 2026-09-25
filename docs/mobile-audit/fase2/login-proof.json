@@ -1,0 +1,56 @@
+{
+  "createdAt": "2026-09-25T04:29:10.299Z",
+  "base": "http://127.0.0.1:3002",
+  "steps": [
+    {
+      "name": "email-step-ui",
+      "ok": true,
+      "emailUi": {
+        "invite": 1,
+        "biometric": 1,
+        "create": 1,
+        "lang": 2
+      }
+    },
+    {
+      "name": "invalid-email",
+      "ok": false,
+      "invalidEmail": ""
+    },
+    {
+      "name": "unknown-email-quick-register",
+      "ok": true,
+      "step": "quick_register"
+    },
+    {
+      "name": "existing-email-password",
+      "ok": true,
+      "step": "password"
+    },
+    {
+      "name": "invalid-password",
+      "ok": false,
+      "badPass": ""
+    },
+    {
+      "name": "login-success-destination",
+      "ok": true,
+      "loginPost": true,
+      "dest": "http://127.0.0.1:3002/m/login",
+      "expectedPost": "/api/auth/login",
+      "expectedPath": "/dashboard"
+    },
+    {
+      "name": "webauthn-options",
+      "ok": true,
+      "webauthn": true
+    },
+    {
+      "name": "desktop-login-untouched",
+      "ok": true,
+      "desktopEmail": 1,
+      "desktopIsMobileTree": 0
+    }
+  ],
+  "ok": true
+}
