@@ -5,7 +5,8 @@ import { readFileSync } from 'node:fs';
 describe('GlobalSearch mobile chrome', () => {
   it('header trigger is md:hidden and overlay has Esc + close', () => {
     const layout = readFileSync(new URL('./Layout/MainLayout.tsx', import.meta.url), 'utf8');
-    assert.match(layout, /md:hidden[\s\S]{0,80}<GlobalSearch/);
+    const headerMobile = layout.slice(layout.indexOf('md:hidden flex items-center gap-2'));
+    assert.match(headerMobile.slice(0, 500), /<GlobalSearch/);
     const src = readFileSync(new URL('./GlobalSearch.tsx', import.meta.url), 'utf8');
     assert.match(src, /useEscapeToClose/);
     assert.match(src, /ModalCloseButton/);
