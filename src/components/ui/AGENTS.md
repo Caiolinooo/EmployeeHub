@@ -21,7 +21,7 @@ Fechar overlays no celular sem mudar o desktop em 1440×900.
 
 ## Verification
 
-- `npx tsx --test src/components/ui/modal-chrome.test.ts`
+- `npx tsx --test src/components/ui/modal-chrome.test.ts src/components/Help/HelpWidget.mobile-chrome.test.ts`
 - `node scripts/mobile-ui-proof.mjs` — prints 390/375 em `docs/mobile-audit/fix-mobile-ui/`
 - `node scripts/mobile-modal-inventory.mjs` — tabela em `docs/mobile-audit/fix-mobile-ui/modals.md`
 - `node scripts/mobile-ui-auth-proof.mjs` — 1440×900 autenticado via `page.route` (sem bypass)

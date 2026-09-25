@@ -424,7 +424,7 @@ export default function HelpWidget() {
                 data-help-trigger
                 data-fab-help=""
                 onClick={() => setIsOpen(!isOpen)}
-                className={`fixed bottom-6 right-4 md:right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 ${isOpen}
+                className={`fixed bottom-6 right-4 md:right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 ${isOpen
                     ? 'hidden md:flex bg-gray-600 hover:bg-gray-700'
                     : 'flex bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800'
                     }`}
