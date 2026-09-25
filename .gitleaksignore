@@ -1,0 +1,4 @@
+# False positives for abz-gmail-app-password-spaced (four spaced 4-letter
+# English words in comments/prose, not a Gmail app password).
+# Do not weaken .gitleaks.toml. Only add a fingerprint after confirming FP.
+f313d9f6083e3f3a56408bc3fabbd66f52ba6eb3:src/lib/middleware-gates.ts:abz-gmail-app-password-spaced:3
