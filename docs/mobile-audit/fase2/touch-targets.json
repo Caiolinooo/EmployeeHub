@@ -1,0 +1,50 @@
+{
+  "base": "http://127.0.0.1:3002",
+  "createdAt": "2026-09-25T04:59:05.582Z",
+  "views": {
+    "390x844": {
+      "en": {
+        "w": 44,
+        "h": 44,
+        "ok": true
+      },
+      "pt": {
+        "w": 44,
+        "h": 44,
+        "ok": true
+      },
+      "invite": {
+        "w": 201,
+        "h": 44,
+        "ok": true
+      },
+      "createAccount": {
+        "w": 73,
+        "h": 44,
+        "ok": true
+      }
+    },
+    "375x812": {
+      "en": {
+        "w": 44,
+        "h": 44,
+        "ok": true
+      },
+      "pt": {
+        "w": 44,
+        "h": 44,
+        "ok": true
+      },
+      "invite": {
+        "w": 201,
+        "h": 44,
+        "ok": true
+      },
+      "createAccount": {
+        "w": 73,
+        "h": 44,
+        "ok": true
+      }
+    }
+  }
+}

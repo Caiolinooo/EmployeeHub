@@ -14,6 +14,7 @@ Screenshots e métricas da Fase 1 mobile-first (viewports 375×812 e 390×844). 
 - Provas desktop (produção): `scripts/mobile-fase2-prod-diff.mjs` + `fase2/proofs-prod.md` (builds irmãos sob `/tmp/mf-*`)
 - Login mobile: `scripts/mobile-fase2-login-proof.mjs` (mock de rede)
 - Shots mobile: `scripts/mobile-fase2-mobile-shots.mjs` (login/home/Mais/Companion)
+- Alvos de toque: `scripts/mobile-fase2-touch-targets.mjs` (getBoundingClientRect 375/390)
 
 ## Local Contracts
 
