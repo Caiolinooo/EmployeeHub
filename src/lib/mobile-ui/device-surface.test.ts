@@ -11,6 +11,7 @@ import {
   shouldRedirectMobilePrefix,
   stripMobilePrefix,
   toMobileRewritePath,
+  safeUiSurfaceNext,
 } from './device-surface';
 import { PHONE_REWRITE_UA_VALUE, TABLET_UA_VALUE } from './ua-patterns';
 import { readFileSync } from 'node:fs';
@@ -262,5 +263,31 @@ describe('path helpers', () => {
     assert.equal(stripMobilePrefix('/m'), '/');
     assert.equal(parseUiCookie('desktop'), 'desktop');
     assert.equal(parseUiCookie('nope'), undefined);
+  });
+});
+
+describe('safeUiSurfaceNext', () => {
+  const origin = 'https://portal.groupabz.com';
+
+  it('keeps same-origin paths and query', () => {
+    assert.equal(safeUiSurfaceNext('/login', origin), '/login');
+    assert.equal(safeUiSurfaceNext('/m/login', origin), '/m/login');
+    assert.equal(safeUiSurfaceNext('/dashboard?tab=1', origin), '/dashboard?tab=1');
+  });
+
+  it('rejects scheme-relative and backslash open redirects', () => {
+    assert.equal(safeUiSurfaceNext('//evil.com', origin), '/login');
+    assert.equal(safeUiSurfaceNext('/\\evil.com', origin), '/login');
+    assert.equal(safeUiSurfaceNext('/\\\\evil.com', origin), '/login');
+    const decoded = new URLSearchParams('next=/%5Cevil.com').get('next');
+    assert.equal(safeUiSurfaceNext(decoded, origin), '/login');
+    const dest = new URL(safeUiSurfaceNext(decoded, origin), origin);
+    assert.equal(dest.origin, origin);
+  });
+
+  it('rejects missing and off-origin values', () => {
+    assert.equal(safeUiSurfaceNext(null, origin), '/login');
+    assert.equal(safeUiSurfaceNext('https://evil.com/', origin), '/login');
+    assert.equal(safeUiSurfaceNext('/login@evil.com', origin), '/login');
   });
 });

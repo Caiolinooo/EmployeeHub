@@ -13,6 +13,7 @@ Decidir se o pedido serve o front mobile (`/m/...`) ou o desktop atual. Desktop 
 - Fallback P0: `next.config.js` `rewrites.beforeFiles` (`/login` + cookie/CH/UA; `/m/preview` 404 em produção). Mantido de propósito depois do Edge voltar a bundlar — `ui=desktop` em `missing`; regex de telefone cobre UA que o `userAgent()` do Next classifica como desktop.
 - `ua-patterns.js` — tablet/phone regex (next.config + testes)
 - API: `src/app/api/ui-surface/route.ts` — cookie `ui`
+- `safeUiSurfaceNext` — `next=` só same-origin; rejeita `//`, `\\`, `%5c`. Redirect via `request.nextUrl.origin`, nunca `new URL(next, request.url)` cru.
 - “Voltar ao mobile”: `UiSurfaceSwitch` só no front mobile. Sem layout extra em `/login` (reordena CSS).
 - Testes: `device-surface.test.ts`
 
@@ -36,6 +37,7 @@ Decidir se o pedido serve o front mobile (`/m/...`) ou o desktop atual. Desktop 
 ## Verification
 
 - `npx tsx --test src/lib/mobile-ui/device-surface.test.ts src/lib/mobile-ui/preview-block.test.ts src/lib/mobile-ui/middleware-contract.test.ts src/lib/middleware-gates.test.ts`
+- `safeUiSurfaceNext('/\\evil.com', origin)` e `next=/%5Cevil.com` → `/login`; `new URL(result, origin).origin` = origin.
 - UA desktop em `/login` → HTML desktop.
 - UA iPhone em `/login` → rewrite `/m/login`.
 - Cookie `ui=desktop` no iPhone → desktop.

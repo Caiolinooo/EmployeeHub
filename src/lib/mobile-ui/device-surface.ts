@@ -163,3 +163,35 @@ function stripQuery(pathname: string): string {
   const q = pathname.indexOf('?');
   return q === -1 ? pathname : pathname.slice(0, q);
 }
+
+const UI_SURFACE_NEXT_FALLBACK = '/login';
+
+/**
+ * Destino de `/api/ui-surface?next=`. Só path same-origin.
+ * `new URL('/\\host', origin)` no WHATWG vira https://host — não basta startsWith('/').
+ */
+export function safeUiSurfaceNext(value: string | null | undefined, origin: string): string {
+  if (!value) return UI_SURFACE_NEXT_FALLBACK;
+  const trimmed = value.trim();
+  if (
+    !trimmed.startsWith('/') ||
+    trimmed.startsWith('//') ||
+    trimmed.includes('\\') ||
+    /[\s@]/.test(trimmed) ||
+    /%5c/i.test(trimmed)
+  ) {
+    return UI_SURFACE_NEXT_FALLBACK;
+  }
+  try {
+    const base = new URL(origin);
+    const dest = new URL(trimmed, base);
+    if (dest.origin !== base.origin) return UI_SURFACE_NEXT_FALLBACK;
+    if (dest.protocol !== 'http:' && dest.protocol !== 'https:') return UI_SURFACE_NEXT_FALLBACK;
+    if (!dest.pathname.startsWith('/') || dest.pathname.startsWith('//')) {
+      return UI_SURFACE_NEXT_FALLBACK;
+    }
+    return `${dest.pathname}${dest.search}${dest.hash}`;
+  } catch {
+    return UI_SURFACE_NEXT_FALLBACK;
+  }
+}

@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { UI_COOKIE, parseUiCookie } from '@/lib/mobile-ui/device-surface';
-
-function safeNext(value: string | null): string {
-  if (!value || !value.startsWith('/') || value.startsWith('//')) return '/login';
-  return value;
-}
+import { UI_COOKIE, parseUiCookie, safeUiSurfaceNext } from '@/lib/mobile-ui/device-surface';
 
 function applyCookie(request: NextRequest, to: string | undefined) {
-  const next = safeNext(request.nextUrl.searchParams.get('next'));
-  const dest = new URL(next, request.url);
+  const next = safeUiSurfaceNext(request.nextUrl.searchParams.get('next'), request.nextUrl.origin);
+  const dest = new URL(next, request.nextUrl.origin);
   const response = NextResponse.redirect(dest);
   if (to === 'desktop' || to === 'mobile') {
     response.cookies.set(UI_COOKIE, to, {
