@@ -145,40 +145,6 @@ export default function TestUserManagementPage() {
     }
   };
 
-  const getAdminToken = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/admin/ensure-admin');
-      const result = await response.json();
-
-      console.log('Resultado da verificação e geração de token de admin:', result);
-
-      if (result.success && result.token) {
-        // Salvar token no localStorage
-        localStorage.setItem('token', result.token);
-        setToken(result.token);
-        setUserId(result.user.id);
-        setEmail(result.user.email);
-
-        setData({
-          status: 'success',
-          message: 'Perfil de administrador verificado e token gerado com sucesso',
-          token: result.token,
-          user: result.user
-        });
-      } else {
-        setError(result.message || 'Erro ao verificar perfil de administrador');
-      }
-    } catch (err) {
-      console.error('Erro ao verificar perfil de administrador:', err);
-      setError(`Erro ao verificar perfil de administrador: ${err instanceof Error ? err.message : String(err)}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     // Verificar se já existe um token
     const existingToken = localStorage.getItem('token') || localStorage.getItem('token') || localStorage.getItem('abzToken');
@@ -207,15 +173,6 @@ export default function TestUserManagementPage() {
           >
             <FiRefreshCw className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
             Diagnóstico Supabase
-          </button>
-
-          <button
-            onClick={getAdminToken}
-            className="px-4 py-2 bg-purple-600 text-white rounded-md flex items-center"
-            disabled={loading}
-          >
-            <FiKey className="mr-2" />
-            Gerar Token Admin
           </button>
 
           <button

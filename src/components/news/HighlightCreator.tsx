@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import toast from 'react-hot-toast';
 import { useI18n } from '@/contexts/I18nContext';
+import { toSafeMediaUrl } from '@/lib/security/safe-media-url';
 import TagInput from './TagInput';
 
 interface HighlightCreatorProps {
@@ -170,7 +171,7 @@ const HighlightCreator: React.FC<HighlightCreatorProps> = ({
               <div className="aspect-[9/16] max-w-xs mx-auto bg-black rounded-2xl overflow-hidden shadow-2xl">
                 {isVideo ? (
                   <video
-                    src={previewUrl}
+                    src={toSafeMediaUrl(previewUrl)}
                     className="w-full h-full object-contain"
                     controls
                     loop
@@ -179,7 +180,7 @@ const HighlightCreator: React.FC<HighlightCreatorProps> = ({
                   />
                 ) : (
                   <img
-                    src={previewUrl}
+                    src={toSafeMediaUrl(previewUrl)}
                     alt="Preview"
                     className="w-full h-full object-contain"
                   />

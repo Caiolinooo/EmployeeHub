@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { parseIcs, IcsEvent } from '@/lib/ics';
 import { dedupeSimilarCalendarEvents } from '@/lib/calendar-event-dedupe';
+import { UnsafeUrlError, resolveCompanyCalendarIcsUrl } from '@/lib/security/safe-url';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,7 +55,20 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ events: CACHE.events, duplicatesHidden: CACHE.duplicatesHidden });
     }
 
-    const res = await fetch(icsUrl, { cache: 'no-store' });
+    let safeIcsUrl: URL;
+    try {
+      safeIcsUrl = resolveCompanyCalendarIcsUrl(icsUrl);
+    } catch (error) {
+      if (error instanceof UnsafeUrlError) {
+        return NextResponse.json({ error: 'ICS URL não permitida.' }, { status: 400 });
+      }
+      throw error;
+    }
+    if (safeIcsUrl.protocol !== 'https:') {
+      return NextResponse.json({ error: 'ICS URL não permitida.' }, { status: 400 });
+    }
+
+    const res = await fetch(safeIcsUrl.href, { cache: 'no-store' });
     if (!res.ok) {
       const errorMsg = res.status === 404
         ? "Falha ao baixar ICS (404). Verifique se o calendário está público (Configurações → Acesso → Disponibilizar ao público)."

@@ -4,9 +4,47 @@ QA reprovou `79b9166d` no `next start` real: wrap da toolbar GT em 1280 + alega�
 
 - [x] Abas GT/`ficha`: nowrap/shrink/overflow só `max-lg:`; `tablistRef` no inner (portal)
 - [x] Esc em AddShortcut, Desligamento, ConfirmarExclusao, ModalAprovacao
-- [ ] Merge `origin/portal` `71bd3534` + prova geometria 1280/1440 (`next build`+`start`, mesmo caminho)
+- [x] Merge `origin/portal` `71bd3534` (conflito só em `tasks.md`; `AGENTS.md` auto-merge)
+- [ ] Prova geometria 1280/1440 (`next build`+`start`, mesmo caminho)
 - [ ] Um push em `fix/mobile-ui-portal` quando a prova local fechar
 - [ ] Refazer prova desktop #108–#111 no mesmo método
+
+---
+
+## QHSE “Colaborador não encontrado” (2026-09-25)
+
+Aba QHSE/EPI da ficha GT em produção chama `GET /api/document-catalog?colaboradorId=&qhse=1`. Select `cargo_nome` em `gt_colaboradores` (coluna só na view) → PostgREST error → identity null → 404. Sem writes no DB real. Sem UI. Sem PR #95 / #96.
+
+- [x] Causa: `CATALOG_COLAB_SELECT` em `identity-match.ts` vs tabela (`cargo_id`) / view (`cargo_nome`)
+- [x] Fix: `cargo:gt_cargos(nome)` + `flattenCatalogColabRow` + `catalogColabSelectIsSafe`
+- [x] Testes `document-catalog.test.ts` (sem DB)
+- [x] Residual: `findFullColaboradorByCpf` + sweep de aliases só da view em `.from('gt_colaboradores')`
+- [x] Guard compartilhado `gtColaboradoresTableSelectIsSafe` + scan `gt-colaboradores-columns.test.ts`
+- [ ] Preview autenticado: aba QHSE lista docs; lista GT e outras abas inalteradas
+
+## Middleware regression (PR #96) + QHSE 404 (2026-09-25)
+
+Sem merge, sem promote, sem Vercel Production, sem PR #95. Supabase real = read-only.
+
+- [x] Audit matcher + branches (`src/lib/middleware-gates.ts`): login/register/reset/set-password/lista-presenca public/static/`_next`/API
+- [x] Fix prefixo `startsWith('/avaliacao')` que pegava `/avaliacoes-avancadas`
+- [x] Não regravar cookies `abzToken` (TTL 1d vs 30d do `saveToken`)
+- [x] Teste `src/lib/middleware-gates.test.ts` no PR #96
+- [x] Login não chama `GET /api/auth/ensure-admin` (401 gated; catch só logava — login não lia a resposta)
+- [x] `test-user-management` parou de pedir JWT em `/api/admin/ensure-admin`
+- [x] QHSE “Colaborador não encontrado”: `CATALOG_COLAB_SELECT` pedia `cargo_nome` em `gt_colaboradores` (alias da view) — feito neste PR #98
+
+## Middleware ausente no bundle de produção (2026-09-25)
+
+`src/middleware.ts` não entra no `next build`. Manifesto sai `{ middleware: {} }`. Sem merge, sem promote, sem Vercel Production, sem PR #95.
+
+- [x] Hipótese: `pages/` na raiz (`pages/api/check-env.js`) faz Next usar `pagesDir=./pages` e procurar `middleware.ts` no root, ignorando `src/middleware.ts`
+- [x] Reproduzir `next build` e gravar `middleware-manifest.json` (antes) — `{ middleware: {} }`
+- [x] GET unauthenticated em `portal.groupabz.com` (páginas + APIs sensíveis)
+- [x] Mapa de rotas (a/b/c) com paths
+- [x] Fix: `middleware.ts` na raiz (parent de `pagesDir=./pages`); stub 401 em `pages/api/check-env.js` (apagar `pages/` quebra o build — conflito `src/pages` vs `src/app`)
+- [x] Build depois: manifesto com `middleware["/"]` + `server/middleware.js`; matcher correto
+- [x] PR draft #96 contra `portal`
 
 ---
 
