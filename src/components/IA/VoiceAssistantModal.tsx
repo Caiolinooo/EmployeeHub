@@ -171,7 +171,13 @@ export default function VoiceAssistantModal({ isOpen, onClose, authToken }: Prop
               }`} />
               <span className="text-xs font-medium uppercase tracking-widest text-slate-400">ABZ Live Voice</span>
             </div>
-            <ModalCloseButton onClick={onClose} className="text-slate-400 hover:text-white hover:bg-slate-800/50" />
+            <button 
+              onClick={onClose}
+              className="hidden md:inline-flex p-2 hover:bg-slate-800/50 rounded-full transition-all text-slate-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <ModalCloseButton onClick={onClose} mobileOnly className="text-slate-400 hover:text-white hover:bg-slate-800/50" />
           </div>
 
           {/* Conteúdo Principal */}

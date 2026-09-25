@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiSave, FiTrash2, FiImage, FiGlobe, FiLock } from 'react-icons/fi';
+import { FiX, FiSave, FiTrash2, FiImage, FiGlobe, FiLock } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import ModalCloseButton from '@/components/ui/ModalCloseButton';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
@@ -70,7 +70,14 @@ export default function ServerSettingsModal({
             <div data-modal-panel="" className="relative bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
                 <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/50">
                     <h2 className="text-lg font-semibold text-white min-w-0 truncate">Configurações do Servidor</h2>
-                    <ModalCloseButton onClick={onClose} className="text-zinc-400 hover:text-white hover:bg-zinc-800" />
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="hidden md:inline-flex p-2 hover:bg-zinc-800 rounded-lg transition-colors text-zinc-400 hover:text-white"
+                    >
+                        <FiX size={20} />
+                    </button>
+                    <ModalCloseButton onClick={onClose} mobileOnly className="text-zinc-400 hover:text-white hover:bg-zinc-800" />
                 </div>
 
                 <div className="p-6 space-y-6">

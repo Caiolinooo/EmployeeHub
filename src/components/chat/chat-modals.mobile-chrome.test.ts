@@ -28,6 +28,7 @@ describe('Chat create/settings + IA overlays', () => {
       assert.match(src, /ModalCloseButton/);
       assert.match(src, /useEscapeToClose/);
       assert.match(src, /data-modal-panel/);
+      assert.match(src, /mobileOnly/);
     });
   }
 

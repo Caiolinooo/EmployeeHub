@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiSearch, FiMessageCircle } from 'react-icons/fi';
+import { FiX, FiSearch, FiMessageCircle } from 'react-icons/fi';
 import { supabase } from '@/lib/supabase';
 import ModalCloseButton from '@/components/ui/ModalCloseButton';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
@@ -82,7 +82,7 @@ export default function StartDMModal({ isOpen, onClose, currentUserId, onStartCo
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center max-md:p-4">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
             <div data-modal-panel="" className="relative bg-zinc-900 rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-white/10 animate-in fade-in zoom-in duration-200">
                 {/* Header */}
@@ -93,7 +93,10 @@ export default function StartDMModal({ isOpen, onClose, currentUserId, onStartCo
                         </div>
                         <h3 className="font-semibold text-lg text-white truncate">Nova Conversa</h3>
                     </div>
-                    <ModalCloseButton onClick={onClose} className="text-zinc-400 hover:text-white hover:bg-white/5" />
+                    <button type="button" onClick={onClose} className="hidden md:inline-flex p-2 hover:bg-white/5 rounded-lg transition-colors text-zinc-400 hover:text-white">
+                        <FiX className="w-5 h-5" />
+                    </button>
+                    <ModalCloseButton onClick={onClose} mobileOnly className="text-zinc-400 hover:text-white hover:bg-white/5" />
                 </div>
 
                 {/* Search */}

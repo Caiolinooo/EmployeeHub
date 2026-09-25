@@ -55,7 +55,7 @@ export default function CreateServerModal({ isOpen, onClose, onCreate }: CreateS
                                     <FaServer className="text-blue-500 text-lg" />
                                 </div>
                                 <h3 className="text-xl font-semibold text-white flex-1 min-w-0">Criar Servidor</h3>
-                                <ModalCloseButton onClick={onClose} className="text-zinc-400 hover:text-white hover:bg-white/10" />
+                                <ModalCloseButton onClick={onClose} mobileOnly className="text-zinc-400 hover:text-white hover:bg-white/10" />
                             </div>
 
                             <div className="space-y-4">
