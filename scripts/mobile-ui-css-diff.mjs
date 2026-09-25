@@ -15,21 +15,39 @@ function collectCss(dir) {
   return files.map((f) => ({ name: f, css: readFileSync(join(dir, f), 'utf8') }));
 }
 
+function findMedia767(css, from) {
+  const patterns = [
+    '@media (max-width: 767px)',
+    '@media (max-width:767px)',
+    '@media(max-width:767px)',
+    '@media(max-width: 767px)',
+  ];
+  let best = -1;
+  let len = 0;
+  for (const p of patterns) {
+    const idx = css.indexOf(p, from);
+    if (idx >= 0 && (best < 0 || idx < best)) {
+      best = idx;
+      len = p.length;
+    }
+  }
+  return { idx: best, len };
+}
+
 function stripMedia767(css) {
-  const needle = '@media (max-width: 767px)';
   let out = '';
   let i = 0;
   while (i < css.length) {
-    const idx = css.indexOf(needle, i);
-    if (idx < 0) {
+    const found = findMedia767(css, i);
+    if (found.idx < 0) {
       out += css.slice(i);
       break;
     }
-    out += css.slice(i, idx);
-    let j = idx + needle.length;
+    out += css.slice(i, found.idx);
+    let j = found.idx + found.len;
     while (j < css.length && /\s/.test(css[j])) j += 1;
     if (css[j] !== '{') {
-      out += css.slice(idx, j);
+      out += css.slice(found.idx, j);
       i = j;
       continue;
     }
@@ -51,7 +69,8 @@ function stripMedia767(css) {
 }
 
 function selectorsOutside(css) {
-  const before = css.split('@media (max-width: 767px)')[0] || css;
+  const stripped = stripMedia767(css);
+  const before = stripped;
   const wanted = [
     '[data-modal-close]',
     '[data-modal-panel]',
@@ -76,8 +95,9 @@ const beforeFiles = collectCss(beforeDir);
 const afterFiles = collectCss(afterDir);
 const beforeAll = beforeFiles.map((f) => f.css).join('\n');
 const afterAll = afterFiles.map((f) => f.css).join('\n');
-const beforeStripped = stripMedia767(beforeAll);
-const afterStripped = stripMedia767(afterAll);
+const stripComments = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, '');
+const beforeStripped = beforeFiles.map((f) => stripComments(stripMedia767(f.css))).sort().join('\n');
+const afterStripped = afterFiles.map((f) => stripComments(stripMedia767(f.css))).sort().join('\n');
 const leaked = selectorsOutside(afterAll);
 
 const outDir = process.env.CSS_DIFF_OUT || '/tmp/mui-css-diff';

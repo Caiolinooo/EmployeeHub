@@ -27,16 +27,16 @@ const MODAL_CSS = `
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
-  [data-gt-kpi-cards] {
-    display: flex;
-    flex-wrap: nowrap;
+  div[data-gt-kpi-cards] {
+    display: flex !important;
+    flex-wrap: nowrap !important;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     gap: 0.625rem;
   }
-  [data-gt-kpi-cards] > * {
-    min-width: min(70vw, 15rem);
+  div[data-gt-kpi-cards] > * {
+    min-width: min(70vw, 15rem) !important;
     scroll-snap-align: start;
     flex-shrink: 0;
   }
@@ -474,6 +474,19 @@ for (const size of [SIZE_390, SIZE_375]) {
   shots.push(await shot(page, 'gt-kpi-depois', kpiPage({ after: true }), size));
   shots.push(await shot(page, 'ficha-qhse-antes', qhseTabs({ after: false }), size));
   shots.push(await shot(page, 'ficha-qhse-depois', qhseTabs({ after: true }), size));
+  {
+    await page.setViewportSize(size);
+    await page.setContent(qhseTabs({ after: true }), { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(400);
+    await page.evaluate(() => {
+      const inner = document.querySelector('[data-testid="collaborator-modal-tablist"]');
+      const shell = inner?.parentElement;
+      if (shell) shell.scrollLeft = shell.scrollWidth;
+    });
+    const swipeFile = join(OUT, `ficha-qhse-depois-swipe-${size.width}x${size.height}.png`);
+    await page.screenshot({ path: swipeFile, fullPage: false });
+    shots.push(swipeFile);
+  }
   shots.push(await shot(page, 'fab-gt-antes', fabsPage({ after: false, title: 'GT Matriz' }), size));
   shots.push(await shot(page, 'fab-gt-depois', fabsPage({ after: true, title: 'GT Matriz' }), size));
   shots.push(await shot(page, 'fab-dashboard-antes', fabsPage({ after: false, title: 'Dashboard' }), size));

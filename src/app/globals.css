@@ -323,8 +323,8 @@ error, success {
   background-color: #d1d5db;
 }
 
-/* Só celular (≤767). Desktop (md+) intacto — nenhum seletor desta lista fora do media. */
 @media (max-width: 767px) {
+  /* Só celular (≤767). Desktop (md+) intacto — nenhum seletor desta lista fora do media. */
   [data-modal-close] {
     min-width: 44px;
     min-height: 44px;
@@ -338,16 +338,16 @@ error, success {
     -webkit-overflow-scrolling: touch;
   }
 
-  [data-gt-kpi-cards] {
-    display: flex;
-    flex-wrap: nowrap;
+  div[data-gt-kpi-cards] {
+    display: flex !important;
+    flex-wrap: nowrap !important;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     gap: 0.625rem;
   }
-  [data-gt-kpi-cards] > * {
-    min-width: min(70vw, 15rem);
+  div[data-gt-kpi-cards] > * {
+    min-width: min(70vw, 15rem) !important;
     scroll-snap-align: start;
     flex-shrink: 0;
   }

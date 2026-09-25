@@ -29,6 +29,9 @@ async function capture(url, file) {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: VIEWPORT });
   await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.addInitScript(() => {
+    localStorage.setItem('languageDialogShown', 'true');
+  });
   const resp = await page.goto(new URL('/unauthorized', url).toString(), {
     waitUntil: 'networkidle',
     timeout: 60_000,
@@ -39,7 +42,7 @@ async function capture(url, file) {
   await page.addStyleTag({
     content: '*,*::before,*::after{animation:none!important;transition:none!important}',
   });
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(1500);
   const html = await page.content();
   const cssHrefs = await page.$$eval('link[rel="stylesheet"]', (els) => els.map((e) => e.href));
   await page.screenshot({ path: file, fullPage: false });
