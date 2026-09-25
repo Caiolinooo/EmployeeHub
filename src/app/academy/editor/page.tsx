@@ -423,7 +423,7 @@ const AcademyEditor: React.FC = () => {
 
         {/* Filtros */}
         <div className="mb-6">
-          <div className="flex max-md:flex-wrap max-md:gap-1 bg-gray-100 p-1 rounded-lg w-fit">
+          <div className="flex space-x-1 max-md:space-x-0 max-md:flex-wrap max-md:gap-1 bg-gray-100 p-1 rounded-lg w-fit">
             <button
               onClick={() => setFilter('all')}
               className={`px-4 py-2 max-md:min-h-11 rounded-md text-sm font-medium transition-colors ${filter === 'all'

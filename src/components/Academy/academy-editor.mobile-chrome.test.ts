@@ -46,8 +46,8 @@ describe('Academy editor mobile chrome', () => {
     assert.match(src, /mobileOnly/);
     assert.match(src, /useEscapeToClose/);
     assert.match(src, /data-modal-panel/);
-    assert.match(src, /onClick=\{handleClose\}/);
-    assert.match(src, /opener\?\.focus/);
+    assert.match(src, /onClick=\{onClose\}/);
+    assert.match(src, /useRestoreFocus\(isOpen\)/);
     assert.match(src, /max-md:min-h-11/);
   });
 

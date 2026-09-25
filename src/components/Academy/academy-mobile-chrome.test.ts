@@ -9,10 +9,8 @@ describe('DeleteCourseModal mobile chrome', () => {
     assert.match(src, /ModalCloseButton/);
     assert.match(src, /mobileOnly/);
     assert.match(src, /mountOnlyWhenMobile/);
-    assert.match(src, /handleClose/);
-    assert.match(src, /openerRef\.current/);
-    assert.match(src, /requestAnimationFrame\(\(\) => opener\?\.focus\(\)\)/);
+    assert.match(src, /useRestoreFocus\(isOpen\)/);
     assert.match(src, /max-md:min-h-11/);
-    assert.match(src, /useEscapeToClose\(isOpen, handleClose\)/);
+    assert.match(src, /useEscapeToClose\(isOpen, onClose\)/);
   });
 });
