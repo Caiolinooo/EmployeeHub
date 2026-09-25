@@ -25,7 +25,6 @@ const adminToken = process.env.ADMIN_TOKEN || 'admin-token-test';
 // Database connection for direct queries
 const pgClient = new Client({
   connectionString: process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/postgres',
-  ssl: { rejectUnauthorized: false }
 });
 
 // Supabase clients

@@ -19,10 +19,10 @@ export async function sendEmailVerificationLink(
   requestHeaders?: Headers
 ): Promise<{ success: boolean; message: string; previewUrl?: string }> {
   try {
-    console.log(`📧 Enviando email de verificação para: ${email} com token: ${token.substring(0, 8)}...`);
+    console.log('Enviando email de verificação para %s (token redigido)', email);
 
     const verificationUrl = buildAppUrl(`/verify-email?token=${encodeURIComponent(token)}`, requestHeaders);
-    console.log(`🔗 URL de verificação gerada: ${verificationUrl}`);
+    console.log('URL de verificação gerada (token redigido)');
 
     // Texto simples para clientes que não suportam HTML
     const text = `
@@ -105,7 +105,7 @@ ${new Date().getFullYear()} © Todos os direitos reservados.
         previewUrl: result.previewUrl
       };
     } else {
-      console.error(`Erro ao enviar email de verificação para ${email}:`, result.message);
+      console.error('Erro ao enviar email de verificação para %s:', email, result.message);
       return {
         success: false,
         message: 'Erro ao enviar email de verificação'
@@ -132,7 +132,7 @@ export async function verifyEmailToken(token: string): Promise<{
   message: string;
 }> {
   try {
-    console.log(`🔍 Verificando token de email: ${token.substring(0, 8)}...`);
+    console.log('Verificando token de email (token redigido)');
 
     const { supabaseAdmin } = await import('@/lib/supabase');
 

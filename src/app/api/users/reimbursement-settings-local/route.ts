@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { resolveInside } from '@/lib/path-safe';
 
 export const dynamic = 'force-dynamic';
 
-// Função para obter o caminho do arquivo de configuração de um usuário
-function getUserConfigPath(userId: string) {
-  const configDir = path.join(process.cwd(), 'src', 'config', 'users');
+type UserConfigPathResult =
+  | { ok: true; path: string }
+  | { ok: false; error: string };
+
+function getUserConfigPath(userId: string): UserConfigPathResult {
+  const configDir = path.resolve(process.cwd(), 'src', 'config', 'users');
+  const inside = resolveInside(configDir, `${userId}.json`, { asName: true });
+  if (!inside.ok) {
+    return inside;
+  }
 
   // Criar diretório se não existir
   if (!fs.existsSync(configDir)) {
@@ -36,7 +44,7 @@ function getUserConfigPath(userId: string) {
     }
   }
 
-  return path.join(configDir, `${userId}.json`);
+  return { ok: true, path: inside.resolved };
 }
 
 // Função para obter o caminho do arquivo de mapeamento de email para ID
@@ -160,17 +168,23 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Caminho para o arquivo de configuração do usuário
-    const configPath = getUserConfigPath(userIdToUse);
+    const configPathResult = getUserConfigPath(userIdToUse);
+    if (!configPathResult.ok) {
+      return NextResponse.json(
+        { error: configPathResult.error },
+        { status: 400 }
+      );
+    }
+    const configPath = configPathResult.path;
 
     // Salvar configurações
     const settings = { enabled, recipients };
 
     try {
       fs.writeFileSync(configPath, JSON.stringify(settings, null, 2));
-      console.log(`Configurações salvas com sucesso em ${configPath}`);
+      console.log('Configurações salvas com sucesso em %s', configPath);
     } catch (writeError) {
-      console.error(`Erro ao escrever arquivo ${configPath}:`, writeError);
+      console.error('Erro ao escrever arquivo %s:', configPath, writeError);
       throw new Error(`Erro ao salvar configurações: ${writeError instanceof Error ? writeError.message : 'Erro desconhecido'}`);
     }
 
@@ -232,9 +246,15 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Caminho para o arquivo de configuração do usuário
-    const configPath = getUserConfigPath(userIdToUse || '');
-    console.log(`Verificando arquivo de configuração em ${configPath}`);
+    const configPathResult = getUserConfigPath(userIdToUse || '');
+    if (!configPathResult.ok) {
+      return NextResponse.json(
+        { error: configPathResult.error },
+        { status: 400 }
+      );
+    }
+    const configPath = configPathResult.path;
+    console.log('Verificando arquivo de configuração em %s', configPath);
 
     // Verificar se o arquivo existe
     if (!fs.existsSync(configPath)) {
@@ -263,7 +283,7 @@ export async function GET(request: NextRequest) {
         reimbursement_email_settings: settings
       });
     } catch (readError) {
-      console.error(`Erro ao ler arquivo ${configPath}:`, readError);
+      console.error('Erro ao ler arquivo %s:', configPath, readError);
       // Retornar configurações padrão em caso de erro
       return NextResponse.json({
         id: userIdToUse,
