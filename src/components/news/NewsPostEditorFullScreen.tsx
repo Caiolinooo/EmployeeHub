@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useLayoutEffect } from 'react';
 import NewsPostEditor from './NewsPostEditor';
 import NewsPostPreview, { NewsPostDraft } from './NewsPostPreview';
 import ModalCloseButton from '@/components/ui/ModalCloseButton';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 
 interface Props {
   userId: string;
@@ -24,7 +26,17 @@ const NewsPostEditorFullScreen: React.FC<Props> = ({ userId, postId, onClose }) 
     pinned: false,
   });
 
-  useEscapeToClose(Boolean(onClose), onClose || (() => {}));
+  const { markTrigger, restoreFocus } = useRestoreFocus();
+  useLayoutEffect(() => {
+    const el = document.activeElement;
+    if (el instanceof HTMLElement && el !== document.body) markTrigger(el);
+  }, [markTrigger]);
+  const handleClose = () => {
+    onClose?.();
+    restoreFocus();
+  };
+  useEscapeToClose(Boolean(onClose), onClose ? handleClose : () => {});
+  useEscapeCapture(Boolean(onClose), onClose ? handleClose : () => {});
 
   // Atalhos de teclado: salvar rascunho (Ctrl/Cmd+S) e publicar (Ctrl/Cmd+Enter)
   React.useEffect(() => {
@@ -52,8 +64,8 @@ const NewsPostEditorFullScreen: React.FC<Props> = ({ userId, postId, onClose }) 
             <span className="hidden sm:inline">Atalhos: Ctrl/Cmd+S (Salvar), Ctrl/Cmd+Enter (Publicar)</span>
             {onClose && (
               <>
-                <button type="button" onClick={onClose} className="text-gray-500 hover:text-gray-700 max-md:hidden">Fechar</button>
-                <ModalCloseButton onClick={onClose} mobileOnly />
+                <button type="button" onClick={handleClose} className="text-gray-500 hover:text-gray-700 max-md:hidden">Fechar</button>
+                <ModalCloseButton onClick={handleClose} mobileOnly mountOnlyWhenMobile />
               </>
             )}
           </div>
