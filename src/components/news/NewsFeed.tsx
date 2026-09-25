@@ -728,22 +728,31 @@ const NewsFeed: React.FC<NewsFeedProps> = ({
                       className="relative"
                       onDoubleClick={() => handleDoubleClick(post.id)}
                     >
-                      {/* Detectar se é vídeo pela extensão ou tipo MIME */}
-                      {url.match(/\.(mp4|webm|ogg|mov)$/i) ? (
-                        <video
-                          src={toSafeMediaUrl(url)}
-                          className="w-full h-auto cursor-pointer select-none"
-                          controls
-                          playsInline
-                          preload="metadata"
-                        />
-                      ) : (
-                        <img
-                          src={toSafeMediaUrl(url)}
-                          alt={t('newsSystem.post.mediaAlt', { index: index + 1 })}
-                          className="w-full h-auto cursor-pointer select-none"
-                        />
-                      )}
+                      {(() => {
+                        const safeMedia = toSafeMediaUrl(url);
+                        if (!safeMedia) {
+                          return (
+                            <div className="w-full h-48 bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
+                              Sem img
+                            </div>
+                          );
+                        }
+                        return url.match(/\.(mp4|webm|ogg|mov)$/i) ? (
+                          <video
+                            src={safeMedia}
+                            className="w-full h-auto cursor-pointer select-none"
+                            controls
+                            playsInline
+                            preload="metadata"
+                          />
+                        ) : (
+                          <img
+                            src={safeMedia}
+                            alt={t('newsSystem.post.mediaAlt', { index: index + 1 })}
+                            className="w-full h-auto cursor-pointer select-none"
+                          />
+                        );
+                      })()}
                       {/* Animação de coração para duplo clique */}
                       <div
                         id={`heart-animation-${post.id}`}

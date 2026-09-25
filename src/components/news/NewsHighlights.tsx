@@ -162,26 +162,30 @@ const NewsHighlights: React.FC<NewsHighlightsProps> = ({ userId, canCreate }) =>
                     >
                         <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-yellow-400 to-orange-500 group-hover:from-yellow-500 group-hover:to-orange-600 transition-all">
                             <div className="w-full h-full rounded-full border-2 border-white overflow-hidden bg-gray-100 relative">
-                                {highlight.media_urls?.[0] ? (
-                                    isVideo(highlight.media_urls[0]) ? (
+                                {(() => {
+                                    const safeThumb = toSafeMediaUrl(highlight.media_urls?.[0]);
+                                    if (!safeThumb) {
+                                        return (
+                                            <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                                                <span className="text-xs text-gray-500">Sem img</span>
+                                            </div>
+                                        );
+                                    }
+                                    return isVideo(highlight.media_urls[0]) ? (
                                         <video
-                                            src={toSafeMediaUrl(highlight.media_urls[0])}
+                                            src={safeThumb}
                                             className="w-full h-full object-contain bg-gray-900"
                                             muted
                                             playsInline
                                         />
                                     ) : (
                                         <img
-                                            src={toSafeMediaUrl(highlight.media_urls[0])}
+                                            src={safeThumb}
                                             alt={highlight.title}
                                             className="w-full h-full object-cover"
                                         />
-                                    )
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                                        <span className="text-xs text-gray-500">Sem img</span>
-                                    </div>
-                                )}
+                                    );
+                                })()}
                             </div>
                         </div>
                         <span className="text-xs font-medium text-gray-600 truncate w-20 text-center">
@@ -223,10 +227,18 @@ const NewsHighlights: React.FC<NewsHighlightsProps> = ({ userId, canCreate }) =>
                             className="relative max-w-sm w-full aspect-[9/16] bg-black rounded-lg overflow-hidden"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            {selectedHighlight.media_urls?.[0] && (
-                                isVideo(selectedHighlight.media_urls[0]) ? (
+                            {(() => {
+                                const safeViewer = toSafeMediaUrl(selectedHighlight.media_urls?.[0]);
+                                if (!safeViewer) {
+                                    return (
+                                        <div className="w-full h-full flex items-center justify-center bg-gray-900">
+                                            <span className="text-sm text-gray-400">Sem img</span>
+                                        </div>
+                                    );
+                                }
+                                return isVideo(selectedHighlight.media_urls[0]) ? (
                                     <video
-                                        src={selectedHighlight.media_urls[0]}
+                                        src={safeViewer}
                                         className="w-full h-full object-contain"
                                         controls
                                         autoPlay
@@ -235,12 +247,12 @@ const NewsHighlights: React.FC<NewsHighlightsProps> = ({ userId, canCreate }) =>
                                     />
                                 ) : (
                                     <img
-                                        src={selectedHighlight.media_urls[0]}
+                                        src={safeViewer}
                                         alt={selectedHighlight.title}
                                         className="w-full h-full object-contain"
                                     />
-                                )
-                            )}
+                                );
+                            })()}
 
                             <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/50 to-transparent flex justify-between items-start">
                                 <div className="flex items-center space-x-2">

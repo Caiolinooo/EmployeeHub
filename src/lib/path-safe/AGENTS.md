@@ -13,7 +13,7 @@ Helper puro para resolver caminhos de usuário contra um diretório-base fixo, s
 
 - `resolveInside(base, input, { asName? })` usa `path.resolve(base, input)`.
 - Rejeita null byte (`\0` / `%00`), `..`, caminho absoluto fora da base, e `rel` absoluto.
-- `asName: true` exige um único segmento em `^[A-Za-z0-9._-]+$` (sem `/`, sem `.` / `..`).
+- `asName: true` exige um único segmento (letras Unicode/acento, espaço, `. _ -`). Rejeita `/`, `\`, `.`, `..`.
 - Decodifica `%xx` até 5 vezes (cobre `..%2f` e `..%252f`).
 - Rotas: input válido mantém shape/status; path inválido → 400 no formato já usado pela rota.
 

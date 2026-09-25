@@ -1,6 +1,7 @@
 import path from 'path';
 
-export const SAFE_PATH_NAME_RE = /^[A-Za-z0-9._-]+$/;
+/** Single path segment: letters (incl. accents), marks, digits, space, `.`, `_`, `-`. */
+export const SAFE_PATH_NAME_RE = /^[\p{L}\p{M}\p{N}._ -]+$/u;
 
 const INVALID_PATH = 'Caminho inválido';
 const INVALID_NAME = 'Nome de arquivo inválido';

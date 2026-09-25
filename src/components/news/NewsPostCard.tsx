@@ -263,11 +263,23 @@ const NewsPostCard: React.FC<NewsPostCardProps> = ({
                                 className="relative"
                                 onDoubleClick={handleDoubleClick}
                             >
-                                <img
-                                    src={toSafeMediaUrl(url)}
-                                    alt={`Mídia ${index + 1}`}
-                                    className="w-full h-auto cursor-pointer select-none"
-                                />
+                                {(() => {
+                                    const safeMedia = toSafeMediaUrl(url);
+                                    if (!safeMedia) {
+                                        return (
+                                            <div className="w-full h-48 bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
+                                                Sem img
+                                            </div>
+                                        );
+                                    }
+                                    return (
+                                        <img
+                                            src={safeMedia}
+                                            alt={`Mídia ${index + 1}`}
+                                            className="w-full h-auto cursor-pointer select-none"
+                                        />
+                                    );
+                                })()}
                                 <div
                                     id={`heart-animation-${post.id}`}
                                     className="absolute inset-0 flex items-center justify-center hidden pointer-events-none"

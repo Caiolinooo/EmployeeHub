@@ -3,6 +3,7 @@
 import React from 'react';
 import { FiUser, FiCalendar, FiEye, FiHeart, FiTag } from 'react-icons/fi';
 import MarkdownPreview from '../MarkdownPreview';
+import { toSafeMediaUrl } from '@/lib/security/safe-media-url';
 
 type Author = {
   first_name?: string;
@@ -96,13 +97,17 @@ const NewsPostPreview: React.FC<NewsPostPreviewProps> = ({ draft, author }) => {
               <div className="grid grid-cols-1 gap-2">
                 {safeMedia.map((url, index) => (
                   <div key={index} className="relative">
-                    {url ? (
-                      <img src={url} alt={`Mídia ${index + 1}`} className="w-full h-auto" />
-                    ) : (
-                      <div className="w-full h-48 bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
-                        URL de mídia vazia
-                      </div>
-                    )}
+                    {(() => {
+                      const safeMedia = toSafeMediaUrl(url);
+                      if (!safeMedia) {
+                        return (
+                          <div className="w-full h-48 bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
+                            URL de mídia vazia
+                          </div>
+                        );
+                      }
+                      return <img src={safeMedia} alt={`Mídia ${index + 1}`} className="w-full h-auto" />;
+                    })()}
                   </div>
                 ))}
               </div>

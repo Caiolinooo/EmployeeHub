@@ -1,5 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import { resolveInside } from './resolve-inside';
 
@@ -125,6 +127,49 @@ describe('resolveInside', () => {
     assert.equal(result.ok, true);
     if (result.ok) {
       assert.equal(result.resolved, path.join(docsBase, fileName));
+    }
+  });
+
+  it('asName accepts spaces and accents and creates those folders only in tmpdir', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'path-safe-'));
+    try {
+      for (const name of ['Minha Pasta', 'Relatório Fiscal']) {
+        const result = resolveInside(tmp, name, { asName: true });
+        assert.equal(result.ok, true);
+        if (!result.ok) {
+          continue;
+        }
+        assert.equal(path.basename(result.resolved), name);
+        assert.equal(result.resolved.startsWith(tmp + path.sep), true);
+        fs.mkdirSync(result.resolved);
+        assert.equal(fs.existsSync(result.resolved), true);
+        assert.equal(fs.statSync(result.resolved).isDirectory(), true);
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('asName still rejects traversal, absolute, encoded, null byte and backslash', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'path-safe-'));
+    try {
+      const rejected = [
+        '../secret',
+        '..\\secret',
+        '/etc/passwd',
+        '..%2fetc/passwd',
+        '..%252fetc/passwd',
+        'foo\0bar',
+        'foo%00bar',
+        'foo/bar',
+        'foo\\bar',
+      ];
+      for (const input of rejected) {
+        const result = resolveInside(tmp, input, { asName: true });
+        assert.equal(result.ok, false, `expected reject: ${JSON.stringify(input)}`);
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
     }
   });
 });
