@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { requirePermission } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    const { error: authError } = await requirePermission(request, 'admin');
+    if (authError) {
+      return authError;
+    }
+
     console.log('Iniciando diagnóstico de autenticação do Supabase');
 
     // Obter configurações do Supabase
@@ -60,10 +66,10 @@ export async function GET(request: NextRequest) {
     console.log('Teste de busca do administrador:', adminError ? 'Falha' : 'Sucesso');
 
     // Verificar configuração de autenticação
-    const { data: authSettings, error: authError } = await supabaseAdmin
+    const { data: authSettings, error: listUsersError } = await supabaseAdmin
       .auth.admin.listUsers();
 
-    console.log('Teste de listagem de usuários auth:', authError ? 'Falha' : 'Sucesso');
+    console.log('Teste de listagem de usuários auth:', listUsersError ? 'Falha' : 'Sucesso');
 
     // Retornar resultados
     return NextResponse.json({
@@ -92,8 +98,8 @@ export async function GET(request: NextRequest) {
           } : null
         },
         authSettings: {
-          success: !authError,
-          error: authError ? authError.message : null,
+          success: !listUsersError,
+          error: listUsersError ? listUsersError.message : null,
           userCount: authSettings ? authSettings.users.length : 0
         }
       }

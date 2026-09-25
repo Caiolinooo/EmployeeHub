@@ -28,6 +28,10 @@ NFS-e (RPS transacional), bancos (integrações/contas/catálogo), cobranças
   erro inesperado → 500 com `console.error`
 - NUNCA devolver valor de credencial: `app_secrets` vira `preenchidos: Record<campo, boolean>`
   (integracoes GET/[id], nfse/config GET/[id]); XMLs de emissão só com `?xml=1` + nível edit
+- `GET /visao-geral`: `empresaId` ausente/vazio/`todas`/`null` **não** aplica
+  `.eq('empresa_id', …)` (coluna uuid; filtro nulo quebra o PostgREST). Só filtra
+  com uuid real. Erro de `fin_faturas` loga `{message,code}` e devolve 500
+  `{success:false,error}`. Lógica em `visao-geral/visao-geral.ts`.
 
 ## Regras de negócio vivas nas rotas
 
@@ -62,3 +66,9 @@ NFS-e (RPS transacional), bancos (integrações/contas/catálogo), cobranças
 
 - `GET /certificado-a1` (view) — metadados do A1 unico (e-Social). Sem senha.
 - `POST /nfse/config/[id]/credenciais` recusa multipart .pfx (409): A1 nao e paralelo.
+
+## Verification
+
+- `npx tsx --test src/app/api/financeiro/visao-geral/visao-geral.test.ts`
+  — filtro `empresaId` (ausente/`todas`/uuid) e 500 com log `{message,code}`
+  (supabase mockado; sem DB).
