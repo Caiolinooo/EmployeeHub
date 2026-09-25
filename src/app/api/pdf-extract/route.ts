@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
-import { UnsafeUrlError, resolvePdfExtractUrl } from '@/lib/security/safe-url';
+import { fetchWithSafeRedirects } from '@/lib/security/fetch-with-safe-redirects';
+import { UnsafeUrlError, pdfExtractAllowedHosts, resolvePdfExtractUrl } from '@/lib/security/safe-url';
 
 // Force this route to be dynamic
 export const dynamic = 'force-dynamic';
@@ -88,10 +89,17 @@ export async function GET(request: NextRequest) {
 
     // Verificar se o arquivo existe
     try {
-      const response = await fetch(safePdfUrl.href, {
-        method: 'HEAD',
-        cache: 'no-cache'
-      });
+      const response = await fetchWithSafeRedirects(
+        safePdfUrl,
+        {
+          method: 'HEAD',
+          cache: 'no-cache'
+        },
+        {
+          allowedHosts: pdfExtractAllowedHosts(),
+          allowedProtocols: ['https:'],
+        },
+      );
 
       if (!response.ok) {
         return NextResponse.json(
@@ -100,6 +108,12 @@ export async function GET(request: NextRequest) {
         );
       }
     } catch (error) {
+      if (error instanceof UnsafeUrlError) {
+        return NextResponse.json(
+          { error: 'URL do PDF não permitida' },
+          { status: 400 }
+        );
+      }
       console.error('Erro ao verificar arquivo:', error);
       return NextResponse.json(
         { error: 'Erro ao acessar o arquivo PDF' },

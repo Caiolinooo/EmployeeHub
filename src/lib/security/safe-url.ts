@@ -4,6 +4,8 @@
  * credentials and private/loopback/link-local addresses.
  */
 
+import { trimTrailingChar } from './trim-trailing-char';
+
 export class UnsafeUrlError extends Error {
   readonly code = 'UNSAFE_URL';
 
@@ -30,7 +32,7 @@ export const MTE_CAEPI_HOST = 'caepi.mte.gov.br';
 export const GOOGLE_CALENDAR_HOST = 'calendar.google.com';
 
 export function isBlockedHostname(hostname: string): boolean {
-  const host = hostname.toLowerCase().replace(/\.+$/, '').replace(/^\[|\]$/g, '');
+  const host = trimTrailingChar(hostname.toLowerCase(), '.').replace(/^\[|\]$/g, '');
   if (!host) return true;
   if (host === 'localhost' || host.endsWith('.localhost')) return true;
   if (host === '0.0.0.0' || host === '::' || host === '::1') return true;
@@ -327,15 +329,91 @@ function isPrivateIpv4(ip: string): boolean {
   return false;
 }
 
+function hextetPairToIpv4(hi: string, lo: string): string | null {
+  if (!/^[0-9a-f]{1,4}$/.test(hi) || !/^[0-9a-f]{1,4}$/.test(lo)) return null;
+  const a = parseInt(hi, 16);
+  const b = parseInt(lo, 16);
+  return `${(a >> 8) & 255}.${a & 255}.${(b >> 8) & 255}.${b & 255}`;
+}
+
+function ipv4FromTail(tail: string): string | null {
+  if (isIpv4Address(tail)) return tail;
+  if (tail.startsWith('0:') && isIpv4Address(tail.slice(2))) return tail.slice(2);
+  const parts = tail.split(':');
+  if (parts.length === 2) return hextetPairToIpv4(parts[0], parts[1]);
+  if (parts.length === 3 && parts[0] === '0') return hextetPairToIpv4(parts[1], parts[2]);
+  return null;
+}
+
+/** Expand a hex IPv6 hostname into 8 hextets. Null if dotted or malformed. */
+function ipv6Hextets(host: string): string[] | null {
+  if (!host.includes(':') || /[^0-9a-f:]/.test(host)) return null;
+  const sides = host.split('::');
+  if (sides.length > 2) return null;
+  const parseSide = (side: string): string[] | null => {
+    if (side === '') return [];
+    const parts = side.split(':');
+    if (parts.some((part) => part === '' || !/^[0-9a-f]{1,4}$/.test(part))) return null;
+    return parts;
+  };
+  const left = parseSide(sides[0] ?? '');
+  const right = sides.length === 2 ? parseSide(sides[1] ?? '') : [];
+  if (!left || !right) return null;
+  if (sides.length === 1) {
+    return left.length === 8 ? left : null;
+  }
+  const fill = 8 - left.length - right.length;
+  if (fill < 0) return null;
+  return [...left, ...Array<string>(fill).fill('0'), ...right];
+}
+
+/** 6to4 2002::/16 — IPv4 lives in hextets 2 and 3 (after :: expansion). */
+function ipv4From6to4(host: string): string | null {
+  const hextets = ipv6Hextets(host);
+  if (!hextets || hextets[0] !== '2002') return null;
+  return hextetPairToIpv4(hextets[1], hextets[2]);
+}
+
+/**
+ * Node WHATWG URL canonicalizes IPv4-mapped IPv6 to `[::ffff:7f00:1]`
+ * (hex hextets), not dotted `::ffff:127.0.0.1`. Same for IPv4-compatible
+ * `::/96` (`[::127.0.0.1]` → `[::7f00:1]`), NAT64 `64:ff9b::/96`,
+ * 6to4 `2002::/16`, and IPv4-translated `::ffff:0:0/96`.
+ */
+function ipv4FromEmbeddedIpv6(host: string): string | null {
+  const h = host.toLowerCase();
+
+  if (h.startsWith('::ffff:')) {
+    return ipv4FromTail(h.slice('::ffff:'.length));
+  }
+  const mappedExpanded = h.match(/^(?:0:){5}ffff:(.+)$/);
+  if (mappedExpanded) return ipv4FromTail(mappedExpanded[1]);
+
+  if (h.startsWith('64:ff9b::')) {
+    return ipv4FromTail(h.slice('64:ff9b::'.length));
+  }
+  const nat64Expanded = h.match(/^64:ff9b:(?:0:){4}(.+)$/);
+  if (nat64Expanded) return ipv4FromTail(nat64Expanded[1]);
+
+  const sixToFour = ipv4From6to4(h);
+  if (sixToFour) return sixToFour;
+
+  if (h.startsWith('::')) {
+    return ipv4FromTail(h.slice(2));
+  }
+  const compatibleExpanded = h.match(/^(?:0:){6}(.+)$/);
+  if (compatibleExpanded) return ipv4FromTail(compatibleExpanded[1]);
+
+  return null;
+}
+
 function isBlockedIpv6(host: string): boolean {
   if (!host.includes(':')) return false;
   const h = host.toLowerCase();
-  if (h === '::1' || h === '::') return true;
+  if (h === '::1' || h === '::' || h === '0:0:0:0:0:0:0:1') return true;
   if (h.startsWith('fe80:')) return true;
   if (h.startsWith('fc') || h.startsWith('fd')) return true;
-  if (h.startsWith('::ffff:')) {
-    const mapped = h.slice('::ffff:'.length);
-    return isIpv4Address(mapped) && isPrivateIpv4(mapped);
-  }
+  const embedded = ipv4FromEmbeddedIpv6(h);
+  if (embedded) return isPrivateIpv4(embedded);
   return false;
 }
