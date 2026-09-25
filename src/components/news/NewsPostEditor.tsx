@@ -243,15 +243,15 @@ const NewsPostEditor: React.FC<NewsPostEditorProps> = ({
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200">
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-gray-200">
-        <h1 className="text-xl font-semibold text-gray-900">
+      <div className="flex items-center justify-between p-6 border-b border-gray-200 max-md:flex-col max-md:items-stretch max-md:gap-3">
+        <h1 className="text-xl font-semibold text-gray-900 max-md:text-lg">
           {postId ? 'Editar Post' : 'Novo Post'}
         </h1>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 max-md:flex-wrap max-md:gap-2 max-md:space-x-0">
           <button
             onClick={() => savePost('draft')}
             disabled={saving}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50"
+            className="px-4 py-2 max-md:min-h-11 text-gray-600 hover:text-gray-800 disabled:opacity-50"
             title="Ctrl/Cmd+S"
           >
             Salvar Rascunho
@@ -260,7 +260,7 @@ const NewsPostEditor: React.FC<NewsPostEditorProps> = ({
             <button
               onClick={() => savePost('published')}
               disabled={saving}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 py-2 max-md:min-h-11 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
               title="Ctrl/Cmd+Enter"
             >
               {saving ? 'Salvando...' : 'Publicar'}
@@ -269,7 +269,7 @@ const NewsPostEditor: React.FC<NewsPostEditorProps> = ({
           {onCancel && (
             <button
               onClick={onCancel}
-              className="p-2 text-gray-400 hover:text-gray-600"
+              className="p-2 max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center text-gray-400 hover:text-gray-600"
             >
               <FiX className="w-5 h-5" />
             </button>
