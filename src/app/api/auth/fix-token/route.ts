@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Se o token já estiver correto, retornar sucesso
-    console.log('Token já possui papel de administrador, retornando sucesso');
+    console.log('Token válido, retornando sucesso');
 
     // Criar a resposta
     const response = NextResponse.json({
