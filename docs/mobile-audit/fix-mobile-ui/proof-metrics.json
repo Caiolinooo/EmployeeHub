@@ -253,5 +253,72 @@
       "src/app/api/gestao-tripulantes/colaboradores/[id]/route.ts:39"
     ],
     "uiEcho": "src/components/admin/CollaboratorDocumentsCatalog.tsx:82"
+  },
+  "auth1440original": {
+    "A": {
+      "pair": "51f741c4 (portal) vs 3d937f27",
+      "ports": {
+        "before": 3001,
+        "after": 3002
+      },
+      "table": {
+        "dashboard": 0,
+        "gt-matriz": 0,
+        "gt-escala": 0,
+        "ferias": 0,
+        "reembolso": 0,
+        "noticias": 0,
+        "ponto": 0,
+        "contracheque": 0,
+        "ficha": 0,
+        "language": 0,
+        "confirm": 7
+      },
+      "confirm": "React real ConfirmationModal em /admin/setores (botão Excluir). 7 px AA header, modal 0.",
+      "language": "LanguageDialog real (languageDialogShown unset). 0 px."
+    },
+    "B": {
+      "pair": "eb47a7f9 vs 2c861cbe",
+      "ports": {
+        "before": 3003,
+        "after": 3004
+      },
+      "table": {
+        "dashboard": 0,
+        "gt-matriz": 0,
+        "gt-escala": 0,
+        "ferias": 2,
+        "reembolso": 0,
+        "noticias": 0,
+        "ponto": 0,
+        "contracheque": 0,
+        "ficha": 0,
+        "language": 0,
+        "confirm": 0
+      },
+      "confirm": "React real ConfirmationModal em /admin/setores. 0 px.",
+      "language": "LanguageDialog real. 0 px."
+    }
+  },
+  "gtMatrizBaselineVsBaseline": {
+    "A": {
+      "ports": [
+        3001,
+        3002
+      ],
+      "bothSha": "51f741c4",
+      "px": 0,
+      "conclusion": "Dois servidores, mesmo baseline, 0 px. portal vs final também 0. O 162 antigo (mid 44c181e2 vs after) não se reproduz contra o baseline original. Sem vazamento desktop."
+    },
+    "B": {
+      "ports": [
+        3003,
+        3005
+      ],
+      "bothSha": "eb47a7f9",
+      "px": 14,
+      "origVsFinal": 0,
+      "conclusion": "Baseline vs baseline em duas portas: 14 px (ruído inter-servidor). orig vs final: 0. Sem correção."
+    }
   }
 }

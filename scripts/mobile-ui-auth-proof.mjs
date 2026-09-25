@@ -131,9 +131,10 @@ function json(data, status = 200) {
   };
 }
 
-function mockApi(urlString) {
+function mockApi(urlString, req) {
   const url = new URL(urlString);
   const p = url.pathname;
+  const accept = String(req?.headers?.()['accept'] || req?.headers?.()['Accept'] || '');
 
   if (p.includes('/api/config')) {
     return json({
@@ -238,6 +239,8 @@ function mockApi(urlString) {
   if (p.includes('/api/contracheque')) return json({ success: true, data: [] });
   if (p.includes('/api/calendar')) return json({ events: [], data: [] });
   if (p.includes('/api/user-shortcuts')) return json([]);
+  if (p.includes('/api/admin/modules')) return json([]);
+  if (p.includes('/api/admin/role-permissions')) return json({});
   if (p.includes('/api/cards')) return json([]);
   if (p.includes('/api/purchase-orders')) return json({ success: true, data: [] });
   if (p.includes('/api/dashboard/pendencies')) return json({ emails_nao_lidos: 0, ferias_pendentes: 0, reembolsos_pendentes: 0 });
@@ -247,27 +250,31 @@ function mockApi(urlString) {
     return json({ success: true, data: [], items: [], requests: [], posts: [] });
   }
 
-  if (p.includes('/rest/v1/users_unified')) return json(USER);
+  if (p.includes('/rest/v1/users_unified')) {
+    if (accept.includes('vnd.pgrst.object+json')) return json(USER);
+    return json([USER]);
+  }
+  if (p.includes('/rest/v1/sectors')) {
+    return {
+      status: 200,
+      contentType: 'application/json; charset=utf-8',
+      headers: { 'content-range': '0-0/1' },
+      body: JSON.stringify([
+        {
+          id: '00000000-0000-4000-8000-0000000000s1',
+          name: 'Operações',
+          description: 'Setor mockado para prova do ConfirmationModal',
+          created_at: '2026-01-01T00:00:00.000Z',
+          updated_at: '2026-01-01T00:00:00.000Z',
+        },
+      ]),
+    };
+  }
   if (p.includes('/rest/v1/')) return json([]);
   if (p.includes('/auth/v1/')) return json({ access_token: null, token_type: 'bearer' });
 
   return null;
 }
-
-const CONFIRM_HTML = `
-<div id="proof-confirmation-modal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
-  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-  <div data-modal-panel="" class="relative w-full max-w-md overflow-hidden rounded-2xl bg-[#1A1A1A] border border-white/10 shadow-2xl">
-    <div class="p-6">
-      <h3 class="text-xl font-semibold text-white mb-2">Excluir marcação</h3>
-      <p class="text-gray-400 mb-6">Confirma a exclusão deste período na escala?</p>
-      <div class="flex justify-end gap-3">
-        <button type="button" class="px-4 py-2 rounded-lg bg-white/5 text-white">Cancelar</button>
-        <button type="button" class="px-4 py-2 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20">Confirmar</button>
-      </div>
-    </div>
-  </div>
-</div>`;
 
 async function attachMocks(page, { showLanguage }) {
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -276,6 +283,7 @@ async function attachMocks(page, { showLanguage }) {
       localStorage.setItem('abzToken', token);
       localStorage.setItem('token', token);
       localStorage.setItem('main-sidebar-collapsed', 'true');
+      localStorage.setItem('admin-sidebar-collapsed', 'true');
       localStorage.setItem('sidebar-meurh-open', 'false');
       localStorage.setItem('sidebar-dept-open', 'false');
       if (showLang) localStorage.removeItem('languageDialogShown');
@@ -289,21 +297,21 @@ async function attachMocks(page, { showLanguage }) {
     if (url.includes('/_next/') || url.includes('/images/') || url.includes('/fonts/') || url.includes('/rive/')) {
       return route.continue();
     }
-    const mocked = mockApi(url);
+    const mocked = mockApi(url, req);
     if (mocked) return route.fulfill(mocked);
     return route.continue();
   });
 }
 
 async function settle(page) {
-  await page.waitForTimeout(800);
+  await page.waitForTimeout(1200);
   await page.evaluate(async () => {
     if (document.fonts?.ready) await document.fonts.ready;
   });
   await page.addStyleTag({
     content: '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}[data-help-trigger],[data-fab-companion],[data-fab-help],[aria-label="Abrir Companion ABZ"]{visibility:hidden!important}',
   });
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(600);
 }
 
 async function shotPage(page, baseUrl, path, outFile, extra) {
@@ -320,7 +328,7 @@ async function shotPage(page, baseUrl, path, outFile, extra) {
     hasMain: !!document.querySelector('[data-portal-main], main'),
     hasLogin: !!document.querySelector('input[type="password"], form[action*="login"]'),
     hasLanguage: !!document.querySelector('[data-modal-panel]') && /idioma|language|Choose Your Language/i.test(document.body.innerText),
-    hasConfirm: !!document.getElementById('proof-confirmation-modal'),
+    hasConfirm: /Excluir Setor|Tem certeza que deseja excluir este setor/i.test(document.body.innerText),
     hasKpi: !!document.querySelector('[data-gt-kpi-cards]'),
     hasTablist: !!document.querySelector('[data-testid="collaborator-modal-tablist"]'),
     bodyText: document.body.innerText.slice(0, 240),
@@ -333,7 +341,7 @@ async function runSide(baseUrl, outDir, label) {
   const browser = await chromium.launch({ headless: true });
   const results = {};
 
-  const pages = [
+  const allPages = [
     ['dashboard', '/dashboard'],
     ['gt-matriz', '/department/gestao-tripulantes'],
     ['gt-escala', '/department/gestao-tripulantes?tab=schedule'],
@@ -343,6 +351,11 @@ async function runSide(baseUrl, outDir, label) {
     ['ponto', '/ponto'],
     ['contracheque', '/contracheque'],
   ];
+  const only = (process.env.ONLY_PAGES || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const pages = only.length ? allPages.filter(([name]) => only.includes(name)) : allPages;
 
   const ctx = await browser.newContext({ viewport: VIEWPORT, locale: 'pt-BR' });
   const page = await ctx.newPage();
@@ -350,6 +363,13 @@ async function runSide(baseUrl, outDir, label) {
 
   for (const [name, path] of pages) {
     results[name] = await shotPage(page, baseUrl, path, join(outDir, `${name}.png`));
+  }
+
+  if (only.length && !only.includes('ficha') && !only.includes('language') && !only.includes('confirm')) {
+    await ctx.close();
+    await browser.close();
+    writeFileSync(join(outDir, `${label}-info.json`), JSON.stringify(results, null, 2));
+    return results;
   }
 
   results.ficha = await shotPage(
@@ -383,14 +403,14 @@ async function runSide(baseUrl, outDir, label) {
   results.confirm = await shotPage(
     page,
     baseUrl,
-    '/dashboard',
+    '/admin/setores',
     join(outDir, 'confirm.png'),
     async (p) => {
-      await p.evaluate((html) => {
-        document.getElementById('proof-confirmation-modal')?.remove();
-        document.body.insertAdjacentHTML('beforeend', html);
-      }, CONFIRM_HTML);
-      await p.waitForTimeout(200);
+      const del = p.locator('button[title="Excluir"]').first();
+      await del.waitFor({ timeout: 10_000 });
+      await del.click();
+      await p.getByText('Excluir Setor').waitFor({ timeout: 8_000 });
+      await p.waitForTimeout(400);
     },
   );
 
@@ -400,18 +420,34 @@ async function runSide(baseUrl, outDir, label) {
   return results;
 }
 
-async function diffPng(aPath, bPath) {
+async function diffPng(aPath, bPath, heatPath) {
   if (!existsSync(aPath) || !existsSync(bPath)) return { px: -1, reason: 'missing' };
   const a = sharp(readFileSync(aPath)).ensureAlpha();
   const b = sharp(readFileSync(bPath)).ensureAlpha();
   const [am, bm] = await Promise.all([a.metadata(), b.metadata()]);
   if (am.width !== bm.width || am.height !== bm.height) {
-    return { px: (am.width || 0) * (am.height || 0), reason: `size ${am.width}x${am.height} vs ${bm.width}x${bm.height}` };
+    return { px: (am.width || 0) * (am.height || 0), reason: `size ${am.width}x${am.height} vs ${bm.width}x${am.height}` };
   }
   const [ar, br] = await Promise.all([a.raw().toBuffer(), b.raw().toBuffer()]);
   let px = 0;
+  const heat = Buffer.alloc(ar.length, 255);
   for (let i = 0; i < ar.length; i += 4) {
-    if (ar[i] !== br[i] || ar[i + 1] !== br[i + 1] || ar[i + 2] !== br[i + 2] || ar[i + 3] !== br[i + 3]) px += 1;
+    const diff = ar[i] !== br[i] || ar[i + 1] !== br[i + 1] || ar[i + 2] !== br[i + 2] || ar[i + 3] !== br[i + 3];
+    if (diff) {
+      px += 1;
+      heat[i] = 220;
+      heat[i + 1] = 30;
+      heat[i + 2] = 30;
+      heat[i + 3] = 255;
+    } else {
+      heat[i] = Math.round(ar[i] * 0.35 + 165);
+      heat[i + 1] = Math.round(ar[i + 1] * 0.35 + 165);
+      heat[i + 2] = Math.round(ar[i + 2] * 0.35 + 165);
+      heat[i + 3] = 255;
+    }
+  }
+  if (heatPath && px > 0) {
+    await sharp(heat, { raw: { width: am.width, height: am.height, channels: 4 } }).png().toFile(heatPath);
   }
   return { px };
 }
@@ -429,8 +465,11 @@ const after = await runSide(AFTER_URL, AFTER_DIR, 'after');
 
 const names = Object.keys(after);
 const table = {};
+const heatDir = process.env.HEAT_DIR || join(AFTER_DIR, 'heat');
+mkdirSync(heatDir, { recursive: true });
 for (const name of names) {
-  const diff = await diffPng(join(BEFORE_DIR, `${name}.png`), join(AFTER_DIR, `${name}.png`));
+  const heatPath = join(heatDir, `${name}-heat.png`);
+  const diff = await diffPng(join(BEFORE_DIR, `${name}.png`), join(AFTER_DIR, `${name}.png`), heatPath);
   table[name] = {
     px: diff.px,
     reason: diff.reason || null,
@@ -439,11 +478,24 @@ for (const name of names) {
     beforeLogin: before[name]?.hasLogin,
     afterLogin: after[name]?.hasLogin,
     afterHasMain: after[name]?.hasMain,
+    beforeHasConfirm: before[name]?.hasConfirm,
+    afterHasConfirm: after[name]?.hasConfirm,
+    beforeHasLanguage: before[name]?.hasLanguage,
+    afterHasLanguage: after[name]?.hasLanguage,
   };
 }
 
-const out = { viewport: VIEWPORT, beforeDir: BEFORE_DIR, afterDir: AFTER_DIR, table, before, after };
-writeFileSync(join(DOCS, 'auth-1440-metrics.json'), JSON.stringify(out, null, 2));
+const metricsName = process.env.METRICS_NAME || 'auth-1440-metrics.json';
+const out = {
+  viewport: VIEWPORT,
+  pair: process.env.PAIR || null,
+  beforeDir: BEFORE_DIR,
+  afterDir: AFTER_DIR,
+  table,
+  before,
+  after,
+};
+writeFileSync(join(DOCS, metricsName), JSON.stringify(out, null, 2));
 console.log(JSON.stringify(table, null, 2));
 const failed = Object.entries(table).filter(([, v]) => v.px !== 0);
 if (failed.length) {

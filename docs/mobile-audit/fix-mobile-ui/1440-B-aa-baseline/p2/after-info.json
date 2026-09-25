@@ -1,0 +1,44 @@
+{
+  "gt-matriz": {
+    "status": 200,
+    "href": "http://127.0.0.1:3005/department/gestao-tripulantes",
+    "title": "Painel ABZ Group",
+    "hasMain": true,
+    "hasLogin": false,
+    "hasLanguage": false,
+    "hasConfirm": false,
+    "hasKpi": false,
+    "hasTablist": false,
+    "bodyText": "PT\nPM\nGestão de Tripulantes\n\nDashboard inteligente de tripulantes e escala offshore\n\nMatriz de Treinamentos\nNovo Colaborador\nMatriz de Conformidade\nMan Schedule (Escala MIO)\nASO Logística\nHistórico de alterações\nMatriz de Treinamentos\n\nTota",
+    "errors": [],
+    "file": "/tmp/mui-1440-b-aa/p2/gt-matriz.png"
+  },
+  "ferias": {
+    "status": 200,
+    "href": "http://127.0.0.1:3005/ferias",
+    "title": "Painel ABZ Group",
+    "hasMain": true,
+    "hasLogin": false,
+    "hasLanguage": false,
+    "hasConfirm": false,
+    "hasKpi": false,
+    "hasTablist": false,
+    "bodyText": "PT\nPM\nMódulo de Férias\n\nGerencie seus períodos de descanso.\n\nMinhas Solicitações\nFormulário\nNova Solicitação\n\nCadastre sua assinatura digital\n\nEla será usada nos formulários de férias (PDF) e outros documentos do portal. Ver no perfil\n\nAgor",
+    "errors": [],
+    "file": "/tmp/mui-1440-b-aa/p2/ferias.png"
+  },
+  "noticias": {
+    "status": 200,
+    "href": "http://127.0.0.1:3005/noticias",
+    "title": "Painel ABZ Group",
+    "hasMain": true,
+    "hasLogin": false,
+    "hasLanguage": false,
+    "hasConfirm": false,
+    "hasKpi": false,
+    "hasTablist": false,
+    "bodyText": "PT\nPM\nABZ News\nDestaques\nNenhum post encontrado\nCriar Primeiro Post",
+    "errors": [],
+    "file": "/tmp/mui-1440-b-aa/p2/noticias.png"
+  }
+}
