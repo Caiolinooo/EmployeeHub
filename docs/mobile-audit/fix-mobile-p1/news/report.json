@@ -1,0 +1,91 @@
+{
+  "module": "news",
+  "before": {
+    "label": "before",
+    "views": {
+      "375": {
+        "file": "/tmp/p1-news/docs/mobile-audit/fix-mobile-p1/news/before-375.png",
+        "close": {
+          "found": true,
+          "w": 48,
+          "h": 44,
+          "label": "Fechar menu"
+        },
+        "overflow": {
+          "scrollW": 375,
+          "clientW": 375,
+          "bodyText": "close\nBuscar...\nPT\nPM\nABZ News\nTodos\nDestaques\nNovo\nNo que você está pensando? Compartilhe uma notícia...\nFoto/Vídeo\nEvento\nDestaque\nP\nProva Mobile\n01/09/2026\n•\n1 pessoa viu\nPost d"
+        },
+        "href": "http://127.0.0.1:3010/noticias"
+      },
+      "390": {
+        "file": "/tmp/p1-news/docs/mobile-audit/fix-mobile-p1/news/before-390.png",
+        "close": {
+          "found": true,
+          "w": 48,
+          "h": 44,
+          "label": "Fechar menu"
+        },
+        "overflow": {
+          "scrollW": 390,
+          "clientW": 390,
+          "bodyText": "close\nBuscar...\nPT\nPM\nABZ News\nTodos\nDestaques\nNovo\nNo que você está pensando? Compartilhe uma notícia...\nFoto/Vídeo\nEvento\nDestaque\nP\nProva Mobile\n01/09/2026\n•\n1 pessoa viu\nPost d"
+        },
+        "href": "http://127.0.0.1:3010/noticias"
+      }
+    },
+    "desktop": {
+      "file": "/tmp/p1-news/docs/mobile-audit/fix-mobile-p1/news/before-1440.png",
+      "href": "http://127.0.0.1:3010/noticias"
+    }
+  },
+  "after": {
+    "label": "after",
+    "views": {
+      "375": {
+        "file": "/tmp/p1-news/docs/mobile-audit/fix-mobile-p1/news/after-375.png",
+        "close": {
+          "found": true,
+          "w": 44,
+          "h": 44,
+          "label": "Fechar"
+        },
+        "overflow": {
+          "scrollW": 375,
+          "clientW": 375,
+          "bodyText": "close\nPT\nPM\nABZ News\nTodos\nDestaques\nNovo\nNo que você está pensando? Compartilhe uma notícia...\nFoto/Vídeo\nEvento\nDestaque\nP\nProva Mobile\n01/09/2026\n•\n1 pessoa viu\nPost de prova\n\nR"
+        },
+        "href": "http://127.0.0.1:3011/noticias"
+      },
+      "390": {
+        "file": "/tmp/p1-news/docs/mobile-audit/fix-mobile-p1/news/after-390.png",
+        "close": {
+          "found": true,
+          "w": 44,
+          "h": 44,
+          "label": "Fechar"
+        },
+        "overflow": {
+          "scrollW": 390,
+          "clientW": 390,
+          "bodyText": "close\nPT\nPM\nABZ News\nTodos\nDestaques\nNovo\nNo que você está pensando? Compartilhe uma notícia...\nFoto/Vídeo\nEvento\nDestaque\nP\nProva Mobile\n01/09/2026\n•\n1 pessoa viu\nPost de prova\n\nR"
+        },
+        "href": "http://127.0.0.1:3011/noticias"
+      }
+    },
+    "esc": {
+      "beforeEsc": 1,
+      "afterEsc": 0,
+      "closed": true
+    },
+    "desktop": {
+      "file": "/tmp/p1-news/docs/mobile-audit/fix-mobile-p1/news/after-1440.png",
+      "href": "http://127.0.0.1:3011/noticias"
+    }
+  },
+  "desktop": {
+    "diffPx": 0,
+    "width": 1440,
+    "height": 900
+  }
+}
