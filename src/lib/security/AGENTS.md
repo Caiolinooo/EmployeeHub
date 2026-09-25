@@ -14,7 +14,8 @@ Guard de URL de saída para fetches server-side (SSRF / scheme checks).
 
 - Sempre `new URL()`. Só `https:` salvo o alvo real exigir `http:`.
 - Host allowlist explícita (constante ou host já lido de env existente). Sem env nova.
-- Rejeitar credenciais na URL e IPs privados / loopback / link-local, inclusive IPv4-mapped IPv6 (forma pontilhada `::ffff:127.0.0.1`, canônica Node `[::ffff:7f00:1]` e expandida `0:0:0:0:0:ffff:…`), mesmo se o hostname estiver na allowlist.
+- Rejeitar credenciais na URL e IPs privados / loopback / link-local, inclusive IPv4 embutido em IPv6 (`::ffff:0:0/96` mapped, `::/96` compatível, `64:ff9b::/96` NAT64; pontilhado e hextets Node), mesmo se o hostname estiver na allowlist. IPv4 público embutido (ex. `64:ff9b::8.8.8.8`) não entra no denylist; a allowlist ainda vale.
+- Limitação conhecida: hostnames DNS wildcard (`127.0.0.1.nip.io`) não são pegos — o checker não resolve DNS.
 - Outbound `fetch` SSRF: `fetchWithSafeRedirects` (`redirect: 'manual'`, no máx. 3 hops). Cada `Location` resolve contra a URL atual e passa de novo em `parseSafeUrl` (allowlist + IP privado).
 - HTML rewrite: `URL.protocol` bloqueia `javascript:`, `data:`, `vbscript:`.
 - Fetch usa `url.href` depois do guard. Sem host derivado de `Host` / origin do request.

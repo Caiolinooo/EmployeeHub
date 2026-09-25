@@ -334,25 +334,39 @@ function hextetPairToIpv4(hi: string, lo: string): string | null {
   return `${(a >> 8) & 255}.${a & 255}.${(b >> 8) & 255}.${b & 255}`;
 }
 
+function ipv4FromTail(tail: string): string | null {
+  if (isIpv4Address(tail)) return tail;
+  const parts = tail.split(':');
+  if (parts.length === 2) return hextetPairToIpv4(parts[0], parts[1]);
+  return null;
+}
+
 /**
  * Node WHATWG URL canonicalizes IPv4-mapped IPv6 to `[::ffff:7f00:1]`
- * (hex hextets), not dotted `::ffff:127.0.0.1`.
+ * (hex hextets), not dotted `::ffff:127.0.0.1`. Same for IPv4-compatible
+ * `::/96` (`[::127.0.0.1]` → `[::7f00:1]`) and NAT64 `64:ff9b::/96`.
  */
-function ipv4FromMappedIpv6(host: string): string | null {
+function ipv4FromEmbeddedIpv6(host: string): string | null {
   const h = host.toLowerCase();
+
   if (h.startsWith('::ffff:')) {
-    const rest = h.slice('::ffff:'.length);
-    if (isIpv4Address(rest)) return rest;
-    const parts = rest.split(':');
-    if (parts.length === 2) return hextetPairToIpv4(parts[0], parts[1]);
-    return null;
+    return ipv4FromTail(h.slice('::ffff:'.length));
   }
-  const expandedDotted = h.match(/^(?:0:){5}ffff:(\d{1,3}(?:\.\d{1,3}){3})$/);
-  if (expandedDotted && isIpv4Address(expandedDotted[1])) {
-    return expandedDotted[1];
+  const mappedExpanded = h.match(/^(?:0:){5}ffff:(.+)$/);
+  if (mappedExpanded) return ipv4FromTail(mappedExpanded[1]);
+
+  if (h.startsWith('64:ff9b::')) {
+    return ipv4FromTail(h.slice('64:ff9b::'.length));
   }
-  const expandedHex = h.match(/^(?:0:){5}ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
-  if (expandedHex) return hextetPairToIpv4(expandedHex[1], expandedHex[2]);
+  const nat64Expanded = h.match(/^64:ff9b:(?:0:){4}(.+)$/);
+  if (nat64Expanded) return ipv4FromTail(nat64Expanded[1]);
+
+  if (h.startsWith('::')) {
+    return ipv4FromTail(h.slice(2));
+  }
+  const compatibleExpanded = h.match(/^(?:0:){6}(.+)$/);
+  if (compatibleExpanded) return ipv4FromTail(compatibleExpanded[1]);
+
   return null;
 }
 
@@ -362,7 +376,7 @@ function isBlockedIpv6(host: string): boolean {
   if (h === '::1' || h === '::' || h === '0:0:0:0:0:0:0:1') return true;
   if (h.startsWith('fe80:')) return true;
   if (h.startsWith('fc') || h.startsWith('fd')) return true;
-  const mapped = ipv4FromMappedIpv6(h);
-  if (mapped) return isPrivateIpv4(mapped);
+  const embedded = ipv4FromEmbeddedIpv6(h);
+  if (embedded) return isPrivateIpv4(embedded);
   return false;
 }

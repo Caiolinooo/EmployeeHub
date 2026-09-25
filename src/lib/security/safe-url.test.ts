@@ -54,6 +54,39 @@ describe('parseSafeUrl', () => {
     }
   });
 
+  it('rejects IPv4-compatible ::/96 and NAT64 64:ff9b::/96 when the embedded IPv4 is private', () => {
+    const embedded = [
+      'https://[::127.0.0.1]/x',
+      'https://[::7f00:1]/x',
+      'https://[::10.0.0.1]/x',
+      'https://[::169.254.169.254]/x',
+      'https://[64:ff9b::127.0.0.1]/x',
+      'https://[64:ff9b::a9fe:a9fe]/x',
+    ];
+    for (const raw of embedded) {
+      const hostname = new URL(raw).hostname;
+      assert.equal(isBlockedHostname(hostname), true, raw);
+      assertUnsafe(() =>
+        parseSafeUrl(raw, {
+          allowedHosts: [hostname, '::7f00:1', '64:ff9b::7f00:1', '64:ff9b::a9fe:a9fe'],
+        }),
+      );
+    }
+  });
+
+  it('does not denylist a public IPv4 embedded in NAT64 (allowlist still applies)', () => {
+    // 8.8.8.8 is not private/loopback/link-local, so the denylist lets it
+    // through — same choice as ::ffff:808:808. parseSafeUrl still needs the host
+    // on the allowlist.
+    const raw = 'https://[64:ff9b::8.8.8.8]/x';
+    const hostname = new URL(raw).hostname;
+    assert.equal(hostname, '[64:ff9b::808:808]');
+    assert.equal(isBlockedHostname(hostname), false, raw);
+    const url = parseSafeUrl(raw, { allowedHosts: [hostname] });
+    assert.equal(url.hostname, hostname);
+    assertUnsafe(() => parseSafeUrl(raw, { allowedHosts: ALLOW_EXAMPLE }));
+  });
+
   it('rejects IPv4-mapped IPv6 even when the canonical hostname is allowlisted', () => {
     const mapped = [
       'https://[::ffff:127.0.0.1]/x',
@@ -278,6 +311,13 @@ describe('isBlockedHostname', () => {
     assert.equal(isBlockedHostname('0:0:0:0:0:ffff:7f00:1'), true);
     assert.equal(isBlockedHostname('0:0:0:0:0:ffff:c0a8:109'), true);
     assert.equal(isBlockedHostname('::ffff:808:808'), false);
+    assert.equal(isBlockedHostname('[::127.0.0.1]'), true);
+    assert.equal(isBlockedHostname('[::7f00:1]'), true);
+    assert.equal(isBlockedHostname('[::10.0.0.1]'), true);
+    assert.equal(isBlockedHostname('[::169.254.169.254]'), true);
+    assert.equal(isBlockedHostname('[64:ff9b::127.0.0.1]'), true);
+    assert.equal(isBlockedHostname('[64:ff9b::a9fe:a9fe]'), true);
+    assert.equal(isBlockedHostname('[64:ff9b::8.8.8.8]'), false);
     assert.equal(isBlockedHostname('example.com'), false);
   });
 });
