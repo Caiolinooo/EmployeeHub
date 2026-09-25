@@ -5,6 +5,7 @@
 
 import { formatCpf, normalizeCpf } from '@/lib/utils/identity';
 import { namesCorroborate } from '@/lib/employee-hub/portal-user-match';
+import { gtColabTableSelectIsSafe } from '@/lib/gestao-tripulantes/gt-colab-view-aliases';
 
 /** PostgREST select for portal users. Must never include `cpf` / `full_name` / `phone`. */
 export const CATALOG_USER_SELECT =
@@ -20,15 +21,6 @@ export const CATALOG_USER_SELECT =
 export const CATALOG_COLAB_SELECT =
   'id, nome_completo, cpf, email, telefone, user_id, cargo:gt_cargos(nome)';
 
-const GT_COLAB_VIEW_ALIASES = [
-  'cargo_nome',
-  'empresa_nome',
-  'embarcacao_nome',
-  'centro_custo_nome',
-  'cargo_nivel',
-  'cargo_ordem',
-];
-
 export function catalogUserSelectIsSafe(select: string = CATALOG_USER_SELECT): boolean {
   return !/(^|[,\s])cpf([,\s]|$)/i.test(select)
     && !/(^|[,\s])full_name([,\s]|$)/i.test(select)
@@ -36,10 +28,7 @@ export function catalogUserSelectIsSafe(select: string = CATALOG_USER_SELECT): b
 }
 
 export function catalogColabSelectIsSafe(select: string = CATALOG_COLAB_SELECT): boolean {
-  return GT_COLAB_VIEW_ALIASES.every((alias) => {
-    const re = new RegExp(`(^|[,\\s])${alias}([,\\s]|$)`, 'i');
-    return !re.test(select);
-  });
+  return gtColabTableSelectIsSafe(select);
 }
 
 export type CatalogColabSelectRow = {

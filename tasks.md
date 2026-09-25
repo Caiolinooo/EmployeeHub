@@ -9,6 +9,7 @@ Port do PR #96 para `feat/mobile-first-fase2` + fix da aba QHSE / EPI. Draft con
 - [x] QHSE 404: `CATALOG_COLAB_SELECT` pedia `cargo_nome` (só existe na view) → embed `cargo:gt_cargos(nome)` + `flattenCatalogColabRow` + `catalogColabSelectIsSafe` rejeita aliases da view (alinhado PR #98)
 - [x] Middleware-gates (`src/lib/middleware-gates.ts`): `/avaliacao` exact+prefix (não `/avaliacoes-avancadas`); com token só `Authorization` (sem reescrever `abzToken` maxAge 1d)
 - [x] Login desktop + `MobileLoginForm` + `mobile-login-flow`: sem `GET /api/auth/ensure-admin` (rota continua gated)
+- [x] Sweep tabela `gt_colaboradores` vs aliases da view: `findFullColaboradorByCpf` join-and-flatten; `updateColaborador` strip; guard `gt-colab-table-select.test.ts`
 - [ ] Preview: `/avaliacao` sem cookie → 302 `/login` + `x-abz-middleware: 1`; QHSE tab com colaborador GT válido → 200
 
 ---
