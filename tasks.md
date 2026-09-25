@@ -6,9 +6,9 @@
 - [x] Reproduzir `next build` e gravar `middleware-manifest.json` (antes) — `{ middleware: {} }`
 - [x] GET unauthenticated em `portal.groupabz.com` (páginas + APIs sensíveis)
 - [x] Mapa de rotas (a/b/c) com paths
-- [x] Fix mínimo: remover `pages/` raiz para Next usar `src/` e bundlar middleware
-- [ ] Build depois: manifesto não vazio; lint/typecheck/testes
-- [ ] PR draft contra `portal`
+- [x] Fix: `middleware.ts` na raiz (parent de `pagesDir=./pages`); stub 401 em `pages/api/check-env.js` (apagar `pages/` quebra o build — conflito `src/pages` vs `src/app`)
+- [x] Build depois: manifesto com `middleware["/"]` + `server/middleware.js`; matcher correto
+- [x] PR draft #96 contra `portal`
 
 ---
 

@@ -30,19 +30,6 @@ const staticRoutes = [
   '/api/_next/',
 ];
 
-// Rotas que precisam de permissão de administrador
-const adminRoutes = [
-  '/admin',
-  '/admin/cards',
-  '/admin/menu',
-  '/admin/documents',
-  '/admin/news',
-  '/admin/users',
-  '/admin/settings',
-  '/admin/reimbursement-settings',
-  '/api/admin',
-];
-
 function markMiddleware(response: NextResponse) {
   response.headers.set('x-abz-middleware', '1');
   return response;
