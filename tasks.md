@@ -1,16 +1,3 @@
-## PR #99 desktop geometry (2026-09-25)
-
-QA reprovou `79b9166d` no `next start` real: wrap da toolbar GT em 1280 + alegação 0 px não reproduziu.
-
-- [x] Abas GT/`ficha`: nowrap/shrink/overflow só `max-lg:`; `tablistRef` no inner (portal)
-- [x] Esc em AddShortcut, Desligamento, ConfirmarExclusao, ModalAprovacao
-- [x] Merge `origin/portal` `71bd3534` (conflito só em `tasks.md`; `AGENTS.md` auto-merge)
-- [x] Prova geometria 1280/1440 (`next build`+`start`, mesmo caminho) — ver `docs/mobile-audit/fix-mobile-ui/desktop-geometry/`
-- [ ] Um push em `fix/mobile-ui-portal` quando a prova local fechar
-- [ ] Refazer prova desktop #108–#111 no mesmo método
-
----
-
 ## QHSE “Colaborador não encontrado” (2026-09-25)
 
 Aba QHSE/EPI da ficha GT em produção chama `GET /api/document-catalog?colaboradorId=&qhse=1`. Select `cargo_nome` em `gt_colaboradores` (coluna só na view) → PostgREST error → identity null → 404. Sem writes no DB real. Sem UI. Sem PR #95 / #96.

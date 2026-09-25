@@ -29,8 +29,8 @@ Componentes React do Companion FAB / chat IA (`AnimatedABZLogo`, mascote, bolhas
 - Regenerar: `scratch/build-companion-mascot-riv.mjs` via `rive-mcp-server` createRiv (não vendorar o server)
 - Sem `.riv` / load error → `CompanionMascotRiveLike`
 - `prefers-reduced-motion` → estático
-- Tamanhos FAB 60 / header 36 / hero 80 no desktop. ≤767: `data-fab-companion` 44×44, `right`/`bottom` com safe-area (`globals.css`). Painel `data-fab-companion-panel` inset horizontal, não `right-24` (sai da tela em 390).
-- Não quebrar FAB `fixed`, session provider ou `portal-action-bus`. Desktop (`md+`) intacto.
+- Tamanhos FAB 60 / header 36 / hero 80
+- Não quebrar FAB `fixed`, session provider ou `portal-action-bus`
 - **Markdown das bolhas** (`renderChatMarkdown`): tabelas GFM (`| col |` + delimiter row) → `<table>` real com `overflow-x-auto`; `> ` → callout; listas bullet/numeradas com hanging indent (níveis por indentação; `- **Título**: desc` vira linha estruturada); headings `#`–`####`; `---` → hr; código fenced/inline mantido; links sanitizados (http/https/mailto/relativo) — **nunca** `dangerouslySetInnerHTML`
 - Bolhas **não** usam `prose` (Tailwind typography) — o renderer controla toda a tipografia; bolha Assistant `w-fit max-w-full min-w-0` para tabelas rolarem dentro
 
