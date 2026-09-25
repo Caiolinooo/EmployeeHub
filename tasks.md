@@ -1,3 +1,16 @@
+## Mobile-first Fase 1 — inventário e plano (2026-09-25)
+
+Adaptar o portal para celular em todos os módulos; dono consulta nas decisões. Esta fatia é **só plano**. Sem UI.
+
+- [x] Branch `feat/mobile-first` a partir de `portal` (sem merge, sem PR)
+- [x] Inventário de módulos/rotas (`docs/mobile-first-plan.md`)
+- [x] Auditoria 375×812 e 390×844 (código + Playwright em rotas públicas)
+- [x] Plano por fases + decisões D1–D8
+- [ ] Dono responde D1–D8
+- [ ] Fase 2: fundação (tokens, nav, Companion sheet) — outra PR
+
+---
+
 ## UI Folha/Financeiro no padrão ABZ (2026-09-23)
 
 Hub `/folha-pagamento` sem sidebar, cards pretos e rotas `sheets/nova/funcionarios/empresas` em loop de redirect. Sem emitir NFS-e. Sem commit.

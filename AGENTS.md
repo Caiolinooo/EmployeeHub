@@ -107,6 +107,7 @@ When the user requests a durable behavior change, record it here or in the relev
 - **Matriz de Treinamento & Conformidade por Cargo (Setores & ACL)**: gerenciado em `/admin/gestao-tripulantes` e também disponível diretamente em `/department/gestao-tripulantes` (aba e botão de cabeçalho "Matriz de Treinamentos"). Exibição e mutação (`/api/gestao-tripulantes/matrizes`) condicionadas à autorização via Setor (DP, RH, Treinamento, Operações, SMS/QHSE, Gestão de Tripulantes com módulo `gestao-tripulantes`), Role (ADMIN/MANAGER), Feature JSONB (`gestao-tripulantes.matrizes.manage` configurável em `/admin/users`) ou ACL granular (`acl_permissions` action `matrizes.manage`/`matrizes.view`). Usuários sem permissão não veem a aba administrativa. Suporta importação de planilhas XLSX oficiais do MIO (`Matriz - Modelo 002`) e cruzamento com o colaborador em `TreinamentosTab` (`MatrizConformidadeColaboradorCard`).
 - **Lista de Presença para Treinamentos Internos**: modal integrado `ModalListaPresencaTreinamento` gerando lista formal no portal (`/lista-presenca`) para assinaturas digitais, com opção de lançamento imediato em lote da conclusão do treinamento no prontuário de todos os participantes selecionados.
 - **Sistema de ACL (visão geral)**: três camadas independentes coexistem — módulos on/off (`access_permissions.modules` + `sectors.allowed_modules`), features JSONB granulares (`access_permissions.features`, `src/lib/permissions.ts`) e tabelas ACL (`acl_permissions`/`user_acl_permissions`/`role_acl_permissions`, checadas via `checkAclPermission`). `hasFeature` / `hasEffectiveFeature` tratam JSONB **e** nome ACL (`gestao-tripulantes.documents.delete`) como o mesmo grant. `GET /api/user/effective-permissions` devolve `effective_features` + `acl_permission_names` do DB (sem cache HTTP; cliente refetch em focus/visibility/`permissions-updated`). A maioria dos módulos usa só as duas primeiras; **férias** e **gestão de tripulantes** (`documents.edit`/`documents.delete`, `matrizes.manage`/`matrizes.view`) também aceitam a 3ª. Seed vivo em `POST /api/acl/init` lê `src/config/modules.ts` (não um array morto). Não regressar GT/e-social.
+- **Mobile-first (Fase 1, 2026-09)**: inventário + auditoria + plano em `docs/mobile-first-plan.md`. Artefatos em `docs/mobile-audit/`. Sem UI até o dono responder as decisões D1–D8 do plano. Branch de trabalho `feat/mobile-first`.
 
 ## Child DOX Index
 
@@ -126,6 +127,8 @@ When the user requests a durable behavior change, record it here or in the relev
 - `src/lib/document-catalog/AGENTS.md` — catálogo global de documentos (QHSE/EPI, lista de presença, GT, academy)
 - `src/config/AGENTS.md` — catálogo vivo de módulos + permissões (UserEditor / ACL)
 - `src/app/api/acl/AGENTS.md` — seed ACL a partir do catálogo vivo
+- `docs/mobile-first-plan.md` — inventário, auditoria e plano mobile-first (Fase 1; sem UI)
+- `docs/mobile-audit/AGENTS.md` — screenshots e métricas da auditoria mobile
 
 ## Index of Modules
 

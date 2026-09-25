@@ -127,3 +127,4 @@ scratch_migrate_*
 # Python check scripts
 scripts/check_*.py
 scripts/output.txt
+.playwright-mcp/

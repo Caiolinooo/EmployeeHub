@@ -1,0 +1,769 @@
+{
+  "generatedAt": "2026-09-25T03:10:37.592Z",
+  "base": "http://127.0.0.1:3000",
+  "viewports": [
+    "375x812",
+    "390x844"
+  ],
+  "totals": {
+    "shots": 26,
+    "ok": 26,
+    "fail": 0,
+    "overflow": 0
+  },
+  "results": [
+    {
+      "slug": "root",
+      "path": "/",
+      "public": true,
+      "viewport": "375x812",
+      "file": "docs/mobile-audit/root-375x812.png",
+      "status": 200,
+      "finalPath": "/",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 0,
+      "smallTargets": [],
+      "ok": true,
+      "bytes": 4819
+    },
+    {
+      "slug": "login",
+      "path": "/login",
+      "public": true,
+      "viewport": "375x812",
+      "file": "docs/mobile-audit/login-375x812.png",
+      "status": 200,
+      "finalPath": "/login",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 8,
+      "smallTargets": [
+        {
+          "tag": "button",
+          "text": "English",
+          "w": 34,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "text": "Portuguese",
+          "w": 32,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "text": "I have an invite code",
+          "w": 153,
+          "h": 20
+        },
+        {
+          "tag": "button",
+          "text": "Continue",
+          "w": 311,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "text": "Create account",
+          "w": 99,
+          "h": 19
+        },
+        {
+          "tag": "a",
+          "text": "LinkedIn",
+          "w": 20,
+          "h": 20
+        },
+        {
+          "tag": "a",
+          "text": "GitHub",
+          "w": 20,
+          "h": 20
+        },
+        {
+          "tag": "a",
+          "text": "Instagram",
+          "w": 20,
+          "h": 20
+        }
+      ],
+      "ok": true,
+      "bytes": 55607
+    },
+    {
+      "slug": "register",
+      "path": "/register",
+      "public": true,
+      "viewport": "375x812",
+      "file": "docs/mobile-audit/register-375x812.png",
+      "status": 200,
+      "finalPath": "/register",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 9,
+      "smallTargets": [
+        {
+          "tag": "button",
+          "text": "Choose your language",
+          "w": 40,
+          "h": 20
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "w": 148,
+          "h": 42
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "w": 148,
+          "h": 42
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "w": 311,
+          "h": 42
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "w": 311,
+          "h": 42
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "w": 311,
+          "h": 42
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "w": 311,
+          "h": 42
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "w": 311,
+          "h": 42
+        },
+        {
+          "tag": "button",
+          "text": "Register",
+          "w": 311,
+          "h": 40
+        }
+      ],
+      "ok": true,
+      "bytes": 56398
+    },
+    {
+      "slug": "reset-password",
+      "path": "/reset-password",
+      "public": true,
+      "viewport": "375x812",
+      "file": "docs/mobile-audit/reset-password-375x812.png",
+      "status": 200,
+      "finalPath": "/reset-password",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 1,
+      "smallTargets": [
+        {
+          "tag": "button",
+          "text": "Voltar para o Login",
+          "w": 175,
+          "h": 36
+        }
+      ],
+      "ok": true,
+      "bytes": 30528
+    },
+    {
+      "slug": "set-password",
+      "path": "/set-password",
+      "public": true,
+      "viewport": "375x812",
+      "file": "docs/mobile-audit/set-password-375x812.png",
+      "status": 200,
+      "finalPath": "/set-password",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 0,
+      "smallTargets": [],
+      "ok": true,
+      "bytes": 2539
+    },
+    {
+      "slug": "verify-email",
+      "path": "/verify-email",
+      "public": true,
+      "viewport": "375x812",
+      "file": "docs/mobile-audit/verify-email-375x812.png",
+      "status": 200,
+      "finalPath": "/verify-email",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 0,
+      "smallTargets": [],
+      "ok": true,
+      "bytes": 2539
+    },
+    {
+      "slug": "unauthorized",
+      "path": "/unauthorized",
+      "public": true,
+      "viewport": "375x812",
+      "file": "docs/mobile-audit/unauthorized-375x812.png",
+      "status": 200,
+      "finalPath": "/unauthorized",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 0,
+      "smallTargets": [],
+      "ok": true,
+      "bytes": 16357
+    },
+    {
+      "slug": "lista-presenca-public",
+      "path": "/lista-presenca/public/audit-placeholder",
+      "public": true,
+      "viewport": "375x812",
+      "file": "docs/mobile-audit/lista-presenca-public-375x812.png",
+      "status": 200,
+      "finalPath": "/lista-presenca/public/audit-placeholder",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 0,
+      "smallTargets": [],
+      "ok": true,
+      "bytes": 85676
+    },
+    {
+      "slug": "academy-validate",
+      "path": "/academy/certificates/validate/audit-placeholder",
+      "public": true,
+      "viewport": "375x812",
+      "file": "docs/mobile-audit/academy-validate-375x812.png",
+      "status": 200,
+      "finalPath": "/academy/certificates/validate/audit-placeholder",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 2,
+      "smallTargets": [
+        {
+          "tag": "button",
+          "text": "Continue",
+          "w": 116,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "text": "Ir para o início",
+          "w": 128,
+          "h": 38
+        }
+      ],
+      "ok": true,
+      "bytes": 47034
+    },
+    {
+      "slug": "assinatura-token",
+      "path": "/assinatura/audit-placeholder",
+      "public": true,
+      "viewport": "375x812",
+      "file": "docs/mobile-audit/assinatura-token-375x812.png",
+      "status": 200,
+      "finalPath": "/assinatura/audit-placeholder",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 0,
+      "smallTargets": [],
+      "ok": true,
+      "bytes": 8443
+    },
+    {
+      "slug": "dashboard",
+      "path": "/dashboard",
+      "public": false,
+      "viewport": "375x812",
+      "file": "docs/mobile-audit/dashboard-375x812.png",
+      "status": 200,
+      "finalPath": "/dashboard",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 0,
+      "smallTargets": [],
+      "ok": true,
+      "bytes": 22489
+    },
+    {
+      "slug": "chat",
+      "path": "/chat",
+      "public": false,
+      "viewport": "375x812",
+      "file": "docs/mobile-audit/chat-375x812.png",
+      "status": 200,
+      "finalPath": "/chat",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 0,
+      "smallTargets": [],
+      "ok": true,
+      "bytes": 7770
+    },
+    {
+      "slug": "admin",
+      "path": "/admin",
+      "public": false,
+      "viewport": "375x812",
+      "file": "docs/mobile-audit/admin-375x812.png",
+      "status": 200,
+      "finalPath": "/admin",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 0,
+      "smallTargets": [],
+      "ok": true,
+      "bytes": 10051
+    },
+    {
+      "slug": "root",
+      "path": "/",
+      "public": true,
+      "viewport": "390x844",
+      "file": "docs/mobile-audit/root-390x844.png",
+      "status": 200,
+      "finalPath": "/",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 0,
+      "smallTargets": [],
+      "ok": true,
+      "bytes": 8154
+    },
+    {
+      "slug": "login",
+      "path": "/login",
+      "public": true,
+      "viewport": "390x844",
+      "file": "docs/mobile-audit/login-390x844.png",
+      "status": 200,
+      "finalPath": "/login",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 8,
+      "smallTargets": [
+        {
+          "tag": "button",
+          "text": "English",
+          "w": 34,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "text": "Portuguese",
+          "w": 32,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "text": "I have an invite code",
+          "w": 153,
+          "h": 20
+        },
+        {
+          "tag": "button",
+          "text": "Continue",
+          "w": 326,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "text": "Create account",
+          "w": 99,
+          "h": 19
+        },
+        {
+          "tag": "a",
+          "text": "LinkedIn",
+          "w": 20,
+          "h": 20
+        },
+        {
+          "tag": "a",
+          "text": "GitHub",
+          "w": 20,
+          "h": 20
+        },
+        {
+          "tag": "a",
+          "text": "Instagram",
+          "w": 20,
+          "h": 20
+        }
+      ],
+      "ok": true,
+      "bytes": 58170
+    },
+    {
+      "slug": "register",
+      "path": "/register",
+      "public": true,
+      "viewport": "390x844",
+      "file": "docs/mobile-audit/register-390x844.png",
+      "status": 200,
+      "finalPath": "/register",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 10,
+      "smallTargets": [
+        {
+          "tag": "button",
+          "text": "Choose your language",
+          "w": 40,
+          "h": 20
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "w": 155,
+          "h": 42
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "w": 155,
+          "h": 42
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "w": 326,
+          "h": 42
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "w": 326,
+          "h": 42
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "w": 326,
+          "h": 42
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "w": 326,
+          "h": 42
+        },
+        {
+          "tag": "input",
+          "text": "",
+          "w": 326,
+          "h": 42
+        },
+        {
+          "tag": "button",
+          "text": "Register",
+          "w": 326,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "text": "Sign in",
+          "w": 44,
+          "h": 19
+        }
+      ],
+      "ok": true,
+      "bytes": 60589
+    },
+    {
+      "slug": "reset-password",
+      "path": "/reset-password",
+      "public": true,
+      "viewport": "390x844",
+      "file": "docs/mobile-audit/reset-password-390x844.png",
+      "status": 200,
+      "finalPath": "/reset-password",
+      "title": "Painel ABZ Group",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 1,
+      "smallTargets": [
+        {
+          "tag": "button",
+          "text": "Voltar para o Login",
+          "w": 175,
+          "h": 36
+        }
+      ],
+      "ok": true,
+      "bytes": 21819
+    },
+    {
+      "slug": "set-password",
+      "path": "/set-password",
+      "public": true,
+      "viewport": "390x844",
+      "file": "docs/mobile-audit/set-password-390x844.png",
+      "status": 200,
+      "finalPath": "/login",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 0,
+      "smallTargets": [],
+      "ok": true,
+      "bytes": 58316
+    },
+    {
+      "slug": "verify-email",
+      "path": "/verify-email",
+      "public": true,
+      "viewport": "390x844",
+      "file": "docs/mobile-audit/verify-email-390x844.png",
+      "status": 200,
+      "finalPath": "/verify-email",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 4,
+      "smallTargets": [
+        {
+          "tag": "button",
+          "text": "Continue",
+          "w": 114,
+          "h": 39
+        },
+        {
+          "tag": "button",
+          "text": "Choose your language",
+          "w": 40,
+          "h": 20
+        },
+        {
+          "tag": "a",
+          "text": "Registrar Novamente",
+          "w": 326,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "text": "Ir para Login",
+          "w": 326,
+          "h": 40
+        }
+      ],
+      "ok": true,
+      "bytes": 65742
+    },
+    {
+      "slug": "unauthorized",
+      "path": "/unauthorized",
+      "public": true,
+      "viewport": "390x844",
+      "file": "docs/mobile-audit/unauthorized-390x844.png",
+      "status": 200,
+      "finalPath": "/unauthorized",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 2,
+      "smallTargets": [
+        {
+          "tag": "button",
+          "text": "Continue",
+          "w": 116,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "text": "Voltar para o Dashboard",
+          "w": 193,
+          "h": 36
+        }
+      ],
+      "ok": true,
+      "bytes": 34229
+    },
+    {
+      "slug": "lista-presenca-public",
+      "path": "/lista-presenca/public/audit-placeholder",
+      "public": true,
+      "viewport": "390x844",
+      "file": "docs/mobile-audit/lista-presenca-public-390x844.png",
+      "status": 200,
+      "finalPath": "/lista-presenca/public/audit-placeholder",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 0,
+      "smallTargets": [],
+      "ok": true,
+      "bytes": 99758
+    },
+    {
+      "slug": "academy-validate",
+      "path": "/academy/certificates/validate/audit-placeholder",
+      "public": true,
+      "viewport": "390x844",
+      "file": "docs/mobile-audit/academy-validate-390x844.png",
+      "status": 200,
+      "finalPath": "/academy/certificates/validate/audit-placeholder",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 2,
+      "smallTargets": [
+        {
+          "tag": "button",
+          "text": "Continue",
+          "w": 111,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "text": "Ir para o início",
+          "w": 128,
+          "h": 38
+        }
+      ],
+      "ok": true,
+      "bytes": 46226
+    },
+    {
+      "slug": "assinatura-token",
+      "path": "/assinatura/audit-placeholder",
+      "public": true,
+      "viewport": "390x844",
+      "file": "docs/mobile-audit/assinatura-token-390x844.png",
+      "status": 200,
+      "finalPath": "/assinatura/audit-placeholder",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 0,
+      "smallTargets": [],
+      "ok": true,
+      "bytes": 30294
+    },
+    {
+      "slug": "dashboard",
+      "path": "/dashboard",
+      "public": false,
+      "viewport": "390x844",
+      "file": "docs/mobile-audit/dashboard-390x844.png",
+      "status": 200,
+      "finalPath": "/dashboard",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 1,
+      "smallTargets": [
+        {
+          "tag": "button",
+          "text": "Continue",
+          "w": 116,
+          "h": 40
+        }
+      ],
+      "ok": true,
+      "bytes": 22784
+    },
+    {
+      "slug": "chat",
+      "path": "/chat",
+      "public": false,
+      "viewport": "390x844",
+      "file": "docs/mobile-audit/chat-390x844.png",
+      "status": 200,
+      "finalPath": "/chat",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 5,
+      "smallTargets": [
+        {
+          "tag": "button",
+          "text": "",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "text": "Online",
+          "w": 112,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 28,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 28,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "w": 28,
+          "h": 28
+        }
+      ],
+      "ok": true,
+      "bytes": 16838
+    },
+    {
+      "slug": "admin",
+      "path": "/admin",
+      "public": false,
+      "viewport": "390x844",
+      "file": "docs/mobile-audit/admin-390x844.png",
+      "status": 200,
+      "finalPath": "/admin",
+      "title": "Portal ABZ",
+      "overflowX": false,
+      "overflowPx": 0,
+      "smallTargetCount": 1,
+      "smallTargets": [
+        {
+          "tag": "button",
+          "text": "Continue",
+          "w": 105,
+          "h": 36
+        }
+      ],
+      "ok": true,
+      "bytes": 16484
+    }
+  ]
+}
