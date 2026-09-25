@@ -131,7 +131,7 @@ function GestaoTripulantesContent() {
     if (tabParam === 'schedule') return 'schedule';
     return 'matrix';
   });
-  const [scheduleMounted, setScheduleMounted] = useState(false);
+  const [scheduleMounted, setScheduleMounted] = useState(() => searchParams?.get('tab') === 'schedule');
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [colaboradores, setColaboradores] = useState<Collaborator[]>([]);
   const [loading, setLoading] = useState(true);
@@ -160,6 +160,10 @@ function GestaoTripulantesContent() {
     if (tab === 'aso-logistica') setActiveTab('aso-logistica');
     else if (tab === 'matriz-config') setActiveTab('matriz-config');
     else if (tab === 'historico') setActiveTab('historico');
+    else if (tab === 'schedule') {
+      setActiveTab('schedule');
+      setScheduleMounted(true);
+    }
   }, [searchParams]);
 
   const setKpiInUrl = useCallback((kpi: GtDashboardKpi | '') => {

@@ -567,6 +567,123 @@ async function diffPng(aPath, bPath, heatPath) {
   return { px, maxChannel };
 }
 
+if (process.env.MODE === 'fase2-round') {
+  const headUrl = process.env.HEAD_URL || process.env.AFTER_URL || 'http://127.0.0.1:3041';
+  const IPHONE =
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
+  const DESKTOP_UA =
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+  const report = { base: headUrl, http: {}, confirm: {}, schedule: {}, ok: true, fails: [] };
+  const fail = (m) => {
+    report.ok = false;
+    report.fails.push(m);
+  };
+
+  async function httpCheck(path, { ua, cookie } = {}) {
+    const res = await fetch(`${headUrl}${path}`, {
+      headers: { 'User-Agent': ua || DESKTOP_UA, ...(cookie ? { Cookie: cookie } : {}) },
+      redirect: 'manual',
+    });
+    return {
+      status: res.status,
+      location: res.headers.get('location'),
+      setCookie: res.headers.get('set-cookie'),
+      xAbzUi: res.headers.get('x-abz-ui'),
+    };
+  }
+
+  report.http.mLogin = await httpCheck('/m/login', { ua: IPHONE });
+  if (report.http.mLogin.status === 308) fail('/m/login 308');
+  if (report.http.mLogin.status !== 200) fail(`/m/login ${report.http.mLogin.status}`);
+
+  report.http.mLoginDesktop = await httpCheck('/m/login', { ua: DESKTOP_UA });
+  if (report.http.mLoginDesktop.status === 308) fail('/m/login desktop 308');
+
+  report.http.loginPhone = await httpCheck('/login', { ua: IPHONE });
+  report.http.loginQueryDesktop = await httpCheck('/login?ui=desktop', { ua: IPHONE });
+  const qd = report.http.loginQueryDesktop;
+  if (qd.status === 308) fail('?ui=desktop 308');
+  if (qd.xAbzUi === 'mobile') fail('?ui=desktop still x-abz-ui=mobile');
+  if (!qd.setCookie || !/ui=desktop/.test(qd.setCookie)) fail('?ui=desktop did not set cookie');
+  if (qd.status !== 200) fail(`?ui=desktop ${qd.status}`);
+
+  report.http.loginCookieDesktop = await httpCheck('/login', { ua: IPHONE, cookie: 'ui=desktop' });
+  if (report.http.loginCookieDesktop.xAbzUi === 'mobile') fail('cookie ui=desktop still mobile');
+
+  const browser = await chromium.launch({ headless: true });
+
+  async function measureConfirm(viewport, isMobile) {
+    const ctx = await browser.newContext({
+      viewport,
+      locale: 'pt-BR',
+      isMobile,
+      hasTouch: isMobile,
+      userAgent: isMobile ? IPHONE : DESKTOP_UA,
+    });
+    const page = await ctx.newPage();
+    await attachMocks(page, { showLanguage: false, authed: true });
+    await page.goto(`${headUrl}/admin/setores`, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await settle(page);
+    await openConfirm(page);
+    const info = await page.evaluate(() => {
+      const close = document.querySelector('[data-modal-close]');
+      const panel = document.querySelector('[data-modal-panel]');
+      const cs = close ? getComputedStyle(close) : null;
+      const r = close?.getBoundingClientRect();
+      return {
+        hasPanel: !!panel,
+        hasClose: !!close,
+        display: cs?.display || null,
+        w: r ? Number(r.width.toFixed(1)) : 0,
+        h: r ? Number(r.height.toFixed(1)) : 0,
+      };
+    });
+    await ctx.close();
+    return info;
+  }
+
+  report.confirm.v390 = await measureConfirm({ width: 390, height: 844 }, true);
+  report.confirm.v375 = await measureConfirm({ width: 375, height: 812 }, true);
+  report.confirm.v1280 = await measureConfirm({ width: 1280, height: 800 }, false);
+
+  for (const key of ['v390', 'v375']) {
+    const c = report.confirm[key];
+    if (!c.hasPanel) fail(`confirm ${key} panel missing`);
+    if (!c.hasClose) fail(`confirm ${key} X missing`);
+    if (c.w < 44 || c.h < 44) fail(`confirm ${key} X ${c.w}x${c.h} < 44`);
+  }
+  if (report.confirm.v1280.hasClose) {
+    fail(`confirm desktop X present (${report.confirm.v1280.display} ${report.confirm.v1280.w}x${report.confirm.v1280.h})`);
+  }
+
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, locale: 'pt-BR' });
+    const page = await ctx.newPage();
+    await attachMocks(page, { showLanguage: false, authed: true });
+    await page.goto(`${headUrl}/department/gestao-tripulantes?tab=schedule`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 60_000,
+    });
+    await settle(page);
+    await page.locator('[data-testid="man-schedule-scroll"]').waitFor({ timeout: 12_000 }).catch(() => {});
+    report.schedule = await page.evaluate(() => ({
+      href: location.href,
+      hasScheduleDom: !!document.querySelector('[data-testid="man-schedule-scroll"]'),
+      hasCol: !!document.querySelector('[data-man-schedule-col]'),
+      error: /Erro na Aplicação/.test(document.body?.innerText || ''),
+    }));
+    if (!report.schedule.hasScheduleDom) fail('?tab=schedule did not mount schedule');
+    await ctx.close();
+  }
+
+  await browser.close();
+  mkdirSync(DOCS, { recursive: true });
+  writeFileSync(join(DOCS, 'fase2-round-verify.json'), JSON.stringify(report, null, 2));
+  console.log(JSON.stringify(report, null, 2));
+  if (!report.ok) process.exitCode = 1;
+  process.exit();
+}
+
 if (process.env.MODE === 'swipe-esc') {
   const headUrl = process.env.HEAD_URL || 'http://127.0.0.1:3021';
   const browser = await chromium.launch({ headless: true });

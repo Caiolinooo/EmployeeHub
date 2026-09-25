@@ -1,0 +1,8810 @@
+{
+  "summary": {
+    "pair": "portal-vs-head",
+    "viewports": [
+      {
+        "width": 1024,
+        "height": 768
+      },
+      {
+        "width": 1280,
+        "height": 800
+      },
+      {
+        "width": 1440,
+        "height": 900
+      }
+    ],
+    "pages": {
+      "1024x768": {
+        "dashboard": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/dashboard",
+          "href_head": "http://127.0.0.1:3051/dashboard",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 688,
+          "maxChannel": 16
+        },
+        "gt-lista": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/department/gestao-tripulantes",
+          "href_head": "http://127.0.0.1:3051/department/gestao-tripulantes",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 713,
+          "maxChannel": 15
+        },
+        "gt-escala": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/department/gestao-tripulantes",
+          "href_head": "http://127.0.0.1:3051/department/gestao-tripulantes",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 688,
+          "maxChannel": 14
+        },
+        "ferias": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/ferias",
+          "href_head": "http://127.0.0.1:3051/ferias",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 688,
+          "maxChannel": 15
+        },
+        "reembolso": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/reembolso",
+          "href_head": "http://127.0.0.1:3051/reembolso",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 684,
+          "maxChannel": 13
+        },
+        "contracheque": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/contracheque",
+          "href_head": "http://127.0.0.1:3051/contracheque",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 688,
+          "maxChannel": 16
+        },
+        "ficha": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/department/gestao-tripulantes",
+          "href_head": "http://127.0.0.1:3051/department/gestao-tripulantes",
+          "boxes_equal": false,
+          "boxes_diff": [
+            "modalClose"
+          ],
+          "px": 688,
+          "maxChannel": 16
+        },
+        "confirm": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/admin/setores",
+          "href_head": "http://127.0.0.1:3051/admin/setores",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 0,
+          "maxChannel": 0
+        },
+        "login": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/login",
+          "href_head": "http://127.0.0.1:3051/login",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 38,
+          "maxChannel": 37
+        },
+        "language": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/dashboard",
+          "href_head": "http://127.0.0.1:3051/dashboard",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 483,
+          "maxChannel": 8
+        }
+      },
+      "1280x800": {
+        "dashboard": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/dashboard",
+          "href_head": "http://127.0.0.1:3051/dashboard",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 688,
+          "maxChannel": 16
+        },
+        "gt-lista": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/department/gestao-tripulantes",
+          "href_head": "http://127.0.0.1:3051/department/gestao-tripulantes",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 715,
+          "maxChannel": 15
+        },
+        "gt-escala": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/department/gestao-tripulantes",
+          "href_head": "http://127.0.0.1:3051/department/gestao-tripulantes",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 688,
+          "maxChannel": 14
+        },
+        "ferias": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/ferias",
+          "href_head": "http://127.0.0.1:3051/ferias",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 693,
+          "maxChannel": 30
+        },
+        "reembolso": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/reembolso",
+          "href_head": "http://127.0.0.1:3051/reembolso",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 684,
+          "maxChannel": 6
+        },
+        "contracheque": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/contracheque",
+          "href_head": "http://127.0.0.1:3051/contracheque",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 688,
+          "maxChannel": 16
+        },
+        "ficha": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/department/gestao-tripulantes",
+          "href_head": "http://127.0.0.1:3051/department/gestao-tripulantes",
+          "boxes_equal": false,
+          "boxes_diff": [
+            "modalClose"
+          ],
+          "px": 687,
+          "maxChannel": 14
+        },
+        "confirm": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/admin/setores",
+          "href_head": "http://127.0.0.1:3051/admin/setores",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 7,
+          "maxChannel": 1
+        },
+        "login": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/login",
+          "href_head": "http://127.0.0.1:3051/login",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 0,
+          "maxChannel": 0
+        },
+        "language": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/dashboard",
+          "href_head": "http://127.0.0.1:3051/dashboard",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 525,
+          "maxChannel": 8
+        }
+      },
+      "1440x900": {
+        "dashboard": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/dashboard",
+          "href_head": "http://127.0.0.1:3051/dashboard",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 688,
+          "maxChannel": 16
+        },
+        "gt-lista": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/department/gestao-tripulantes",
+          "href_head": "http://127.0.0.1:3051/department/gestao-tripulantes",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 864,
+          "maxChannel": 15
+        },
+        "gt-escala": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/department/gestao-tripulantes",
+          "href_head": "http://127.0.0.1:3051/department/gestao-tripulantes",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 688,
+          "maxChannel": 14
+        },
+        "ferias": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/ferias",
+          "href_head": "http://127.0.0.1:3051/ferias",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 1667,
+          "maxChannel": 100
+        },
+        "reembolso": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/reembolso",
+          "href_head": "http://127.0.0.1:3051/reembolso",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 1653,
+          "maxChannel": 30
+        },
+        "contracheque": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/contracheque",
+          "href_head": "http://127.0.0.1:3051/contracheque",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 688,
+          "maxChannel": 16
+        },
+        "ficha": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/department/gestao-tripulantes",
+          "href_head": "http://127.0.0.1:3051/department/gestao-tripulantes",
+          "boxes_equal": false,
+          "boxes_diff": [
+            "modalClose"
+          ],
+          "px": 688,
+          "maxChannel": 7
+        },
+        "confirm": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/admin/setores",
+          "href_head": "http://127.0.0.1:3051/admin/setores",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 7,
+          "maxChannel": 1
+        },
+        "login": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/login",
+          "href_head": "http://127.0.0.1:3051/login",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 0,
+          "maxChannel": 0
+        },
+        "language": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/dashboard",
+          "href_head": "http://127.0.0.1:3051/dashboard",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 525,
+          "maxChannel": 8
+        }
+      }
+    }
+  },
+  "table": [
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 944,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 944,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 768
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 768
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 944,
+        "h": 704
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 944,
+        "h": 704
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "shell",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "tabnav",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "table",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "bbox_head": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 944,
+        "y": 688,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 944,
+        "y": 688,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1024x768",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 944,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 944,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 768
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 768
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 944,
+        "h": 704
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 944,
+        "h": 704
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "shell",
+      "bbox_base": {
+        "x": 112,
+        "y": 88,
+        "w": 880,
+        "h": 656
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 88,
+        "w": 880,
+        "h": 656
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "tabnav",
+      "bbox_base": {
+        "x": 112,
+        "y": 154,
+        "w": 889,
+        "h": 36
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 154,
+        "w": 889,
+        "h": 36
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "kpi",
+      "bbox_base": {
+        "x": 112,
+        "y": 202,
+        "w": 880,
+        "h": 118.5
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 202,
+        "w": 880,
+        "h": 118.5
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "table",
+      "bbox_base": {
+        "x": 113,
+        "y": 567.5,
+        "w": 1026,
+        "h": 118
+      },
+      "bbox_head": {
+        "x": 113,
+        "y": 567.5,
+        "w": 1026,
+        "h": 118
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 112,
+        "y": 88,
+        "w": 354,
+        "h": 32
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 88,
+        "w": 354,
+        "h": 32
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 944,
+        "y": 688,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 944,
+        "y": 688,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1024x768",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 944,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 944,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 768
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 768
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 944,
+        "h": 704
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 944,
+        "h": 704
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "shell",
+      "bbox_base": {
+        "x": 112,
+        "y": 88,
+        "w": 880,
+        "h": 656
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 88,
+        "w": 880,
+        "h": 656
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "tabnav",
+      "bbox_base": {
+        "x": 112,
+        "y": 154,
+        "w": 889,
+        "h": 36
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 154,
+        "w": 889,
+        "h": 36
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "table",
+      "bbox_base": {
+        "x": -85,
+        "y": 394,
+        "w": 1076,
+        "h": 188
+      },
+      "bbox_head": {
+        "x": -85,
+        "y": 394,
+        "w": 1076,
+        "h": 188
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "schedule",
+      "bbox_base": {
+        "x": 113,
+        "y": 394,
+        "w": 878,
+        "h": 360
+      },
+      "bbox_head": {
+        "x": 113,
+        "y": 394,
+        "w": 878,
+        "h": 360
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "toolbar",
+      "bbox_base": {
+        "x": 125,
+        "y": 211,
+        "w": 854,
+        "h": 160
+      },
+      "bbox_head": {
+        "x": 125,
+        "y": 211,
+        "w": 854,
+        "h": 160
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "dateStart",
+      "bbox_base": {
+        "x": 310,
+        "y": 275,
+        "w": 120,
+        "h": 16
+      },
+      "bbox_head": {
+        "x": 310,
+        "y": 275,
+        "w": 120,
+        "h": 16
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "dateEnd",
+      "bbox_base": {
+        "x": 440,
+        "y": 275,
+        "w": 120,
+        "h": 16
+      },
+      "bbox_head": {
+        "x": 440,
+        "y": 275,
+        "w": 120,
+        "h": 16
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 112,
+        "y": 88,
+        "w": 354,
+        "h": 32
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 88,
+        "w": 354,
+        "h": 32
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 944,
+        "y": 688,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 944,
+        "y": 688,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1024x768",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 944,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 944,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 768
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 768
+      },
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 944,
+        "h": 704
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 944,
+        "h": 704
+      },
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "shell",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "tabnav",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "table",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 174,
+        "y": 88,
+        "w": 287,
+        "h": 32
+      },
+      "bbox_head": {
+        "x": 174,
+        "y": 88,
+        "w": 287,
+        "h": 32
+      },
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 944,
+        "y": 688,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 944,
+        "y": 688,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1024x768",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 944,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 944,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 768
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 768
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 944,
+        "h": 704
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 944,
+        "h": 704
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "shell",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "tabnav",
+      "bbox_base": {
+        "x": 112,
+        "y": 144,
+        "w": 880,
+        "h": 54
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 144,
+        "w": 880,
+        "h": 54
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "table",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "loginCard",
+      "bbox_base": {
+        "x": 168,
+        "y": 412,
+        "w": 768,
+        "h": 1663
+      },
+      "bbox_head": {
+        "x": 168,
+        "y": 412,
+        "w": 768,
+        "h": 1663
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 144,
+        "y": 88,
+        "w": 133,
+        "h": 32
+      },
+      "bbox_head": {
+        "x": 144,
+        "y": 88,
+        "w": 133,
+        "h": 32
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 944,
+        "y": 688,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 944,
+        "y": 688,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1024x768",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 944,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 944,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 768
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 768
+      },
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 944,
+        "h": 704
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 944,
+        "h": 704
+      },
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "shell",
+      "bbox_base": {
+        "x": 112,
+        "y": 88,
+        "w": 880,
+        "h": 656
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 88,
+        "w": 880,
+        "h": 656
+      },
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "tabnav",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "table",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 169,
+        "y": 105,
+        "w": 290,
+        "h": 28
+      },
+      "bbox_head": {
+        "x": 169,
+        "y": 105,
+        "w": 290,
+        "h": 28
+      },
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 944,
+        "y": 688,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 944,
+        "y": 688,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1024x768",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 944,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 944,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 768
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 768
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 944,
+        "h": 704
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 944,
+        "h": 704
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "shell",
+      "bbox_base": {
+        "x": 112,
+        "y": 88,
+        "w": 880,
+        "h": 656
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 88,
+        "w": 880,
+        "h": 656
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "tabnav",
+      "bbox_base": {
+        "x": 112,
+        "y": 154,
+        "w": 889,
+        "h": 36
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 154,
+        "w": 889,
+        "h": 36
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "tablist",
+      "bbox_base": {
+        "x": 16,
+        "y": 104,
+        "w": 992,
+        "h": 38
+      },
+      "bbox_head": {
+        "x": 16,
+        "y": 104,
+        "w": 992,
+        "h": 38
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "kpi",
+      "bbox_base": {
+        "x": 112,
+        "y": 202,
+        "w": 880,
+        "h": 118.5
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 202,
+        "w": 880,
+        "h": 118.5
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "table",
+      "bbox_base": {
+        "x": 113,
+        "y": 567.5,
+        "w": 1026,
+        "h": 118
+      },
+      "bbox_head": {
+        "x": 113,
+        "y": 567.5,
+        "w": 1026,
+        "h": 118
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "fichaTablist",
+      "bbox_base": {
+        "x": 16,
+        "y": 104,
+        "w": 992,
+        "h": 38
+      },
+      "bbox_head": {
+        "x": 16,
+        "y": 104,
+        "w": 992,
+        "h": 38
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "fichaBody",
+      "bbox_base": {
+        "x": 16,
+        "y": 143,
+        "w": 992,
+        "h": 609
+      },
+      "bbox_head": {
+        "x": 16,
+        "y": 143,
+        "w": 992,
+        "h": 609
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "fichaPanel",
+      "bbox_base": {
+        "x": 16,
+        "y": 16,
+        "w": 992,
+        "h": 736
+      },
+      "bbox_head": {
+        "x": 16,
+        "y": 16,
+        "w": 992,
+        "h": 736
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "modalPanel",
+      "bbox_base": {
+        "x": 16,
+        "y": 16,
+        "w": 992,
+        "h": 736
+      },
+      "bbox_head": {
+        "x": 16,
+        "y": 16,
+        "w": 992,
+        "h": 736
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": {
+        "x": 952,
+        "y": 44,
+        "w": 32,
+        "h": 32
+      },
+      "equal": false
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 112,
+        "y": 88,
+        "w": 354,
+        "h": 32
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 88,
+        "w": 354,
+        "h": 32
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 944,
+        "y": 688,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 944,
+        "y": 688,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1024x768",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "header",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 64,
+        "h": 768
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 64,
+        "h": 768
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "main",
+      "bbox_base": {
+        "x": 64,
+        "y": 0,
+        "w": 960,
+        "h": 715
+      },
+      "bbox_head": {
+        "x": 64,
+        "y": 0,
+        "w": 960,
+        "h": 715
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "shell",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "tabnav",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "table",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "modalPanel",
+      "bbox_base": {
+        "x": 288,
+        "y": 272,
+        "w": 448,
+        "h": 224
+      },
+      "bbox_head": {
+        "x": 288,
+        "y": 272,
+        "w": 448,
+        "h": 224
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "confirmTitle",
+      "bbox_base": {
+        "x": 313,
+        "y": 297,
+        "w": 398,
+        "h": 28
+      },
+      "bbox_head": {
+        "x": 313,
+        "y": 297,
+        "w": 398,
+        "h": 28
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "confirmCancel",
+      "bbox_base": {
+        "x": 514,
+        "y": 429,
+        "w": 101,
+        "h": 42
+      },
+      "bbox_head": {
+        "x": 514,
+        "y": 429,
+        "w": 101,
+        "h": 42
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "confirmOk",
+      "bbox_base": {
+        "x": 627,
+        "y": 429,
+        "w": 84,
+        "h": 42
+      },
+      "bbox_head": {
+        "x": 627,
+        "y": 429,
+        "w": 84,
+        "h": 42
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 136,
+        "y": 72,
+        "w": 431,
+        "h": 32
+      },
+      "bbox_head": {
+        "x": 136,
+        "y": 72,
+        "w": 431,
+        "h": 32
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "fabHelp",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1024x768",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "header",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "sidebar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "main",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "shell",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "tabnav",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "table",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "loginCard",
+      "bbox_base": {
+        "x": 328,
+        "y": 212,
+        "w": 368,
+        "h": 360
+      },
+      "bbox_head": {
+        "x": 328,
+        "y": 212,
+        "w": 368,
+        "h": 360
+      },
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "loginTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "fabHelp",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1024x768",
+      "element": "fabCompanion",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 944,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 944,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 768
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 768
+      },
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 944,
+        "h": 704
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 944,
+        "h": 704
+      },
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "shell",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "tabnav",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "table",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "modalPanel",
+      "bbox_base": {
+        "x": 288,
+        "y": 180,
+        "w": 448,
+        "h": 408
+      },
+      "bbox_head": {
+        "x": 288,
+        "y": 180,
+        "w": 448,
+        "h": 408
+      },
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "languagePanel",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 768
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 768
+      },
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "bbox_head": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 944,
+        "y": 688,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 944,
+        "y": 688,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1024x768",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 864,
+        "y": 680,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "shell",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "tabnav",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "table",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "bbox_head": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "shell",
+      "bbox_base": {
+        "x": 112,
+        "y": 88,
+        "w": 1136,
+        "h": 688
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 88,
+        "w": 1136,
+        "h": 688
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "tabnav",
+      "bbox_base": {
+        "x": 112,
+        "y": 154,
+        "w": 1136,
+        "h": 36
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 154,
+        "w": 1136,
+        "h": 36
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "kpi",
+      "bbox_base": {
+        "x": 112,
+        "y": 202,
+        "w": 1136,
+        "h": 118.5
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 202,
+        "w": 1136,
+        "h": 118.5
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "table",
+      "bbox_base": {
+        "x": 113,
+        "y": 517.5,
+        "w": 1134,
+        "h": 102
+      },
+      "bbox_head": {
+        "x": 113,
+        "y": 517.5,
+        "w": 1134,
+        "h": 102
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 112,
+        "y": 88,
+        "w": 354,
+        "h": 32
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 88,
+        "w": 354,
+        "h": 32
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1280x800",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "shell",
+      "bbox_base": {
+        "x": 112,
+        "y": 88,
+        "w": 1136,
+        "h": 688
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 88,
+        "w": 1136,
+        "h": 688
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "tabnav",
+      "bbox_base": {
+        "x": 112,
+        "y": 154,
+        "w": 1136,
+        "h": 36
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 154,
+        "w": 1136,
+        "h": 36
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "table",
+      "bbox_base": {
+        "x": 113,
+        "y": 350,
+        "w": 1134,
+        "h": 188
+      },
+      "bbox_head": {
+        "x": 113,
+        "y": 350,
+        "w": 1134,
+        "h": 188
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "schedule",
+      "bbox_base": {
+        "x": 113,
+        "y": 350,
+        "w": 1134,
+        "h": 390
+      },
+      "bbox_head": {
+        "x": 113,
+        "y": 350,
+        "w": 1134,
+        "h": 390
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "toolbar",
+      "bbox_base": {
+        "x": 125,
+        "y": 211,
+        "w": 1110,
+        "h": 116
+      },
+      "bbox_head": {
+        "x": 125,
+        "y": 211,
+        "w": 1110,
+        "h": 116
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "dateStart",
+      "bbox_base": {
+        "x": 1060,
+        "y": 213,
+        "w": 120,
+        "h": 16
+      },
+      "bbox_head": {
+        "x": 1060,
+        "y": 213,
+        "w": 120,
+        "h": 16
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "dateEnd",
+      "bbox_base": {
+        "x": 125,
+        "y": 275,
+        "w": 120,
+        "h": 16
+      },
+      "bbox_head": {
+        "x": 125,
+        "y": 275,
+        "w": 120,
+        "h": 16
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 112,
+        "y": 88,
+        "w": 354,
+        "h": 32
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 88,
+        "w": 354,
+        "h": 32
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1280x800",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "shell",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "tabnav",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "table",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 230,
+        "y": 88,
+        "w": 287,
+        "h": 32
+      },
+      "bbox_head": {
+        "x": 230,
+        "y": 88,
+        "w": 287,
+        "h": 32
+      },
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1280x800",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "shell",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "tabnav",
+      "bbox_base": {
+        "x": 112,
+        "y": 144,
+        "w": 1136,
+        "h": 54
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 144,
+        "w": 1136,
+        "h": 54
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "table",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "loginCard",
+      "bbox_base": {
+        "x": 168,
+        "y": 412,
+        "w": 1024,
+        "h": 1663
+      },
+      "bbox_head": {
+        "x": 168,
+        "y": 412,
+        "w": 1024,
+        "h": 1663
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 144,
+        "y": 88,
+        "w": 133,
+        "h": 32
+      },
+      "bbox_head": {
+        "x": 144,
+        "y": 88,
+        "w": 133,
+        "h": 32
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1280x800",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "shell",
+      "bbox_base": {
+        "x": 112,
+        "y": 88,
+        "w": 1136,
+        "h": 688
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 88,
+        "w": 1136,
+        "h": 688
+      },
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "tabnav",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "table",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 169,
+        "y": 105,
+        "w": 290,
+        "h": 28
+      },
+      "bbox_head": {
+        "x": 169,
+        "y": 105,
+        "w": 290,
+        "h": 28
+      },
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1280x800",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "shell",
+      "bbox_base": {
+        "x": 112,
+        "y": 88,
+        "w": 1136,
+        "h": 688
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 88,
+        "w": 1136,
+        "h": 688
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "tabnav",
+      "bbox_base": {
+        "x": 112,
+        "y": 154,
+        "w": 1136,
+        "h": 36
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 154,
+        "w": 1136,
+        "h": 36
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "tablist",
+      "bbox_base": {
+        "x": 64,
+        "y": 104,
+        "w": 1152,
+        "h": 38
+      },
+      "bbox_head": {
+        "x": 64,
+        "y": 104,
+        "w": 1152,
+        "h": 38
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "kpi",
+      "bbox_base": {
+        "x": 112,
+        "y": 202,
+        "w": 1136,
+        "h": 118.5
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 202,
+        "w": 1136,
+        "h": 118.5
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "table",
+      "bbox_base": {
+        "x": 113,
+        "y": 517.5,
+        "w": 1134,
+        "h": 102
+      },
+      "bbox_head": {
+        "x": 113,
+        "y": 517.5,
+        "w": 1134,
+        "h": 102
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "fichaTablist",
+      "bbox_base": {
+        "x": 64,
+        "y": 104,
+        "w": 1152,
+        "h": 38
+      },
+      "bbox_head": {
+        "x": 64,
+        "y": 104,
+        "w": 1152,
+        "h": 38
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "fichaBody",
+      "bbox_base": {
+        "x": 64,
+        "y": 143,
+        "w": 1152,
+        "h": 641
+      },
+      "bbox_head": {
+        "x": 64,
+        "y": 143,
+        "w": 1152,
+        "h": 641
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "fichaPanel",
+      "bbox_base": {
+        "x": 64,
+        "y": 16,
+        "w": 1152,
+        "h": 768
+      },
+      "bbox_head": {
+        "x": 64,
+        "y": 16,
+        "w": 1152,
+        "h": 768
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "modalPanel",
+      "bbox_base": {
+        "x": 64,
+        "y": 16,
+        "w": 1152,
+        "h": 768
+      },
+      "bbox_head": {
+        "x": 64,
+        "y": 16,
+        "w": 1152,
+        "h": 768
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": {
+        "x": 1160,
+        "y": 44,
+        "w": 32,
+        "h": 32
+      },
+      "equal": false
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 112,
+        "y": 88,
+        "w": 354,
+        "h": 32
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 88,
+        "w": 354,
+        "h": 32
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1280x800",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "header",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 64,
+        "h": 800
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 64,
+        "h": 800
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "main",
+      "bbox_base": {
+        "x": 64,
+        "y": 0,
+        "w": 1216,
+        "h": 747
+      },
+      "bbox_head": {
+        "x": 64,
+        "y": 0,
+        "w": 1216,
+        "h": 747
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "shell",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "tabnav",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "table",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "modalPanel",
+      "bbox_base": {
+        "x": 416,
+        "y": 288,
+        "w": 448,
+        "h": 224
+      },
+      "bbox_head": {
+        "x": 416,
+        "y": 288,
+        "w": 448,
+        "h": 224
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "confirmTitle",
+      "bbox_base": {
+        "x": 441,
+        "y": 313,
+        "w": 398,
+        "h": 28
+      },
+      "bbox_head": {
+        "x": 441,
+        "y": 313,
+        "w": 398,
+        "h": 28
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "confirmCancel",
+      "bbox_base": {
+        "x": 642,
+        "y": 445,
+        "w": 101,
+        "h": 42
+      },
+      "bbox_head": {
+        "x": 642,
+        "y": 445,
+        "w": 101,
+        "h": 42
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "confirmOk",
+      "bbox_base": {
+        "x": 755,
+        "y": 445,
+        "w": 84,
+        "h": 42
+      },
+      "bbox_head": {
+        "x": 755,
+        "y": 445,
+        "w": 84,
+        "h": 42
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 136,
+        "y": 72,
+        "w": 431,
+        "h": 32
+      },
+      "bbox_head": {
+        "x": 136,
+        "y": 72,
+        "w": 431,
+        "h": 32
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "fabHelp",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1280x800",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "header",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "sidebar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "main",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "shell",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "tabnav",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "table",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "loginCard",
+      "bbox_base": {
+        "x": 456,
+        "y": 212,
+        "w": 368,
+        "h": 360
+      },
+      "bbox_head": {
+        "x": 456,
+        "y": 212,
+        "w": 368,
+        "h": 360
+      },
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "loginTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "fabHelp",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "fabCompanion",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "shell",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "tabnav",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "table",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "modalPanel",
+      "bbox_base": {
+        "x": 416,
+        "y": 196,
+        "w": 448,
+        "h": 408
+      },
+      "bbox_head": {
+        "x": 416,
+        "y": 196,
+        "w": 448,
+        "h": 408
+      },
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "languagePanel",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 1280,
+        "h": 800
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 1280,
+        "h": 800
+      },
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "bbox_head": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1280x800",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "shell",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "tabnav",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "table",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "bbox_head": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "shell",
+      "bbox_base": {
+        "x": 112,
+        "y": 88,
+        "w": 1296,
+        "h": 788
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 88,
+        "w": 1296,
+        "h": 788
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "tabnav",
+      "bbox_base": {
+        "x": 112,
+        "y": 154,
+        "w": 1296,
+        "h": 36
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 154,
+        "w": 1296,
+        "h": 36
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "kpi",
+      "bbox_base": {
+        "x": 112,
+        "y": 202,
+        "w": 1296,
+        "h": 118.5
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 202,
+        "w": 1296,
+        "h": 118.5
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "table",
+      "bbox_base": {
+        "x": 113,
+        "y": 517.5,
+        "w": 1294,
+        "h": 102
+      },
+      "bbox_head": {
+        "x": 113,
+        "y": 517.5,
+        "w": 1294,
+        "h": 102
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 112,
+        "y": 88,
+        "w": 354,
+        "h": 32
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 88,
+        "w": 354,
+        "h": 32
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-lista",
+      "viewport": "1440x900",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "shell",
+      "bbox_base": {
+        "x": 112,
+        "y": 88,
+        "w": 1296,
+        "h": 788
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 88,
+        "w": 1296,
+        "h": 788
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "tabnav",
+      "bbox_base": {
+        "x": 112,
+        "y": 154,
+        "w": 1296,
+        "h": 36
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 154,
+        "w": 1296,
+        "h": 36
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "table",
+      "bbox_base": {
+        "x": 113,
+        "y": 332,
+        "w": 1294,
+        "h": 188
+      },
+      "bbox_head": {
+        "x": 113,
+        "y": 332,
+        "w": 1294,
+        "h": 188
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "schedule",
+      "bbox_base": {
+        "x": 113,
+        "y": 332,
+        "w": 1294,
+        "h": 508
+      },
+      "bbox_head": {
+        "x": 113,
+        "y": 332,
+        "w": 1294,
+        "h": 508
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "toolbar",
+      "bbox_base": {
+        "x": 125,
+        "y": 211,
+        "w": 1270,
+        "h": 98
+      },
+      "bbox_head": {
+        "x": 125,
+        "y": 211,
+        "w": 1270,
+        "h": 98
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "dateStart",
+      "bbox_base": {
+        "x": 1060,
+        "y": 213,
+        "w": 120,
+        "h": 16
+      },
+      "bbox_head": {
+        "x": 1060,
+        "y": 213,
+        "w": 120,
+        "h": 16
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "dateEnd",
+      "bbox_base": {
+        "x": 1190,
+        "y": 213,
+        "w": 120,
+        "h": 16
+      },
+      "bbox_head": {
+        "x": 1190,
+        "y": 213,
+        "w": 120,
+        "h": 16
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 112,
+        "y": 88,
+        "w": 354,
+        "h": 32
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 88,
+        "w": 354,
+        "h": 32
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "gt-escala",
+      "viewport": "1440x900",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "shell",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "tabnav",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "table",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 310,
+        "y": 88,
+        "w": 287,
+        "h": 32
+      },
+      "bbox_head": {
+        "x": 310,
+        "y": 88,
+        "w": 287,
+        "h": 32
+      },
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "ferias",
+      "viewport": "1440x900",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "shell",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "tabnav",
+      "bbox_base": {
+        "x": 112,
+        "y": 144,
+        "w": 1296,
+        "h": 54
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 144,
+        "w": 1296,
+        "h": 54
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "table",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "loginCard",
+      "bbox_base": {
+        "x": 168,
+        "y": 412,
+        "w": 1184,
+        "h": 1663
+      },
+      "bbox_head": {
+        "x": 168,
+        "y": 412,
+        "w": 1184,
+        "h": 1663
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 144,
+        "y": 88,
+        "w": 133,
+        "h": 32
+      },
+      "bbox_head": {
+        "x": 144,
+        "y": 88,
+        "w": 133,
+        "h": 32
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "reembolso",
+      "viewport": "1440x900",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "shell",
+      "bbox_base": {
+        "x": 112,
+        "y": 88,
+        "w": 1296,
+        "h": 788
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 88,
+        "w": 1296,
+        "h": 788
+      },
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "tabnav",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "table",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 169,
+        "y": 105,
+        "w": 290,
+        "h": 28
+      },
+      "bbox_head": {
+        "x": 169,
+        "y": 105,
+        "w": 290,
+        "h": 28
+      },
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "contracheque",
+      "viewport": "1440x900",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "shell",
+      "bbox_base": {
+        "x": 112,
+        "y": 88,
+        "w": 1296,
+        "h": 788
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 88,
+        "w": 1296,
+        "h": 788
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "tabnav",
+      "bbox_base": {
+        "x": 112,
+        "y": 154,
+        "w": 1296,
+        "h": 36
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 154,
+        "w": 1296,
+        "h": 36
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "tablist",
+      "bbox_base": {
+        "x": 144,
+        "y": 106,
+        "w": 1152,
+        "h": 38
+      },
+      "bbox_head": {
+        "x": 144,
+        "y": 106,
+        "w": 1152,
+        "h": 38
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "kpi",
+      "bbox_base": {
+        "x": 112,
+        "y": 202,
+        "w": 1296,
+        "h": 118.5
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 202,
+        "w": 1296,
+        "h": 118.5
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "table",
+      "bbox_base": {
+        "x": 113,
+        "y": 517.5,
+        "w": 1294,
+        "h": 102
+      },
+      "bbox_head": {
+        "x": 113,
+        "y": 517.5,
+        "w": 1294,
+        "h": 102
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "fichaTablist",
+      "bbox_base": {
+        "x": 144,
+        "y": 106,
+        "w": 1152,
+        "h": 38
+      },
+      "bbox_head": {
+        "x": 144,
+        "y": 106,
+        "w": 1152,
+        "h": 38
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "fichaBody",
+      "bbox_base": {
+        "x": 144,
+        "y": 145,
+        "w": 1152,
+        "h": 737
+      },
+      "bbox_head": {
+        "x": 144,
+        "y": 145,
+        "w": 1152,
+        "h": 737
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "fichaPanel",
+      "bbox_base": {
+        "x": 144,
+        "y": 18,
+        "w": 1152,
+        "h": 864
+      },
+      "bbox_head": {
+        "x": 144,
+        "y": 18,
+        "w": 1152,
+        "h": 864
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "modalPanel",
+      "bbox_base": {
+        "x": 144,
+        "y": 18,
+        "w": 1152,
+        "h": 864
+      },
+      "bbox_head": {
+        "x": 144,
+        "y": 18,
+        "w": 1152,
+        "h": 864
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": {
+        "x": 1240,
+        "y": 46,
+        "w": 32,
+        "h": 32
+      },
+      "equal": false
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 112,
+        "y": 88,
+        "w": 354,
+        "h": 32
+      },
+      "bbox_head": {
+        "x": 112,
+        "y": 88,
+        "w": 354,
+        "h": 32
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "ficha",
+      "viewport": "1440x900",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "header",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 64,
+        "h": 900
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 64,
+        "h": 900
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "main",
+      "bbox_base": {
+        "x": 64,
+        "y": 0,
+        "w": 1376,
+        "h": 847
+      },
+      "bbox_head": {
+        "x": 64,
+        "y": 0,
+        "w": 1376,
+        "h": 847
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "shell",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "tabnav",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "table",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "modalPanel",
+      "bbox_base": {
+        "x": 496,
+        "y": 338,
+        "w": 448,
+        "h": 224
+      },
+      "bbox_head": {
+        "x": 496,
+        "y": 338,
+        "w": 448,
+        "h": 224
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "confirmTitle",
+      "bbox_base": {
+        "x": 521,
+        "y": 363,
+        "w": 398,
+        "h": 28
+      },
+      "bbox_head": {
+        "x": 521,
+        "y": 363,
+        "w": 398,
+        "h": 28
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "confirmCancel",
+      "bbox_base": {
+        "x": 722,
+        "y": 495,
+        "w": 101,
+        "h": 42
+      },
+      "bbox_head": {
+        "x": 722,
+        "y": 495,
+        "w": 101,
+        "h": 42
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "confirmOk",
+      "bbox_base": {
+        "x": 835,
+        "y": 495,
+        "w": 84,
+        "h": 42
+      },
+      "bbox_head": {
+        "x": 835,
+        "y": 495,
+        "w": 84,
+        "h": 42
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 136,
+        "y": 72,
+        "w": 431,
+        "h": 32
+      },
+      "bbox_head": {
+        "x": 136,
+        "y": 72,
+        "w": 431,
+        "h": 32
+      },
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "fabHelp",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "confirm",
+      "viewport": "1440x900",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "header",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "sidebar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "main",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "shell",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "tabnav",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "table",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "languagePanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "loginCard",
+      "bbox_base": {
+        "x": 536,
+        "y": 242,
+        "w": 368,
+        "h": 360
+      },
+      "bbox_head": {
+        "x": 536,
+        "y": 242,
+        "w": 368,
+        "h": 360
+      },
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "loginTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "fabHelp",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "fabCompanion",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "shell",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "tabnav",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "tablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "kpi",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "table",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "schedule",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "toolbar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "dateStart",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "dateEnd",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "fichaTablist",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "fichaBody",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "fichaPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "modalPanel",
+      "bbox_base": {
+        "x": 496,
+        "y": 246,
+        "w": 448,
+        "h": 408
+      },
+      "bbox_head": {
+        "x": 496,
+        "y": 246,
+        "w": 448,
+        "h": 408
+      },
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "confirmTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "confirmCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "confirmOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "languagePanel",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 1440,
+        "h": 900
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 1440,
+        "h": 900
+      },
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "bbox_head": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "language",
+      "viewport": "1440x900",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    }
+  ]
+}
