@@ -10,6 +10,8 @@ const DATABASE_URL = process.env.DATABASE_URL;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PHONE = process.env.ADMIN_PHONE_NUMBER;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_FIRST_NAME = process.env.ADMIN_FIRST_NAME || 'Admin';
+const ADMIN_LAST_NAME = process.env.ADMIN_LAST_NAME || 'User';
 
 const missingEnv = [
   !SUPABASE_URL && 'NEXT_PUBLIC_SUPABASE_URL',
@@ -193,8 +195,8 @@ async function createAdminUser() {
     password: ADMIN_PASSWORD,
     options: {
       data: {
-        first_name: process.env.ADMIN_FIRST_NAME || 'Admin',
-        last_name: process.env.ADMIN_LAST_NAME || 'User',
+        first_name: ADMIN_FIRST_NAME,
+        last_name: ADMIN_LAST_NAME,
         phone_number: ADMIN_PHONE,
         role: 'ADMIN'
       }
@@ -241,8 +243,8 @@ async function createAdminUser() {
       userId,
       ADMIN_EMAIL,
       ADMIN_PHONE,
-      'Caio',
-      'Correia',
+      ADMIN_FIRST_NAME,
+      ADMIN_LAST_NAME,
       'ADMIN',
       'Administrador do Sistema',
       'TI',

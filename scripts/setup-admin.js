@@ -15,6 +15,8 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PHONE = process.env.ADMIN_PHONE_NUMBER;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_FIRST_NAME = process.env.ADMIN_FIRST_NAME || 'Admin';
+const ADMIN_LAST_NAME = process.env.ADMIN_LAST_NAME || 'User';
 const TOKEN_NAME = process.env.NEXT_PUBLIC_TOKEN_NAME || 'token';
 const TOKEN_FILE_NAME = process.env.TOKEN_FILE_NAME || '.token';
 
@@ -104,8 +106,8 @@ async function setupAdmin() {
             id: userId,
             email: ADMIN_EMAIL,
             phone_number: ADMIN_PHONE,
-            first_name: 'Caio',
-            last_name: 'Correia',
+            first_name: ADMIN_FIRST_NAME,
+            last_name: ADMIN_LAST_NAME,
             role: 'ADMIN',
             active: true,
             created_at: new Date().toISOString(),
@@ -126,8 +128,8 @@ async function setupAdmin() {
               .from('users')
               .update({
                 phone_number: ADMIN_PHONE,
-                first_name: 'Caio',
-                last_name: 'Correia',
+                first_name: ADMIN_FIRST_NAME,
+                last_name: ADMIN_LAST_NAME,
                 role: 'ADMIN',
                 active: true,
                 updated_at: new Date().toISOString(),
@@ -155,8 +157,8 @@ async function setupAdmin() {
           .from('users')
           .update({
             phone_number: ADMIN_PHONE,
-            first_name: 'Caio',
-            last_name: 'Correia',
+            first_name: ADMIN_FIRST_NAME,
+            last_name: ADMIN_LAST_NAME,
             role: 'ADMIN',
             active: true,
             updated_at: new Date().toISOString(),

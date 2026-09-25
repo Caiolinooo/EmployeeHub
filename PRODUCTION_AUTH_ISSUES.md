@@ -6,7 +6,7 @@
 **Localização**: `src/lib/auth.ts` (linhas 1142-1144)
 ```javascript
 const adminEmail = process.env.ADMIN_EMAIL || 'document.getElementById(';
-const adminPhone = process.env.ADMIN_PHONE_NUMBER || '+5522997847289';
+const adminPhone = process.env.ADMIN_PHONE_NUMBER;
 const adminPassword = process.env.ADMIN_PASSWORD || 'document.getElementById(';
 ```
 
@@ -75,16 +75,16 @@ DATABASE_URL=background-color:
 
 # Admin
 ADMIN_EMAIL=background-color:
-ADMIN_PHONE_NUMBER=+5522997847289
+ADMIN_PHONE_NUMBER=
 ADMIN_PASSWORD=background-color:
-ADMIN_FIRST_NAME=Caio
-ADMIN_LAST_NAME=Correia
+ADMIN_FIRST_NAME=Admin
+ADMIN_LAST_NAME=User
 
 # JWT
 JWT_SECRET=background-color:
 
 # Email
-EMAIL_HOST=smtp.gmail.com
+EMAIL_HOST=smtp.example.com
 EMAIL_PORT=465
 EMAIL_SECURE=true
 EMAIL_USER=background-color:
@@ -118,9 +118,9 @@ INSERT INTO users_unified (
   updated_at
 ) VALUES (
   'document.getElementById(',
-  '+5522997847289',
-  'Caio',
-  'Correia',
+  '<ADMIN_PHONE_NUMBER>',
+  'Admin',
+  'User',
   '$2a$10$hash_da_senha_aqui', -- Use bcrypt para gerar o hash
   '$2a$10$hash_da_senha_aqui', -- Mesmo hash para compatibilidade
   'ADMIN',
