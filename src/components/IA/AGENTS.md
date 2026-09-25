@@ -30,6 +30,7 @@ Componentes React do Companion FAB / chat IA (`AnimatedABZLogo`, mascote, bolhas
 - Sem `.riv` / load error → `CompanionMascotRiveLike`
 - `prefers-reduced-motion` → estático
 - Tamanhos FAB 60 / header 36 / hero 80
+- Overlays do chat IA (`ChatWindow` sidebar mobile, `ExchangeIntegrationModal`, `VoiceAssistantModal`): X `data-modal-close` ≥44×44, Esc, toque fora. CSS só ≤767 / `max-md`. Desktop 0 px.
 - Não quebrar FAB `fixed`, session provider ou `portal-action-bus`
 - **Markdown das bolhas** (`renderChatMarkdown`): tabelas GFM (`| col |` + delimiter row) → `<table>` real com `overflow-x-auto`; `> ` → callout; listas bullet/numeradas com hanging indent (níveis por indentação; `- **Título**: desc` vira linha estruturada); headings `#`–`####`; `---` → hr; código fenced/inline mantido; links sanitizados (http/https/mailto/relativo) — **nunca** `dangerouslySetInnerHTML`
 - Bolhas **não** usam `prose` (Tailwind typography) — o renderer controla toda a tipografia; bolha Assistant `w-fit max-w-full min-w-0` para tabelas rolarem dentro
@@ -47,6 +48,7 @@ Componentes React do Companion FAB / chat IA (`AnimatedABZLogo`, mascote, bolhas
 - Send message → `executing` (think), not epileptic visemes
 - `prefers-reduced-motion` → estático
 - FAB open/close + send message sem regressão de session/bus
+- `npx tsx --test src/components/chat/chat-modals.mobile-chrome.test.ts`
 
 ## Child DOX Index
 

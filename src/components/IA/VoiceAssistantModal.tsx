@@ -13,6 +13,8 @@ import {
 } from '@livekit/components-react';
 import { Track, ConnectionState } from 'livekit-client';
 import { X, Mic, MicOff, PhoneOff, Loader2, Wifi, Volume2, ShieldAlert } from 'lucide-react';
+import ModalCloseButton from '@/components/ui/ModalCloseButton';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
 
 // Interface do token retornado pelo nosso backend
 interface LiveKitConnectionDetails {
@@ -138,6 +140,8 @@ export default function VoiceAssistantModal({ isOpen, onClose, authToken }: Prop
     }
   }, [authToken]);
 
+  useEscapeToClose(isOpen, onClose);
+
   if (!isOpen) return null;
 
   return (
@@ -147,13 +151,16 @@ export default function VoiceAssistantModal({ isOpen, onClose, authToken }: Prop
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-2xl p-4 md:p-6"
+        onClick={onClose}
       >
         <motion.div
           initial={{ scale: 0.9, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
           transition={{ type: "spring", damping: 25, stiffness: 250 }}
-          className="relative w-full max-w-lg h-[550px] md:h-[650px] bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+          data-modal-panel=""
+          onClick={(e) => e.stopPropagation()}
+          className="relative w-full max-w-lg h-[550px] max-md:h-auto max-md:max-h-[100dvh] md:h-[650px] bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden"
         >
           {/* Header do Modal */}
           <div className="absolute top-6 left-6 right-6 z-20 flex items-center justify-between text-slate-400">
@@ -164,12 +171,7 @@ export default function VoiceAssistantModal({ isOpen, onClose, authToken }: Prop
               }`} />
               <span className="text-xs font-medium uppercase tracking-widest text-slate-400">ABZ Live Voice</span>
             </div>
-            <button 
-              onClick={onClose}
-              className="p-2 hover:bg-slate-800/50 rounded-full transition-all text-slate-400 hover:text-white"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <ModalCloseButton onClick={onClose} className="text-slate-400 hover:text-white hover:bg-slate-800/50" />
           </div>
 
           {/* Conteúdo Principal */}

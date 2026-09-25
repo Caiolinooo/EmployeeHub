@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { FiX, FiHash, FiVolume2, FiGlobe, FiUsers, FiLock, FiCheckCircle } from 'react-icons/fi';
+import { FiHash, FiVolume2, FiGlobe, FiUsers, FiLock, FiCheckCircle } from 'react-icons/fi';
+import ModalCloseButton from '@/components/ui/ModalCloseButton';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
 
 interface CreateChannelModalProps {
     isOpen: boolean;
@@ -15,6 +17,7 @@ export default function CreateChannelModal({ isOpen, onClose, onCreate, serverId
     const [department, setDepartment] = useState('');
     const [targetRole, setTargetRole] = useState('');
     const [loading, setLoading] = useState(false);
+    useEscapeToClose(isOpen, onClose);
 
     if (!isOpen) return null;
 
@@ -41,19 +44,18 @@ export default function CreateChannelModal({ isOpen, onClose, onCreate, serverId
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="bg-zinc-900 rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-white/10 animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+            <div data-modal-panel="" className="relative bg-zinc-900 rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-white/10 animate-in fade-in zoom-in duration-200">
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-zinc-900/80">
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
                             <FiHash className="w-5 h-5 text-blue-400" />
                         </div>
-                        <h3 className="font-semibold text-lg text-white">Criar Novo Canal</h3>
+                        <h3 className="font-semibold text-lg text-white truncate">Criar Novo Canal</h3>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg transition-colors text-zinc-400 hover:text-white">
-                        <FiX className="w-5 h-5" />
-                    </button>
+                    <ModalCloseButton onClick={onClose} className="text-zinc-400 hover:text-white hover:bg-white/5" />
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-5">

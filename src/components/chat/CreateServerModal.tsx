@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaServer, FaPlus } from 'react-icons/fa';
+import ModalCloseButton from '@/components/ui/ModalCloseButton';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
 
 interface CreateServerModalProps {
     isOpen: boolean;
@@ -11,6 +13,7 @@ interface CreateServerModalProps {
 export default function CreateServerModal({ isOpen, onClose, onCreate }: CreateServerModalProps) {
     const [name, setName] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    useEscapeToClose(isOpen, onClose);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -43,6 +46,7 @@ export default function CreateServerModal({ isOpen, onClose, onCreate }: CreateS
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        data-modal-panel=""
                         className="relative w-full max-w-md overflow-hidden rounded-2xl bg-[#1A1A1A] border border-white/10 shadow-2xl"
                     >
                         <form onSubmit={handleSubmit} className="p-6">
@@ -50,7 +54,8 @@ export default function CreateServerModal({ isOpen, onClose, onCreate }: CreateS
                                 <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
                                     <FaServer className="text-blue-500 text-lg" />
                                 </div>
-                                <h3 className="text-xl font-semibold text-white">Criar Servidor</h3>
+                                <h3 className="text-xl font-semibold text-white flex-1 min-w-0">Criar Servidor</h3>
+                                <ModalCloseButton onClick={onClose} className="text-zinc-400 hover:text-white hover:bg-white/10" />
                             </div>
 
                             <div className="space-y-4">
@@ -73,7 +78,7 @@ export default function CreateServerModal({ isOpen, onClose, onCreate }: CreateS
                                 <button
                                     type="button"
                                     onClick={onClose}
-                                    className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white transition-colors"
+                                    className="px-4 py-2 max-md:min-h-11 rounded-lg bg-white/5 hover:bg-white/10 text-white transition-colors"
                                     disabled={isSubmitting}
                                 >
                                     Cancelar
@@ -81,7 +86,7 @@ export default function CreateServerModal({ isOpen, onClose, onCreate }: CreateS
                                 <button
                                     type="submit"
                                     disabled={!name.trim() || isSubmitting}
-                                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="px-4 py-2 max-md:min-h-11 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
                                     {isSubmitting ? (
                                         <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />

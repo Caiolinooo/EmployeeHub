@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { FiX, FiMonitor, FiSpeaker, FiMic, FiSettings, FiBell, FiVolume2, FiCamera } from 'react-icons/fi';
+import { FiMonitor, FiSpeaker, FiMic, FiSettings, FiBell, FiCamera } from 'react-icons/fi';
+import ModalCloseButton from '@/components/ui/ModalCloseButton';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
 
 interface ChatSettingsModalProps {
     isOpen: boolean;
@@ -15,6 +17,8 @@ export default function ChatSettingsModal({ isOpen, onClose, prefs, onSave }: Ch
     const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
     const [selectedAudioDevice, setSelectedAudioDevice] = useState('');
     const [selectedVideoDevice, setSelectedVideoDevice] = useState('');
+
+    useEscapeToClose(isOpen, onClose);
 
     useEffect(() => {
         setLocalPrefs(prefs);
@@ -53,35 +57,34 @@ export default function ChatSettingsModal({ isOpen, onClose, prefs, onSave }: Ch
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="bg-zinc-900 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col h-[550px] border border-white/10 animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+            <div data-modal-panel="" className="relative bg-zinc-900 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col h-[550px] max-md:h-auto max-md:max-h-[100dvh] border border-white/10 animate-in fade-in zoom-in duration-200">
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-zinc-900/80">
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-lg bg-violet-500/10 flex items-center justify-center shrink-0">
                             <FiSettings className="w-5 h-5 text-violet-400" />
                         </div>
-                        <h3 className="font-semibold text-lg text-white">Configurações do Chat</h3>
+                        <h3 className="font-semibold text-lg text-white truncate">Configurações do Chat</h3>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg transition-colors text-zinc-400 hover:text-white">
-                        <FiX className="w-5 h-5" />
-                    </button>
+                    <ModalCloseButton onClick={onClose} className="text-zinc-400 hover:text-white hover:bg-white/5" />
                 </div>
 
                 {/* Sidebar + Content Layout */}
-                <div className="flex flex-1 overflow-hidden">
+                <div className="flex flex-1 overflow-hidden max-md:flex-col">
                     {/* Sidebar */}
-                    <div className="w-44 bg-zinc-950/50 border-r border-white/5 p-3 space-y-1">
+                    <div className="w-44 max-md:w-full max-md:flex max-md:flex-row max-md:space-y-0 max-md:gap-2 bg-zinc-950/50 border-r max-md:border-r-0 max-md:border-b border-white/5 p-3 space-y-1">
                         <button
                             onClick={() => setActiveTab('interface')}
-                            className={`w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2.5 transition-all ${activeTab === 'interface' ? 'bg-violet-500/10 text-violet-400 border border-violet-500/20' : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'}`}
+                            className={`w-full max-md:min-h-11 text-left px-3 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2.5 transition-all ${activeTab === 'interface' ? 'bg-violet-500/10 text-violet-400 border border-violet-500/20' : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'}`}
                         >
                             <FiMonitor className="w-4 h-4" />
                             Interface
                         </button>
                         <button
                             onClick={() => setActiveTab('audio')}
-                            className={`w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2.5 transition-all ${activeTab === 'audio' ? 'bg-violet-500/10 text-violet-400 border border-violet-500/20' : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'}`}
+                            className={`w-full max-md:min-h-11 text-left px-3 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2.5 transition-all ${activeTab === 'audio' ? 'bg-violet-500/10 text-violet-400 border border-violet-500/20' : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'}`}
                         >
                             <FiSpeaker className="w-4 h-4" />
                             Áudio e Vídeo
@@ -208,13 +211,13 @@ export default function ChatSettingsModal({ isOpen, onClose, prefs, onSave }: Ch
                 <div className="px-6 py-4 border-t border-white/5 bg-zinc-950/50 flex justify-end gap-3">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-300 font-medium transition-colors"
+                        className="px-4 py-2 max-md:min-h-11 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-300 font-medium transition-colors"
                     >
                         Cancelar
                     </button>
                     <button
                         onClick={handleSave}
-                        className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg font-medium transition-colors shadow-lg shadow-violet-500/10"
+                        className="px-4 py-2 max-md:min-h-11 bg-violet-600 hover:bg-violet-700 text-white rounded-lg font-medium transition-colors shadow-lg shadow-violet-500/10"
                     >
                         Salvar Alterações
                     </button>

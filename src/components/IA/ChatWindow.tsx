@@ -9,6 +9,7 @@ import GenerativeDashboard from './GenerativeDashboard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Mic } from 'lucide-react';
 import VoiceAssistantModal from './VoiceAssistantModal';
+import ModalCloseButton from '@/components/ui/ModalCloseButton';
 
 interface Props {
   token: string;
@@ -106,6 +107,18 @@ export default function ChatWindow({ token }: Props) {
       setSidebarOpen(!!lastSidebarMsg.metadata.sidebarOpen);
     }
   }, [streamingMetadata?.sidebarOpen, messages]);
+
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (!window.matchMedia('(max-width: 1023px)').matches) return;
+      event.stopPropagation();
+      setSidebarOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [sidebarOpen]);
 
   // Listen for dashboard actions
   useEffect(() => {
@@ -351,7 +364,10 @@ export default function ChatWindow({ token }: Props) {
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed inset-0 z-50 lg:hidden flex"
           >
-            <div className="w-72 bg-white shadow-2xl h-full">
+            <div data-modal-panel="" className="relative w-72 bg-white shadow-2xl h-full">
+              <div className="absolute right-1 top-1 z-10">
+                <ModalCloseButton onClick={() => setSidebarOpen(false)} />
+              </div>
               <ChatSidebar 
                 sessions={sessions} 
                 activeSessionId={activeSessionId}
@@ -385,7 +401,7 @@ export default function ChatWindow({ token }: Props) {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500"
+              className="p-2 max-md:min-h-11 max-md:min-w-11 hover:bg-gray-100 rounded-lg transition-colors text-gray-500"
               title="Menu Lateral"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -417,12 +433,12 @@ export default function ChatWindow({ token }: Props) {
             )}
             <button 
               onClick={() => setShowVoiceModal(true)} 
-              className="p-2 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors text-gray-500" 
+              className="p-2 max-md:min-h-11 max-md:min-w-11 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors text-gray-500" 
               title="Conversa por Voz em Tempo Real"
             >
               <Mic className="w-5 h-5" />
             </button>
-            <button onClick={handleNewSession} className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500" title="Nova Conversa">
+            <button onClick={handleNewSession} className="p-2 max-md:min-h-11 max-md:min-w-11 hover:bg-gray-100 rounded-lg transition-colors text-gray-500" title="Nova Conversa">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
