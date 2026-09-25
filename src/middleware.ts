@@ -5,6 +5,7 @@ import { applyMobileSurface } from './lib/mobile-ui/apply-mobile-surface';
 const publicRoutes = [
   '/',
   '/login',
+  '/m',
   '/m/login',
   '/m/preview',
   '/set-password',

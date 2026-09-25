@@ -131,6 +131,13 @@ describe('shouldRedirectMobilePrefix', () => {
     );
   });
 
+  it('redirects desktop UA from /m and /m/login to the public URL', () => {
+    assert.equal(shouldRedirectMobilePrefix({ pathname: '/m' }), true);
+    assert.equal(stripMobilePrefix('/m'), '/');
+    assert.equal(stripMobilePrefix('/m/login'), '/login');
+    assert.equal(shouldRedirectMobilePrefix({ pathname: '/m', uaDeviceType: 'mobile' }), false);
+  });
+
   it('cookie ui=mobile keeps /m/login on desktop UA', () => {
     assert.equal(
       shouldRedirectMobilePrefix({ pathname: '/m/login', uiCookie: 'mobile' }),
@@ -216,6 +223,7 @@ describe('path helpers', () => {
   it('maps public path to /m prefix', () => {
     assert.equal(toMobileRewritePath('/login'), '/m/login');
     assert.equal(stripMobilePrefix('/m/login'), '/login');
+    assert.equal(stripMobilePrefix('/m'), '/');
     assert.equal(parseUiCookie('desktop'), 'desktop');
     assert.equal(parseUiCookie('nope'), undefined);
   });

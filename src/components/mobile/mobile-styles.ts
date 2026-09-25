@@ -22,14 +22,40 @@ export const MOBILE_SURFACE_CSS = `
   border-top-right-radius: 1.5rem;
 }
 [data-abz-ui='mobile'] .abz-m-sheet-tall { height: 85dvh; }
-[data-abz-ui='mobile'] .abz-m-nav { height: var(--mobile-nav-h); }
-[data-abz-ui='mobile'] .abz-m-main { padding-bottom: calc(var(--mobile-nav-h) + 16px); }
+[data-abz-ui='mobile'] .abz-m-nav {
+  min-height: var(--mobile-nav-h);
+  height: auto;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+[data-abz-ui='mobile'] .abz-m-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  padding: 6px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  background: transparent;
+}
+[data-abz-ui='mobile'] .abz-m-nav-item-active {
+  color: var(--mobile-blue);
+  box-shadow: inset 0 3px 0 var(--mobile-blue);
+}
+[data-abz-ui='mobile'] .abz-m-main {
+  padding-bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px) + 80px);
+}
 [data-abz-ui='mobile'] .abz-m-fab {
   position: fixed;
   right: 1rem;
-  bottom: calc(var(--mobile-nav-h) + 12px);
+  bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px) + 12px);
 }
 [data-abz-ui='mobile'] .abz-m-chip { background: #e8f1f8; }
 [data-abz-ui='mobile'] .abz-m-card { min-height: 64px; }
 [data-abz-ui='mobile'] .abz-m-switch { bottom: 12px; }
+[data-abz-ui='mobile'] .abz-m-alert-error { background: #fef2f2; color: #b91c1c; }
+[data-abz-ui='mobile'] .abz-m-alert-ok { background: #f0fdf4; color: #166534; }
 `.trim();

@@ -6,7 +6,7 @@ Decidir se o pedido serve o front mobile (`/m/...`) ou o desktop atual. Desktop 
 
 ## Ownership
 
-- `device-surface.ts` — allowlist, cookie `ui`, CH, UA, tablet, `/m/preview`
+- `device-surface.ts` — allowlist, cookie `ui`, CH, UA, tablet, `/m` home, `/m/preview` (404 em produção)
 - `apply-mobile-surface.ts` — usado só por `src/middleware.ts`
 - Fallback P0: `next.config.js` `rewrites.beforeFiles` (`/login` + cookie/CH/UA)
 - `ua-patterns.js` — tablet/phone regex (next.config + testes)
@@ -16,7 +16,8 @@ Decidir se o pedido serve o front mobile (`/m/...`) ou o desktop atual. Desktop 
 
 ## Local Contracts
 
-- Allowlist P0: `/login`. Fora da lista = desktop. `/m/preview` é direto (QA).
+- Allowlist P0: `/login`. Fora da lista = desktop. Home mobile é `/m` (sem rewrite de `/`). `/m/preview` é direto e 404 em produção.
+- Desktop em `/m/*`: Edge redireciona `/m` → `/`, `/m/login` → `/login`. Sem Edge (este Next 15.5) a URL `/m/*` renderiza o mobile; `/login` público continua desktop.
 - Tablet = desktop. Middleware: `device.type === 'tablet'`. Fallback `next.config`: `TABLET_UA_VALUE` (iPad, Tablet, PlayBook, SM-T/SM-X, Nexus 7/9/10, Kindle, Silk, Lenovo TB, Pixel Tablet). Telefone = `PHONE_REWRITE_UA_VALUE` (ancora `^$`; tablet vence mesmo com `Mobile`).
 - Cookie `ui=desktop|mobile` vence UA/CH.
 - Bot = desktop.

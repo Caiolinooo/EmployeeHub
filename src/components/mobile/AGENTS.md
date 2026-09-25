@@ -8,29 +8,34 @@ UI só do front mobile. Desktop não importa estes arquivos.
 
 - `TouchButton.tsx` — alvo 44 px (Radix Slot)
 - `BottomSheet.tsx` — sheet sem lib nova
-- `DataCard.tsx` — listas de pessoas/pedidos
-- `MobileShell.tsx` — nav híbrida Home/Notícias/Férias/Mais
-- `MobileCompanion.tsx` — um FAB + sheet full-width
-- `MobileLoginForm.tsx` — login P0 (mesmos hooks de auth)
-- `UiSurfaceSwitch.tsx` — “Voltar para o mobile”. **Não** montar em layout desktop (`/login/layout` reordena CSS). P0: só no front mobile + `/api/ui-surface`
-- `mobile-styles.ts` — tokens `--touch-min: 44px` injetados no layout `(mobile)` via `<style>` (não import global de CSS)
+- `DataCard.tsx` — listas
+- `MobileShell.tsx` — nav Home/Notícias/Férias/Mais (ícone + rótulo, ativo, ≥ 44 px, `pb-safe`)
+- `MobileHome.tsx` — home real (saudação + atalhos do catálogo; sem mock)
+- `MobileCompanion.tsx` — um FAB acima da nav + entrada no Mais
+- `MobileLoginForm.tsx` + `mobile-login-flow.ts` — mesmo fluxo/APIs do desktop (`initiateLogin`, senha, OTP, convite, biometria, reset, quick-register, `/register`)
+- `mobile-shortcuts.ts` — `SYSTEM_MODULES` visíveis
+- `UiSurfaceSwitch.tsx` — “Voltar para o mobile”. **Não** montar em layout desktop
+- `mobile-styles.ts` — tokens injetados no layout `(mobile)` via `<style>`
 
 ## Local Contracts
 
-- Sem mudança visual no desktop.
-- Nav Mais lista `SYSTEM_MODULES` (`visible !== false`).
-- Companion mobile não monta o FAB desktop (`data-abz-ui=mobile`).
-- `/m/preview` é QA (sheet via `?sheet=mais|companion`).
+- Sem mudança visual no desktop. Sem `import '*.css'` e sem segundo `next/font`.
+- Login mobile: mesmas APIs e mesmos destinos (`/dashboard` ou `/set-password`). Sem bypass commitado.
+- Home `/m`: atalhos reais. Sem copy de dev e sem dados fake.
+- `/m/preview`: vitrine de kit. `notFound()` em produção.
+- Companion: um FAB (`bottom: nav + safe-area + 12px`). Login **não** monta FAB.
+- `/m/*` no desktop: com Edge, `shouldRedirectMobilePrefix` manda `/m` → `/` e `/m/login` → `/login`. Sem Edge (Next 15.5 neste repo) a URL `/m/*` renderiza o front mobile; URLs públicas do desktop não mudam.
 
 ## Work Guidance
 
-Novo módulo: página em `src/app/(mobile)/m/<rota>` + allowlist em `device-surface.ts`.
+Página nova = allowlist em `src/lib/mobile-ui/device-surface.ts` se a URL pública deve reescrever.
 
 ## Verification
 
-- Login mobile: texto “Entrar” + `data-abz-mobile-login`.
-- Preview: nav + sheets Mais/Companion.
-- Alvos ≥ 44 px (`.touch-target`).
+- `npx tsx --test src/components/mobile/mobile-login-flow.test.ts src/lib/mobile-ui/device-surface.test.ts`
+- Login: `data-abz-mobile-login` + passos `data-abz-login-form`
+- Home: `data-abz-mobile-home`. Nav ≥ 44 px (`.abz-m-nav-item`)
+- Prova de fluxo: `scripts/mobile-fase2-login-proof.mjs` (mock de rede, sem bypass no repo)
 
 ## Child DOX Index
 

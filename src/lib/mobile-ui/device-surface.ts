@@ -14,7 +14,7 @@ export const MOBILE_PATH_PREFIX = '/m';
 /** Rotas cuja URL pública já tem página em `app/(mobile)/m/...`. */
 export const MOBILE_IMPLEMENTED_PATHS = ['/login'] as const;
 
-/** `/m/*` que o UA desktop pode abrir direto (QA). Sem redirect. */
+/** `/m/*` que o UA desktop pode abrir direto. `/m/preview` é vitrine e 404 em produção. */
 export const MOBILE_DIRECT_PATHS = ['/m/preview'] as const;
 
 export type DeviceClass = 'mobile' | 'tablet' | 'desktop';
@@ -75,10 +75,10 @@ export function toMobileRewritePath(pathname: string): string {
 
 export function stripMobilePrefix(pathname: string): string {
   const path = stripQuery(pathname);
-  if (path === MOBILE_PATH_PREFIX) return '/login';
+  if (path === MOBILE_PATH_PREFIX) return '/';
   if (path.startsWith(`${MOBILE_PATH_PREFIX}/`)) {
     const rest = path.slice(MOBILE_PATH_PREFIX.length);
-    return rest || '/login';
+    return rest || '/';
   }
   return path;
 }

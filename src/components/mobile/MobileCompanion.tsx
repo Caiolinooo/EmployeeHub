@@ -1,32 +1,42 @@
 'use client';
 
-import React, { useState } from 'react';
 import BottomSheet from './BottomSheet';
 import TouchButton from './TouchButton';
 
 type MobileCompanionProps = {
   defaultOpen?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
-export default function MobileCompanion({ defaultOpen = false }: MobileCompanionProps) {
-  const [open, setOpen] = useState(defaultOpen);
+export default function MobileCompanion({
+  defaultOpen = false,
+  open,
+  onOpenChange,
+}: MobileCompanionProps) {
+  const controlled = open !== undefined;
+  const isOpen = controlled ? Boolean(open) : defaultOpen;
 
   return (
     <>
       <TouchButton
         aria-label="Abrir Companion"
-        onClick={() => setOpen(true)}
-        className="abz-m-fab z-[60] h-14 w-14 rounded-full px-0 shadow-lg"
+        onClick={() => onOpenChange?.(true)}
+        className="abz-m-fab z-[40] h-14 w-14 rounded-full px-0 shadow-lg"
         data-abz-mobile-companion-fab=""
       >
         IA
       </TouchButton>
-      <BottomSheet open={open} onClose={() => setOpen(false)} title="Companion ABZ" className="abz-m-sheet-tall">
+      <BottomSheet
+        open={isOpen}
+        onClose={() => onOpenChange?.(false)}
+        title="Companion ABZ"
+        className="abz-m-sheet-tall"
+      >
         <div className="flex h-full min-h-[320px] flex-col gap-3" data-abz-mobile-companion-sheet="">
-          <div className="rounded-2xl abz-m-chip px-3 py-2 text-sm text-gray-800">
-            Olá. Sou o Companion no celular — sheet full-width, um FAB só. Mesma sessão e APIs do
-            desktop quando você estiver logado.
-          </div>
+          <p className="rounded-2xl abz-m-chip px-3 py-2 text-sm text-gray-800">
+            Companion do portal. Mesma sessão e APIs do desktop quando você estiver logado.
+          </p>
           <div className="mt-auto flex gap-2">
             <input
               type="text"
