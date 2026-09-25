@@ -8,24 +8,29 @@ const { createClient } = require('@supabase/supabase-js');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 
-// Configurações
+// Configurações (somente process.env, sem default)
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const JWT_SECRET = process.env.JWT_SECRET;
-const ADMIN_EMAIL = ***REMOVED*** || 'document.getElementById(';
-const ADMIN_PHONE = ***REMOVED*** || '+5522997847289';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'document.getElementById(';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_PHONE = process.env.ADMIN_PHONE_NUMBER;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_FIRST_NAME = process.env.ADMIN_FIRST_NAME || 'Admin';
+const ADMIN_LAST_NAME = process.env.ADMIN_LAST_NAME || 'User';
 const TOKEN_NAME = process.env.NEXT_PUBLIC_TOKEN_NAME || 'token';
 const TOKEN_FILE_NAME = process.env.TOKEN_FILE_NAME || '.token';
 
-// Verificar configurações
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.error('Erro: SUPABASE_URL e SUPABASE_ANON_KEY devem estar definidos no arquivo .env');
-  process.exit(1);
-}
+const missingEnv = [
+  !SUPABASE_URL && 'NEXT_PUBLIC_SUPABASE_URL',
+  !SUPABASE_ANON_KEY && 'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  !JWT_SECRET && 'JWT_SECRET',
+  !ADMIN_EMAIL && 'ADMIN_EMAIL',
+  !ADMIN_PHONE && 'ADMIN_PHONE_NUMBER',
+  !ADMIN_PASSWORD && 'ADMIN_PASSWORD',
+].filter(Boolean);
 
-if (!JWT_SECRET) {
-  console.error('Erro: JWT_SECRET deve estar definido no arquivo .env');
+if (missingEnv.length > 0) {
+  console.error(`Erro: variáveis de ambiente obrigatórias ausentes: ${missingEnv.join(', ')}`);
   process.exit(1);
 }
 
@@ -101,8 +106,8 @@ async function setupAdmin() {
             id: userId,
             email: ADMIN_EMAIL,
             phone_number: ADMIN_PHONE,
-            first_name: 'Caio',
-            last_name: 'Correia',
+            first_name: ADMIN_FIRST_NAME,
+            last_name: ADMIN_LAST_NAME,
             role: 'ADMIN',
             active: true,
             created_at: new Date().toISOString(),
@@ -123,8 +128,8 @@ async function setupAdmin() {
               .from('users')
               .update({
                 phone_number: ADMIN_PHONE,
-                first_name: 'Caio',
-                last_name: 'Correia',
+                first_name: ADMIN_FIRST_NAME,
+                last_name: ADMIN_LAST_NAME,
                 role: 'ADMIN',
                 active: true,
                 updated_at: new Date().toISOString(),
@@ -152,8 +157,8 @@ async function setupAdmin() {
           .from('users')
           .update({
             phone_number: ADMIN_PHONE,
-            first_name: 'Caio',
-            last_name: 'Correia',
+            first_name: ADMIN_FIRST_NAME,
+            last_name: ADMIN_LAST_NAME,
             role: 'ADMIN',
             active: true,
             updated_at: new Date().toISOString(),

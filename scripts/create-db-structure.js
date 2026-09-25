@@ -3,18 +3,34 @@
  */
 
 require('dotenv').config();
-const { createClient } = require('@supabase/supabase-js');
-const { Pool } = require('pg');
 
-// Configurações
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const DATABASE_URL = process.env.DATABASE_URL;
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_PHONE = process.env.ADMIN_PHONE_NUMBER;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_FIRST_NAME = process.env.ADMIN_FIRST_NAME || 'Admin';
+const ADMIN_LAST_NAME = process.env.ADMIN_LAST_NAME || 'User';
 
-// Criar cliente Supabase
+const missingEnv = [
+  !SUPABASE_URL && 'NEXT_PUBLIC_SUPABASE_URL',
+  !SUPABASE_ANON_KEY && 'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  !DATABASE_URL && 'DATABASE_URL',
+  !ADMIN_EMAIL && 'ADMIN_EMAIL',
+  !ADMIN_PHONE && 'ADMIN_PHONE_NUMBER',
+  !ADMIN_PASSWORD && 'ADMIN_PASSWORD',
+].filter(Boolean);
+
+if (missingEnv.length > 0) {
+  console.error(`Erro: variáveis de ambiente obrigatórias ausentes: ${missingEnv.join(', ')}`);
+  process.exit(1);
+}
+
+const { createClient } = require('@supabase/supabase-js');
+const { Pool } = require('pg');
+
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// Criar cliente PostgreSQL
 const pool = new Pool({
   connectionString: DATABASE_URL,
 });
@@ -174,22 +190,14 @@ async function createPasswordResetTokensTable() {
 async function createAdminUser() {
   console.log('Criando usuário administrador...');
   
-  // Verificar se o usuário já existe na autenticação do Supabase
-  const adminEmail = process.env.ADMIN_EMAIL;
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  if (!adminEmail || !adminPassword) {
-    console.error('Defina ADMIN_EMAIL e ADMIN_PASSWORD no ambiente antes de criar o admin.');
-    return false;
-  }
-
   const { data: authUser, error: authError } = await supabase.auth.signUp({
-    email: adminEmail,
-    password: adminPassword,
+    email: ADMIN_EMAIL,
+    password: ADMIN_PASSWORD,
     options: {
       data: {
-        first_name: process.env.ADMIN_FIRST_NAME || 'Admin',
-        last_name: process.env.ADMIN_LAST_NAME || 'User',
-        phone_number: ***REMOVED*** || '',
+        first_name: ADMIN_FIRST_NAME,
+        last_name: ADMIN_LAST_NAME,
+        phone_number: ADMIN_PHONE,
         role: 'ADMIN'
       }
     }
@@ -233,10 +241,10 @@ async function createAdminUser() {
   try {
     const result = await executeQuery(insertQuery, [
       userId,
-      'document.getElementById(',
-      '+5522997847289',
-      'Caio',
-      'Correia',
+      ADMIN_EMAIL,
+      ADMIN_PHONE,
+      ADMIN_FIRST_NAME,
+      ADMIN_LAST_NAME,
       'ADMIN',
       'Administrador do Sistema',
       'TI',
