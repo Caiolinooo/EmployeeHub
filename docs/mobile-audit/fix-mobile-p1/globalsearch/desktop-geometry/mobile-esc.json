@@ -1,0 +1,25 @@
+{
+  "module": "globalsearch",
+  "viewports": {
+    "390x844": {
+      "search": {
+        "close": {
+          "w": 44,
+          "h": 44
+        },
+        "before": 3,
+        "after": 0
+      }
+    },
+    "375x812": {
+      "search": {
+        "close": {
+          "w": 44,
+          "h": 44
+        },
+        "before": 3,
+        "after": 0
+      }
+    }
+  }
+}

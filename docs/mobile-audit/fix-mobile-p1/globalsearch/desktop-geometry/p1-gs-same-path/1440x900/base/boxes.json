@@ -1,0 +1,142 @@
+{
+  "login": {
+    "status": 200,
+    "href": "http://127.0.0.1:3020/login",
+    "title": "Painel ABZ Group",
+    "body": "Acesse Sua Conta\nEN\nPT\nEmail\n\nDigite seu email\n\nTenho um código de convite\nContinuar\nou entre com biometria\nEntrar com Biometria\nImpressão digital, reconhecimento facial ou Windows Hello\nABZ Group\n\nAinda não tem cadastro? Criar conta\n\n© 2026 ABZ Group. Todos os direitos reservado",
+    "boxes": {
+      "header": null,
+      "sidebar": null,
+      "main": null,
+      "loginCard": {
+        "x": 536,
+        "y": 242,
+        "w": 368,
+        "h": 360
+      },
+      "loginTitle": null,
+      "newsTitle": null,
+      "newsFechar": null,
+      "academyTitle": null,
+      "academyCancel": null,
+      "academyOk": null,
+      "chatTitle": null,
+      "chatCancel": null,
+      "searchPanel": null,
+      "modalPanel": null,
+      "modalClose": null,
+      "fabHelp": null,
+      "fabCompanion": null
+    }
+  },
+  "dashboard": {
+    "status": 200,
+    "href": "http://127.0.0.1:3020/dashboard",
+    "title": "Painel ABZ Group",
+    "body": "PT\nPM\nOlá, Prova!\n\nBem-vindo ao Hub da ABZ Group. Reunimos as principais ferramentas em um único local para facilitar o dia a dia dos nossos colaboradores.\n\nPost de prova\nSMS\nLinks Rápidos\nPonto\n\nRegistro de Ponto\n\nReembolso\n\nSolicitações\n\nContracheque\n\nHolerites\n\nABZ Academy\n\nCu",
+    "boxes": {
+      "header": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "sidebar": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "main": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "loginCard": null,
+      "loginTitle": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "newsTitle": null,
+      "newsFechar": null,
+      "academyTitle": null,
+      "academyCancel": null,
+      "academyOk": null,
+      "chatTitle": null,
+      "chatCancel": null,
+      "searchPanel": null,
+      "modalPanel": null,
+      "modalClose": null,
+      "fabHelp": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "fabCompanion": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "globalsearch-ctrlk": {
+    "status": 200,
+    "href": "http://127.0.0.1:3020/dashboard",
+    "title": "Painel ABZ Group",
+    "body": "PT\nPM\nOlá, Prova!\n\nBem-vindo ao Hub da ABZ Group. Reunimos as principais ferramentas em um único local para facilitar o dia a dia dos nossos colaboradores.\n\nPost de prova\nSMS\nLinks Rápidos\nPonto\n\nRegistro de Ponto\n\nReembolso\n\nSolicitações\n\nContracheque\n\nHolerites\n\nABZ Academy\n\nCu",
+    "boxes": {
+      "header": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "sidebar": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "main": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "loginCard": null,
+      "loginTitle": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "newsTitle": null,
+      "newsFechar": null,
+      "academyTitle": null,
+      "academyCancel": null,
+      "academyOk": null,
+      "chatTitle": null,
+      "chatCancel": null,
+      "searchPanel": null,
+      "modalPanel": null,
+      "modalClose": null,
+      "fabHelp": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "fabCompanion": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      }
+    }
+  }
+}

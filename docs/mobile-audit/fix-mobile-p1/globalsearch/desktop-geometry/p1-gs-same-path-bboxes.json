@@ -1,0 +1,1172 @@
+{
+  "summary": {
+    "pair": "p1-gs-same-path",
+    "module": "globalsearch",
+    "viewports": [
+      {
+        "width": 1280,
+        "height": 800
+      },
+      {
+        "width": 1440,
+        "height": 900
+      }
+    ],
+    "pages": {
+      "1280x800": {
+        "login": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/login",
+          "href_head": "http://127.0.0.1:3032/login",
+          "body_base": "Acesse Sua Conta\nEN\nPT\nEmail\n\nDigite seu email\n\nTenho um código de convite\nContinuar\nou entre com biometria\nEntrar com Biometria\nImpressão digital, reconhecimento facial ou Windows Hello\nABZ Group\n\nAinda não tem cadastro? Criar conta\n\n© 2026 ABZ Group. Todos os direitos reservado",
+          "body_head": "Acesse Sua Conta\nEN\nPT\nEmail\n\nDigite seu email\n\nTenho um código de convite\nContinuar\nou entre com biometria\nEntrar com Biometria\nImpressão digital, reconhecimento facial ou Windows Hello\nABZ Group\n\nAinda não tem cadastro? Criar conta\n\n© 2026 ABZ Group. Todos os direitos reservado",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 0,
+          "maxChannel": 0
+        },
+        "dashboard": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/dashboard",
+          "href_head": "http://127.0.0.1:3032/dashboard",
+          "body_base": "PT\nPM\nOlá, Prova!\n\nBem-vindo ao Hub da ABZ Group. Reunimos as principais ferramentas em um único local para facilitar o dia a dia dos nossos colaboradores.\n\nPost de prova\nSMS\nLinks Rápidos\nPonto\n\nRegistro de Ponto\n\nReembolso\n\nSolicitações\n\nContracheque\n\nHolerites\n\nABZ Academy\n\nCu",
+          "body_head": "PT\nPM\nOlá, Prova!\n\nBem-vindo ao Hub da ABZ Group. Reunimos as principais ferramentas em um único local para facilitar o dia a dia dos nossos colaboradores.\n\nPost de prova\nSMS\nLinks Rápidos\nPonto\n\nRegistro de Ponto\n\nReembolso\n\nSolicitações\n\nContracheque\n\nHolerites\n\nABZ Academy\n\nCu",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 0,
+          "maxChannel": 0
+        },
+        "globalsearch-ctrlk": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/dashboard",
+          "href_head": "http://127.0.0.1:3032/dashboard",
+          "body_base": "PT\nPM\nOlá, Prova!\n\nBem-vindo ao Hub da ABZ Group. Reunimos as principais ferramentas em um único local para facilitar o dia a dia dos nossos colaboradores.\n\nPost de prova\nSMS\nLinks Rápidos\nPonto\n\nRegistro de Ponto\n\nReembolso\n\nSolicitações\n\nContracheque\n\nHolerites\n\nABZ Academy\n\nCu",
+          "body_head": "PT\nPM\nOlá, Prova!\n\nBem-vindo ao Hub da ABZ Group. Reunimos as principais ferramentas em um único local para facilitar o dia a dia dos nossos colaboradores.\n\nPost de prova\nSMS\nLinks Rápidos\nPonto\n\nRegistro de Ponto\n\nReembolso\n\nSolicitações\n\nContracheque\n\nHolerites\n\nABZ Academy\n\nCu",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 0,
+          "maxChannel": 0
+        }
+      },
+      "1440x900": {
+        "login": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/login",
+          "href_head": "http://127.0.0.1:3032/login",
+          "body_base": "Acesse Sua Conta\nEN\nPT\nEmail\n\nDigite seu email\n\nTenho um código de convite\nContinuar\nou entre com biometria\nEntrar com Biometria\nImpressão digital, reconhecimento facial ou Windows Hello\nABZ Group\n\nAinda não tem cadastro? Criar conta\n\n© 2026 ABZ Group. Todos os direitos reservado",
+          "body_head": "Acesse Sua Conta\nEN\nPT\nEmail\n\nDigite seu email\n\nTenho um código de convite\nContinuar\nou entre com biometria\nEntrar com Biometria\nImpressão digital, reconhecimento facial ou Windows Hello\nABZ Group\n\nAinda não tem cadastro? Criar conta\n\n© 2026 ABZ Group. Todos os direitos reservado",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 37,
+          "maxChannel": 37
+        },
+        "dashboard": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/dashboard",
+          "href_head": "http://127.0.0.1:3032/dashboard",
+          "body_base": "PT\nPM\nOlá, Prova!\n\nBem-vindo ao Hub da ABZ Group. Reunimos as principais ferramentas em um único local para facilitar o dia a dia dos nossos colaboradores.\n\nPost de prova\nSMS\nLinks Rápidos\nPonto\n\nRegistro de Ponto\n\nReembolso\n\nSolicitações\n\nContracheque\n\nHolerites\n\nABZ Academy\n\nCu",
+          "body_head": "PT\nPM\nOlá, Prova!\n\nBem-vindo ao Hub da ABZ Group. Reunimos as principais ferramentas em um único local para facilitar o dia a dia dos nossos colaboradores.\n\nPost de prova\nSMS\nLinks Rápidos\nPonto\n\nRegistro de Ponto\n\nReembolso\n\nSolicitações\n\nContracheque\n\nHolerites\n\nABZ Academy\n\nCu",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 0,
+          "maxChannel": 0
+        },
+        "globalsearch-ctrlk": {
+          "status_base": 200,
+          "status_head": 200,
+          "href_base": "http://127.0.0.1:3020/dashboard",
+          "href_head": "http://127.0.0.1:3032/dashboard",
+          "body_base": "PT\nPM\nOlá, Prova!\n\nBem-vindo ao Hub da ABZ Group. Reunimos as principais ferramentas em um único local para facilitar o dia a dia dos nossos colaboradores.\n\nPost de prova\nSMS\nLinks Rápidos\nPonto\n\nRegistro de Ponto\n\nReembolso\n\nSolicitações\n\nContracheque\n\nHolerites\n\nABZ Academy\n\nCu",
+          "body_head": "PT\nPM\nOlá, Prova!\n\nBem-vindo ao Hub da ABZ Group. Reunimos as principais ferramentas em um único local para facilitar o dia a dia dos nossos colaboradores.\n\nPost de prova\nSMS\nLinks Rápidos\nPonto\n\nRegistro de Ponto\n\nReembolso\n\nSolicitações\n\nContracheque\n\nHolerites\n\nABZ Academy\n\nCu",
+          "boxes_equal": true,
+          "boxes_diff": [],
+          "px": 61,
+          "maxChannel": 2
+        }
+      }
+    }
+  },
+  "table": [
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "header",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "sidebar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "main",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "loginCard",
+      "bbox_base": {
+        "x": 456,
+        "y": 212,
+        "w": 368,
+        "h": 360
+      },
+      "bbox_head": {
+        "x": 456,
+        "y": 212,
+        "w": 368,
+        "h": 360
+      },
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "loginTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "newsTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "newsFechar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "academyTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "academyCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "academyOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "chatTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "chatCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "searchPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "fabHelp",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1280x800",
+      "element": "fabCompanion",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "bbox_head": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "newsTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "newsFechar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "academyTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "academyCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "academyOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "chatTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "chatCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "searchPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1280x800",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1280x800",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 1200,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1280x800",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 800
+      },
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1280x800",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 1200,
+        "h": 736
+      },
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1280x800",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1280x800",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "bbox_head": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1280x800",
+      "element": "newsTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1280x800",
+      "element": "newsFechar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1280x800",
+      "element": "academyTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1280x800",
+      "element": "academyCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1280x800",
+      "element": "academyOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1280x800",
+      "element": "chatTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1280x800",
+      "element": "chatCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1280x800",
+      "element": "searchPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1280x800",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1280x800",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1280x800",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 1200,
+        "y": 720,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1280x800",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1120,
+        "y": 712,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "header",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "sidebar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "main",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "loginCard",
+      "bbox_base": {
+        "x": 536,
+        "y": 242,
+        "w": 368,
+        "h": 360
+      },
+      "bbox_head": {
+        "x": 536,
+        "y": 242,
+        "w": 368,
+        "h": 360
+      },
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "loginTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "newsTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "newsFechar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "academyTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "academyCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "academyOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "chatTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "chatCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "searchPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "fabHelp",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "login",
+      "viewport": "1440x900",
+      "element": "fabCompanion",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "bbox_head": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "newsTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "newsFechar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "academyTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "academyCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "academyOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "chatTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "chatCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "searchPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "dashboard",
+      "viewport": "1440x900",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1440x900",
+      "element": "header",
+      "bbox_base": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 0,
+        "w": 1360,
+        "h": 64
+      },
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1440x900",
+      "element": "sidebar",
+      "bbox_base": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "bbox_head": {
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 900
+      },
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1440x900",
+      "element": "main",
+      "bbox_base": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "bbox_head": {
+        "x": 80,
+        "y": 64,
+        "w": 1360,
+        "h": 836
+      },
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1440x900",
+      "element": "loginCard",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1440x900",
+      "element": "loginTitle",
+      "bbox_base": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "bbox_head": {
+        "x": 160,
+        "y": 152,
+        "w": 672,
+        "h": 48
+      },
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1440x900",
+      "element": "newsTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1440x900",
+      "element": "newsFechar",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1440x900",
+      "element": "academyTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1440x900",
+      "element": "academyCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1440x900",
+      "element": "academyOk",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1440x900",
+      "element": "chatTitle",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1440x900",
+      "element": "chatCancel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1440x900",
+      "element": "searchPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1440x900",
+      "element": "modalPanel",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1440x900",
+      "element": "modalClose",
+      "bbox_base": null,
+      "bbox_head": null,
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1440x900",
+      "element": "fabHelp",
+      "bbox_base": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "bbox_head": {
+        "x": 1360,
+        "y": 820,
+        "w": 56,
+        "h": 56
+      },
+      "equal": true
+    },
+    {
+      "page": "globalsearch-ctrlk",
+      "viewport": "1440x900",
+      "element": "fabCompanion",
+      "bbox_base": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "bbox_head": {
+        "x": 1280,
+        "y": 812,
+        "w": 64,
+        "h": 64
+      },
+      "equal": true
+    }
+  ]
+}
