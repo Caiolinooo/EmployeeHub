@@ -6,6 +6,7 @@ import { DocumentTextIcon, NewspaperIcon, UserIcon, RectangleStackIcon, Currency
 import { useI18n } from '@/contexts/I18nContext';
 import ModalCloseButton from '@/components/ui/ModalCloseButton';
 import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
 
 interface SearchResult {
   id: string;
@@ -53,6 +54,7 @@ const GlobalSearch: React.FC = () => {
     requestAnimationFrame(() => triggerRef.current?.focus());
   }, []);
   useEscapeToClose(isOpen, close);
+  useEscapeCapture(isOpen, close);
 
   useEffect(() => {
     if (!isNarrow767 && isOpen) setIsOpen(false);
@@ -213,8 +215,15 @@ const GlobalSearch: React.FC = () => {
                   placeholder={t('components.digiteparaBuscar', 'Digite para buscar...')}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="flex-1 min-w-0 text-lg outline-none max-md:text-base"
+                  className="flex-1 text-lg outline-none max-md:min-w-0 max-md:text-base"
                   autoFocus
+                  onKeyDown={(event) => {
+                    if (event.key === 'Escape' || event.key === 'Esc') {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      close();
+                    }
+                  }}
                 />
                 <ModalCloseButton onClick={close} className="ml-3" />
               </div>
