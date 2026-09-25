@@ -74,6 +74,60 @@ describe('parseSafeUrl', () => {
     }
   });
 
+  it('rejects 6to4 2002::/16 when the embedded IPv4 is private', () => {
+    const sixToFour = [
+      'https://[2002:7f00:1::]/x',
+      'https://[2002:a9fe:a9fe::]/x',
+      'https://[2002:0a00:0005::]/x',
+      'https://[2002:c0a8:0101::]/x',
+    ];
+    for (const raw of sixToFour) {
+      const hostname = new URL(raw).hostname;
+      assert.equal(isBlockedHostname(hostname), true, raw);
+      assertUnsafe(() =>
+        parseSafeUrl(raw, {
+          allowedHosts: [hostname, '[2002:7f00:1::]', '[2002:a9fe:a9fe::]', '[2002:a00:5::]', '[2002:c0a8:101::]'],
+        }),
+      );
+    }
+  });
+
+  it('does not denylist a public IPv4 embedded in 6to4 (allowlist still applies)', () => {
+    // 8.8.8.8 in 2002::/16 is not private/loopback/link-local — denylist
+    // lets it through; parseSafeUrl still requires the host on the allowlist.
+    const raw = 'https://[2002:0808:0808::]/x';
+    const hostname = new URL(raw).hostname;
+    assert.equal(hostname, '[2002:808:808::]');
+    assert.equal(isBlockedHostname(hostname), false, raw);
+    const url = parseSafeUrl(raw, { allowedHosts: [hostname] });
+    assert.equal(url.hostname, hostname);
+    assertUnsafe(() => parseSafeUrl(raw, { allowedHosts: ALLOW_EXAMPLE }));
+  });
+
+  it('rejects IPv4-translated ::ffff:0:X:Y when the embedded IPv4 is private', () => {
+    const translated = ['https://[::ffff:0:7f00:1]/x'];
+    for (const raw of translated) {
+      const hostname = new URL(raw).hostname;
+      assert.equal(isBlockedHostname(hostname), true, raw);
+      assertUnsafe(() =>
+        parseSafeUrl(raw, {
+          allowedHosts: [hostname, '[::ffff:0:7f00:1]'],
+        }),
+      );
+    }
+  });
+
+  it('does not denylist a public IPv4-translated address (allowlist still applies)', () => {
+    // ::ffff:0:0/96 with public 8.8.8.8 — same denylist policy as mapped
+    // ::ffff:808:808 and NAT64 64:ff9b::808:808. Allowlist still required.
+    const raw = 'https://[::ffff:0:808:808]/x';
+    const hostname = new URL(raw).hostname;
+    assert.equal(isBlockedHostname(hostname), false, raw);
+    const url = parseSafeUrl(raw, { allowedHosts: [hostname] });
+    assert.equal(url.hostname, hostname);
+    assertUnsafe(() => parseSafeUrl(raw, { allowedHosts: ALLOW_EXAMPLE }));
+  });
+
   it('does not denylist a public IPv4 embedded in NAT64 (allowlist still applies)', () => {
     // 8.8.8.8 is not private/loopback/link-local, so the denylist lets it
     // through — same choice as ::ffff:808:808. parseSafeUrl still needs the host
@@ -318,6 +372,17 @@ describe('isBlockedHostname', () => {
     assert.equal(isBlockedHostname('[64:ff9b::127.0.0.1]'), true);
     assert.equal(isBlockedHostname('[64:ff9b::a9fe:a9fe]'), true);
     assert.equal(isBlockedHostname('[64:ff9b::8.8.8.8]'), false);
+    assert.equal(isBlockedHostname('[2002:7f00:1::]'), true);
+    assert.equal(isBlockedHostname('[2002:a9fe:a9fe::]'), true);
+    assert.equal(isBlockedHostname('[2002:0a00:0005::]'), true);
+    assert.equal(isBlockedHostname('[2002:a00:5::]'), true);
+    assert.equal(isBlockedHostname('[2002:c0a8:0101::]'), true);
+    assert.equal(isBlockedHostname('[2002:c0a8:101::]'), true);
+    assert.equal(isBlockedHostname('[2002:0808:0808::]'), false);
+    assert.equal(isBlockedHostname('[2002:808:808::]'), false);
+    assert.equal(isBlockedHostname('[::ffff:0:7f00:1]'), true);
+    assert.equal(isBlockedHostname('[::ffff:0:808:808]'), false);
+    assert.equal(isBlockedHostname('localhost...'), true);
     assert.equal(isBlockedHostname('example.com'), false);
   });
 });

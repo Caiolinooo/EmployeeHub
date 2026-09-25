@@ -64,6 +64,26 @@ describe('fetchWithSafeRedirects', () => {
     );
   });
 
+  it('rejects a redirect to a 6to4 loopback', async () => {
+    const fetchImpl: typeof fetch = async () =>
+      redirectResponse(302, 'https://[2002:7f00:1::]/secret.ics');
+
+    await assert.rejects(
+      () => fetchWithSafeRedirects(START, {}, { allowedHosts: ALLOWED, fetchImpl }),
+      UnsafeUrlError,
+    );
+  });
+
+  it('rejects a redirect to an IPv4-translated loopback', async () => {
+    const fetchImpl: typeof fetch = async () =>
+      redirectResponse(302, 'https://[::ffff:0:7f00:1]/secret.ics');
+
+    await assert.rejects(
+      () => fetchWithSafeRedirects(START, {}, { allowedHosts: ALLOWED, fetchImpl }),
+      UnsafeUrlError,
+    );
+  });
+
   it('rejects a redirect to a non-allowlisted host', async () => {
     const fetchImpl: typeof fetch = async () =>
       redirectResponse(301, 'https://evil.example/cal.ics');
