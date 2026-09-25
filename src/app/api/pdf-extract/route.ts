@@ -1,10 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { fetchWithSafeRedirects } from '@/lib/security/fetch-with-safe-redirects';
 import { UnsafeUrlError, pdfExtractAllowedHosts, resolvePdfExtractUrl } from '@/lib/security/safe-url';
 
 // Force this route to be dynamic
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+
+function authenticateRequest(request: NextRequest) {
+  const authHeader = request.headers.get('authorization');
+  let token = extractTokenFromHeader(authHeader || undefined);
+  if (!token) {
+    const cookie = request.cookies.get('abzToken') || request.cookies.get('token');
+    if (cookie) token = cookie.value;
+  }
+  if (!token) return null;
+  const payload = verifyToken(token);
+  if (!payload?.userId) return null;
+  return payload;
+}
 
 // Função para extrair texto de um PDF
 // Esta é uma implementação simulada, pois a extração real de PDF requer bibliotecas adicionais
@@ -25,6 +39,11 @@ export async function GET(request: NextRequest) {
         { error: 'Rota não disponível durante geração estática' },
         { status: 503 }
       );
+    }
+
+    const payload = authenticateRequest(request);
+    if (!payload) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     let pdfUrl = null;

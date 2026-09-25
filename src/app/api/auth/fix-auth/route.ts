@@ -33,36 +33,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar se o token tem formato JWT
-    const parts = token.split('.');
-    if (parts.length !== 3) {
-      console.error('API fix-auth: Token não tem formato JWT válido');
+    const verifiedPayload = verifyToken(token);
+    if (!verifiedPayload || typeof verifiedPayload !== 'object' || !verifiedPayload.userId) {
+      console.error('API fix-auth: Token inválido ou expirado');
       return NextResponse.json(
-        { success: false, error: 'Token inválido - formato incorreto' },
+        { success: false, error: 'Token inválido ou expirado' },
         { status: 401 }
       );
     }
 
-    // Decodificar o token sem verificar a assinatura
-    let payload;
-    try {
-      payload = jwt.decode(token);
-      console.log('API fix-auth: Token decodificado:', payload);
-    } catch (decodeError) {
-      console.error('API fix-auth: Erro ao decodificar token:', decodeError);
-      return NextResponse.json(
-        { success: false, error: 'Erro ao decodificar token' },
-        { status: 401 }
-      );
-    }
-
-    if (!payload || typeof payload !== 'object' || !payload.userId) {
-      console.error('API fix-auth: Token não contém ID do usuário');
-      return NextResponse.json(
-        { success: false, error: 'Token não contém ID do usuário' },
-        { status: 401 }
-      );
-    }
+    const payload = verifiedPayload;
 
     // Inicializar cliente Supabase
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
