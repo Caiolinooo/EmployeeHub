@@ -386,7 +386,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ courseId }) => {
                                     <button
                                         onClick={() => handleReorder(mod.id, 'up')}
                                         disabled={index === 0}
-                                        className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                                        className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center"
                                         title="Mover para cima"
                                     >
                                         <ArrowUpIcon className="w-4 h-4 text-gray-600" />
@@ -394,7 +394,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ courseId }) => {
                                     <button
                                         onClick={() => handleReorder(mod.id, 'down')}
                                         disabled={index === modules.length - 1}
-                                        className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                                        className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center"
                                         title="Mover para baixo"
                                     >
                                         <ArrowDownIcon className="w-4 h-4 text-gray-600" />
@@ -405,14 +405,14 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ courseId }) => {
                                 <div className="flex-shrink-0 flex items-center gap-1">
                                     <button
                                         onClick={() => startEdit(mod)}
-                                        className="p-1.5 rounded hover:bg-blue-50 text-blue-600"
+                                        className="p-1.5 rounded hover:bg-blue-50 text-blue-600 max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center"
                                         title="Editar módulo"
                                     >
                                         <PencilIcon className="w-4 h-4" />
                                     </button>
                                     <button
                                         onClick={() => handleDelete(mod.id)}
-                                        className="p-1.5 rounded hover:bg-red-50 text-red-600"
+                                        className="p-1.5 rounded hover:bg-red-50 text-red-600 max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center"
                                         title="Excluir módulo"
                                     >
                                         <TrashIcon className="w-4 h-4" />

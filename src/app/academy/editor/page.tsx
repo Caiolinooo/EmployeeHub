@@ -603,6 +603,7 @@ const AcademyEditor: React.FC = () => {
                           </button>
                           <button
                             onClick={() => promptDeleteCourse(course)}
+                            data-academy-delete-trigger=""
                             className="text-red-600 hover:text-red-900 max-md:min-h-11 max-md:min-w-11 max-md:inline-flex max-md:items-center max-md:justify-center"
                             title={t('academy.excluir')}
                           >
