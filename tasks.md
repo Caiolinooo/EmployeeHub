@@ -1,3 +1,14 @@
+## QHSE “Colaborador não encontrado” (2026-09-25)
+
+Aba QHSE/EPI da ficha GT em produção chama `GET /api/document-catalog?colaboradorId=&qhse=1`. Select `cargo_nome` em `gt_colaboradores` (coluna só na view) → PostgREST error → identity null → 404. Sem writes no DB real. Sem UI. Sem PR #95 / #96.
+
+- [x] Causa: `CATALOG_COLAB_SELECT` em `identity-match.ts` vs tabela (`cargo_id`) / view (`cargo_nome`)
+- [x] Fix: `cargo:gt_cargos(nome)` + `flattenCatalogColabRow` + `catalogColabSelectIsSafe`
+- [x] Testes `document-catalog.test.ts` (sem DB)
+- [ ] Preview autenticado: aba QHSE lista docs; lista GT e outras abas inalteradas
+
+---
+
 ## UI Folha/Financeiro no padrão ABZ (2026-09-23)
 
 Hub `/folha-pagamento` sem sidebar, cards pretos e rotas `sheets/nova/funcionarios/empresas` em loop de redirect. Sem emitir NFS-e. Sem commit.
