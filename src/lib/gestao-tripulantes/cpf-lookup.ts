@@ -4,6 +4,17 @@
 
 import { supabaseAdmin } from '@/lib/supabase';
 import { formatCpf, normalizeCpf } from '@/lib/gestao-tripulantes/cpf';
+import {
+  flattenFullColaboradorRow,
+  FULL_COLAB_BY_CPF_SELECT,
+  type FullColaboradorInfo,
+} from '@/lib/gestao-tripulantes/full-colaborador-row';
+
+export {
+  flattenFullColaboradorRow,
+  FULL_COLAB_BY_CPF_SELECT,
+  type FullColaboradorInfo,
+} from '@/lib/gestao-tripulantes/full-colaborador-row';
 
 /** Lookup colaborador by CPF trying digits-only and masked forms (backfill-safe). */
 export async function findColaboradorByCpf(
@@ -31,21 +42,6 @@ export async function findColaboradorByCpf(
   return exact || data[0];
 }
 
-export interface FullColaboradorInfo {
-  id: string;
-  cpf: string;
-  nome_completo: string;
-  matricula?: string | null;
-  matricula_esocial?: string | null;
-  data_admissao?: string | null;
-  cargo_nome?: string | null;
-  funcao?: string | null;
-  cbo?: string | null;
-  cargo_cbo?: string | null;
-  empresa_cnpj?: string | null;
-  empresa_nome?: string | null;
-}
-
 export async function findFullColaboradorByCpf(
   cpfRaw: string
 ): Promise<FullColaboradorInfo | null> {
@@ -55,10 +51,7 @@ export async function findFullColaboradorByCpf(
   const formatted = formatCpf(digits);
   const { data, error } = await supabaseAdmin
     .from('gt_colaboradores')
-    .select(`
-      id, cpf, nome_completo, matricula, matricula_esocial, data_admissao,
-      cargo_nome, funcao, cbo, cargo_cbo, empresa_cnpj, empresa_nome
-    `)
+    .select(FULL_COLAB_BY_CPF_SELECT)
     .or(`cpf.eq.${digits},cpf.eq.${formatted}`)
     .is('deleted_at', null)
     .limit(2);
@@ -70,8 +63,9 @@ export async function findFullColaboradorByCpf(
 
   if (!data || data.length === 0) return null;
 
-  const exact = data.find((c) => normalizeCpf(c.cpf || '') === digits);
-  return exact || data[0];
+  const rows = data as unknown as Array<Parameters<typeof flattenFullColaboradorRow>[0]>;
+  const exact = rows.find((c) => normalizeCpf(c.cpf || '') === digits) || rows[0];
+  return flattenFullColaboradorRow(exact);
 }
 
 export async function getColaboradorCpfNormalized(colaboradorId: string): Promise<string | null> {

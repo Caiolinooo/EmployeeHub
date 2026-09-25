@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyToken } from '@/lib/auth';
 import { getStoredSession, mergeCookies, buildCookieHeader, extractCsrfTokenFromCookies, storeSession } from '@/lib/poliweb-session';
+import {
+    POLIWEB_BASE,
+    POLIWEB_HOST,
+    resolvePoliwebUrl,
+    shouldRewriteProxiedHtmlUrl,
+} from '@/lib/security/safe-url';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const POLIWEB_BASE = 'https://poliweb.policlinicamacae.com.br';
 const FORWARDED_RESPONSE_HEADERS = [
     'content-type',
     'content-length',
@@ -98,12 +104,11 @@ export async function GET(request: NextRequest, props: { params: Promise<{ path:
 
         if (token) {
             try {
-                const { verifyToken } = await import('@/lib/auth');
                 const authResult = verifyToken(token);
                 if (authResult) {
                     userId = authResult.userId;
                 }
-            } catch (e) {
+            } catch {
                 // Token invalid, continue without session
             }
         }
@@ -122,11 +127,15 @@ export async function GET(request: NextRequest, props: { params: Promise<{ path:
 
         const url = new URL(request.url);
         const searchParams = url.searchParams.toString();
-        const fullUrl = searchParams
-            ? `${POLIWEB_BASE}${targetPath}?${searchParams}`
-            : `${POLIWEB_BASE}${targetPath}`;
+        const targetUrl = resolvePoliwebUrl(targetPath, searchParams);
+        if (targetUrl.protocol !== 'https:' || targetUrl.hostname !== POLIWEB_HOST) {
+            return NextResponse.json(
+                { error: 'Erro ao conectar ao Poliweb' },
+                { status: 502 }
+            );
+        }
 
-        const response = await fetch(fullUrl, {
+        const response = await fetch(targetUrl.href, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
@@ -213,12 +222,11 @@ export async function POST(request: NextRequest, props: { params: Promise<{ path
 
         if (token) {
             try {
-                const { verifyToken } = await import('@/lib/auth');
                 const authResult = verifyToken(token);
                 if (authResult) {
                     userId = authResult.userId;
                 }
-            } catch (e) {
+            } catch {
                 // Token invalid, continue without session
             }
         }
@@ -240,7 +248,15 @@ export async function POST(request: NextRequest, props: { params: Promise<{ path
             body = await request.arrayBuffer();
         }
 
-        const response = await fetch(`${POLIWEB_BASE}${targetPath}`, {
+        const targetUrl = resolvePoliwebUrl(targetPath);
+        if (targetUrl.protocol !== 'https:' || targetUrl.hostname !== POLIWEB_HOST) {
+            return NextResponse.json(
+                { error: 'Erro ao processar requisição' },
+                { status: 502 }
+            );
+        }
+
+        const response = await fetch(targetUrl.href, {
             method: 'POST',
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -315,7 +331,7 @@ function rewriteHtml(html: string): string {
 
     // Rewrite relative URLs to go through our proxy
     result = result.replace(/\b(href|src|action)=["'](\/(?!\/)[^"']*)["']/gi, (match, attr, path) => {
-        if (path.startsWith('data:') || path.startsWith('javascript:') || path.startsWith('mailto:') || path.startsWith('#')) {
+        if (!shouldRewriteProxiedHtmlUrl(path)) {
             return match;
         }
         return `${attr}="/api/poliweb-proxy${path}"`;

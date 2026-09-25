@@ -4,6 +4,7 @@ import React, { useState, useCallback } from 'react';
 import { MagnifyingGlassIcon, CheckCircleIcon, ExclamationTriangleIcon, XCircleIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import type { CALookupResult, CAValidityLevel } from '@/types/epi';
 import { getCAValidityLevel, CA_VALIDITY_COLORS, CA_VALIDITY_LABELS } from '@/types/epi';
+import { buildConsultaCaHref } from '@/lib/epi/consulta-ca-url';
 
 interface CALookupFieldProps {
     value: string;
@@ -75,6 +76,7 @@ export default function CALookupField({
 
     const inputSizeClass = size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-2 text-sm';
     const btnSizeClass = size === 'sm' ? 'p-1' : 'p-2';
+    const consultaCaHref = buildConsultaCaHref(value);
 
     return (
         <div className={`space-y-2 ${className}`}>
@@ -132,9 +134,9 @@ export default function CALookupField({
                         <ExclamationTriangleIcon className="w-3.5 h-3.5 flex-shrink-0" />
                         <span>{error}</span>
                     </div>
-                    {value && (
+                    {consultaCaHref && (
                         <a
-                            href={`https://consultaca.com/${value}`}
+                            href={consultaCaHref}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="ml-5 text-blue-600 hover:underline flex items-center gap-1"
