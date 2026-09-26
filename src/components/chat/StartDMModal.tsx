@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { FiX, FiSearch, FiMessageCircle } from 'react-icons/fi';
 import { supabase } from '@/lib/supabase';
+import ModalCloseButton from '@/components/ui/ModalCloseButton';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
 
 interface User {
     id: string;
@@ -23,6 +26,8 @@ export default function StartDMModal({ isOpen, onClose, currentUserId, onStartCo
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(false);
     const [starting, setStarting] = useState<string | null>(null);
+    useEscapeToClose(isOpen, onClose);
+    useEscapeCapture(isOpen, onClose);
 
     useEffect(() => {
         if (isOpen) {
@@ -79,19 +84,27 @@ export default function StartDMModal({ isOpen, onClose, currentUserId, onStartCo
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="bg-zinc-900 rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-white/10 animate-in fade-in zoom-in duration-200">
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm max-md:p-4"
+            onClick={onClose}
+        >
+            <div
+                data-modal-panel=""
+                className="bg-zinc-900 rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-white/10 animate-in fade-in zoom-in duration-200"
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-zinc-900/80">
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                    <div className="flex items-center gap-3 max-md:min-w-0">
+                        <div className="w-9 h-9 rounded-lg bg-violet-500/10 flex items-center justify-center max-md:shrink-0">
                             <FiMessageCircle className="w-5 h-5 text-violet-400" />
                         </div>
-                        <h3 className="font-semibold text-lg text-white">Nova Conversa</h3>
+                        <h3 className="font-semibold text-lg text-white max-md:truncate">Nova Conversa</h3>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg transition-colors text-zinc-400 hover:text-white">
+                    <button type="button" onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg transition-colors text-zinc-400 hover:text-white max-md:hidden">
                         <FiX className="w-5 h-5" />
                     </button>
+                    <ModalCloseButton onClick={onClose} mobileOnly mountOnlyWhenMobile className="text-zinc-400 hover:text-white hover:bg-white/5" />
                 </div>
 
                 {/* Search */}
@@ -105,6 +118,13 @@ export default function StartDMModal({ isOpen, onClose, currentUserId, onStartCo
                             placeholder="Buscar usuário..."
                             className="w-full bg-zinc-950/50 border border-white/5 rounded-lg pl-10 pr-4 py-2.5 text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all"
                             autoFocus
+                            onKeyDown={(event) => {
+                                if (event.key === 'Escape' || event.key === 'Esc') {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    onClose();
+                                }
+                            }}
                         />
                     </div>
                 </div>

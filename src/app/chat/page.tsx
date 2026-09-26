@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { toast } from 'react-hot-toast';
@@ -141,6 +142,27 @@ export default function ChatPage() {
   const [selectedDM, setSelectedDM] = useState<any>(null);
   const [showStartDMModal, setShowStartDMModal] = useState(false);
   const [showDMSection, setShowDMSection] = useState(false);
+  const { markTrigger, restoreFocus } = useRestoreFocus();
+  const closeSettings = useCallback(() => {
+    setShowSettings(false);
+    restoreFocus();
+  }, [restoreFocus]);
+  const closeCreateChannel = useCallback(() => {
+    setShowCreateChannel(false);
+    restoreFocus();
+  }, [restoreFocus]);
+  const closeCreateServer = useCallback(() => {
+    setShowCreateServerModal(false);
+    restoreFocus();
+  }, [restoreFocus]);
+  const closeServerSettings = useCallback(() => {
+    setShowServerSettingsModal(false);
+    restoreFocus();
+  }, [restoreFocus]);
+  const closeStartDM = useCallback(() => {
+    setShowStartDMModal(false);
+    restoreFocus();
+  }, [restoreFocus]);
 
   const [confirmationModal, setConfirmationModal] = useState<{
     isOpen: boolean;
@@ -1095,7 +1117,8 @@ export default function ChatPage() {
           <div className="w-8 h-[2px] bg-white/5 rounded-full my-1" />
 
           <button
-            onClick={() => {
+            onClick={(event) => {
+              markTrigger(event.currentTarget);
               setShowCreateServerModal(true);
               setShowMobileSidebar(false);
             }}
@@ -1125,6 +1148,7 @@ export default function ChatPage() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+                      markTrigger(e.currentTarget);
                       setShowServerSettingsModal(true);
                     }}
                     className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded transition-all"
@@ -1144,10 +1168,17 @@ export default function ChatPage() {
               <div className="flex items-center justify-between px-2 mb-2 text-[11px] font-bold text-zinc-500 uppercase tracking-wider hover:text-zinc-300 transition-colors cursor-pointer group">
                 <span>Canais de Texto</span>
                 {isAdmin && selectedServer && (
-                  <FiPlus
-                    className="cursor-pointer hover:text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all"
-                    onClick={() => setShowCreateChannel(true)}
-                  />
+                  <button
+                    type="button"
+                    className="cursor-pointer hover:text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all p-0 bg-transparent border-0"
+                    onClick={(event) => {
+                      markTrigger(event.currentTarget);
+                      setShowCreateChannel(true);
+                    }}
+                    aria-label="Criar canal de texto"
+                  >
+                    <FiPlus />
+                  </button>
                 )}
               </div>
               <div className="space-y-[2px]">
@@ -1189,10 +1220,17 @@ export default function ChatPage() {
             <div className="border-t border-white/5 pt-4">
               <div className="flex items-center justify-between px-2 mb-2 text-[11px] font-bold text-zinc-500 uppercase tracking-wider hover:text-zinc-300 transition-colors cursor-pointer group">
                 <span>Mensagens Diretas</span>
-                <FiPlus
-                  className="cursor-pointer hover:text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all"
-                  onClick={() => setShowStartDMModal(true)}
-                />
+                <button
+                  type="button"
+                  className="cursor-pointer hover:text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all p-0 bg-transparent border-0"
+                  onClick={(event) => {
+                    markTrigger(event.currentTarget);
+                    setShowStartDMModal(true);
+                  }}
+                  aria-label="Nova conversa"
+                >
+                  <FiPlus />
+                </button>
               </div>
               <div className="space-y-[2px] max-h-40 overflow-y-auto">
                 {dmConversations.length === 0 ? (
@@ -1245,10 +1283,17 @@ export default function ChatPage() {
               <div className="flex items-center justify-between px-2 mb-2 text-[11px] font-bold text-zinc-500 uppercase tracking-wider hover:text-zinc-300 transition-colors cursor-pointer group">
                 <span>Canais de Voz</span>
                 {isAdmin && selectedServer && (
-                  <FiPlus
-                    className="cursor-pointer hover:text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all"
-                    onClick={() => setShowCreateChannel(true)}
-                  />
+                  <button
+                    type="button"
+                    className="cursor-pointer hover:text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all p-0 bg-transparent border-0"
+                    onClick={(event) => {
+                      markTrigger(event.currentTarget);
+                      setShowCreateChannel(true);
+                    }}
+                    aria-label="Criar canal de voz"
+                  >
+                    <FiPlus />
+                  </button>
                 )}
               </div>
               <div className="space-y-[2px]">
@@ -1309,7 +1354,12 @@ export default function ChatPage() {
                 {isLocalMuted ? <FiVolumeX className="w-4 h-4" /> : <FiVolume2 className="w-4 h-4" />}
               </button>
               <button
-                onClick={() => setShowSettings(true)}
+                type="button"
+                aria-label="Configurações do Chat"
+                onClick={(event) => {
+                  markTrigger(event.currentTarget);
+                  setShowSettings(true);
+                }}
                 className="p-1.5 hover:bg-white/10 rounded-md transition-colors text-zinc-400 hover:text-white"
               >
                 <FiSettings className="w-4 h-4" />
@@ -1714,7 +1764,7 @@ export default function ChatPage() {
       {/* Settings Modal */}
       <ChatSettingsModal
         isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
+        onClose={closeSettings}
         prefs={{ typing: prefTyping, sound: prefSound }}
         onSave={savePrefs}
       />
@@ -1723,7 +1773,7 @@ export default function ChatPage() {
       {selectedServer && (
         <CreateChannelModal
           isOpen={showCreateChannel}
-          onClose={() => setShowCreateChannel(false)}
+          onClose={closeCreateChannel}
           onCreate={handleCreateChannel}
           serverId={selectedServer.id}
         />
@@ -1731,7 +1781,7 @@ export default function ChatPage() {
 
       <CreateServerModal
         isOpen={showCreateServerModal}
-        onClose={() => setShowCreateServerModal(false)}
+        onClose={closeCreateServer}
         onCreate={handleCreateServer}
       />
 
@@ -1753,7 +1803,7 @@ export default function ChatPage() {
       {selectedServer && (
         <ServerSettingsModal
           isOpen={showServerSettingsModal}
-          onClose={() => setShowServerSettingsModal(false)}
+          onClose={closeServerSettings}
           server={selectedServer}
           onUpdate={handleUpdateServer}
           onDelete={(id) => {
@@ -1771,7 +1821,7 @@ export default function ChatPage() {
       {/* Start DM Modal */}
       <StartDMModal
         isOpen={showStartDMModal}
-        onClose={() => setShowStartDMModal(false)}
+        onClose={closeStartDM}
         currentUserId={user?.id || ''}
         onStartConversation={handleStartDMConversation}
       />
