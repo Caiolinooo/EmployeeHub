@@ -45,23 +45,6 @@ export default function ChatWindow({ token }: Props) {
     restoreFocus();
   }, [restoreFocus]);
 
-  useEffect(() => {
-    if (!sidebarOpen) return undefined;
-    const mq = window.matchMedia('(max-width: 1023px)');
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      if (!mq.matches) return;
-      event.stopPropagation();
-      closeMobileSidebar();
-    };
-    window.addEventListener('keydown', onKey);
-    document.addEventListener('keydown', onKey, true);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.removeEventListener('keydown', onKey, true);
-    };
-  }, [sidebarOpen, closeMobileSidebar]);
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -132,24 +115,27 @@ export default function ChatWindow({ token }: Props) {
   }, [streamingMetadata?.sidebarOpen, messages]);
 
   useEffect(() => {
-    if (!sidebarOpen) return;
+    if (!sidebarOpen) return undefined;
     const mq = window.matchMedia('(max-width: 1023px)');
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       event.stopPropagation();
-      setSidebarOpen(false);
+      closeMobileSidebar();
     };
     const apply = () => {
       window.removeEventListener('keydown', onKey);
+      document.removeEventListener('keydown', onKey, true);
       if (mq.matches) window.addEventListener('keydown', onKey);
+      if (mq.matches) document.addEventListener('keydown', onKey, true);
     };
     apply();
     mq.addEventListener('change', apply);
     return () => {
       mq.removeEventListener('change', apply);
       window.removeEventListener('keydown', onKey);
+      document.removeEventListener('keydown', onKey, true);
     };
-  }, [sidebarOpen]);
+  }, [sidebarOpen, closeMobileSidebar]);
 
   // Listen for dashboard actions
   useEffect(() => {
