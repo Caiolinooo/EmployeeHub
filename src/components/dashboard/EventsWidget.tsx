@@ -90,7 +90,7 @@ export default function EventsWidget() {
                         ))}
                     </div>
                 ) : events.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-40 text-gray-400">
+                    <div className="flex flex-col items-center justify-center h-40 text-gray-500">
                         <p className="text-sm">Sem eventos próximos</p>
                     </div>
                 ) : (
@@ -99,11 +99,11 @@ export default function EventsWidget() {
                             <div className="flex items-center gap-5 z-10 relative w-full">
                                 <div className="flex flex-col items-center justify-center pr-5 border-r border-gray-100 min-w-[4rem]">
                                     <span className="text-2xl font-bold text-gray-800">{getDay(ev.date)}</span>
-                                    <span className="text-xs font-bold text-gray-400 uppercase">{getMonthAbbr(ev.date)}</span>
+                                    <span className="text-xs font-bold text-gray-500 uppercase">{getMonthAbbr(ev.date)}</span>
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <h4 className="font-bold text-gray-900 text-base line-clamp-1 mb-0.5">{ev.title}</h4>
-                                    <p className="text-xs text-gray-400 line-clamp-1">{ev.description || (ev.type === 'COMPANY' ? 'Evento Corporativo' : ev.type)}</p>
+                                    <p className="text-xs text-gray-500 line-clamp-1">{ev.description || (ev.type === 'COMPANY' ? 'Evento Corporativo' : ev.type)}</p>
                                 </div>
                             </div>
                             {/* Type Indicator */}

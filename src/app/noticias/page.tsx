@@ -45,7 +45,8 @@ export default function NoticiasPage() {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                className="ml-2 p-3 -m-2 text-gray-500 hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-abz-blue rounded-full"
+                aria-label="Limpar busca"
               >
                 <FiX className="h-4 w-4" />
               </button>
@@ -79,13 +80,13 @@ export default function NoticiasPage() {
         <div className="md:hidden flex items-center space-x-2 mb-6 overflow-x-auto pb-2 scrollbar-hide px-1">
           <button
             onClick={() => setShowFeaturedOnly(false)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${!showFeaturedOnly ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'}`}
+            className={`px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${!showFeaturedOnly ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'}`}
           >
             Todos
           </button>
           <button
             onClick={() => setShowFeaturedOnly(true)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${showFeaturedOnly ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'}`}
+            className={`px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${showFeaturedOnly ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'}`}
           >
             Destaques
           </button>

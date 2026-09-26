@@ -77,7 +77,7 @@ export function EPIReportModal({ isOpen, onClose }: EPIReportModalProps) {
                         <h2 className="text-xl font-semibold">Gerar Relatório Geral de EPI</h2>
                         <p className="text-sm text-gray-500 mt-1">Selecione os filtros para o PDF.</p>
                     </div>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700 transition-colors" aria-label="Fechar">
                         <X className="w-5 h-5" />
                     </button>
                 </div>

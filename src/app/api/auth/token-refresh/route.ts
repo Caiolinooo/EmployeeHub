@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { extractTokenFromHeader, verifyToken, generateToken } from '@/lib/auth';
+import { extractTokenFromHeader, verifyToken, verifyTokenAllowExpired, generateToken } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -47,8 +47,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar o token
-    const payload = verifyToken(token);
+    // Verificar o token (aceita token expirado com assinatura válida dentro da janela de graça)
+    let payload = verifyToken(token);
+    if (!payload) {
+      payload = verifyTokenAllowExpired(token);
+      if (payload) {
+        console.log('Token expirado aceito dentro da janela de graça para renovação');
+      }
+    }
     console.log('Resultado da verificação do token:', payload ? 'Válido' : 'Inválido');
 
     if (!payload) {

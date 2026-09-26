@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { toast } from 'react-hot-toast';
+import { fetchWithToken } from '@/lib/tokenStorage';
 
 interface NewEventState {
     summary: string;
@@ -41,22 +42,33 @@ const AdminCalendarManager: React.FC<{ onEventCreated?: () => void }> = ({ onEve
         try {
             setLoading(true);
 
+            if (!user?.id) {
+                toast.error('Sessão expirada. Faça login novamente.');
+                return;
+            }
+
             const eventBody = {
+                userId: user.id,
                 summary: newEvent.summary,
                 description: newEvent.description,
                 location: newEvent.location,
-                start: { dateTime: new Date(newEvent.start).toISOString() },
-                end: { dateTime: new Date(newEvent.end).toISOString() },
+                start: new Date(newEvent.start).toISOString(),
+                end: new Date(newEvent.end).toISOString(),
                 attendees: newEvent.attendees
-                    ? newEvent.attendees.split(',').map(email => ({ email: email.trim() }))
+                    ? newEvent.attendees.split(',').map(email => email.trim()).filter(email => email)
                     : [],
             };
 
-            const response = await fetch('/api/calendar/google', {
+            const response = await fetchWithToken('/api/calendar/events', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(eventBody)
             });
+
+            if (response.status === 401) {
+                toast.error('Sessão expirada. Faça login novamente.');
+                return;
+            }
 
             if (!response.ok) {
                 const error = await response.json();
@@ -75,9 +87,9 @@ const AdminCalendarManager: React.FC<{ onEventCreated?: () => void }> = ({ onEve
             });
             if (onEventCreated) onEventCreated();
 
-        } catch (error: any) {
+        } catch (error) {
             console.error('Erro ao criar evento:', error);
-            toast.error(error.message);
+            toast.error(error instanceof Error ? error.message : 'Erro ao criar evento');
         } finally {
             setLoading(false);
         }

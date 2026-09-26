@@ -684,7 +684,7 @@ export default function Login() {
                     <div className="w-full border-t border-gray-200" />
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="bg-white px-3 text-gray-400">
+                    <span className="bg-white px-3 text-gray-500">
                       {t('auth.biometricOrDivider', 'ou entre com biometria')}
                     </span>
                   </div>
@@ -947,8 +947,9 @@ export default function Login() {
                     />
                     <button
                       type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-500"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-abz-blue rounded"
                       onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? t('auth.hidePassword', 'Ocultar senha') as string : t('auth.showPassword', 'Mostrar senha') as string}
                     >
                       {showPassword ? <FiEyeOff className="h-5 w-5" /> : <FiEye className="h-5 w-5" />}
                     </button>
@@ -1200,7 +1201,8 @@ export default function Login() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="text-gray-400 hover:text-gray-500 focus:outline-none"
+                      className="text-gray-500 hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-abz-blue rounded"
+                      aria-label={showPassword ? t('auth.hidePassword', 'Ocultar senha') as string : t('auth.showPassword', 'Mostrar senha') as string}
                     >
                       {showPassword ? <FiEyeOff className="h-4 w-4" /> : <FiEye className="h-4 w-4" />}
                     </button>
@@ -1231,7 +1233,8 @@ export default function Login() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="text-gray-400 hover:text-gray-500 focus:outline-none"
+                      className="text-gray-500 hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-abz-blue rounded"
+                      aria-label={showConfirmPassword ? t('auth.hidePassword', 'Ocultar senha') as string : t('auth.showPassword', 'Mostrar senha') as string}
                     >
                       {showConfirmPassword ? <FiEyeOff className="h-4 w-4" /> : <FiEye className="h-4 w-4" />}
                     </button>

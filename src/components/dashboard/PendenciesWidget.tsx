@@ -156,7 +156,7 @@ export default function PendenciesWidget() {
             <FiClipboard className="w-6 h-6 text-green-500" />
           </div>
           <p className="text-sm text-gray-500">Sem pendências no momento</p>
-          <p className="text-xs text-gray-400 mt-1">Tudo em dia!</p>
+          <p className="text-xs text-gray-500 mt-1">Tudo em dia!</p>
         </div>
       ) : (
         <div className="space-y-0.5">

@@ -150,7 +150,7 @@ export default function PasskeyManagement() {
                 <div className="bg-gray-50 border border-dashed rounded-lg p-8 text-center">
                     <FiKey className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                     <p className="text-gray-500">Nenhuma biometria cadastrada.</p>
-                    <p className="text-sm text-gray-400 mt-1">Cadastre uma para agilizar suas assinaturas de EPI.</p>
+                    <p className="text-sm text-gray-500 mt-1">Cadastre uma para agilizar suas assinaturas de EPI.</p>
                 </div>
             ) : (
                 <div className="grid gap-4">

@@ -337,7 +337,7 @@ export default function ProfilePage() {
                   value={formData.taxId}
                   onChange={(e) => setFormData({ ...formData, taxId: formatCpf(e.target.value) })}
                 />
-                <p className="text-xs text-gray-400">{t('profile.cpf_hint', 'Utilizado para validação de identidade em assinaturas eletrônicas.')}</p>
+                <p className="text-xs text-gray-500">{t('profile.cpf_hint', 'Utilizado para validação de identidade em assinaturas eletrônicas.')}</p>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">{t('profile.birth_date', 'Data de Nascimento')}</label>
@@ -379,7 +379,7 @@ export default function ProfilePage() {
                 <div className="flex border-b border-gray-100 overflow-x-auto scrollbar-hide">
                   <button
                     onClick={() => setActiveTab('password')}
-                    className={`px-4 md:px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap focus:outline-none ${activeTab === 'password' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                    className={`px-4 md:px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-abz-blue ${activeTab === 'password' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
                   >
                     <div className="flex items-center gap-2">
                       <FiLock className="w-4 h-4" />
@@ -388,7 +388,7 @@ export default function ProfilePage() {
                   </button>
                   <button
                     onClick={() => setActiveTab('notifications')}
-                    className={`px-4 md:px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap focus:outline-none ${activeTab === 'notifications' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                    className={`px-4 md:px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-abz-blue ${activeTab === 'notifications' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
                   >
                     <div className="flex items-center gap-2">
                       <FiSettings className="w-4 h-4" />
@@ -397,7 +397,7 @@ export default function ProfilePage() {
                   </button>
                   <button
                     onClick={() => setActiveTab('signature')}
-                    className={`px-4 md:px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap focus:outline-none ${activeTab === 'signature' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                    className={`px-4 md:px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-abz-blue ${activeTab === 'signature' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
                   >
                     <div className="flex items-center gap-2">
                       <FiEdit className="w-4 h-4" />
@@ -406,7 +406,7 @@ export default function ProfilePage() {
                   </button>
                   <button
                     onClick={() => setActiveTab('documents')}
-                    className={`px-4 md:px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap focus:outline-none ${activeTab === 'documents' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                    className={`px-4 md:px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-abz-blue ${activeTab === 'documents' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
                   >
                     <div className="flex items-center gap-2">
                       <FiFileText className="w-4 h-4" />
@@ -416,7 +416,7 @@ export default function ProfilePage() {
                   {showQhseTab && (
                     <button
                       onClick={() => setActiveTab('qhse')}
-                      className={`px-4 md:px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap focus:outline-none ${activeTab === 'qhse' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                      className={`px-4 md:px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-abz-blue ${activeTab === 'qhse' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
                     >
                       <div className="flex items-center gap-2">
                         <FiShield className="w-4 h-4" />
@@ -426,7 +426,7 @@ export default function ProfilePage() {
                   )}
                   <button
                     onClick={() => setActiveTab('passkeys')}
-                    className={`px-4 md:px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap focus:outline-none ${activeTab === 'passkeys' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                    className={`px-4 md:px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-abz-blue ${activeTab === 'passkeys' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
                   >
                     <div className="flex items-center gap-2">
                       <FiKey className="w-4 h-4" />
@@ -436,7 +436,7 @@ export default function ProfilePage() {
                   {(profile?.role === 'admin' || profile?.role === 'manager') && (
                     <button
                       onClick={() => setActiveTab('admin_reimbursement')}
-                      className={`px-4 md:px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap focus:outline-none ${activeTab === 'admin_reimbursement' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                      className={`px-4 md:px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-abz-blue ${activeTab === 'admin_reimbursement' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
                     >
                       <div className="flex items-center gap-2">
                         <FiDollarSign className="w-4 h-4" />

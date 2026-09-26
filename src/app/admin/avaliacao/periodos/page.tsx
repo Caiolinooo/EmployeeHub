@@ -364,7 +364,8 @@ export default function PeriodosAvaliacaoPage() {
                   </h2>
                   <button
                     onClick={() => setShowModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-500 hover:text-gray-700"
+                    aria-label="Fechar"
                   >
                     <FiX size={24} />
                   </button>

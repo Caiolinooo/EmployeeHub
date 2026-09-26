@@ -340,8 +340,9 @@ const DocumentItem = ({ document, onEdit, onDelete, onToggleVisibility, onMoveUp
           </button>
           <button
             onClick={() => onToggleVisibility(document.id, !document.enabled)}
-            className={`p-1 ${document.enabled ? 'text-green-500 hover:text-green-700' : 'text-gray-400 hover:text-gray-600'}`}
+            className={`p-1 ${document.enabled ? 'text-green-600 hover:text-green-700' : 'text-gray-500 hover:text-gray-700'}`}
             title={document.enabled ? t('admin.documents.disable') : t('admin.documents.enable')}
+            aria-label={document.enabled ? t('admin.documents.disable') as string : t('admin.documents.enable') as string}
           >
             {document.enabled ? <FiEye className="h-4 w-4" /> : <FiEyeOff className="h-4 w-4" />}
           </button>

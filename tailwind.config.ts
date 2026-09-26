@@ -35,6 +35,37 @@ const config: Config = {
         'abz-cyan-dark': '#0891B2',
         'abz-teal': '#14B8A6',
         'abz-teal-dark': '#0D9488',
+        // Tokens semânticos (componentes ui/*) mapeados para a paleta canônica
+        // via variáveis CSS definidas em src/app/globals.css
+        border: 'var(--border)',
+        input: 'var(--input)',
+        ring: 'var(--ring)',
+        background: 'var(--background)',
+        foreground: 'var(--foreground)',
+        primary: {
+          DEFAULT: 'var(--primary-color, #005dff)',
+          foreground: 'var(--primary-foreground)',
+        },
+        secondary: {
+          DEFAULT: 'var(--secondary-color, #6339F5)',
+          foreground: 'var(--secondary-foreground)',
+        },
+        destructive: {
+          DEFAULT: 'var(--destructive)',
+          foreground: 'var(--destructive-foreground)',
+        },
+        muted: {
+          DEFAULT: 'var(--muted)',
+          foreground: 'var(--muted-foreground)',
+        },
+        accent: {
+          DEFAULT: 'var(--accent)',
+          foreground: 'var(--accent-foreground)',
+        },
+        card: {
+          DEFAULT: 'var(--card)',
+          foreground: 'var(--card-foreground)',
+        },
       },
       typography: {
         DEFAULT: {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { extractTokenFromHeader, verifyToken, generateToken } from '@/lib/auth';
+import { extractTokenFromHeader, verifyToken, verifyTokenAllowExpired, generateToken } from '@/lib/auth';
 import jwt from 'jsonwebtoken';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -46,8 +46,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar o token
-    const payload = verifyToken(token);
+    // Verificar o token (aceita token expirado com assinatura válida dentro da janela de graça)
+    let payload = verifyToken(token);
+    let tokenExpiredButValid = false;
+    if (!payload) {
+      payload = verifyTokenAllowExpired(token);
+      if (payload) {
+        tokenExpiredButValid = true;
+        console.log('Token expirado aceito dentro da janela de graça para correção');
+      }
+    }
     console.log('Resultado da verificação do token:', payload ? 'Válido' : 'Inválido');
 
     if (!payload) {
@@ -164,14 +172,18 @@ export async function POST(request: NextRequest) {
       return response;
     }
 
-    // Se o token já estiver correto, retornar sucesso
-    console.log('Token válido, retornando sucesso');
+    // Se o token original estava expirado (aceito pela janela de graça), emitir um novo token;
+    // caso contrário, retornar o token original que ainda é válido
+    const tokenToReturn = tokenExpiredButValid
+      ? generateToken({ id: user.id, phone_number: user.phone_number, role: user.role })
+      : token;
+    console.log(tokenExpiredButValid ? 'Token expirado substituído por um novo' : 'Token válido, retornando sucesso');
 
     // Criar a resposta
     const response = NextResponse.json({
       success: true,
-      message: 'Token válido',
-      token: token, // Retornar o token original
+      message: tokenExpiredButValid ? 'Token renovado' : 'Token válido',
+      token: tokenToReturn,
       user: {
         _id: user.id,
         firstName: user.first_name,
@@ -194,7 +206,7 @@ export async function POST(request: NextRequest) {
     // Definir o cookie com o token
     response.cookies.set({
       name: 'abzToken',
-      value: token,
+      value: tokenToReturn,
       expires: expiryDate,
       path: '/',
       httpOnly: false, // Permitir acesso via JavaScript
@@ -205,7 +217,7 @@ export async function POST(request: NextRequest) {
     // Também definir no cookie legado para compatibilidade
     response.cookies.set({
       name: 'token',
-      value: token,
+      value: tokenToReturn,
       expires: expiryDate,
       path: '/',
       httpOnly: false,

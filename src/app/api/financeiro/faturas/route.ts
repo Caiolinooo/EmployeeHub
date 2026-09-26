@@ -4,6 +4,7 @@ import { garantirNivelFinanceiro } from '@/lib/financeiro/financeiro-auth';
 import { criarFatura } from '@/lib/financeiro/service';
 import { atorDeUserId } from '@/lib/financeiro/eventos';
 import { finErro, finFail, finOk, corpoJson, paginacao } from '../_lib/http';
+import { resolverEmpresaIdFiltro } from '../visao-geral/visao-geral';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,8 +25,10 @@ export async function GET(request: NextRequest) {
       .select('*, cliente:fin_clientes(id, nome, client_key)', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(from, to);
-    const empresaId = searchParams.get('empresaId');
-    if (empresaId) query = query.eq('empresa_id', empresaId);
+    // 'todas'/'null'/'' = visão geral (sem filtro); uuid inválido = 400 (evita 500 do Postgres)
+    const empresaFiltro = resolverEmpresaIdFiltro(searchParams.get('empresaId'));
+    if (!empresaFiltro.ok) return finFail('empresaId inválido: informe um UUID ou "todas"', 400);
+    if (empresaFiltro.empresaId) query = query.eq('empresa_id', empresaFiltro.empresaId);
     const status = searchParams.get('status');
     if (status) query = query.eq('status', status);
     const clienteId = searchParams.get('clienteId');

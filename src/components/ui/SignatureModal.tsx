@@ -132,8 +132,8 @@ export default function SignatureModal({
                 {/* Header */}
                 <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-50 rounded-lg">
-                            <FiEdit3 className="w-5 h-5 text-blue-600" />
+                        <div className="p-2 bg-abz-light-blue rounded-lg">
+                            <FiEdit3 className="w-5 h-5 text-abz-blue" />
                         </div>
                         <div>
                             <h3 className="text-lg font-semibold text-gray-900">{displayTitle}</h3>
@@ -143,7 +143,7 @@ export default function SignatureModal({
                     <button
                         onClick={onClose}
                         disabled={isSubmitting || isRegistering || isPasskeyLoading}
-                        className="text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-gray-100 transition-colors"
+                        className="text-gray-500 hover:text-gray-600 p-1 rounded-md hover:bg-gray-100 transition-colors"
                     >
                         <FiX className="w-5 h-5" />
                     </button>
@@ -154,7 +154,7 @@ export default function SignatureModal({
                     {step === 'register' && (
                         <div className="space-y-4">
                             <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                                <FiShield className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                                <FiShield className="w-5 h-5 text-abz-yellow-dark flex-shrink-0" />
                                 <p className="text-sm text-amber-800">
                                     {currentSignatureUrl
                                         ? t('signature.modal.draw_to_replace', 'Desenhe sua nova assinatura abaixo para substituir a atual.')
@@ -183,7 +183,7 @@ export default function SignatureModal({
                                     type="button"
                                     onClick={handleRegisterSignature}
                                     disabled={!newSignatureBase64 || isRegistering}
-                                    className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                                    className="flex items-center gap-2 px-5 py-2.5 bg-abz-blue text-white rounded-lg hover:bg-abz-blue-dark disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
                                 >
                                     {isRegistering ? (
                                         <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
@@ -220,7 +220,7 @@ export default function SignatureModal({
                                     type="button"
                                     onClick={() => setStep('register')}
                                     disabled={isSubmitting || isPasskeyLoading}
-                                    className="text-xs text-blue-600 hover:text-blue-800 font-medium underline underline-offset-2"
+                                    className="text-xs text-abz-blue hover:text-abz-blue-dark font-medium underline underline-offset-2"
                                 >
                                     {t('signature.modal.change_signature', 'Alterar assinatura')}
                                 </button>
@@ -237,7 +237,7 @@ export default function SignatureModal({
                                         type="button"
                                         onClick={handleDirectConfirm}
                                         disabled={isSubmitting || isPasskeyLoading}
-                                        className="flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium text-sm"
+                                        className="flex items-center justify-center gap-2 px-4 py-3 bg-abz-green text-white rounded-lg hover:bg-abz-green-dark disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium text-sm"
                                     >
                                         {isSubmitting && !isPasskeyLoading ? (
                                             <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
@@ -252,7 +252,7 @@ export default function SignatureModal({
                                         type="button"
                                         onClick={handlePasskeyAuth}
                                         disabled={isSubmitting || isPasskeyLoading}
-                                        className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium text-sm"
+                                        className="flex items-center justify-center gap-2 px-4 py-3 bg-abz-blue text-white rounded-lg hover:bg-abz-blue-dark disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium text-sm"
                                     >
                                         {isPasskeyLoading ? (
                                             <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />

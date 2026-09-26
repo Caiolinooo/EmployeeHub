@@ -69,7 +69,7 @@ export default function SignaturePad({
                     onEnd={handleEnd}
                 />
                 {isEmpty && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-gray-400 text-sm">
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-gray-500 text-sm">
                         {placeholder}
                     </div>
                 )}
@@ -85,7 +85,7 @@ export default function SignaturePad({
                     Limpar
                 </button>
                 {!isEmpty && (
-                    <span className="flex items-center gap-1 text-xs text-green-600">
+                    <span className="flex items-center gap-1 text-xs text-abz-green-dark">
                         <FiCheck className="w-3 h-3" />
                         Assinatura capturada
                     </span>

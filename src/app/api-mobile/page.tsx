@@ -242,8 +242,8 @@ export default function APIMobilePage() {
         <div className="space-y-2">
           {stats?.api.topEndpoints.map((endpoint, index) => (
             <div key={index} className="flex justify-between items-center py-2">
-              <span className="text-sm font-mono text-gray-700">{endpoint.endpoint}</span>
-              <span className="text-sm font-semibold text-gray-900">{endpoint.count}</span>
+              <span className="text-sm font-mono text-gray-700 break-all">{endpoint.endpoint}</span>
+              <span className="text-sm font-semibold text-gray-900 shrink-0 ml-4">{endpoint.count}</span>
             </div>
           ))}
         </div>
@@ -254,11 +254,11 @@ export default function APIMobilePage() {
   const renderDevices = () => (
     <div className="bg-white rounded-lg shadow-sm border">
       <div className="p-6 border-b">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-wrap justify-between items-center gap-2">
           <h3 className="text-lg font-semibold text-gray-900">Dispositivos Móveis</h3>
           <button
             onClick={() => exportData('devices')}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             <FiDownload className="h-4 w-4" />
             Exportar
@@ -274,9 +274,9 @@ export default function APIMobilePage() {
   const renderNotifications = () => (
     <div className="bg-white rounded-lg shadow-sm border">
       <div className="p-6 border-b">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-wrap justify-between items-center gap-2">
           <h3 className="text-lg font-semibold text-gray-900">Notificações Push</h3>
-          <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+          <button className="px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700">
             Enviar Notificação
           </button>
         </div>
@@ -358,7 +358,7 @@ export default function APIMobilePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">API Mobile</h1>
                 <p className="text-gray-600">Gerenciamento e monitoramento da API mobile</p>
@@ -366,7 +366,7 @@ export default function APIMobilePage() {
               <button
                 onClick={loadStats}
                 disabled={refreshing}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
               >
                 <FiRefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
                 Atualizar
@@ -376,7 +376,7 @@ export default function APIMobilePage() {
 
           {/* Tabs */}
           <div className="mb-8">
-            <nav className="flex space-x-8">
+            <nav className="flex space-x-2 sm:space-x-8 overflow-x-auto pb-1">
               {[
                 { id: 'overview', label: 'Visão Geral', icon: FiBarChart },
                 { id: 'devices', label: 'Dispositivos', icon: FiSmartphone },
@@ -386,7 +386,7 @@ export default function APIMobilePage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg ${
+                  className={`flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'bg-blue-100 text-blue-700'
                       : 'text-gray-500 hover:text-gray-700'

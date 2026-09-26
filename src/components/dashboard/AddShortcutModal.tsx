@@ -196,7 +196,7 @@ export default function AddShortcutModal({ onClose, onAdd, existingShortcuts }: 
                 <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
 
                     {loading ? (
-                        <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                        <div className="flex flex-col items-center justify-center py-12 text-gray-500">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-3"></div>
                             <p>{t('common.loading')}</p>
                         </div>
@@ -205,7 +205,7 @@ export default function AddShortcutModal({ onClose, onAdd, existingShortcuts }: 
                             {/* Suggestions Section */}
                             {suggestions.length > 0 && !searchQuery && (
                                 <div>
-                                    <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">
+                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-1">
                                         {t('dashboard.suggestedForYou', 'Sugeridos para você')}
                                     </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -231,7 +231,7 @@ export default function AddShortcutModal({ onClose, onAdd, existingShortcuts }: 
                                                             {t('dashboard.oftenAccessed', 'Acessado frequentemente')}
                                                         </p>
                                                     </div>
-                                                    <FiPlus className="w-5 h-5 text-gray-300 group-hover:text-blue-500" />
+                                                    <FiPlus className="w-5 h-5 text-gray-500 group-hover:text-blue-500" />
                                                 </button>
                                             );
                                         })}
@@ -241,7 +241,7 @@ export default function AddShortcutModal({ onClose, onAdd, existingShortcuts }: 
 
                             {/* All Modules Section */}
                             <div>
-                                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">
+                                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-1">
                                     {searchQuery ? t('common.results', 'Resultados') : t('dashboard.allModules', 'Todos os módulos')}
                                 </h3>
 
@@ -268,7 +268,7 @@ export default function AddShortcutModal({ onClose, onAdd, existingShortcuts }: 
                                                         {module.moduleKey ? t(`cards.${module.moduleKey}Desc`, module.description) : module.description}
                                                     </p>
                                                 </div>
-                                                <FiPlus className="w-5 h-5 text-gray-300 group-hover:text-blue-500" />
+                                                <FiPlus className="w-5 h-5 text-gray-500 group-hover:text-blue-500" />
                                             </button>
                                         ))}
                                     </div>

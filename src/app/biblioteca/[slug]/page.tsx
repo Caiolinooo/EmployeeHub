@@ -121,7 +121,7 @@ export default function LibraryItemPage() {
             <div className="mb-6 flex items-center justify-between">
                 <button
                     onClick={() => router.push('/biblioteca')}
-                    className="flex items-center text-gray-600 hover:text-abz-blue transition-colors"
+                    className="flex items-center py-2 -my-2 text-gray-600 hover:text-abz-blue transition-colors"
                 >
                     <FiArrowLeft className="mr-2" />
                     Voltar para Biblioteca
@@ -129,12 +129,12 @@ export default function LibraryItemPage() {
             </div>
 
             <div className={`rounded-lg shadow-sm border border-gray-100 overflow-hidden min-h-[60vh]`} style={containerStyle}>
-                <div className="p-8 border-b border-gray-100 bg-white/50 backdrop-blur-sm">
-                    <h1 className="text-3xl font-bold mb-3" style={{ color: contentStyle.color }}>{item.title}</h1>
+                <div className="p-4 sm:p-8 border-b border-gray-100 bg-white/50 backdrop-blur-sm">
+                    <h1 className="text-2xl sm:text-3xl font-bold mb-3 break-words" style={{ color: contentStyle.color }}>{item.title}</h1>
                     <p className="text-lg opacity-80" style={{ color: contentStyle.color }}>{item.description}</p>
                 </div>
 
-                <div className="p-8">
+                <div className="p-4 sm:p-8">
                     {/* Render Consolidated Legacy Content if matched */}
                     {legacyContent ? (
                         <div className="legacy-content-wrapper">
@@ -143,7 +143,7 @@ export default function LibraryItemPage() {
                     ) : (
                         <>
                             {item.type === 'pdf' && item.content_url && (
-                                <div className="h-[800px] border border-gray-200 rounded-lg overflow-hidden">
+                                <div className="h-[70vh] md:h-[800px] border border-gray-200 rounded-lg overflow-hidden">
                                     <iframe
                                         src={`${item.content_url}#toolbar=0`}
                                         className="w-full h-full"

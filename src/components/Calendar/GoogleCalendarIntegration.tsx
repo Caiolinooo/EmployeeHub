@@ -13,6 +13,7 @@ import {
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useSiteConfig } from '@/contexts/SiteConfigContext';
 import { useI18n } from '@/contexts/I18nContext';
+import { fetchWithToken } from '@/lib/tokenStorage';
 
 interface CalendarEvent {
   id: string;
@@ -69,8 +70,13 @@ const GoogleCalendarIntegration: React.FC = () => {
 
   const checkAuthStatus = async () => {
     try {
-      const response = await fetch('/api/calendar/auth?action=status');
+      const response = await fetchWithToken('/api/calendar/auth?action=status');
       const data = await response.json();
+      if (response.status === 401) {
+        setAuthenticated(false);
+        console.warn('Sessão expirada ao verificar autenticação do calendário. Faça login novamente.');
+        return;
+      }
       setAuthenticated(data.authenticated);
     } catch (error) {
       console.error(t('components.erroAoVerificarStatusDeAutenticacao'), error);
@@ -94,8 +100,13 @@ const GoogleCalendarIntegration: React.FC = () => {
         maxResults: '50'
       });
 
-      const response = await fetch(`/api/calendar/events?${params}`);
+      const response = await fetchWithToken(`/api/calendar/events?${params}`);
       const data = await response.json();
+
+      if (response.status === 401) {
+        alert('Sua sessão expirou. Faça login novamente para ver os eventos.');
+        return;
+      }
 
       if (response.ok) {
         setEvents(data.events);
@@ -114,8 +125,13 @@ const GoogleCalendarIntegration: React.FC = () => {
 
   const handleAuth = async () => {
     try {
-      const response = await fetch('/api/calendar/auth?action=url');
+      const response = await fetchWithToken('/api/calendar/auth?action=url');
       const data = await response.json();
+
+      if (response.status === 401) {
+        alert('Sua sessão expirou. Faça login novamente para conectar o Google Calendar.');
+        return;
+      }
 
       if (response.ok) {
         setAuthUrl(data.authUrl);
@@ -138,7 +154,7 @@ const GoogleCalendarIntegration: React.FC = () => {
         ? newEvent.attendees.split(',').map(email => email.trim()).filter(email => email)
         : [];
 
-      const response = await fetch('/api/calendar/events', {
+      const response = await fetchWithToken('/api/calendar/events', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -155,6 +171,11 @@ const GoogleCalendarIntegration: React.FC = () => {
       });
 
       const data = await response.json();
+
+      if (response.status === 401) {
+        alert('Sua sessão expirou. Faça login novamente para criar eventos.');
+        return;
+      }
 
       if (response.ok) {
         alert('Evento criado com sucesso!');

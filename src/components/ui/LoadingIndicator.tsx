@@ -14,7 +14,7 @@ export function LoadingIndicator({ message, fullScreen = true }: LoadingIndicato
 
   return (
     <div className={`flex flex-col items-center justify-center ${fullScreen ? 'min-h-screen' : 'py-10'} bg-gray-50`}>
-      <FiLoader className="animate-spin h-10 w-10 text-blue-600 mb-4" />
+      <FiLoader className="animate-spin h-10 w-10 text-abz-blue mb-4" />
       <p className="text-gray-700 font-medium">{displayMessage}</p>
     </div>
   );

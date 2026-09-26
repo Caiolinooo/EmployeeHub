@@ -166,6 +166,13 @@ function GestaoTripulantesContent() {
     router.replace(qs ? `${pathnameSafe}?${qs}` : pathnameSafe, { scroll: false });
   }, [pathnameSafe, router, searchParams]);
 
+  // O kpiFilter (Matriz de Conformidade) também filtra a grade da Man Schedule;
+  // ao trocar para outra aba, reseta para o valor neutro ('') para não esvaziar
+  // a escala silenciosamente.
+  useEffect(() => {
+    if (activeTab !== 'matrix' && kpiFilter) setKpiInUrl('');
+  }, [activeTab, kpiFilter, setKpiInUrl]);
+
   const handleKpiClick = useCallback((kpi: GtDashboardKpi) => {
     const next = kpiFilter === kpi ? '' : kpi;
     if (next === 'embarcados' || next === 'disponiveis' || next === 'docs_vencidos' || next === 'colaboradores') {

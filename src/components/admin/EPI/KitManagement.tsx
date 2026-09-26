@@ -256,7 +256,7 @@ export default function KitManagement() {
                     <div className="bg-white rounded-lg max-w-md w-full p-6">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-xl font-bold text-gray-900">Atribuir Kit: {selectedKitForAssign.name}</h3>
-                            <button onClick={() => setAssignModalOpen(false)} className="text-gray-400 hover:text-gray-600"><FiX size={24} /></button>
+                            <button onClick={() => setAssignModalOpen(false)} className="text-gray-500 hover:text-gray-700" aria-label="Fechar"><FiX size={24} /></button>
                         </div>
 
                         <p className="text-sm text-gray-500 mb-4">Selecione o colaborador que receberá este kit. Serão criadas solicitações pendentes para cada item.</p>
@@ -327,7 +327,7 @@ export default function KitManagement() {
                     <div className="bg-white rounded-lg max-w-2xl w-full p-6 my-8">
                         <div className="flex justify-between items-center mb-6 border-b pb-4">
                             <h3 className="text-xl font-bold text-gray-900">{editingKit ? 'Editar Kit' : 'Novo Kit'}</h3>
-                            <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600"><FiX size={24} /></button>
+                            <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700" aria-label="Fechar"><FiX size={24} /></button>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-6">

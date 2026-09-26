@@ -431,6 +431,54 @@ export function verifyToken(token: string | null | undefined): TokenPayload | nu
   }
 }
 
+// Janela de graça padrão para renovação de tokens expirados (7 dias, em segundos)
+export const TOKEN_REFRESH_GRACE_SECONDS = 7 * 24 * 60 * 60;
+
+// Função para verificar um token JWT ignorando APENAS a expiração.
+// Usada pelas rotas de renovação/correção de token (token-refresh, fix-token)
+// para destravar sessões cujo token expirou. Assinatura e demais claims
+// continuam obrigatórios; tokens expirados além da janela de graça são rejeitados.
+export function verifyTokenAllowExpired(
+  token: string | null | undefined,
+  gracePeriodSeconds: number = TOKEN_REFRESH_GRACE_SECONDS
+): TokenPayload | null {
+  try {
+    if (!token || typeof token !== 'string') {
+      return null;
+    }
+
+    // Verificar se o token tem o formato correto de um JWT (3 partes separadas por ponto)
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return null;
+    }
+
+    // Obter a chave secreta do JWT (sem fallback inseguro em produção)
+    const jwtSecret = getJwtSecret();
+
+    // Verificar assinatura ignorando apenas a checagem de expiração
+    const payload = jwt.verify(token, jwtSecret, { ignoreExpiration: true }) as TokenPayload;
+
+    // Verificar se o payload contém as informações necessárias
+    if (!payload || !payload.userId) {
+      return null;
+    }
+
+    // Janela de graça: rejeitar tokens expirados há mais tempo que o permitido
+    const now = Math.floor(Date.now() / 1000);
+    if (payload.exp && payload.exp < now - gracePeriodSeconds) {
+      return null;
+    }
+
+    return payload;
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development' && error instanceof Error) {
+      console.error('verifyTokenAllowExpired: Token inválido -', error.message);
+    }
+    return null;
+  }
+}
+
 // Função para extrair o token do cabeçalho de autorização
 export function extractTokenFromHeader(authHeader: string | undefined): string | null {
   if (!authHeader) {

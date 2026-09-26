@@ -274,6 +274,7 @@ const NewsHighlights: React.FC<NewsHighlightsProps> = ({ userId, canCreate }) =>
                                     <button
                                         onClick={() => setSelectedHighlight(null)}
                                         className="text-white hover:text-gray-300"
+                                        aria-label="Fechar"
                                     >
                                         <FiX className="w-6 h-6" />
                                     </button>

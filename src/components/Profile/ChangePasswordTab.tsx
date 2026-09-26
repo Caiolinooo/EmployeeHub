@@ -116,13 +116,14 @@ export default function ChangePasswordTab() {
             />
             <button
               type="button"
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-abz-blue"
               onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+              aria-label={showCurrentPassword ? 'Ocultar senha' : 'Mostrar senha'}
             >
               {showCurrentPassword ? (
-                <FiEyeOff className="h-5 w-5 text-gray-400" />
+                <FiEyeOff className="h-5 w-5 text-gray-500" />
               ) : (
-                <FiEye className="h-5 w-5 text-gray-400" />
+                <FiEye className="h-5 w-5 text-gray-500" />
               )}
             </button>
           </div>
@@ -149,13 +150,14 @@ export default function ChangePasswordTab() {
             />
             <button
               type="button"
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-abz-blue"
               onClick={() => setShowNewPassword(!showNewPassword)}
+              aria-label={showNewPassword ? 'Ocultar senha' : 'Mostrar senha'}
             >
               {showNewPassword ? (
-                <FiEyeOff className="h-5 w-5 text-gray-400" />
+                <FiEyeOff className="h-5 w-5 text-gray-500" />
               ) : (
-                <FiEye className="h-5 w-5 text-gray-400" />
+                <FiEye className="h-5 w-5 text-gray-500" />
               )}
             </button>
           </div>
@@ -185,13 +187,14 @@ export default function ChangePasswordTab() {
             />
             <button
               type="button"
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-abz-blue"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              aria-label={showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'}
             >
               {showConfirmPassword ? (
-                <FiEyeOff className="h-5 w-5 text-gray-400" />
+                <FiEyeOff className="h-5 w-5 text-gray-500" />
               ) : (
-                <FiEye className="h-5 w-5 text-gray-400" />
+                <FiEye className="h-5 w-5 text-gray-500" />
               )}
             </button>
           </div>

@@ -84,7 +84,7 @@ export default function LibraryPage() {
                         <input
                             type="text"
                             placeholder="Buscar documentos..."
-                            className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
@@ -93,7 +93,8 @@ export default function LibraryPage() {
                     {isAdmin && (
                         <button
                             onClick={() => setIsManagerOpen(true)}
-                            className="flex items-center justify-center px-4 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 active:scale-95"
+                            className="flex items-center justify-center px-4 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 active:scale-95"
+                            aria-label="Gerenciar biblioteca"
                         >
                             <FiSettings className="mr-2" />
                             <span className="hidden sm:inline">Gerenciar</span>

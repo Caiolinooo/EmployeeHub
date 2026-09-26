@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+## [5.89.0] - 2026-09-25
+
+### Gestão de Tripulantes de volta ao ar, fim do deadlock de token e tokens shadcn na UI
+
+#### Corrigido
+
+1. **Módulo GT sem dados (Man Schedule/MIO)**: `GET /api/man-schedule/realtime` engolia erro de query e devolvia `200 {success:true, data:[]}` — a grade nascia vazia e muda. Erro de query agora vira 500 explícito; se o PostgREST rejeita os embeds de `gt_colaboradores`, o select é refeito plano e enriquecido com lookups separados nas tabelas de dimensão; o probe de freshness ficou resiliente (qualquer falha desativa o cache da assinatura em vez de derrubar a rota), e lookups `.in('id', ...)` nunca saem com lista vazia (PostgREST 400).
+2. **"Apenas Ativos" escondia colaboradores legados**: registros com `ativo NULL` (equivale ao default true) sumiam da lista de GT. Filtro agora usa `.or('ativo.eq.true,ativo.is.null')`.
+3. **Deadlock de token derrubava calendário e perfil**: o refresh só aceitava token dentro da validade — token expirado → 401 → espiral de re-login. Novo `verifyTokenAllowExpired` em `src/lib/auth.ts` (assinatura válida + janela de graça de 7 dias) usado por `token-refresh` e `fix-token`; os 3 componentes de calendário (`AdminCalendarManager`, `CompanyIcsEventsList`, `GoogleCalendarIntegration`) migrados para `fetchWithToken`, e a chamada à rota inexistente `/api/calendar/google` passa a usar `POST /api/calendar/events`.
+4. **Financeiro 500 com "Todas as empresas"**: `/api/financeiro/faturas` resolve `empresaId=todas`/vazio via `resolverEmpresaIdFiltro` em vez de aplicar `.eq()` com valor inválido.
+5. **Componentes shadcn sem cor**: os tokens (`bg-card`, `text-muted-foreground`, `bg-destructive`, `border-border`…) não existiam no `tailwind.config.ts` — dezenas de componentes renderizavam sem estilo. Tokens e variáveis CSS criados a partir da paleta canônica (`#005dff`/`#6339F5`); `.bg-primary`/`.bg-secondary` movidos para `@layer components`, devolvendo o `hover:bg-primary/90` dos botões.
+6. **Contraste e acessibilidade**: gray-400 → gray-500 (AA) e aria-labels em botões-ícone em ~37 telas; chave `common.remove` adicionada nos dois locales.
+7. **Drawer mobile não herda mais sidebar colapsada**: `MainLayout` usa `showExpanded` (expandido quando o menu mobile abre, mesmo com sidebar recolhida no desktop); alvos de toque ≥40px, modais com scroll em 360px e headers/grids empilhando em telas estreitas.
+
+#### Removido
+
+1. **Lixo tracked fora do índice**: `src/app/login/page.tsx.bak`, 17 `scripts/_tmp_*` (.mjs/.json), 24 screenshots de `scripts/_tmp_shots/` e `scripts/wk-exportar-xml.ps1` (`git rm --cached`). `.gitignore` passa a blindar `scripts/_tmp_*`, `scripts/wk-*` soltos, `wk-export/` e `wk-*.csv`.
+
+#### Atenção ao atualizar
+
+- Erros reais de query no Man Schedule agora aparecem como 500 + toast/estado de erro com retry (antes: grade vazia silenciosa).
+- `token-refresh` aceita token expirado há até 7 dias **somente** com assinatura válida; fora da graça, relogin normal.
+
 ## [5.88.0] - 2026-09-25
 
 ### Segurança, correções e limpeza (PRs #100, #102, #98, #106, #107, #103, #101, #96, #114)

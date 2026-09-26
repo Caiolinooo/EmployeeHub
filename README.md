@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.88.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.89.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -16,21 +16,16 @@ Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](
 
 ---
 
-## Nesta versão (5.88.0)
+## Nesta versão (5.89.0)
 
-- **Middleware no bundle**: o `middleware.ts` da raiz entra no manifesto de produção; rotas de debug/admin deixam de responder sem JWT ADMIN ou `CRON_SECRET`.
-- **Allowlist anti-SSRF**: buscas externas só falam com host em `src/lib/security/safe-url.ts` (e no resolvedor da rota).
-- **e-Social valida TLS**: cadeia de certificado exigida; `NODE_TLS_REJECT_UNAUTHORIZED=0` só como escape de emergência.
-- **QHSE/EPI**: a aba deixa de mostrar “Colaborador não encontrado” por select inválido em `gt_colaboradores`.
-- **Mídias das notícias**: `img`/`video` `src` passam por `toSafeMediaUrl` (`src/lib/security/safe-media-url.ts`); bloqueia `javascript:`, `data:` e `http:`.
-- **Scratch e scripts**: apagados one-offs sem runtime (`scratch/mio_api_doc.html`, `scratch/test-ocr-aso.ts`, `scripts/discover-mio.js`); os que ficam foram endurecidos.
-- **Login**: não chama `fix-token` nem `ensure-admin`. Token do storage vai para `verify-token`. `fix-token` só depois do refresh falhar **e** existir sessão Supabase — sem mint ADMIN em token morto.
-- **Visão geral financeira**: “Todas as empresas” (sem `empresaId`) soma todas as empresas; o 500 do filtro nulo some.
-- **Calendário e pdf-extract**: `GET /api/calendar/company/events` e `GET /api/pdf-extract` exigem JWT; anônimo recebe **401**.
+- **Gestão de Tripulantes de volta ao ar**: a Man Schedule deixava a grade vazia e muda quando a query falhava (`200` com `data:[]`). Erro vira 500 com estado de erro + retry; embeds quebrados do PostgREST caem para select plano; "Apenas Ativos" volta a incluir legados com `ativo NULL`.
+- **Fim do deadlock de token**: refresh aceita token expirado há até 7 dias (assinatura válida); calendário migrado para `fetchWithToken` e eventos gravam em `POST /api/calendar/events`.
+- **UI com tokens shadcn de verdade**: `bg-card`, `text-muted-foreground`, `bg-destructive` etc. agora existem no `tailwind.config.ts`; hover dos botões primary/secondary volta; contraste AA e aria-labels em ~37 telas; drawer mobile não herda mais a sidebar colapsada do desktop.
+- **Financeiro**: `?empresaId=todas` não derruba mais `/api/financeiro/faturas` com 500.
 
 ## Segurança
 
-Versão atual: **5.88.0**. Detalhe das correções: [CHANGELOG.md](CHANGELOG.md). Política: [SECURITY.md](SECURITY.md).
+Versão atual: **5.89.0**. Detalhe das correções: [CHANGELOG.md](CHANGELOG.md). Política: [SECURITY.md](SECURITY.md).
 
 - Middleware vive em `middleware.ts` na raiz (Next 15.5 procura ao lado do `pagesDir`). Sem isso o bundle ia sem gate.
 - Debug/admin públicos (`ensure-admin`, `test-users`, `supabase-status`, `acl/init`, `execute-sql`) exigem JWT ADMIN ou `CRON_SECRET`.

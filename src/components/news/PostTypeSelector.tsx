@@ -75,7 +75,8 @@ const PostTypeSelector: React.FC<PostTypeSelectorProps> = ({
           <h2 className="text-2xl font-bold text-gray-800">{t('newsSystem.createPost')}</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
+            className="text-gray-500 hover:text-gray-700 transition-colors p-2 rounded-full hover:bg-gray-100"
+            aria-label={t('common.close', 'Fechar') as string}
           >
             <FiX className="w-6 h-6" />
           </button>

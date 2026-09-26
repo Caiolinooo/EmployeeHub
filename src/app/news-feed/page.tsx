@@ -300,7 +300,7 @@ const NewsFeedPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <button className="p-2 hover:bg-gray-100 rounded-full">
+                <button className="p-2 hover:bg-gray-100 rounded-full" aria-label="Opções da publicação">
                   <EllipsisHorizontalIcon className="w-5 h-5 text-gray-500" />
                 </button>
               </div>
@@ -330,6 +330,7 @@ const NewsFeedPage: React.FC = () => {
                     <button
                       onClick={() => handleLike(item.id)}
                       className="flex items-center space-x-1 hover:text-red-500 transition-colors"
+                      aria-label={likedPosts.has(item.id) ? 'Descurtir' : 'Curtir'}
                     >
                       {likedPosts.has(item.id) ? (
                         <HeartSolidIcon className="w-6 h-6 text-red-500" />
@@ -341,11 +342,12 @@ const NewsFeedPage: React.FC = () => {
                     <button
                       onClick={() => toggleComments(item.id)}
                       className="flex items-center space-x-1 hover:text-blue-500 transition-colors"
+                      aria-label="Comentários"
                     >
                       <ChatBubbleOvalLeftIcon className="w-6 h-6" />
                     </button>
 
-                    <button className="flex items-center space-x-1 hover:text-green-500 transition-colors">
+                    <button className="flex items-center space-x-1 hover:text-green-500 transition-colors" aria-label="Compartilhar">
                       <ShareIcon className="w-6 h-6" />
                     </button>
                   </div>
@@ -353,6 +355,7 @@ const NewsFeedPage: React.FC = () => {
                   <button
                     onClick={() => handleSave(item.id)}
                     className="hover:text-blue-500 transition-colors"
+                    aria-label={savedPosts.has(item.id) ? 'Remover dos salvos' : 'Salvar'}
                   >
                     {savedPosts.has(item.id) ? (
                       <BookmarkSolidIcon className="w-6 h-6 text-blue-500" />

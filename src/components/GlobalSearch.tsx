@@ -191,7 +191,8 @@ const GlobalSearch: React.FC = () => {
                 />
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="ml-3 p-1 text-gray-400 hover:text-gray-600"
+                  className="ml-3 p-1 text-gray-500 hover:text-gray-700 focus-visible:ring-2 focus-visible:ring-abz-blue rounded"
+                  aria-label={t('common.close', 'Fechar busca') as string}
                 >
                   <XMarkIcon className="w-5 h-5" />
                 </button>

@@ -143,7 +143,7 @@ export default function UserProfileView({ user, isOwnProfile, onEdit, isLoading 
                             {user.bio ? (
                                 <p className="text-gray-600 leading-relaxed max-w-2xl mx-auto md:mx-0">{user.bio}</p>
                             ) : (
-                                <p className="text-gray-400 italic">{t('profile.noBio', 'Nenhuma biografia adicionada.')}</p>
+                                <p className="text-gray-500 italic">{t('profile.noBio', 'Nenhuma biografia adicionada.')}</p>
                             )}
                         </div>
 

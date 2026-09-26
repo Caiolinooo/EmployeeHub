@@ -1880,6 +1880,7 @@ export default {
     search: 'Buscar',
     filter: 'Filtrar',
     close: 'Fechar',
+    remove: 'Remover',
     confirm: 'Confirmar',
     back: 'Voltar',
     next: 'Próximo',

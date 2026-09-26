@@ -39,7 +39,7 @@ export default function ConfirmationModal({
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="relative w-full max-w-md overflow-hidden rounded-2xl bg-[#1A1A1A] border border-white/10 shadow-2xl"
+                        className="relative w-full max-w-md overflow-hidden rounded-2xl bg-abz-text-dark border border-white/10 shadow-2xl"
                     >
                         <div className="p-6">
                             <h3 className="text-xl font-semibold text-white mb-2">{title}</h3>
@@ -58,8 +58,8 @@ export default function ConfirmationModal({
                                         onClose();
                                     }}
                                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${confirmButtonClass || (isDestructive
-                                        ? 'bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20'
-                                        : 'bg-blue-600 hover:bg-blue-700 text-white')
+                                        ? 'bg-abz-red-dark/15 hover:bg-abz-red-dark/25 text-white border border-abz-red/30'
+                                        : 'bg-abz-blue hover:bg-abz-blue-dark text-white')
                                         }`}
                                 >
                                     {confirmText}

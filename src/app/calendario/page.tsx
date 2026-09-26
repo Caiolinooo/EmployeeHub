@@ -408,7 +408,7 @@ export default function CalendarioPage() {
   return (
     <MainLayout>
       <div className="flex flex-col min-h-0 flex-1 h-full gap-6">
-        <div className="shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-gray-200 shadow-xs">
+        <div className="shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 sm:p-6 rounded-2xl border border-gray-200 shadow-xs">
           <div className="flex items-center gap-3">
             <span className="p-2.5 bg-blue-50 text-abz-blue rounded-xl">
               <FiCalendar className="w-6 h-6" />

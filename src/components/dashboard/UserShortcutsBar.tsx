@@ -185,7 +185,7 @@ export default function UserShortcutsBar() {
             {/* Search and Shortcuts Row */}
             <div className="flex items-center gap-3 flex-wrap">
                 {/* Search Input */}
-                <div ref={searchRef} className="relative flex-1 min-w-[280px] max-w-xl">
+                <div ref={searchRef} className="relative flex-1 min-w-0 sm:min-w-[280px] max-w-xl">
                     <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                         <FiSearch className="h-5 w-5 text-gray-400" />
                     </div>
@@ -260,8 +260,9 @@ export default function UserShortcutsBar() {
                                             e.preventDefault();
                                             handleRemoveShortcut(shortcut.module_id);
                                         }}
-                                        className="opacity-0 group-hover:opacity-100 ml-1 p-0.5 text-gray-400 hover:text-red-500 transition-all"
+                                        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 ml-1 p-0.5 text-gray-500 hover:text-red-500 transition-all"
                                         title={t('common.remove')}
+                                        aria-label={t('common.remove') as string}
                                     >
                                         <FiX className="w-3.5 h-3.5" />
                                     </button>
@@ -273,8 +274,9 @@ export default function UserShortcutsBar() {
                     {/* Add Shortcut Button */}
                     <button
                         onClick={() => setShowModal(true)}
-                        className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-400 hover:text-blue-600 hover:shadow-md transition-all border border-gray-100 shadow-sm"
+                        className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-500 hover:text-blue-600 hover:shadow-md transition-all border border-gray-100 shadow-sm"
                         title={t('dashboard.addShortcut')}
+                        aria-label={t('dashboard.addShortcut') as string}
                     >
                         <FiPlus className="w-5 h-5" />
                     </button>

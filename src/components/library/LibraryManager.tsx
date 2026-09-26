@@ -282,7 +282,7 @@ export default function LibraryManager({ isOpen, onClose, onUpdate }: LibraryMan
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50">
                     <h2 className="text-xl font-bold text-gray-800">Gerenciar Biblioteca</h2>
-                    <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200">
+                    <button onClick={onClose} className="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-200" aria-label="Fechar">
                         <FiX className="w-5 h-5" />
                     </button>
                 </div>
@@ -311,13 +311,13 @@ export default function LibraryManager({ isOpen, onClose, onUpdate }: LibraryMan
                             <div className="flex border-b border-gray-200 mb-6">
                                 <button
                                     onClick={() => setCreateTab('content')}
-                                    className={`pb-2 mr-6 text-xs font-bold uppercase tracking-wide border-b-2 transition-colors ${createTab === 'content' ? 'border-abz-blue text-abz-blue' : 'border-transparent text-gray-400'}`}
+                                    className={`pb-2 mr-6 text-xs font-bold uppercase tracking-wide border-b-2 transition-colors ${createTab === 'content' ? 'border-abz-blue text-abz-blue' : 'border-transparent text-gray-500'}`}
                                 >
                                     Conteúdo
                                 </button>
                                 <button
                                     onClick={() => setCreateTab('appearance')}
-                                    className={`pb-2 text-xs font-bold uppercase tracking-wide border-b-2 transition-colors ${createTab === 'appearance' ? 'border-abz-blue text-abz-blue' : 'border-transparent text-gray-400'}`}
+                                    className={`pb-2 text-xs font-bold uppercase tracking-wide border-b-2 transition-colors ${createTab === 'appearance' ? 'border-abz-blue text-abz-blue' : 'border-transparent text-gray-500'}`}
                                 >
                                     Aparência
                                 </button>
@@ -441,7 +441,7 @@ export default function LibraryManager({ isOpen, onClose, onUpdate }: LibraryMan
                                                 <div>
                                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Itens Inclusos ({formData.metadata.resources.length})</label>
                                                     {formData.metadata.resources.length === 0 ? (
-                                                        <p className="text-sm text-center text-gray-400 italic py-4 bg-gray-50 rounded-lg">Nenhum item adicionado ainda.</p>
+                                                        <p className="text-sm text-center text-gray-500 italic py-4 bg-gray-50 rounded-lg">Nenhum item adicionado ainda.</p>
                                                     ) : (
                                                         <ul className="space-y-2">
                                                             {formData.metadata.resources.map((res: ResourceItem, idx: number) => (
@@ -450,13 +450,14 @@ export default function LibraryManager({ isOpen, onClose, onUpdate }: LibraryMan
                                                                         {res.type === 'link' ? <FiLink className="text-gray-400 mr-3" /> : <FiFile className="text-gray-400 mr-3" />}
                                                                         <div>
                                                                             <p className="text-sm font-medium text-gray-800">{res.title}</p>
-                                                                            <p className="text-xs text-gray-400 truncate max-w-[150px]">{res.url}</p>
+                                                                            <p className="text-xs text-gray-500 truncate max-w-[150px]">{res.url}</p>
                                                                         </div>
                                                                     </div>
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => removeResource(idx)}
-                                                                        className="text-red-400 hover:text-red-600 p-1"
+                                                                        className="text-red-500 hover:text-red-700 p-1"
+                                                                        aria-label={`Remover ${res.title}`}
                                                                     >
                                                                         <FiTrash2 className="w-4 h-4" />
                                                                     </button>
@@ -576,7 +577,8 @@ export default function LibraryManager({ isOpen, onClose, onUpdate }: LibraryMan
                                             </div>
                                             <button
                                                 onClick={() => handleDelete(item.id, item.title)}
-                                                className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors bg-gray-50"
+                                                className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors bg-gray-50"
+                                                aria-label={`Excluir ${item.title}`}
                                             >
                                                 <FiTrash2 className="w-4 h-4" />
                                             </button>

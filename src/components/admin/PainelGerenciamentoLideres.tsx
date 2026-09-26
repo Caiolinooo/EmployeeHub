@@ -300,7 +300,8 @@ export default function PainelGerenciamentoLideres() {
               <h3 className="text-lg font-semibold text-gray-900">Adicionar Líder</h3>
               <button
                 onClick={fecharModal}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-500 hover:text-gray-700"
+                aria-label="Fechar"
               >
                 <FiX size={20} />
               </button>

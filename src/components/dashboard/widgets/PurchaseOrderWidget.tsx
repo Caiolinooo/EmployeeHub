@@ -63,7 +63,7 @@ export default function PurchaseOrderWidget() {
                         {[1, 2, 3].map(i => <div key={i} className="h-20 bg-white rounded-3xl shadow-sm"></div>)}
                     </div>
                 ) : orders.length === 0 ? (
-                    <div className="bg-white rounded-3xl p-6 shadow-sm flex flex-col items-center justify-center text-gray-400 text-sm h-full">
+                    <div className="bg-white rounded-3xl p-6 shadow-sm flex flex-col items-center justify-center text-gray-500 text-sm h-full">
                         <p>{t('dashboard.purchaseOrderWidget.noRecentRequests')}</p>
                         <Link href="/department/purchase-orders/new" className="mt-2 text-blue-500 hover:underline font-medium">
                             {t('dashboard.purchaseOrderWidget.createNew')}
@@ -88,7 +88,7 @@ export default function PurchaseOrderWidget() {
                                     </div>
                                     <div className="flex flex-col items-end shrink-0">
                                         {getStatusIcon(order.status)}
-                                        <span className="text-[10px] text-gray-400 mt-1 font-medium bg-gray-50 px-2 py-0.5 rounded-full">
+                                        <span className="text-[10px] text-gray-500 mt-1 font-medium bg-gray-50 px-2 py-0.5 rounded-full">
                                             {new Date(order.created_at).toLocaleDateString()}
                                         </span>
                                     </div>

@@ -269,7 +269,8 @@ const NewsPostEditor: React.FC<NewsPostEditorProps> = ({
           {onCancel && (
             <button
               onClick={onCancel}
-              className="p-2 text-gray-400 hover:text-gray-600"
+              className="p-2 text-gray-500 hover:text-gray-700"
+              aria-label={t('common.close', 'Fechar') as string}
             >
               <FiX className="w-5 h-5" />
             </button>

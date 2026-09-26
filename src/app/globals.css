@@ -7,6 +7,23 @@
   --foreground: #171717;
   --primary-color: #005dff;
   --secondary-color: #6339F5;
+
+  /* Tokens semânticos dos componentes ui/* (ver tailwind.config.ts).
+     Valores derivados da paleta canônica ABZ, com contraste AA (>= 4.5:1)
+     para os pares texto/fundo. */
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --primary-foreground: #ffffff;
+  --secondary-foreground: #ffffff;
+  --muted: #F5F5F5; /* abz-background */
+  --muted-foreground: #4B5563; /* gray-600: 6.9:1 sobre --muted, 7.5:1 sobre branco */
+  --accent: #E0F2FE; /* abz-light-blue */
+  --accent-foreground: #0D1B42; /* abz-blue-dark */
+  --destructive: #DC2626; /* abz-red-dark: texto branco 5:1 */
+  --destructive-foreground: #ffffff;
+  --border: #E5E7EB; /* gray-200 */
+  --input: #D1D5DB; /* gray-300 */
+  --ring: var(--primary-color);
 }
 
 body {
@@ -95,9 +112,11 @@ body {
   color: var(--primary-color);
 }
 
-.bg-primary {
-  background-color: var(--primary-color);
-  color: white; /* Ensure text is white on primary background */
+@layer components {
+  .bg-primary {
+    background-color: var(--primary-color);
+    color: white; /* Ensure text is white on primary background */
+  }
 }
 
 .border-primary {
@@ -108,9 +127,11 @@ body {
   color: var(--secondary-color);
 }
 
-.bg-secondary {
-  background-color: var(--secondary-color);
-  color: white; /* Ensure text is white on secondary background */
+@layer components {
+  .bg-secondary {
+    background-color: var(--secondary-color);
+    color: white; /* Ensure text is white on secondary background */
+  }
 }
 
 .border-secondary {

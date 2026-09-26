@@ -104,6 +104,7 @@ export default {
     search: 'Search',
     filter: 'Filter',
     close: 'Close',
+    remove: 'Remove',
     confirm: 'Confirm',
     back: 'Back',
     next: 'Next',

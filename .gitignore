@@ -127,3 +127,8 @@ scratch_migrate_*
 # Python check scripts
 scripts/check_*.py
 scripts/output.txt
+
+# Local temporary scripts and exports
+scripts/_tmp_*
+wk-export/
+wk-*.csv

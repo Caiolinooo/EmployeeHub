@@ -341,8 +341,9 @@ const CardItem = ({ card, onEdit, onDelete, onToggleVisibility, onMoveUp, onMove
           </button>
           <button
             onClick={() => onToggleVisibility(card.id, !card.enabled)}
-            className={`p-1 ${card.enabled ? 'text-green-500 hover:text-green-700' : 'text-gray-400 hover:text-gray-600'}`}
+            className={`p-1 ${card.enabled ? 'text-green-600 hover:text-green-700' : 'text-gray-500 hover:text-gray-700'}`}
             title={card.enabled ? t('admin.deactivate', 'Desativar') : t('admin.activate', 'Ativar')}
+            aria-label={card.enabled ? t('admin.deactivate', 'Desativar') as string : t('admin.activate', 'Ativar') as string}
           >
             {card.enabled ? <FiEye className="h-4 w-4" /> : <FiEyeOff className="h-4 w-4" />}
           </button>

@@ -74,6 +74,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const [isLayoutStateLoaded, setIsLayoutStateLoaded] = useState(false);
   const layoutTransition = (classes: string) => (isLayoutStateLoaded ? classes : '!transition-none');
 
+  // No drawer mobile a sidebar sempre renderiza expandida (labels/badges/submenus),
+  // mesmo quando o usuário recolheu a sidebar no desktop (isCollapsed é preferência de desktop).
+  const showExpanded = !isCollapsed || isMobileMenuOpen;
+
   // Customizer State
   const [isMenuCustomizerOpen, setIsMenuCustomizerOpen] = useState(false);
 
@@ -190,30 +194,30 @@ export default function MainLayout({ children }: MainLayoutProps) {
         className={`relative flex items-center px-4 py-3.5 my-1 mx-2 rounded-xl ${layoutTransition('transition-all duration-200')} group
           ${isActive
             ? 'bg-[#0066FF] text-white shadow-md shadow-blue-500/30'
-            : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
           }`}
-        title={isCollapsed ? item.label : ''}
+        title={!showExpanded ? item.label : ''}
         // Apply animation styles if config exists
         style={item.animation_config ? {
           // Basic implementation of entrance animation would go here or in a wrapper
           // For now, let's just stick to standard rendering to ensure stability
         } : {}}
       >
-        <Icon className={`w-5 h-5 flex-shrink-0 ${!isCollapsed && 'mr-3'} ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-gray-600'}`} />
+        <Icon className={`w-5 h-5 flex-shrink-0 ${showExpanded && 'mr-3'} ${isActive ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}`} />
 
-        {!isCollapsed && (
+        {showExpanded && (
           <span className={`font-medium text-sm ${isActive ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}`}>
             {t(`modules.${item.id}`, item.label)}
           </span>
         )}
 
         {/* Badge for News */}
-        {item.badge && !isCollapsed && (
+        {item.badge && showExpanded && (
           <span className="ml-auto bg-red-50 text-red-600 text-xs font-bold px-2.5 py-0.5 rounded-lg min-w-[20px] text-center ml-2">
             {item.badge}
           </span>
         )}
-        {item.badge && isCollapsed && (
+        {item.badge && !showExpanded && (
           <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
         )}
       </Link>
@@ -239,7 +243,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
         >
           {/* Logo */}
           <div className={`h-20 shrink-0 flex items-center ${isCollapsed ? 'md:justify-center px-6 md:px-0' : 'px-6'} justify-between`}>
-            {(!isCollapsed || isMobileMenuOpen) && (
+            {showExpanded && (
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 flex items-center justify-center shrink-0">
                   <img
@@ -290,10 +294,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
               <div className="mx-2 my-1">
                 <button
                   onClick={toggleMeuRH}
-                  className={`w-full flex items-center px-4 py-3 rounded-xl transition-all duration-200 text-gray-400 hover:text-gray-600 hover:bg-gray-50 ${isMeuRHOpen ? 'bg-gray-50' : ''}`}
+                  className={`w-full flex items-center px-4 py-3 rounded-xl transition-all duration-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 ${isMeuRHOpen ? 'bg-gray-50' : ''}`}
                 >
-                  <FiCreditCard className={`w-5 h-5 flex-shrink-0 ${!isCollapsed && 'mr-3'}`} />
-                  {!isCollapsed && (
+                  <FiCreditCard className={`w-5 h-5 flex-shrink-0 ${showExpanded && 'mr-3'}`} />
+                  {showExpanded && (
                     <>
                       <span className="font-medium text-sm text-gray-500 flex-1 text-left">{t('categories.hr', MODULE_CATEGORIES.hr)}</span>
                       <FiChevronDown className={`w-4 h-4 ${layoutTransition('transition-transform')} ${isMeuRHOpen ? 'rotate-180' : ''}`} />
@@ -302,7 +306,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 </button>
 
                 {/* Submenu */}
-                <div className={`overflow-hidden ${layoutTransition('transition-all duration-300')} ${isMeuRHOpen && !isCollapsed ? 'max-h-[1200px] mt-1' : 'max-h-0'}`}>
+                <div className={`overflow-hidden ${layoutTransition('transition-all duration-300')} ${isMeuRHOpen && showExpanded ? 'max-h-[1200px] mt-1' : 'max-h-0'}`}>
                   {unifiedHr.map(renderItem)}
                 </div>
               </div>
@@ -313,10 +317,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
               <div className="mx-2 my-1">
                 <button
                   onClick={toggleDepartment}
-                  className={`w-full flex items-center px-4 py-3 rounded-xl transition-all duration-200 text-gray-400 hover:text-gray-600 hover:bg-gray-50 ${isDepartmentOpen ? 'bg-gray-50' : ''}`}
+                  className={`w-full flex items-center px-4 py-3 rounded-xl transition-all duration-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 ${isDepartmentOpen ? 'bg-gray-50' : ''}`}
                 >
-                  <FiShoppingCart className={`w-5 h-5 flex-shrink-0 ${!isCollapsed && 'mr-3'}`} />
-                  {!isCollapsed && (
+                  <FiShoppingCart className={`w-5 h-5 flex-shrink-0 ${showExpanded && 'mr-3'}`} />
+                  {showExpanded && (
                     <>
                       <span className="font-medium text-sm text-gray-500 flex-1 text-left truncate">
                         {departmentTitle === MODULE_CATEGORIES.department ? t('categories.department', MODULE_CATEGORIES.department) : departmentTitle}
@@ -327,7 +331,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 </button>
 
                 {/* Submenu */}
-                <div className={`overflow-hidden ${layoutTransition('transition-all duration-300')} ${isDepartmentOpen && !isCollapsed ? 'max-h-[1200px] mt-1' : 'max-h-0'}`}>
+                <div className={`overflow-hidden ${layoutTransition('transition-all duration-300')} ${isDepartmentOpen && showExpanded ? 'max-h-[1200px] mt-1' : 'max-h-0'}`}>
                   {unifiedDept.map(renderItem)}
                 </div>
               </div>
@@ -341,7 +345,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
 
           {/* Credits */}
-          {!isCollapsed && (
+          {showExpanded && (
             <div className="p-6 mt-auto shrink-0">
               <div className="pt-4 border-t border-gray-100 text-[11px] text-gray-500 font-medium leading-relaxed">
                 {t('layout.developedBy', 'Desenvolvido por')} <a href="https://github.com/Caiolinooo" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600 transition-colors">Caio Correia</a>.

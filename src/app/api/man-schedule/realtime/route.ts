@@ -120,6 +120,8 @@ function rotationOverlapsWindow(
  * mais recentes (toda marcação nova) ficavam de fora da resposta e o grid
  * apagava a célula 1s depois do save. Pagina até esgotar.
  */
+type Paged<T> = PromiseLike<{ data: T[] | null; error: { message: string } | null }>;
+
 async function selectAllPaged<T>(
     // PromiseLike: PostgrestFilterBuilder é thenable (não expõe catch/finally),
     // então o builder pode ser passado direto sem `await` no callback.
@@ -137,6 +139,109 @@ async function selectAllPaged<T>(
     }
     return { data: out, error: null };
 }
+
+/** Linha de gt_colaboradores consumida pelo builder da escala. */
+interface ColaboradorGtRow {
+    id: string;
+    cpf: string | null;
+    nome_completo: string | null;
+    ativo: boolean | null;
+    matricula?: string | null;
+    cargo?: { nome?: string } | null;
+    empresa?: { nome?: string } | null;
+    embarcacao_atual?: { nome?: string } | { nome?: string }[] | null;
+    centro_custo?: { codigo?: string; nome?: string } | null;
+    cargo_id?: string | null;
+    empresa_id?: string | null;
+    embarcacao_atual_id?: string | null;
+    centro_custo_id?: string | null;
+}
+
+/**
+ * Select de gt_colaboradores com embeds relacionais — mesmo padrão comprovado de
+ * LIST_SELECT em src/lib/gestao-tripulantes/colaborador-get.ts. Se o embed
+ * quebrar no PostgREST (relacionamento ausente/ambíguo), refaz o select plano e
+ * enriquece com lookups separados nas tabelas de dimensão.
+ */
+const COLAB_SELECT_EMBED = `
+    id, cpf, nome_completo, ativo, matricula,
+    cargo:gt_cargos(nome),
+    empresa:gt_empresas(nome),
+    embarcacao_atual:gt_embarcacoes!embarcacao_atual_id(nome),
+    centro_custo:gt_centros_custo(codigo, nome)
+`.replace(/\s+/g, ' ').trim();
+
+const COLAB_SELECT_FLAT = `
+    id, cpf, nome_completo, ativo, matricula,
+    cargo_id, empresa_id, embarcacao_atual_id, centro_custo_id
+`.replace(/\s+/g, ' ').trim();
+
+async function fetchColaboradoresGT(): Promise<{ data: ColaboradorGtRow[]; error: { message: string } | null }> {
+    const embedded = await selectAllPaged<ColaboradorGtRow>((from, to) =>
+        supabaseAdmin
+            .from('gt_colaboradores')
+            // Select computado (join de linhas): postgrest-js tipa string dinâmica
+            // como GenericStringError[]; o cast repõe o tipo real da projeção.
+            .select(COLAB_SELECT_EMBED)
+            .is('deleted_at', null)
+            .order('id')
+            .range(from, to) as unknown as Paged<ColaboradorGtRow>
+    );
+    if (!embedded.error) return embedded;
+
+    console.warn(
+        '[ManSchedule] select de gt_colaboradores com embed falhou; refazendo sem embed:',
+        embedded.error.message
+    );
+    const flat = await selectAllPaged<ColaboradorGtRow>((from, to) =>
+        supabaseAdmin
+            .from('gt_colaboradores')
+            .select(COLAB_SELECT_FLAT)
+            .is('deleted_at', null)
+            .order('id')
+            .range(from, to) as unknown as Paged<ColaboradorGtRow>
+    );
+    if (flat.error || flat.data.length === 0) return flat;
+
+    // 4+ chamadas com o mesmo comportamento: ids únicos não-nulos por FK.
+    // PostgREST rejeita .in('id', []) (400) — com nenhum id, pula a query.
+    const uniqIds = (vals: Array<string | null | undefined>): string[] =>
+        Array.from(new Set(vals.filter((v): v is string => typeof v === 'string' && v.length > 0)));
+    const noRows = Promise.resolve({ data: [] as never[], error: null });
+    const cargoIds = uniqIds(flat.data.map((c) => c.cargo_id));
+    const empresaIds = uniqIds(flat.data.map((c) => c.empresa_id));
+    const embarcacaoIds = uniqIds(flat.data.map((c) => c.embarcacao_atual_id));
+    const centroIds = uniqIds(flat.data.map((c) => c.centro_custo_id));
+    const [cargosRes, empresasRes, embarcacoesRes, centrosRes] = await Promise.all([
+        cargoIds.length ? supabaseAdmin.from('gt_cargos').select('id, nome').in('id', cargoIds) : noRows,
+        empresaIds.length ? supabaseAdmin.from('gt_empresas').select('id, nome').in('id', empresaIds) : noRows,
+        embarcacaoIds.length ? supabaseAdmin.from('gt_embarcacoes').select('id, nome').in('id', embarcacaoIds) : noRows,
+        centroIds.length ? supabaseAdmin.from('gt_centros_custo').select('id, codigo, nome').in('id', centroIds) : noRows,
+    ]);
+    const lookups: Array<[string, { error: { message: string } | null }]> = [
+        ['cargos', cargosRes],
+        ['empresas', empresasRes],
+        ['embarcacoes', embarcacoesRes],
+        ['centros_custo', centrosRes],
+    ];
+    for (const [label, res] of lookups) {
+        if (res.error) console.error(`[ManSchedule] lookup ${label}:`, res.error.message);
+    }
+    const cargoById = new Map((cargosRes.data || []).map((r) => [r.id, r]));
+    const empresaById = new Map((empresasRes.data || []).map((r) => [r.id, r]));
+    const embarcacaoById = new Map((embarcacoesRes.data || []).map((r) => [r.id, r]));
+    const centroById = new Map((centrosRes.data || []).map((r) => [r.id, r]));
+
+    const data = flat.data.map((c) => ({
+        ...c,
+        cargo: (c.cargo_id ? cargoById.get(c.cargo_id) : null) || null,
+        empresa: (c.empresa_id ? empresaById.get(c.empresa_id) : null) || null,
+        embarcacao_atual: (c.embarcacao_atual_id ? embarcacaoById.get(c.embarcacao_atual_id) : null) || null,
+        centro_custo: (c.centro_custo_id ? centroById.get(c.centro_custo_id) : null) || null,
+    }));
+    return { data, error: null };
+}
+
 
 export async function GET(request: NextRequest) {
     const t0 = Date.now();
@@ -170,44 +275,82 @@ export async function GET(request: NextRequest) {
         const timings: Record<string, number> = {};
 
         // ---- Stage 1: cheap freshness probe of gt_* (canonical, not mio_cache blobs)
+        // Resiliente: coluna ausente (ex.: updated_at em gt_historico_embarques) ou
+        // falha do probe NÃO derruba o endpoint — freshness fica 'unknown', o cache
+        // é ignorado neste ciclo e segue o fetch completo.
         const probeStart = Date.now();
-        const [{ count: embCount }, { data: embUpdated }, { data: embCreated }, { count: colCount }, { count: afastCount, data: afastUpdated }] = await Promise.all([
-            supabaseAdmin
-                .from('gt_historico_embarques')
-                .select('id', { count: 'exact', head: true })
-                .is('deleted_at', null),
-            supabaseAdmin
-                .from('gt_historico_embarques')
-                .select('updated_at, created_at')
-                .is('deleted_at', null)
-                .order('updated_at', { ascending: false, nullsFirst: false })
-                .limit(1),
-            supabaseAdmin
-                .from('gt_historico_embarques')
-                .select('created_at')
-                .is('deleted_at', null)
-                .order('created_at', { ascending: false })
-                .limit(1),
-            supabaseAdmin
-                .from('gt_colaboradores')
-                .select('id', { count: 'exact', head: true })
-                .is('deleted_at', null),
-            supabaseAdmin
-                .from('gt_afastamentos')
-                .select('updated_at', { count: 'exact' })
-                .is('deleted_at', null)
-                .order('updated_at', { ascending: false, nullsFirst: false })
-                .limit(1),
-        ]);
+        let embCount: number | null = null;
+        let colCount: number | null = null;
+        let afastCount: number | null = null;
+        let stampUpdated = 'unknown';
+        let stampCreated = 'unknown';
+        let stampAfast = 'unknown';
+        let probeOk = true;
+        try {
+            const [embCountRes, embUpdatedRes, embCreatedRes, colCountRes, afastRes] = await Promise.all([
+                supabaseAdmin
+                    .from('gt_historico_embarques')
+                    .select('id', { count: 'exact', head: true })
+                    .is('deleted_at', null),
+                supabaseAdmin
+                    .from('gt_historico_embarques')
+                    .select('updated_at, created_at')
+                    .is('deleted_at', null)
+                    .order('updated_at', { ascending: false, nullsFirst: false })
+                    .limit(1),
+                supabaseAdmin
+                    .from('gt_historico_embarques')
+                    .select('created_at')
+                    .is('deleted_at', null)
+                    .order('created_at', { ascending: false })
+                    .limit(1),
+                supabaseAdmin
+                    .from('gt_colaboradores')
+                    .select('id', { count: 'exact', head: true })
+                    .is('deleted_at', null),
+                supabaseAdmin
+                    .from('gt_afastamentos')
+                    .select('updated_at', { count: 'exact' })
+                    .is('deleted_at', null)
+                    .order('updated_at', { ascending: false, nullsFirst: false })
+                    .limit(1),
+            ]);
+            embCount = embCountRes.count ?? null;
+            colCount = colCountRes.count ?? null;
+            afastCount = afastRes.count ?? null;
+            if (embCountRes.error || colCountRes.error) {
+                probeOk = false;
+                console.warn('[ManSchedule] probe de contagens falhou:', embCountRes.error?.message || colCountRes.error?.message);
+            }
+            if (embUpdatedRes.error) {
+                probeOk = false;
+                console.warn('[ManSchedule] probe updated_at (embarques) falhou:', embUpdatedRes.error.message);
+            } else {
+                stampUpdated = embUpdatedRes.data?.[0]?.updated_at || embUpdatedRes.data?.[0]?.created_at || 'none';
+            }
+            if (embCreatedRes.error) {
+                probeOk = false;
+                console.warn('[ManSchedule] probe created_at (embarques) falhou:', embCreatedRes.error.message);
+            } else {
+                stampCreated = embCreatedRes.data?.[0]?.created_at || 'none';
+            }
+            if (afastRes.error) {
+                probeOk = false;
+                console.warn('[ManSchedule] probe updated_at (afastamentos) falhou:', afastRes.error.message);
+            } else {
+                stampAfast = afastRes.data?.[0]?.updated_at || 'none';
+            }
+        } catch (probeError) {
+            probeOk = false;
+            console.warn('[ManSchedule] probe de freshness falhou; seguindo sem cache:', probeError);
+        }
         timings.probe = Date.now() - probeStart;
-        const stampUpdated = embUpdated?.[0]?.updated_at || embUpdated?.[0]?.created_at || 'none';
-        const stampCreated = embCreated?.[0]?.created_at || 'none';
-        const stampAfast = afastUpdated?.[0]?.updated_at || 'none';
         const mioSignature = `gt_emb:${embCount ?? 0}:${stampUpdated}:${stampCreated}:g${manScheduleCacheGeneration()}|gt_col:${colCount ?? 0}|gt_afast:${afastCount ?? 0}:${stampAfast}`;
 
         // ---- Stage 2: in-memory cache (same TTL; lazy-load UI unchanged)
         const cachedEntry = resultCache.get(janelaParam);
         if (
+            probeOk &&
             cachedEntry &&
             cachedEntry.mioSignature === mioSignature &&
             Date.now() - cachedEntry.builtAt < RESULT_CACHE_TTL_MS
@@ -242,20 +385,7 @@ export async function GET(request: NextRequest) {
 
         const blobStart = Date.now();
         const [{ data: colabs, error: colErr }, { data: embarques, error: embErr }, { data: afastamentosRows, error: afastErr }] = await Promise.all([
-            selectAllPaged((from, to) =>
-                supabaseAdmin
-                    .from('gt_colaboradores')
-                    .select(`
-                        id, cpf, nome_completo, ativo, matricula,
-                        cargo:gt_cargos(nome),
-                        empresa:gt_empresas(nome),
-                        embarcacao_atual:gt_embarcacoes!embarcacao_atual_id(nome),
-                        centro_custo:gt_centros_custo(codigo, nome)
-                    `)
-                    .is('deleted_at', null)
-                    .order('id')
-                    .range(from, to)
-            ),
+            fetchColaboradoresGT(),
             selectAllPaged((from, to) => {
                 let embQuery = supabaseAdmin
                     .from('gt_historico_embarques')
@@ -282,13 +412,29 @@ export async function GET(request: NextRequest) {
         ]);
         timings.blobRead = Date.now() - blobStart;
 
-        if (colErr) console.error('[ManSchedule] colaboradores:', colErr.message);
+        // Erro de query é falha, não sucesso vazio: colErr sempre 500 (sem
+        // colaboradores o builder descarta todo o resto); embErr/afastErr 500
+        // quando as outras fontes também estiverem vazias.
+        if (colErr) {
+            console.error('[ManSchedule] colaboradores:', colErr.message);
+            return NextResponse.json(
+                { success: false, error: `Falha ao ler gt_colaboradores: ${colErr.message}`, refreshing: false },
+                { status: 500 }
+            );
+        }
         if (embErr) console.error('[ManSchedule] embarques:', embErr.message);
         if (afastErr) console.error('[ManSchedule] afastamentos:', afastErr.message);
 
         const colaboradores = colabs || [];
-        const hist = embarques || [];
-        const afastamentos = afastamentosRows || [];
+        const hist = embErr ? [] : (embarques || []);
+        const afastamentos = afastErr ? [] : (afastamentosRows || []);
+        if ((embErr || afastErr) && colaboradores.length === 0 && hist.length === 0 && afastamentos.length === 0) {
+            const detalhe = (embErr || afastErr)?.message || 'erro desconhecido';
+            return NextResponse.json(
+                { success: false, error: `Falha ao ler dados da escala (gt_*): ${detalhe}`, refreshing: false },
+                { status: 500 }
+            );
+        }
         if (colaboradores.length === 0 && hist.length === 0 && afastamentos.length === 0) {
             return NextResponse.json(
                 {
@@ -437,11 +583,15 @@ export async function GET(request: NextRequest) {
             },
         };
 
-        resultCache.set(janelaParam, {
-            payload: responseBody,
-            mioSignature,
-            builtAt: Date.now(),
-        });
+        // Com probe degradado (freshness 'unknown') não gravamos no cache: a
+        // assinatura não reflete o estado real do banco.
+        if (probeOk) {
+            resultCache.set(janelaParam, {
+                payload: responseBody,
+                mioSignature,
+                builtAt: Date.now(),
+            });
+        }
 
         return NextResponse.json(responseBody);
     } catch (error: unknown) {

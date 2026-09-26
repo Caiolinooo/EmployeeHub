@@ -550,6 +550,7 @@ export default function GTManScheduleTab({ onColabClick, kpiFilter = '' }: Props
         DEFAULT_TIPOS_EVENTO_ESCALA.map((tipo, i) => ({ ...tipo, id: `default-${i}` }))
     );
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
     const [openingColab, setOpeningColab] = useState<string | null>(null);
 
     const [selectedCell, setSelectedCell] = useState<{
@@ -769,20 +770,30 @@ export default function GTManScheduleTab({ onColabClick, kpiFilter = '' }: Props
 
     const fetchSchedules = useCallback(async (force = false, silent = false) => {
         probeBusyRef.current = true;
+        // Geração fora do try: o catch precisa enxergar myRequestId para
+        // descartar erros de requisições já substituídas.
+        if (force) {
+            // Nova geração: respostas de refetchs anteriores em voo não
+            // podem sobrescrever o estado otimista recém-aplicado.
+            scheduleRequestId += 1;
+        }
+        const myRequestId = scheduleRequestId;
         try {
-            if (force) {
-                // Nova geração: respostas de refetchs anteriores em voo não
-                // podem sobrescrever o estado otimista recém-aplicado.
-                scheduleRequestId += 1;
-            }
-            const myRequestId = scheduleRequestId;
             if (!silent && !scheduleCache) setLoading(true);
             const data = await loadScheduleRows(force);
             if (scheduleRequestId !== myRequestId) return; // resposta velha: descarta
             setAllSchedules(data);
+            setLoadError(null);
         } catch (error: unknown) {
             console.error('Error fetching schedules:', error);
-            if (!silent) toast.error(error instanceof Error ? error.message : 'Erro ao carregar escala do MIO.');
+            if (scheduleRequestId !== myRequestId) return; // erro de requisicao velha: descarta
+            const message = error instanceof Error ? error.message : 'Erro ao carregar escala do MIO.';
+            if (!silent) {
+                toast.error(message);
+                // Falha inicial/não-silenciosa: mostra estado de erro visível na grade
+                // (em vez de tabela vazia silenciosa) com opção de tentar novamente.
+                setLoadError(message);
+            }
         } finally {
             probeBusyRef.current = false;
             if (!silent) setLoading(false);
@@ -1932,10 +1943,28 @@ function parseLocalDate(str: string | null | undefined): Date | null {
                                     </div>
                                 </td>
                             </tr>
+                        ) : loadError ? (
+                            <tr>
+                                <td colSpan={7 + filteredWeeks.length} className="px-4 py-10 text-center bg-white">
+                                    <div className="flex flex-col items-center justify-center gap-3">
+                                        <p className="text-sm font-semibold text-red-600">
+                                            {t('manSchedule.loadError', 'Não foi possível carregar a escala.')}
+                                        </p>
+                                        <p className="text-xs text-gray-500 max-w-md">{loadError}</p>
+                                        <button
+                                            type="button"
+                                            onClick={() => fetchSchedules(true)}
+                                            className="flex items-center gap-2 bg-abz-blue text-white px-3.5 py-1.5 rounded-lg shadow-sm hover:bg-blue-800 transition font-semibold text-xs h-[34px]"
+                                        >
+                                            {t('manSchedule.retry', 'Tentar novamente')}
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
                         ) : visibleGroups.length === 0 ? (
                             <tr>
                                 <td colSpan={7 + filteredWeeks.length} className="px-4 py-8 text-center text-gray-400 bg-white">
-                                    {t('manSchedule.empty', 'Nenhum tripulante encontrado para os filtros selecionados.')}
+                                    {t('manSchedule.empty', 'Nenhuma escala encontrada para os filtros selecionados.')}
                                 </td>
                             </tr>
                         ) : (

@@ -240,11 +240,12 @@ const ACLManagementPanel: React.FC = () => {
                   <div className="flex items-center space-x-2 shrink-0 self-end sm:self-auto">
                     <button
                       onClick={() => setEditingPermission(permission)}
-                      className="tap-target inline-flex items-center justify-center text-gray-400 hover:text-blue-600 rounded"
+                      className="tap-target inline-flex items-center justify-center text-gray-500 hover:text-blue-600 rounded"
+                      aria-label={`Editar permissão ${permission.name || ''}`}
                     >
                       <FiEdit className="w-4 h-4" />
                     </button>
-                    <button className="tap-target inline-flex items-center justify-center text-gray-400 hover:text-red-600 rounded">
+                    <button className="tap-target inline-flex items-center justify-center text-gray-500 hover:text-red-600 rounded" aria-label={`Excluir permissão ${permission.name || ''}`}>
                       <FiTrash2 className="w-4 h-4" />
                     </button>
                   </div>

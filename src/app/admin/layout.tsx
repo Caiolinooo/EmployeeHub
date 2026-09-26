@@ -416,7 +416,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <button
                   onClick={toggleMobileMenu}
                   aria-label={t('gtMobileV2.openMenu', 'Abrir menu') as string}
-                  className="flex items-center justify-center h-11 w-11 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none transition-colors"
+                  className="flex items-center justify-center h-11 w-11 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-abz-blue transition-colors"
                 >
                   <FiMenu className="h-6 w-6" />
                 </button>

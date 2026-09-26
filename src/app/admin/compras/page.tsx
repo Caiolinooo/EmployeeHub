@@ -204,7 +204,7 @@ export default function SuppliersAdminPage() {
                     className="w-full bg-transparent border-0 outline-none text-sm text-gray-700"
                 />
                 {search && (
-                    <button onClick={() => setSearch('')} className="text-gray-400 hover:text-gray-600">
+                    <button onClick={() => setSearch('')} className="text-gray-500 hover:text-gray-700" aria-label="Limpar busca">
                         <FiX />
                     </button>
                 )}
@@ -300,7 +300,7 @@ export default function SuppliersAdminPage() {
                             <h2 className="text-xl font-bold text-gray-900">
                                 {editingSupplier ? 'Editar Fornecedor' : 'Novo Fornecedor'}
                             </h2>
-                            <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-600 p-2">
+                            <button onClick={handleCloseModal} className="text-gray-500 hover:text-gray-700 p-2" aria-label="Fechar">
                                 <FiX className="text-xl" />
                             </button>
                         </div>

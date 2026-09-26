@@ -450,8 +450,9 @@ const NewsAdminPanel: React.FC<NewsAdminPanelProps> = ({ userId }) => {
                           setEditingPostId(post.id);
                           setShowEditor(true);
                         }}
-                        className="p-2 text-gray-400 hover:text-blue-600 rounded"
+                        className="p-2 text-gray-500 hover:text-blue-600 rounded"
                         title="Editar"
+                        aria-label="Editar"
                       >
                         <FiEdit className="w-4 h-4" />
                       </button>
@@ -462,9 +463,10 @@ const NewsAdminPanel: React.FC<NewsAdminPanelProps> = ({ userId }) => {
                         onClick={() => toggleFeatured(post.id, post.featured)}
                         className={`p-2 rounded ${post.featured
                           ? 'text-yellow-600 hover:text-yellow-700'
-                          : 'text-gray-400 hover:text-yellow-600'
+                          : 'text-gray-500 hover:text-yellow-600'
                           }`}
                         title={post.featured ? 'Remover destaque' : 'Destacar'}
+                        aria-label={post.featured ? 'Remover destaque' : 'Destacar'}
                       >
                         <FiStar className="w-4 h-4" />
                       </button>
@@ -473,8 +475,9 @@ const NewsAdminPanel: React.FC<NewsAdminPanelProps> = ({ userId }) => {
                     {hasPermission('news.delete') && (
                       <button
                         onClick={() => deletePost(post.id)}
-                        className="p-2 text-gray-400 hover:text-red-600 rounded"
+                        className="p-2 text-gray-500 hover:text-red-600 rounded"
                         title="Excluir"
+                        aria-label="Excluir"
                       >
                         <FiTrash2 className="w-4 h-4" />
                       </button>
@@ -529,7 +532,7 @@ const NewsAdminPanel: React.FC<NewsAdminPanelProps> = ({ userId }) => {
                   <div className="text-xs text-gray-500">Únicos</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-400">{viewersStats.anonymous_views}</div>
+                  <div className="text-2xl font-bold text-gray-500">{viewersStats.anonymous_views}</div>
                   <div className="text-xs text-gray-500">Anônimos</div>
                 </div>
               </div>
@@ -582,7 +585,7 @@ const NewsAdminPanel: React.FC<NewsAdminPanelProps> = ({ userId }) => {
                               <div className="font-medium text-gray-600">
                                 {viewer.user_id ? 'Usuário não identificado' : 'Visitante Anônimo'}
                               </div>
-                              <div className="text-xs text-gray-400">
+                              <div className="text-xs text-gray-500">
                                 {viewer.user_id ? `ID: ${viewer.user_id}` : `Sessão: ${viewer.session_id?.substring(0, 8)}...`}
                               </div>
                             </div>

@@ -236,7 +236,8 @@ export async function GET(request: NextRequest) {
     if (embarcacaoIds && embarcacaoIds.length > 0) query = query.in('embarcacao_atual_id', embarcacaoIds);
     if (cargoId) query = query.eq('cargo_id', cargoId);
     if (centroId) query = query.eq('centro_custo_id', centroId);
-    if (ativo === 'true' || ativo === 'ativos' || ativo === 'ativo') query = query.eq('ativo', true);
+    // Legados com ativo NULL contam como ativos (equivale ao default true).
+    if (ativo === 'true' || ativo === 'ativos' || ativo === 'ativo') query = query.or('ativo.eq.true,ativo.is.null');
     if (ativo === 'false' || ativo === 'inativos' || ativo === 'inativo') query = query.eq('ativo', false);
 
     let idFilter = vencidoIds;

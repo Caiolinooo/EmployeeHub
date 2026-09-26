@@ -187,7 +187,7 @@ export default function APIMobilePage() {
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 py-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 flex items-center">
                 <FiSmartphone className="mr-3 text-blue-600" />
@@ -201,7 +201,7 @@ export default function APIMobilePage() {
             <div className="flex items-center space-x-3">
               <button
                 onClick={loadAPIData}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                className="inline-flex items-center px-4 py-2.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
               >
                 <FiRefreshCw className="mr-2 h-4 w-4" />
                 Atualizar
@@ -209,7 +209,7 @@ export default function APIMobilePage() {
               
               <button
                 onClick={() => setShowCreateForm(true)}
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md shadow-sm text-sm font-medium hover:bg-blue-700"
+                className="inline-flex items-center px-4 py-2.5 bg-blue-600 text-white rounded-md shadow-sm text-sm font-medium hover:bg-blue-700"
               >
                 <FiKey className="mr-2 h-4 w-4" />
                 Nova Chave API
@@ -222,7 +222,7 @@ export default function APIMobilePage() {
       {/* Estatísticas */}
       {stats && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
@@ -327,13 +327,15 @@ export default function APIMobilePage() {
                           </code>
                           <button
                             onClick={() => toggleShowKey(key.id)}
-                            className="text-gray-400 hover:text-gray-600"
+                            className="p-3 -my-2 text-gray-500 hover:text-gray-700"
+                            aria-label={showKeys[key.id] ? 'Ocultar chave' : 'Mostrar chave'}
                           >
                             {showKeys[key.id] ? <FiEyeOff className="h-4 w-4" /> : <FiEye className="h-4 w-4" />}
                           </button>
                           <button
                             onClick={() => copyToClipboard(key.key)}
-                            className="text-gray-400 hover:text-gray-600"
+                            className="p-3 -my-2 text-gray-500 hover:text-gray-700"
+                            aria-label="Copiar chave"
                           >
                             <FiCopy className="h-4 w-4" />
                           </button>
@@ -366,7 +368,7 @@ export default function APIMobilePage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
                           onClick={() => toggleKeyStatus(key.id)}
-                          className={`inline-flex items-center px-3 py-1 rounded-md text-sm font-medium ${
+                          className={`inline-flex items-center px-3 py-2 min-h-[40px] rounded-md text-sm font-medium ${
                             key.active
                               ? 'text-red-700 bg-red-100 hover:bg-red-200'
                               : 'text-green-700 bg-green-100 hover:bg-green-200'
@@ -388,7 +390,7 @@ export default function APIMobilePage() {
       {/* Modal de Criação de Chave */}
       {showCreateForm && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+          <div className="relative top-10 sm:top-20 mx-auto p-5 border w-11/12 max-w-md max-h-[85vh] overflow-y-auto shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Nova Chave API</h3>
               
@@ -433,13 +435,13 @@ export default function APIMobilePage() {
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={() => setShowCreateForm(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                  className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleCreateKey}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                  className="px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
                 >
                   Criar Chave
                 </button>

@@ -80,7 +80,7 @@ export default function ModernLibraryCard({ item, onClick }: ModernLibraryCardPr
                         {finalIcon}
                     </div>
                     {/* Optional Status or Type Badge */}
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400 bg-gray-50 px-2 py-1 rounded-full border border-gray-100">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-gray-500 bg-gray-50 px-2 py-1 rounded-full border border-gray-100">
                         {item.type}
                     </span>
                 </div>
