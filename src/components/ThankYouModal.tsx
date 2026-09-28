@@ -5,6 +5,10 @@ import { motion } from 'framer-motion';
 import { FiCheckCircle, FiCopy } from 'react-icons/fi';
 import Confetti from 'react-confetti';
 import { useI18n } from '@/contexts/I18nContext';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
+import ModalCloseButton from '@/components/ui/ModalCloseButton';
 
 interface ThankYouModalProps {
   protocol: string;
@@ -31,6 +35,10 @@ const ThankYouModal: React.FC<ThankYouModalProps> = ({ protocol, onClose }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEscapeToClose(true, onClose);
+  useEscapeCapture(true, onClose);
+  useRestoreFocus(true);
+
   const copyToClipboard = () => {
     navigator.clipboard.writeText(protocol);
     setCopied(true);
@@ -56,8 +64,12 @@ const ThankYouModal: React.FC<ThankYouModalProps> = ({ protocol, onClose }) => {
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 text-center"
+        data-modal-panel=""
+        className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6 text-center"
       >
+        <div className="absolute right-1 top-1">
+          <ModalCloseButton onClick={onClose} mobileOnly />
+        </div>
         <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
           <FiCheckCircle className="w-10 h-10 text-green-500" />
         </div>

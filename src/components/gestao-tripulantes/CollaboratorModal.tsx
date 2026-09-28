@@ -10,6 +10,9 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { QHSE_MODULE_KEY } from '@/lib/document-catalog/permissions';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import { toast } from 'react-hot-toast';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 import { enviarOcrDocumento } from '@/components/gestao-tripulantes/ocr-client';
 import SugestaoBackModal from './SugestaoBackModal';
 import DesligamentoModal, { DesligamentoHistorico } from './DesligamentoModal';
@@ -248,11 +251,16 @@ export default function CollaboratorModal({ colaboradorId, onClose, initialTab, 
   const [loading, setLoading] = useState(true);
   const [showBackModal, setShowBackModal] = useState(false);
   const [showDesligamentoModal, setShowDesligamentoModal] = useState(false);
+  const overlayOpen = !showBackModal && !showDesligamentoModal;
+  useEscapeToClose(overlayOpen, onClose);
+  useEscapeCapture(overlayOpen, onClose);
+  useRestoreFocus(overlayOpen);
   const [desligamento, setDesligamento] = useState<GTDesligamento | null>(null);
   const [podeDesligar, setPodeDesligar] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [tabOverflow, setTabOverflow] = useState({ left: false, right: false });
   const tablistRef = useRef<HTMLDivElement>(null);
+  const tablistShellRef = useRef<HTMLDivElement>(null);
 
   const fetchData = useCallback(async (opts?: { silent?: boolean }) => {
     try {
@@ -316,7 +324,10 @@ export default function CollaboratorModal({ colaboradorId, onClose, initialTab, 
   }, []);
 
   const updateTabOverflow = useCallback(() => {
-    const el = tablistRef.current;
+    const shell = tablistShellRef.current;
+    const inner = tablistRef.current;
+    const el =
+      shell && shell.scrollWidth > shell.clientWidth + 2 ? shell : inner;
     if (!el) return;
     const { scrollLeft, scrollWidth, clientWidth } = el;
     setTabOverflow({
@@ -326,14 +337,20 @@ export default function CollaboratorModal({ colaboradorId, onClose, initialTab, 
   }, []);
 
   useEffect(() => {
-    const el = tablistRef.current;
-    if (!el) return;
+    const targets = [tablistShellRef.current, tablistRef.current].filter(
+      (el): el is HTMLDivElement => Boolean(el),
+    );
+    if (targets.length === 0) return;
     updateTabOverflow();
-    el.addEventListener('scroll', updateTabOverflow, { passive: true });
     const ro = new ResizeObserver(updateTabOverflow);
-    ro.observe(el);
+    for (const el of targets) {
+      el.addEventListener('scroll', updateTabOverflow, { passive: true });
+      ro.observe(el);
+    }
     return () => {
-      el.removeEventListener('scroll', updateTabOverflow);
+      for (const el of targets) {
+        el.removeEventListener('scroll', updateTabOverflow);
+      }
       ro.disconnect();
     };
   }, [updateTabOverflow, visibleTabs, activeTab]);
@@ -521,6 +538,7 @@ export default function CollaboratorModal({ colaboradorId, onClose, initialTab, 
           onClick={e => e.stopPropagation()}
           className={COLLABORATOR_MODAL_PANEL_CLASS}
           data-testid="collaborator-modal-panel"
+          data-modal-panel=""
         >
           {/* Header */}
           <div className={`${COLLABORATOR_MODAL_HEADER_CLASS} bg-gradient-to-r ${gradientClass} px-4 py-3 sm:px-6 sm:py-4`}>
@@ -612,7 +630,10 @@ export default function CollaboratorModal({ colaboradorId, onClose, initialTab, 
                 ) : null}
 
                 <button
+                  type="button"
                   onClick={onClose}
+                  data-modal-close=""
+                  aria-label="Fechar"
                   className="p-1.5 hover:bg-white/20 rounded-lg transition-colors ml-1"
                 >
                   <FiX className="w-5 h-5 text-white" />
@@ -623,6 +644,7 @@ export default function CollaboratorModal({ colaboradorId, onClose, initialTab, 
 
           {/* Tabs */}
           <div
+            ref={tablistShellRef}
             className={COLLABORATOR_MODAL_TABLIST_SHELL_CLASS}
             data-overflow-left={tabOverflow.left ? 'true' : 'false'}
             data-overflow-right={tabOverflow.right ? 'true' : 'false'}

@@ -264,7 +264,7 @@ export default function ReembolsoPage() {
         </div>
 
         {/* Tab Content */}
-        <div className="bg-white rounded-lg shadow-md p-6 flex-1 min-h-0 overflow-auto flex flex-col">
+        <div className="bg-white rounded-lg shadow-md p-6 flex-1 min-h-0 overflow-auto flex flex-col max-lg:min-h-[40vh]">
           <ErrorBoundary fallback={
             <div className="p-4 text-center">
               <div className="text-red-500 mb-4">

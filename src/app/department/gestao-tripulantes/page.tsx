@@ -8,7 +8,11 @@ import { useI18n } from '@/contexts/I18nContext';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import DashboardCards from '@/components/gestao-tripulantes/DashboardCards';
-import GtPageShell from '@/components/gestao-tripulantes/GtPageShell';
+import GtPageShell, {
+  GT_PAGE_TAB_BUTTON_CLASS,
+  GT_PAGE_TABLIST_CLASS,
+  GT_PAGE_TABNAV_CLASS,
+} from '@/components/gestao-tripulantes/GtPageShell';
 import GTMatrixFilters from '@/components/gestao-tripulantes/GTMatrixFilters';
 import GTMatrix from '@/components/gestao-tripulantes/GTMatrix';
 import GTMatrixLegend from '@/components/gestao-tripulantes/GTMatrixLegend';
@@ -127,7 +131,7 @@ function GestaoTripulantesContent() {
     if (tabParam === 'schedule') return 'schedule';
     return 'matrix';
   });
-  const [scheduleMounted, setScheduleMounted] = useState(false);
+  const [scheduleMounted, setScheduleMounted] = useState(() => searchParams?.get('tab') === 'schedule');
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [colaboradores, setColaboradores] = useState<Collaborator[]>([]);
   const [loading, setLoading] = useState(true);
@@ -156,6 +160,10 @@ function GestaoTripulantesContent() {
     if (tab === 'aso-logistica') setActiveTab('aso-logistica');
     else if (tab === 'matriz-config') setActiveTab('matriz-config');
     else if (tab === 'historico') setActiveTab('historico');
+    else if (tab === 'schedule') {
+      setActiveTab('schedule');
+      setScheduleMounted(true);
+    }
   }, [searchParams]);
 
   const setKpiInUrl = useCallback((kpi: GtDashboardKpi | '') => {
@@ -358,11 +366,11 @@ function GestaoTripulantesContent() {
       </div>
 
       {/* Tabs Seletor */}
-      <div className="border-b border-gray-200 shrink-0 overflow-x-auto no-scrollbar">
-        <nav className="flex space-x-4 sm:space-x-6 -mb-px min-w-max pb-0.5">
+      <div className={GT_PAGE_TABLIST_CLASS}>
+        <nav className={GT_PAGE_TABNAV_CLASS}>
           <button
             onClick={() => setActiveTab('matrix')}
-            className={`pb-3 text-sm font-bold border-b-2 transition-all ${
+            className={`${GT_PAGE_TAB_BUTTON_CLASS} ${
               activeTab === 'matrix'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -375,7 +383,7 @@ function GestaoTripulantesContent() {
               setActiveTab('schedule');
               setScheduleMounted(true);
             }}
-            className={`pb-3 text-sm font-bold border-b-2 transition-all ${
+            className={`${GT_PAGE_TAB_BUTTON_CLASS} ${
               activeTab === 'schedule'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -385,7 +393,7 @@ function GestaoTripulantesContent() {
           </button>
           <button
             onClick={() => setActiveTab('aso-logistica')}
-            className={`pb-3 text-sm font-bold border-b-2 transition-all ${
+            className={`${GT_PAGE_TAB_BUTTON_CLASS} ${
               activeTab === 'aso-logistica'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -395,7 +403,7 @@ function GestaoTripulantesContent() {
           </button>
           <button
             onClick={() => setActiveTab('historico')}
-            className={`pb-3 text-sm font-bold border-b-2 transition-all inline-flex items-center gap-1.5 ${
+            className={`${GT_PAGE_TAB_BUTTON_CLASS} inline-flex items-center gap-1.5 ${
               activeTab === 'historico'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -407,7 +415,7 @@ function GestaoTripulantesContent() {
           {(canViewMatrizes || canManageMatrizes) && (
             <button
               onClick={() => setActiveTab('matriz-config')}
-              className={`pb-3 text-sm font-bold border-b-2 transition-all ${
+              className={`${GT_PAGE_TAB_BUTTON_CLASS} ${
                 activeTab === 'matriz-config'
                   ? 'border-blue-600 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -420,7 +428,7 @@ function GestaoTripulantesContent() {
       </div>
 
       {activeTab === 'matrix' && (
-        <div className="flex flex-col flex-1 min-h-0 min-w-0 gap-3 overflow-y-auto lg:overflow-hidden">
+        <div className="flex flex-col flex-1 min-h-0 min-w-0 gap-3 overflow-y-auto lg:overflow-hidden max-lg:overflow-visible">
           <div className="shrink-0 space-y-3">
             <AsoReviewPanel compact />
             <DashboardCards data={dashboard} activeKpi={kpiFilter} onKpiClick={handleKpiClick} />
@@ -456,7 +464,7 @@ function GestaoTripulantesContent() {
             colaboradores={colaboradores}
             loading={loading}
             onRowClick={handleRowClick}
-            className="flex-1 min-h-0 min-w-0"
+            className="flex-1 min-h-0 min-w-0 max-lg:flex-none max-lg:min-h-[50vh]"
             selectable={podeMarcar}
             selectedIds={podeMarcar ? selectedIds : undefined}
             onToggleSelect={podeMarcar ? handleToggleSelect : undefined}
@@ -466,7 +474,7 @@ function GestaoTripulantesContent() {
       )}
 
       {activeTab === 'aso-logistica' && (
-        <div className="flex flex-col flex-1 min-h-0 min-w-0 overflow-hidden">
+        <div className="flex flex-col flex-1 min-h-0 min-w-0 overflow-hidden max-lg:overflow-visible max-lg:min-h-[40vh]">
           <AsoAgendamentoInbox />
         </div>
       )}
@@ -484,7 +492,7 @@ function GestaoTripulantesContent() {
       )}
 
       {scheduleMounted && (
-        <div className={activeTab === 'schedule' ? 'flex flex-col flex-1 min-h-0 min-w-0 w-full overflow-hidden' : 'hidden'}>
+        <div className={activeTab === 'schedule' ? 'flex flex-col flex-1 min-h-0 min-w-0 w-full overflow-hidden max-lg:overflow-visible max-lg:min-h-[70vh]' : 'hidden'}>
           <GTManScheduleTab onColabClick={handleRowClick} kpiFilter={kpiFilter} />
         </div>
       )}

@@ -25,6 +25,9 @@ import { fetchWithToken } from '@/lib/tokenStorage';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useSignature } from '@/contexts/SignatureContext';
 import { useI18n } from '@/contexts/I18nContext';
+import { useEscapeToClose } from '@/hooks/useEscapeToClose';
+import { useEscapeCapture } from '@/hooks/useEscapeCapture';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 import { useGtLiveProbe } from '@/hooks/useGtLiveProbe';
 import {
   assinaturaCobreAprovador,
@@ -84,6 +87,9 @@ export default function ModalAprovacaoFechamento({
   onSuccess,
 }: ModalAprovacaoFechamentoProps) {
   const { t } = useI18n();
+  useEscapeToClose(isOpen, onClose);
+  useEscapeCapture(isOpen, onClose);
+  useRestoreFocus(isOpen);
   // Mês civil local (BRT): toISOString() viraria o mês em 21h do fim de mês.
   const [mesAno, setMesAno] = useState(initialMesAno || mesAnoAtualBRT());
   const [aba, setAba] = useState<AbaFechamento>('resumo');
@@ -377,7 +383,9 @@ export default function ModalAprovacaoFechamento({
               {statusBadgeLabel}
             </span>
             <button
+              type="button"
               onClick={onClose}
+              data-modal-close=""
               className="min-h-[44px] min-w-[44px] p-2 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-200 transition"
               aria-label={t('gtFechV2.acoes.fechar', 'Fechar')}
             >
