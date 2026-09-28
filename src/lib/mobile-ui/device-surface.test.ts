@@ -45,12 +45,16 @@ describe('classifyDevice', () => {
 });
 
 describe('allowlist', () => {
-  it('only login is implemented in P0', () => {
+  it('matches implemented paths exactly (no prefix loop with catch-all)', () => {
     assert.equal(isMobileImplemented('/login'), true);
-    assert.equal(isMobileImplemented('/login/extra'), true);
-    assert.equal(isMobileImplemented('/dashboard'), false);
+    assert.equal(isMobileImplemented('/noticias'), true);
+    assert.equal(isMobileImplemented('/ferias'), true);
+    // Subrota sem página mobile NÃO reescreve: cai no desktop (fallback),
+    // senão `/m/<sub>` 307 do catch-all voltaria a reescrever em loop.
+    assert.equal(isMobileImplemented('/login/extra'), false);
+    assert.equal(isMobileImplemented('/noticias/123'), false);
+    assert.equal(isMobileImplemented('/dashboard'), true);
     assert.equal(isMobileImplemented('/register'), false);
-    assert.equal(isMobileImplemented('/ferias'), false);
   });
 });
 
@@ -98,8 +102,14 @@ describe('decideMobileSurface', () => {
     assert.equal(d.reason, 'cookie-mobile');
   });
 
-  it('does not rewrite dashboard even on mobile UA', () => {
+  it('rewrites dashboard on mobile UA (allowlisted)', () => {
     const d = decideMobileSurface({ pathname: '/dashboard', ...mobileUa });
+    assert.equal(d.rewritePath, '/m/dashboard');
+    assert.equal(d.reason, 'ua-mobile');
+  });
+
+  it('does not rewrite non-allowlisted path even on mobile UA', () => {
+    const d = decideMobileSurface({ pathname: '/register', ...mobileUa });
     assert.equal(d.rewritePath, null);
     assert.equal(d.reason, 'not-implemented');
   });

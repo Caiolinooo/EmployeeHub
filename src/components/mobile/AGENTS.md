@@ -27,13 +27,24 @@ UI só do front mobile. Desktop não importa estes arquivos.
 - Companion: entrada no Mais (D7 — sem FAB cobrindo nav/atalhos). Login sem FAB.
 - `/m/*` no desktop: com Edge, `shouldRedirectMobilePrefix` manda `/m` → `/` e `/m/login` → `/login`. Sem Edge (Next 15.5 neste repo) a URL `/m/*` renderiza o front mobile; URLs públicas do desktop não mudam.
 
+## Padrão de página mobile (revamp por módulo)
+
+Cada módulo `/<rota>` ganha front mobile em `/m/<rota>`:
+
+- `src/app/(mobile)/m/<rota>/page.tsx` — server component FINO, só `export default function …() { return <MobileX /> }` (contrato Next.js, não inlinar).
+- `src/components/mobile/Mobile<Module>.tsx` — client component com a UI: `MobileShell` (título = nome do módulo) + `DataCard`/`TouchButton`/`BottomSheet`. Sem lib nova, sem CSS import, sem Tailwind classes novas fora do já usado no kit.
+- Dados: APIs existentes em `src/app/api/**` (ler a rota antes de chamar). Auth: `getToken()` de `@/lib/tokenStorage` + header `Authorization: Bearer`; usuário via `useSupabaseAuth()` de `@/contexts/SupabaseAuthContext` (`user`, `profile`, `isAuthenticated`, `isLoading`).
+- Função preservada: mesma API e mesmos campos do desktop; fluxos completos do desktop (forms grandes, aprovações admin) podem virar ação simples + link/302 natural p/ URL desktop (o catch-all `/m/[...slug]` redireciona).
+- Referências canônicas: `MobileNewsFeed.tsx` (lista paginada pública) e `MobileLeave.tsx` (lista autenticada + BottomSheet de criação).
+- `data-abz-mobile-<modulo>` no container raiz para smoke.
+
 ## Work Guidance
 
-Página nova = allowlist em `src/lib/mobile-ui/device-surface.ts` se a URL pública deve reescrever.
+Página nova = adicionar a URL pública em `src/lib/mobile-ui/mobile-paths.js` (allowlist única, CJS; dono = sessão principal do revamp). Subagentes NÃO editam `mobile-paths.js` nem `next.config.js` — reportam os paths implementados no output. Match é exato (`/noticias` não cobre `/noticias/123`; sub-rota vira fallback desktop pelo catch-all).
 
 ## Verification
 
-- `npx tsx --test src/components/mobile/mobile-login-flow.test.ts src/lib/mobile-ui/device-surface.test.ts src/lib/mobile-ui/preview-block.test.ts`
+- `npx tsx --test src/components/mobile/mobile-login-flow.test.ts src/lib/mobile-ui/device-surface.test.ts src/lib/mobile-ui/middleware-contract.test.ts src/lib/mobile-ui/preview-block.test.ts`
 - Login: `data-abz-mobile-login` + passos `data-abz-login-form`
 - Home: `data-abz-mobile-home`. Nav ≥ 44 px (`.abz-m-nav-item`)
 - Prova de fluxo: `scripts/mobile-fase2-login-proof.mjs` (mock de rede, sem bypass no repo)

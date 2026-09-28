@@ -74,8 +74,15 @@ describe('root middleware contract', () => {
       uaDeviceType: 'mobile',
       isBot: false,
     });
-    assert.equal(dashboard.rewritePath, null);
-    assert.equal(dashboard.reason, 'not-implemented');
+    assert.equal(dashboard.rewritePath, '/m/dashboard');
+
+    const unlisted = decideMobileSurface({
+      pathname: '/register',
+      uaDeviceType: 'mobile',
+      isBot: false,
+    });
+    assert.equal(unlisted.rewritePath, null);
+    assert.equal(unlisted.reason, 'not-implemented');
   });
 
   it('sends desktop UA away from /m/login unless cookie ui=mobile', () => {

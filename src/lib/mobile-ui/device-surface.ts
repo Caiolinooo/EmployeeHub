@@ -7,12 +7,17 @@ export {
   isPhoneUserAgent,
   isTabletUserAgent,
 } from './ua-patterns';
+import { MOBILE_IMPLEMENTED_PATHS } from './mobile-paths';
 
 export const UI_COOKIE = 'ui';
 export const MOBILE_PATH_PREFIX = '/m';
 
-/** Rotas cuja URL pública já tem página em `app/(mobile)/m/...`. */
-export const MOBILE_IMPLEMENTED_PATHS = ['/login'] as const;
+/**
+ * Rotas públicas com página em `app/(mobile)/m/...`. Fonte: `mobile-paths.js`
+ * (CJS, compartilhado com next.config). Match EXATO — subrota sem página
+ * mobile cai no desktop (fallback) em vez de loopar com o catch-all.
+ */
+export { MOBILE_IMPLEMENTED_PATHS };
 
 /** `/m/*` que o UA desktop pode abrir direto. `/m/preview` é vitrine e 404 em produção. */
 export const MOBILE_DIRECT_PATHS = ['/m/preview'] as const;
@@ -65,7 +70,7 @@ export function classifyDevice(input: {
 
 export function isMobileImplemented(pathname: string): boolean {
   const path = stripQuery(pathname);
-  return MOBILE_IMPLEMENTED_PATHS.some((p) => path === p || path.startsWith(`${p}/`));
+  return MOBILE_IMPLEMENTED_PATHS.some((p) => path === p);
 }
 
 export function toMobileRewritePath(pathname: string): string {

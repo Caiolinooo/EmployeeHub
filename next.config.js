@@ -6,6 +6,7 @@ const {
   TABLET_UA_VALUE,
 } = require('./src/lib/mobile-ui/ua-patterns');
 const { productionMobilePreviewRewrites } = require('./src/lib/mobile-ui/preview-block');
+const { MOBILE_IMPLEMENTED_PATHS } = require('./src/lib/mobile-ui/mobile-paths');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -132,39 +133,42 @@ const nextConfig = {
   },
 
   // Proxy para o Guacamole (WKRadar) para permitir acesso Same-Origin e Auto-Login.
-  // beforeFiles: fallback do P0 `/login` (cookie `ui` + CH + UA).
+  // beforeFiles: fallback mobile por rota da allowlist (`mobile-paths.js`).
   // A detecção já corre no middleware (`applyMobileSurface`). Não mover o rewrite
   // só para o middleware: `ui=desktop` (cookie e query) está em `missing` aqui;
-  // se o Edge falhar, `/login` mobile quebra sem este fallback.
+  // se o Edge falhar, a rota mobile quebra sem este fallback.
   // Cookie `ui=desktop` vence. Tablet (iPad + Android) = desktop. Desktop UA não casa.
   async rewrites() {
+    const mobileFallbacks = MOBILE_IMPLEMENTED_PATHS.flatMap((path) => [
+      {
+        source: path,
+        has: [{ type: 'cookie', key: 'ui', value: 'mobile' }],
+        destination: `/m${path}`,
+      },
+      {
+        source: path,
+        has: [{ type: 'header', key: 'sec-ch-ua-mobile', value: '\\?1' }],
+        missing: [
+          { type: 'cookie', key: 'ui', value: 'desktop' },
+          { type: 'query', key: 'ui', value: 'desktop' },
+          { type: 'header', key: 'user-agent', value: TABLET_UA_VALUE },
+        ],
+        destination: `/m${path}`,
+      },
+      {
+        source: path,
+        has: [{ type: 'header', key: 'user-agent', value: PHONE_REWRITE_UA_VALUE }],
+        missing: [
+          { type: 'cookie', key: 'ui', value: 'desktop' },
+          { type: 'query', key: 'ui', value: 'desktop' },
+        ],
+        destination: `/m${path}`,
+      },
+    ]);
     return {
       beforeFiles: [
         ...(process.env.NODE_ENV === 'production' ? productionMobilePreviewRewrites() : []),
-        {
-          source: '/login',
-          has: [{ type: 'cookie', key: 'ui', value: 'mobile' }],
-          destination: '/m/login',
-        },
-        {
-          source: '/login',
-          has: [{ type: 'header', key: 'sec-ch-ua-mobile', value: '\\?1' }],
-          missing: [
-            { type: 'cookie', key: 'ui', value: 'desktop' },
-            { type: 'query', key: 'ui', value: 'desktop' },
-            { type: 'header', key: 'user-agent', value: TABLET_UA_VALUE },
-          ],
-          destination: '/m/login',
-        },
-        {
-          source: '/login',
-          has: [{ type: 'header', key: 'user-agent', value: PHONE_REWRITE_UA_VALUE }],
-          missing: [
-            { type: 'cookie', key: 'ui', value: 'desktop' },
-            { type: 'query', key: 'ui', value: 'desktop' },
-          ],
-          destination: '/m/login',
-        },
+        ...mobileFallbacks,
       ],
       afterFiles: [
         {
