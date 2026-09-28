@@ -18,6 +18,7 @@ import MaterialDesignIcon from '@/components/MaterialDesignIcon';
 import LanguageDialog from '@/components/LanguageDialog';
 import SiteHead from '@/components/SiteHead';
 import CompleteProfilePrompt from '@/components/Profile/CompleteProfilePrompt';
+import UiSurfaceSwitch from '@/components/mobile/UiSurfaceSwitch';
 import ChangelogModal from '@/components/ChangelogModal';
 import { usePathname } from 'next/navigation';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
@@ -89,6 +90,7 @@ export default function ClientProviders({ children }: { children: React.ReactNod
                   {isMounted && <Toaster position="top-right" />}
                   {isMounted && <ChangelogModal />}
                   <ProfilePromptGate isMounted={isMounted} pathname={pathname} />
+                  {isMounted && <UiSurfaceSwitch />}
                   {children}
                 </SignatureProvider>
               </AlertProvider>

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { applyMobileSurface } from './src/lib/mobile-ui/apply-mobile-surface';
 import {
   avaliacaoLegacyRedirect,
   isAvaliacaoPagePath,
   isAuthPassthroughPath,
 } from './src/lib/middleware-gates';
 
-function markMiddleware(response: NextResponse) {
+function markMiddleware(response: NextResponse): NextResponse {
   response.headers.set('x-abz-middleware', '1');
   return response;
 }
@@ -20,7 +21,7 @@ export function middleware(request: NextRequest) {
   // }
 
   if (isAuthPassthroughPath(pathname)) {
-    return markMiddleware(NextResponse.next());
+    return markMiddleware(applyMobileSurface(request, NextResponse.next()));
   }
 
   const token = request.cookies.get('abzToken')?.value || request.cookies.get('token')?.value;
@@ -56,7 +57,7 @@ export function middleware(request: NextRequest) {
   response.headers.set('x-locale', locale);
   response.cookies.set('NEXT_LOCALE', locale);
 
-  return markMiddleware(response);
+  return markMiddleware(applyMobileSurface(request, response));
 }
 
 export const config = {
