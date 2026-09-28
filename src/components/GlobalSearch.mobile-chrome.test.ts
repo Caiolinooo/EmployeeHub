@@ -12,15 +12,16 @@ describe('767 media block (helpers #99)', () => {
     assert.match(css, /max-height: 100dvh/);
   });
 
-  it('keeps only modal-close/panel selectors inside max-width 767px', () => {
+  it('keeps all mobile helper selectors inside max-width 767px', () => {
     const css = readFileSync(new URL('../app/globals.css', import.meta.url), 'utf8');
     const marker = '@media (max-width: 767px)';
     const mediaIdx = css.indexOf(marker);
     assert.ok(mediaIdx >= 0);
     const outside = css.slice(0, mediaIdx);
     const inside = css.slice(mediaIdx);
-    const keep = ['[data-modal-close]', '[data-modal-panel]'];
-    const drop = [
+    const keep = [
+      '[data-modal-close]',
+      '[data-modal-panel]',
       '[data-gt-kpi-cards]',
       '[data-portal-main]',
       '[data-fab-companion]',
@@ -31,9 +32,6 @@ describe('767 media block (helpers #99)', () => {
     for (const sel of keep) {
       assert.equal(outside.includes(sel), false, `${sel} fora do media`);
       assert.ok(inside.includes(sel), `${sel} ausente no media`);
-    }
-    for (const sel of drop) {
-      assert.equal(inside.includes(sel), false, `${sel} no media desta PR`);
     }
     assert.equal((css.match(/@media \(max-width: 767px\)/g) || []).length, 1);
   });
