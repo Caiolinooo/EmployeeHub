@@ -9,6 +9,8 @@ import GenerativeDashboard from './GenerativeDashboard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Mic } from 'lucide-react';
 import VoiceAssistantModal from './VoiceAssistantModal';
+import ModalCloseButton from '@/components/ui/ModalCloseButton';
+import { useRestoreFocus } from '@/hooks/useRestoreFocus';
 
 interface Props {
   token: string;
@@ -37,6 +39,11 @@ export default function ChatWindow({ token }: Props) {
   const [showDashboard, setShowDashboard] = useState(false);
   
   const [showVoiceModal, setShowVoiceModal] = useState(false);
+  const { markTrigger, restoreFocus } = useRestoreFocus();
+  const closeMobileSidebar = useCallback(() => {
+    setSidebarOpen(false);
+    restoreFocus();
+  }, [restoreFocus]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -106,6 +113,29 @@ export default function ChatWindow({ token }: Props) {
       setSidebarOpen(!!lastSidebarMsg.metadata.sidebarOpen);
     }
   }, [streamingMetadata?.sidebarOpen, messages]);
+
+  useEffect(() => {
+    if (!sidebarOpen) return undefined;
+    const mq = window.matchMedia('(max-width: 1023px)');
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.stopPropagation();
+      closeMobileSidebar();
+    };
+    const apply = () => {
+      window.removeEventListener('keydown', onKey);
+      document.removeEventListener('keydown', onKey, true);
+      if (mq.matches) window.addEventListener('keydown', onKey);
+      if (mq.matches) document.addEventListener('keydown', onKey, true);
+    };
+    apply();
+    mq.addEventListener('change', apply);
+    return () => {
+      mq.removeEventListener('change', apply);
+      window.removeEventListener('keydown', onKey);
+      document.removeEventListener('keydown', onKey, true);
+    };
+  }, [sidebarOpen, closeMobileSidebar]);
 
   // Listen for dashboard actions
   useEffect(() => {
@@ -351,17 +381,20 @@ export default function ChatWindow({ token }: Props) {
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed inset-0 z-50 lg:hidden flex"
           >
-            <div className="w-72 bg-white shadow-2xl h-full">
+            <div data-modal-panel="" className="relative w-72 bg-white shadow-2xl h-full">
+              <div className="absolute right-1 top-1 z-10">
+                <ModalCloseButton onClick={closeMobileSidebar} />
+              </div>
               <ChatSidebar 
                 sessions={sessions} 
                 activeSessionId={activeSessionId}
-                onSelectSession={(id) => { handleSelectSession(id); setSidebarOpen(false); }} 
-                onNewSession={() => { handleNewSession(); setSidebarOpen(false); }}
+                onSelectSession={(id) => { handleSelectSession(id); closeMobileSidebar(); }} 
+                onNewSession={() => { handleNewSession(); closeMobileSidebar(); }}
                 onDeleteSession={handleDeleteSession} 
                 isLoading={sessionsLoading} 
               />
             </div>
-            <div className="flex-1 bg-black/20 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+            <div className="flex-1 bg-black/20 backdrop-blur-sm" onClick={closeMobileSidebar} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -370,13 +403,19 @@ export default function ChatWindow({ token }: Props) {
       <div className="flex-1 flex flex-col min-w-0 bg-white relative">
         <ExchangeIntegrationModal 
           isOpen={showExchangeModal} 
-          onClose={() => setShowExchangeModal(false)} 
+          onClose={() => {
+            setShowExchangeModal(false);
+            restoreFocus();
+          }} 
           token={token} 
         />
 
         <VoiceAssistantModal 
           isOpen={showVoiceModal}
-          onClose={() => setShowVoiceModal(false)}
+          onClose={() => {
+            setShowVoiceModal(false);
+            restoreFocus();
+          }}
           authToken={token}
         />
 
@@ -384,8 +423,12 @@ export default function ChatWindow({ token }: Props) {
         <div className="h-14 border-b border-gray-100 px-4 flex items-center justify-between bg-white/80 backdrop-blur-sm sticky top-0 z-20">
           <div className="flex items-center gap-3">
             <button 
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500"
+              onClick={(event) => {
+                if (!sidebarOpen) markTrigger(event.currentTarget);
+                else restoreFocus();
+                setSidebarOpen((open) => !open);
+              }}
+              className="p-2 max-md:min-h-11 max-md:min-w-11 hover:bg-gray-100 rounded-lg transition-colors text-gray-500"
               title="Menu Lateral"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -416,13 +459,16 @@ export default function ChatWindow({ token }: Props) {
               </button>
             )}
             <button 
-              onClick={() => setShowVoiceModal(true)} 
-              className="p-2 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors text-gray-500" 
+              onClick={(event) => {
+                markTrigger(event.currentTarget);
+                setShowVoiceModal(true);
+              }} 
+              className="p-2 max-md:min-h-11 max-md:min-w-11 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors text-gray-500" 
               title="Conversa por Voz em Tempo Real"
             >
               <Mic className="w-5 h-5" />
             </button>
-            <button onClick={handleNewSession} className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500" title="Nova Conversa">
+            <button onClick={handleNewSession} className="p-2 max-md:min-h-11 max-md:min-w-11 hover:bg-gray-100 rounded-lg transition-colors text-gray-500" title="Nova Conversa">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
@@ -509,7 +555,10 @@ export default function ChatWindow({ token }: Props) {
               </div>
             </div>
             <button 
-              onClick={() => setShowVoiceModal(true)}
+              onClick={(event) => {
+                markTrigger(event.currentTarget);
+                setShowVoiceModal(true);
+              }}
               className="flex-shrink-0 w-14 h-14 bg-slate-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-200 text-slate-600 hover:text-blue-600 rounded-2xl transition-all flex items-center justify-center group active:scale-95 shadow-sm hover:shadow"
               title="Iniciar conversa por Voz em Tempo Real"
             >
