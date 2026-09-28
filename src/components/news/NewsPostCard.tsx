@@ -180,6 +180,8 @@ const NewsPostCard: React.FC<NewsPostCardProps> = ({
 
                 <div className="relative">
                     <button
+                        type="button"
+                        data-news-more=""
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
                         className="p-2 hover:bg-gray-100 rounded-full"
                     >
@@ -197,7 +199,14 @@ const NewsPostCard: React.FC<NewsPostCardProps> = ({
 
                             {(hasPermission('news.edit') || hasPermission('news.publish')) && onEdit && (
                                 <button
-                                    onClick={() => { onEdit(post); setIsMenuOpen(false); }}
+                                    type="button"
+                                    onClick={(e) => {
+                                        const more = (e.currentTarget.closest('.relative') as HTMLElement | null)
+                                            ?.querySelector('[data-news-more]');
+                                        if (more instanceof HTMLElement) more.focus();
+                                        onEdit(post);
+                                        setIsMenuOpen(false);
+                                    }}
                                     className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
                                 >
                                     {t('newsSystem.post.edit')}
