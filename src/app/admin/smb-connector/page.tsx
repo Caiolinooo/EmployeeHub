@@ -757,9 +757,9 @@ export default function SmbConnectorPage() {
                                                     </p>
                                                     <div className="bg-gray-900 text-gray-100 rounded-xl p-4 font-mono text-sm">
                                                         <p className="text-gray-400"># Executar sincronização manualmente</p>
-                                                        <p className="text-emerald-400">npx tsx scripts/smb-sync.ts</p>
+                                                        <p className="text-emerald-400">npm run smb:sync</p>
                                                         <p className="text-gray-400 mt-2"># Agendar no Windows Task Scheduler ou cron</p>
-                                                        <p className="text-amber-400">schtasks /create /tn &ldquo;SMB Sync&rdquo; /tr &ldquo;npx tsx scripts/smb-sync.ts&rdquo; /sc daily /st 08:00</p>
+                                                        <p className="text-amber-400">schtasks /create /tn &ldquo;SMB Sync&rdquo; /tr &ldquo;npm run smb:sync&rdquo; /sc daily /st 08:00</p>
                                                     </div>
                                                 </div>
                                             </div>

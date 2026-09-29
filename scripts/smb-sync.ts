@@ -15,6 +15,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import SMB2 from '@marsaud/smb2';
+import fs from 'fs';
 import crypto from 'crypto';
 import path from 'path';
 import dotenv from 'dotenv';
@@ -97,6 +98,27 @@ async function isDir(client: any, p: string): Promise<boolean> {
     });
 }
 
+// Contrato mínimo usado pelo sync (subset da API callback do SMB2).
+interface SyncClient {
+    readdir(dirPath: string, cb: (err: Error | null, files?: string[]) => void): void;
+    readFile(filePath: string, cb: (err: Error | null, data?: Buffer) => void): void;
+}
+
+// Adapter: mesma API callback do SMB2, mas lê via filesystem local/UNC.
+// Usado quando a conexão tem local_path (modo LocalFs — a autenticação fica
+// com o Windows, via credencial salva em `cmdkey` ou conta de serviço).
+function createLocalClient(rootPath: string): SyncClient {
+    const join = (p: string) => path.join(rootPath, p.replace(/[\\/]+/g, path.sep));
+    return {
+        readdir(dirPath: string, cb: (err: NodeJS.ErrnoException | null, files?: string[]) => void) {
+            fs.readdir(join(dirPath || ''), (err, files) => cb(err, files as unknown as string[]));
+        },
+        readFile(filePath: string, cb: (err: NodeJS.ErrnoException | null, data?: Buffer) => void) {
+            fs.readFile(join(filePath), (err, data) => cb(err, data));
+        },
+    };
+}
+
 async function listAllFiles(client: any, basePath: string): Promise<{ name: string; path: string }[]> {
     const all: { name: string; path: string }[] = [];
 
@@ -141,24 +163,45 @@ async function main() {
     for (const conn of connections) {
         console.log(`━━━ Processando: ${conn.name} (${conn.host}\\${conn.share}) ━━━`);
 
-        const sharePath = `\\\\${conn.host}\\${conn.share}`;
-        let password: string;
+        // Modo local/UNC: autenticação é do Windows (cmdkey/conta de serviço) — sem password no banco
+        let client: SyncClient;
+        if (conn.local_path) {
+            console.log(`📁 Modo local: ${conn.local_path}`);
+            client = createLocalClient(conn.local_path);
+        } else {
+            let password: string;
+            try {
+                password = decryptPassword(conn.password_encrypted);
+            } catch (e: any) {
+                console.error(`❌ Falha ao descriptografar password: ${e.message}`);
+                continue;
+            }
 
-        try {
-            password = decryptPassword(conn.password_encrypted);
-        } catch (e: any) {
-            console.error(`❌ Falha ao descriptografar password: ${e.message}`);
-            continue;
+            // Aceita usuario "DOMINIO\\usuario" ou "usuario@dominio.com" (mesmo parse do SmbService)
+            let username: string = conn.username;
+            let domain: string = conn.domain || '';
+            if (username.includes('\\')) {
+                const parts = username.split('\\');
+                if (!domain) domain = parts[0];
+                username = parts[1];
+            } else if (username.includes('@')) {
+                const parts = username.split('@');
+                username = parts[0];
+                if (!domain) domain = parts[1];
+            }
+            if (domain.includes('.')) domain = domain.split('.')[0];
+            domain = domain.toUpperCase();
+
+            const sharePath = `\\\\${conn.host}\\${conn.share}`;
+            client = new SMB2({
+                share: sharePath,
+                domain,
+                username,
+                password,
+                port: conn.port || 445,
+                autoCloseTimeout: 60000,
+            });
         }
-
-        const client = new SMB2({
-            share: sharePath,
-            domain: conn.domain || '',
-            username: conn.username,
-            password,
-            port: conn.port || 445,
-            autoCloseTimeout: 60000,
-        });
 
         // Create sync log
         const { data: syncLog } = await supabase
@@ -205,23 +248,18 @@ async function main() {
                     const storagePath = `smb-sync/${conn.id}/${Date.now()}_${safeName}`;
                     const mime = getMimeType(file.name);
 
-                    // Upload
+                    // Upload — bucket canônico da biblioteca
+                    const bucket = 'library-assets';
                     const { error: upErr } = await supabase.storage
-                        .from('library')
+                        .from(bucket)
                         .upload(storagePath, data, { contentType: mime, upsert: true });
 
                     if (upErr) {
-                        const { error: upErr2 } = await supabase.storage
-                            .from('documents')
-                            .upload(storagePath, data, { contentType: mime, upsert: true });
-                        if (upErr2) {
-                            errors.push(`Upload: ${file.name}: ${upErr2.message}`);
-                            failed++;
-                            continue;
-                        }
+                        errors.push(`Upload: ${file.name}: ${upErr.message}`);
+                        failed++;
+                        continue;
                     }
 
-                    const bucket = 'library';
                     const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(storagePath);
 
                     const ext = file.name.split('.').pop()?.toLowerCase();

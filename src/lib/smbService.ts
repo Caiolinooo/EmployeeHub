@@ -90,19 +90,32 @@ export class SmbService {
         if (!this.client) {
             const sharePath = `\\\\${this.config.host}\\${this.config.share}`;
 
-            // Normalize domain for NTLM: strip FQDN suffixes (.local, .com, etc.) and uppercase
+            // Aceita usuario nos formatos "DOMINIO\\usuario" ou "usuario@dominio.com"
+            // e separa dominio/username antes de montar a autenticacao NTLM.
+            let username = this.config.username;
             let domain = this.config.domain || '';
+            if (username.includes('\\')) {
+                const parts = username.split('\\');
+                if (!domain) domain = parts[0];
+                username = parts[1];
+            } else if (username.includes('@')) {
+                const parts = username.split('@');
+                username = parts[0];
+                if (!domain) domain = parts[1];
+            }
+
+            // Normalize domain for NTLM: strip FQDN suffixes (.local, .com, etc.) and uppercase
             if (domain.includes('.')) {
                 domain = domain.split('.')[0];
             }
             domain = domain.toUpperCase();
 
-            console.log(`[SMB] Connecting to: ${sharePath}, domain: ${domain}, user: ${this.config.username}, port: ${this.config.port || 445}`);
+            console.log(`[SMB] Connecting to: ${sharePath}, domain: ${domain || '(vazio)'}, user: ${username}, port: ${this.config.port || 445}`);
 
             this.client = new SMB2({
                 share: sharePath,
                 domain: domain,
-                username: this.config.username,
+                username: username,
                 password: this.config.password,
                 port: this.config.port || 445,
                 autoCloseTimeout: 30000, // 30 seconds
@@ -119,11 +132,19 @@ export class SmbService {
             const client = this.getClient();
 
             return new Promise((resolve) => {
-                client.readdir('', (err: any, files: string[]) => {
+                client.readdir('', (err: { message?: string; code?: string } | null, files: string[]) => {
                     if (err) {
+                        const code = err.message || err.code || 'Erro desconhecido';
+                        const hints: Record<string, string> = {
+                            'STATUS_LOGON_FAILURE': 'Usuário ou senha inválidos. Use o formato DOMINIO\\usuario (ex.: GROUPABZ\\joao).',
+                            'STATUS_ACCESS_DENIED': 'Sem permissão no compartilhamento. Verifique os direitos do usuário na pasta.',
+                            'STATUS_BAD_NETWORK_NAME': 'Compartilhamento não encontrado. Confira o nome do share (ex.: DATA-ABZ).',
+                            'STATUS_INVALID_PARAMETER': 'Parâmetro inválido na autenticação. Informe o domínio (ex.: GROUPABZ) ou use DOMINIO\\usuario.',
+                        };
+                        const hint = Object.entries(hints).find(([k]) => code.includes(k))?.[1];
                         resolve({
                             success: false,
-                            message: `Falha na conexão: ${err.message || err.code || 'Erro desconhecido'}`
+                            message: `Falha na conexão: ${code}${hint ? ' — ' + hint : ''}`
                         });
                     } else {
                         resolve({

@@ -98,36 +98,26 @@ export const POST = withAdmin(async (request: NextRequest) => {
                 const storagePath = `smb-sync/${connection_id}/${Date.now()}_${safeName}`;
                 const mimeType = getMimeType(file.name);
 
-                // Upload to Supabase Storage
-                const { data: uploadData, error: uploadError } = await supabaseAdmin
+                // Upload to Supabase Storage — bucket canônico da biblioteca
+                const bucket = 'library-assets';
+                const { error: uploadError } = await supabaseAdmin
                     .storage
-                    .from('library')
+                    .from(bucket)
                     .upload(storagePath, fileData, {
                         contentType: mimeType,
                         upsert: true
                     });
 
                 if (uploadError) {
-                    // Try 'documents' bucket as fallback
-                    const { error: uploadError2 } = await supabaseAdmin
-                        .storage
-                        .from('documents')
-                        .upload(storagePath, fileData, {
-                            contentType: mimeType,
-                            upsert: true
-                        });
-
-                    if (uploadError2) {
-                        errors.push(`Upload falhou para ${file.name}: ${uploadError2.message}`);
-                        filesFailed++;
-                        continue;
-                    }
+                    errors.push(`Upload falhou para ${file.name}: ${uploadError.message}`);
+                    filesFailed++;
+                    continue;
                 }
 
                 // Get the public URL
                 const { data: urlData } = supabaseAdmin
                     .storage
-                    .from(uploadData ? 'library' : 'documents')
+                    .from(bucket)
                     .getPublicUrl(storagePath);
 
                 // Determine file type
