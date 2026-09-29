@@ -5,6 +5,8 @@
 
 import SMB2 from '@marsaud/smb2';
 import crypto from 'crypto';
+import fs from 'fs/promises';
+import path from 'path';
 
 // Encryption config
 const ALGORITHM = 'aes-256-gcm';
@@ -229,6 +231,82 @@ export class SmbService {
     }
 
     /**
+     * Writes (uploads) a file to the SMB share
+     */
+    async writeFile(path: string, data: Buffer): Promise<void> {
+        const client = this.getClient();
+        const normalizedPath = path.replace(/\//g, '\\');
+
+        return new Promise((resolve, reject) => {
+            client.writeFile(normalizedPath, data, (err: any) => {
+                if (err) {
+                    reject(new Error(`Erro ao gravar arquivo "${path}": ${err.message || err.code}`));
+                    return;
+                }
+                resolve();
+            });
+        });
+    }
+
+    /**
+     * Creates a directory in the SMB share
+     */
+    async mkdir(path: string): Promise<void> {
+        const client = this.getClient();
+        const normalizedPath = path.replace(/\//g, '\\');
+
+        return new Promise((resolve, reject) => {
+            client.mkdir(normalizedPath, (err: any) => {
+                // STATUS_OBJECT_NAME_COLLISION = pasta já existe → idempotente
+                if (err && !(err.message || err.code || '').includes('COLLISION')) {
+                    reject(new Error(`Erro ao criar pasta "${path}": ${err.message || err.code}`));
+                    return;
+                }
+                resolve();
+            });
+        });
+    }
+
+    /**
+     * Deletes a file or empty directory in the SMB share
+     */
+    async delete(path: string, isDirectory: boolean): Promise<void> {
+        const client = this.getClient();
+        const normalizedPath = path.replace(/\//g, '\\');
+
+        return new Promise((resolve, reject) => {
+            const cb = (err: any) => {
+                if (err) {
+                    reject(new Error(`Erro ao excluir "${path}": ${err.message || err.code}`));
+                    return;
+                }
+                resolve();
+            };
+            if (isDirectory) client.rmdir(normalizedPath, cb);
+            else client.unlink(normalizedPath, cb);
+        });
+    }
+
+    /**
+     * Renames/moves a file or directory in the SMB share
+     */
+    async rename(oldPath: string, newPath: string): Promise<void> {
+        const client = this.getClient();
+        const normalizedOld = oldPath.replace(/\//g, '\\');
+        const normalizedNew = newPath.replace(/\//g, '\\');
+
+        return new Promise((resolve, reject) => {
+            client.rename(normalizedOld, normalizedNew, (err: any) => {
+                if (err) {
+                    reject(new Error(`Erro ao renomear "${oldPath}": ${err.message || err.code}`));
+                    return;
+                }
+                resolve();
+            });
+        });
+    }
+
+    /**
      * Recursively lists all files in a directory
      */
     async listAllFiles(basePath: string = ''): Promise<SmbFileInfo[]> {
@@ -286,8 +364,6 @@ export class LocalFsService {
      */
     async testConnection(): Promise<{ success: boolean; message: string }> {
         try {
-            const fs = await import('fs/promises');
-            const path = await import('path');
 
             const resolvedPath = path.resolve(this.basePath);
             console.log(`[LocalFS] Testing path: ${resolvedPath}`);
@@ -317,11 +393,9 @@ export class LocalFsService {
      * Lists files and directories at the given path
      */
     async listFiles(subPath: string = ''): Promise<SmbFileInfo[]> {
-        const fs = await import('fs/promises');
-        const pathModule = await import('path');
 
         const fullPath = subPath
-            ? pathModule.join(this.basePath, subPath.replace(/\//g, '\\'))
+            ? path.join(this.basePath, subPath.replace(/\//g, '\\'))
             : this.basePath;
 
         try {
@@ -340,15 +414,75 @@ export class LocalFsService {
      * Reads a file from the local path
      */
     async readFile(filePath: string): Promise<Buffer> {
-        const fs = await import('fs/promises');
-        const pathModule = await import('path');
 
-        const fullPath = pathModule.join(this.basePath, filePath.replace(/\//g, '\\'));
+        const fullPath = path.join(this.basePath, filePath.replace(/\//g, '\\'));
 
         try {
             return await fs.readFile(fullPath);
         } catch (error: any) {
             throw new Error(`Erro ao ler arquivo "${filePath}": ${error.message}`);
+        }
+    }
+
+    /**
+     * Resolves a subPath safely inside basePath (blocks ".." traversal)
+     */
+    private async resolveSafe(subPath: string): Promise<string> {
+        const fullPath = path.resolve(this.basePath, subPath.replace(/\//g, '\\'));
+        // path.resolve() mantém separador final em raiz UNC (\\host\share\) — normalizar
+        const root = path.resolve(this.basePath).replace(/[\\/]+$/, '');
+        if (fullPath !== root && !fullPath.startsWith(root + path.sep)) {
+            throw new Error(`Caminho fora da raiz permitida: ${subPath}`);
+        }
+        return fullPath;
+    }
+
+    /**
+     * Writes (uploads) a file to the local path
+     */
+    async writeFile(filePath: string, data: Buffer): Promise<void> {
+        const fullPath = await this.resolveSafe(filePath);
+        try {
+            await fs.writeFile(fullPath, data);
+        } catch (error: any) {
+            throw new Error(`Erro ao gravar arquivo "${filePath}": ${error.message}`);
+        }
+    }
+
+    /**
+     * Creates a directory in the local path (recursive, idempotent)
+     */
+    async mkdir(dirPath: string): Promise<void> {
+        const fullPath = await this.resolveSafe(dirPath);
+        try {
+            await fs.mkdir(fullPath, { recursive: true });
+        } catch (error: any) {
+            throw new Error(`Erro ao criar pasta "${dirPath}": ${error.message}`);
+        }
+    }
+
+    /**
+     * Deletes a file or directory in the local path
+     */
+    async delete(targetPath: string, isDirectory: boolean): Promise<void> {
+        const fullPath = await this.resolveSafe(targetPath);
+        try {
+            await fs.rm(fullPath, { recursive: isDirectory, force: false });
+        } catch (error: any) {
+            throw new Error(`Erro ao excluir "${targetPath}": ${error.message}`);
+        }
+    }
+
+    /**
+     * Renames/moves a file or directory in the local path
+     */
+    async rename(oldPath: string, newPath: string): Promise<void> {
+        const fullOld = await this.resolveSafe(oldPath);
+        const fullNew = await this.resolveSafe(newPath);
+        try {
+            await fs.rename(fullOld, fullNew);
+        } catch (error: any) {
+            throw new Error(`Erro ao renomear "${oldPath}": ${error.message}`);
         }
     }
 

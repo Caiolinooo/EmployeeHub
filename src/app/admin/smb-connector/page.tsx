@@ -8,7 +8,8 @@ import {
     FiServer, FiRefreshCw, FiCheck, FiX, FiPlus, FiTrash2,
     FiFolder, FiFile, FiChevronRight, FiChevronDown,
     FiPlay, FiClock, FiAlertTriangle, FiSave, FiEye, FiEyeOff,
-    FiActivity, FiDatabase, FiSettings, FiLink
+    FiActivity, FiDatabase, FiSettings, FiLink, FiDownload,
+    FiUpload, FiFolderPlus, FiEdit2
 } from 'react-icons/fi';
 
 interface SmbConnection {
@@ -217,6 +218,82 @@ export default function SmbConnectorPage() {
             setIsBrowsing(false);
         }
     };
+
+    // File manager: download / upload / mkdir / rename / delete
+    const [fileOpBusy, setFileOpBusy] = useState(false);
+    const [fileOpError, setFileOpError] = useState<string | null>(null);
+
+    const itemPath = (name: string) => (currentPath ? `${currentPath}/${name}` : name);
+
+    const runFileOp = async (fn: () => Promise<void>) => {
+        setFileOpBusy(true);
+        setFileOpError(null);
+        try {
+            await fn();
+            await browsePath(currentPath);
+        } catch (e: any) {
+            setFileOpError(e.message || 'Operação falhou');
+        } finally {
+            setFileOpBusy(false);
+        }
+    };
+
+    const downloadFile = (file: SmbFile) => runFileOp(async () => {
+        const res = await fetchWithToken(
+            `/api/smb/files?connection_id=${selectedConn!.id}&path=${encodeURIComponent(itemPath(file.name))}`
+        );
+        if (!res.ok) throw new Error((await res.json()).error || 'Falha no download');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.name;
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    const uploadFiles = (fileList: FileList | null) => runFileOp(async () => {
+        if (!fileList || !selectedConn?.id) return;
+        for (const f of Array.from(fileList)) {
+            const form = new FormData();
+            form.append('connection_id', selectedConn.id);
+            form.append('path', currentPath);
+            form.append('file', f);
+            const res = await fetchWithToken('/api/smb/files', { method: 'POST', body: form });
+            if (!res.ok) throw new Error((await res.json()).error || `Falha no upload de ${f.name}`);
+        }
+    });
+
+    const createFolder = () => runFileOp(async () => {
+        const name = window.prompt('Nome da nova pasta:');
+        if (!name || !selectedConn?.id) return;
+        const res = await fetchWithToken('/api/smb/files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ connection_id: selectedConn.id, action: 'mkdir', path: itemPath(name) }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Falha ao criar pasta');
+    });
+
+    const renameItem = (file: SmbFile) => runFileOp(async () => {
+        const newName = window.prompt('Novo nome:', file.name);
+        if (!newName || newName === file.name || !selectedConn?.id) return;
+        const res = await fetchWithToken('/api/smb/files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ connection_id: selectedConn.id, action: 'rename', path: itemPath(file.name), newName }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Falha ao renomear');
+    });
+
+    const deleteItem = (file: SmbFile) => runFileOp(async () => {
+        if (!window.confirm(`Excluir ${file.isDirectory ? 'a pasta' : 'o arquivo'} "${file.name}"?`)) return;
+        const res = await fetchWithToken(
+            `/api/smb/files?connection_id=${selectedConn!.id}&path=${encodeURIComponent(itemPath(file.name))}&isDirectory=${file.isDirectory}`,
+            { method: 'DELETE' }
+        );
+        if (!res.ok) throw new Error((await res.json()).error || 'Falha ao excluir');
+    });
 
     // Sync
     const handleSync = async () => {
@@ -614,6 +691,32 @@ export default function SmbConnectorPage() {
                                                     </button>
                                                 </div>
 
+                                                {/* Toolbar */}
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <button
+                                                        onClick={createFolder}
+                                                        disabled={fileOpBusy}
+                                                        className="flex items-center gap-1.5 px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 disabled:opacity-50"
+                                                    >
+                                                        <FiFolderPlus className="w-4 h-4" /> Nova pasta
+                                                    </button>
+                                                    <label className={`flex items-center gap-1.5 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer ${fileOpBusy ? 'opacity-50 pointer-events-none' : ''}`}>
+                                                        <FiUpload className="w-4 h-4" /> Upload
+                                                        <input
+                                                            type="file"
+                                                            multiple
+                                                            className="hidden"
+                                                            onChange={(e) => { uploadFiles(e.target.files); e.target.value = ''; }}
+                                                        />
+                                                    </label>
+                                                    {fileOpBusy && <FiRefreshCw className="w-4 h-4 text-blue-600 animate-spin" />}
+                                                    {fileOpError && (
+                                                        <span className="text-xs text-red-600 truncate" title={fileOpError}>
+                                                            {fileOpError}
+                                                        </span>
+                                                    )}
+                                                </div>
+
                                                 {/* File List */}
                                                 {isBrowsing ? (
                                                     <div className="flex justify-center py-12">
@@ -627,25 +730,55 @@ export default function SmbConnectorPage() {
                                                 ) : (
                                                     <div className="divide-y divide-gray-50 border border-gray-100 rounded-xl overflow-hidden">
                                                         {files.map((file, i) => (
-                                                            <button
+                                                            <div
                                                                 key={i}
-                                                                onClick={() => file.isDirectory && browsePath(
-                                                                    currentPath ? `${currentPath}/${file.name}` : file.name
-                                                                )}
-                                                                className={`w-full p-3 text-left flex items-center gap-3 hover:bg-gray-50 transition-colors ${file.isDirectory ? 'cursor-pointer' : 'cursor-default'}`}
+                                                                className="w-full p-3 flex items-center gap-3 hover:bg-gray-50 transition-colors group"
                                                             >
-                                                                {file.isDirectory ? (
-                                                                    <FiFolder className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                                                                ) : (
-                                                                    <FiFile className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                                                                )}
-                                                                <span className={`text-sm ${file.isDirectory ? 'font-medium text-gray-700' : 'text-gray-600'}`}>
-                                                                    {file.name}
-                                                                </span>
-                                                                {file.isDirectory && (
-                                                                    <FiChevronRight className="w-4 h-4 text-gray-300 ml-auto" />
-                                                                )}
-                                                            </button>
+                                                                <button
+                                                                    onClick={() => file.isDirectory && browsePath(itemPath(file.name))}
+                                                                    className={`flex items-center gap-3 flex-1 min-w-0 text-left ${file.isDirectory ? 'cursor-pointer' : 'cursor-default'}`}
+                                                                >
+                                                                    {file.isDirectory ? (
+                                                                        <FiFolder className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                                                                    ) : (
+                                                                        <FiFile className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                                                                    )}
+                                                                    <span className={`text-sm truncate ${file.isDirectory ? 'font-medium text-gray-700' : 'text-gray-600'}`}>
+                                                                        {file.name}
+                                                                    </span>
+                                                                    {file.isDirectory && (
+                                                                        <FiChevronRight className="w-4 h-4 text-gray-300" />
+                                                                    )}
+                                                                </button>
+                                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    {!file.isDirectory && (
+                                                                        <button
+                                                                            onClick={() => downloadFile(file)}
+                                                                            disabled={fileOpBusy}
+                                                                            title="Baixar"
+                                                                            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                                                                        >
+                                                                            <FiDownload className="w-4 h-4" />
+                                                                        </button>
+                                                                    )}
+                                                                    <button
+                                                                        onClick={() => renameItem(file)}
+                                                                        disabled={fileOpBusy}
+                                                                        title="Renomear"
+                                                                        className="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg"
+                                                                    >
+                                                                        <FiEdit2 className="w-4 h-4" />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => deleteItem(file)}
+                                                                        disabled={fileOpBusy}
+                                                                        title="Excluir"
+                                                                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                                                                    >
+                                                                        <FiTrash2 className="w-4 h-4" />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
                                                         ))}
                                                     </div>
                                                 )}
