@@ -22,7 +22,7 @@ export const DEFAULT_INCLUDE = [
 export type ColaboradorInclude = (typeof DEFAULT_INCLUDE)[number];
 
 const PROFILE_SELECT = `
-  id, user_id, nome_completo, cpf, rg, data_nascimento, email, telefone,
+  id, user_id, nome_completo, cpf, rg, data_nascimento, email, telefone, telefone_2,
   nacionalidade, naturalidade, naturalidade_uf, pais_nascimento,
   nome_mae, nome_pai, estado_civil,
   endereco_logradouro, endereco_numero, endereco_complemento,
@@ -36,10 +36,11 @@ const PROFILE_SELECT = `
   cnh, cnh_categoria, cnh_validade, cnh_uf,
   titulo_eleitor, titulo_eleitor_zona, titulo_eleitor_sessao,
   certidao_tipo, certidao_numero, certidao_cartorio,
+  rnm_rne, rnm_rne_emissao, rnm_rne_validade,
   salario, tipo_salario, forma_pagamento, sindicato, cbo,
   jornada_semanal, jornada_mensal, tipo_contrato, prazo_contrato,
   categoria_contrato, tipo_trabalho, tipo_mao_de_obra, regime_trabalho,
-  escala_embarque, escala_folga, departamento, motivo_demissao,
+  escala_embarque, escala_folga, departamento, departamento_id, motivo_demissao,
   tipo_admissao, natureza_atividade, tipo_jornada, tipo_lotacao, matricula_esocial,
   dados_bancarios, dados_saude,
   cargo:gt_cargos(nome, nivel, ordem_exibicao),
@@ -438,7 +439,7 @@ export async function loadColaboradorDetail(
 }
 
 export const LIST_SELECT = `
-  id, nome_completo, cpf, email, matricula, foto_url,
+  id, nome_completo, cpf, email, matricula, foto_url, departamento,
   status_embarque, standby, data_proximo_embarque,
   ativo, regime_trabalho, escala_embarque, escala_folga,
   cargo:gt_cargos(nome),

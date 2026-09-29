@@ -12,6 +12,8 @@ import TiposEventoEscalaAdmin from '@/components/gestao-tripulantes/admin/TiposE
 import AuditoriaDocumentosTab from '@/components/gestao-tripulantes/admin/AuditoriaDocumentosTab';
 import ExportarTab from '@/components/gestao-tripulantes/admin/ExportarTab';
 import CentrosCustoAdminTab from '@/components/gestao-tripulantes/admin/CentrosCustoAdminTab';
+import DepartamentosAdminTab from '@/components/gestao-tripulantes/admin/DepartamentosAdminTab';
+import CargosAdminTab from '@/components/gestao-tripulantes/admin/CargosAdminTab';
 import WorkflowFechamentoTab, {
   type WorkflowFechamentoHandle,
 } from '@/components/gestao-tripulantes/admin/WorkflowFechamentoTab';
@@ -120,8 +122,12 @@ export default function GestaoTripulantesAdminPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('geral');
+  useEffect(() => {
+    const tab = new URLSearchParams(window.location.search).get('tab');
+    if (tab) setActiveTab(tab);
+  }, []);
   const fechamentoRef = useRef<WorkflowFechamentoHandle>(null);
-  const TABS_COM_SALVAR_PROPRIO = new Set(['fechamento', 'aso_agendamento', 'auditoria', 'exportar', 'centros_custo', 'escala', 'matriz_treinamentos']);
+  const TABS_COM_SALVAR_PROPRIO = new Set(['fechamento', 'aso_agendamento', 'auditoria', 'exportar', 'centros_custo', 'departamentos', 'cargos', 'escala', 'matriz_treinamentos']);
   const [isTestingConexao, setIsTestingConexao] = useState(false);
   const [isScraping, setIsScraping] = useState(false);
   const [cronLogs, setCronLogs] = useState<any[]>([]);
@@ -273,6 +279,8 @@ export default function GestaoTripulantesAdminPage() {
     { id: 'matriz_treinamentos', label: 'Matriz de Treinamentos', icon: FiAward },
     { id: 'auditoria', label: 'Auditoria Documentos', icon: FiAlertTriangle },
     { id: 'exportar', label: 'Exportar', icon: FiDownload },
+    { id: 'cargos', label: 'Cargos / Funções', icon: FiBriefcase },
+    { id: 'departamentos', label: 'Departamentos', icon: FiFolder },
     { id: 'centros_custo', label: 'Centros de Custo', icon: FiFolder },
     { id: 'fechamento', label: 'Fechamento DP', icon: FiCheckSquare },
     { id: 'aso_agendamento', label: 'Agendamento ASO', icon: FiActivity },
@@ -366,6 +374,8 @@ export default function GestaoTripulantesAdminPage() {
           {activeTab === 'matriz_treinamentos' && <MatrizTreinamentoConfigTab />}
           {activeTab === 'auditoria' && <AuditoriaDocumentosTab />}
           {activeTab === 'exportar' && <ExportarTab />}
+          {activeTab === 'cargos' && <CargosAdminTab />}
+          {activeTab === 'departamentos' && <DepartamentosAdminTab />}
           {activeTab === 'centros_custo' && <CentrosCustoAdminTab />}
           {activeTab === 'fechamento' && <WorkflowFechamentoTab ref={fechamentoRef} />}
           {activeTab === 'aso_agendamento' && <AsoAgendamentoConfigTab />}

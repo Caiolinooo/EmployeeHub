@@ -5,6 +5,7 @@ import { FiEdit2, FiUser, FiMapPin, FiBriefcase, FiCreditCard, FiFileText } from
 import { useI18n } from '@/contexts/I18nContext';
 import { formatBirthDate } from '@/lib/utils/identity';
 import { formatRegimeDisplay } from '@/lib/gestao-tripulantes/regime-escala';
+import { contaComDigito, labelBanco } from '@/lib/gestao-tripulantes/bancos-br';
 import {
   COLLABORATOR_MODAL_TAB_FILL_CLASS,
   COLLABORATOR_MODAL_TABLE_SCROLL_CLASS,
@@ -19,6 +20,7 @@ interface CollaboratorDetail {
   data_nascimento: string;
   email: string;
   telefone: string;
+  telefone_2?: string | null;
   nacionalidade: string;
   naturalidade: string;
   nome_mae: string;
@@ -179,6 +181,7 @@ export default function DadosPessoaisTab({ data, onUpdate, onRefresh }: Props) {
               <InfoField label="Matrícula e-Social" value={data.matricula_esocial} />
               <InfoField label={t('gestaoTripulantes.personalData.birthDate')} value={displayDate(data.data_nascimento)} />
               <InfoField label="Sexo" value={data.sexo} />
+              <InfoField label="Gênero" value={data.genero} />
               <InfoField label={t('gestaoTripulantes.personalData.nationality')} value={data.nacionalidade} />
               <InfoField label={t('gestaoTripulantes.personalData.birthplace')} value={data.naturalidade} />
               <InfoField label={t('gestaoTripulantes.personalData.motherName')} value={data.nome_mae} />
@@ -186,6 +189,7 @@ export default function DadosPessoaisTab({ data, onUpdate, onRefresh }: Props) {
               <InfoField label={t('gestaoTripulantes.personalData.maritalStatus')} value={data.estado_civil} />
               <InfoField label={t('gestaoTripulantes.personalData.email')} value={data.email} />
               <InfoField label="Telefone" value={data.telefone} />
+              <InfoField label="Telefone 2" value={data.telefone_2} />
               <InfoField label="Escolaridade" value={data.escolaridade} />
               <InfoField label="Raça/Cor" value={data.raca_cor} />
             </div>
@@ -195,10 +199,10 @@ export default function DadosPessoaisTab({ data, onUpdate, onRefresh }: Props) {
             <SectionTitle icon={FiBriefcase} title="Dados Profissionais" />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               <InfoField label={t('gestaoTripulantes.personalData.position')} value={data.cargo_nome} />
+              <InfoField label="Departamento" value={data.departamento} />
               <InfoField label={t('gestaoTripulantes.personalData.company')} value={data.empresa_nome} />
               <InfoField label={t('gestaoTripulantes.personalData.vessel', 'Embarcação')} value={data.embarcacao_nome} />
               <InfoField label={t('gestaoTripulantes.personalData.costCenter')} value={data.centro_custo_nome} />
-              <InfoField label="Departamento" value={data.departamento} />
               <InfoField label="Regime / Escala de Trabalho" value={formatRegimeDisplay(data)} />
               <InfoField label="Contrato" value={data.tipo_contrato} />
               <InfoField
@@ -229,15 +233,16 @@ export default function DadosPessoaisTab({ data, onUpdate, onRefresh }: Props) {
               <InfoField label="PIS/PASEP" value={data.pis_pasep} />
               <InfoField label="CTPS" value={[data.ctps, data.ctps_serie, data.ctps_uf].filter(Boolean).join(' / ') || null} />
               <InfoField label="CNH" value={[data.cnh, data.cnh_categoria, displayDate(data.cnh_validade) !== '—' ? displayDate(data.cnh_validade) : null].filter(Boolean).join(' · ') || null} />
+              <InfoField label="RNM / RNE" value={(data.rnm_rne as string | null | undefined) || null} />
             </div>
           </div>
 
           <div>
             <SectionTitle icon={FiCreditCard} title="Dados bancários" />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              <InfoField label="Banco" value={bank?.codigo} />
+              <InfoField label="Banco" value={labelBanco(bank?.codigo, bank?.banco)} />
               <InfoField label="Agência" value={bank?.agencia} />
-              <InfoField label="Conta" value={bank?.conta} />
+              <InfoField label="Conta" value={contaComDigito(bank?.conta, bank?.digito) || null} />
               <InfoField label="Tipo" value={bank?.tipo} />
             </div>
           </div>

@@ -1,3 +1,17 @@
+## Cadastro DP — e-mail Marlene (2026-09-29)
+
+Campos do cadastro alinhados ao que o DP pediu e ao WK (departamento ≠ centro de custo).
+
+- [x] Datas RG e nascimento aceitam colar DD/MM/AAAA
+- [x] Gênero vira lista; naturalidade busca município IBGE pela UF
+- [x] Aba Documentos: seção Estrangeiros (RNM/RNE)
+- [x] Endereço começa pelo CEP e preenche pela base dos Correios (ViaCEP)
+- [x] Telefone 2; banco selecionável (COMPE) + dígito da conta
+- [x] Cargo/função: DP pode adicionar; admin em Gestão de Tripulantes → Cargos; função AUXILIAR DE SERVIÇOS GERAIS incluída
+- [x] Embarcação atual só reflete a rotação que a logística lançar na escala
+- [x] Departamento (WK 01 ABZ SERVIÇOS- ADMINISTRATIVO) separado do centro de custo (WK 01 AGUAS BRASILEIRAS)
+- [ ] Preview autenticado do formulário no DP
+
 ## QHSE “Colaborador não encontrado” (2026-09-25)
 
 Aba QHSE/EPI da ficha GT em produção chama `GET /api/document-catalog?colaboradorId=&qhse=1`. Select `cargo_nome` em `gt_colaboradores` (coluna só na view) → PostgREST error → identity null → 404. Sem writes no DB real. Sem UI. Sem PR #95 / #96.

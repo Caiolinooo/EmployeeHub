@@ -5,11 +5,17 @@ import { FiX } from 'react-icons/fi';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import toast from 'react-hot-toast';
 import SearchableCreatableSelect from '@/components/gestao-tripulantes/SearchableCreatableSelect';
+import DatePasteInput from '@/components/gestao-tripulantes/DatePasteInput';
+import CidadeBrasilSelect from '@/components/gestao-tripulantes/CidadeBrasilSelect';
 import {
   createGtLookupOption,
+  formatCentroCustoLabel,
   toLookupOptions,
   type GtLookupKind,
 } from '@/components/gestao-tripulantes/createGtLookupOption';
+import { GENERO_OPTIONS } from '@/lib/gestao-tripulantes/genero';
+import { BANCOS_BR, labelBanco } from '@/lib/gestao-tripulantes/bancos-br';
+import { formatarCep, normalizarCep } from '@/lib/gestao-tripulantes/cep-correios';
 
 type TabId = 'dados-pessoais' | 'documentos' | 'endereco' | 'contato' | 'dados-bancarios' | 'vinculo' | 'esocial';
 
@@ -41,6 +47,8 @@ export default function NovoColaboradorModal({ isOpen, onClose, onSuccess }: Pro
   const [empresas, setEmpresas] = useState<Option[]>([]);
   const [embarcacoes, setEmbarcacoes] = useState<Option[]>([]);
   const [centrosCusto, setCentrosCusto] = useState<Option[]>([]);
+  const [departamentos, setDepartamentos] = useState<Option[]>([]);
+  const [cepBuscando, setCepBuscando] = useState(false);
 
   // Form data
   const [form, setForm] = useState<Record<string, any>>({
@@ -58,11 +66,13 @@ export default function NovoColaboradorModal({ isOpen, onClose, onSuccess }: Pro
       fetchWithToken('/api/gestao-tripulantes/empresas').then(r => r.ok ? r.json() : { data: [] }),
       fetchWithToken('/api/gestao-tripulantes/embarcacoes').then(r => r.ok ? r.json() : { data: [] }),
       fetchWithToken('/api/gestao-tripulantes/centros-custo').then(r => r.ok ? r.json() : { data: [] }),
-    ]).then(([c, e, emb, cc]) => {
+      fetchWithToken('/api/gestao-tripulantes/departamentos').then(r => r.ok ? r.json() : { data: [] }),
+    ]).then(([c, e, emb, cc, dep]) => {
       setCargos(c.data || []);
       setEmpresas(e.data || []);
       setEmbarcacoes(emb.data || []);
       setCentrosCusto(cc.data || []);
+      setDepartamentos(dep.data || []);
     }).catch(err => {
       console.error('Erro ao carregar dados dos dropdowns:', err);
       toast.error('Erro ao carregar opções dos formulários');
@@ -72,6 +82,34 @@ export default function NovoColaboradorModal({ isOpen, onClose, onSuccess }: Pro
   if (!isOpen) return null;
 
   const set = (field: string, value: any) => setForm(p => ({ ...p, [field]: value }));
+
+  const buscarCep = async (bruto: string) => {
+    const cep = normalizarCep(bruto);
+    if (cep.length !== 8) return;
+    setCepBuscando(true);
+    try {
+      const res = await fetchWithToken(`/api/cep/${cep}`);
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.data) {
+        toast.error(json.error || 'CEP não encontrado na base dos Correios');
+        return;
+      }
+      const e = json.data;
+      setForm(p => ({
+        ...p,
+        endereco_cep: e.cep || formatarCep(cep),
+        endereco_logradouro: e.logradouro || p.endereco_logradouro,
+        endereco_bairro: e.bairro || p.endereco_bairro,
+        endereco_cidade: e.cidade || p.endereco_cidade,
+        endereco_uf: e.uf || p.endereco_uf,
+        endereco_complemento: p.endereco_complemento || e.complemento || '',
+      }));
+    } catch {
+      toast.error('Falha ao consultar o CEP');
+    } finally {
+      setCepBuscando(false);
+    }
+  };
 
   const handleCreateLookup = async (
     kind: GtLookupKind,
@@ -156,6 +194,7 @@ export default function NovoColaboradorModal({ isOpen, onClose, onSuccess }: Pro
     setSaving(true);
     try {
       const payload = { ...form };
+      delete payload.embarcacao_atual_id;
       // Convert types
       if (payload.salario) payload.salario = Number(payload.salario);
       if (payload.peso) payload.peso = Number(payload.peso);
@@ -239,16 +278,24 @@ export default function NovoColaboradorModal({ isOpen, onClose, onSuccess }: Pro
               <div>{label('CPF', true)}{input('cpf', { placeholder: '000.000.000-00', required: true })}</div>
               <div>{label('RG')}{input('rg')}</div>
               <div>{label('Órgão Emissor')}{input('orgao_emissor')}</div>
-              <div>{label('Data Emissão RG')}{input('data_emissao_rg', { type: 'date' })}</div>
+              <div>{label('Data Emissão RG')}<DatePasteInput value={String(form.data_emissao_rg || '')} onChange={v => set('data_emissao_rg', v)} /></div>
               <div>{label('Matrícula')}{input('matricula')}</div>
             </>)}
             {section('Nascimento', <>
-              <div>{label('Data de Nascimento')}{input('data_nascimento', { type: 'date' })}</div>
+              <div>{label('Data de Nascimento')}<DatePasteInput value={String(form.data_nascimento || '')} onChange={v => set('data_nascimento', v)} /></div>
               <div>{label('Sexo')}{select('sexo', ['Masculino', 'Feminino'])}</div>
-              <div>{label('Gênero')}{input('genero')}</div>
+              <div>{label('Gênero')}{select('genero', GENERO_OPTIONS)}</div>
               <div>{label('Estado Civil')}{select('estado_civil', ['Solteiro', 'Casado', 'Divorciado', 'Viúvo', 'União Estável'])}</div>
               <div>{label('Nacionalidade')}{input('nacionalidade')}</div>
-              <div>{label('Naturalidade (Cidade)')}{input('naturalidade')}</div>
+              <div>
+                {label('Naturalidade (Cidade)')}
+                <CidadeBrasilSelect
+                  cidade={String(form.naturalidade || '')}
+                  uf={String(form.naturalidade_uf || '')}
+                  onCidade={v => set('naturalidade', v)}
+                  onUf={v => set('naturalidade_uf', v)}
+                />
+              </div>
               <div>{label('Naturalidade UF')}{select('naturalidade_uf', ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'])}</div>
               <div>{label('País de Nascimento')}{input('pais_nascimento')}</div>
             </>)}
@@ -306,6 +353,11 @@ export default function NovoColaboradorModal({ isOpen, onClose, onSuccess }: Pro
               <div>{label('Número')}{input('certidao_numero')}</div>
               <div>{label('Cartório')}{input('certidao_cartorio')}</div>
             </>)}
+            {section('Estrangeiros (RNM / RNE)', <>
+              <div>{label('Número RNM ou RNE')}{input('rnm_rne')}</div>
+              <div>{label('Emissão')}<DatePasteInput value={String(form.rnm_rne_emissao || '')} onChange={v => set('rnm_rne_emissao', v)} /></div>
+              <div>{label('Validade')}<DatePasteInput value={String(form.rnm_rne_validade || '')} onChange={v => set('rnm_rne_validade', v)} /></div>
+            </>)}
           </div>
         );
 
@@ -314,11 +366,23 @@ export default function NovoColaboradorModal({ isOpen, onClose, onSuccess }: Pro
           <div className="space-y-4">
             <h4 className="text-sm font-bold text-gray-800 mb-1">Endereço</h4>
             {section('Endereço Residencial', <>
+              <div>
+                {label('CEP')}
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="00000-000"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs"
+                  value={form.endereco_cep || ''}
+                  onChange={e => set('endereco_cep', formatarCep(e.target.value))}
+                  onBlur={e => { void buscarCep(e.target.value); }}
+                />
+                <p className="text-[11px] text-gray-500 mt-1">{cepBuscando ? 'Consultando os Correios...' : 'O endereço é preenchido pela base dos Correios.'}</p>
+              </div>
               <div className="lg:col-span-2">{label('Logradouro')}{input('endereco_logradouro')}</div>
               <div>{label('Número')}{input('endereco_numero')}</div>
               <div>{label('Complemento')}{input('endereco_complemento')}</div>
               <div>{label('Bairro')}{input('endereco_bairro')}</div>
-              <div>{label('CEP')}{input('endereco_cep')}</div>
               <div>{label('Cidade')}{input('endereco_cidade')}</div>
               <div>{label('UF')}{select('endereco_uf', ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'])}</div>
             </>)}
@@ -332,6 +396,7 @@ export default function NovoColaboradorModal({ isOpen, onClose, onSuccess }: Pro
             {section('Informações de Contato', <>
               <div>{label('E-mail')}{input('email', { type: 'email' })}</div>
               <div>{label('Telefone 1')}{input('telefone')}</div>
+              <div>{label('Telefone 2')}{input('telefone_2')}</div>
             </>)}
           </div>
         );
@@ -354,9 +419,24 @@ export default function NovoColaboradorModal({ isOpen, onClose, onSuccess }: Pro
           <div className="space-y-4">
             <h4 className="text-sm font-bold text-gray-800 mb-1">Dados Bancários</h4>
             {section('Banco', <>
-              <div>{label('Código do Banco')}{bankInput('codigo', '001')}</div>
+              <div>
+                {label('Código do Banco')}
+                <SearchableCreatableSelect
+                  className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs bg-white"
+                  options={BANCOS_BR.map(b => ({ id: b.codigo, label: labelBanco(b.codigo, b.nome) }))}
+                  value={bk.codigo || ''}
+                  allowCreate={false}
+                  placeholder="Buscar banco..."
+                  onChange={id => {
+                    const banco = BANCOS_BR.find(b => b.codigo === id);
+                    setBank('codigo', id);
+                    setBank('banco', banco?.nome || '');
+                  }}
+                />
+              </div>
               <div>{label('Agência')}{bankInput('agencia')}</div>
               <div>{label('Conta')}{bankInput('conta')}</div>
+              <div>{label('Dígito da conta')}{bankInput('digito', '0')}</div>
               <div>{label('Tipo')}{bankSelect('tipo', ['Corrente', 'Poupança', 'Salário'])}</div>
             </>)}
           </div>
@@ -367,12 +447,46 @@ export default function NovoColaboradorModal({ isOpen, onClose, onSuccess }: Pro
           <div className="space-y-4">
             <h4 className="text-sm font-bold text-gray-800 mb-1">Vínculo Empregatício</h4>
             {section('Empresa e Cargo', <>
-              <div>{label('Empresa')}{select('empresa_id', empresas)}</div>
-              <div>{label('Cargo/Função')}{select('cargo_id', cargos)}</div>
+              <div>{label('Empresa')}{lookupSelect('empresa_id', empresas, 'empresas', setEmpresas)}</div>
+              <div>
+                {label('Cargo/Função')}
+                {lookupSelect('cargo_id', cargos, 'cargos', setCargos)}
+                <p className="text-[11px] text-gray-500 mt-1">Não achou? Digite o nome e escolha Adicionar.</p>
+              </div>
               <div>{label('CBO')}{input('cbo', { placeholder: 'Código Brasileiro de Ocupações' })}</div>
-              <div>{label('Centro de Custo')}{select('centro_custo_id', centrosCusto)}</div>
-              <div>{label('Embarcação Atual')}{select('embarcacao_atual_id', embarcacoes)}</div>
-              <div>{label('Departamento')}{input('departamento')}</div>
+              <div>
+                {label('Departamento')}
+                <SearchableCreatableSelect
+                  className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs bg-white"
+                  options={toLookupOptions(departamentos, 'departamentos', form.departamento_id ? { id: form.departamento_id, label: form.departamento || form.departamento_id } : undefined)}
+                  value={form.departamento_id || ''}
+                  allowCreate
+                  placeholder="Buscar departamento (WK)..."
+                  onChange={id => {
+                    const row = departamentos.find(d => d.id === id);
+                    setForm(p => ({
+                      ...p,
+                      departamento_id: id || null,
+                      departamento: row ? formatCentroCustoLabel(row) : '',
+                    }));
+                  }}
+                  onCreate={async (labelText) => {
+                    const created = await handleCreateLookup('departamentos', labelText, setDepartamentos);
+                    setForm(p => ({ ...p, departamento_id: created.id, departamento: created.label }));
+                    return created;
+                  }}
+                />
+              </div>
+              <div>{label('Centro de Custo')}{lookupSelect('centro_custo_id', centrosCusto, 'centros-custo', setCentrosCusto)}</div>
+              <div>
+                {label('Embarcação Atual')}
+                <input
+                  type="text"
+                  disabled
+                  className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs bg-gray-50"
+                  value={embarcacoes.find(e => e.id === form.embarcacao_atual_id)?.nome || 'Definida pela logística na escala'}
+                />
+              </div>
             </>)}
             {section('Datas', <>
               <div>{label('Data de Admissão')}{input('data_admissao', { type: 'date' })}</div>

@@ -1,7 +1,8 @@
 /**
  * Espelha a estrutura do GT na folha.
  *   gt_empresas      → payroll_companies   (upsert por CNPJ ou nome)
- *   gt_centros_custo → payroll_departments (upsert por company_id + code)
+ *   gt_departamentos → payroll_departments (upsert por company_id + code)
+ * Centro de custo do GT NÃO vira departamento: no WK são campos diferentes.
  *
  * GT é a fonte da verdade. Sem contraparte GT ativa, a ficha da folha
  * fica is_active=false (é assim que o protótipo Luz Marítima saiu do select).
@@ -25,7 +26,7 @@ interface GtEmpresa {
   ativo: boolean | null;
 }
 
-interface GtCentroCusto {
+interface GtDepartamento {
   id: string;
   nome: string | null;
   codigo: string | null;
@@ -129,11 +130,11 @@ export async function sincronizarEstruturaGt(
   }
 
   const { data: ccRows, error: ccErr } = await supabase
-    .from('gt_centros_custo')
+    .from('gt_departamentos')
     .select('id, nome, codigo, ativo')
     .order('nome');
-  if (ccErr) throw new Error(`gt_centros_custo: ${ccErr.message}`);
-  const centrosAtivos = ((ccRows || []) as GtCentroCusto[])
+  if (ccErr) throw new Error(`gt_departamentos: ${ccErr.message}`);
+  const centrosAtivos = ((ccRows || []) as GtDepartamento[])
     .filter((c) => c.ativo !== false && (c.nome || '').trim());
 
   const { data: empresasAtivas, error: eaErr } = await supabase
@@ -172,20 +173,6 @@ export async function sincronizarEstruturaGt(
           .insert({ company_id: emp.id, code, name: nome, is_active: true });
         if (error) throw new Error(`insert dept ${code} em ${emp.name}: ${error.message}`);
         deptInseridos += 1;
-      }
-    }
-
-    const codigosAtivos = new Set(
-      centrosAtivos.map((c) => (((c.codigo || c.nome || '').trim()) || '').slice(0, 10)),
-    );
-    for (const d of (deptRows || []) as PayrollDepartment[]) {
-      if (!codigosAtivos.has(d.code) && d.is_active) {
-        const { error } = await supabase
-          .from('payroll_departments')
-          .update({ is_active: false })
-          .eq('id', d.id);
-        if (error) throw new Error(`desativar dept ${d.code}: ${error.message}`);
-        deptDesativados += 1;
       }
     }
   }

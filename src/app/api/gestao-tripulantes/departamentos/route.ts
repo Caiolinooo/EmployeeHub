@@ -20,26 +20,27 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const ativo = searchParams.get('ativo');
+    const search = searchParams.get('search');
 
     let query = supabaseAdmin
-      .from('gt_cargos')
+      .from('gt_departamentos')
       .select('*');
 
     if (ativo === 'true') query = query.eq('ativo', true);
     if (ativo === 'false') query = query.eq('ativo', false);
+    if (search) query = query.or(`nome.ilike.%${search}%,codigo.ilike.%${search}%`);
 
     const { data, error } = await query
-      .order('ordem_exibicao', { ascending: true })
       .order('nome', { ascending: true });
 
     if (error) {
-      console.error('Erro ao listar cargos:', error);
-      return NextResponse.json({ error: 'Erro ao listar cargos' }, { status: 500 });
+      console.error('Erro ao listar departamentos:', error);
+      return NextResponse.json({ error: 'Erro ao listar departamentos' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, data: data || [] });
   } catch (error) {
-    console.error('Erro na API cargos:', error);
+    console.error('Erro na API departamentos:', error);
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
   }
 }
@@ -59,23 +60,35 @@ export async function POST(request: NextRequest) {
 
     const permitido = await podeMutarCadastroColaborador(payload.userId, payload.role);
     if (!permitido) {
-      return NextResponse.json({ error: 'Acesso negado. Apenas o DP pode cadastrar cargo.' }, { status: 403 });
+      return NextResponse.json({ error: 'Acesso negado. Apenas o DP pode cadastrar departamento.' }, { status: 403 });
     }
 
     const body = await request.json();
-    const { nome, descricao, nivel, ordem_exibicao } = body;
+    const nome = String(body.nome || '').trim();
+    let codigo = String(body.codigo || '').trim();
 
     if (!nome) {
-      return NextResponse.json({ error: 'Nome do cargo é obrigatório' }, { status: 400 });
+      return NextResponse.json({ error: 'Nome do departamento é obrigatório' }, { status: 400 });
+    }
+
+    if (!codigo) {
+      const prefixo = /^(\d{1,10})\b/.exec(nome);
+      codigo = prefixo
+        ? prefixo[1]
+        : nome
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toUpperCase()
+          .replace(/[^A-Z0-9]+/g, '')
+          .slice(0, 10);
+      if (!codigo) codigo = Date.now().toString(36).toUpperCase().slice(0, 10);
     }
 
     const { data, error } = await supabaseAdmin
-      .from('gt_cargos')
+      .from('gt_departamentos')
       .insert({
         nome,
-        descricao: descricao || null,
-        nivel: nivel ?? 1,
-        ordem_exibicao: ordem_exibicao ?? 0,
+        codigo,
         ativo: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -84,13 +97,13 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Erro ao criar cargo:', error);
-      return NextResponse.json({ error: 'Erro ao criar cargo' }, { status: 500 });
+      console.error('Erro ao criar departamento:', error);
+      return NextResponse.json({ error: 'Erro ao criar departamento' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
-    console.error('Erro ao criar cargo:', error);
+    console.error('Erro ao criar departamento:', error);
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
   }
 }

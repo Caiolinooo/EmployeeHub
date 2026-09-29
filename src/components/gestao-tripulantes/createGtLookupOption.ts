@@ -1,7 +1,7 @@
 import { fetchWithToken } from '@/lib/tokenStorage';
 import type { SearchableOption } from '@/components/gestao-tripulantes/SearchableCreatableSelect';
 
-export type GtLookupKind = 'cargos' | 'empresas' | 'embarcacoes' | 'centros-custo';
+export type GtLookupKind = 'cargos' | 'empresas' | 'embarcacoes' | 'centros-custo' | 'departamentos';
 
 export interface GtLookupRow {
   id: string;
@@ -23,7 +23,7 @@ export function toLookupOptions(
 ): SearchableOption[] {
   const mapped = rows.map(o => ({
     id: o.id,
-    label: kind === 'centros-custo' ? formatCentroCustoLabel(o) : (o.nome || o.id),
+    label: kind === 'centros-custo' || kind === 'departamentos' ? formatCentroCustoLabel(o) : (o.nome || o.id),
   }));
   if (current?.id && !mapped.some(o => o.id === current.id)) {
     return [{ id: current.id, label: current.label || current.id }, ...mapped];
@@ -49,6 +49,6 @@ export async function createGtLookupOption(
   if (!res.ok) throw new Error(json.error || 'Falha ao criar registro');
   const data = json.data as GtLookupRow | undefined;
   if (!data?.id) throw new Error('Resposta inválida ao criar registro');
-  const label = kind === 'centros-custo' ? formatCentroCustoLabel(data) : (data.nome || trimmed);
+  const label = kind === 'centros-custo' || kind === 'departamentos' ? formatCentroCustoLabel(data) : (data.nome || trimmed);
   return { id: data.id, label, nome: data.nome || trimmed, codigo: data.codigo ?? null };
 }

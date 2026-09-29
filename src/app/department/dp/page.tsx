@@ -34,6 +34,7 @@ interface ColaboradorItem {
   cargo_nome?: string | null;
   empresa_nome?: string | null;
   embarcacao_nome?: string | null;
+  departamento?: string | null;
   centro_custo_nome?: string | null;
   centro_custo_codigo?: string | null;
 }
@@ -571,6 +572,7 @@ export default function DepartamentoPessoalPage() {
                     <th className="px-3 py-2">Matrícula</th>
                     <th className="px-3 py-2">Colaborador / CPF</th>
                     <th className="px-3 py-2">Cargo</th>
+                    <th className="px-3 py-2 hidden xl:table-cell">Departamento</th>
                     <th className="px-3 py-2 hidden xl:table-cell">Centro de Custo</th>
                     <th className="px-3 py-2">Empresa / Emb.</th>
                     <th className="px-3 py-2 hidden lg:table-cell">Escala</th>
@@ -581,14 +583,14 @@ export default function DepartamentoPessoalPage() {
                 <tbody className="divide-y divide-gray-200 bg-white">
                   {loading ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
+                      <td colSpan={9} className="px-4 py-12 text-center text-gray-500">
                         <FiRefreshCw className="animate-spin inline w-5 h-5 mr-2 text-abz-blue" />
                         Carregando quadro de colaboradores...
                       </td>
                     </tr>
                   ) : filteredColabs.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                      <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
                         Nenhum colaborador encontrado para os filtros selecionados.
                       </td>
                     </tr>
@@ -605,6 +607,7 @@ export default function DepartamentoPessoalPage() {
                           <div className="text-[11px] font-mono text-gray-500">{formatCpfDisplay(c.cpf)}</div>
                         </td>
                         <td className="px-3 py-2 text-gray-700 font-medium">{c.cargo_nome || '—'}</td>
+                        <td className="px-3 py-2 text-gray-600 hidden xl:table-cell">{c.departamento || '—'}</td>
                         <td className="px-3 py-2 text-gray-600 hidden xl:table-cell">{formatCentroCusto(c)}</td>
                         <td className="px-3 py-2 text-gray-600">
                           <div>{c.empresa_nome || '—'}</div>

@@ -9,7 +9,7 @@
  * o motor não tem em quem lançar os dias e todo mundo cai em "CPF não casado".
  *
  * Regras:
- * - GT é a fonte da vida funcional (nome, cargo, centro de custo, admissão) —
+ * - GT é a fonte da vida funcional (nome, cargo, departamento WK, admissão) —
  *   gravada de forma aditiva: só preenche campo vazio na ficha.
  * - `base_salary` NUNCA é rebaixado: valor já existente na folha (WK, digitado
  *   pelo DP) só é substituído por um salário GT maior que zero quando a ficha
@@ -20,12 +20,10 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { mergeColaborador } from './colaborador-merge';
+import { resolverDepartmentId } from './departamento-de-cadastro';
+import { contaComDigito } from '@/lib/gestao-tripulantes/bancos-br';
 
 const digitos = (v: unknown): string => String(v ?? '').replace(/\D/g, '');
-
-/** Mesma convenção de código do sync de estrutura: payroll_departments.code é VARCHAR(10). */
-const codigoDepartamento = (codigo: string | null, nome: string | null): string =>
-  (((codigo || nome || '').trim()) || '').slice(0, 10);
 
 type Embed<T> = T | T[] | null;
 
@@ -42,7 +40,9 @@ interface ColaboradorGt {
   data_demissao: string | null;
   cargo: Embed<{ nome: string | null }>;
   empresa: Embed<{ nome: string | null; cnpj: string | null }>;
-  centro_custo: Embed<{ codigo: string | null; nome: string | null }>;
+  departamento: string | null;
+  dados_bancarios: { codigo?: string; agencia?: string; conta?: string; digito?: string } | null;
+  departamento_ref: Embed<{ codigo: string | null; nome: string | null }>;
 }
 
 interface EmployeeFolha {
@@ -77,9 +77,10 @@ export async function sincronizarColaboradoresGt(
     .from('gt_colaboradores')
     .select(
       `id, cpf, nome_completo, matricula, ativo, salario, data_admissao, data_demissao,
+       departamento, dados_bancarios,
        cargo:gt_cargos(nome),
        empresa:gt_empresas(nome, cnpj),
-       centro_custo:gt_centros_custo(codigo, nome)`,
+       departamento_ref:gt_departamentos!departamento_id(codigo, nome)`,
     )
     .is('deleted_at', null)
     .order('nome_completo');
@@ -99,11 +100,15 @@ export async function sincronizarColaboradoresGt(
 
   const { data: deptRows, error: deptErr } = await supabase
     .from('payroll_departments')
-    .select('id, company_id, code, is_active')
+    .select('id, company_id, code, name, is_active')
     .eq('is_active', true);
   if (deptErr) throw new Error(`payroll_departments: ${deptErr.message}`);
-  const deptPorEmpresaCodigo = new Map(
-    (deptRows || []).map((d) => [`${d.company_id}|${d.code}`, d.id]),
+  const normDept = (v: string) => v.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
+  const deptPorCodigo = new Map(
+    (deptRows || []).map((d) => [`${d.company_id}|${d.code}`, d.id as string]),
+  );
+  const deptPorNome = new Map(
+    (deptRows || []).filter((d) => d.name).map((d) => [`${d.company_id}|${normDept(String(d.name))}`, d.id as string]),
   );
 
   const { data: empRows, error: empErr } = await supabase
@@ -151,10 +156,15 @@ export async function sincronizarColaboradoresGt(
       continue;
     }
 
-    const cc = unwrap(c.centro_custo);
-    const departmentId = cc
-      ? deptPorEmpresaCodigo.get(`${companyId}|${codigoDepartamento(cc.codigo, cc.nome)}`) ?? null
-      : null;
+    const dep = unwrap(c.departamento_ref);
+    const departmentId = resolverDepartmentId({
+      companyId,
+      departamento: dep,
+      texto: c.departamento,
+      porCodigo: deptPorCodigo,
+      porNome: deptPorNome,
+    });
+    const banco = c.dados_bancarios && typeof c.dados_bancarios === 'object' ? c.dados_bancarios : null;
 
     const matricula = (c.matricula || '').trim() || `GT-${cpf.slice(-8)}`;
     const salarioGt = Number(c.salario) || 0;
@@ -179,6 +189,9 @@ export async function sincronizarColaboradoresGt(
         data_demissao: c.data_demissao || null,
         gt_colaborador_id: c.id,
         department_id: departmentId,
+        bank_code: banco?.codigo || null,
+        bank_agency: banco?.agencia || null,
+        bank_account: contaComDigito(banco?.conta, banco?.digito) || null,
         status,
       },
       'gt',

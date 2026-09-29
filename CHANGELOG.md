@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+## [5.90.0] - 2026-09-29
+
+### Cadastro DP no padrão do WK
+
+#### Adicionado
+
+1. **Datas coláveis**: emissão do RG e nascimento aceitam colar `DD/MM/AAAA` (além do calendário).
+2. **Gênero em lista** e **naturalidade** com busca de município do IBGE depois da UF.
+3. **Estrangeiros**: aba Documentos ganha RNM/RNE (número, emissão, validade).
+4. **CEP primeiro**: 8 dígitos preenchem logradouro, bairro, cidade e UF pela base dos Correios (ViaCEP, fallback BrasilAPI).
+5. **Telefone 2** e **banco selecionável** (código COMPE) com dígito da conta.
+6. **Cargo/função**: o DP pode adicionar na hora. Cadastro também em Gestão de Tripulantes → Cargos. Função AUXILIAR DE SERVIÇOS GERAIS entra no catálogo.
+7. **Departamentos** próprios (código + nome), separados do centro de custo. Seed WK: departamento `01 ABZ SERVIÇOS- ADMINISTRATIVO` e centro de custo `01 AGUAS BRASILEIRAS...`.
+
+#### Corrigido
+
+1. **Departamento x centro de custo**: a folha deixa de copiar o centro de custo operacional para o departamento do funcionário. A lista do DP mostra os dois campos.
+2. **Embarcação atual**: o DP não edita. O campo reflete a rotação que a logística gravar na escala e que cobrir o dia de hoje.
+3. **Ficha da Marlene (matrícula 809)** alinhada ao WK: cargo AUXILIAR DE SERVIÇOS GERAIS, departamento 01 ABZ SERVIÇOS- ADMINISTRATIVO, centro de custo 01 AGUAS BRASILEIRAS.
+
+#### Atenção ao atualizar
+
+- Rodar a migration `20260929_000001_cadastro_dp_wk.sql` (já aplicada no Supabase do portal). Sem as colunas `telefone_2`, `rnm_rne*` e `departamento_id`, o GET do colaborador quebra.
+- O próximo sync de estrutura da folha espelha `gt_departamentos`, não `gt_centros_custo`. Não desativa departamentos antigos da folha.
+
 ## [5.89.0] - 2026-09-25
 
 ### Gestão de Tripulantes de volta ao ar, fim do deadlock de token e tokens shadcn na UI

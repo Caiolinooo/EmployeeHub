@@ -5,11 +5,17 @@ import { useRouter } from 'next/navigation';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import toast from 'react-hot-toast';
 import SearchableCreatableSelect from '@/components/gestao-tripulantes/SearchableCreatableSelect';
+import DatePasteInput from '@/components/gestao-tripulantes/DatePasteInput';
+import CidadeBrasilSelect from '@/components/gestao-tripulantes/CidadeBrasilSelect';
 import {
   createGtLookupOption,
+  formatCentroCustoLabel,
   toLookupOptions,
   type GtLookupKind,
 } from '@/components/gestao-tripulantes/createGtLookupOption';
+import { GENERO_OPTIONS } from '@/lib/gestao-tripulantes/genero';
+import { BANCOS_BR, labelBanco } from '@/lib/gestao-tripulantes/bancos-br';
+import { formatarCep, normalizarCep } from '@/lib/gestao-tripulantes/cep-correios';
 import {
   REGIME_TRABALHO_OPTIONS,
   escalaDiasParaForm,
@@ -83,6 +89,8 @@ export function hydrateCadastroForm(data?: Record<string, unknown> | null): Reco
     escala_folga: escalaDiasParaForm(regimeUi || String(data.regime_trabalho || ''), data.escala_folga as number | string | null),
     data_nascimento: toDateInput(data.data_nascimento as string | null),
     data_emissao_rg: toDateInput(data.data_emissao_rg as string | null),
+    rnm_rne_emissao: toDateInput(data.rnm_rne_emissao as string | null),
+    rnm_rne_validade: toDateInput(data.rnm_rne_validade as string | null),
     data_admissao: toDateInput(data.data_admissao as string | null),
     data_demissao: toDateInput(data.data_demissao as string | null),
     cnh_validade: toDateInput(data.cnh_validade as string | null),
@@ -121,6 +129,8 @@ export default function ColaboradorCadastroForm({
   const [empresas, setEmpresas] = useState<Option[]>([]);
   const [embarcacoes, setEmbarcacoes] = useState<Option[]>([]);
   const [centrosCusto, setCentrosCusto] = useState<Option[]>([]);
+  const [departamentos, setDepartamentos] = useState<Option[]>([]);
+  const [cepBuscando, setCepBuscando] = useState(false);
   const [form, setForm] = useState<Record<string, unknown>>(() => hydrateCadastroForm(initialData));
 
   useEffect(() => {
@@ -133,15 +143,45 @@ export default function ColaboradorCadastroForm({
       fetchWithToken('/api/gestao-tripulantes/empresas').then(r => r.ok ? r.json() : { data: [] }),
       fetchWithToken('/api/gestao-tripulantes/embarcacoes').then(r => r.ok ? r.json() : { data: [] }),
       fetchWithToken('/api/gestao-tripulantes/centros-custo').then(r => r.ok ? r.json() : { data: [] }),
-    ]).then(([c, e, emb, cc]) => {
+      fetchWithToken('/api/gestao-tripulantes/departamentos').then(r => r.ok ? r.json() : { data: [] }),
+    ]).then(([c, e, emb, cc, dep]) => {
       setCargos(c.data || []);
       setEmpresas(e.data || []);
       setEmbarcacoes(emb.data || []);
       setCentrosCusto(cc.data || []);
+      setDepartamentos(dep.data || []);
     });
   }, []);
 
   const set = (field: string, value: unknown) => setForm(p => ({ ...p, [field]: value }));
+
+  const buscarCep = async (bruto: string) => {
+    const cep = normalizarCep(bruto);
+    if (cep.length !== 8) return;
+    setCepBuscando(true);
+    try {
+      const res = await fetchWithToken(`/api/cep/${cep}`);
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.data) {
+        toast.error(json.error || 'CEP não encontrado na base dos Correios');
+        return;
+      }
+      const e = json.data as { logradouro?: string; complemento?: string; bairro?: string; cidade?: string; uf?: string; cep?: string };
+      setForm(p => ({
+        ...p,
+        endereco_cep: e.cep || formatarCep(cep),
+        endereco_logradouro: e.logradouro || p.endereco_logradouro,
+        endereco_bairro: e.bairro || p.endereco_bairro,
+        endereco_cidade: e.cidade || p.endereco_cidade,
+        endereco_uf: e.uf || p.endereco_uf,
+        endereco_complemento: p.endereco_complemento || e.complemento || '',
+      }));
+    } catch {
+      toast.error('Falha ao consultar o CEP');
+    } finally {
+      setCepBuscando(false);
+    }
+  };
 
   const handleCreateLookup = async (
     kind: GtLookupKind,
@@ -271,9 +311,10 @@ export default function ColaboradorCadastroForm({
         escala_folga: escalaPersistida.escala_folga,
         cargo_id: emptyToNull(form.cargo_id),
         empresa_id: emptyToNull(form.empresa_id),
-        embarcacao_atual_id: emptyToNull(form.embarcacao_atual_id),
+        departamento_id: emptyToNull(form.departamento_id),
         centro_custo_id: emptyToNull(form.centro_custo_id),
       };
+      delete payload.embarcacao_atual_id;
       if (payload.dados_bancarios && typeof payload.dados_bancarios === 'object' && Object.keys(payload.dados_bancarios as object).length === 0) {
         payload.dados_bancarios = null;
       }
@@ -362,7 +403,7 @@ export default function ColaboradorCadastroForm({
               <div>{label('CPF', true)}{input('cpf', { placeholder: '000.000.000-00', required: true })}</div>
               <div>{label('RG')}{input('rg')}</div>
               <div>{label('Órgão Emissor')}{input('orgao_emissor')}</div>
-              <div>{label('Data Emissão RG')}{input('data_emissao_rg', { type: 'date' })}</div>
+              <div>{label('Data Emissão RG')}<DatePasteInput value={String(form.data_emissao_rg || '')} onChange={v => set('data_emissao_rg', v)} /></div>
               <div>{label('Matrícula')}{input('matricula')}</div>
               <div>{label('Matrícula e-Social')}{input('matricula_esocial', { placeholder: 'Copia a matrícula se vazio' })}</div>
               <div>
@@ -379,12 +420,20 @@ export default function ColaboradorCadastroForm({
               </div>
             </>)}
             {section('Nascimento', <>
-              <div>{label('Data de Nascimento')}{input('data_nascimento', { type: 'date' })}</div>
+              <div>{label('Data de Nascimento')}<DatePasteInput value={String(form.data_nascimento || '')} onChange={v => set('data_nascimento', v)} /></div>
               <div>{label('Sexo')}{select('sexo', ['Masculino', 'Feminino'])}</div>
-              <div>{label('Gênero')}{input('genero')}</div>
+              <div>{label('Gênero')}{select('genero', GENERO_OPTIONS)}</div>
               <div>{label('Estado Civil')}{select('estado_civil', ['Solteiro', 'Casado', 'Divorciado', 'Viúvo', 'União Estável'])}</div>
               <div>{label('Nacionalidade')}{input('nacionalidade')}</div>
-              <div>{label('Naturalidade (Cidade)')}{input('naturalidade')}</div>
+              <div>
+                {label('Naturalidade (Cidade)')}
+                <CidadeBrasilSelect
+                  cidade={String(form.naturalidade || '')}
+                  uf={String(form.naturalidade_uf || '')}
+                  onCidade={v => set('naturalidade', v)}
+                  onUf={v => set('naturalidade_uf', v)}
+                />
+              </div>
               <div>{label('Naturalidade UF')}{select('naturalidade_uf', UFS)}</div>
               <div>{label('País de Nascimento')}{input('pais_nascimento')}</div>
             </>)}
@@ -441,6 +490,14 @@ export default function ColaboradorCadastroForm({
               <div>{label('Número')}{input('certidao_numero')}</div>
               <div>{label('Cartório')}{input('certidao_cartorio')}</div>
             </>)}
+            {section('Estrangeiros (RNM / RNE)', <>
+              <div className="lg:col-span-3">
+                <p className="text-xs text-gray-500 -mt-1">Registro Nacional Migratório (RNM) ou o RNE antigo. Preencha só para estrangeiro.</p>
+              </div>
+              <div>{label('Número RNM ou RNE')}{input('rnm_rne')}</div>
+              <div>{label('Emissão')}<DatePasteInput value={String(form.rnm_rne_emissao || '')} onChange={v => set('rnm_rne_emissao', v)} /></div>
+              <div>{label('Validade')}<DatePasteInput value={String(form.rnm_rne_validade || '')} onChange={v => set('rnm_rne_validade', v)} /></div>
+            </>)}
           </div>
         );
       case 'endereco':
@@ -448,11 +505,26 @@ export default function ColaboradorCadastroForm({
           <div>
             <h2 className="text-lg font-bold text-gray-800 mb-4">Endereço</h2>
             {section('Endereço Residencial', <>
+              <div>
+                {label('CEP')}
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="postal-code"
+                  placeholder="00000-000"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={form.endereco_cep == null ? '' : String(form.endereco_cep)}
+                  onChange={e => set('endereco_cep', formatarCep(e.target.value))}
+                  onBlur={e => { void buscarCep(e.target.value); }}
+                />
+                <p className="text-[11px] text-gray-500 mt-1">
+                  {cepBuscando ? 'Consultando a base dos Correios...' : 'Digite o CEP. O logradouro, bairro, cidade e UF vêm dos Correios.'}
+                </p>
+              </div>
               <div className="lg:col-span-2">{label('Logradouro')}{input('endereco_logradouro')}</div>
               <div>{label('Número')}{input('endereco_numero')}</div>
               <div>{label('Complemento')}{input('endereco_complemento')}</div>
               <div>{label('Bairro')}{input('endereco_bairro')}</div>
-              <div>{label('CEP')}{input('endereco_cep')}</div>
               <div>{label('Cidade')}{input('endereco_cidade')}</div>
               <div>{label('UF')}{select('endereco_uf', UFS)}</div>
             </>)}
@@ -465,6 +537,7 @@ export default function ColaboradorCadastroForm({
             {section('Informações de Contato', <>
               <div>{label('E-mail')}{input('email', { type: 'email' })}</div>
               <div>{label('Telefone 1')}{input('telefone')}</div>
+              <div>{label('Telefone 2')}{input('telefone_2')}</div>
             </>)}
           </div>
         );
@@ -487,9 +560,30 @@ export default function ColaboradorCadastroForm({
           <div>
             <h2 className="text-lg font-bold text-gray-800 mb-4">Dados Bancários</h2>
             {section('Banco', <>
-              <div>{label('Código do Banco')}{bankInput('codigo', '001')}</div>
+              <div>
+                {label('Código do Banco')}
+                <SearchableCreatableSelect
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  options={BANCOS_BR.map(b => ({ id: b.codigo, label: labelBanco(b.codigo, b.nome) }))}
+                  value={bk.codigo || ''}
+                  allowCreate={false}
+                  placeholder="Buscar banco..."
+                  onChange={id => {
+                    const banco = BANCOS_BR.find(b => b.codigo === id);
+                    setForm(p => ({
+                      ...p,
+                      dados_bancarios: {
+                        ...((p.dados_bancarios as Record<string, string>) || {}),
+                        codigo: id,
+                        banco: banco?.nome || '',
+                      },
+                    }));
+                  }}
+                />
+              </div>
               <div>{label('Agência')}{bankInput('agencia')}</div>
               <div>{label('Conta')}{bankInput('conta')}</div>
+              <div>{label('Dígito da conta')}{bankInput('digito', '0')}</div>
               <div>
                 {label('Tipo')}
                 <select
@@ -511,11 +605,55 @@ export default function ColaboradorCadastroForm({
             <h2 className="text-lg font-bold text-gray-800 mb-4">Vínculo Empregatício</h2>
             {section('Empresa e Cargo', <>
               <div>{label('Empresa')}{lookupSelect('empresa_id', empresas, 'empresas', setEmpresas)}</div>
-              <div>{label('Cargo/Função')}{lookupSelect('cargo_id', cargos, 'cargos', setCargos)}</div>
+              <div>
+                {label('Cargo/Função')}
+                {lookupSelect('cargo_id', cargos, 'cargos', setCargos)}
+                <p className="text-[11px] text-gray-500 mt-1">
+                  Não achou a função? Digite o nome e escolha Adicionar. Também em Gestão de Tripulantes → Cargos.
+                </p>
+              </div>
               <div>{label('CBO')}{input('cbo', { placeholder: 'Código Brasileiro de Ocupações' })}</div>
-              <div>{label('Centro de Custo')}{lookupSelect('centro_custo_id', centrosCusto, 'centros-custo', setCentrosCusto)}</div>
-              <div>{label('Embarcação Atual')}{lookupSelect('embarcacao_atual_id', embarcacoes, 'embarcacoes', setEmbarcacoes)}</div>
-              <div>{label('Departamento')}{input('departamento')}</div>
+              <div>
+                {label('Departamento')}
+                <SearchableCreatableSelect
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  options={toLookupOptions(departamentos, 'departamentos', form.departamento_id ? { id: String(form.departamento_id), label: String(form.departamento || form.departamento_id) } : undefined)}
+                  value={form.departamento_id ? String(form.departamento_id) : ''}
+                  allowCreate
+                  placeholder="Buscar departamento (WK)..."
+                  onChange={id => {
+                    const row = departamentos.find(d => d.id === id);
+                    setForm(p => ({
+                      ...p,
+                      departamento_id: id || null,
+                      departamento: row ? formatCentroCustoLabel(row) : '',
+                    }));
+                  }}
+                  onCreate={async (labelText) => {
+                    const created = await handleCreateLookup('departamentos', labelText, setDepartamentos);
+                    setForm(p => ({ ...p, departamento_id: created.id, departamento: created.label }));
+                    return created;
+                  }}
+                />
+                <p className="text-[11px] text-gray-500 mt-1">No WK este campo é o departamento (ex.: 01 ABZ SERVIÇOS- ADMINISTRATIVO).</p>
+              </div>
+              <div>
+                {label('Centro de Custo')}
+                {lookupSelect('centro_custo_id', centrosCusto, 'centros-custo', setCentrosCusto)}
+                <p className="text-[11px] text-gray-500 mt-1">No WK este campo é o centro de custo (ex.: 01 AGUAS BRASILEIRAS). Não é o departamento.</p>
+              </div>
+              <div>
+                {label('Embarcação Atual')}
+                <input
+                  type="text"
+                  disabled
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-700"
+                  value={embarcacoes.find(e => e.id === form.embarcacao_atual_id)?.nome || 'Sem embarque lançado pela logística'}
+                />
+                <p className="text-[11px] text-gray-500 mt-1">
+                  Reflete a embarcação que a logística lançar na escala. O DP não altera este campo.
+                </p>
+              </div>
             </>)}
             {section('Datas', <>
               <div>{label('Data de Admissão')}{input('data_admissao', { type: 'date' })}</div>

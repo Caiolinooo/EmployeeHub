@@ -7,6 +7,8 @@
  */
 import { supabaseAdmin } from '@/lib/supabase';
 import { derivarDatasEscala, type EventoEscalaDatasLike } from './embarques-datas';
+import { resolverEmbarcacaoAtual, type EventoEmbarcacaoAtual } from './embarcacao-atual';
+import { dataLocalISO } from './validade-civil';
 
 export async function sincronizarDatasEscalaColaborador(
   colaboradorId: string | null | undefined,
@@ -15,7 +17,7 @@ export async function sincronizarDatasEscalaColaborador(
   try {
     const { data, error } = await supabaseAdmin
       .from('gt_historico_embarques')
-      .select('data_embarque, data_desembarque')
+      .select('tipo, data_embarque, data_desembarque, local_desembarque')
       .eq('colaborador_id', colaboradorId)
       .is('deleted_at', null);
 
@@ -24,15 +26,34 @@ export async function sincronizarDatasEscalaColaborador(
       return;
     }
 
-    const datas = derivarDatasEscala((data || []) as EventoEscalaDatasLike[]);
+    const eventos = (data || []) as EventoEscalaDatasLike[];
+    const datas = derivarDatasEscala(eventos);
+    const patch: Record<string, unknown> = {
+      data_ultimo_embarque: datas.data_ultimo_embarque,
+      data_ultimo_desembarque: datas.data_ultimo_desembarque,
+      data_proximo_embarque: datas.data_proximo_embarque,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data: catalogo, error: embErr } = await supabaseAdmin
+      .from('gt_embarcacoes')
+      .select('id, nome');
+    if (embErr) {
+      console.error('[sync-datas-escala] Erro ao carregar embarcações:', embErr.message);
+    } else {
+      const hoje = dataLocalISO();
+      const resolucao = resolverEmbarcacaoAtual(
+        eventos as EventoEmbarcacaoAtual[],
+        (catalogo || []) as { id: string; nome: string }[],
+        hoje,
+      );
+      if (resolucao.acao === 'definir') patch.embarcacao_atual_id = resolucao.embarcacaoId;
+      if (resolucao.acao === 'limpar') patch.embarcacao_atual_id = null;
+    }
+
     const { error: updErr } = await supabaseAdmin
       .from('gt_colaboradores')
-      .update({
-        data_ultimo_embarque: datas.data_ultimo_embarque,
-        data_ultimo_desembarque: datas.data_ultimo_desembarque,
-        data_proximo_embarque: datas.data_proximo_embarque,
-        updated_at: new Date().toISOString(),
-      })
+      .update(patch)
       .eq('id', colaboradorId);
 
     if (updErr) {

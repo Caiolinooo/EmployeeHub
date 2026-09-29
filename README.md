@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.89.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.90.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -16,6 +16,12 @@ Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](
 
 ---
 
+## Nesta versão (5.90.0)
+
+- **Cadastro DP no padrão do WK**: datas de RG e nascimento aceitam colar, gênero em lista, cidade do IBGE, RNM/RNE, CEP dos Correios, telefone 2, banco com dígito e cargo/função cadastrável pelo DP.
+- **Departamento separado do centro de custo**: departamento é o do WK (ex.: 01 ABZ SERVIÇOS- ADMINISTRATIVO); centro de custo é outro catálogo (ex.: 01 AGUAS BRASILEIRAS). A folha não copia mais um no outro.
+- **Embarcação atual vem da logística**: o DP vê o campo, não edita. A escala grava a embarcação do dia.
+
 ## Nesta versão (5.89.0)
 
 - **Gestão de Tripulantes de volta ao ar**: a Man Schedule deixava a grade vazia e muda quando a query falhava (`200` com `data:[]`). Erro vira 500 com estado de erro + retry; embeds quebrados do PostgREST caem para select plano; "Apenas Ativos" volta a incluir legados com `ativo NULL`.
@@ -25,7 +31,7 @@ Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](
 
 ## Segurança
 
-Versão atual: **5.89.0**. Detalhe das correções: [CHANGELOG.md](CHANGELOG.md). Política: [SECURITY.md](SECURITY.md).
+Versão atual: **5.90.0**. Detalhe das correções: [CHANGELOG.md](CHANGELOG.md). Política: [SECURITY.md](SECURITY.md).
 
 - Middleware vive em `middleware.ts` na raiz (Next 15.5 procura ao lado do `pagesDir`). Sem isso o bundle ia sem gate.
 - Debug/admin públicos (`ensure-admin`, `test-users`, `supabase-status`, `acl/init`, `execute-sql`) exigem JWT ADMIN ou `CRON_SECRET`.
