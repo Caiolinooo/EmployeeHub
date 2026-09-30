@@ -2060,7 +2060,7 @@ export default {
     paymentGuides: 'Guias de Recolhimento',
     costAnalysis: 'Análise de Custos',
     settings: 'Configurações',
-    payrollCodes: 'Códigos de Folha',
+    payrollCodes: 'Rubricas',
     calculationProfiles: 'Perfis de Cálculo',
     legalTables: 'Tabelas Legais',
     recentSheets: 'Folhas Recentes',

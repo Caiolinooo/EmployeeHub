@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.90.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.91.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,12 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.91.0)
+
+- **Rubricas do DP editáveis de verdade**: a página virou "Rubricas", o DP chega nela do painel, e a **natureza** (mensal/férias/13º/rescisão) entra no cadastro e no cálculo. Sync WK já devolve os códigos sem mapa.
+- **Upload de documentos com erro real**: o toast do DP/GT mostra a mensagem do servidor (tipo inválido, MIME, ASO sem data) em vez de "Erro no upload" genérico.
+- **Recrutamento (base)**: módulo novo com vagas e prospectos. O DP converte o contratado em colaborador com um clique. Sync Inhire preparado; falha de credencial responde com aviso, não quebra a página.
 
 ## Nesta versão (5.90.0)
 
@@ -31,7 +37,7 @@ Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](
 
 ## Segurança
 
-Versão atual: **5.90.0**. Detalhe das correções: [CHANGELOG.md](CHANGELOG.md). Política: [SECURITY.md](SECURITY.md).
+Versão atual: **5.91.0**. Detalhe das correções: [CHANGELOG.md](CHANGELOG.md). Política: [SECURITY.md](SECURITY.md).
 
 - Middleware vive em `middleware.ts` na raiz (Next 15.5 procura ao lado do `pagesDir`). Sem isso o bundle ia sem gate.
 - Debug/admin públicos (`ensure-admin`, `test-users`, `supabase-status`, `acl/init`, `execute-sql`) exigem JWT ADMIN ou `CRON_SECRET`.

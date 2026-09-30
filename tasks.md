@@ -12,6 +12,17 @@ Campos do cadastro alinhados ao que o DP pediu e ao WK (departamento ≠ centro 
 - [x] Departamento (WK 01 ABZ SERVIÇOS- ADMINISTRATIVO) separado do centro de custo (WK 01 AGUAS BRASILEIRAS)
 - [ ] Preview autenticado do formulário no DP
 
+## Rubricas do DP editáveis (2026-09-30)
+
+A página `/folha-pagamento/configuracoes/codigos` já existia, mas não era chegável a partir do DP e escondia o motor.
+
+- [x] Título passa de "Códigos de Folha" para "Rubricas"
+- [x] `payroll_codes.natureza` (mensal/ferias/decimo/rescisao) no cadastro, grade e cálculo (`PUT /api/payroll/calculate`)
+- [x] Banner de códigos WK não mapeados com `?pendentes=` vindo do sync 422
+- [x] Botão "Mapear rubricas" no painel DP vai direto para a página de rubricas
+- [x] `POST/PUT/DELETE /api/payroll/codes` com gate `folha.edit` já existia; seed de rubricas na migration 20260921
+- [ ] Confirmar o DP consegue abrir, editar e criar rubrica no navegador
+
 ## QHSE “Colaborador não encontrado” (2026-09-25)
 
 Aba QHSE/EPI da ficha GT em produção chama `GET /api/document-catalog?colaboradorId=&qhse=1`. Select `cargo_nome` em `gt_colaboradores` (coluna só na view) → PostgREST error → identity null → 404. Sem writes no DB real. Sem UI. Sem PR #95 / #96.

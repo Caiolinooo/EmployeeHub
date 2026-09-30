@@ -385,8 +385,8 @@ export default function CollaboratorModal({ colaboradorId, onClose, initialTab, 
       if (docId) {
         void enviarOcrDocumento(docId, json.data?.arquivo_url).then(() => silentRefresh());
       }
-    } catch {
-      toast.error(t('gestaoTripulantes.upload.error'));
+    } catch (err: unknown) {
+      toast.error(err instanceof Error && err.message ? err.message : t('gestaoTripulantes.upload.error'));
     } finally {
       setUploadingDoc(false);
       e.target.value = '';

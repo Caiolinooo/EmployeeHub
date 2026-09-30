@@ -16,6 +16,7 @@ interface PayrollCodeRow {
   value: number;
   formula: string | null;
   legal_type: PayrollCode['legalType'];
+  natureza: PayrollCode['natureza'] | null;
   codigo_wk: string | null;
   is_system: boolean;
   is_active: boolean;
@@ -35,6 +36,7 @@ function mapearCode(row: PayrollCodeRow): PayrollCode {
     value: Number(row.value),
     formula: row.formula ?? undefined,
     legalType: row.legal_type ?? undefined,
+    natureza: row.natureza ?? 'mensal',
     codigoWk: row.codigo_wk,
     isSystem: row.is_system,
     isActive: row.is_active,
@@ -132,6 +134,9 @@ export async function POST(request: NextRequest) {
         error: 'Código, tipo e nome são obrigatórios'
       } as PayrollApiResponse<null>, { status: 400 });
     }
+    const natureza = body.natureza && ['mensal', 'ferias', 'decimo', 'rescisao'].includes(body.natureza)
+      ? body.natureza
+      : 'mensal';
 
     // Verificar se código já existe para o tipo
     const { data: existingCode } = await supabaseAdmin
@@ -177,6 +182,7 @@ export async function POST(request: NextRequest) {
         value: body.value || 0,
         formula: body.formula,
         legal_type: body.legalType,
+        natureza,
         codigo_wk: codigoWk,
         is_system: body.isSystem || false,
         is_active: body.isActive !== false

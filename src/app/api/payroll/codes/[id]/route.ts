@@ -17,6 +17,7 @@ interface PayrollCodeRow {
   value: number;
   formula: string | null;
   legal_type: PayrollCode['legalType'];
+  natureza: PayrollCode['natureza'] | null;
   codigo_wk: string | null;
   is_system: boolean;
   is_active: boolean;
@@ -36,6 +37,7 @@ function mapearCode(row: PayrollCodeRow): PayrollCode {
     value: Number(row.value),
     formula: row.formula ?? undefined,
     legalType: row.legal_type ?? undefined,
+    natureza: row.natureza ?? 'mensal',
     codigoWk: row.codigo_wk,
     isSystem: row.is_system,
     isActive: row.is_active,
@@ -47,6 +49,7 @@ function mapearCode(row: PayrollCodeRow): PayrollCode {
 /** Tipos de cálculo aceitos (CHECK da tabela). */
 const CALCULATION_TYPES = ['fixed', 'percentage', 'formula', 'legal'] as const;
 const LEGAL_TYPES = ['inss', 'irrf', 'fgts'] as const;
+const NATUREZAS = ['mensal', 'ferias', 'decimo', 'rescisao'] as const;
 
 /**
  * GET /api/payroll/codes/[id]
@@ -111,6 +114,7 @@ export async function PUT(
     const valor = body.value;
     const formula = body.formula;
     const tipoLegal = body.legalType ?? body.legal_type;
+    const naturezaBruta = body.natureza;
     const codigoWkBruto = body.codigoWk ?? body.codigo_wk;
     const ativo = body.isActive ?? body.is_active;
     const novoCode = body.code;
@@ -143,6 +147,12 @@ export async function PUT(
       return NextResponse.json({
         success: false,
         error: `Tipo legal inválido: ${tipoLegal}. Use: ${LEGAL_TYPES.join(', ')}`
+      } as PayrollApiResponse<null>, { status: 400 });
+    }
+    if (naturezaBruta !== undefined && naturezaBruta !== null && !NATUREZAS.includes(naturezaBruta)) {
+      return NextResponse.json({
+        success: false,
+        error: `Natureza inválida: ${naturezaBruta}. Use: ${NATUREZAS.join(', ')}`
       } as PayrollApiResponse<null>, { status: 400 });
     }
 
@@ -225,12 +235,18 @@ export async function PUT(
     const patch: Record<string, unknown> = {};
     if (novoCode !== undefined && trocaChave) patch.code = novoCode;
     if (novoType !== undefined && trocaChave) patch.type = novoType;
-    if (nome !== undefined) patch.name = nome;
+    if (nome !== undefined) {
+      if (!String(nome).trim()) {
+        return NextResponse.json({ success: false, error: 'Nome não pode ficar vazio' } as PayrollApiResponse<null>, { status: 400 });
+      }
+      patch.name = String(nome).trim();
+    }
     if (descricao !== undefined) patch.description = descricao;
     if (tipoCalculo !== undefined) patch.calculation_type = tipoCalculo;
     if (valor !== undefined) patch.value = valor;
     if (formula !== undefined) patch.formula = formula;
     if (tipoLegal !== undefined) patch.legal_type = tipoLegal;
+    if (naturezaBruta !== undefined) patch.natureza = naturezaBruta ?? 'mensal';
     if (codigoWk !== undefined) patch.codigo_wk = codigoWk;
     if (ativo !== undefined) patch.is_active = ativo;
 

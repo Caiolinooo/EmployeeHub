@@ -102,6 +102,7 @@ interface CodigoMapeado {
   code: string;
   type: string;
   ativo: boolean;
+  natureza: string;
 }
 
 const TAMANHO_CHUNK = 500;
@@ -214,7 +215,7 @@ async function resolverCodigosWk(lancamentos: WkLancamento[]): Promise<Map<strin
   const chavesBusca = [...new Set(distintos.flatMap((codigo) => chavesCodigoWk(codigo)))];
   const { data, error } = await supabaseAdmin
     .from('payroll_codes')
-    .select('id, code, type, is_active, codigo_wk')
+    .select('id, code, type, is_active, codigo_wk, natureza')
     .in('codigo_wk', chavesBusca);
   if (error) throw new Error(`Falha ao consultar payroll_codes: ${error.message}`);
 
@@ -226,6 +227,7 @@ async function resolverCodigosWk(lancamentos: WkLancamento[]): Promise<Map<strin
       code: String(linha.code ?? ''),
       type: String(linha.type ?? ''),
       ativo: linha.is_active !== false,
+      natureza: typeof linha.natureza === 'string' ? linha.natureza : 'mensal',
     };
     for (const chave of chavesCodigoWk(codigoWk)) {
       mapa.set(chave, mapeado);

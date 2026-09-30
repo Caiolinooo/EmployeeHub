@@ -7,6 +7,7 @@
 export type PayrollCodeType = 'provento' | 'desconto' | 'outros';
 export type PayrollCalculationType = 'fixed' | 'percentage' | 'formula' | 'legal';
 export type PayrollLegalType = 'inss' | 'irrf' | 'fgts';
+export type PayrollNatureza = 'mensal' | 'ferias' | 'decimo' | 'rescisao';
 export type PayrollSheetStatus = 'draft' | 'calculated' | 'approved' | 'paid' | 'cancelled';
 export type PayrollEmployeeStatus = 'active' | 'inactive' | 'terminated';
 
@@ -106,6 +107,8 @@ export interface PayrollCode {
   value: number;
   formula?: string;
   legalType?: PayrollLegalType;
+  /** Natureza da competência: mensal, férias, 13º ou rescisão. Tributa por grupo. */
+  natureza?: PayrollNatureza;
   /** Código equivalente no WK Radar (coluna codigo_wk, índice único parcial). */
   codigoWk?: string | null;
   isSystem: boolean;

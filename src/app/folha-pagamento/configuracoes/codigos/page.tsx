@@ -8,7 +8,7 @@ import { useI18n } from '@/contexts/I18nContext';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import { FORMULAS_FOLHA } from '@/lib/payroll/calculations';
-import type { PayrollCode, PayrollCodeType, PayrollCalculationType, PayrollLegalType } from '@/types/payroll';
+import type { PayrollCode, PayrollCodeType, PayrollCalculationType, PayrollLegalType, PayrollNatureza } from '@/types/payroll';
 
 const CHAVES_FORMULA = Object.keys(FORMULAS_FOLHA); // 'dsr' | 'reflexo' | 'reflexo_he'
 
@@ -31,12 +31,20 @@ const TIPOS_LEGAL: Array<{ valor: PayrollLegalType; label: string }> = [
   { valor: 'fgts', label: 'FGTS' }
 ];
 
+const NATUREZAS: Array<{ valor: PayrollNatureza; label: string }> = [
+  { valor: 'mensal', label: 'Mensal' },
+  { valor: 'ferias', label: 'Férias' },
+  { valor: 'decimo', label: '13º salário' },
+  { valor: 'rescisao', label: 'Rescisão' }
+];
+
 interface Formulario {
   code: string;
   type: PayrollCodeType;
   name: string;
   description: string;
   calculationType: PayrollCalculationType;
+  natureza: PayrollNatureza;
   value: string;
   formula: string;
   legalType: PayrollLegalType | '';
@@ -50,6 +58,7 @@ const FORMULARIO_VAZIO: Formulario = {
   name: '',
   description: '',
   calculationType: 'fixed',
+  natureza: 'mensal',
   value: '0',
   formula: '',
   legalType: '',
@@ -72,6 +81,7 @@ export default function CodigosFolhaPage() {
   const [editando, setEditando] = useState<PayrollCode | null>(null);
   const [form, setForm] = useState<Formulario>(FORMULARIO_VAZIO);
   const [salvando, setSalvando] = useState(false);
+  const [codigosNaoMapeados, setCodigosNaoMapeados] = useState<string[]>([]);
 
   const carregar = useCallback(async () => {
     setLoading(true);
@@ -94,6 +104,13 @@ export default function CodigosFolhaPage() {
     carregar();
   }, [carregar]);
 
+  useEffect(() => {
+    const pendentes = new URLSearchParams(window.location.search).get('pendentes');
+    if (pendentes) {
+      setCodigosNaoMapeados(pendentes.split(',').map((c) => c.trim()).filter(Boolean));
+    }
+  }, []);
+
   const filtrados = useMemo(() => {
     const termo = busca.trim().toLowerCase();
     return codes.filter((c) => {
@@ -105,6 +122,12 @@ export default function CodigosFolhaPage() {
         .some((campo) => String(campo || '').toLowerCase().includes(termo));
     });
   }, [codes, busca, filtroTipo, filtroAtivo]);
+
+  const codigosVisiveis = useMemo(() => {
+    if (codigosNaoMapeados.length === 0) return filtrados;
+    const falta = new Set(codigosNaoMapeados.map((c) => c.toLowerCase()));
+    return filtrados.filter((c) => !c.codigoWk || !falta.has(c.codigoWk.toLowerCase()));
+  }, [filtrados, codigosNaoMapeados]);
 
   const abrirCriar = () => {
     setEditando(null);
@@ -123,6 +146,7 @@ export default function CodigosFolhaPage() {
       value: String(code.value ?? 0),
       formula: code.formula || '',
       legalType: code.legalType || '',
+      natureza: code.natureza || 'mensal',
       codigoWk: code.codigoWk || '',
       isActive: code.isActive
     });
@@ -149,6 +173,7 @@ export default function CodigosFolhaPage() {
         value: parseFloat(form.value) || 0,
         formula: form.calculationType === 'formula' && form.formula ? form.formula : undefined,
         legalType: form.calculationType === 'legal' && form.legalType ? form.legalType : undefined,
+        natureza: form.natureza,
         codigoWk: form.codigoWk.trim() || null,
         isActive: form.isActive
       };
@@ -225,10 +250,10 @@ export default function CodigosFolhaPage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-abz-text-dark">
-                  {t('payroll.payrollCodes', 'Códigos de Folha')}
+                  {t('payroll.payrollCodes', 'Rubricas')}
                 </h1>
                 <p className="text-gray-600">
-                  Configure as rubricas de proventos, descontos e eventos da folha
+                  Crie e edite as rubricas da folha: proventos, descontos e eventos, com o código do WK
                 </p>
               </div>
             </div>
@@ -247,6 +272,22 @@ export default function CodigosFolhaPage() {
 
       {/* Conteúdo */}
       <div className="max-w-7xl mx-auto px-6 py-6">
+        {codigosNaoMapeados.length > 0 && (
+          <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3">
+            <p className="text-sm text-amber-900">
+              <strong>Códigos WK sem rubrica mapeada:</strong>{' '}
+              {codigosNaoMapeados.join(', ')}.
+              Preencha o campo Código WK na rubrica correspondente ou crie uma nova rubrica.
+            </p>
+            <button
+              type="button"
+              onClick={() => setCodigosNaoMapeados([])}
+              className="ml-auto text-xs font-medium text-amber-700 hover:underline"
+            >
+              Ver todas
+            </button>
+          </div>
+        )}
         {/* Filtros */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
           <div className="flex flex-col sm:flex-row gap-3">
@@ -286,7 +327,7 @@ export default function CodigosFolhaPage() {
         <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
           {loading ? (
             <div className="p-8 text-center text-gray-500">Carregando rubricas...</div>
-          ) : filtrados.length === 0 ? (
+          ) : codigosVisiveis.length === 0 ? (
             <div className="p-8 text-center text-gray-500">Nenhuma rubrica encontrada</div>
           ) : (
             <div className="overflow-x-auto">
@@ -296,6 +337,7 @@ export default function CodigosFolhaPage() {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Natureza</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cálculo</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cód. WK</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Situação</th>
@@ -303,7 +345,7 @@ export default function CodigosFolhaPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {filtrados.map((c) => (
+                  {codigosVisiveis.map((c) => (
                     <tr key={c.id} className={`hover:bg-gray-50 ${!c.isActive ? 'opacity-60' : ''}`}>
                       <td className="px-4 py-3 text-sm font-mono font-medium text-gray-900">{c.code}</td>
                       <td className="px-4 py-3 text-sm text-gray-900">
@@ -317,6 +359,7 @@ export default function CodigosFolhaPage() {
                           {TIPOS.find((t2) => t2.valor === c.type)?.label || c.type}
                         </span>
                       </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">{NATUREZAS.find((n) => n.valor === c.natureza)?.label || 'Mensal'}</td>
                       <td className="px-4 py-3 text-sm text-gray-700">{labelValor(c)}</td>
                       <td className="px-4 py-3 text-sm">
                         {c.codigoWk ? (
@@ -355,7 +398,7 @@ export default function CodigosFolhaPage() {
                 </tbody>
               </table>
               <div className="px-4 py-3 border-t border-gray-200 text-xs text-gray-500">
-                {filtrados.length} de {codes.length} rubrica(s)
+                {codigosVisiveis.length} de {codes.length} rubrica(s)
               </div>
             </div>
           )}
@@ -437,6 +480,18 @@ export default function CodigosFolhaPage() {
                 >
                   {TIPOS_CALCULO.map((t2) => (
                     <option key={t2.valor} value={t2.valor}>{t2.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Natureza</label>
+                <select
+                  value={form.natureza}
+                  onChange={(e) => setForm({ ...form, natureza: e.target.value as PayrollNatureza })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-abz-blue focus:border-transparent"
+                >
+                  {NATUREZAS.map((n) => (
+                    <option key={n.valor} value={n.valor}>{n.label}</option>
                   ))}
                 </select>
               </div>

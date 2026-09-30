@@ -564,6 +564,16 @@ export const SYSTEM_MODULES: ModuleDefinition[] = [
     acl: crudAcl('dp', 'Departamento Pessoal', { read: STAFF, write: STAFF, admin: ADMIN_ONLY }),
   },
   {
+    key: 'recrutamento',
+    name: 'Recrutamento',
+    description: 'Vagas e prospectos do Inhire até o pré-cadastro do DP',
+    defaultRoles: STAFF,
+    category: 'department',
+    href: '/department/recrutamento',
+    visible: true,
+    acl: crudAcl('recrutamento', 'Recrutamento', { read: STAFF, write: STAFF, admin: ADMIN_ONLY }),
+  },
+  {
     key: 'folha',
     name: 'Folha de Pagamento',
     description: 'Rubricas, sincronização WK Radar, cálculo e aprovação da folha',

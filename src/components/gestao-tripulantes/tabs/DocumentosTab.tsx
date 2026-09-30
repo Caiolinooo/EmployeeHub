@@ -122,8 +122,8 @@ export default function DocumentosTab({ colaboradorId, documentos, onRefresh, hi
           .catch(() => onRefresh?.())
           .finally(() => setOcrRunning(null));
       }
-    } catch {
-      toast.error(t('gestaoTripulantes.upload.error'));
+    } catch (err: unknown) {
+      toast.error(err instanceof Error && err.message ? err.message : t('gestaoTripulantes.upload.error'));
     } finally {
       setUploading(false);
       e.target.value = '';

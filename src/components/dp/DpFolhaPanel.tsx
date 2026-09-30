@@ -866,7 +866,7 @@ export default function DpFolhaPanel() {
             ))}
           </div>
           <Link
-            href="/folha-pagamento"
+            href="/folha-pagamento/configuracoes/codigos"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition"
           >
             {tf('dp.folha.mapearRubricas', 'Mapear rubricas')}

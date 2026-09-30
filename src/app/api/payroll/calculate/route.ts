@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { calculateEmployeePayroll, PerfilCalculo, type NaturezaFolha } from '@/lib/payroll/calculations';
 import { PayrollApiResponse, PayrollCalculationResult, PayrollCalculationInput } from '@/types/payroll';
+
+const NATUREZA_FOLHA_VALIDA: ReadonlySet<string> = new Set(['mensal', 'ferias', 'decimo', 'rescisao']);
 import { garantirNivelPayroll } from '@/lib/payroll/payroll-auth';
 
 export const dynamic = 'force-dynamic';
@@ -190,10 +192,12 @@ export async function PUT(request: NextRequest) {
             const codigo = code?.code || '';
             const informado = Number(item.calculated_value);
             const legal = code?.legal_type === 'inss' || code?.legal_type === 'irrf' || code?.legal_type === 'fgts';
-            const natureza: NaturezaFolha = codigo === '005' || codigo === '006' ? 'ferias'
+            const natureza: NaturezaFolha =
+              (code?.natureza && NATUREZA_FOLHA_VALIDA.has(code.natureza) ? code.natureza : null) ??
+              (codigo === '005' || codigo === '006' ? 'ferias'
               : codigo === '007' ? 'decimo'
               : ['301','302','303','304','305','306','307'].includes(codigo) ? 'rescisao'
-              : 'mensal';
+              : 'mensal');
             return {
               codeId: item.code_id,
               code: codigo,

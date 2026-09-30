@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+## [5.91.0] - 2026-09-30
+
+### Rubricas editáveis, upload com erro real e Recrutamento
+
+#### Adicionado
+
+1. **Rubricas do DP**: `/folha-pagamento/configuracoes/codigos` vira "Rubricas". Campo **natureza** (`mensal|ferias|decimo|rescisao`) no cadastro, grade e motor (`PUT /api/payroll/calculate`). Banner de códigos WK não mapeados via `?pendentes=`; botão "Mapear rubricas" do painel DP abre a página.
+2. **Recrutamento (base)**: módulo `recrutamento` no catálogo. Tabelas `rc_vagas` + `rc_prospectos`. Página `/department/recrutamento` com criar vaga/prospecto manual, "Sincronizar Inhire" e "Converter DP". Setor Recrutamento já existente recebe o módulo; ACL `recrutamento.view/manage/admin`.
+3. **Inhire (cliente)**: `src/lib/recrutamento/inhire-client.ts` — `auth.inhire.app/login` com `X-Tenant`, cache de token, base `api.inhire.app`. Credenciais em `app_secrets` (`inhire_email`, `inhire_password`, `inhire_tenant`).
+
+#### Corrigido
+
+1. **Upload de documentos sem mensagem**: `DocumentosTab` e `CollaboratorModal` engoliam o erro do servidor. O toast agora mostra a mensagem real (400 tipo/MIME, 404 colaborador, 422 ASO sem data) — era por isso que o Gustavo não sabia a causa.
+2. **Conversão prospecto → colaborador**: idempotente. Já convertido devolve o mesmo id; CPF existente vincula; sem CPF válido não cria cadastro.
+
+#### Atenção ao atualizar
+
+- Migrations `20260930_000001_payroll_rubricas_natureza.sql` e `20260930_000002_rc_recrutamento.sql` aplicadas no Supabase do portal.
+- A credencial Inhire passada hoje devolve 401 (senha inválida ou conta API desabilitada). O sync responde com aviso e não derruba a página. Com token estático do painel Inhire, gravar `inhire_token` em `app_secrets` para o client usar Bearer direto.
+
 ## [5.90.0] - 2026-09-29
 
 ### Cadastro DP no padrão do WK
