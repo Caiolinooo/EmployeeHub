@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.91.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.91.1 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,10 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.91.1)
+
+- **Login de volta ao ar**: o portal inteiro dava 500/401 no login porque `DATABASE_URL` e as senhas de DB na Vercel estavam com a senha antiga do Supabase. Toda query pg quebrava antes do bcrypt, então senha certa e errada falhavam igual. Envs regravadas + redeploy; login verificado retornando token.
 
 ## Nesta versão (5.91.0)
 
@@ -37,7 +41,7 @@ Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](
 
 ## Segurança
 
-Versão atual: **5.91.0**. Detalhe das correções: [CHANGELOG.md](CHANGELOG.md). Política: [SECURITY.md](SECURITY.md).
+Versão atual: **5.91.1**. Detalhe das correções: [CHANGELOG.md](CHANGELOG.md). Política: [SECURITY.md](SECURITY.md).
 
 - Middleware vive em `middleware.ts` na raiz (Next 15.5 procura ao lado do `pagesDir`). Sem isso o bundle ia sem gate.
 - Debug/admin públicos (`ensure-admin`, `test-users`, `supabase-status`, `acl/init`, `execute-sql`) exigem JWT ADMIN ou `CRON_SECRET`.

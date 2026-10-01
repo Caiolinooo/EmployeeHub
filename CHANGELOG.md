@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [5.91.1] - 2026-10-01
+
+### Login fora do ar (infra)
+
+#### Corrigido
+
+1. **Login 500/401 para todos os usuarios**: `DATABASE_URL`, `SUPABASE_DB_PASSWORD` e `POSTGRES_PASSWORD` na Vercel estavam com a senha antiga do banco Supabase. Toda query pg direta (`new Pool` em `src/lib/auth.ts` e afins) falhava com `28P01 password authentication failed`. O login quebrava antes do bcrypt — senha certa ou errada davam o mesmo erro. Envs regravadas com a senha atual + redeploy em producao. Login verificado retornando token.
+2. `.env.local` e `.env` do repo sincronizados com a mesma senha (estavam na antiga).
+
+#### Atencao ao atualizar
+
+- Quem guardou a senha temporaria de teste (`Abz@2026Temp`) deve redefinir via "Esqueci a senha" (caso da ericka.relvas, usada na verificacao).
+- Sem migration e sem mudanca de codigo — foi config/infra.
+
 ## [5.91.0] - 2026-09-30
 
 ### Rubricas editáveis, upload com erro real e Recrutamento
