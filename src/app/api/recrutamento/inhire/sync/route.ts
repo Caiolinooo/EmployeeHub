@@ -33,32 +33,46 @@ export async function POST(request: NextRequest) {
 
     let vagasResp: unknown;
     try {
-      vagasResp = await inhireFetch('/v1/jobs');
+      vagasResp = await inhireFetch('/jobs/paginated/lean', {
+        method: 'POST',
+        body: JSON.stringify({ limit: 100 }),
+      });
     } catch (err) {
       return NextResponse.json({
         success: false,
-        warning: err instanceof Error ? err.message : 'Falha ao consultar vagas do Inhire',
+        warning: err instanceof Error ? err.message : 'Falha ao consultar vagas do InHire',
       });
     }
 
-    const vagas = Array.isArray(vagasResp) ? vagasResp : ((vagasResp as { data?: unknown[] })?.data || []);
+    const vagas = Array.isArray(vagasResp)
+      ? vagasResp
+      : (((vagasResp as { results?: unknown[]; data?: unknown[] })?.results
+        || (vagasResp as { data?: unknown[] })?.data) || []);
     let vagasImportadas = 0;
     let candidatosImportados = 0;
 
     for (const v of vagas) {
       const job = v as Record<string, unknown>;
-      const inhireId = texto(job.id || job.job_id);
-      const titulo = texto(job.title || job.titulo || job.name) || 'Vaga Inhire';
+      const inhireId = texto(job.id);
+      const titulo = texto(job.name) || 'Vaga InHire';
       if (!inhireId) continue;
+
+      // Vaga excluída manualmente (deleted_at preenchido) não é ressuscitada pelo sync.
+      const { data: existente } = await supabaseAdmin
+        .from('rc_vagas')
+        .select('id, deleted_at')
+        .eq('inhire_id', inhireId)
+        .maybeSingle();
+      if (existente?.deleted_at) continue;
 
       const { data: vaga, error } = await supabaseAdmin
         .from('rc_vagas')
         .upsert({
           inhire_id: inhireId,
           titulo,
-          descricao: texto(job.description || job.descricao) || null,
-          empresa: texto(job.company || job.empresa) || null,
-          status: 'aberta',
+          descricao: texto(job.description) || null,
+          empresa: texto((job.tenantClient as Record<string, unknown> | undefined)?.name) || null,
+          status: texto(job.status) === 'published' ? 'aberta' : (texto(job.status) || 'aberta'),
           atualizado_em: new Date().toISOString(),
         }, { onConflict: 'inhire_id' })
         .select('id')
@@ -69,18 +83,32 @@ export async function POST(request: NextRequest) {
 
       let candidatos: unknown[] = [];
       try {
-        const resp = await inhireFetch(`/v1/jobs/${inhireId}/candidates`);
-        candidatos = Array.isArray(resp) ? resp : (((resp as { data?: unknown[] })?.data) || []);
+        const resp = await inhireFetch(`/job-talents/${inhireId}/talents/paginated`, {
+          method: 'POST',
+          body: JSON.stringify({ limit: 100 }),
+        });
+        candidatos = Array.isArray(resp)
+          ? resp
+          : (((resp as { jobTalents?: unknown[] })?.jobTalents) || []);
       } catch {
         candidatos = [];
       }
 
       for (const c of candidatos) {
         const cand = c as Record<string, unknown>;
-        const inhireCandId = texto(cand.id || cand.candidate_id);
-        const nome = texto(cand.name || cand.nome_completo || cand.full_name);
+        const talent = (cand.talent || {}) as Record<string, unknown>;
+        const inhireCandId = texto(cand.id);
+        const nome = texto(talent.name);
         if (!inhireCandId || !nome) continue;
-        const cpf = texto(cand.cpf || cand.document).replace(/\D/g, '') || null;
+        const cpf = texto(talent.cpf || talent.document).replace(/\D/g, '') || null;
+
+        // Prospecto excluído manualmente não é ressuscitado pelo sync.
+        const { data: existente } = await supabaseAdmin
+          .from('rc_prospectos')
+          .select('id, deleted_at')
+          .eq('inhire_candidato_id', inhireCandId)
+          .maybeSingle();
+        if (existente?.deleted_at) continue;
 
         const { error: pErr } = await supabaseAdmin
           .from('rc_prospectos')
@@ -89,8 +117,8 @@ export async function POST(request: NextRequest) {
             inhire_candidato_id: inhireCandId,
             nome_completo: nome,
             cpf,
-            email: texto(cand.email) || null,
-            telefone: texto(cand.phone || cand.telefone) || null,
+            email: texto(talent.email) || null,
+            telefone: texto(talent.phone) || null,
             dados: cand,
             status: 'prospecto',
             updated_at: new Date().toISOString(),

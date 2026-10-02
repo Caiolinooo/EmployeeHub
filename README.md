@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.91.1 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.92.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,11 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.92.0)
+
+- **InHire autenticado**: login e refresh reais no tenant `abzservicos`. O sync puxa vagas e candidatos dos endpoints certos. Falha de credencial continua respondendo com aviso, sem derrubar a página.
+- **Editar e excluir no Recrutamento**: vagas e prospectos ganham edição e exclusão (soft delete). Vaga com prospecto ativo não some; prospecto já convertido em colaborador também não.
 
 ## Nesta versão (5.91.1)
 
@@ -41,7 +46,7 @@ Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](
 
 ## Segurança
 
-Versão atual: **5.91.1**. Detalhe das correções: [CHANGELOG.md](CHANGELOG.md). Política: [SECURITY.md](SECURITY.md).
+Versão atual: **5.92.0**. Detalhe das correções: [CHANGELOG.md](CHANGELOG.md). Política: [SECURITY.md](SECURITY.md).
 
 - Middleware vive em `middleware.ts` na raiz (Next 15.5 procura ao lado do `pagesDir`). Sem isso o bundle ia sem gate.
 - Debug/admin públicos (`ensure-admin`, `test-users`, `supabase-status`, `acl/init`, `execute-sql`) exigem JWT ADMIN ou `CRON_SECRET`.

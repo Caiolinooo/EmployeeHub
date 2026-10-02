@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabaseAdmin
       .from('rc_vagas')
       .select('*')
+      .is('deleted_at', null)
       .order('criado_em', { ascending: false });
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });

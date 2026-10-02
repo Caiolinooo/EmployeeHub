@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
     let query = supabaseAdmin
       .from('rc_prospectos')
       .select('*, vaga:rc_vagas(titulo)')
+      .is('deleted_at', null)
       .order('created_at', { ascending: false });
     if (status) query = query.eq('status', status);
 
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
       .from('rc_prospectos')
       .insert({
         vaga_id: body.vaga_id || null,
+        inhire_candidato_id: body.inhire_candidato_id || null,
         nome_completo: nome,
         cpf: cpfBruto || null,
         email: body.email || null,

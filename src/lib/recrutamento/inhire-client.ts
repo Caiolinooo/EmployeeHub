@@ -44,40 +44,92 @@ export async function carregarCredenciaisInhire(): Promise<InhireCredenciais | n
   };
 }
 
-let tokenCache: { token: string; em: number } | null = null;
+interface TokenSessao {
+  accessToken: string;
+  refreshToken: string;
+  accessExpiraEm: number;
+  refreshExpiraEm: number;
+}
+
+const ACCESS_TTL_MS = 60 * 60 * 1000; // 1h conforme manual
+const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 dias conforme manual
+
+let sessao: TokenSessao | null = null;
+
+interface RespostaLogin {
+  accessToken?: string;
+  refreshToken?: string;
+  access_token?: string;
+  refresh_token?: string;
+  token?: string;
+  expires_in?: number;
+}
+
+function extrairTokens(json: RespostaLogin): { accessToken: string; refreshToken: string | null } {
+  const accessToken = json.accessToken || json.access_token || json.token || '';
+  const refreshToken = json.refreshToken || json.refresh_token || null;
+  if (!accessToken) throw new Error('Resposta de auth InHire sem accessToken');
+  return { accessToken, refreshToken };
+}
+
+async function postAuth(cred: InhireCredenciais, path: string, body: Record<string, unknown>): Promise<RespostaLogin> {
+  const res = await fetch(`${cred.authBase}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Tenant': cred.tenant },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const texto = await res.text();
+    throw new Error(`InHire auth ${path} ${res.status}: ${texto.slice(0, 200)}`);
+  }
+  return (await res.json()) as RespostaLogin;
+}
 
 export async function loginInhire(): Promise<string> {
   const cred = await carregarCredenciaisInhire();
-  if (!cred) throw new Error('Credenciais Inhire não configuradas (app_secrets inhire_*)');
+  if (!cred) throw new Error('Credenciais InHire não configuradas (app_secrets inhire_*)');
 
-  if (tokenCache && Date.now() < tokenCache.em - 30_000) return tokenCache.token;
+  const agora = Date.now();
 
-  const res = await fetch(`${cred.authBase}/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Tenant': cred.tenant,
-    },
-    body: JSON.stringify({ email: cred.email, password: cred.password }),
-  });
+  if (sessao && agora < sessao.accessExpiraEm - 30_000) return sessao.accessToken;
 
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Inhire auth ${res.status}: ${body.slice(0, 200)}`);
+  // Refresh: somente refreshToken (servidor rejeita campos extras, ex accessToken)
+  if (sessao && sessao.refreshToken && agora < sessao.refreshExpiraEm - 60_000) {
+    try {
+      const json = await postAuth(cred, '/refresh', { refreshToken: sessao.refreshToken });
+      const { accessToken, refreshToken } = extrairTokens(json);
+      const refreshFinal = refreshToken || sessao.refreshToken;
+      if (!refreshFinal) throw new Error('Refresh InHire sem refreshToken');
+      sessao = {
+        accessToken,
+        refreshToken: refreshFinal,
+        accessExpiraEm: agora + ACCESS_TTL_MS,
+        refreshExpiraEm: agora + REFRESH_TTL_MS,
+      };
+      return accessToken;
+    } catch {
+      sessao = null; // refresh inválido: cai para login completo
+    }
   }
 
-  const json = (await res.json()) as { access_token?: string; token?: string; expires_in?: number };
-  const token = json.access_token || json.token;
-  if (!token) throw new Error('Resposta de login Inhire sem token');
-  tokenCache = { token, em: Date.now() + (json.expires_in || 3600) * 1000 };
-  return token;
+  const json = await postAuth(cred, '/login', { email: cred.email, password: cred.password });
+  const { accessToken, refreshToken } = extrairTokens(json);
+  if (!refreshToken) throw new Error('Login InHire sem refreshToken');
+  sessao = {
+    accessToken,
+    refreshToken,
+    accessExpiraEm: agora + ACCESS_TTL_MS,
+    refreshExpiraEm: agora + REFRESH_TTL_MS,
+  };
+  return accessToken;
 }
 
-export async function inhireFetch(path: string, init?: RequestInit): Promise<unknown> {
-  const cred = await carregarCredenciaisInhire();
-  if (!cred) throw new Error('Credenciais Inhire não configuradas');
-  const token = await loginInhire();
-  const res = await fetch(`${cred.apiBase}${path}`, {
+export function limparSessaoInhire(): void {
+  sessao = null;
+}
+
+async function requestInhire(cred: InhireCredenciais, token: string, path: string, init?: RequestInit): Promise<Response> {
+  return fetch(`${cred.apiBase}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
@@ -86,9 +138,25 @@ export async function inhireFetch(path: string, init?: RequestInit): Promise<unk
       ...(init?.headers || {}),
     },
   });
+}
+
+export async function inhireFetch(path: string, init?: RequestInit): Promise<unknown> {
+  const cred = await carregarCredenciaisInhire();
+  if (!cred) throw new Error('Credenciais InHire não configuradas');
+
+  let token = await loginInhire();
+  let res = await requestInhire(cred, token, path, init);
+
+  // 401: token rejeitado antes do TTL estimado; força novo login e tenta 1x
+  if (res.status === 401) {
+    limparSessaoInhire();
+    token = await loginInhire();
+    res = await requestInhire(cred, token, path, init);
+  }
+
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`Inhire ${path} ${res.status}: ${body.slice(0, 200)}`);
+    throw new Error(`InHire ${path} ${res.status}: ${body.slice(0, 200)}`);
   }
   return res.json();
 }

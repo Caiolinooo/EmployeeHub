@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [5.92.0] - 2026-10-02
+
+### Recrutamento: InHire autenticado e edição/exclusão
+
+#### Adicionado
+
+1. **Auth InHire funcionando**: login e refresh contra `auth.inhire.app` com tenant `abzservicos`. O manual diverge do servidor — `X-Tenant` também no login/refresh, e `/refresh` aceita só `refreshToken`. Cache de sessão (1h / 30d) e retry em 401.
+2. **Diagnóstico**: `POST /api/recrutamento/inhire/test-auth` (admin) e `scripts/test-inhire-auth.js`. Nenhum dos dois devolve token ou senha.
+3. **Editar e excluir vagas e prospectos**: `PUT`/`DELETE` em `/api/recrutamento/vagas/[id]` e `/prospectos/[id]`. Exclusão é soft (`deleted_at`). Vaga com prospecto ativo bloqueia; prospecto convertido não exclui. Botões e modais em `/department/recrutamento` para quem tem `recrutamento.manage`.
+
+#### Corrigido
+
+1. **Sync InHire nos endpoints reais**: vagas em `POST /jobs/paginated/lean` e candidatos em `POST /job-talents/:jobId/talents/paginated` (sem `/v1`, que devolve 403). Sync não recria registro excluído à mão.
+
+#### Atenção ao atualizar
+
+- Migration `20261002_000001_rc_recrutamento_soft_delete.sql` já aplicada no Supabase do portal (`deleted_at` + índice de CPF só entre ativos).
+- Credenciais em `app_secrets`: `inhire_email`, `inhire_password`, `inhire_tenant=abzservicos`.
+
 ## [5.91.1] - 2026-10-01
 
 ### Login fora do ar (infra)
