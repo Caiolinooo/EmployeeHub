@@ -18,6 +18,16 @@ import {
   textoOcrSuficiente,
   visaoLlmCompativel,
 } from './ocr-routing';
+import { decodeXmlEntities } from './decode-xml-entities';
+import {
+  extrairCnhOcr,
+  extrairCtpsOcr,
+  extrairLogradouroOcr,
+  extrairNomeMaeOcr,
+  extrairNomeOcr,
+  extrairNomePaiOcr,
+  extrairPisOcr,
+} from './ocr-field-extract';
 import fs from 'fs';
 import path from 'path';
 
@@ -80,12 +90,9 @@ export function extrairDadosTexto(
   }
 
   // 3. Nome do Colaborador
-  const nomeMatch = upper.match(/(?:NOME|NOME\s*COMPLETO|TRABALHADOR|PACIENTE)[:\s.\-|]*([A-ZÀ-Ú\x20\t]{3,60})/);
-  if (nomeMatch) {
-    const nomeLimpo = nomeMatch[1].trim().replace(/\s+(?:CPF|RG|DN|EMPRESA|FUNÇÃO|CARGO|SETOR).*$/i, '').trim();
-    if (nomeLimpo.length >= 3) {
-      dados.nome_completo = nomeLimpo;
-    }
+  const nomeLimpo = extrairNomeOcr(upper);
+  if (nomeLimpo) {
+    dados.nome_completo = nomeLimpo;
   }
 
   // 4. Data de Realização preliminar para evitar conflito com Data de Nascimento
@@ -112,28 +119,24 @@ export function extrairDadosTexto(
   }
 
   // 6. Filiação
-  const maeMatch = upper.match(/(?:FILIAÇÃO|MÃE|MAE)[:\s.\-|]*([A-ZÀ-Ú\s]{3,60})/);
-  if (maeMatch) {
-    dados.nome_mae = maeMatch[1].trim().replace(/\s+(?:PAI|CPF|RG|NATURALIDADE).*$/i, '').trim();
-  }
+  const nomeMae = extrairNomeMaeOcr(upper);
+  if (nomeMae) dados.nome_mae = nomeMae;
 
-  const paiMatch = upper.match(/(?:PAI)[:\s.\-|]*([A-ZÀ-Ú\s]{3,60})/);
-  if (paiMatch) {
-    dados.nome_pai = paiMatch[1].trim().replace(/\s+(?:MÃE|MAE|CPF|RG|NATURALIDADE).*$/i, '').trim();
-  }
+  const nomePai = extrairNomePaiOcr(upper);
+  if (nomePai) dados.nome_pai = nomePai;
 
   // 7. Documentos complementares
-  const ctpsMatch = upper.match(/CTPS[:\s.\-|]*(\d+)/);
-  if (ctpsMatch) dados.ctps = ctpsMatch[1];
+  const ctps = extrairCtpsOcr(upper);
+  if (ctps) dados.ctps = ctps;
 
-  const cnhMatch = upper.match(/CNH[:\s.\-|]*(\d+)/);
-  if (cnhMatch) dados.numero_cnh = cnhMatch[1];
+  const cnh = extrairCnhOcr(upper);
+  if (cnh) dados.numero_cnh = cnh;
 
-  const pisMatch = upper.match(/PIS[:\s.\-|]*(\d+)/);
-  if (pisMatch) dados.pis_pasep = pisMatch[1];
+  const pis = extrairPisOcr(upper);
+  if (pis) dados.pis_pasep = pis;
 
-  const ruaMatch = upper.match(/(?:RUA|AVENIDA|AV|TRAVESSA|PRACA|ESTRADA)[:\s.\-|]*([A-ZÀ-Ú\s0-9,]+)/);
-  if (ruaMatch) dados.endereco_logradouro = ruaMatch[1].trim();
+  const logradouro = extrairLogradouroOcr(upper);
+  if (logradouro) dados.endereco_logradouro = logradouro;
 
   const cepMatch = texto.match(/(\d{5})-?(\d{3})/);
   if (cepMatch) dados.endereco_cep = `${cepMatch[1]}-${cepMatch[2]}`;
@@ -671,12 +674,7 @@ async function processarDOCX(buffer: Buffer): Promise<{ texto: string; confianca
         const pText = matches
           .map(m => {
             const content = m.replace(/<w:t[^>]*>|<\/w:t>/g, '');
-            return content
-              .replace(/&lt;/g, '<')
-              .replace(/&gt;/g, '>')
-              .replace(/&amp;/g, '&')
-              .replace(/&quot;/g, '"')
-              .replace(/&apos;/g, "'");
+            return decodeXmlEntities(content);
           })
           .join('');
         if (pText.trim()) {

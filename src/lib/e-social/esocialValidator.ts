@@ -1,5 +1,11 @@
 import { xmlTemDtExmInvertida } from './esocial-date';
 import { isValidTsNome, nomesTsDoXml, sanitizeTsNome } from './ts-nome';
+import {
+  coletarTagsDataXml,
+  valorDentroDaTag,
+  xmlAsoSemDtAsoAntesDeRes,
+  xmlTemTagsVazias,
+} from './xml-linear';
 
 export interface ErroValidacao {
   campo: string;
@@ -322,12 +328,11 @@ export function validarXMLGerado(xml: string, codigoEvento: string): ResultadoVa
   }
 
   // Check valid dates format YYYY-MM-DD (excluding dtBase which is a month number 1-12)
-  const dateTags = xml.match(/<(dt[A-Z][a-zA-Z0-9]+|data[a-zA-Z0-9]+)>([^<]+)<\//g) || [];
+  const dateTags = coletarTagsDataXml(xml);
   for (const tag of dateTags) {
     if (tag.startsWith('<dtBase>')) continue;
-    const valueMatch = tag.match(/>([^<]+)</);
-    if (valueMatch && valueMatch[1]) {
-      const val = valueMatch[1];
+    const val = valorDentroDaTag(tag);
+    if (val) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(val)) {
          erros.push({ campo: 'datas', mensagem: `Data inválida no XML: ${val}. Formato esperado YYYY-MM-DD`, tipo: 'formato', autocorrigivel: true });
       } else {
@@ -340,7 +345,7 @@ export function validarXMLGerado(xml: string, codigoEvento: string): ResultadoVa
   }
 
   // Check empty required tags like <tag></tag>
-  if (/<[a-zA-Z0-9]+>\s*<\/[a-zA-Z0-9]+>/.test(xml)) {
+  if (xmlTemTagsVazias(xml)) {
      erros.push({ campo: 'xml', mensagem: 'XML contém tags vazias', tipo: 'estrutura', autocorrigivel: true });
   }
 
@@ -365,7 +370,7 @@ export function validarXMLGerado(xml: string, codigoEvento: string): ResultadoVa
     }
     
     // Bug histórico do S-2220
-    if (/<aso>\s*<resAso>/.test(xml)) {
+    if (xmlAsoSemDtAsoAntesDeRes(xml)) {
       erros.push({ campo: 'aso', mensagem: '<dtAso> deve vir antes de <resAso> em <aso>', tipo: 'estrutura', autocorrigivel: true });
     }
 

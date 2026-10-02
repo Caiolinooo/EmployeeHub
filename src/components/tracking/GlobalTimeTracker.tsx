@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import dashboardCards from '@/data/cards';
+import { newTrackingSessionId } from '@/lib/tracking/session-id';
 
 // Map path segments to Module IDs
 const getModuleIdFromPath = (path: string): { id: string, name: string } | null => {
@@ -26,7 +27,7 @@ export default function GlobalTimeTracker() {
     const startTimeRef = useRef<number | null>(null);
     const activeModuleRef = useRef<{ id: string, name: string } | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
-    const sessionIdRef = useRef<string>(Math.random().toString(36).substring(7));
+    const sessionIdRef = useRef<string>(newTrackingSessionId());
     const isVisibleRef = useRef(true);
 
     const sendTracking = (type: 'view' | 'heartbeat', duration: number = 0) => {

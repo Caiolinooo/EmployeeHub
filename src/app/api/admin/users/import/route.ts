@@ -4,6 +4,7 @@ import { sendInviteWithRegisterLinkEmail } from '@/lib/notifications';
 import { sendInviteSMS } from '@/lib/sms';
 import crypto from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
+import { isValidImportEmail } from '@/lib/import-email';
 
 export const dynamic = 'force-dynamic';
 
@@ -356,7 +357,7 @@ function validateUserData(userData: any) {
   }
 
   // Validar formato de email
-  if (userData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userData.email)) {
+  if (userData.email && !isValidImportEmail(userData.email)) {
     return {
       isValid: false,
       error: 'Formato de email inválido',
