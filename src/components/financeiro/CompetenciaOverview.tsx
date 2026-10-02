@@ -247,6 +247,9 @@ export default function CompetenciaOverview({ onDrill }: { onDrill: (destino: 'f
               <h2 className="text-sm font-bold text-gray-900">{t('financeiro.movimentoCompetencia')}</h2>
               <p className="text-xs text-gray-500">{t('financeiro.competencias')}</p>
             </div>
+            <p className="text-sm text-gray-500">
+              {t('financeiro.totalNoPeriodo')}: <span className="font-bold text-gray-900">{formatarMoeda(barras.reduce((s, b) => s + b.total, 0))}</span>
+            </p>
           </div>
           {barras.length === 0 ? (
             <p className="py-10 text-center text-sm text-gray-400">{t('financeiro.semCompetencias')}</p>
@@ -336,8 +339,15 @@ export default function CompetenciaOverview({ onDrill }: { onDrill: (destino: 'f
       </div>
 
       <div className={`${FIN_CARD_CLASS} flex min-h-0 flex-1 flex-col overflow-hidden`}>
-        <div className="border-b border-gray-100 px-4 py-3">
+        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
           <h2 className="text-sm font-bold text-gray-900">{t('financeiro.competencias')}</h2>
+          <button
+            type="button"
+            onClick={() => onDrill('faturas')}
+            className="text-xs font-bold text-abz-blue hover:underline"
+          >
+            {t('financeiro.verTodas')} →
+          </button>
         </div>
         <div className="min-h-0 flex-1 overflow-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -345,35 +355,44 @@ export default function CompetenciaOverview({ onDrill }: { onDrill: (destino: 'f
               <tr>
                 <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500">{t('financeiro.competencia')}</th>
                 <th className="px-4 py-2 text-right text-xs font-bold uppercase text-gray-500">{t('financeiro.tabFaturas')}</th>
+                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500">{t('financeiro.status')}</th>
                 <th className="px-4 py-2 text-right text-xs font-bold uppercase text-gray-500">{t('financeiro.total')}</th>
                 <th className="px-4 py-2" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {(dados?.competencias ?? []).map((linha) => (
-                <tr key={linha.competencia} className="hover:bg-abz-light-blue/40">
-                  <td className="px-4 py-2 text-sm font-semibold text-gray-900">{linha.competencia}</td>
-                  <td className="px-4 py-2 text-right text-sm text-gray-600">{linha.faturas}</td>
-                  <td className="px-4 py-2 text-right text-sm text-gray-600">{formatarMoeda(linha.total)}</td>
-                  <td className="px-4 py-2 text-right">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const [cAno, cMes] = linha.competencia.split('-');
-                        if (cMes) setMes(Number(cMes));
-                        if (cAno) setAno(Number(cAno));
-                        onDrill('faturas');
-                      }}
-                      className="text-xs font-bold text-abz-blue hover:underline"
-                    >
-                      {t('financeiro.visualizar')}
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {(dados?.competencias ?? []).map((linha) => {
+                const quitada = linha.competencia < competencia;
+                const statusLabel = quitada ? t('financeiro.statusQuitada') : t('financeiro.statusEmAberto');
+                const statusClass = quitada ? 'text-emerald-600' : 'text-amber-600';
+                return (
+                  <tr key={linha.competencia} className="hover:bg-abz-light-blue/40">
+                    <td className="px-4 py-2 text-sm font-semibold text-gray-900">{linha.competencia}</td>
+                    <td className="px-4 py-2 text-right text-sm text-gray-600">{linha.faturas}</td>
+                    <td className="px-4 py-2 text-sm">
+                      <span className={`font-semibold ${statusClass}`}>{statusLabel}</span>
+                    </td>
+                    <td className="px-4 py-2 text-right text-sm text-gray-600">{formatarMoeda(linha.total)}</td>
+                    <td className="px-4 py-2 text-right">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const [cAno, cMes] = linha.competencia.split('-');
+                          if (cMes) setMes(Number(cMes));
+                          if (cAno) setAno(Number(cAno));
+                          onDrill('faturas');
+                        }}
+                        className="text-xs font-bold text-abz-blue hover:underline"
+                      >
+                        {t('financeiro.visualizar')}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
               {dados && (dados.competencias ?? []).length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-sm text-gray-400">
+                  <td colSpan={5} className="px-4 py-8 text-center text-sm text-gray-400">
                     {t('financeiro.semCompetencias')}
                   </td>
                 </tr>

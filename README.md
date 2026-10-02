@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.93.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.94.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -16,12 +16,17 @@ Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](
 
 ---
 
+## Nesta versão (5.94.0)
+
+- **Menu Horizontal Elementor no Financeiro**: novo top bar horizontal com mega menus dropdown por área (Painel, Cadastros, Folha, Faturamento, Contas, Relatórios), navegação mobile responsiva e atalhos rápidos.
+- **Casca Própria sem Sidebar**: remoção da sidebar padrão do portal no módulo financeiro, liberando espaço horizontal com botão de retorno imediato ao dashboard geral.
+- **Painel de Competências Aprimorado**: inclusão de coluna de status ("Em aberto" / "Quitada"), cálculo de total no período e atalho de visualização rápida de faturas.
+
 ## Nesta versão (5.93.0)
 
 - **Financeiro com Navegação Unificada**: novo `FinanceiroShell` conectando Painel Geral, Cadastros, Folha, Faturamento e Contas com preservação de rota e deep-links por aba (`?tab=`).
 - **Dashboard de Competência Expandido**: visão analítica com série histórica mês a mês, gráficos de barras de distribuição por competência e composição visual por status de pagamento.
 - **Upload GT e ASO Resiliente**: validação de integridade de documentos refinada para uploads diretos de ASO e correções no modal de importação.
-
 ## Nesta versão (5.92.0)
 
 - **InHire autenticado**: login e refresh reais no tenant `abzservicos`. O sync puxa vagas e candidatos dos endpoints certos. Falha de credencial continua respondendo com aviso, sem derrubar a página.

@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [5.94.0] - 2026-10-02
+
+### Mockup Financeiro: menu horizontal estilo Elementor e casca própria
+
+#### Adicionado
+
+1. **Menu horizontal estilo Elementor no Financeiro**: redesign completo do `FinanceiroShell` com navegação superior horizontal agrupando Painel, Cadastros, Folha, Faturamento, Contas e Relatórios em mega menus dropdown ricos com ícones, navegação mobile por chips horizontais e breadcrumb dinâmico com link direto para o dashboard principal.
+2. **Casca própria do módulo Financeiro**: desacoplamento do `MainLayout` no `folha-pagamento/layout.tsx`, eliminando a sidebar padrão do portal no módulo para oferecer uma visão ampla e focada, mantendo o controle de autenticação e permissões com `ProtectedRoute`.
+3. **Indicador de Status e Total no período no Painel de Competências**: adição da coluna **STATUS** ("Quitada" / "Em aberto") e atalho "Ver todas →" na listagem de competências do `CompetenciaOverview`, além da exibição do "Total no período" no cabeçalho do gráfico de barras de faturamento por competência.
+4. **Internacionalização completa**: novas chaves adicionadas aos dicionários `pt-BR` e `en-US` (`statusEmAberto`, `statusQuitada`, `totalNoPeriodo`, `verTodas`).
 ## [5.93.0] - 2026-10-02
 
 ### Financeiro Hub unificado, Competência e upload GT resiliente
