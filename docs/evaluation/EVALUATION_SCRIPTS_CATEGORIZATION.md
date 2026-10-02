@@ -72,8 +72,6 @@ These provide documentation and should be kept for reference.
 These scripts have broader utility beyond just the evaluation module.
 
 #### JavaScript Scripts (KEEP)
-- `create-admin-user.js` ✅ **KEEP** - General admin user creation
-- `ensure-admin-user.js` ✅ **KEEP** - Admin user verification
 - `create-admin-simple.js` ✅ **KEEP** - Simplified admin creation
 - `create-admin-direct.js` ✅ **KEEP** - Direct admin creation
 - `fix-admin-direct.js` ✅ **KEEP** - Admin fixes
@@ -167,8 +165,6 @@ These scripts have broader utility beyond just the evaluation module.
 18. `EVALUATION_API_TESTING_SUMMARY.md` ✅
 
 #### General Utility Scripts (29 files)
-19. `create-admin-user.js` ✅
-20. `ensure-admin-user.js` ✅
 21. `create-admin-simple.js` ✅
 22. `create-admin-direct.js` ✅
 23. `fix-admin-direct.js` ✅
