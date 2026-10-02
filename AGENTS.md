@@ -129,6 +129,7 @@ When the user requests a durable behavior change, record it here or in the relev
 - `src/config/AGENTS.md` — catálogo vivo de módulos + permissões (UserEditor / ACL)
 - `src/app/api/acl/AGENTS.md` — seed ACL a partir do catálogo vivo
 - `src/app/api/recrutamento/AGENTS.md` — auth InHire (divergências do manual), sync vagas/candidatos, endpoints reais
+- `src/components/financeiro/AGENTS.md` — casca Portal / Financeiro (áreas agrupadas) e painel da competência na paleta `abz-blue`
 
 ## Index of Modules
 

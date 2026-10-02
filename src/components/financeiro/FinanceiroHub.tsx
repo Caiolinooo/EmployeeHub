@@ -1,15 +1,13 @@
 'use client';
 
 /**
- * Hub do módulo Financeiro (§7.1 + reforma §4): abas Visão geral · Folhas ·
+ * Hub do módulo Financeiro (§7.1 + reforma §4): Visão geral · Folhas ·
  * Empresas · Clientes · Faturas · NFS-e · Bancos/Recebimentos. Estado da aba
  * em ?tab= (deep-link friendly); as rotas /folha-pagamento/{faturas,nfse,bancos}
- * entram com tabInicial. Casca no padrão GtPageShell + GT_PAGE_SCROLLPORT_CLASS.
+ * entram com tabInicial. A navegação por área fica em FinanceiroShell.
  */
 import React from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { FiBarChart2, FiList, FiFileText, FiFilePlus, FiCreditCard, FiBriefcase, FiUsers } from 'react-icons/fi';
-import { useI18n } from '@/contexts/I18nContext';
 import GtPageShell, { GT_PAGE_SCROLLPORT_CLASS } from '@/components/gestao-tripulantes/GtPageShell';
 import CompetenciaOverview from '@/components/financeiro/CompetenciaOverview';
 import FolhasTab from '@/components/financeiro/FolhasTab';
@@ -23,22 +21,11 @@ export type FinanceiroTab = 'visao-geral' | 'folhas' | 'empresas' | 'clientes' |
 
 const TAB_IDS: FinanceiroTab[] = ['visao-geral', 'folhas', 'empresas', 'clientes', 'faturas', 'nfse', 'bancos'];
 
-const TAB_META: Record<FinanceiroTab, { labelKey: string; icon: React.ReactNode }> = {
-  'visao-geral': { labelKey: 'financeiro.tabVisaoGeral', icon: <FiBarChart2 className="h-4 w-4" /> },
-  folhas: { labelKey: 'financeiro.tabFolhas', icon: <FiList className="h-4 w-4" /> },
-  empresas: { labelKey: 'fin.tabEmpresas', icon: <FiBriefcase className="h-4 w-4" /> },
-  clientes: { labelKey: 'fin.tabClientes', icon: <FiUsers className="h-4 w-4" /> },
-  faturas: { labelKey: 'financeiro.tabFaturas', icon: <FiFileText className="h-4 w-4" /> },
-  nfse: { labelKey: 'financeiro.tabNfse', icon: <FiFilePlus className="h-4 w-4" /> },
-  bancos: { labelKey: 'financeiro.tabBancos', icon: <FiCreditCard className="h-4 w-4" /> },
-};
-
 function ehTabValida(valor: string | null | undefined): valor is FinanceiroTab {
   return typeof valor === 'string' && (TAB_IDS as string[]).includes(valor);
 }
 
 export default function FinanceiroHub({ tabInicial }: { tabInicial?: FinanceiroTab }) {
-  const { t } = useI18n();
   const router = useRouter();
   const pathname = usePathname() || '/folha-pagamento';
   const searchParams = useSearchParams();
@@ -54,37 +41,6 @@ export default function FinanceiroHub({ tabInicial }: { tabInicial?: FinanceiroT
 
   return (
     <GtPageShell>
-      {/* Cabeçalho + abas */}
-      <div className="shrink-0 space-y-3">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">{t('financeiro.titulo')}</h1>
-          <p className="text-sm text-gray-500">{t('financeiro.subtitulo')}</p>
-        </div>
-        <nav className="flex flex-wrap gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
-          {TAB_IDS.map((id) => {
-            const meta = TAB_META[id];
-            const ativa = id === tab;
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => trocarAba(id)}
-                aria-current={ativa ? 'page' : undefined}
-                className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                  ativa
-                    ? 'bg-abz-blue text-white shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                {meta.icon}
-                <span className="whitespace-nowrap">{t(meta.labelKey)}</span>
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-
-      {/* Conteúdo da aba */}
       <div className={GT_PAGE_SCROLLPORT_CLASS}>
         {tab === 'visao-geral' && <CompetenciaOverview onDrill={(destino) => trocarAba(destino)} />}
         {tab === 'folhas' && <FolhasTab />}

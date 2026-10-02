@@ -59,7 +59,7 @@ NFS-e (RPS transacional), bancos (integrações/contas/catálogo), cobranças
 
 ## Conexões
 
-- UI: `FinanceiroHub` (`/folha-pagamento`, dev-Front) consome visao-geral/faturas/nfse/bancos;
+- UI: `FinanceiroShell` agrupa as áreas; `FinanceiroHub` (`/folha-pagamento`, `?tab=`) consome visao-geral/faturas/nfse/bancos. Contrato visual em `src/components/financeiro/AGENTS.md`.
   `admin/financeiro-config` consome catalogo/integracoes/nfse-config/municipios/templates
 - api-client tipado: `src/lib/financeiro/api-client.ts` (dev-Front, importa `src/types/financeiro.ts`)
 - Gates de verificação: raiz `GATES.md` (G1–G6 dev-Back, §10 do design)

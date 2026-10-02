@@ -48,6 +48,30 @@ async function main() {
   );
   assert(datesOk.ok, 'passport upload without dates allowed');
 
+  // Importar ASO (OCR) envia só data_emissao. Upload passa permitirSemValidade
+  // para o OCR preencher a validade depois (ASO demissional pode nem ter).
+  const asoOcrUpload = validarDatasObrigatorias(
+    { data_emissao: '2026-10-02', data_validade: null, tipo_documento: 'aso' },
+    { permitirSemValidade: true, tipoDocumento: 'aso' }
+  );
+  assert(asoOcrUpload.ok, `ASO OCR upload without validade must pass, got ${asoOcrUpload.errors.join('; ')}`);
+
+  const asoStrict = validarDatasObrigatorias(
+    { data_emissao: '2026-10-02', data_validade: null, tipo_documento: 'aso' },
+    { tipoDocumento: 'aso' }
+  );
+  assert(!asoStrict.ok, 'ASO without permitirSemValidade still requires validade');
+  assert(
+    asoStrict.errors.some((e) => e.includes('Data de validade é obrigatória para ASO')),
+    'strict ASO names validade'
+  );
+
+  const asoOrder = validarDatasObrigatorias(
+    { data_emissao: '2026-10-02', data_validade: '2026-01-01', tipo_documento: 'aso' },
+    { permitirSemValidade: true, tipoDocumento: 'aso' }
+  );
+  assert(!asoOrder.ok, 'validade before emissao still rejected');
+
   const samplePassport = `
 REPUBLICA FEDERATIVA DO BRASIL
 PASSAPORTE / PASSPORT
@@ -128,6 +152,7 @@ Date of expiry 11/03/2032
   );
 
   console.log('OK: MIME, tipos, datas, extração de passaporte, skip vision mismatch, skip LLM vazio');
+  process.exit(0);
 }
 
 main().catch((err) => {

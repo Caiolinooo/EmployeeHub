@@ -96,9 +96,10 @@ const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', '
       fd.append('file', file);
       fd.append('colaborador_id', selectedColabId);
       fd.append('tipo_documento', 'aso');
-      // Title is storage label only — identity comes from OCR, never from filename
+      // Title is storage label only — identity comes from OCR, never from filename.
+      // Datas ficam vazias de propósito: o OCR grava emissão/validade reais.
+      // Data de hoje aqui bloqueava a emissão extraída (persistência só preenche campo vazio).
       fd.append('titulo', 'ASO');
-      fd.append('data_emissao', new Date().toISOString().split('T')[0]);
 
       const uploadRes = await fetchWithToken('/api/gestao-tripulantes/documentos/upload', {
         method: 'POST',

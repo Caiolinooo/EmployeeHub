@@ -183,11 +183,11 @@ export function validarDatasObrigatorias(
   const isAso = tipo === 'aso';
   const podeSemValidade = opts?.permitirSemValidade || (!isAso && tipo !== '');
 
-  if (!data.data_emissao?.trim() && isAso) {
+  if (!data.data_emissao?.trim() && isAso && !podeSemValidade) {
     errors.push('Data de emissão é obrigatória para ASO');
   }
 
-  if (!data.data_validade?.trim() && isAso) {
+  if (!data.data_validade?.trim() && isAso && !podeSemValidade) {
     errors.push('Data de validade é obrigatória para ASO');
   }
 

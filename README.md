@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.92.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.93.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -16,11 +16,16 @@ Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](
 
 ---
 
+## Nesta versão (5.93.0)
+
+- **Financeiro com Navegação Unificada**: novo `FinanceiroShell` conectando Painel Geral, Cadastros, Folha, Faturamento e Contas com preservação de rota e deep-links por aba (`?tab=`).
+- **Dashboard de Competência Expandido**: visão analítica com série histórica mês a mês, gráficos de barras de distribuição por competência e composição visual por status de pagamento.
+- **Upload GT e ASO Resiliente**: validação de integridade de documentos refinada para uploads diretos de ASO e correções no modal de importação.
+
 ## Nesta versão (5.92.0)
 
 - **InHire autenticado**: login e refresh reais no tenant `abzservicos`. O sync puxa vagas e candidatos dos endpoints certos. Falha de credencial continua respondendo com aviso, sem derrubar a página.
 - **Editar e excluir no Recrutamento**: vagas e prospectos ganham edição e exclusão (soft delete). Vaga com prospecto ativo não some; prospecto já convertido em colaborador também não.
-
 ## Nesta versão (5.91.1)
 
 - **Login de volta ao ar**: o portal inteiro dava 500/401 no login porque `DATABASE_URL` e as senhas de DB na Vercel estavam com a senha antiga do Supabase. Toda query pg quebrava antes do bcrypt, então senha certa e errada falhavam igual. Envs regravadas + redeploy; login verificado retornando token.

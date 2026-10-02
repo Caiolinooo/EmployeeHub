@@ -1,13 +1,15 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import MainLayout from '@/components/Layout/MainLayout';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
+import FinanceiroShell from '@/components/financeiro/FinanceiroShell';
 
 /**
  * Layout do módulo Financeiro (folha → fatura → NFS-e → bancos → conciliação).
- * MainLayout = sidebar + topbar (padrão /department/dp). Gate do módulo em
- * ProtectedRoute (`folha_pagamento`, design §7.1).
+ * MainLayout = sidebar + topbar do portal. FinanceiroShell agrupa as áreas
+ * (cadastros, folha, faturamento, contas, relatórios). Gate em ProtectedRoute
+ * (`folha_pagamento`).
  */
 export default function PayrollLayout({
   children,
@@ -16,7 +18,11 @@ export default function PayrollLayout({
 }) {
   return (
     <ProtectedRoute moduleName="folha_pagamento">
-      <MainLayout>{children}</MainLayout>
+      <MainLayout>
+        <Suspense fallback={<div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>}>
+          <FinanceiroShell>{children}</FinanceiroShell>
+        </Suspense>
+      </MainLayout>
     </ProtectedRoute>
   );
 }

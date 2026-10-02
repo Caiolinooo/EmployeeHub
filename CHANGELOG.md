@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [5.93.0] - 2026-10-02
+
+### Financeiro Hub unificado, Competência e upload GT resiliente
+
+#### Adicionado
+
+1. **FinanceiroShell e navegação integrada**: nova estrutura de navegação contextual (`FinanceiroShell`, `financeiro-nav.ts`, `financeiro-dashboard.ts`) unificando as áreas do módulo Financeiro com suporte a deep links por tab (`?tab=`) e sincronização de abas.
+2. **Visão Geral e Painel de Competência**: `CompetenciaOverview` enriquecido com resumo executivo de custos, comparações mês a mês, gráficos de barras de distribuição por competência e composição detalhada de status de pagamento.
+3. **Testes unitários de navegação financeira**: suíte `src/components/financeiro/financeiro-nav.test.ts` cobrindo resolução de abas/rotas ativas e cálculo de distribuição do dashboard.
+
+#### Corrigido
+
+1. **Upload de documentos GT e ASO**: ajuste no `documento-integrity.ts` permitindo bypass controlado de data e emissão quando o fluxo de upload de ASO traz campos específicos validados, além de correções no modal `ImportarASOModal`.
+2. **Ajuste nos layouts e páginas de folha de pagamento**: unificação do header e links de navegação em relatórios e configurações de códigos, perfis e tabelas.
+
 ## [5.92.0] - 2026-10-02
 
 ### Recrutamento: InHire autenticado e edição/exclusão
