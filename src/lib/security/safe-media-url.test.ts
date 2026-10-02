@@ -30,6 +30,15 @@ describe('toSafeMediaUrl', () => {
     assert.equal(isSafeMediaUrl('javascript:alert(1)'), false);
   });
 
+  it('blocks entity-encoded javascript: URLs', () => {
+    assert.equal(toSafeMediaUrl('javascript&#58;alert(1)'), '');
+    assert.equal(toSafeMediaUrl('javascript&#x3a;alert(1)'), '');
+    assert.equal(toSafeMediaUrl('javascript&#x3A;void(0)'), '');
+    assert.equal(toSafeMediaUrl('javascript&colon;alert(1)'), '');
+    assert.equal(toSafeMediaUrl('JAVASCRIPT&COLON;alert(1)'), '');
+    assert.equal(isSafeMediaUrl('javascript&#58;alert(1)'), false);
+  });
+
   it('blocks data:text/html', () => {
     const htmlPayload = 'data:text/html,<script>alert(1)</script>';
     assert.equal(toSafeMediaUrl(htmlPayload), '');

@@ -4,6 +4,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { resolveInside } from '@/lib/path-safe';
 
 /**
  * Salva um buffer em um arquivo para debug
@@ -20,19 +21,20 @@ export function saveBufferToFile(buffer: Buffer, filename: string, prefix: strin
       fs.mkdirSync(debugDir, { recursive: true });
     }
 
-    // Sanitizar nome do arquivo
     const sanitizedFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
-    
-    // Criar nome de arquivo único com timestamp
+    const sanitizedPrefix = prefix.replace(/[^a-zA-Z0-9.-]/g, '_');
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const debugFilename = `${prefix}_${timestamp}_${sanitizedFilename}`;
-    const debugPath = path.join(debugDir, debugFilename);
+    const debugFilename = `${sanitizedPrefix}_${timestamp}_${sanitizedFilename}`;
+    const inside = resolveInside(debugDir, debugFilename, { asName: true });
+    if (!inside.ok) {
+      console.error('Caminho de debug rejeitado:', inside.error);
+      return '';
+    }
 
-    // Salvar buffer no arquivo
-    fs.writeFileSync(debugPath, buffer);
+    fs.writeFileSync(inside.resolved, buffer);
     
-    console.log(`Arquivo de debug salvo em: ${debugPath}`);
-    return debugPath;
+    console.log('Arquivo de debug salvo em: %s', inside.resolved);
+    return inside.resolved;
   } catch (error) {
     console.error('Erro ao salvar arquivo de debug:', error);
     return '';

@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
           results.emailsSent++;
           console.log(`✅ Email enviado para ${email}`);
         } catch (error) {
-          console.error(`❌ Erro ao enviar email para ${email}:`, error);
+          console.error('Erro ao enviar email para %s:', email, error);
           results.errors.push(`Email para ${email}: ${error}`);
         }
       }

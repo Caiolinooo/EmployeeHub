@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`Atualizando card com ID: ${id}`, body);
+    console.log('Atualizando card com ID: %s', id, body);
     console.log('adminOnly:', body.adminOnly);
 
     // Verificar se o card existe

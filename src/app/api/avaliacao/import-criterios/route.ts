@@ -4,6 +4,7 @@ import { isAdminFromRequest } from '@/lib/auth';
 import * as XLSX from 'xlsx';
 import path from 'path';
 import fs from 'fs';
+import { resolveInside } from '@/lib/path-safe';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,13 +22,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the file path from the request body or use the default path
     const { filePath } = await request.json();
-    
-    // Default path is in the docs folder
-    const excelFilePath = filePath || path.join(process.cwd(), 'docs', 'AN-TED-002-R0 - Avaliação de Desempenho.xlsx');
-    
-    // Check if file exists
+
+    const docsBase = path.resolve(process.cwd(), 'docs');
+    const defaultFileName = 'AN-TED-002-R0 - Avaliação de Desempenho.xlsx';
+    const rawInput = typeof filePath === 'string' && filePath.trim() ? filePath : defaultFileName;
+    const slashNormalized = rawInput.replace(/\\/g, '/');
+    const cwdPrefix = process.cwd().replace(/\\/g, '/');
+    let relativeToDocs = slashNormalized;
+    if (path.isAbsolute(rawInput)) {
+      relativeToDocs = rawInput;
+    } else {
+      if (relativeToDocs.startsWith(`${cwdPrefix}/`)) {
+        relativeToDocs = relativeToDocs.slice(cwdPrefix.length + 1);
+      }
+      if (relativeToDocs.startsWith('docs/')) {
+        relativeToDocs = relativeToDocs.slice('docs/'.length);
+      }
+    }
+
+    const inside = resolveInside(docsBase, relativeToDocs);
+    if (!inside.ok) {
+      return NextResponse.json(
+        { success: false, error: inside.error },
+        { status: 400 }
+      );
+    }
+    const excelFilePath = inside.resolved;
+
     if (!fs.existsSync(excelFilePath)) {
       return NextResponse.json(
         { success: false, error: `File not found: ${excelFilePath}` },

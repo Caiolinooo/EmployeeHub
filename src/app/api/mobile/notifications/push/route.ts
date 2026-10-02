@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
         }
 
       } catch (error) {
-        console.error(`Erro ao enviar para ${recipient}:`, error);
+        console.error('Erro ao enviar para %s:', recipient, error);
         results.push({
           recipient,
           success: false,

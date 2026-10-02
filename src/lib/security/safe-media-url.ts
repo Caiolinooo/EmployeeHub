@@ -5,9 +5,15 @@
  */
 
 const SCHEME_PREFIX = /^([a-zA-Z][a-zA-Z0-9+.-]*):/;
+const COLON_ENTITY = /&colon;|&#0*58;|&#x0*3a;/gi;
 
 function hasControlChars(value: string): boolean {
   return /[\u0000-\u001F\u007F]/.test(value);
+}
+
+/** Decode numeric/named encodings of `:` so `javascript&#58;` is not a relative path. */
+function decodeColonEntities(value: string): string {
+  return value.replace(COLON_ENTITY, ':');
 }
 
 /**
@@ -36,7 +42,8 @@ export function toSafeMediaUrl(value: unknown): string {
     return '';
   }
 
-  const schemeMatch = SCHEME_PREFIX.exec(url);
+  const forScheme = decodeColonEntities(url);
+  const schemeMatch = SCHEME_PREFIX.exec(forScheme);
   if (!schemeMatch) {
     return url;
   }

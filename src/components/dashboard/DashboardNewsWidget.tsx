@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import { FiLoader, FiVideo, FiFileText } from 'react-icons/fi';
+import { toSafeMediaUrl } from '@/lib/security/safe-media-url';
 
 interface NewsPost {
     id: string;
@@ -73,30 +74,40 @@ export default function DashboardNewsWidget() {
             onClick={() => window.location.href = `/noticias?id=${latestPost.id}`}>
 
             {/* Background Media */}
-            {videoUrl ? (
-                <div className="absolute inset-0 w-full h-full z-0">
-                    <video
-                        src={videoUrl}
-                        className="w-full h-full object-cover opacity-60 group-hover:opacity-70 transition-opacity"
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-blue-900/90 via-blue-900/40 to-transparent"></div>
-                </div>
-            ) : latestPost.media_urls.length > 0 ? (
-                <div className="absolute inset-0 w-full h-full z-0">
-                    <img
-                        src={latestPost.media_urls[0]}
-                        className="w-full h-full object-cover opacity-60 group-hover:opacity-70 transition-opacity"
-                        alt="News background"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-blue-900/90 via-blue-900/40 to-transparent"></div>
-                </div>
-            ) : (
-                <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-blue-400/20 to-transparent pointer-events-none z-0"></div>
-            )}
+            {(() => {
+                const safeVideo = toSafeMediaUrl(videoUrl);
+                const safeImage = toSafeMediaUrl(latestPost.media_urls[0]);
+                if (safeVideo) {
+                    return (
+                        <div className="absolute inset-0 w-full h-full z-0">
+                            <video
+                                src={safeVideo}
+                                className="w-full h-full object-cover opacity-60 group-hover:opacity-70 transition-opacity"
+                                autoPlay
+                                muted
+                                loop
+                                playsInline
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-blue-900/90 via-blue-900/40 to-transparent"></div>
+                        </div>
+                    );
+                }
+                if (safeImage) {
+                    return (
+                        <div className="absolute inset-0 w-full h-full z-0">
+                            <img
+                                src={safeImage}
+                                className="w-full h-full object-cover opacity-60 group-hover:opacity-70 transition-opacity"
+                                alt="News background"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-blue-900/90 via-blue-900/40 to-transparent"></div>
+                        </div>
+                    );
+                }
+                return (
+                    <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-blue-400/20 to-transparent pointer-events-none z-0"></div>
+                );
+            })()}
 
             {/* Content */}
             <div className="relative z-10 p-8 md:p-10 mt-auto">

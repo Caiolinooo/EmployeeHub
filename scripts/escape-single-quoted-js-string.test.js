@@ -19,4 +19,11 @@ describe('escapeSingleQuotedJsString', () => {
     assert.equal(escapeSingleQuotedJsString('\\'), '\\\\');
     assert.equal(escapeSingleQuotedJsString("\\'"), "\\\\\\'");
   });
+
+  it('escapes line terminators that can break out of a single-quoted literal', () => {
+    assert.equal(escapeSingleQuotedJsString('a\nb'), 'a\\nb');
+    assert.equal(escapeSingleQuotedJsString('a\rb'), 'a\\rb');
+    assert.equal(escapeSingleQuotedJsString('a\u2028b'), 'a\\u2028b');
+    assert.equal(escapeSingleQuotedJsString('a\u2029b'), 'a\\u2029b');
+  });
 });
