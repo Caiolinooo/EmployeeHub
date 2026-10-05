@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.94.1 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.94.2 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,11 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.94.2)
+
+- **Evento não some mais da grade filtrada**: lançamentos sem embarcação própria (ex.: RENAN em MATRIX -INT, 12-16/09) apareciam ao salvar e sumiam ao recarregar quando o colaborador estava de folga. Agora herdam a embarcação do evento vizinho do próprio colaborador — 25 eventos de 5 pessoas voltam ao filtro.
+- **Célula vazia já vem com a embarcação**: ao lançar evento numa célula vazia, o formulário traz a embarcação do evento vizinho, e o registro é gravado com ela.
 
 ## Nesta versão (5.94.1)
 

@@ -40,6 +40,7 @@ import {
     type GTTipoEventoEscala,
 } from '@/lib/gestao-tripulantes/escala-tipos';
 import { pickOverlappingRotation } from '@/lib/gestao-tripulantes/escala-contagem';
+import { embarcacaoHerdadaPorEvento } from '@/lib/gestao-tripulantes/escala-embarcacao-evento';
 import {
     civilTodayYmd,
     countPobOnCivilDay,
@@ -838,8 +839,22 @@ function parseLocalDate(str: string | null | undefined): Date | null {
     const handleCellClick = (cpf: string, name: string, date: Date, status: string, rotations: RotationCell[]) => {
         const matchingRotation = getWeekRotation(date, rotations);
         const rotId = matchingRotation?.id || '';
-        const currentVessel = matchingRotation?.vessel || '';
         const formattedDate = formatLocalYmd(date);
+        // Célula vazia: o evento novo nasce na embarcação do vizinho mais próximo
+        // do colaborador — sem isso ele é gravado sem embarcação e some do filtro.
+        const currentVessel =
+            matchingRotation?.vessel ||
+            embarcacaoHerdadaPorEvento([
+                ...rotations.map((r) => ({
+                    id: r.id,
+                    colaborador_id: cpf,
+                    data_embarque: r.start,
+                    data_desembarque: r.end,
+                    local_desembarque: r.vessel,
+                })),
+                { id: '__novo__', colaborador_id: cpf, data_embarque: formattedDate, data_desembarque: formattedDate, local_desembarque: '' },
+            ]).get('__novo__') ||
+            '';
 
         const defaultEnd = new Date(date);
         defaultEnd.setDate(defaultEnd.getDate() + 14);

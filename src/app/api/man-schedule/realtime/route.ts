@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { mapDbTipoToCodigo, normalizeCpf } from '@/lib/gestao-tripulantes/escala-tipos';
+import { embarcacaoHerdadaPorEvento } from '@/lib/gestao-tripulantes/escala-embarcacao-evento';
 import {
     manScheduleCacheGeneration,
     manScheduleResultCache,
@@ -453,6 +454,17 @@ export async function GET(request: NextRequest) {
         const schedules: ScheduleEntry[] = [];
         const seenColabInWindow = new Set<string>();
         let lgpSkippedByWindow = 0;
+        // Evento sem embarcação própria herda a do vizinho do mesmo colaborador;
+        // embarcacao_atual (volátil: só a rotação de HOJE) fica como último recurso.
+        const embarcacaoHerdada = embarcacaoHerdadaPorEvento(
+            hist.map((e) => ({
+                id: e.id,
+                colaborador_id: e.colaborador_id,
+                data_embarque: e.data_embarque,
+                data_desembarque: e.data_desembarque || e.data_prevista_desembarque,
+                local_desembarque: e.local_desembarque,
+            }))
+        );
 
         for (const entry of hist) {
             const start = entry.data_embarque;
@@ -476,7 +488,11 @@ export async function GET(request: NextRequest) {
                 centro_custo: ccNome,
                 full_name: (colab.nome_completo || '').toUpperCase().trim(),
                 position: ((colab as { cargo?: { nome?: string } }).cargo?.nome || '').toUpperCase().trim(),
-                vessel: (entry.local_desembarque || colabEmbarcacaoNome(colab)).trim(),
+                vessel: (
+                    (entry.local_desembarque || '').trim() ||
+                    embarcacaoHerdada.get(entry.id) ||
+                    colabEmbarcacaoNome(colab)
+                ).trim(),
                 company: ((colab as { empresa?: { nome?: string } }).empresa?.nome || '').trim(),
                 rotation_start: start,
                 rotation_end: end,

@@ -1,5 +1,18 @@
 # Changelog
 
+## [5.94.2] - 2026-10-05
+
+### Escala (GT): evento some da grade filtrada por embarcação depois de recarregar
+
+#### Corrigido
+
+1. **Evento sem embarcação própria herdava a embarcação ATUAL do colaborador** (`/api/man-schedule/realtime`): esse campo só vale para a rotação que cobre hoje e é limpo quando a pessoa está de folga (OFF-C/STB/DBA). Resultado: o evento aparecia logo após salvar (atualização otimista) e sumia no refetch com o filtro de embarcação ativo — caso do RENAN em MATRIX -INT, 12-13/09 e 14-16/09. Agora o evento sem `local_desembarque` herda a embarcação do evento mais próximo no tempo do mesmo colaborador; `embarcacao_atual` fica só como último recurso. Na base de produção, 25 eventos de 5 colaboradores voltam a aparecer no filtro (sobra 0 sem embarcação).
+2. **Evento lançado em célula vazia nascia sem embarcação**: o formulário da grade agora vem preenchido com a embarcação do evento vizinho do colaborador, então o novo evento já é gravado com ela.
+
+#### Adicionado
+
+1. **`src/lib/gestao-tripulantes/escala-embarcacao-evento.ts`** (`embarcacaoHerdadaPorEvento`): regra pura e testada, usada pela API e pelo formulário da grade.
+
 ## [5.94.1] - 2026-10-05
 
 ### Recuperação das escalas apagadas e saneamento da manutenção da escala (GT)
