@@ -2,14 +2,13 @@ import { NextRequest } from 'next/server';
 import { garantirNivelFinanceiro } from '@/lib/financeiro/financeiro-auth';
 import { enviarPagamentoLote } from '@/lib/financeiro/service';
 import { atorDeUserId } from '@/lib/financeiro/eventos';
-import { finErro, finOk, corpoJson } from '../../_lib/http';
+import { finErro, finFail, finOk, corpoJson, texto } from '../../_lib/http';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * POST /api/financeiro/pagamentos/lote {origemTipo:'payroll_sheet', origemId,
- * contaBancariaId, dataPrevista} — monta líquidos da folha approved|paid e
- * envia via adapter (§6).
+ * POST /api/financeiro/pagamentos/lote {origemId, contaBancariaId,
+ * dataPrevista} — monta líquidos da folha approved|paid e envia via adapter (§6).
  */
 export async function POST(request: NextRequest) {
   try {
@@ -17,12 +16,13 @@ export async function POST(request: NextRequest) {
     if (!gate.ok) return gate.error;
 
     const body = await corpoJson(request);
-    const origemTipo = body.origemTipo === 'manual' ? 'manual' : 'payroll_sheet';
+    const origemId = texto(body.origemId ?? body.origem_id);
+    const contaBancariaId = texto(body.contaBancariaId ?? body.conta_bancaria_id);
+    if (!origemId || !contaBancariaId) return finFail('origemId e contaBancariaId são obrigatórios', 400);
     const resultado = await enviarPagamentoLote(
       {
-        origemTipo,
-        origemId: body.origemId ? String(body.origemId) : undefined,
-        contaBancariaId: String((body.contaBancariaId ?? body.conta_bancaria_id) || ''),
+        origemId,
+        contaBancariaId,
         dataPrevista: typeof body.dataPrevista === 'string' ? body.dataPrevista : undefined,
       },
       await atorDeUserId(gate.user.userId),

@@ -1,251 +1,151 @@
 'use client';
 
+/**
+ * Relatório mensal operacional da folha: competência calculada pelo portal
+ * (embarques, dobras, folgas, férias) via GET /api/payroll/relatorios/operacional
+ * (type=operacional). Tabela por colaborador + totais da competência.
+ */
 import React, { useState } from 'react';
-import { ArrowLeft, Download, Calendar, Filter, FileText } from 'lucide-react';
+import { FiArrowLeft, FiFileText, FiLoader } from 'react-icons/fi';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 import { useI18n } from '@/contexts/I18nContext';
+import { fetchWithToken } from '@/lib/tokenStorage';
+import { FIN_CARD_CLASS, formatarMoeda } from '@/components/financeiro/shared';
+import RelatorioFiltros, { type FiltroRelatorio } from '@/components/financeiro/RelatorioFiltros';
+import type { RelatorioOperacional } from '@/lib/payroll/relatorio-operacional';
 
 export default function RelatorioMensalPage() {
   const { t } = useI18n();
-  const [filters, setFilters] = useState({
-    empresa: '',
-    ano: new Date().getFullYear(),
-    mes: new Date().getMonth() + 1,
-    departamento: ''
-  });
+  const [carregando, setCarregando] = useState(false);
+  const [relatorio, setRelatorio] = useState<RelatorioOperacional | null>(null);
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFilters({
-      ...filters,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleGenerateReport = () => {
-    console.log('Gerando relatório mensal:', filters);
-    alert('Funcionalidade em desenvolvimento!');
+  const gerar = async (filtro: FiltroRelatorio) => {
+    setCarregando(true);
+    setRelatorio(null);
+    try {
+      const params = new URLSearchParams({
+        companyId: filtro.companyId,
+        month: String(filtro.mes),
+        year: String(filtro.ano),
+        type: 'operacional',
+      });
+      if (filtro.departmentId) params.set('departmentId', filtro.departmentId);
+      const res = await fetchWithToken(`/api/payroll/relatorios/operacional?${params.toString()}`);
+      const body = await res.json();
+      if (!res.ok || body?.success === false) {
+        throw new Error(body?.error || t('payroll.relatorioErroGerar', 'Erro ao gerar relatório'));
+      }
+      setRelatorio(body.data as RelatorioOperacional);
+    } catch (erro) {
+      toast.error(erro instanceof Error ? erro.message : t('payroll.relatorioErroGerar', 'Erro ao gerar relatório'));
+    } finally {
+      setCarregando(false);
+    }
   };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-auto rounded-2xl bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Link
-                href="/folha-pagamento"
-                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-                title={t('common.back', 'Voltar')}
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-              <div className="p-2 bg-abz-blue/10 rounded-lg">
-                <FileText className="h-6 w-6 text-abz-blue" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-abz-text-dark">
-                  {t('payroll.monthlyReport', 'Relatório Mensal')}
-                </h1>
-                <p className="text-gray-600">
-                  Gere relatórios mensais da folha de pagamento
-                </p>
-              </div>
-            </div>
-          </div>
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <div className="flex shrink-0 items-center gap-3">
+        <Link
+          href="/folha-pagamento"
+          className="rounded-lg p-2 text-gray-400 transition-colors hover:text-abz-blue"
+          title={t('common.back', 'Voltar')}
+        >
+          <FiArrowLeft className="h-5 w-5" />
+        </Link>
+        <span className="rounded-xl bg-blue-50 p-1.5 text-abz-blue">
+          <FiFileText className="h-5 w-5" />
+        </span>
+        <div>
+          <h1 className="text-lg font-black text-gray-900">
+            {t('payroll.monthlyReport', 'Relatório Mensal')}
+          </h1>
+          <p className="text-xs text-gray-500">
+            {t('payroll.monthlyReportDesc', 'Competência calculada: proventos, descontos e tributos por colaborador')}
+          </p>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        {/* Filtros */}
-        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-6">
-          <h2 className="text-lg font-semibold text-abz-text-dark mb-4 flex items-center space-x-2">
-            <Filter className="h-5 w-5" />
-            <span>Filtros do Relatório</span>
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Empresa *
-              </label>
-              <select
-                name="empresa"
-                value={filters.empresa}
-                onChange={handleFilterChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-abz-blue focus:border-transparent"
-              >
-                <option value="">Selecione uma empresa</option>
-                <option value="abz-group">ABZ Group</option>
-                <option value="abz-logistica">ABZ Logística</option>
-                <option value="abz-transportes">ABZ Transportes</option>
-              </select>
+      <RelatorioFiltros aoGerar={gerar} carregando={carregando} />
+
+      {carregando && (
+        <div className={`${FIN_CARD_CLASS} flex items-center justify-center gap-2 p-10 text-gray-500`}>
+          <FiLoader className="h-5 w-5 animate-spin" />
+          {t('payroll.relatorioCalculando', 'Calculando a competência...')}
+        </div>
+      )}
+
+      {relatorio && (
+        <>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div className={`${FIN_CARD_CLASS} p-4`}>
+              <p className="text-xs font-bold uppercase text-gray-500">{t('payroll.colaboradores', 'Colaboradores')}</p>
+              <p className="mt-1 text-xl font-black text-gray-900">{relatorio.colaboradores.length}</p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Departamento
-              </label>
-              <select
-                name="departamento"
-                value={filters.departamento}
-                onChange={handleFilterChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-abz-blue focus:border-transparent"
-              >
-                <option value="">Todos os departamentos</option>
-                <option value="logistica">Logística</option>
-                <option value="administrativo">Administrativo</option>
-                <option value="financeiro">Financeiro</option>
-                <option value="rh">Recursos Humanos</option>
-              </select>
+            <div className={`${FIN_CARD_CLASS} p-4`}>
+              <p className="text-xs font-bold uppercase text-gray-500">{t('payroll.totalBruto', 'Bruto')}</p>
+              <p className="mt-1 text-xl font-black text-gray-900">{formatarMoeda(relatorio.totais.bruto)}</p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Ano *
-              </label>
-              <select
-                name="ano"
-                value={filters.ano}
-                onChange={handleFilterChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-abz-blue focus:border-transparent"
-              >
-                <option value="2024">2024</option>
-                <option value="2023">2023</option>
-                <option value="2022">2022</option>
-              </select>
+            <div className={`${FIN_CARD_CLASS} p-4`}>
+              <p className="text-xs font-bold uppercase text-gray-500">{t('payroll.totalDescontos', 'Descontos')}</p>
+              <p className="mt-1 text-xl font-black text-gray-900">{formatarMoeda(relatorio.totais.descontos)}</p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Mês *
-              </label>
-              <select
-                name="mes"
-                value={filters.mes}
-                onChange={handleFilterChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-abz-blue focus:border-transparent"
-              >
-                <option value="1">Janeiro</option>
-                <option value="2">Fevereiro</option>
-                <option value="3">Março</option>
-                <option value="4">Abril</option>
-                <option value="5">Maio</option>
-                <option value="6">Junho</option>
-                <option value="7">Julho</option>
-                <option value="8">Agosto</option>
-                <option value="9">Setembro</option>
-                <option value="10">Outubro</option>
-                <option value="11">Novembro</option>
-                <option value="12">Dezembro</option>
-              </select>
+            <div className={`${FIN_CARD_CLASS} p-4`}>
+              <p className="text-xs font-bold uppercase text-gray-500">{t('payroll.totalLiquido', 'Líquido')}</p>
+              <p className="mt-1 text-xl font-black text-abz-blue">{formatarMoeda(relatorio.totais.liquido)}</p>
             </div>
           </div>
-        </div>
 
-        {/* Opções de Relatório */}
-        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-6">
-          <h2 className="text-lg font-semibold text-abz-text-dark mb-4">
-            Opções do Relatório
-          </h2>
-          <div className="space-y-4">
-            <div className="flex items-center">
-              <input
-                id="incluir-descontos"
-                type="checkbox"
-                defaultChecked
-                className="h-4 w-4 text-abz-blue focus:ring-abz-blue border-gray-300 rounded"
-              />
-              <label htmlFor="incluir-descontos" className="ml-2 text-sm text-gray-700">
-                Incluir detalhamento de descontos
-              </label>
+          {relatorio.pendencias.length > 0 && (
+            <div className={`${FIN_CARD_CLASS} border-amber-200 bg-amber-50 p-4 text-sm text-amber-800`}>
+              {t('payroll.relatorioPendencias', 'CPFs sem cadastro na folha')}: {relatorio.pendencias.length}
             </div>
-            <div className="flex items-center">
-              <input
-                id="incluir-beneficios"
-                type="checkbox"
-                defaultChecked
-                className="h-4 w-4 text-abz-blue focus:ring-abz-blue border-gray-300 rounded"
-              />
-              <label htmlFor="incluir-beneficios" className="ml-2 text-sm text-gray-700">
-                Incluir benefícios e adicionais
-              </label>
-            </div>
-            <div className="flex items-center">
-              <input
-                id="incluir-encargos"
-                type="checkbox"
-                defaultChecked
-                className="h-4 w-4 text-abz-blue focus:ring-abz-blue border-gray-300 rounded"
-              />
-              <label htmlFor="incluir-encargos" className="ml-2 text-sm text-gray-700">
-                Incluir encargos patronais
-              </label>
-            </div>
-            <div className="flex items-center">
-              <input
-                id="incluir-totalizadores"
-                type="checkbox"
-                defaultChecked
-                className="h-4 w-4 text-abz-blue focus:ring-abz-blue border-gray-300 rounded"
-              />
-              <label htmlFor="incluir-totalizadores" className="ml-2 text-sm text-gray-700">
-                Incluir totalizadores por departamento
-              </label>
-            </div>
+          )}
+
+          <div className={`${FIN_CARD_CLASS} overflow-x-auto`}>
+            <table className="w-full text-left text-sm">
+              <thead className="bg-gray-50 text-xs uppercase text-gray-500">
+                <tr>
+                  <th className="px-4 py-2">{t('payroll.employee', 'Colaborador')}</th>
+                  <th className="px-4 py-2">{t('payroll.centroCusto', 'Centro de custo')}</th>
+                  <th className="px-4 py-2 text-right">{t('payroll.totalBruto', 'Bruto')}</th>
+                  <th className="px-4 py-2 text-right">{t('payroll.totalDescontos', 'Descontos')}</th>
+                  <th className="px-4 py-2 text-right">{t('payroll.totalLiquido', 'Líquido')}</th>
+                  <th className="px-4 py-2 text-right">INSS</th>
+                  <th className="px-4 py-2 text-right">IRRF</th>
+                  <th className="px-4 py-2 text-right">FGTS</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {relatorio.colaboradores.map((c) => (
+                  <tr key={c.employeeId} className="hover:bg-gray-50">
+                    <td className="px-4 py-2 font-semibold text-gray-900">{c.nome}</td>
+                    <td className="px-4 py-2 text-gray-600">{c.centroCusto || '—'}</td>
+                    <td className="px-4 py-2 text-right text-gray-900">{formatarMoeda(c.bruto)}</td>
+                    <td className="px-4 py-2 text-right text-gray-600">{formatarMoeda(c.descontos)}</td>
+                    <td className="px-4 py-2 text-right font-semibold text-gray-900">{formatarMoeda(c.liquido)}</td>
+                    <td className="px-4 py-2 text-right text-gray-600">{formatarMoeda(c.inss)}</td>
+                    <td className="px-4 py-2 text-right text-gray-600">{formatarMoeda(c.irrf)}</td>
+                    <td className="px-4 py-2 text-right text-gray-600">{formatarMoeda(c.fgts)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="bg-gray-50 text-sm font-bold text-gray-900">
+                <tr>
+                  <td className="px-4 py-2" colSpan={2}>TOTAL</td>
+                  <td className="px-4 py-2 text-right">{formatarMoeda(relatorio.totais.bruto)}</td>
+                  <td className="px-4 py-2 text-right">{formatarMoeda(relatorio.totais.descontos)}</td>
+                  <td className="px-4 py-2 text-right">{formatarMoeda(relatorio.totais.liquido)}</td>
+                  <td className="px-4 py-2 text-right">{formatarMoeda(relatorio.totais.inss)}</td>
+                  <td className="px-4 py-2 text-right">{formatarMoeda(relatorio.totais.irrf)}</td>
+                  <td className="px-4 py-2 text-right">{formatarMoeda(relatorio.totais.fgts)}</td>
+                </tr>
+              </tfoot>
+            </table>
           </div>
-        </div>
-
-        {/* Formatos de Exportação */}
-        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-6">
-          <h2 className="text-lg font-semibold text-abz-text-dark mb-4">
-            Formato de Exportação
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button
-              onClick={handleGenerateReport}
-              className="p-4 border-2 border-gray-200 rounded-lg hover:border-abz-blue hover:bg-abz-blue/5 transition-colors text-center"
-            >
-              <Download className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-              <div className="text-sm font-medium text-gray-900">PDF</div>
-              <div className="text-xs text-gray-500">Relatório formatado</div>
-            </button>
-            <button
-              onClick={handleGenerateReport}
-              className="p-4 border-2 border-gray-200 rounded-lg hover:border-abz-blue hover:bg-abz-blue/5 transition-colors text-center"
-            >
-              <Download className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-              <div className="text-sm font-medium text-gray-900">Excel</div>
-              <div className="text-xs text-gray-500">Planilha editável</div>
-            </button>
-            <button
-              onClick={handleGenerateReport}
-              className="p-4 border-2 border-gray-200 rounded-lg hover:border-abz-blue hover:bg-abz-blue/5 transition-colors text-center"
-            >
-              <Download className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-              <div className="text-sm font-medium text-gray-900">CSV</div>
-              <div className="text-xs text-gray-500">Dados tabulares</div>
-            </button>
-          </div>
-        </div>
-
-        {/* Ações */}
-        <div className="flex justify-end space-x-4">
-          <Link
-            href="/folha-pagamento"
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-          >
-            {t('common.cancel', 'Cancelar')}
-          </Link>
-          <button
-            onClick={handleGenerateReport}
-            className="px-6 py-2 bg-abz-blue text-white rounded-md hover:bg-abz-blue-dark transition-colors flex items-center space-x-2"
-          >
-            <Download className="h-4 w-4" />
-            <span>Gerar Relatório</span>
-          </button>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }

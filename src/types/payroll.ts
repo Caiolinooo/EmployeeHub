@@ -372,20 +372,6 @@ export interface PayrollPaginatedResponse<T> {
   error?: string;
 }
 
-// Tipos para dashboard
-export interface PayrollDashboardStats {
-  totalCompanies: number;
-  totalEmployees: number;
-  totalActiveSheets: number;
-  totalMonthlyPayroll: number;
-  recentSheets: PayrollSheet[];
-  monthlyTrends: {
-    month: string;
-    totalPayroll: number;
-    totalEmployees: number;
-  }[];
-}
-
 // Tipos para workflows específicos por cliente
 export interface PayrollWorkflow {
   id: string;

@@ -19,7 +19,7 @@ Componentes da Matriz, modal do colaborador e Man Schedule. Lookups profissionai
 
 ## Local Contracts
 
-- Cargo / Empresa / Embarcação / Centro de Custo: `SearchableCreatableSelect` (busca + Adicionar). Create via POST `/api/gestao-tripulantes/{cargos|empresas|embarcacoes|centros-custo}` (`createGtLookupOption`). Filtros da matriz/Man Schedule: busca sem create (valores de nome, não UUID).
+- Cargo / Empresa / Embarcação / Centro de Custo: `SearchableCreatableSelect` (busca + Adicionar). Create via POST `/api/gestao-tripulantes/{cargos|empresas|embarcacoes|centros-custo}` (`createGtLookupOption`). Filtros da matriz/Man Schedule: busca sem create (valores de nome, não UUID). Opções dos 4 dropdowns da Matriz vêm de GET `/{empresas|cargos|centros-custo|embarcacoes}?ativo=true` (`useNomeOptions`) + merge do distinct da página (fallback fail-soft; CC usa `nome` puro, não 'codigo - nome') — não esvaziam quando KPI/busca estreita a página.
 - **Cadastro completo** (`ColaboradorCadastroForm`): create/edit de todos os campos de `gt_colaboradores`. Usado em `/department/dp/novo`, `/department/gestao-tripulantes/novo` e `DadosPessoaisTab` (modo Editar, `embedded`). POST/PUT na API interna. Sem store paralelo.
 - **Regime de trabalho** (`ColaboradorCadastroForm` / `DadosPessoaisTab`): opções `sem_escala` / `administrativo` / `onshore` + NxN. Não defaultar 14x14. Sem rotação grava dias 0; a grade Man Schedule não inventa ON. Token vazio + `escala_* = 0` lê como `sem_escala` (`inferRegimeUi`).
 - **Matrícula e-Social**: campo editável `matricula_esocial` (além de `matricula`). Envio S-2220 lê `matricula_esocial || matricula`. Vazio no save copia `matricula`.

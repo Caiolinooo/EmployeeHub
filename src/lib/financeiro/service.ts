@@ -1205,7 +1205,8 @@ export async function atualizarCobranca(cobrancaId: string, ator: EventoAtor): P
   const integracaoId = (conta as { integracao_id: string | null } | null)?.integracao_id;
   if (!integracaoId) return cobranca;
 
-  const { ctx, adapter } = await montarBankContext(integracaoId);
+  // O contexto usa EXATAMENTE a conta da cobrança (review P1-1), não a primeira da integração.
+  const { ctx, adapter } = await montarBankContext(integracaoId, { contaId: cobranca.conta_bancaria_id });
   const criadaEm = cobranca.created_at.slice(0, 10);
   const hoje = new Date().toISOString().slice(0, 10);
   const movimentos = await chamarCapacidade(() => adapter.listarConciliacao(ctx, { de: criadaEm, ate: hoje }));
@@ -1366,8 +1367,7 @@ export async function importarConciliacoes(
 
 export async function enviarPagamentoLote(
   input: {
-    origemTipo: 'payroll_sheet' | 'manual';
-    origemId?: string;
+    origemId: string;
     contaBancariaId: string;
     dataPrevista?: string;
   },
@@ -1381,59 +1381,57 @@ export async function enviarPagamentoLote(
   if (!conta) throw erro404('conta_ausente', 'Conta bancária não encontrada');
   const contaRow = conta as { integracao_id: string | null };
   if (!contaRow.integracao_id) throw erro400('conta_sem_integracao', 'Conta bancária sem integração de banco vinculada');
-  const { ctx, adapter } = await montarBankContext(contaRow.integracao_id);
+  const { ctx, adapter } = await montarBankContext(contaRow.integracao_id, { contaId: input.contaBancariaId });
 
-  let favorecidos: { nome: string; documento: string; banco: string; agencia: string; conta: string; digito?: string; valor: number }[] = [];
-
-  if (input.origemTipo === 'payroll_sheet') {
-    if (!input.origemId) throw erro400('origem_obrigatoria', 'origemId é obrigatório para lote de folha');
-    const { data: sheet } = await supabaseAdmin
-      .from('payroll_sheets')
-      .select('status, company_id')
-      .eq('id', input.origemId)
-      .maybeSingle();
-    if (!sheet) throw erro404('folha_ausente', 'Folha não encontrada');
-    const st = (sheet as { status: string }).status;
-    if (st !== 'approved' && st !== 'paid') {
-      throw erro409('folha_nao_aprovada', 'A folha precisa estar aprovada para pagamento em lote');
-    }
-    const { data: summaries } = await supabaseAdmin
-      .from('payroll_employee_summaries')
-      .select('employee_id, net_salary')
-      .eq('sheet_id', input.origemId);
-    const nets = (summaries || []) as { employee_id: string; net_salary: number }[];
-    if (nets.length === 0) throw erro409('folha_sem_itens', 'Folha sem resumos para pagamento');
-    const { data: employees } = await supabaseAdmin
-      .from('payroll_employees')
-      .select('id, name, cpf, bank_code, bank_agency, bank_account')
-      .in('id', nets.map((n) => n.employee_id));
-    const porId = new Map((employees || []).map((e) => [e.id, e as {
-      name: string; cpf?: string; bank_code?: string; bank_agency?: string; bank_account?: string;
-    }]));
-    favorecidos = nets
-      .map((n) => {
-        const emp = porId.get(n.employee_id);
-        return {
-          nome: emp?.name || 'Colaborador',
-          documento: String(emp?.cpf || '').replace(/\D/g, ''),
-          banco: emp?.bank_code || '',
-          agencia: emp?.bank_agency || '',
-          conta: emp?.bank_account || '',
-          digito: '',
-          valor: Number(n.net_salary || 0),
-        };
-      })
-      .filter((f) => f.valor > 0);
+  const { data: sheet } = await supabaseAdmin
+    .from('payroll_sheets')
+    .select('status, company_id')
+    .eq('id', input.origemId)
+    .maybeSingle();
+  if (!sheet) throw erro404('folha_ausente', 'Folha não encontrada');
+  const st = (sheet as { status: string }).status;
+  if (st !== 'approved' && st !== 'paid') {
+    throw erro409('folha_nao_aprovada', 'A folha precisa estar aprovada para pagamento em lote');
   }
+  const { data: summaries } = await supabaseAdmin
+    .from('payroll_employee_summaries')
+    .select('employee_id, net_salary')
+    .eq('sheet_id', input.origemId);
+  const nets = (summaries || []) as { employee_id: string; net_salary: number }[];
+  if (nets.length === 0) throw erro409('folha_sem_itens', 'Folha sem resumos para pagamento');
+  const { data: employees } = await supabaseAdmin
+    .from('payroll_employees')
+    .select('id, name, cpf, bank_code, bank_agency, bank_account')
+    .in('id', nets.map((n) => n.employee_id));
+  const porId = new Map((employees || []).map((e) => [e.id, e as {
+    name: string; cpf?: string; bank_code?: string; bank_agency?: string; bank_account?: string;
+  }]));
+  const favorecidos = nets
+    .map((n) => {
+      const emp = porId.get(n.employee_id);
+      return {
+        nome: emp?.name || 'Colaborador',
+        documento: String(emp?.cpf || '').replace(/\D/g, ''),
+        banco: emp?.bank_code || '',
+        agencia: emp?.bank_agency || '',
+        conta: emp?.bank_account || '',
+        digito: '',
+        valor: Number(n.net_salary || 0),
+      };
+    })
+    .filter((f) => f.valor > 0);
 
   if (favorecidos.length === 0) throw erro400('lote_vazio', 'Nenhum favorecido com valor > 0');
 
   // grava fin_pagamentos pendente e envia só quem tem dados bancários completos
   const dataPrevista = input.dataPrevista || new Date().toISOString().slice(0, 10);
-  const completos = favorecidos.filter((f) => f.banco && f.agencia && f.conta && f.documento);
+  // Envia o que o PRÓPRIO pagamento tem de completo (bug: casar por nome+valor
+  // colidia entre homônimos de mesmo salário e apontava a conta errada).
+  const temDadosBancarios = (f: { banco: string; agencia: string; conta: string; documento: string }): boolean =>
+    !!(f.banco && f.agencia && f.conta && f.documento);
   const insercoes = favorecidos.map((f) => ({
-    origem_tipo: input.origemTipo,
-    origem_id: input.origemId ?? null,
+    origem_tipo: 'payroll_sheet',
+    origem_id: input.origemId,
     conta_bancaria_id: input.contaBancariaId,
     favorecido: f,
     valor: f.valor,
@@ -1446,13 +1444,10 @@ export async function enviarPagamentoLote(
     .select('id, favorecido, valor');
   if (error) throw new FinanceiroHttpError(500, 'db_erro', error.message);
   const pagamentosRows = (pagamentos || []) as unknown as { id: string; favorecido: typeof favorecidos[number]; valor: number }[];
-
-  const enviaveis = pagamentosRows.filter((p) =>
-    completos.some((f) => f.nome === p.favorecido.nome && f.valor === Number(p.valor)),
-  );
+  const enviaveis = pagamentosRows.filter((p) => temDadosBancarios(p.favorecido));
 
   const itens: FinPagamentoLoteResponse['itens'] = pagamentosRows.map((p) => {
-    const completo = !!p.favorecido.banco && !!p.favorecido.agencia && !!p.favorecido.conta && !!p.favorecido.documento;
+    const completo = temDadosBancarios(p.favorecido);
     return { idLocal: p.id, aceito: false, ...(completo ? {} : { erro: 'Dados bancários incompletos' }) };
   });
 
@@ -1470,7 +1465,7 @@ export async function enviarPagamentoLote(
       },
       valor: Number(p.valor),
       dataPrevista,
-      descricao: input.origemTipo === 'payroll_sheet' ? 'Pagamento de folha' : 'Pagamento manual',
+      descricao: 'Pagamento de folha',
     }));
     if (!adapter.enviarPagamentoLote) {
       throw erro400('capacidade_nao_suportada', `Adapter '${adapter.meta.key}' não suporta pagamento em lote`);

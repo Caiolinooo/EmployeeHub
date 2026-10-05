@@ -51,40 +51,47 @@ const STATUS_OPTIONS = [
 ];
 
 /**
- * R8: fonte de opções vem de GET /embarcacoes (lista completa, não só a já
- * filtrada na página). Fallback fail-soft: distinct da página atual.
+ * Fonte de opções dos dropdowns: GET /{empresas|cargos|centros-custo|embarcacoes}?ativo=true
+ * (lista completa, não só a página já filtrada). Merge fail-soft com o distinct da página
+ * atual (garante o valor de um filtro ativo visível mesmo se a API falhar ou omitir).
+ * Valores = NOMES (server resolve nomes→ids).
  */
-function useEmbarcacaoOptions(colaboradores: Collaborator[]): OptionItem[] {
+function useNomeOptions(url: string, pageValues: string[]): OptionItem[] {
   const [apiOptions, setApiOptions] = useState<OptionItem[]>([]);
 
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
-        const res = await fetchWithToken('/api/gestao-tripulantes/embarcacoes?ativo=true');
+        const res = await fetchWithToken(url);
         if (!res.ok) return;
         const json = await res.json();
         const rows = Array.isArray(json?.data) ? json.data : [];
         const opts: OptionItem[] = rows
           .map((r: { nome?: string | null }) => ({ id: String(r?.nome || ''), label: String(r?.nome || '') }))
           .filter((o: OptionItem) => o.id);
-        opts.sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
         if (alive && opts.length > 0) setApiOptions(opts);
       } catch {
         /* fail-soft: cai no distinct da página */
       }
     })();
     return () => { alive = false; };
-  }, []);
+  }, [url]);
 
-  const pageOptions = useMemo(() => {
-    return Array.from(new Set(colaboradores.map(c => c.embarcacao_nome).filter(Boolean)))
-      .sort((a, b) => a.localeCompare(b, 'pt-BR'))
-      .map(v => ({ id: v, label: v }));
-  }, [colaboradores]);
-
-  return apiOptions.length > 0 ? apiOptions : pageOptions;
+  return useMemo(() => {
+    const seen = new Set<string>();
+    const out: OptionItem[] = [];
+    for (const o of apiOptions) {
+      if (!seen.has(o.id)) { seen.add(o.id); out.push(o); }
+    }
+    for (const v of pageValues) {
+      if (!seen.has(v)) { seen.add(v); out.push({ id: v, label: v }); }
+    }
+    out.sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
+    return out;
+  }, [apiOptions, pageValues]);
 }
+
 
 /**
  * Multi-select de embarcações (chips + dropdown com busca).
@@ -181,19 +188,27 @@ function EmbarcacoesMultiSelect({
 export default function GTMatrixFilters({ filters, onChange, colaboradores = [] }: GTMatrixFiltersProps) {
   const { t } = useI18n();
   const [expandido, setExpandido] = useState(false);
-  const embarcacaoOptions = useEmbarcacaoOptions(colaboradores);
 
   const distinctOptions = useMemo(() => {
     const extract = (key: keyof Collaborator) =>
       Array.from(new Set(
         colaboradores.map(c => (c[key] as string)).filter(Boolean)
-      )).sort();
+      ));
     return {
       empresas: extract('empresa_nome'),
       cargos: extract('cargo_nome'),
       centrosCusto: extract('centro_custo_nome'),
+      embarcacoes: extract('embarcacao_nome'),
     };
   }, [colaboradores]);
+
+  // Opções vêm da lista COMPLETA (GET ?ativo=true) + merge do distinct da página,
+  // para não esvaziar quando KPI/busca estreita a página a poucas linhas.
+  // Centros de custo: valor = `nome` puro (server resolve eq('nome')), não 'codigo - nome'.
+  const empresaOptions = useNomeOptions('/api/gestao-tripulantes/empresas?ativo=true', distinctOptions.empresas);
+  const embarcacaoOptions = useNomeOptions('/api/gestao-tripulantes/embarcacoes?ativo=true', distinctOptions.embarcacoes);
+  const cargoOptions = useNomeOptions('/api/gestao-tripulantes/cargos?ativo=true', distinctOptions.cargos);
+  const centroCustoOptions = useNomeOptions('/api/gestao-tripulantes/centros-custo?ativo=true', distinctOptions.centrosCusto);
 
   const activeCount = useMemo(() => {
     let n = 0;
@@ -249,7 +264,7 @@ export default function GTMatrixFilters({ filters, onChange, colaboradores = [] 
           <div className="w-full lg:w-40">
             <SearchableCreatableSelect
               className="w-full px-2.5 py-2 border border-gray-200 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              options={distinctOptions.empresas.map(v => ({ id: v, label: v }))}
+              options={empresaOptions}
               value={filters.empresa}
               onChange={id => onChange({ empresa: id })}
               emptyLabel={t('gestaoTripulantes.filters.allCompanies')}
@@ -267,8 +282,8 @@ export default function GTMatrixFilters({ filters, onChange, colaboradores = [] 
           <div className="w-full lg:w-40">
             <SearchableCreatableSelect
               className="w-full px-2.5 py-2 border border-gray-200 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              options={distinctOptions.cargos.map(v => ({ id: v, label: v }))}
               value={filters.cargo}
+              options={cargoOptions}
               onChange={id => onChange({ cargo: id })}
               emptyLabel={t('gestaoTripulantes.filters.allPositions')}
               placeholder={t('gestaoTripulantes.filters.allPositions')}
@@ -278,7 +293,7 @@ export default function GTMatrixFilters({ filters, onChange, colaboradores = [] 
           <div className="w-full lg:w-40">
             <SearchableCreatableSelect
               className="w-full px-2.5 py-2 border border-gray-200 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              options={distinctOptions.centrosCusto.map(v => ({ id: v, label: v }))}
+              options={centroCustoOptions}
               value={filters.centro_custo}
               onChange={id => onChange({ centro_custo: id })}
               emptyLabel={t('gestaoTripulantes.filters.allCostCenters')}

@@ -103,19 +103,19 @@ export function getHardcodedCards(): DashboardCard[] {
     },
     {
       id: 'folhaPagamento',
-      title: 'Folha de Pagamento',
-      description: 'Gerencie a folha de pagamento dos colaboradores',
+      title: 'Financeiro',
+      description: 'Faturas, NFS-e, cobranças, conciliação e folha de pagamento',
       href: '/folha-pagamento',
       icon: FiActivity,
       iconName: 'FiActivity',
-      color: 'bg-green-500',
-      hoverColor: 'hover:bg-green-600',
+      color: 'bg-abz-blue',
+      hoverColor: 'hover:bg-abz-blue-dark',
       external: false,
       enabled: true,
       order: 3,
       adminOnly: false,
       managerOnly: true,
-      moduleKey: 'folha_pagamento',
+      moduleKey: 'financeiro',
     },
     {
       id: 'academy',
@@ -293,8 +293,8 @@ export function getTranslatedCards(t: (key: string) => string): DashboardCard[] 
     },
     {
       id: 'folha-pagamento',
-      title: t('cards.folhaPagamento'),
-      description: t('cards.folhaPagamentoDesc'),
+      title: t('cards.financeiro'),
+      description: t('cards.financeiroDesc'),
       href: '/folha-pagamento',
       icon: FiActivity,
       iconName: 'FiActivity',
@@ -304,7 +304,7 @@ export function getTranslatedCards(t: (key: string) => string): DashboardCard[] 
       enabled: true,
       order: 11,
       managerOnly: true,
-      moduleKey: 'folha_pagamento'
+      moduleKey: 'financeiro'
     },
     {
       id: 'academy',

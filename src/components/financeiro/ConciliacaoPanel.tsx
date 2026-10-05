@@ -178,8 +178,8 @@ export default function ConciliacaoPanel() {
 
       <div className={`${FIN_CARD_CLASS} overflow-hidden`}>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-900">
+          <table className="min-w-full divide-y divide-gray-200 ">
+            <thead className="bg-gray-50 ">
               <tr>
                 <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500">{t('financeiro.data')}</th>
                 <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500">{t('financeiro.credito')}/{t('financeiro.debito')}</th>
@@ -189,19 +189,19 @@ export default function ConciliacaoPanel() {
                 <th className="px-4 py-2" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-gray-100 ">
               {movimentos.map((mov) => (
-                <tr key={mov.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200">{formatarData(mov.data_movimento)}</td>
+                <tr key={mov.id} className="hover:bg-gray-50 ">
+                  <td className="px-4 py-2 text-sm text-gray-700 ">{formatarData(mov.data_movimento)}</td>
                   <td className="px-4 py-2 text-sm">
                     <span className={mov.tipo === 'credito' ? 'font-semibold text-emerald-600' : 'font-semibold text-rose-600'}>
                       {mov.tipo === 'credito' ? t('financeiro.credito') : t('financeiro.debito')}
                     </span>
                   </td>
-                  <td className="px-4 py-2 text-right text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  <td className="px-4 py-2 text-right text-sm font-semibold text-gray-900 ">
                     {formatarMoeda(mov.valor)}
                   </td>
-                  <td className="max-w-56 truncate px-4 py-2 text-sm text-gray-600 dark:text-gray-300" title={mov.descricao ?? ''}>
+                  <td className="max-w-56 truncate px-4 py-2 text-sm text-gray-600 " title={mov.descricao ?? ''}>
                     {mov.descricao ?? '—'}
                   </td>
                   <td className="px-4 py-2">

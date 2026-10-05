@@ -188,7 +188,7 @@ interface CampoProps {
 function Campo({ rotulo, children, className }: CampoProps) {
   return (
     <label className={`block ${className ?? ''}`}>
-      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{rotulo}</span>
+      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 ">{rotulo}</span>
       {children}
     </label>
   );
@@ -197,7 +197,7 @@ function Campo({ rotulo, children, className }: CampoProps) {
 function SecaoForm({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
     <fieldset className="space-y-3">
-      <legend className="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">{titulo}</legend>
+      <legend className="text-xs font-bold uppercase tracking-wider text-gray-400 ">{titulo}</legend>
       {children}
     </fieldset>
   );
@@ -540,44 +540,44 @@ export default function ClientesTab() {
       {/* Tabela */}
       <div className={`${FIN_CARD_CLASS} min-h-0 flex-1 overflow-auto`}>
         {carregando ? (
-          <div className="flex items-center justify-center gap-2 p-10 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center justify-center gap-2 p-10 text-sm text-gray-500 ">
             <FiLoader className="h-5 w-5 animate-spin text-abz-blue" /> {t('financeiro.carregando')}
           </div>
         ) : clientes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 p-10 text-sm text-gray-400 dark:text-gray-500">
+          <div className="flex flex-col items-center justify-center gap-2 p-10 text-sm text-gray-400 ">
             <FiFolder className="h-8 w-8" /> {t('fin.nenhumCliente')}
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
-            <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900">
+          <table className="min-w-full divide-y divide-gray-200  text-sm">
+            <thead className="sticky top-0 bg-gray-50 ">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.clienteNome')}</th>
-                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.clienteKey')}</th>
-                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('fin.pais')}</th>
-                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('fin.documentoBr')}/{t('fin.taxId')}</th>
-                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.moeda')}</th>
-                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('fin.categoria')}</th>
-                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.status')}</th>
-                <th className="px-4 py-2 text-right text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.acoes')}</th>
+                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 ">{t('financeiro.clienteNome')}</th>
+                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 ">{t('financeiro.clienteKey')}</th>
+                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 ">{t('fin.pais')}</th>
+                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 ">{t('fin.documentoBr')}/{t('fin.taxId')}</th>
+                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 ">{t('financeiro.moeda')}</th>
+                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 ">{t('fin.categoria')}</th>
+                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 ">{t('financeiro.status')}</th>
+                <th className="px-4 py-2 text-right text-xs font-bold uppercase text-gray-500 ">{t('financeiro.acoes')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody className="divide-y divide-gray-100 ">
               {clientes.map((cliente) => (
-                <tr key={cliente.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/40">
-                  <td className="px-4 py-2 font-semibold text-gray-900 dark:text-gray-100">{cliente.nome}</td>
-                  <td className="px-4 py-2 text-gray-600 dark:text-gray-300">{cliente.client_key}</td>
-                  <td className="px-4 py-2 text-gray-600 dark:text-gray-300">{cliente.pais || 'BR'}</td>
-                  <td className="px-4 py-2 text-gray-600 dark:text-gray-300">
+                <tr key={cliente.id} className="hover:bg-gray-50 ">
+                  <td className="px-4 py-2 font-semibold text-gray-900 ">{cliente.nome}</td>
+                  <td className="px-4 py-2 text-gray-600 ">{cliente.client_key}</td>
+                  <td className="px-4 py-2 text-gray-600 ">{cliente.pais || 'BR'}</td>
+                  <td className="px-4 py-2 text-gray-600 ">
                     {(cliente.pais && cliente.pais !== 'BR' ? cliente.tax_id : cliente.documento) || '—'}
                   </td>
-                  <td className="px-4 py-2 text-gray-600 dark:text-gray-300">{cliente.moeda}</td>
-                  <td className="px-4 py-2 text-gray-600 dark:text-gray-300">{cliente.categoria || '—'}</td>
+                  <td className="px-4 py-2 text-gray-600 ">{cliente.moeda}</td>
+                  <td className="px-4 py-2 text-gray-600 ">{cliente.categoria || '—'}</td>
                   <td className="px-4 py-2">
                     <span
                       className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
                         cliente.is_active
-                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
-                          : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                          ? 'bg-emerald-100 text-emerald-700  '
+                          : 'bg-gray-100 text-gray-500  '
                       }`}
                     >
                       {cliente.is_active ? t('fin.ativo') : t('fin.inativo')}
@@ -587,7 +587,7 @@ export default function ClientesTab() {
                     <button
                       type="button"
                       onClick={() => abrirEdicao(cliente)}
-                      className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-abz-blue dark:hover:bg-gray-700"
+                      className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-abz-blue "
                       aria-label={t('financeiro.editar')}
                     >
                       <FiEdit2 className="h-4 w-4" />
@@ -595,7 +595,7 @@ export default function ClientesTab() {
                     <button
                       type="button"
                       onClick={() => excluir(cliente)}
-                      className="rounded-lg p-2 text-gray-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/30"
+                      className="rounded-lg p-2 text-gray-400 transition hover:bg-rose-50 hover:text-rose-600 "
                       aria-label={t('financeiro.excluir')}
                     >
                       <FiTrash2 className="h-4 w-4" />
@@ -615,21 +615,21 @@ export default function ClientesTab() {
             role="dialog"
             aria-modal="true"
             aria-label={editando ? t('fin.editarCliente') : t('financeiro.novoCliente')}
-            className="flex h-[100dvh] w-full max-w-3xl flex-col overflow-hidden bg-white shadow-2xl dark:bg-gray-800 sm:h-auto sm:max-h-[92dvh] sm:rounded-2xl sm:border sm:border-gray-200 dark:sm:border-gray-700"
+            className="flex h-[100dvh] w-full max-w-3xl flex-col overflow-hidden bg-white shadow-2xl  sm:h-auto sm:max-h-[92dvh] sm:rounded-2xl sm:border sm:border-gray-200 "
           >
-            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-900 sm:px-6">
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3   sm:px-6">
               <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-abz-blue text-white shadow-sm">
                   <FiUsers className="h-5 w-5" />
                 </div>
-                <h2 className="truncate text-base font-bold text-gray-900 dark:text-gray-100 sm:text-lg">
+                <h2 className="truncate text-base font-bold text-gray-900  sm:text-lg">
                   {editando ? t('fin.editarCliente') : t('financeiro.novoCliente')}
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={() => setModalAberto(false)}
-                className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-200 hover:text-gray-700 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-200 hover:text-gray-700  "
                 aria-label={t('financeiro.fechar')}
               >
                 <FiX className="h-5 w-5" />
@@ -656,13 +656,13 @@ export default function ClientesTab() {
               </div>
               <ClienteFormFields valor={form} onChange={setForm} templates={templates} />
               {form.pais && form.pais !== 'BR' && (
-                <p className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
+                <p className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800   ">
                   {t('fin.exteriorSemNfse')}
                 </p>
               )}
             </div>
 
-            <div className="flex shrink-0 items-center justify-end gap-2 border-t border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-900 sm:px-6">
+            <div className="flex shrink-0 items-center justify-end gap-2 border-t border-gray-200 bg-gray-50 px-4 py-3   sm:px-6">
               <button type="button" onClick={() => setModalAberto(false)} className={FIN_BTN_SECONDARY_CLASS}>
                 {t('financeiro.cancelar')}
               </button>

@@ -154,7 +154,7 @@ export default function TemplatesTab() {
           <div key={tpl.id} className={`${FIN_CARD_CLASS} overflow-hidden`}>
             <div className="flex flex-wrap items-center gap-3 p-4">
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold text-gray-900 dark:text-gray-100">
+                <p className="truncate text-sm font-bold text-gray-900 ">
                   {tpl.nome}
                   <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-bold text-gray-500">{tpl.tipo}</span>
                   {tpl.is_default && (

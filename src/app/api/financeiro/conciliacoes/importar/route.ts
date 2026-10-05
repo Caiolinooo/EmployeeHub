@@ -35,7 +35,8 @@ export async function POST(request: NextRequest) {
     const integracaoId = (conta as { integracao_id: string | null } | null)?.integracao_id;
     if (!integracaoId) return finFail('Conta bancária sem integração de banco vinculada', 400);
 
-    const { ctx, adapter } = await montarBankContext(integracaoId);
+    // O contexto usa EXATAMENTE a conta pedida (review P1-1), não a primeira da integração.
+    const { ctx, adapter } = await montarBankContext(integracaoId, { contaId: contaBancariaId });
     let movimentos: ConciliacaoMovimento[];
     try {
       movimentos = await adapter.listarConciliacao(ctx, { de, ate });

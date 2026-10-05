@@ -19,7 +19,9 @@ fatura/NFS-e/cobrança/conciliação/pagamentos), regras puras e renderers de fa
   `full_name`/`cpf` de `users_unified`)
 - `regras-financeiro.ts` — regras PURAS (sem Supabase/Next): nº sequencial, cálculo
   de itens, máquina de estados fatura/NFS-e, `verificarEmissaoNfse` (BRL-only),
-  `conciliarMovimento` (txid > nosso_numero > valor+data). Testes: `*.test.ts` (`npx tsx --test`)
+  `conciliarMovimento` (txid > nosso_numero > valor+data), aging da carteira
+  (`FAIXAS_AGING` a_vencer/1_30/31_60/61_90/90_mais, `agingCarteira(titulos, ref)`
+  → faixas + inadimplência + maiores devedores). Testes: `*.test.ts` (`npx tsx --test`)
 - `service.ts` — monta `BankContext`/`NfseContext` decifrando `app_secrets` via
   `secure-credentials` (convenções `fin_banco_<integracaoId>_<campo>` /
   `fin_nfse_<configId>_<campo>`; senha do pfx = `..._pfx_senha`); resolve
@@ -66,3 +68,11 @@ total D30, seção conta A43.
   Front (`src/lib/financeiro/api-client.ts`), scripts de gate na raiz `GATES.md`
 - `scripts/verify-financeiro-fluxo-e2e.ts` exercita o service inteiro sem rede
   (mock HTTP local para o provider proprietário Macaé 3302403)
+- Carteira de recebimentos: `GET /api/financeiro/carteira` monta
+  `TituloCarteira[]` (saldo = `fin_faturas.valor_total` − Σ cobranças `liquidada`,
+  só faturas `emitida|nfse_emitida` — mesma regra de `podeCobrarFatura`, uma moeda por
+  consulta) e delega o cálculo a `agingCarteira`; consumido por
+  `components/financeiro/CarteiraRecebimentosPanel`. As regras puras moram aqui
+  (`FAIXAS_AGING`, `faixaAging`, `agingCarteira`); os DTOs de resposta
+  (`FinFaixaAging`, `FinResumoAging`, `FinCarteira`) ficam em `src/types/financeiro.ts`
+  — nunca redefinir o contrato localmente.

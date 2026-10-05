@@ -31,12 +31,12 @@ export const FIN_BTN_SECONDARY_CLASS =
 type ChipTone = 'gray' | 'blue' | 'green' | 'amber' | 'red' | 'violet';
 
 const CHIP_TONE_CLASS: Record<ChipTone, string> = {
-  gray: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-  blue: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-  green: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
-  amber: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
-  red: 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200',
-  violet: 'bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200',
+  gray: 'bg-gray-100 text-gray-700  ',
+  blue: 'bg-blue-100 text-blue-800  ',
+  green: 'bg-emerald-100 text-emerald-800  ',
+  amber: 'bg-amber-100 text-amber-800  ',
+  red: 'bg-rose-100 text-rose-800  ',
+  violet: 'bg-violet-100 text-violet-800  ',
 };
 
 export function FinChip({ tone, children }: { tone: ChipTone; children: React.ReactNode }) {

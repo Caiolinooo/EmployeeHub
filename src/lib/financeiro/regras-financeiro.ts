@@ -4,7 +4,15 @@
  * estas funções e persiste os resultados; estados/números nunca mudam sem
  * passar por aqui.
  */
-import type { FinCobrancaStatus, FinConciliacaoTipo, FinFaturaStatus, FinNfseStatus } from '@/types/financeiro';
+import type {
+  FinClienteCarteira,
+  FinCobrancaStatus,
+  FinConciliacaoTipo,
+  FinFaixaAging,
+  FinFaturaStatus,
+  FinNfseStatus,
+  FinResumoAging,
+} from '@/types/financeiro';
 
 // ============================================================
 // Faturas — número sequencial e máquina de estados
@@ -231,4 +239,112 @@ export function podeAtualizarCobranca(status: FinCobrancaStatus): boolean {
 /** Cobrança só é gerada contra fatura emitida/nfse_emitida (nunca rascunho/cancelada). */
 export function podeCobrarFatura(status: FinFaturaStatus): boolean {
   return status === 'emitida' || status === 'nfse_emitida';
+}
+
+// ============================================================
+// Carteira de recebimentos — aging e inadimplência
+// ============================================================
+
+/**
+ * Dias corridos entre duas datas YYYY-MM-DD. Positivo = `ate` depois de
+ * `de`. Parse como UTC para não escorregar por timezone do servidor.
+ */
+export function diasEntre(de: string, ate: string): number {
+  const ms = Date.parse(`${ate}T00:00:00Z`) - Date.parse(`${de}T00:00:00Z`);
+  return Number.isFinite(ms) ? Math.round(ms / 86400000) : 0;
+}
+
+/** Dias de atraso de um título: >0 vencido, <=0 ainda a vencer. */
+export function diasAtraso(vencimento: string | null | undefined, referencia: string): number {
+  if (!vencimento) return 0;
+  return diasEntre(vencimento, referencia);
+}
+
+/** Ordem de exibição das faixas — a_vencer primeiro, depois por atraso. */
+export const FAIXAS_AGING: readonly FinFaixaAging[] = ['a_vencer', '1_30', '31_60', '61_90', '90_mais'] as const;
+
+/**
+ * Faixa de aging pelo atraso. Vencimento hoje ou antes já entra em 1_30
+ * (dias=0 → vencido no vencimento), que é como o aging BR conta.
+ */
+export function faixaAging(dias: number): FinFaixaAging {
+  if (dias <= 0) return 'a_vencer';
+  if (dias <= 30) return '1_30';
+  if (dias <= 60) return '31_60';
+  if (dias <= 90) return '61_90';
+  return '90_mais';
+}
+
+export interface TituloCarteira {
+  id: string;
+  clienteId: string | null;
+  clienteNome: string;
+  /** Saldo em aberto (já descontado o liquidado). */
+  valor: number;
+  vencimento: string | null;
+}
+
+
+/**
+ * Aging da carteira de recebimentos a partir dos SALDOS em aberto: fatura
+ * `rascunho` não entra (não foi emitida) e `paga`/`cancelada` saem. Faixas de
+ * 30/60/90 dias e percentual vencido são o painel mínimo de cobrança BR.
+ */
+export function agingCarteira(titulos: TituloCarteira[], referencia: string): FinResumoAging {
+  const acc: Record<FinFaixaAging, { quantidade: number; valor: number }> = {
+    a_vencer: { quantidade: 0, valor: 0 },
+    '1_30': { quantidade: 0, valor: 0 },
+    '31_60': { quantidade: 0, valor: 0 },
+    '61_90': { quantidade: 0, valor: 0 },
+    '90_mais': { quantidade: 0, valor: 0 },
+  };
+  const porCliente = new Map<string, FinClienteCarteira>();
+  let total = 0;
+  let vencido = 0;
+  let titulosVencidos = 0;
+  let maiorAtraso = 0;
+
+  for (const t of titulos) {
+    const valor = round2(Number(t.valor) || 0);
+    if (valor <= 0) continue;
+    const dias = diasAtraso(t.vencimento, referencia);
+    const faixa = faixaAging(dias);
+    acc[faixa].quantidade += 1;
+    acc[faixa].valor = round2(acc[faixa].valor + valor);
+    total = round2(total + valor);
+
+    const chave = t.clienteId || `nome:${t.clienteNome}`;
+    const atual = porCliente.get(chave);
+    if (atual) {
+      atual.valor = round2(atual.valor + valor);
+      atual.titulos += 1;
+      atual.maiorAtraso = Math.max(atual.maiorAtraso, dias);
+    } else {
+      porCliente.set(chave, {
+        clienteId: t.clienteId,
+        clienteNome: t.clienteNome,
+        valor,
+        titulos: 1,
+        maiorAtraso: dias,
+      });
+    }
+
+    if (dias > 0) {
+      vencido = round2(vencido + valor);
+      titulosVencidos += 1;
+      maiorAtraso = Math.max(maiorAtraso, dias);
+    }
+  }
+
+  return {
+    faixas: FAIXAS_AGING.map((faixa) => ({ faixa, ...acc[faixa] })),
+    total,
+    aVencer: round2(total - vencido),
+    vencido,
+    percentualVencido: total > 0 ? round2((vencido / total) * 100) : 0,
+    titulos: [...Object.values(acc)].reduce((s, f) => s + f.quantidade, 0),
+    titulosVencidos,
+    maiorAtraso,
+    clientes: [...porCliente.values()].sort((a, b) => b.valor - a.valor),
+  };
 }

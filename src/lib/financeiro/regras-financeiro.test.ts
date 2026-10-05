@@ -23,7 +23,13 @@ import {
   conciliarMovimento,
   podeAtualizarCobranca,
   podeCobrarFatura,
+  diasEntre,
+  diasAtraso,
+  faixaAging,
+  agingCarteira,
+  FAIXAS_AGING,
   type CobrancaConciliavel,
+  type TituloCarteira,
 } from './regras-financeiro';
 
 const cobranca = (over: Partial<CobrancaConciliavel>): CobrancaConciliavel => ({
@@ -217,5 +223,126 @@ describe('cobranças: atualização', () => {
     assert.equal(podeAtualizarCobranca('gerada'), true);
     assert.equal(podeAtualizarCobranca('liquidada'), false);
     assert.equal(podeAtualizarCobranca('expirada'), false);
+  });
+});
+
+describe('carteira: dias de atraso (sem escorregar por timezone)', () => {
+  it('conta dias corridos entre vencimento e referência', () => {
+    assert.equal(diasEntre('2026-10-05', '2026-10-20'), 15);
+    assert.equal(diasEntre('2026-10-20', '2026-10-05'), -15);
+  });
+  it('atravessa mês e ano (fev de ano não-bissexto = 28 dias)', () => {
+    assert.equal(diasEntre('2026-02-01', '2026-03-01'), 28);
+    assert.equal(diasEntre('2025-12-31', '2026-01-01'), 1);
+  });
+  it('vencimento ausente não gera atraso', () => {
+    assert.equal(diasAtraso(null, '2026-10-05'), 0);
+    assert.equal(diasAtraso(undefined, '2026-10-05'), 0);
+  });
+});
+
+describe('carteira: faixas de aging', () => {
+  it('não vencido (inclusive o dia do vencimento) fica a vencer', () => {
+    assert.equal(faixaAging(-5), 'a_vencer');
+    assert.equal(faixaAging(0), 'a_vencer');
+  });
+  it('fronteiras 30/60/90 caem na faixa de baixo', () => {
+    assert.equal(faixaAging(1), '1_30');
+    assert.equal(faixaAging(30), '1_30');
+    assert.equal(faixaAging(31), '31_60');
+    assert.equal(faixaAging(60), '31_60');
+    assert.equal(faixaAging(61), '61_90');
+    assert.equal(faixaAging(90), '61_90');
+    assert.equal(faixaAging(91), '90_mais');
+    assert.equal(faixaAging(365), '90_mais');
+  });
+});
+
+describe('carteira: aging e inadimplência', () => {
+  const REF = '2026-10-05';
+  const titulo = (over: Partial<TituloCarteira> & { id: string }): TituloCarteira => ({
+    clienteId: 'c1',
+    clienteNome: 'Cliente A',
+    valor: 1000,
+    vencimento: '2026-10-20',
+    ...over,
+  });
+
+  it('carteira vazia não divide por zero e devolve todas as faixas zeradas', () => {
+    const r = agingCarteira([], REF);
+    assert.equal(r.total, 0);
+    assert.equal(r.percentualVencido, 0);
+    assert.equal(r.maiorAtraso, 0);
+    assert.deepEqual(r.faixas.map((f) => f.faixa), [...FAIXAS_AGING]);
+    assert.ok(r.faixas.every((f) => f.quantidade === 0 && f.valor === 0));
+  });
+  it('distribui por faixa e fecha total/vencido', () => {
+    const r = agingCarteira(
+      [
+        titulo({ id: 't1', vencimento: '2026-09-25', valor: 100 }), // 10 dias
+        titulo({ id: 't2', vencimento: '2026-08-20', valor: 200 }), // 46 dias
+        titulo({ id: 't3', vencimento: '2026-06-01', valor: 300 }), // 126 dias
+        titulo({ id: 't4', vencimento: '2026-10-20', valor: 400 }), // a vencer
+      ],
+      REF,
+    );
+    const porFaixa = Object.fromEntries(r.faixas.map((f) => [f.faixa, f.valor]));
+    assert.deepEqual(porFaixa, { a_vencer: 400, '1_30': 100, '31_60': 200, '61_90': 0, '90_mais': 300 });
+    assert.equal(r.total, 1000);
+    assert.equal(r.vencido, 600);
+    assert.equal(r.aVencer, 400);
+    assert.equal(r.titulos, 4);
+    assert.equal(r.titulosVencidos, 3);
+    assert.equal(r.maiorAtraso, 126);
+    assert.equal(r.percentualVencido, 60);
+  });
+  it('título sem vencimento conta como a vencer', () => {
+    const r = agingCarteira([titulo({ id: 't1', vencimento: null })], REF);
+    assert.equal(r.aVencer, 1000);
+    assert.equal(r.vencido, 0);
+    assert.equal(r.percentualVencido, 0);
+  });
+  it('saldo <= 0 (integralmente liquidado) não entra na carteira', () => {
+    const r = agingCarteira(
+      [titulo({ id: 't1', vencimento: '2026-09-01', valor: 0 }), titulo({ id: 't2', vencimento: '2026-09-01', valor: -50 })],
+      REF,
+    );
+    assert.equal(r.total, 0);
+    assert.equal(r.titulos, 0);
+    assert.equal(r.maiorAtraso, 0);
+  });
+  it('agrupa devedores por cliente e ordena pelo maior saldo', () => {
+    const r = agingCarteira(
+      [
+        titulo({ id: 't1', clienteId: 'c1', clienteNome: 'Cliente A', valor: 100, vencimento: '2026-09-01' }),
+        titulo({ id: 't2', clienteId: 'c1', clienteNome: 'Cliente A', valor: 250, vencimento: '2026-07-01' }),
+        titulo({ id: 't3', clienteId: 'c2', clienteNome: 'Cliente B', valor: 900, vencimento: '2026-10-01' }),
+      ],
+      REF,
+    );
+    assert.deepEqual(r.clientes.map((c) => [c.clienteId, c.valor, c.titulos]), [
+      ['c2', 900, 1],
+      ['c1', 350, 2],
+    ]);
+    assert.equal(r.clientes[1].maiorAtraso, 96); // 2026-07-01 → 2026-10-05
+  });
+  it('cliente sem id agrupa por nome', () => {
+    const r = agingCarteira(
+      [
+        titulo({ id: 't1', clienteId: null, clienteNome: 'PF nao cadastrada', valor: 100 }),
+        titulo({ id: 't2', clienteId: null, clienteNome: 'PF nao cadastrada', valor: 200 }),
+      ],
+      REF,
+    );
+    assert.equal(r.clientes.length, 1);
+    assert.equal(r.clientes[0].valor, 300);
+  });
+  it('arredonda a 2 casas para não somar centavos fantasma', () => {
+    const r = agingCarteira(
+      [titulo({ id: 't1', valor: 0.1, vencimento: '2026-10-01' }), titulo({ id: 't2', valor: 0.2, vencimento: '2026-10-01' })],
+      REF,
+    );
+    assert.equal(r.vencido, 0.3);
+    assert.equal(r.total, 0.3);
   });
 });

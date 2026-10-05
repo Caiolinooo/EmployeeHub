@@ -45,11 +45,11 @@ export default function FinanceiroConfigPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <div>
-        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('admin.financeiroConfig')}</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">{t('financeiro.subtitulo')}</p>
+        <h1 className="text-xl font-bold text-gray-900 ">{t('admin.financeiroConfig')}</h1>
+        <p className="text-sm text-gray-500 ">{t('financeiro.subtitulo')}</p>
       </div>
 
-      <nav className="flex flex-wrap gap-1 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-1 shadow-sm">
+      <nav className="flex flex-wrap gap-1 rounded-xl border border-gray-200  bg-white  p-1 shadow-sm">
         {ABAS.map((id) => {
           const meta = ABA_META[id];
           const ativa = id === aba;
@@ -60,7 +60,7 @@ export default function FinanceiroConfigPage() {
               onClick={() => trocarAba(id)}
               aria-current={ativa ? 'page' : undefined}
               className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                ativa ? 'bg-abz-blue text-white shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                ativa ? 'bg-abz-blue text-white shadow-sm' : 'text-gray-600  hover:bg-gray-100 '
               }`}
             >
               {meta.icon}

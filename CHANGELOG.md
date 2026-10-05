@@ -1,5 +1,42 @@
 # Changelog
 
+## [5.95.0] - 2026-10-05
+
+### Módulo Financeiro unificado, dark mode removido, itens pendentes implementados e filtros GT
+
+#### Alterado
+
+1. **Financeiro e Folha de Pagamento viraram um módulo só**: `src/config/modules.ts` passa a ter um único módulo `financeiro` com a ACL mesclada (`financeiro.*` + `folha.*`); menu, cards, gate do layout (`folha_pagamento` → `financeiro`), fallback de `/api/cards`, card no Supabase (título/descrição/cor `abz-blue`) e o rótulo no Integração ERP agora exibem "Financeiro". O setor "Departamento Pessoal" mantém a chave `folha` em `allowed_modules` (fallback de autenticação da folha).
+2. **Dark mode removido do Financeiro/DP**: 325 tokens `dark:` retirados de 15 arquivos (componentes do Financeiro, `admin/financeiro-config` e wizard do DP); a superfície usa exclusivamente a paleta ABZ (`abz-blue #005dff`, `abz-blue-dark`, `gray-50`).
+
+#### Adicionado
+
+1. **Perfis de cálculo reais** (`folha-pagamento/configuracoes/perfis`): lista e edição dos perfis em `payroll_calculation_profiles` (regras de INSS/IRRF/FGTS, vale transporte, perfil padrão por empresa) via novo `GET/PUT /api/payroll/profiles` com `garantirNivelPayroll` (`view`/`edit`); edição travada por `hasFeature('folha.edit')`.
+2. **Tabelas legais** (`configuracoes/tabelas`): visualizador somente leitura das tabelas de INSS/IRRF/FGTS versionadas em `src/lib/payroll/legal-tables.ts`, com vigência e aviso de que alterações seguem deploy.
+3. **Relatórios reais** (`relatorios/mensal`, `custos`, `guias`): o mensal deixou de usar empresas hardcoded/console.log/alert e passa a calcular a competência via novo `GET /api/payroll/relatorios/operacional` (`type=operacional|custos|guias`, 409 para folha aprovada/paga); custos agrega por departamento/centro de custo (bruto + FGTS) e guias consolida provisões de INSS/IRRF/FGTS. Agregações puras e testadas em `src/lib/payroll/relatorios-agregacao.ts` (7 testes) com filtros compartilhados em `RelatorioFiltros.tsx`.
+4. **Filtros da Matriz GT sempre preenchidos**: `GTMatrixFilters` deixou de derivar as opções de empresa/cargo/centro de custo da página filtrada (dropdowns morriam quando um KPI/busca estreitava o resultado); agora busca `/api/gestao-tripulantes/{empresas,cargos,centros-custo}?ativo=true` com merge/dedup dos valores da página (mesmo padrão das embarcações). Sonda em produção confirmou que todos os parâmetros de filtro estreitam corretamente (ex.: KPI "Embarcados Agora" = 1 = ROMULO; busca "ander" + KPI = 0 por semântica AND correta).
+
+#### Removido
+
+1. **Componentes mortos de payroll**: `PayrollDashboard.tsx`, `PayrollCard.tsx`, `PayrollCalculator.tsx` e o tipo órfão `PayrollDashboardStats` (referenciados apenas entre si).
+
+### Auditoria do módulo Financeiro: carteira de recebimentos e correções de lote
+
+#### Adicionado
+
+1. **Carteira de recebimentos com aging**: novo endpoint `GET /api/financeiro/carteira` (`carteira/route.ts` + `carteira.ts` + `carteira.test.ts`) expondo aging por faixas (`a_vencer`, `1_30`, `31_60`, `61_90`, `90_mais`), total a receber, vencido, percentual de inadimplência, maior atraso e top devedores. Regras puras em `src/lib/financeiro/regras-financeiro.ts` (`diasEntre`, `diasAtraso`, `faixaAging`, `agingCarteira`), com saldo líquido por fatura descontando apenas cobranças `liquidada` da própria fatura.
+2. **Painel Carteira de Recebimentos** na aba Bancos & Recebimentos (`CarteiraRecebimentosPanel.tsx`), reaproveitando o sistema de cards/cores já existente no módulo.
+3. **Cobertura de testes**: 23 testes novos entre `regras-financeiro.test.ts` (13) e `carteira.test.ts` (10).
+
+#### Corrigido
+
+1. **`contaId` não propagado em `montarBankContext`**: três caminhos que montavam o contexto bancário sem o identificador da conta, quebrando a conciliação.
+2. **Colisão nome + valor em `enviarPagamentoLote`**: filtrar por descrição e importe podia selecionar o pagamento errado quando dois lançamentos tinham o mesmo rótulo e mesmo valor.
+3. **Origem `'manual'` morta** removida do fluxo de pagamento em lote (o endpoint já derivava a origem da folha).
+4. **Dropdown de folha aprovada exibindo `undefined/ · R$ 0,00`**: `FolhaOpcao` em `PagamentosPanel.tsx` declarava `referenceMonth`/`referenceYear`/`totalNet`, mas `/api/payroll/sheets` devolve `select('*')` em `snake_case`. Agora exibe `09/2026 · R$ 9.500,00`.
+5. **`GET /carteira` omitia `referencia` e `moeda` na resposta**: a rota devolvia só o núcleo do aging enquanto o tipo `FinCarteira` declarava os dois campos — o cliente não conseguia dizer com que dia e em que moeda os totais foram calculados. `montarCarteira` agora devolve o `FinCarteira` completo, com teste de regressão.
+6. **DTOs de aging movidos para `src/types/financeiro.ts`**: `FinFaixaAging`, `FinResumoAging` e `FinCarteira` estavam redefinidos dentro de `regras-financeiro.ts` e `api-client.ts`, quebrando a convenção do módulo (todo contrato de resposta vive em `src/types/financeiro.ts`, como `FinVisaoGeral`).
+
 ## [5.94.2] - 2026-10-05
 
 ### Escala (GT): evento some da grade filtrada por embarcação depois de recarregar
@@ -33,8 +70,6 @@
 1. **`scripts/lib/escala-manutencao.ts`**: núcleo compartilhado dos scripts de escala (leitura paginada, diff/sincronização das datas de escala, snapshot/hash/trilha no formato do portal, soft-delete e restauração em lote). Reusa `derivarDatasEscala`, `resolverEmbarcacaoAtual` e `paginarSelect` — a regra de derivação não é reimplementada.
 2. **`scripts/recupera-escala-apagada.ts`**: classifica todo soft-delete sem trilha em cinco grupos (restaura apenas o que ALARGA a escala; histórico, marcador, conflito e sem-data ficam no relatório para decisão humana) e reporta o efeito na escala de cada colaborador.
 3. **Scripts de limpeza reescritos em TypeScript** (`limpa-sobrepostos-embarques.ts`, `dedupe-embarques-locais.ts`), com dry-run por padrão e `--apply` explícito; as versões `.js` legadas foram removidas.
-
-## [Unreleased]
 
 ## [5.94.0] - 2026-10-02
 

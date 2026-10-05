@@ -18,6 +18,7 @@ Casca visual de `/folha-pagamento`: trilha Portal / Financeiro e áreas agrupada
 - Atalhos da aba Folhas apontam para `/folha-pagamento/sheets` e `/folha-pagamento/nova`. O painel do DP continua em `/department/dp?tab=folha`.
 - Variação do card de faturas = total faturado da competência contra o mês anterior presente na série. Sem mês anterior, sem badge. O card "recebido" não usa essa variação.
 - Cores dos exemplos verdes não entram. Fundo escuro dos cards = `abz-blue-dark` / `abz-blue`.
+- Relatórios (`/folha-pagamento/relatorios/{mensal,custos,guias}`) usam `RelatorioFiltros.tsx` + `GET /api/payroll/relatorios/operacional` (`type=operacional|custos|guias`; agregações puras em `src/lib/payroll/relatorios-agregacao.ts`). Perfis de cálculo: `GET|PUT /api/payroll/profiles` (rules JSONB do motor). Tabelas legais: leitura de `src/lib/payroll/legal-tables.ts`, versionadas em código.
 
 ## Work Guidance
 

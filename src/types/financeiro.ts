@@ -512,3 +512,45 @@ export interface FinNfseCredencialInput {
 export interface FinNfseEmissaoDetalhe extends FinNfseEmissao {
   preenchidos: Record<string, boolean>;
 }
+
+/** Faixa de aging: vencimento hoje ou antes já conta como vencido no BR. */
+export type FinFaixaAging = 'a_vencer' | '1_30' | '31_60' | '61_90' | '90_mais';
+
+/** GET /api/financeiro/carteira — agregação de uma faixa. */
+export interface FinFaixaAgingResumo {
+  faixa: FinFaixaAging;
+  quantidade: number;
+  valor: number;
+}
+
+/** Cliente devedor, do maior saldo para o menor. */
+export interface FinClienteCarteira {
+  clienteId: string | null;
+  clienteNome: string;
+  valor: number;
+  titulos: number;
+  maiorAtraso: number;
+}
+
+/** Núcleo do aging — o que a regra pura `agingCarteira` devolve. */
+export interface FinResumoAging {
+  faixas: FinFaixaAgingResumo[];
+  /** Saldo em aberto total (a vencer + vencido). */
+  total: number;
+  aVencer: number;
+  vencido: number;
+  /** Inadimplência = vencido / total (0..100). 0 quando não há carteira. */
+  percentualVencido: number;
+  titulos: number;
+  titulosVencidos: number;
+  /** Maior atraso em dias (0 se nada vencido). */
+  maiorAtraso: number;
+  clientes: FinClienteCarteira[];
+}
+
+/** GET /api/financeiro/carteira?ref=YYYY-MM-DD&moeda= */
+export interface FinCarteira extends FinResumoAging {
+  /** Dia de referência do aging (eco de `ref`). */
+  referencia: string;
+  moeda: string;
+}

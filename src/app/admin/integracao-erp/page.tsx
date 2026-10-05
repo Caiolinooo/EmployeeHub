@@ -72,7 +72,7 @@ export default function IntegracaoERPPage() {
 
   const availableModules = [
     { id: 'usuarios', name: t('admin.usuarios'), icon: FiUsers },
-    { id: 'folha_pagamento', name: 'Folha de Pagamento', icon: FiDollarSign },
+    { id: 'folha_pagamento', name: 'Financeiro', icon: FiDollarSign },
     { id: 'avaliacoes', name: t('admin.avaliacoes'), icon: FiFileText },
     { id: 'departamentos', name: 'Departamentos', icon: FiUsers },
     { id: 'cargos', name: 'Cargos', icon: FiFileText },

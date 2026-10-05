@@ -128,7 +128,7 @@ export default function BancosConfigTab() {
             <div key={integracao.id} className={`${FIN_CARD_CLASS} overflow-hidden`}>
               <div className="flex items-start justify-between gap-3 p-4">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-bold text-gray-900 dark:text-gray-100">
+                  <p className="truncate text-sm font-bold text-gray-900 ">
                     {integracao.apelido}
                     <span className="ml-2 text-xs font-normal text-gray-400">
                       {meta?.nome ?? integracao.adapter_key} · FEBRABAN {meta?.codigoFebraban ?? '—'}

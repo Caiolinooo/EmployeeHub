@@ -6,7 +6,7 @@ import FinanceiroShell from '@/components/financeiro/FinanceiroShell';
 
 /**
  * Layout do módulo Financeiro — shell próprio com menu horizontal Elementor.
- * Sem MainLayout (sem sidebar do portal). Gate em ProtectedRoute (`folha_pagamento`).
+ * Sem MainLayout (sem sidebar do portal). Gate em ProtectedRoute (`financeiro`).
  */
 export default function PayrollLayout({
   children,
@@ -14,7 +14,7 @@ export default function PayrollLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ProtectedRoute moduleName="folha_pagamento">
+    <ProtectedRoute moduleName="financeiro">
       <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-gray-400">Carregando…</div>}>
         <FinanceiroShell>{children}</FinanceiroShell>
       </Suspense>

@@ -21,12 +21,13 @@ import {
   mensagemErro,
 } from '@/components/financeiro/shared';
 
+/** `/api/payroll/sheets` devolve `select('*')` da tabela: campos em snake_case. */
 interface FolhaOpcao {
   id: string;
-  referenceMonth: number;
-  referenceYear: number;
+  reference_month: number;
+  reference_year: number;
   status: string;
-  totalNet: number;
+  total_net: number;
 }
 
 export default function PagamentosPanel() {
@@ -76,7 +77,6 @@ export default function PagamentosPanel() {
     setEnviando(true);
     try {
       const res = await criarLotePagamentos({
-        origemTipo: 'payroll_sheet',
         origemId: folhaId,
         contaBancariaId: contaId,
         dataPrevista: dataPrevista || undefined,
@@ -103,7 +103,7 @@ export default function PagamentosPanel() {
             <option value="">{folhas.length === 0 ? t('financeiro.nenhumaFolhaAprovada') : '—'}</option>
             {folhas.map((f) => (
               <option key={f.id} value={f.id}>
-                {String(f.referenceMonth).padStart(2, '0')}/{f.referenceYear} · {formatarMoeda(f.totalNet)}
+                {String(f.reference_month).padStart(2, '0')}/{f.reference_year} · {formatarMoeda(f.total_net)}
               </option>
             ))}
           </select>
@@ -130,8 +130,8 @@ export default function PagamentosPanel() {
       {/* Lista de pagamentos */}
       <div className={`${FIN_CARD_CLASS} overflow-hidden`}>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-900">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500">{t('financeiro.favorecido')}</th>
                 <th className="px-4 py-2 text-right text-xs font-bold uppercase text-gray-500">{t('financeiro.valor')}</th>
@@ -141,17 +141,17 @@ export default function PagamentosPanel() {
                 <th className="px-4 py-2" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-gray-100">
               {pagamentos.map((pag) => (
-                <tr key={pag.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
+                <tr key={pag.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-2 text-sm text-gray-700">
                     {pag.favorecido?.nome ?? '—'}
                     {pag.favorecido?.documento ? <span className="ml-2 text-xs text-gray-400">{pag.favorecido.documento}</span> : null}
                   </td>
-                  <td className="px-4 py-2 text-right text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  <td className="px-4 py-2 text-right text-sm font-semibold text-gray-900">
                     {formatarMoeda(pag.valor)}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">{formatarData(pag.data_prevista)}</td>
+                  <td className="px-4 py-2 text-sm text-gray-600">{formatarData(pag.data_prevista)}</td>
                   <td className="px-4 py-2 text-xs text-gray-500">
                     {pag.origem_tipo === 'payroll_sheet' ? t('financeiro.origemFolha') : t('financeiro.origemManual')} ·{' '}
                     {pag.origem_id?.slice(0, 8) ?? '—'}

@@ -356,9 +356,9 @@ export default function FechamentoDpWizard({
   ][n - 1]);
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-700 shadow-xs shrink-0">
+    <div className="bg-white  rounded-xl border border-gray-200  shadow-xs shrink-0">
       {/* Stepper */}
-      <div className="px-4 pt-3 pb-2 border-b border-gray-100 dark:border-slate-800">
+      <div className="px-4 pt-3 pb-2 border-b border-gray-100 ">
         <ol className="flex flex-wrap items-center gap-1.5">
           {ETAPAS.map((n, idx) => {
             const Icone = ETAPA_ICONE[n];
@@ -366,7 +366,7 @@ export default function FechamentoDpWizard({
             const concluida = etapa > n;
             return (
               <li key={n} className="flex items-center gap-1.5">
-                {idx > 0 && <FiChevronRight className="w-3 h-3 text-gray-300 dark:text-slate-600" />}
+                {idx > 0 && <FiChevronRight className="w-3 h-3 text-gray-300 " />}
                 <button
                   type="button"
                   onClick={() => setEtapa(n)}
@@ -374,8 +374,8 @@ export default function FechamentoDpWizard({
                     ativa
                       ? 'bg-abz-blue text-white'
                       : concluida
-                        ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                        ? 'bg-emerald-50  text-emerald-800 '
+                        : 'bg-slate-100  text-slate-600  hover:bg-slate-200 '
                   }`}
                 >
                   {concluida ? <FiCheck className="w-3 h-3" /> : <Icone className="w-3 h-3" />}
@@ -387,18 +387,18 @@ export default function FechamentoDpWizard({
         </ol>
       </div>
 
-      <div className="p-4 space-y-3 text-xs text-gray-700 dark:text-slate-300">
+      <div className="p-4 space-y-3 text-xs text-gray-700 ">
         {/* Etapa 1 — Escala GT */}
         {etapa === 1 && (
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-bold text-gray-900 dark:text-slate-100">{tf('dp.fechamento.escalaTitulo', 'Homologação da escala GT')}</span>
+              <span className="font-bold text-gray-900 ">{tf('dp.fechamento.escalaTitulo', 'Homologação da escala GT')}</span>
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold ${
                 escalaHomologada
-                  ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
+                  ? 'bg-emerald-100  text-emerald-800 '
                   : escalaStatus === 'em_aprovacao'
-                    ? 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300'
-                    : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
+                    ? 'bg-blue-100  text-blue-800 '
+                    : 'bg-amber-100  text-amber-800 '
               }`}>
                 {escalaHomologada && <FiCheckCircle className="w-3 h-3" />}
                 {escalaHomologada
@@ -408,7 +408,7 @@ export default function FechamentoDpWizard({
                     : tf('dp.fechamento.escalaPendente', 'Pendente de homologação')}
               </span>
             </div>
-            <p className="text-[11px] text-gray-500 dark:text-slate-400">
+            <p className="text-[11px] text-gray-500 ">
               {tf('dp.fechamento.escalaDescricao', 'A escala da competência precisa estar assinada pelos aprovadores antes do fechamento da folha.')}
             </p>
             <button
@@ -426,17 +426,17 @@ export default function FechamentoDpWizard({
         {etapa === 2 && (
           <div className="space-y-3">
             {!podeVerFolha ? (
-              <p className="text-[11px] text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+              <p className="text-[11px] text-amber-800  bg-amber-50  border border-amber-200  rounded-lg p-3">
                 {tf('dp.fechamento.requerFolhaView', 'Requer permissão folha.view para as etapas da folha de pagamento.')}
               </p>
             ) : (
               <>
-                <label className="block text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase">
+                <label className="block text-[11px] font-bold text-gray-500  uppercase">
                   {tf('dp.fechamento.empresaFolha', 'Empresa da folha')}
                   <select
                     value={companyId}
                     onChange={(e) => setCompanyId(e.target.value)}
-                    className="block mt-0.5 w-64 max-w-full px-2 py-1 text-xs border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 font-medium text-gray-700 dark:text-slate-200"
+                    className="block mt-0.5 w-64 max-w-full px-2 py-1 text-xs border border-gray-300  rounded-lg bg-white  font-medium text-gray-700 "
                   >
                     <option value="">{tf('dp.fechamento.selecioneEmpresaOpcao', 'Selecione uma empresa')}</option>
                     {empresas.map((emp) => (
@@ -447,14 +447,14 @@ export default function FechamentoDpWizard({
                 <div className="flex flex-wrap items-center gap-2">
                   <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold ${
                     competenciaStatusWk && competenciaStatusWk.itensWk > 0
-                      ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                      ? 'bg-emerald-100  text-emerald-800 '
+                      : 'bg-slate-100  text-slate-600 '
                   }`}>
                     {competenciaStatusWk
                       ? tf('dp.fechamento.itensWk', `${competenciaStatusWk.itensWk} itens WK na competência`, { count: competenciaStatusWk.itensWk })
                       : tf('dp.fechamento.semItensWk', 'Nenhum item WK nesta competência')}
                   </span>
-                  <span className="text-[11px] text-gray-500 dark:text-slate-400">
+                  <span className="text-[11px] text-gray-500 ">
                     {statusWk?.ultimoEvento
                       ? `${tf('dp.fechamento.ultimaSync', 'Última sync')}: ${formatDataBR(statusWk.ultimoEvento.em)}`
                       : tf('dp.fechamento.nuncaSincronizado', 'Nunca sincronizado')}
@@ -481,19 +481,19 @@ export default function FechamentoDpWizard({
         {etapa === 3 && (
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-bold text-gray-900 dark:text-slate-100">{tf('dp.fechamento.calculoTitulo', 'Cálculo da folha da competência')}</span>
+              <span className="font-bold text-gray-900 ">{tf('dp.fechamento.calculoTitulo', 'Cálculo da folha da competência')}</span>
               {sheet && (
                 <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold ${
-                  sheet.status === 'calculated' ? 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300'
-                    : sheetAprovada ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
-                      : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
+                  sheet.status === 'calculated' ? 'bg-blue-100  text-blue-800 '
+                    : sheetAprovada ? 'bg-emerald-100  text-emerald-800 '
+                      : 'bg-amber-100  text-amber-800 '
                 }`}>
                   {tf(`dp.folha.status${sheet.status.charAt(0).toUpperCase()}${sheet.status.slice(1)}`, sheet.status)}
                 </span>
               )}
             </div>
             {!sheet && (
-              <p className="text-[11px] text-gray-500 dark:text-slate-400">
+              <p className="text-[11px] text-gray-500 ">
                 {tf('dp.fechamento.semSheet', 'Nenhuma folha nesta competência — o cálculo cria a sheet e lê embarques, dobras, folgas e férias.')}
               </p>
             )}
@@ -502,7 +502,7 @@ export default function FechamentoDpWizard({
               onClick={calcularFolha}
               disabled={!podeEditar || !companyId || calculando || sheetAprovada}
               title={!podeEditar ? tf('dp.fechamento.requerFolhaEdit', 'Requer permissão folha.edit') : undefined}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-indigo-900 dark:text-indigo-200 bg-indigo-100 dark:bg-indigo-950 hover:bg-indigo-200 dark:hover:bg-indigo-900 rounded-xl transition shadow-xs disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-indigo-900  bg-indigo-100  hover:bg-indigo-200  rounded-xl transition shadow-xs disabled:opacity-50"
             >
               <FiDollarSign className={`w-3.5 h-3.5 ${calculando ? 'animate-pulse' : ''}`} />
               {calculando
@@ -516,16 +516,16 @@ export default function FechamentoDpWizard({
         {etapa === 4 && (
           <div className="space-y-3">
             {checklistCarregando ? (
-              <p className="text-[11px] text-gray-500 dark:text-slate-400">
+              <p className="text-[11px] text-gray-500 ">
                 <FiRefreshCw className="animate-spin inline w-3.5 h-3.5 mr-1.5 text-abz-blue" />
                 {tf('dp.fechamento.checklistCarregando', 'Conferindo checklist da competência...')}
               </p>
             ) : !checklist ? (
-              <p className="text-[11px] text-gray-500 dark:text-slate-400">{tf('dp.fechamento.checklistIndisponivel', 'Checklist indisponível — calcule a folha primeiro.')}</p>
+              <p className="text-[11px] text-gray-500 ">{tf('dp.fechamento.checklistIndisponivel', 'Checklist indisponível — calcule a folha primeiro.')}</p>
             ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  <div className={`p-3 rounded-lg border ${checklist.escalaTravada ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950' : 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950'}`}>
+                  <div className={`p-3 rounded-lg border ${checklist.escalaTravada ? 'border-emerald-200  bg-emerald-50 ' : 'border-amber-200  bg-amber-50 '}`}>
                     <div className="flex items-center gap-1.5 font-bold text-[11px]">
                       {checklist.escalaTravada ? <FiCheckCircle className="w-3.5 h-3.5 text-emerald-600" /> : <FiAlertTriangle className="w-3.5 h-3.5 text-amber-600" />}
                       {tf('dp.fechamento.chkEscala', 'Escala GT travada')}
@@ -536,7 +536,7 @@ export default function FechamentoDpWizard({
                         : tf('dp.fechamento.chkEscalaPendente', 'Escala ainda não homologada — volte à etapa 1.')}
                     </p>
                   </div>
-                  <div className={`p-3 rounded-lg border ${checklist.semSalario.length === 0 ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950' : 'border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950'}`}>
+                  <div className={`p-3 rounded-lg border ${checklist.semSalario.length === 0 ? 'border-emerald-200  bg-emerald-50 ' : 'border-red-300  bg-red-50 '}`}>
                     <div className="flex items-center gap-1.5 font-bold text-[11px]">
                       {checklist.semSalario.length === 0 ? <FiCheckCircle className="w-3.5 h-3.5 text-emerald-600" /> : <FiXCircle className="w-3.5 h-3.5 text-red-600" />}
                       {tf('dp.fechamento.chkSalario', 'Salário base preenchido')}
@@ -547,7 +547,7 @@ export default function FechamentoDpWizard({
                         : tf('dp.fechamento.chkSalarioBloqueio', `${checklist.semSalario.length} ativo(s) sem salário — BLOQUEIA o fechamento.`, { count: checklist.semSalario.length })}
                     </p>
                   </div>
-                  <div className={`p-3 rounded-lg border ${checklist.semVinculo.length === 0 ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950' : 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950'}`}>
+                  <div className={`p-3 rounded-lg border ${checklist.semVinculo.length === 0 ? 'border-emerald-200  bg-emerald-50 ' : 'border-amber-200  bg-amber-50 '}`}>
                     <div className="flex items-center gap-1.5 font-bold text-[11px]">
                       {checklist.semVinculo.length === 0 ? <FiCheckCircle className="w-3.5 h-3.5 text-emerald-600" /> : <FiAlertTriangle className="w-3.5 h-3.5 text-amber-600" />}
                       {tf('dp.fechamento.chkVinculo', 'Vínculo GT ↔ folha')}
@@ -558,7 +558,7 @@ export default function FechamentoDpWizard({
                         : tf('dp.fechamento.chkVinculoPendente', `${checklist.semVinculo.length} colaborador(es) com escala sem vínculo na folha.`, { count: checklist.semVinculo.length })}
                     </p>
                   </div>
-                  <div className={`p-3 rounded-lg border ${checklist.divergenciasWkGt.length === 0 ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950' : 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950'}`}>
+                  <div className={`p-3 rounded-lg border ${checklist.divergenciasWkGt.length === 0 ? 'border-emerald-200  bg-emerald-50 ' : 'border-amber-200  bg-amber-50 '}`}>
                     <div className="flex items-center gap-1.5 font-bold text-[11px]">
                       {checklist.divergenciasWkGt.length === 0 ? <FiCheckCircle className="w-3.5 h-3.5 text-emerald-600" /> : <FiAlertTriangle className="w-3.5 h-3.5 text-amber-600" />}
                       {tf('dp.fechamento.chkDivergencias', 'Precedência WK × GT')}
@@ -572,16 +572,16 @@ export default function FechamentoDpWizard({
                 </div>
 
                 {checklist.semSalario.length > 0 && (
-                  <div className="rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950 p-3">
-                    <p className="font-bold text-[11px] text-red-900 dark:text-red-200 mb-1">
+                  <div className="rounded-lg border border-red-300  bg-red-50  p-3">
+                    <p className="font-bold text-[11px] text-red-900  mb-1">
                       {tf('dp.fechamento.semSalarioTitulo', 'Ativos sem salário base (impeditivo)')}
                     </p>
-                    <ul className="text-[11px] text-red-800 dark:text-red-300 space-y-0.5">
+                    <ul className="text-[11px] text-red-800  space-y-0.5">
                       {checklist.semSalario.map((p) => (
                         <li key={p.id} className="flex flex-wrap gap-2">
                           <span className="font-semibold">{p.nome}</span>
                           <span className="font-mono">{p.cpf || '—'}</span>
-                          <span className="text-red-600 dark:text-red-400">{p.matricula || ''}</span>
+                          <span className="text-red-600 ">{p.matricula || ''}</span>
                         </li>
                       ))}
                     </ul>
@@ -589,11 +589,11 @@ export default function FechamentoDpWizard({
                 )}
 
                 {checklist.semVinculo.length > 0 && (
-                  <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 p-3">
-                    <p className="font-bold text-[11px] text-amber-900 dark:text-amber-200 mb-1">
+                  <div className="rounded-lg border border-amber-200  bg-amber-50  p-3">
+                    <p className="font-bold text-[11px] text-amber-900  mb-1">
                       {tf('dp.fechamento.semVinculoTitulo', 'Com escala e sem vínculo na folha')}
                     </p>
-                    <ul className="text-[11px] text-amber-900 dark:text-amber-200 space-y-0.5">
+                    <ul className="text-[11px] text-amber-900  space-y-0.5">
                       {checklist.semVinculo.map((p) => (
                         <li key={p.cpf} className="flex flex-wrap gap-2">
                           <span className="font-mono font-bold">{p.cpf}</span>
@@ -604,7 +604,7 @@ export default function FechamentoDpWizard({
                     <button
                       type="button"
                       onClick={onIrParaColaboradores}
-                      className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold text-amber-900 dark:text-amber-200 bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-slate-700 rounded-lg transition"
+                      className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold text-amber-900  bg-white  border border-amber-300  hover:bg-amber-100  rounded-lg transition"
                     >
                       <FiUsers className="w-3 h-3" />
                       {tf('dp.fechamento.resolverNaAbaColaboradores', 'Resolver na aba Colaboradores')}
@@ -613,16 +613,16 @@ export default function FechamentoDpWizard({
                 )}
 
                 {checklist.divergenciasWkGt.length > 0 && (
-                  <div className="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
-                    <p className="font-bold text-[11px] text-gray-900 dark:text-slate-100 mb-1">
+                  <div className="rounded-lg border border-gray-200  bg-white  p-3">
+                    <p className="font-bold text-[11px] text-gray-900  mb-1">
                       {tf('dp.fechamento.divergenciasTitulo', 'Códigos GT descartados por precedência WK')}
                     </p>
-                    <ul className="text-[11px] text-gray-700 dark:text-slate-300 space-y-0.5">
+                    <ul className="text-[11px] text-gray-700  space-y-0.5">
                       {checklist.divergenciasWkGt.map((d) => (
                         <li key={d.code} className="flex flex-wrap gap-2">
                           <span className="font-mono font-bold">{d.code}</span>
                           <span>{d.nome}</span>
-                          <span className="text-gray-500 dark:text-slate-400">
+                          <span className="text-gray-500 ">
                             {tf('dp.fechamento.divergenciasColaboradores', `${d.colaboradores} colaborador(es)`, { count: d.colaboradores })}
                           </span>
                         </li>
@@ -639,10 +639,10 @@ export default function FechamentoDpWizard({
         {etapa === 5 && (
           <div className="space-y-3">
             {!sheet ? (
-              <p className="text-[11px] text-gray-500 dark:text-slate-400">{tf('dp.fechamento.semSheetAssinar', 'Nenhuma folha calculada nesta competência.')}</p>
+              <p className="text-[11px] text-gray-500 ">{tf('dp.fechamento.semSheetAssinar', 'Nenhuma folha calculada nesta competência.')}</p>
             ) : sheetAprovada ? (
               <div className="space-y-3">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100  text-emerald-800 ">
                   <FiLock className="w-3.5 h-3.5" />
                   {tf('dp.fechamento.folhaBloqueada', 'Folha aprovada e bloqueada')}
                 </span>
@@ -652,15 +652,15 @@ export default function FechamentoDpWizard({
                       type="button"
                       onClick={() => setFormReabrirAberto(true)}
                       title={tf('dp.fechamento.requerFolhaApprove', 'Requer permissão folha.approve (verificado no servidor)')}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-amber-900 dark:text-amber-200 bg-amber-100 dark:bg-amber-950 hover:bg-amber-200 dark:hover:bg-amber-900 rounded-xl transition shadow-xs disabled:opacity-50"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-amber-900  bg-amber-100  hover:bg-amber-200  rounded-xl transition shadow-xs disabled:opacity-50"
                     >
                       <FiUnlock className="w-3.5 h-3.5" />
                       {tf('dp.fechamento.reabrirFolha', 'Reabrir folha para correção')}
                     </button>
                   </div>
                 ) : (
-                  <div className="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950 p-3 space-y-2">
-                    <p className="text-[11px] font-bold text-amber-900 dark:text-amber-200">
+                  <div className="rounded-lg border border-amber-300  bg-amber-50  p-3 space-y-2">
+                    <p className="text-[11px] font-bold text-amber-900 ">
                       {tf('dp.fechamento.reabrirTitulo', 'Reabertura auditada — a folha volta para "calculada" e as assinaturas são reiniciadas.')}
                     </p>
                     <textarea
@@ -668,7 +668,7 @@ export default function FechamentoDpWizard({
                       onChange={(e) => setJustificativa(e.target.value)}
                       rows={3}
                       placeholder={tf('dp.fechamento.justificativaPlaceholder', 'Justificativa obrigatória (ex.: rubrica lançada a maior para a matrícula 1234)')}
-                      className="w-full px-2.5 py-1.5 text-xs border border-amber-300 dark:border-amber-700 rounded-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100"
+                      className="w-full px-2.5 py-1.5 text-xs border border-amber-300  rounded-lg bg-white  text-gray-900 "
                     />
                     <div className="flex flex-wrap gap-2">
                       <button
@@ -684,7 +684,7 @@ export default function FechamentoDpWizard({
                         type="button"
                         onClick={() => { setFormReabrirAberto(false); setJustificativa(''); }}
                         disabled={reabrindo}
-                        className="px-3 py-1.5 text-[11px] font-bold text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-xl transition"
+                        className="px-3 py-1.5 text-[11px] font-bold text-gray-700  bg-white  border border-gray-300  hover:bg-gray-50  rounded-xl transition"
                       >
                         {tf('dp.fechamento.cancelar', 'Cancelar')}
                       </button>
@@ -694,7 +694,7 @@ export default function FechamentoDpWizard({
               </div>
             ) : (
               <div className="space-y-3">
-                <p className="text-[11px] text-gray-500 dark:text-slate-400">
+                <p className="text-[11px] text-gray-500 ">
                   {sheet.status === 'calculated'
                     ? tf('dp.fechamento.assinarDescricao', 'A folha está calculada. Inicie a coleta de assinaturas para aprovar e bloquear a competência.')
                     : tf('dp.fechamento.assinarRascunho', 'A folha ainda está em rascunho — calcule na etapa 3 antes de assinar.')}
@@ -714,12 +714,12 @@ export default function FechamentoDpWizard({
         )}
 
         {/* Navegação */}
-        <div className="flex items-center justify-between border-t border-gray-100 dark:border-slate-800 pt-3">
+        <div className="flex items-center justify-between border-t border-gray-100  pt-3">
           <button
             type="button"
             onClick={() => setEtapa((e) => Math.max(1, e - 1))}
             disabled={etapa <= 1}
-            className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-gray-600 dark:text-slate-300 border border-gray-300 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-40 transition"
+            className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-gray-600  border border-gray-300  rounded-lg hover:bg-gray-50  disabled:opacity-40 transition"
           >
             <FiChevronLeft className="w-3.5 h-3.5" />
             {tf('dp.fechamento.voltar', 'Voltar')}

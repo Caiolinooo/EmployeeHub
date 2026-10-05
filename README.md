@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.94.2 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.95.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,13 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.95.0)
+
+- **Financeiro e Folha de Pagamento viraram um módulo só ("Financeiro")**: menu, cards, ACL e o card do Supabase agora apontam para o módulo unificado; dark mode foi removido de toda a superfície (paleta ABZ única).
+- **Itens pendentes implementados**: Perfis de Cálculo (edição real em `payroll_calculation_profiles`), Tabelas Legais (visualizador INSS/IRRF/FGTS) e os relatórios Mensal/Custos/Guias agora calculam a competência de verdade via novo `/api/payroll/relatorios/operacional`.
+- **Filtros da Matriz GT**: dropdowns de empresa/cargo/centro de custo deixam de esvaziar quando um KPI ou busca estreita a lista — opções vêm dos endpoints de lookup.
+- **Carteira de recebimentos**: novo painel de aging/inadimplência na aba Bancos & Recebimentos, com endpoint dedicado e correções no fluxo de pagamento em lote.
 
 ## Nesta versão (5.94.2)
 

@@ -238,44 +238,44 @@ export default function EmpresasTab() {
       {/* Tabela */}
       <div className={`${FIN_CARD_CLASS} min-h-0 flex-1 overflow-auto`}>
         {carregando ? (
-          <div className="flex items-center justify-center gap-2 p-10 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center justify-center gap-2 p-10 text-sm text-gray-500 ">
             <FiLoader className="h-5 w-5 animate-spin text-abz-blue" /> {t('financeiro.carregando')}
           </div>
         ) : empresas.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 p-10 text-sm text-gray-400 dark:text-gray-500">
+          <div className="flex flex-col items-center justify-center gap-2 p-10 text-sm text-gray-400 ">
             <FiFolder className="h-8 w-8" /> {t('fin.nenhumaEmpresa')}
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
-            <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900">
+          <table className="min-w-full divide-y divide-gray-200  text-sm">
+            <thead className="sticky top-0 bg-gray-50 ">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.clienteNome')}</th>
-                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('fin.cnpj')}</th>
-                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('fin.razaoSocial')}</th>
-                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400">
+                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 ">{t('financeiro.clienteNome')}</th>
+                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 ">{t('fin.cnpj')}</th>
+                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 ">{t('fin.razaoSocial')}</th>
+                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 ">
                   {t('fin.municipio')}/{t('fin.uf')}
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('fin.inscricaoMunicipal')}</th>
-                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.status')}</th>
-                <th className="px-4 py-2 text-right text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.acoes')}</th>
+                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 ">{t('fin.inscricaoMunicipal')}</th>
+                <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500 ">{t('financeiro.status')}</th>
+                <th className="px-4 py-2 text-right text-xs font-bold uppercase text-gray-500 ">{t('financeiro.acoes')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody className="divide-y divide-gray-100 ">
               {empresas.map((empresa) => (
-                <tr key={empresa.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/40">
-                  <td className="px-4 py-2 font-semibold text-gray-900 dark:text-gray-100">{empresa.name}</td>
-                  <td className="px-4 py-2 text-gray-600 dark:text-gray-300">{empresa.cnpj}</td>
-                  <td className="px-4 py-2 text-gray-600 dark:text-gray-300">{empresa.razao_social || '—'}</td>
-                  <td className="px-4 py-2 text-gray-600 dark:text-gray-300">
+                <tr key={empresa.id} className="hover:bg-gray-50 ">
+                  <td className="px-4 py-2 font-semibold text-gray-900 ">{empresa.name}</td>
+                  <td className="px-4 py-2 text-gray-600 ">{empresa.cnpj}</td>
+                  <td className="px-4 py-2 text-gray-600 ">{empresa.razao_social || '—'}</td>
+                  <td className="px-4 py-2 text-gray-600 ">
                     {[empresa.municipio, empresa.uf].filter(Boolean).join('/') || '—'}
                   </td>
-                  <td className="px-4 py-2 text-gray-600 dark:text-gray-300">{empresa.inscricao_municipal || '—'}</td>
+                  <td className="px-4 py-2 text-gray-600 ">{empresa.inscricao_municipal || '—'}</td>
                   <td className="px-4 py-2">
                     <span
                       className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
                         empresa.is_active
-                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
-                          : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                          ? 'bg-emerald-100 text-emerald-700  '
+                          : 'bg-gray-100 text-gray-500  '
                       }`}
                     >
                       {empresa.is_active ? t('fin.ativo') : t('fin.inativo')}
@@ -285,7 +285,7 @@ export default function EmpresasTab() {
                     <button
                       type="button"
                       onClick={() => abrirEdicao(empresa)}
-                      className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-abz-blue dark:hover:bg-gray-700"
+                      className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-abz-blue "
                       aria-label={t('financeiro.editar')}
                     >
                       <FiEdit2 className="h-4 w-4" />
@@ -293,7 +293,7 @@ export default function EmpresasTab() {
                     <button
                       type="button"
                       onClick={() => excluir(empresa)}
-                      className="rounded-lg p-2 text-gray-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/30"
+                      className="rounded-lg p-2 text-gray-400 transition hover:bg-rose-50 hover:text-rose-600 "
                       aria-label={t('financeiro.excluir')}
                     >
                       <FiTrash2 className="h-4 w-4" />
@@ -313,21 +313,21 @@ export default function EmpresasTab() {
             role="dialog"
             aria-modal="true"
             aria-label={editando ? t('fin.editarEmpresa') : t('fin.novaEmpresa')}
-            className="flex h-[100dvh] w-full max-w-3xl flex-col overflow-hidden bg-white shadow-2xl dark:bg-gray-800 sm:h-auto sm:max-h-[92dvh] sm:rounded-2xl sm:border sm:border-gray-200 dark:sm:border-gray-700"
+            className="flex h-[100dvh] w-full max-w-3xl flex-col overflow-hidden bg-white shadow-2xl  sm:h-auto sm:max-h-[92dvh] sm:rounded-2xl sm:border sm:border-gray-200 "
           >
-            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-900 sm:px-6">
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3   sm:px-6">
               <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-abz-blue text-white shadow-sm">
                   <FiBriefcase className="h-5 w-5" />
                 </div>
-                <h2 className="truncate text-base font-bold text-gray-900 dark:text-gray-100 sm:text-lg">
+                <h2 className="truncate text-base font-bold text-gray-900  sm:text-lg">
                   {editando ? t('fin.editarEmpresa') : t('fin.novaEmpresa')}
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={() => setModalAberto(false)}
-                className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-200 hover:text-gray-700 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-200 hover:text-gray-700  "
                 aria-label={t('financeiro.fechar')}
               >
                 <FiX className="h-5 w-5" />
@@ -337,36 +337,36 @@ export default function EmpresasTab() {
             <div className="min-h-0 flex-1 overflow-auto p-4 sm:p-6">
               <div className="space-y-4">
                 <fieldset className="space-y-3">
-                  <legend className="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                  <legend className="text-xs font-bold uppercase tracking-wider text-gray-400 ">
                     {t('fin.secaoIdentificacao')}
                   </legend>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <label className="block">
-                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.clienteNome')}</span>
+                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 ">{t('financeiro.clienteNome')}</span>
                       <input value={form.name} onChange={(e) => set('name', e.target.value)} className={FIN_INPUT_CLASS} />
                     </label>
                     <label className="block">
-                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('fin.cnpj')}</span>
+                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 ">{t('fin.cnpj')}</span>
                       <input value={form.cnpj} onChange={(e) => set('cnpj', e.target.value)} className={FIN_INPUT_CLASS} maxLength={18} />
                     </label>
                     <label className="block">
-                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('fin.razaoSocial')}</span>
+                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 ">{t('fin.razaoSocial')}</span>
                       <input value={form.razao_social} onChange={(e) => set('razao_social', e.target.value)} className={FIN_INPUT_CLASS} />
                     </label>
                     <label className="block">
-                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('fin.nomeFantasia')}</span>
+                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 ">{t('fin.nomeFantasia')}</span>
                       <input value={form.nome_fantasia} onChange={(e) => set('nome_fantasia', e.target.value)} className={FIN_INPUT_CLASS} />
                     </label>
                   </div>
                 </fieldset>
 
                 <fieldset className="space-y-3">
-                  <legend className="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                  <legend className="text-xs font-bold uppercase tracking-wider text-gray-400 ">
                     {t('fin.secaoFiscal')}
                   </legend>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <label className="block">
-                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('fin.inscricaoMunicipal')}</span>
+                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 ">{t('fin.inscricaoMunicipal')}</span>
                       <input
                         value={form.inscricao_municipal}
                         onChange={(e) => set('inscricao_municipal', e.target.value)}
@@ -375,7 +375,7 @@ export default function EmpresasTab() {
                       />
                     </label>
                     <label className="block">
-                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('fin.inscricaoEstadual')}</span>
+                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 ">{t('fin.inscricaoEstadual')}</span>
                       <input
                         value={form.inscricao_estadual}
                         onChange={(e) => set('inscricao_estadual', e.target.value)}
@@ -384,7 +384,7 @@ export default function EmpresasTab() {
                       />
                     </label>
                     <label className="block">
-                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('fin.cnaePrincipal')}</span>
+                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 ">{t('fin.cnaePrincipal')}</span>
                       <input
                         value={form.cnae_principal}
                         onChange={(e) => set('cnae_principal', e.target.value)}
@@ -396,32 +396,32 @@ export default function EmpresasTab() {
                 </fieldset>
 
                 <fieldset className="space-y-3">
-                  <legend className="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                  <legend className="text-xs font-bold uppercase tracking-wider text-gray-400 ">
                     {t('fin.secaoEndereco')}
                   </legend>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-6">
                     <label className="block sm:col-span-4">
-                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('fin.logradouro')}</span>
+                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 ">{t('fin.logradouro')}</span>
                       <input value={form.logradouro} onChange={(e) => set('logradouro', e.target.value)} className={FIN_INPUT_CLASS} />
                     </label>
                     <label className="block sm:col-span-2">
-                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.numero')}</span>
+                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 ">{t('financeiro.numero')}</span>
                       <input value={form.numero} onChange={(e) => set('numero', e.target.value)} className={FIN_INPUT_CLASS} maxLength={20} />
                     </label>
                     <label className="block sm:col-span-3">
-                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('fin.complemento')}</span>
+                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 ">{t('fin.complemento')}</span>
                       <input value={form.complemento} onChange={(e) => set('complemento', e.target.value)} className={FIN_INPUT_CLASS} />
                     </label>
                     <label className="block sm:col-span-3">
-                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('fin.bairro')}</span>
+                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 ">{t('fin.bairro')}</span>
                       <input value={form.bairro} onChange={(e) => set('bairro', e.target.value)} className={FIN_INPUT_CLASS} maxLength={120} />
                     </label>
                     <label className="block sm:col-span-2">
-                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('fin.municipio')}</span>
+                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 ">{t('fin.municipio')}</span>
                       <input value={form.municipio} onChange={(e) => set('municipio', e.target.value)} className={FIN_INPUT_CLASS} maxLength={120} />
                     </label>
                     <label className="block sm:col-span-1">
-                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('fin.uf')}</span>
+                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 ">{t('fin.uf')}</span>
                       <input
                         value={form.uf}
                         onChange={(e) => set('uf', e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2))}
@@ -430,11 +430,11 @@ export default function EmpresasTab() {
                       />
                     </label>
                     <label className="block sm:col-span-1">
-                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('fin.cep')}</span>
+                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 ">{t('fin.cep')}</span>
                       <input value={form.cep} onChange={(e) => set('cep', e.target.value)} className={FIN_INPUT_CLASS} maxLength={9} />
                     </label>
                     <label className="block sm:col-span-2">
-                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('fin.municipioIbge')}</span>
+                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 ">{t('fin.municipioIbge')}</span>
                       <input
                         value={form.municipio_ibge}
                         onChange={(e) => set('municipio_ibge', e.target.value.replace(/\D/g, '').slice(0, 7))}
@@ -446,20 +446,20 @@ export default function EmpresasTab() {
                 </fieldset>
 
                 <fieldset className="space-y-3">
-                  <legend className="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                  <legend className="text-xs font-bold uppercase tracking-wider text-gray-400 ">
                     {t('fin.secaoContato')}
                   </legend>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <label className="block">
-                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('financeiro.clienteEmail')}</span>
+                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 ">{t('financeiro.clienteEmail')}</span>
                       <input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} className={FIN_INPUT_CLASS} />
                     </label>
                     <label className="block">
-                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('fin.telefone')}</span>
+                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 ">{t('fin.telefone')}</span>
                       <input value={form.phone} onChange={(e) => set('phone', e.target.value)} className={FIN_INPUT_CLASS} maxLength={20} />
                     </label>
                     <label className="block">
-                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{t('fin.contato')}</span>
+                      <span className="mb-1 block text-xs font-bold uppercase text-gray-500 ">{t('fin.contato')}</span>
                       <input
                         value={form.contact_person}
                         onChange={(e) => set('contact_person', e.target.value)}
@@ -467,12 +467,12 @@ export default function EmpresasTab() {
                       />
                     </label>
                   </div>
-                  <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+                  <label className="inline-flex items-center gap-2 text-sm text-gray-700 ">
                     <input
                       type="checkbox"
                       checked={form.is_active}
                       onChange={(e) => set('is_active', e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300 text-abz-blue focus:ring-abz-blue dark:border-gray-600"
+                      className="h-4 w-4 rounded border-gray-300 text-abz-blue focus:ring-abz-blue "
                     />
                     {t('fin.ativo')}
                   </label>
@@ -480,7 +480,7 @@ export default function EmpresasTab() {
               </div>
             </div>
 
-            <div className="flex shrink-0 items-center justify-end gap-2 border-t border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-900 sm:px-6">
+            <div className="flex shrink-0 items-center justify-end gap-2 border-t border-gray-200 bg-gray-50 px-4 py-3   sm:px-6">
               <button type="button" onClick={() => setModalAberto(false)} className={FIN_BTN_SECONDARY_CLASS}>
                 {t('financeiro.cancelar')}
               </button>

@@ -364,20 +364,20 @@ function ConfigForm({
 
       {/* A1 unico da empresa (e-Social) — sem upload paralelo */}
       {(exigeA1 || providerKey === "proprietario") && (
-        <div className={`rounded-xl border p-3 ${certUnico ? 'border-emerald-200 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-900/20' : 'border-amber-200 bg-amber-50/50'}`}>
-          <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase text-gray-600 dark:text-gray-300">
+        <div className={`rounded-xl border p-3 ${certUnico ? 'border-emerald-200 bg-emerald-50/50  ' : 'border-amber-200 bg-amber-50/50'}`}>
+          <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase text-gray-600 ">
             {certUnico ? <FiCheckCircle className="h-4 w-4 text-emerald-600" /> : <FiAlertTriangle className="h-4 w-4 text-amber-700" />}
             {t('financeiro.certificadoUnicoTitulo')}
           </p>
           {certUnico ? (
-            <div className="space-y-1 text-sm text-gray-700 dark:text-gray-200">
+            <div className="space-y-1 text-sm text-gray-700 ">
               <p className="font-semibold">{certUnico.nome}{certUnico.subjectCn ? ` · ${certUnico.subjectCn}` : ''}</p>
               <p className="text-xs text-gray-500">{t('financeiro.certificadoUnicoValidade')}: {certUnico.validoAte || '—'}</p>
               <p className="truncate font-mono text-xs text-gray-400" title={certUnico.fingerprint}>{certUnico.fingerprint}</p>
               <p className="text-xs text-gray-500">{t('financeiro.certificadoUnicoHint')}</p>
             </div>
           ) : (
-            <p className="text-sm text-amber-800 dark:text-amber-200">{certUnicoErro || t('financeiro.certificadoUnicoAusente')}</p>
+            <p className="text-sm text-amber-800 ">{certUnicoErro || t('financeiro.certificadoUnicoAusente')}</p>
           )}
           <a href="/department/e-social" className={`${FIN_BTN_SECONDARY_CLASS} mt-3 inline-flex`}>
             {t('financeiro.certificadoUnicoGerenciar')}

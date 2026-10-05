@@ -49,6 +49,12 @@ NFS-e (RPS transacional), bancos (integrações/contas/catálogo), cobranças
   casamento txid > nosso_numero > valor+data contra cobranças `gerada` → `liquidada` + evento
 - cobrancas/[id]/atualizar: o contrato §3.1 não tem consulta unitária — "reconsulta"
   roda a conciliação automática da conta contra a cobrança alvo
+- `GET /carteira`: aging de recebimentos (`ref` = YYYY-MM-DD, padrão hoje; `moeda`
+  padrão BRL — somar moedas diferentes daria número sem sentido). Só faturas
+  `emitida|nfse_emitida`; saldo = `valor_total` − Σ cobranças `liquidada`; cálculo em
+  `regras-financeiro.agingCarteira`. `montarCarteira` devolve o `FinCarteira` completo
+  — a rota só embrulha em `finOk`, e `referencia`/`moeda` voltam no corpo para o cliente
+  saber o corte dos totais (não devolver só o núcleo faz o contrato mentir).
 - DELETE de cliente: com faturas → soft-delete (`is_active=false`); sem → delete físico
 - DELETE de integração/conta/template/config NFS-e → soft-delete
 

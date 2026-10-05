@@ -45,7 +45,7 @@ export default function ContasBancariasCards() {
               <FiCreditCard className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-bold text-gray-900 dark:text-gray-100">
+              <p className="truncate text-sm font-bold text-gray-900 ">
                 {conta.banco_nome || conta.banco_codigo}
               </p>
               <p className="text-xs text-gray-500">

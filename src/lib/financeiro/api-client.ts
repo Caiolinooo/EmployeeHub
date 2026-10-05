@@ -40,6 +40,7 @@ import type {
   FinNfseEmissaoDetalhe,
   FinGerarDaFolhaInput,
   FinIntegracaoAmbiente,
+  FinCarteira,
 } from '@/types/financeiro';
 
 const BASE = '/api/financeiro';
@@ -108,6 +109,14 @@ function jsonInit(method: string, payload: unknown): RequestInit {
 
 export function getVisaoGeral(params?: { competencia?: string; empresaId?: string }): Promise<FinVisaoGeral> {
   return unwrap<FinVisaoGeral>(`/visao-geral${qs(params)}`);
+}
+
+// ============================================================
+// Carteira de recebimentos (aging / inadimplência)
+// ============================================================
+
+export function getCarteira(params?: { empresaId?: string; moeda?: string; ref?: string }): Promise<FinCarteira> {
+  return unwrap<FinCarteira>(`/carteira${qs(params)}`);
 }
 
 // ============================================================
@@ -393,7 +402,6 @@ export function atualizarCobranca(id: string): Promise<FinCobranca> {
 // ============================================================
 
 export function criarLotePagamentos(input: {
-  origemTipo: 'payroll_sheet' | 'manual';
   origemId: string;
   contaBancariaId: string;
   dataPrevista?: string;

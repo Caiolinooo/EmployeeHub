@@ -143,14 +143,14 @@ export function getTranslatedMenu(t: (key: string, defaultValue?: string) => str
     },
     {
       id: 'folha-pagamento',
-      title: t('menu.folhaPagamento'),
+      title: t('menu.financeiro'),
       href: '/folha-pagamento',
       icon: FiDollarSign,
       external: false,
       enabled: true,
       order: 11,
       adminOnly: false,
-      moduleKey: 'folha_pagamento'
+      moduleKey: 'financeiro'
     },
     {
       id: 'avaliacao',
@@ -310,13 +310,13 @@ const menuItems: MenuItem[] = [
   {
     id: 'folha-pagamento',
     href: '/folha-pagamento',
-    label: 'Folha de Pagamento',
+    label: 'Financeiro',
     icon: FiDollarSign,
     external: false,
     enabled: true,
     order: 11,
     adminOnly: false,
-    moduleKey: 'folha_pagamento'
+    moduleKey: 'financeiro'
   },
   {
     id: 'avaliacao',

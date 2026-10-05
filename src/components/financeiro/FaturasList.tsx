@@ -186,8 +186,8 @@ export default function FaturasList() {
 
       {/* Tabela */}
       <div className="min-h-0 flex-1 overflow-auto">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900">
+        <table className="min-w-full divide-y divide-gray-200 ">
+          <thead className="sticky top-0 bg-gray-50 ">
             <tr>
               <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500">{t('financeiro.numero')}</th>
               <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500">{t('financeiro.cliente')}</th>
@@ -198,17 +198,17 @@ export default function FaturasList() {
               <th className="px-4 py-2" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+          <tbody className="divide-y divide-gray-100 ">
             {faturas.map((fatura) => (
               <React.Fragment key={fatura.id}>
-                <tr className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="px-4 py-2 text-sm font-bold text-gray-900 dark:text-gray-100">
+                <tr className="hover:bg-gray-50 ">
+                  <td className="px-4 py-2 text-sm font-bold text-gray-900 ">
                     {fatura.numero}/{fatura.ano}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200">{nomeCliente(fatura)}</td>
-                  <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">{competenciaLabel(fatura)}</td>
-                  <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">{fatura.moeda}</td>
-                  <td className="px-4 py-2 text-right text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  <td className="px-4 py-2 text-sm text-gray-700 ">{nomeCliente(fatura)}</td>
+                  <td className="px-4 py-2 text-sm text-gray-600 ">{competenciaLabel(fatura)}</td>
+                  <td className="px-4 py-2 text-sm text-gray-600 ">{fatura.moeda}</td>
+                  <td className="px-4 py-2 text-right text-sm font-semibold text-gray-900 ">
                     {formatarMoeda(fatura.valor_total, fatura.moeda)}
                   </td>
                   <td className="px-4 py-2">
@@ -227,7 +227,7 @@ export default function FaturasList() {
                 </tr>
                 {expandida === fatura.id && (
                   <tr>
-                    <td colSpan={7} className="bg-gray-50/70 px-4 py-3 dark:bg-gray-800/70">
+                    <td colSpan={7} className="bg-gray-50/70 px-4 py-3 ">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="mr-2 text-xs font-bold uppercase text-gray-400">{labelOrigem(fatura.origem_tipo)}</span>
                         <button type="button" onClick={() => setViewer(fatura)} className={FIN_BTN_SECONDARY_CLASS}>

@@ -85,8 +85,8 @@ export default function MunicipiosTab() {
       {/* Tabela */}
       <div className={`${FIN_CARD_CLASS} overflow-hidden`}>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-900">
+          <table className="min-w-full divide-y divide-gray-200 ">
+            <thead className="bg-gray-50 ">
               <tr>
                 <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500">{t('financeiro.cfgCodigoIbge')}</th>
                 <th className="px-4 py-2 text-left text-xs font-bold uppercase text-gray-500">{t('financeiro.cfgMunicipio')}</th>
@@ -96,7 +96,7 @@ export default function MunicipiosTab() {
                 <th className="px-4 py-2" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-gray-100 ">
               {itens.map((municipio) => (
                 <LinhaMunicipio
                   key={municipio.codigo_ibge}
@@ -180,10 +180,10 @@ function LinhaMunicipio({
   }
 
   return (
-    <tr className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+    <tr className="hover:bg-gray-50 ">
       <td className="px-4 py-2 font-mono text-xs text-gray-500">{municipio.codigo_ibge}</td>
-      <td className="px-4 py-2 text-sm font-semibold text-gray-900 dark:text-gray-100">{municipio.nome}</td>
-      <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">{municipio.uf}</td>
+      <td className="px-4 py-2 text-sm font-semibold text-gray-900 ">{municipio.nome}</td>
+      <td className="px-4 py-2 text-sm text-gray-600 ">{municipio.uf}</td>
       {editando ? (
         <>
           <td className="px-4 py-2">
@@ -210,7 +210,7 @@ function LinhaMunicipio({
         </>
       ) : (
         <>
-          <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">
+          <td className="px-4 py-2 text-sm text-gray-600 ">
             {municipio.provider_sugerido ? PROVIDER_LABEL_KEY[municipio.provider_sugerido] : '—'}
           </td>
           <td className="max-w-48 truncate px-4 py-2 font-mono text-xs text-gray-500" title={municipio.wsdl_url ?? ''}>

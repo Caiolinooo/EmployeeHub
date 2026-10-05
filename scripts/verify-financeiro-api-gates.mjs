@@ -29,6 +29,7 @@ async function main() {
   });
   const verificacoes = [
     ['GET /visao-geral sem token', () => codigo('/api/financeiro/visao-geral?empresaId=' + UUID_FALSO)],
+    ['GET /carteira sem token', () => codigo('/api/financeiro/carteira?empresaId=' + UUID_FALSO)],
     ['GET /clientes sem token', () => codigo('/api/financeiro/clientes')],
     ['POST /clientes sem token', () => codigo('/api/financeiro/clientes', json({}))],
     ['GET /clientes/[id] sem token', () => codigo(`/api/financeiro/clientes/${UUID_FALSO}`)],
