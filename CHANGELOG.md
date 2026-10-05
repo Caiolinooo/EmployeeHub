@@ -1,5 +1,26 @@
 # Changelog
 
+## [5.94.1] - 2026-10-05
+
+### Recuperação das escalas apagadas e saneamento da manutenção da escala (GT)
+
+#### Recuperado
+
+1. **61 rotações de escala que sumiram da grade** (2861 → 2922 eventos vivos) restauradas por `scripts/recupera-escala-apagada.ts`: cada item volta com uma linha `restore` em `gt_escala_edicoes` (before/after + hash no mesmo formato do portal), então a recuperação aparece na Fila de Revisão e pode ser revertida como qualquer edição. Onze colaboradores ficaram com a escala estendida até 2027 (RAMON 22/01/27, PAULO LIMA 15/01/27, BRUNO 06/02/27, ALEX e RAFAEL 30/01/27).
+2. **219 colaboradores com `data_ultimo_embarque` / `data_proximo_embarque` congeladas** recalculadas por `scripts/recalc-escala-datas.ts` a partir dos eventos vivos (o único escritor dessas colunas era o pull MIO, desligado na v5.77.0). Rodar de novo devolve 0 divergentes.
+
+#### Corrigido
+
+1. **Leitura NÃO paginada nos scripts de limpeza** (`limpa-sobrepostos-embarques`, `dedupe-embarques-locais`): o PostgREST trunca em 1000 linhas (`db-max-rows`), então os scripts decidiam sobreposições e dedupe sobre um subconjunto arbitrário das ~2.900 linhas vivas.
+2. **Soft-delete em lote sem trilha e sem resync**: os dois scripts apagavam sem registrar em `gt_escala_edicoes` e sem rederivar as colunas de escala dos colaboradores afetados — foi assim que escala saiu do grid sem reversão possível. Agora gravam trilha por linha, em lote, e resincronizam as datas.
+3. **Regra de substituição sem type-aware**: os scripts legados derrubavam a rotação quando o sobreposto era um marcador (DBA/FI/STB/OFF-C). Passam a usar `filtrarSubstitutiveis`/`normalizarTipoEscala`, a mesma regra do portal — marcador nunca apaga rotação.
+
+#### Adicionado
+
+1. **`scripts/lib/escala-manutencao.ts`**: núcleo compartilhado dos scripts de escala (leitura paginada, diff/sincronização das datas de escala, snapshot/hash/trilha no formato do portal, soft-delete e restauração em lote). Reusa `derivarDatasEscala`, `resolverEmbarcacaoAtual` e `paginarSelect` — a regra de derivação não é reimplementada.
+2. **`scripts/recupera-escala-apagada.ts`**: classifica todo soft-delete sem trilha em cinco grupos (restaura apenas o que ALARGA a escala; histórico, marcador, conflito e sem-data ficam no relatório para decisão humana) e reporta o efeito na escala de cada colaborador.
+3. **Scripts de limpeza reescritos em TypeScript** (`limpa-sobrepostos-embarques.ts`, `dedupe-embarques-locais.ts`), com dry-run por padrão e `--apply` explícito; as versões `.js` legadas foram removidas.
+
 ## [Unreleased]
 
 ## [5.94.0] - 2026-10-02

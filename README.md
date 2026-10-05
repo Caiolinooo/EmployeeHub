@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.94.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.94.1 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,13 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.94.1)
+
+- **Escalas apagadas, recuperadas**: 61 rotações que sumiram da grade voltaram com trilha de auditoria (aparecem na Fila de Revisão e podem ser revertidas como qualquer edição); 11 colaboradores ficaram escalados até 2027.
+- **Datas de escala destravadas**: 219 colaboradores com último/próximo embarque congelados foram recalculados a partir dos eventos vivos — o dado que a Matriz de Conformidade e a lista de tripulantes exibem voltou a bater.
+- **Scripts de manutenção da escala saneados**: leitura paginada, soft-delete com trilha e resync das datas, e substituição type-aware (marcador DBA/FI/STB/OFF-C nunca mais apaga a rotação do tripulante).
+- **Recuperação reproduzível**: `scripts/recupera-escala-apagada.ts`, `scripts/recalc-escala-datas.ts` e o núcleo `scripts/lib/escala-manutencao.ts` — todos com dry-run por padrão e relatório do que seria alterado.
 
 ## Nesta versão (5.94.0)
 
