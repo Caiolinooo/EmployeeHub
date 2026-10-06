@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.95.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.96.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,11 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.96.0)
+
+- **Integração PontoFlow (Time-Sheet)**: SSO single-use, sincronização de colaboradores, webhook assinado (HMAC + dedup) com resumo de ponto e cron diário de sync — configuração no novo painel `/admin/integracoes`.
+- **e-Social GT**: importação de ASO agora valida permissão antes do submit (banner + botão desabilitado para quem não pode editar documentos) e o endpoint exige `canEditGtDocuments`.
 
 ## Nesta versão (5.95.0)
 

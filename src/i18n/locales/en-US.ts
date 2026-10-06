@@ -729,6 +729,23 @@ export default {
     'e460055d-4b67-4350-a015-5317fc07e76aDesc': 'Administrative panel'
   },
   ponto: {
+    timesheet: {
+      title: 'Time Sheet',
+      description: 'Log your time in Time Sheet. Access is directly from the portal, no extra password.',
+      loading: 'Loading…',
+      loadError: 'Failed to load Time Sheet status',
+      open: 'Open Time Sheet',
+      opening: 'Opening…',
+      openError: 'Could not open Time Sheet',
+      syncPending: 'Your record is being synced; if access fails, try again shortly.',
+      syncError: 'There is a sync issue with your record. Tell HR if access fails.',
+      summaryTitle: 'Period summary',
+      period: 'Period',
+      status: 'Status',
+      workedDays: 'Worked days',
+      workedHours: 'Worked hours',
+      notEnabled: 'Your record is not enabled for Time Sheet. Ask HR to enable "Contabilizar no Time Sheet".',
+    },
     title: 'Time Clock',
     pageTitle: 'Time Clock',
     description: 'Register your time and check your history',
@@ -1045,6 +1062,35 @@ export default {
     code: 'en-US'
   },
   admin: {
+    timesheet: {
+      title: 'Time-Sheet Integration (PontoFlow)',
+      subtitle: 'Per-company settings (1 tenant per company), credentials and sync queue.',
+      queueTitle: 'Sync queue',
+      queuePending: 'Pending',
+      queueRetry: 'Awaiting retry',
+      queueDead: 'Failed (dead)',
+      syncNow: 'Sync now',
+      syncing: 'Syncing…',
+      syncOk: 'Sync finished: {ok} ok, {failed} failed, {dead} dead',
+      syncError: 'Sync failed',
+      reprocess: 'Reprocess failed',
+      reprocessing: 'Reprocessing…',
+      reprocessOk: '{n} job(s) returned to the queue',
+      reprocessError: 'Failed to reprocess',
+      loadError: 'Failed to load settings',
+      loading: 'Loading…',
+      noCompanies: 'No companies registered.',
+      enabled: 'Integration enabled',
+      tenantSlug: 'Tenant slug in Time-Sheet',
+      baseUrl: 'API base URL (https)',
+      apiKey: 'API key (X-API-Key)',
+      webhookSecret: 'Webhook secret (HMAC)',
+      keepSecret: 'Empty keeps current',
+      save: 'Save',
+      saving: 'Saving…',
+      saveOk: 'Settings saved',
+      saveError: 'Failed to save',
+    },
     // — Finance - Configuration (§8) —
     financeiroConfig: 'Finance - Configuration',
     tabBancos: 'Banks',
@@ -4459,6 +4505,15 @@ export default {
     sem_permissao_desc: 'You do not have permission to view or manage Chat.'
   },
   gestaoTripulantes: {
+    cadastro: {
+      contabilizarTimesheet: 'Count in Time Sheet',
+      timesheetSync: {
+        pendente: 'Sync pending',
+        ativo: 'Time Sheet active',
+        inativo: 'Time Sheet inactive',
+        erro: 'Sync error',
+      },
+    },
     title: 'Crew Management',
     subtitle: 'Intelligent crew management and offshore scale dashboard',
     tabs: {

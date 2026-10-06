@@ -28,13 +28,14 @@ export const ALLOWED_COLAB_FIELDS = [
   'escala_embarque', 'escala_folga', 'status_embarque', 'standby', 'ativo',
   'data_ultimo_embarque', 'data_ultimo_desembarque', 'data_proximo_embarque',
   'dados_saude', 'tipo_admissao', 'natureza_atividade', 'tipo_jornada', 'tipo_lotacao',
+  'contabilizar_timesheet',
 ] as const;
 
 export type AllowedColabField = (typeof ALLOWED_COLAB_FIELDS)[number];
 
 export const ALLOWED_COLAB_FIELD_SET = new Set<string>(ALLOWED_COLAB_FIELDS);
 
-export const BOOLEAN_COLAB_FIELDS = new Set(['standby', 'ativo']);
+export const BOOLEAN_COLAB_FIELDS = new Set(['standby', 'ativo', 'contabilizar_timesheet']);
 export const NUMBER_COLAB_FIELDS = new Set([
   'peso', 'altura', 'salario', 'escala_embarque', 'escala_folga',
 ]);

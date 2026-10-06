@@ -1,5 +1,18 @@
 # Changelog
 
+## [5.96.0] - 2026-10-06
+
+### Integração PontoFlow (Time-Sheet) e correção de permissão no e-Social GT
+
+#### Adicionado
+
+1. **Integração PontoFlow/Time-Sheet**: módulo `src/lib/timesheet-integration/` + rotas `/api/pontoflow/*` (SSO single-use, people sync), `/api/webhooks/pontoflow` (HMAC `X-PontoFlow-Signature`, dedup por event id, resumo de ponto em `ts_timesheet_resumo`) e `/api/cron/timesheet-sync` (diário 04:00, registrado no `vercel.json`). Painel admin em `/admin/integracoes`, documentação em `docs/timesheet-integration/` e migrations `20261006_000001/000002`. Credenciais em `app_secrets` (`timesheet.<empresaId>.*`), tenant TS `abz` em `sso_only`.
+2. **Colaboradores GT sincronizam dados pessoais com o TS**: cadastro/edição (`colaborador-cadastro.ts`, rotas de colaboradores e form) propagam `dados_pessoais` para o módulo Ponto (`/ponto`) e para o Time-Sheet.
+
+#### Corrigido
+
+1. **ASO/e-Social 403 para não-admin**: `POST /api/gestao-tripulantes/documentos/[id]/esocial` agora exige `canEditGtDocuments` (antes só token válido) e o `ImportarASOModal` faz fail-fast — banner + botão desabilitado via `GET /documentos/permissions` em vez de quebrar no submit. Contas ADMIN/MANAGER mantêm bypass; o erro do print era sessão de conta USER (gmail pessoal), não bug de admin.
+
 ## [5.95.0] - 2026-10-05
 
 ### Módulo Financeiro unificado, dark mode removido, itens pendentes implementados e filtros GT

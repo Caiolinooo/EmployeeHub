@@ -23,6 +23,7 @@ import {
   type DocumentoAgrupavel,
 } from '@/lib/gestao-tripulantes/documento-historico';
 import { montarPayloadCadastro } from '@/lib/gestao-tripulantes/colaborador-cadastro';
+import { syncColaboradorAfterSave } from '@/lib/timesheet-integration/outbox';
 import {
   MENSAGEM_CADASTRO_NEGADO,
   podeMutarCadastroColaborador,
@@ -450,10 +451,14 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // Run auto event generation in background
-      autoGenerateESocialEvents(newColaborador.id).catch(err => {
-        console.error('[eSocialAuto] Failed in background execution:', err);
-      });
+      // Time-Sheet: flag ligada no cadastro → enfileira sync (best-effort,
+      // nunca falha o save — design §9.7).
+      if (newColaborador.contabilizar_timesheet === true) {
+        syncColaboradorAfterSave(newColaborador.id, { flagChanged: true }).catch(err => {
+          console.error('[TimesheetSync] Failed to enqueue after create:', err);
+        });
+      }
+
     }
 
     return NextResponse.json({

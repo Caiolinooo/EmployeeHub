@@ -5,6 +5,7 @@ import { autoGenerateESocialEvents } from '@/services/eSocialAutoService';
 import { findColaboradorByCpf } from '@/lib/gestao-tripulantes/cpf-lookup';
 import { loadColaboradorDetail, parseIncludeParam } from '@/lib/gestao-tripulantes/colaborador-get';
 import { montarPayloadCadastro } from '@/lib/gestao-tripulantes/colaborador-cadastro';
+import { syncColaboradorAfterSave } from '@/lib/timesheet-integration/outbox';
 import {
   MENSAGEM_CADASTRO_NEGADO,
   podeMutarCadastroColaborador,
@@ -111,6 +112,17 @@ export async function PUT(
       }
       updateData[idKey] = row.id;
     }
+    // Time-Sheet: flag anterior p/ detectar mudança (design §9.1/§9.2).
+    let flagAnterior: boolean | null = null;
+    if ('contabilizar_timesheet' in updateData) {
+      const { data: atual } = await supabaseAdmin
+        .from('gt_colaboradores')
+        .select('contabilizar_timesheet')
+        .eq('id', id)
+        .maybeSingle();
+      flagAnterior = atual?.contabilizar_timesheet === true;
+    }
+
 
     const { data: updated, error: updateError } = await supabaseAdmin
       .from('gt_colaboradores')
@@ -130,6 +142,15 @@ export async function PUT(
     if (updated && updated.id) {
       autoGenerateESocialEvents(updated.id).catch(err => {
         console.error('[eSocialAuto] Failed in background execution on update:', err);
+      });
+
+      // Time-Sheet: reenfileira se a flag mudou OU o payload de sync mudou
+      // (hash em ts_people_map) — best-effort, nunca falha o save (design §9.7).
+      const flagChanged =
+        'contabilizar_timesheet' in updateData &&
+        (updateData.contabilizar_timesheet === true) !== flagAnterior;
+      syncColaboradorAfterSave(updated.id, { flagChanged }).catch(err => {
+        console.error('[TimesheetSync] Failed to enqueue after update:', err);
       });
     }
 

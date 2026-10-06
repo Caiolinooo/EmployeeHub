@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { authenticateUser } from '@/lib/api-auth';
+import { canEditGtDocuments } from '@/lib/gestao-tripulantes/documento-permissions';
 import { generateEventXML, validateEventXML, validateEventData, updateEvento, logEnvio } from '@/services/eSocialService';
 import { cpfsMatch, normalizeCpf } from '@/lib/gestao-tripulantes/cpf';
 import { sanitizeTsNome } from '@/lib/e-social/ts-nome';
@@ -182,6 +184,14 @@ export async function POST(
     if (!token) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     const payload = verifyToken(token);
     if (!payload) return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+
+    // Mesmo gate do PUT /documentos/[id]: gerar evento e-Social exige
+    // permissão de edição de documentos do cadastro (ADMIN/MANAGER/feature/ACL).
+    const { user, error: authError } = await authenticateUser(request);
+    if (authError) return authError;
+    if (!user || !(await canEditGtDocuments(user))) {
+      return NextResponse.json({ error: 'Sem permissão para enviar documentos ao e-Social' }, { status: 403 });
+    }
 
     const { id: docId } = await context.params;
 

@@ -814,6 +814,23 @@ export default {
     'e460055d-4b67-4350-a015-5317fc07e76aDesc': 'Painel administrativo'
   },
   ponto: {
+    timesheet: {
+      title: 'Time Sheet',
+      description: 'Registre seu ponto no Time Sheet. O acesso é feito diretamente pelo portal, sem senha adicional.',
+      loading: 'Carregando…',
+      loadError: 'Falha ao carregar status do Time Sheet',
+      open: 'Abrir Time Sheet',
+      opening: 'Abrindo…',
+      openError: 'Não foi possível abrir o Time Sheet',
+      syncPending: 'Seu cadastro está sendo sincronizado; se o acesso falhar, tente novamente em instantes.',
+      syncError: 'Há uma pendência na sincronização do seu cadastro. Avise o DP se o acesso falhar.',
+      summaryTitle: 'Resumo do período',
+      period: 'Período',
+      status: 'Status',
+      workedDays: 'Dias trabalhados',
+      workedHours: 'Horas trabalhadas',
+      notEnabled: 'Seu cadastro não está habilitado para Time Sheet. Procure o DP para ativar a opção "Contabilizar no Time Sheet".',
+    },
     title: 'Ponto',
     pageTitle: 'Registro de Ponto',
     description: 'Registre seu ponto e consulte seu histórico',
@@ -1157,6 +1174,35 @@ export default {
     }
   },
   admin: {
+    timesheet: {
+      title: 'Integração Time-Sheet (PontoFlow)',
+      subtitle: 'Configuração por empresa (1 tenant por empresa), credenciais e fila de sincronização.',
+      queueTitle: 'Fila de sincronização',
+      queuePending: 'Pendentes',
+      queueRetry: 'Aguardando retry',
+      queueDead: 'Falhos (dead)',
+      syncNow: 'Sincronizar agora',
+      syncing: 'Sincronizando…',
+      syncOk: 'Sincronização concluída: {ok} ok, {failed} falhas, {dead} dead',
+      syncError: 'Falha ao sincronizar',
+      reprocess: 'Reprocessar falhos',
+      reprocessing: 'Reprocessando…',
+      reprocessOk: '{n} job(s) devolvido(s) à fila',
+      reprocessError: 'Falha ao reprocessar',
+      loadError: 'Falha ao carregar configurações',
+      loading: 'Carregando…',
+      noCompanies: 'Nenhuma empresa cadastrada.',
+      enabled: 'Integração habilitada',
+      tenantSlug: 'Slug do tenant no Time-Sheet',
+      baseUrl: 'URL base da API (https)',
+      apiKey: 'API key (X-API-Key)',
+      webhookSecret: 'Segredo dos webhooks (HMAC)',
+      keepSecret: 'Vazio mantém a atual',
+      save: 'Salvar',
+      saving: 'Salvando…',
+      saveOk: 'Configuração salva',
+      saveError: 'Falha ao salvar',
+    },
     // — Financeiro - Configuração (§8) —
     financeiroConfig: 'Financeiro - Configuração',
     tabBancos: 'Bancos',
@@ -4460,6 +4506,15 @@ export default {
     }
   },
   gestaoTripulantes: {
+    cadastro: {
+      contabilizarTimesheet: 'Contabilizar no Time Sheet',
+      timesheetSync: {
+        pendente: 'Sync pendente',
+        ativo: 'Time Sheet ativo',
+        inativo: 'Time Sheet inativo',
+        erro: 'Erro de sync',
+      },
+    },
     title: 'Gestão de Tripulantes',
     subtitle: 'Dashboard inteligente de tripulantes e escala offshore',
     tabs: {

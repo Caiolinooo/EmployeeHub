@@ -47,8 +47,10 @@ const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', '
   const [ocrNome, setOcrNome] = useState('');
   const [ocrCpf, setOcrCpf] = useState('');
   const [identityMatch, setIdentityMatch] = useState<string | null>(null);
+  const [canEditDocs, setCanEditDocs] = useState<boolean | null>(null);
 
-  // Fetch collaborators
+  // Fetch collaborators + checa permissão de edição ANTES de upload/OCR,
+  // para falhar rápido em vez de só no "Salvar & Enviar" (403 do PUT).
   useEffect(() => {
     async function loadCollaborators() {
       try {
@@ -61,8 +63,23 @@ const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', '
         console.error('Erro ao carregar colaboradores:', err);
       }
     }
+    async function loadPermissions() {
+      try {
+        const res = await fetchWithToken('/api/gestao-tripulantes/documentos/permissions');
+        if (res.ok) {
+          const json = await res.json();
+          setCanEditDocs(json.canEdit === true);
+        } else {
+          setCanEditDocs(false);
+        }
+      } catch (err) {
+        console.error('Erro ao verificar permissões de documentos:', err);
+        setCanEditDocs(false);
+      }
+    }
     if (isOpen) {
       loadCollaborators();
+      loadPermissions();
     }
   }, [isOpen]);
 
@@ -80,6 +97,10 @@ const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', '
   };
 
   const handleStartPipeline = async () => {
+    if (canEditDocs === false) {
+      toast.error('Sem permissão para editar documentos do cadastro. Faça login com uma conta autorizada (ADMIN/MANAGER).');
+      return;
+    }
     if (!selectedColabId) {
       toast.error('Selecione um colaborador');
       return;
@@ -329,6 +350,14 @@ const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', '
 
         {/* Content */}
         <div className="p-6 overflow-y-auto space-y-5 flex-1">
+          {canEditDocs === false && (
+            <div className="flex items-start gap-2.5 p-3.5 rounded-lg border border-red-200 bg-red-50 text-red-700">
+              <FiAlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              <p className="text-xs font-semibold leading-relaxed">
+                Sem permissão para editar documentos do cadastro. Esta conta não pode importar ASO nem enviar ao e-Social — faça login com uma conta autorizada (ADMIN/MANAGER).
+              </p>
+            </div>
+          )}
           {step === 'idle' && (
             <div className="space-y-4">
               {/* Colaborador */}
@@ -657,7 +686,7 @@ const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', '
               </button>
               <button
                 onClick={handleStartPipeline}
-                disabled={!selectedColabId || !file}
+                disabled={!selectedColabId || !file || canEditDocs === false}
                 className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm disabled:opacity-40 disabled:pointer-events-none transition-all flex items-center gap-1.5"
               >
                 <FiCpu className="w-3.5 h-3.5" />

@@ -26,6 +26,7 @@ import {
   persistirCamposEscala,
 } from '@/lib/gestao-tripulantes/regime-escala';
 import { formatCpf, isValidCpf } from '@/lib/utils/identity';
+import { useI18n } from '@/contexts/I18nContext';
 
 type TabId =
   | 'dados-pessoais'
@@ -99,6 +100,7 @@ export function hydrateCadastroForm(data?: Record<string, unknown> | null): Reco
     data_proximo_embarque: toDateInput(data.data_proximo_embarque as string | null),
     standby: Boolean(data.standby),
     ativo: data.ativo !== false,
+    contabilizar_timesheet: Boolean(data.contabilizar_timesheet),
   };
 }
 
@@ -121,6 +123,8 @@ export default function ColaboradorCadastroForm({
   onSaved,
   onCancel,
 }: ColaboradorCadastroFormProps) {
+  const { t } = useI18n();
+
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>('dados-pessoais');
   const [saving, setSaving] = useState(false);
@@ -417,6 +421,43 @@ export default function ColaboradorCadastroForm({
                   />
                   Ativo na folha
                 </label>
+              </div>
+              <div>
+                {label(t('gestaoTripulantes.cadastro.contabilizarTimesheet', 'Contabilizar no Time Sheet'))}
+                <label className="flex items-center gap-2 text-sm text-gray-800 mt-2">
+                  <input
+                    type="checkbox"
+                    checked={form.contabilizar_timesheet === true}
+                    onChange={e => set('contabilizar_timesheet', e.target.checked)}
+                    className="w-4 h-4 text-blue-600 rounded border-gray-300"
+                  />
+                  {t('gestaoTripulantes.cadastro.contabilizarTimesheet', 'Contabilizar no Time Sheet')}
+                </label>
+                {(() => {
+                  const status = String(form.timesheet_sync_status || 'none');
+                  if (status === 'none') return null;
+                  const syncError = String(form.timesheet_sync_error || '');
+                  const statusStyles: Record<string, string> = {
+                    pending: 'bg-amber-50 text-amber-700 border-amber-200',
+                    active: 'bg-green-50 text-green-700 border-green-200',
+                    inactive: 'bg-gray-50 text-gray-600 border-gray-200',
+                    error: 'bg-red-50 text-red-700 border-red-200',
+                  };
+                  const statusLabels: Record<string, string> = {
+                    pending: t('gestaoTripulantes.cadastro.timesheetSync.pendente', 'Sync pendente'),
+                    active: t('gestaoTripulantes.cadastro.timesheetSync.ativo', 'Time Sheet ativo'),
+                    inactive: t('gestaoTripulantes.cadastro.timesheetSync.inativo', 'Time Sheet inativo'),
+                    error: t('gestaoTripulantes.cadastro.timesheetSync.erro', 'Erro de sync'),
+                  };
+                  return (
+                    <span
+                      title={syncError || undefined}
+                      className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full border ${statusStyles[status] || statusStyles.inactive}`}
+                    >
+                      {statusLabels[status] || status}
+                    </span>
+                  );
+                })()}
               </div>
             </>)}
             {section('Nascimento', <>
