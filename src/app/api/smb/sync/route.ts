@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { withAdmin } from '@/lib/api-auth';
 import { createServiceFromConfig, getMimeType, SmbService, LocalFsService } from '@/lib/smbService';
+import { getConfig } from '@/lib/gestao-tripulantes/config-service';
 
 export const dynamic = 'force-dynamic';
 // Increase timeout for sync operations
@@ -37,6 +38,23 @@ export const POST = withAdmin(async (request: NextRequest) => {
             return NextResponse.json(
                 { error: 'Conexão não encontrada' },
                 { status: 404 }
+            );
+        }
+
+        // Respeita a pausa: conexão desativada não sincroniza nem por disparo manual
+        if (conn.is_active === false) {
+            return NextResponse.json(
+                { error: 'Conexão desativada (is_active=false). Reative em /admin/smb-connector.' },
+                { status: 409 }
+            );
+        }
+
+        // Kill-switch global do robô (gt_configuracoes.smb_sync_enabled = false)
+        const cfgSync = await getConfig('smb_sync_enabled');
+        if (cfgSync.success && cfgSync.data === false) {
+            return NextResponse.json(
+                { error: 'SMB Sync pausado (gt_configuracoes.smb_sync_enabled = false).' },
+                { status: 409 }
             );
         }
 

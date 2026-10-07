@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { FiUpload, FiDownload, FiSend, FiHeart, FiAlertCircle, FiCheckCircle, FiClock, FiEye, FiFileText, FiEdit2, FiTrash2, FiX, FiSave } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
 import { fetchWithToken } from '@/lib/tokenStorage';
+import { uploadDocumentoGt } from '@/lib/gestao-tripulantes/upload-client';
 import { toast } from 'react-hot-toast';
 import { cpfsMatch, formatCpf, isEsocialGlobalVisible, normalizeCpf } from '@/lib/gestao-tripulantes/cpf';
 import { enviarOcrDocumento } from '@/components/gestao-tripulantes/ocr-client';
@@ -346,19 +347,12 @@ export default function ASOTab({ colaboradorId, colaboradorCpf, documentos, esoc
     if (!file) return;
     try {
       setUploading(true);
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('colaborador_id', colaboradorId);
-      fd.append('tipo_documento', 'aso');
-      fd.append('titulo', 'ASO');
-
-      const res = await fetchWithToken('/api/gestao-tripulantes/documentos/upload', {
-        method: 'POST',
-        body: fd,
+      const json = await uploadDocumentoGt({
+        file,
+        colaboradorId,
+        tipoDocumento: 'aso',
+        titulo: 'ASO',
       });
-      if (!res.ok) throw new Error('Upload falhou');
-
-      const json = await res.json();
       const doc = json.data;
 
       toast.success(t('gestaoTripulantes.upload.success'));
@@ -367,8 +361,8 @@ export default function ASOTab({ colaboradorId, colaboradorCpf, documentos, esoc
       if (doc && doc.id && doc.arquivo_url) {
         handleRunOCR(doc.id, doc.arquivo_url);
       }
-    } catch {
-      toast.error(t('gestaoTripulantes.upload.error'));
+    } catch (err: unknown) {
+      toast.error(err instanceof Error && err.message ? err.message : t('gestaoTripulantes.upload.error'));
     } finally {
       setUploading(false);
       e.target.value = '';

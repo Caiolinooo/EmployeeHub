@@ -2,13 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { authenticateUser } from '@/lib/api-auth';
-import { canDeleteGtDocuments, canEditGtDocuments } from '@/lib/gestao-tripulantes/documento-permissions';
+import { podeExcluirDocumentoGt, podeIncluirOuEditarDocumentoGt } from '@/lib/gestao-tripulantes/documento-permissions';
+import { usuarioPodeVerDocumentoGt } from '@/lib/gestao-tripulantes/empresa-acesso';
 import { buscarCodigoExame } from '@/lib/e-social/codigos';
 import {
   garantirNumeroRastreioUnico,
   validarDatasObrigatorias,
   calcularStatusValidacaoPorValidade,
 } from '@/lib/gestao-tripulantes/documento-integrity';
+import {
+  resolverTipoDocumentoEdicao,
+  asoBloqueiaTrocaDeTipo,
+} from '@/lib/gestao-tripulantes/documento-tipos';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +34,11 @@ export async function GET(
     }
 
     const { id } = await context.params;
+
+    // ACL por empresa
+    if (!(await usuarioPodeVerDocumentoGt({ id: payload.userId, role: payload.role }, id))) {
+      return NextResponse.json({ error: 'Sem acesso a este documento (empresa restrita)' }, { status: 403 });
+    }
 
     const { data, error } = await supabaseAdmin
       .from('gt_documentos')
@@ -74,11 +84,17 @@ export async function PUT(
   try {
     const { user, error: authError } = await authenticateUser(request);
     if (authError) return authError;
-    if (!user || !(await canEditGtDocuments(user))) {
+    if (!user || !(await podeIncluirOuEditarDocumentoGt(user))) {
       return NextResponse.json({ error: 'Sem permissão para editar documentos do cadastro' }, { status: 403 });
     }
 
     const { id } = await context.params;
+
+    // ACL por empresa
+    if (!(await usuarioPodeVerDocumentoGt(user, id))) {
+      return NextResponse.json({ error: 'Sem acesso a este documento (empresa restrita)' }, { status: 403 });
+    }
+
     const body = await request.json();
 
     const { aso, treinamento_data, ...docFields } = body;
@@ -89,8 +105,15 @@ export async function PUT(
     delete updateData.colaborador_id;
     delete updateData.numero_rastreio;
     delete updateData.arquivo_hash;
+    // Troca de tipo não move o arquivo nem abre outra linha.
+    for (const key of [
+      'arquivo_path', 'arquivo_url', 'arquivo_tipo', 'arquivo_tamanho_bytes', 'arquivo_nome',
+      'arquivo_ausente', 'arquivo_ausente_em', 'arquivo_ausente_motivo', 'origem',
+    ]) {
+      delete updateData[key];
+    }
 
-    for (const key of ['numero_documento', 'orgao_emissor', 'data_emissao', 'data_validade', 'titulo', 'descricao', 'subtipo']) {
+    for (const key of ['numero_documento', 'orgao_emissor', 'data_emissao', 'data_validade', 'titulo', 'descricao', 'subtipo', 'tipo_documento']) {
       if (key in updateData && typeof updateData[key] === 'string') {
         const trimmed = updateData[key].trim();
         updateData[key] = trimmed === '' ? null : (key.startsWith('data_') ? trimmed.slice(0, 10) : trimmed);
@@ -111,15 +134,53 @@ export async function PUT(
     const emQuarentena =
       atual.identity_match === 'quarantine' || body.quarentena === true;
 
+    let tipoEfetivo = atual.tipo_documento as string;
+    if ('tipo_documento' in updateData) {
+      const resolved = resolverTipoDocumentoEdicao(updateData.tipo_documento);
+      if (!resolved.ok) {
+        return NextResponse.json({
+          error: resolved.error,
+          tipos_aceitos: resolved.tipos_aceitos,
+        }, { status: 400 });
+      }
+      tipoEfetivo = resolved.tipo;
+      if (resolved.tipo !== atual.tipo_documento) {
+        let esocialStatus: string | null = null;
+        const tipoAtual = String(atual.tipo_documento || '').toLowerCase();
+        if (tipoAtual === 'aso' || tipoAtual === 'laudo') {
+          const { data: asoRow } = await supabaseAdmin
+            .from('gt_documentos_aso')
+            .select('esocial_status')
+            .eq('documento_id', id)
+            .maybeSingle();
+          esocialStatus = asoRow?.esocial_status ?? null;
+        }
+        if (asoBloqueiaTrocaDeTipo(atual.tipo_documento, resolved.tipo, esocialStatus)) {
+          return NextResponse.json({
+            error: 'ASO já enviado ao e-Social — não editável',
+          }, { status: 409 });
+        }
+        updateData.tipo_documento = resolved.tipo;
+        if (resolved.subtipo && !('subtipo' in docFields)) {
+          updateData.subtipo = resolved.subtipo;
+        }
+      } else {
+        delete updateData.tipo_documento;
+        if (resolved.subtipo && !('subtipo' in docFields)) {
+          updateData.subtipo = resolved.subtipo;
+        }
+      }
+    }
+
     const efetivo = {
       data_emissao: 'data_emissao' in updateData ? updateData.data_emissao : atual.data_emissao,
       data_validade: 'data_validade' in updateData ? updateData.data_validade : atual.data_validade,
-      tipo_documento: atual.tipo_documento,
+      tipo_documento: tipoEfetivo,
     };
     const validacao = validarDatasObrigatorias(efetivo, {
       permitirQuarentena: emQuarentena,
       permitirSemValidade: true,
-      tipoDocumento: atual.tipo_documento,
+      tipoDocumento: tipoEfetivo,
     });
     if (!validacao.ok) {
       return NextResponse.json({
@@ -132,13 +193,13 @@ export async function PUT(
       delete updateData.status_validacao;
     }
     if (efetivo.data_validade !== undefined) {
-      updateData.status_validacao = calcularStatusValidacaoPorValidade(efetivo.data_validade, { tipoDocumento: atual.tipo_documento });
+      updateData.status_validacao = calcularStatusValidacaoPorValidade(efetivo.data_validade, { tipoDocumento: tipoEfetivo });
     }
 
-    // Garante numero_rastreio único em qualquer edição
+    // Garante numero_rastreio único em qualquer edição. Rastreio já gravado permanece.
     let numeroRastreioFinal = atual.numero_rastreio as string | null;
     if (!numeroRastreioFinal) {
-      numeroRastreioFinal = await garantirNumeroRastreioUnico(atual.tipo_documento);
+      numeroRastreioFinal = await garantirNumeroRastreioUnico(tipoEfetivo);
       updateData.numero_rastreio = numeroRastreioFinal;
     }
 
@@ -215,11 +276,16 @@ export async function DELETE(
   try {
     const { user, error: authError } = await authenticateUser(request);
     if (authError) return authError;
-    if (!user || !(await canDeleteGtDocuments(user))) {
+    if (!user || !(await podeExcluirDocumentoGt(user))) {
       return NextResponse.json({ error: 'Sem permissão para excluir documentos do cadastro' }, { status: 403 });
     }
 
     const { id } = await context.params;
+
+    // ACL por empresa
+    if (!(await usuarioPodeVerDocumentoGt(user, id))) {
+      return NextResponse.json({ error: 'Sem acesso a este documento (empresa restrita)' }, { status: 403 });
+    }
 
     const { error } = await supabaseAdmin
       .from('gt_documentos')

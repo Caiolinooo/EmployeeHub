@@ -101,9 +101,8 @@ export interface GTColaborador {
     ultimo_embarque?: any;
 }
 
-export type TipoDocumento = 'aso' | 'treinamento' | 'passaporte' | 'cnh' | 'certidao_nascimento'
-    | 'certidao_casamento' | 'reservista' | 'titulo_eleitor' | 'ctps'
-    | 'documento_pessoal' | 'certificado' | 'contrato' | 'laudo' | 'outro';
+export type TipoDocumento = 'aso' | 'treinamento' | 'passaporte' | 'certificado' | 'laudo'
+    | 'pessoal' | 'contratual' | 'demissional' | 'ferias' | 'ponto' | 'outro';
 
 export type StatusValidacao = 'valido' | 'vencendo' | 'vencido' | 'pendente' | 'reprovado' | 'cancelado';
 export type OCRStatus = 'pendente' | 'processando' | 'concluido' | 'erro' | 'nao_aplicavel';

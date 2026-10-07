@@ -18,6 +18,7 @@ interface PayrollCodeRow {
   legal_type: PayrollCode['legalType'];
   natureza: PayrollCode['natureza'] | null;
   codigo_wk: string | null;
+  codigo_timesheet: string | null;
   is_system: boolean;
   is_active: boolean;
   created_at: string;
@@ -38,11 +39,25 @@ function mapearCode(row: PayrollCodeRow): PayrollCode {
     legalType: row.legal_type ?? undefined,
     natureza: row.natureza ?? 'mensal',
     codigoWk: row.codigo_wk,
+    codigoTimesheet: row.codigo_timesheet,
     isSystem: row.is_system,
     isActive: row.is_active,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at)
   };
+}
+
+const CODIGOS_TIMESHEET = ['DIAS', 'HORAS', 'HE50', 'NOTURNO', 'FALTA'] as const;
+
+/** Vazio vira null. Valor fora da lista vira Error. */
+function normalizarCodigoTimesheet(raw: unknown): string | null | Error {
+  if (raw === undefined || raw === null) return null;
+  const code = String(raw).trim().toUpperCase();
+  if (!code) return null;
+  if (!CODIGOS_TIMESHEET.includes(code as (typeof CODIGOS_TIMESHEET)[number])) {
+    return new Error(`Código do ponto inválido: ${code}. Use: ${CODIGOS_TIMESHEET.join(', ')}`);
+  }
+  return code;
 }
 
 /**
@@ -155,6 +170,23 @@ export async function POST(request: NextRequest) {
 
     // codigo_wk tem índice único parcial — validar antes de inserir (409)
     const codigoWk = body.codigoWk?.trim() || null;
+    const codigoTimesheet = normalizarCodigoTimesheet(body.codigoTimesheet);
+    if (codigoTimesheet instanceof Error) {
+      return NextResponse.json({ success: false, error: codigoTimesheet.message } as PayrollApiResponse<null>, { status: 400 });
+    }
+    if (codigoTimesheet) {
+      const { data: existingTs } = await supabaseAdmin
+        .from('payroll_codes')
+        .select('id, code, type')
+        .eq('codigo_timesheet', codigoTimesheet)
+        .maybeSingle();
+      if (existingTs) {
+        return NextResponse.json({
+          success: false,
+          error: `Código do ponto "${codigoTimesheet}" já mapeado para a rubrica ${existingTs.code} (${existingTs.type})`,
+        } as PayrollApiResponse<null>, { status: 409 });
+      }
+    }
     if (codigoWk) {
       const { data: existingWk } = await supabaseAdmin
         .from('payroll_codes')
@@ -184,6 +216,7 @@ export async function POST(request: NextRequest) {
         legal_type: body.legalType,
         natureza,
         codigo_wk: codigoWk,
+        codigo_timesheet: codigoTimesheet,
         is_system: body.isSystem || false,
         is_active: body.isActive !== false
       }])

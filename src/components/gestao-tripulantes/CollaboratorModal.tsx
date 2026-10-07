@@ -9,6 +9,7 @@ import { useI18n } from '@/contexts/I18nContext';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { QHSE_MODULE_KEY } from '@/lib/document-catalog/permissions';
 import { fetchWithToken } from '@/lib/tokenStorage';
+import { uploadDocumentoGt } from '@/lib/gestao-tripulantes/upload-client';
 import { toast } from 'react-hot-toast';
 import { enviarOcrDocumento } from '@/components/gestao-tripulantes/ocr-client';
 import SugestaoBackModal from './SugestaoBackModal';
@@ -217,6 +218,7 @@ function fetchColaboradorDetail(colaboradorId: string, opts?: { force?: boolean 
   if (existing) return existing;
   const pending = (async () => {
     const res = await fetchWithToken(`/api/gestao-tripulantes/colaboradores/${colaboradorId}?include=all`);
+    if (res.status === 403) throw new Error('ACESSO_NEGADO_EMPRESA');
     if (!res.ok) throw new Error('Erro ao carregar dados');
     const json = await res.json();
     const payload = json?.data;
@@ -262,6 +264,11 @@ export default function CollaboratorModal({ colaboradorId, onClose, initialTab, 
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
       console.error(err);
+      if (err instanceof Error && err.message === 'ACESSO_NEGADO_EMPRESA') {
+        toast.error('Sem acesso a documentos desta empresa (restrição de ACL).');
+        onClose();
+        return;
+      }
       toast.error(t('gestaoTripulantes.errors.loadError'));
     } finally {
       setLoading(false);
@@ -367,19 +374,17 @@ export default function CollaboratorModal({ colaboradorId, onClose, initialTab, 
     if (!file || !data) return;
     try {
       setUploadingDoc(true);
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('colaborador_id', data.id);
-      fd.append('tipo_documento', 'outro');
-      fd.append('titulo', file.name.replace(/\.[^.]+$/, ''));
-
-      const res = await fetchWithToken('/api/gestao-tripulantes/documentos/upload', {
-        method: 'POST',
-        body: fd,
+      const json = await uploadDocumentoGt({
+        file,
+        colaboradorId: data.id,
+        tipoDocumento: 'outro',
+        titulo: file.name.replace(/\.[^.]+$/, ''),
       });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error || 'Upload falhou');
-      toast.success(t('gestaoTripulantes.upload.success'));
+      if (json.merged) {
+        toast('Documento idêntico já existia — o registro anterior foi atualizado', { icon: 'ℹ️' });
+      } else {
+        toast.success(t('gestaoTripulantes.upload.success'));
+      }
       await silentRefresh();
       const docId = json.data?.id as string | undefined;
       if (docId) {

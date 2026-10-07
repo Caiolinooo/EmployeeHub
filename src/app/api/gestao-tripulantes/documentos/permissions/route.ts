@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateUser } from '@/lib/api-auth';
-import { canDeleteGtDocuments, canEditGtDocuments } from '@/lib/gestao-tripulantes/documento-permissions';
+import { podeExcluirDocumentoGt, podeIncluirOuEditarDocumentoGt } from '@/lib/gestao-tripulantes/documento-permissions';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,8 +13,8 @@ export async function GET(request: NextRequest) {
     }
 
     const [canEdit, canDelete] = await Promise.all([
-      canEditGtDocuments(user),
-      canDeleteGtDocuments(user),
+      podeIncluirOuEditarDocumentoGt(user),
+      podeExcluirDocumentoGt(user),
     ]);
 
     return NextResponse.json(

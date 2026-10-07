@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.96.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.97.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,12 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.97.0)
+
+- **Ponto e folha na mesma pessoa**: batida no portal, horas aprovadas na folha e rubrica única no financeiro e na aba Rubricas do DP.
+- **Contracheque no portal**: HTML e PDF a partir da folha calculada, no módulo do colaborador e no preview do DP.
+- **Documentos do colaborador**: categorias do prontuário e inclusão, edição e exclusão com o mesmo gate do cadastro DP.
 
 ## Nesta versão (5.96.0)
 

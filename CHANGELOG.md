@@ -1,5 +1,25 @@
 # Changelog
 
+## [5.97.0] - 2026-10-07
+
+### Ponto na folha, contracheque no portal e categorias de documento
+
+#### Adicionado
+
+1. **Batida de ponto nos dois lugares**: `/ponto` registra entrada e saída via `POST /api/pontoflow/punch`. A cadeia login, GT, PontoFlow e folha (`resolveVinculo`) tem de estar completa. Horas aprovadas (`timesheet.approved` com `lines`) gravam `payroll_sheet_items` com `origem=timesheet`.
+2. **Código do ponto na rubrica**: `payroll_codes.codigo_timesheet` (DIAS, HORAS, HE50, NOTURNO, FALTA), o mesmo cadastro em `/folha-pagamento/configuracoes/codigos` e na aba Rubricas do DP (`/department/dp?tab=rubricas`).
+3. **Contracheque no portal**: HTML e PDF em `/contracheque` e em `GET /api/dp/folha/contracheque` (`?pdf=1`), com botões no preview da folha do DP. O vínculo usa `payroll_employees.employee_id` (id do GT) ou CPF.
+
+#### Alterado
+
+1. **Categorias de documento**: tipos legados (`documento_pessoal`, `cnh`, `contrato`) passam ao catálogo do prontuário (`pessoal`, `contratual`, `demissional`, `ferias`, `ponto`, `outro`). O card mostra o rótulo, não o valor cru.
+2. **Incluir, editar e excluir documento na ficha** usa o gate do cadastro DP (ADMIN/MANAGER ou setor DP/RH com módulo GT), além do checkbox `documents.edit` / `documents.delete`.
+3. **Contracheque**: FGTS e tipo `outros` ficam na coluna informativa. O líquido usa `net_salary`.
+
+#### Corrigido
+
+1. **Ajuda e IA** deixam de mandar o colaborador ao WK Radar para ver o holerite. O caminho é `/contracheque`.
+
 ## [5.96.0] - 2026-10-06
 
 ### Integração PontoFlow (Time-Sheet) e correção de permissão no e-Social GT

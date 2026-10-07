@@ -11,6 +11,7 @@ import {
 import type { CatalogViewer } from '@/lib/document-catalog/permissions';
 import type { DocumentCatalogSourceId } from '@/lib/document-catalog/types';
 import { isQhseRelatedText } from '@/lib/document-catalog/qhse';
+import { usuarioPodeVerDocumentoGt } from '@/lib/gestao-tripulantes/empresa-acesso';
 
 export const dynamic = 'force-dynamic';
 
@@ -93,6 +94,10 @@ export async function GET(request: NextRequest) {
           .is('deleted_at', null)
           .maybeSingle();
         if (!doc) return NextResponse.json({ error: 'Documento não encontrado' }, { status: 404 });
+        // ACL por empresa (GT)
+        if (!(await usuarioPodeVerDocumentoGt({ id: viewer.id, role: viewer.role }, doc.id))) {
+          return NextResponse.json({ error: 'Sem acesso a este documento (empresa restrita)' }, { status: 403 });
+        }
         const identity = await resolveCollaboratorIdentity({ colaboradorId: doc.colaborador_id });
         if (!canDownloadCatalogSource(viewer, source, false, identity?.userId || null)) {
           return NextResponse.json({ error: 'Permissão negada' }, { status: 403 });

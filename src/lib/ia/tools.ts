@@ -1484,7 +1484,7 @@ export const IA_TOOLS_DEFINITION = [
     type: 'function',
     function: {
       name: 'obter_link_contracheque',
-      description: 'Obtém as instruções e o link de acesso para o sistema externo de contracheques.',
+      description: 'Aponta o contracheque gerado no portal (/contracheque), a partir da folha calculada.',
       parameters: {
         type: 'object',
         properties: {},
@@ -4793,9 +4793,9 @@ case 'coletar_dados_holisticos': {
 
       case 'obter_link_contracheque': {
         return JSON.stringify({
-          sistema: 'WK Radar WebNet',
-          url: 'http://wk.groupabz.com/radarwebnet',
-          instrucoes: 'Os contracheques e holerites do ABZ Group são gerenciados no sistema externo WK Radar. Acesse o sistema pelo link acima usando suas credenciais.'
+          sistema: 'Portal ABZ',
+          url: '/contracheque',
+          instrucoes: 'O contracheque é gerado no portal, a partir da folha calculada. Abra /contracheque para ver e baixar o PDF da competência aprovada.'
         });
       }
 

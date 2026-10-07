@@ -28,6 +28,7 @@ import {
   MENSAGEM_CADASTRO_NEGADO,
   podeMutarCadastroColaborador,
 } from '@/lib/gestao-tripulantes/colaborador-cadastro-auth';
+import { filtrarQueryEmpresa } from '@/lib/gestao-tripulantes/empresa-acesso';
 
 const DOC_PENDENCY_SELECT =
   'id, colaborador_id, tipo_documento, subtipo, titulo, descricao, origem, numero_documento, numero_rastreio, data_emissao, data_validade, status_validacao, created_at';
@@ -222,6 +223,10 @@ export async function GET(request: NextRequest) {
       .from('gt_colaboradores')
       .select(LIST_SELECT, { count: 'exact' })
       .is('deleted_at', null);
+
+    // ACL por empresa: usuário com restrição só vê colaboradores das empresas
+    // liberadas em gt_user_empresa_acesso (0 linhas = sem restrição).
+    query = await filtrarQueryEmpresa(query, { id: payload.userId, role: payload.role });
 
     if (cpfMatchId) {
       query = query.eq('id', cpfMatchId);

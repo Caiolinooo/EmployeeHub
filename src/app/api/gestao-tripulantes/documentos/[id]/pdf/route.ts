@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { generateTreinamentoPDF } from '@/lib/gestao-tripulantes/treinamento-pdf-generator';
+import { usuarioPodeVerDocumentoGt } from '@/lib/gestao-tripulantes/empresa-acesso';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +22,8 @@ export async function GET(
   try {
     const authHeader = request.headers.get('authorization') || undefined;
     const token = extractTokenFromHeader(authHeader);
-    if (!token || !verifyToken(token)) {
+    const payload = token ? verifyToken(token) : null;
+    if (!payload) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
@@ -29,6 +31,11 @@ export async function GET(
     const sp = request.nextUrl.searchParams;
     const forceGenerate = sp.get('generate_sheet') === 'true' || sp.get('ficha') === 'true';
     const forceDownload = sp.get('download') === 'true';
+
+    // ACL por empresa: documento de colaborador de empresa restrita → 403
+    if (!(await usuarioPodeVerDocumentoGt({ id: payload.userId, role: payload.role }, id))) {
+      return NextResponse.json({ error: 'Sem acesso a este documento (empresa restrita)' }, { status: 403 });
+    }
 
     // 1. Fetch document and collaborator info
     const { data: doc, error: docError } = await supabaseAdmin

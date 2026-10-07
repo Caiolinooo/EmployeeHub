@@ -28,6 +28,32 @@ export interface PersonResult {
   created: boolean;
 }
 
+export type PunchKind = 'in' | 'out';
+export type PunchSource = 'portal' | 'web';
+
+export interface RubricaLine {
+  code: string;
+  quantity: number;
+}
+
+export interface PunchRecord {
+  employeeId: string;
+  externalId: string;
+  timesheetId: string;
+  entryId: string;
+  date: string;
+  kind: PunchKind;
+  horaIni: string | null;
+  horaFim: string | null;
+}
+
+export interface TodayPunch {
+  date: string;
+  open: boolean;
+  horaIni: string | null;
+  horaFim: string | null;
+}
+
 /** Resumo derivado que volta ao portal (D5): nunca batida bruta. */
 export interface TimesheetSummary {
   timesheetId: string;
@@ -55,4 +81,9 @@ export interface TimesheetClient {
   putPerson(p: PersonUpsert, o: { idempotencyKey: string }): Promise<PersonResult>;
   createSsoLink(p: { externalId: string }): Promise<{ url: string; expiresAt: string }>;
   listTimesheets(p: { externalId: string; from: ISODate; to: ISODate }): Promise<TimesheetSummary[]>;
+  recordPunch(
+    p: { externalId: string; kind: PunchKind; at: string; source: PunchSource; geo?: { lat: number; lng: number } | null },
+    o: { idempotencyKey: string },
+  ): Promise<PunchRecord>;
+  todayPunch(p: { externalId: string }): Promise<TodayPunch>;
 }

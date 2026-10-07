@@ -1,6 +1,7 @@
 import JSZip from 'jszip';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getConfig, updateConfig } from '@/lib/gestao-tripulantes/config-service';
+import { montarOrClauseEmpresa } from '@/lib/gestao-tripulantes/empresa-acesso';
 
 /**
  * Serviço de exportação organizada (zip) de documentos e dados do módulo
@@ -157,6 +158,8 @@ export interface ExportFilters {
   funcionarios?: string[];
   empresa?: string; // id ou nome (parcial)
   centroCusto?: string; // id ou nome (parcial)
+  /** ACL por empresa: quando presente (array), restringe o export às empresas liberadas */
+  empresasPermitidas?: string[];
 }
 
 async function carregarLookups(): Promise<{
@@ -224,6 +227,10 @@ export async function buscarColaboradoresFiltrados(
     if (empIds) {
       if (empIds.length === 0) return { success: true, data: [] };
       query = query.in('empresa_id', empIds);
+    }
+    // ACL por empresa (restritos): empresa IN (...) OR empresa IS NULL
+    if (filters.empresasPermitidas) {
+      query = query.or(montarOrClauseEmpresa(filters.empresasPermitidas));
     }
     const cenIds = resolveId(filters.centroCusto, lookups.centros);
     if (cenIds) {

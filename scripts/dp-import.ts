@@ -19,6 +19,15 @@
  *   npm run dp:import -- --max-arquivos=40 # teto global de arquivos gravados (apply)
  *   npm run dp:import -- --filtro=silva    # só pastas de colaborador cujo nome contenha "silva"
  *   npm run dp:import -- --saida=out.json  # caminho do relatório (default scripts/out/dp-import-<ts>.json)
+ *   npm run dp:import -- --excluir="ABZ - Base X"  # poda ramo (relativo à raiz de scan); acumulável
+ *   npm run dp:import -- --permite-fallback-nome   # LEGADO: match por nome mesmo com matrícula não-casada
+ *
+ * Regras de segurança (2026-10):
+ *   - Kill-switch: gt_configuracoes.dp_import_enabled = false bloqueia --apply.
+ *   - Conexão is_active = false bloqueia --apply.
+ *   - Pasta com matrícula que não casa NUNCA cai para match por nome → quarentena_match.
+ *   - Matrícula-só-dígitos com 2+ colaboradores = ambíguo (nunca "primeiro vence").
+ *   - Ramos em smb_connections.excluded_paths (ou --excluir) são podados do scan.
  *
  * Pré-requisitos: sessão SMB ativa (New-SmbMapping persistente — ver skill
  * painel-abz-smb-data-abz) e .env.local com NEXT_PUBLIC_SUPABASE_URL +
@@ -42,9 +51,17 @@ function argValor(nome: string): string | null {
   const hit = process.argv.find(a => a.startsWith(`--${nome}=`));
   return hit ? hit.split('=').slice(1).join('=') : null;
 }
+function argValores(nome: string): string[] {
+  return process.argv
+    .filter(a => a.startsWith(`--${nome}=`))
+    .map(a => a.split('=').slice(1).join('='))
+    .filter(Boolean);
+}
 
 const APLICAR = argFlag('apply');
 const SEM_OCR = argFlag('sem-ocr');
+const PERMITE_FALLBACK_NOME = argFlag('permite-fallback-nome'); // legado: match por nome mesmo com matrícula
+const EXCLUIR_CLI = argValores('excluir'); // caminhos relativos a podar (além dos do banco)
 const LIMIT_PASTAS = Number(argValor('limit') || 0) || 0;
 const MAX_ARQUIVOS = Number(argValor('max-arquivos') || 0) || 0;
 const FILTRO_PASTA = (argValor('filtro') || '').toLowerCase().trim();
@@ -105,15 +122,20 @@ function parsePastaColaborador(nomePasta: string): { nome: string; cargo: string
 // ---------------------------------------------------------------------------
 // Classificação de tipo_documento (subpasta + nome do arquivo)
 // ---------------------------------------------------------------------------
-type Classificacao = { tipo: string; motivo: string } | { skip: true; motivo: string };
+type Classificacao = { tipo: string; subtipo?: string; motivo: string } | { skip: true; motivo: string };
 
-const MAPA_SUBPASTA: Record<string, string> = {
-  'documentos pessoais': 'documento_pessoal',
-  'documentos contratuais': 'contrato',
-  'documentos medicos': 'aso',
-  'certificados': 'treinamento',
-  'hse': 'treinamento',
-  'outros': 'outro',
+// Tipos canônicos pós-expansão 2026-10 (pessoal/contratual/demissional/ferias/ponto)
+const MAPA_SUBPASTA: Record<string, { tipo: string; subtipo?: string }> = {
+  'documentos pessoais': { tipo: 'pessoal' },
+  'documentos contratuais': { tipo: 'contratual' },
+  'documentos medicos': { tipo: 'aso' },
+  'certificados': { tipo: 'treinamento' },
+  'hse': { tipo: 'treinamento' },
+  'demissional': { tipo: 'demissional' },
+  'desligamento': { tipo: 'demissional' },
+  'rescisao': { tipo: 'demissional' },
+  'ferias': { tipo: 'ferias' },
+  'outros': { tipo: 'outro' },
 };
 
 function classificarArquivo(subpasta: string, nomeArquivo: string): Classificacao {
@@ -124,28 +146,32 @@ function classificarArquivo(subpasta: string, nomeArquivo: string): Classificaca
     return { skip: true, motivo: 'subpasta Ponto (frequência, não prontuário GT)' };
   }
 
-  // Sinais fortes no nome do arquivo vencem a subpasta
-  const regrasNome: Array<[RegExp, string]> = [
-    [/passaport/, 'passaporte'],
-    [/\bcnh\b|habilitacao/, 'cnh'],
-    [/reservista/, 'reservista'],
-    [/titulo.{0,3}eleitor/, 'titulo_eleitor'],
-    [/\bctps\b|carteira de trabalho/, 'ctps'],
-    [/certidao.{0,3}nascimento/, 'certidao_nascimento'],
-    [/certidao.{0,3}casamento/, 'certidao_casamento'],
-    [/\baso\b|admissional|periodico|demissional|mudanca.{0,3}funcao|exame ocupacional/, 'aso'],
-    [/laudo/, 'laudo'],
-    [/contrato/, 'contrato'],
-    [/\brg\b|registro geral/, 'documento_pessoal'],
-    [/\bcpf\b/, 'documento_pessoal'],
-    [/nr ?\d+|cbsp|huet|caerf|cess|tbs|stcw|certificado/, 'treinamento'],
+  // Sinais fortes no nome do arquivo vencem a subpasta.
+  // Tipos civis viram 'pessoal' + subtipo (modelo novo); OCR usa o subtipo.
+  const regrasNome: Array<[RegExp, { tipo: string; subtipo?: string }]> = [
+    [/passaport/, { tipo: 'passaporte' }],
+    [/\bcnh\b|habilitacao/, { tipo: 'pessoal', subtipo: 'cnh' }],
+    [/reservista/, { tipo: 'pessoal', subtipo: 'reservista' }],
+    [/titulo.{0,3}eleitor/, { tipo: 'pessoal', subtipo: 'titulo_eleitor' }],
+    [/\bctps\b|carteira de trabalho/, { tipo: 'pessoal', subtipo: 'ctps' }],
+    [/certidao.{0,3}nascimento/, { tipo: 'pessoal', subtipo: 'certidao_nascimento' }],
+    [/certidao.{0,3}casamento/, { tipo: 'pessoal', subtipo: 'certidao_casamento' }],
+    [/\baso\b|admissional|periodico|mudanca.{0,3}funcao|exame ocupacional/, { tipo: 'aso' }],
+    [/\bdemissional\b/, { tipo: 'aso', subtipo: 'demissional' }],
+    [/laudo/, { tipo: 'laudo' }],
+    [/contrato/, { tipo: 'contratual' }],
+    [/\btrct\b|aviso.{0,3}previo|pedido.{0,3}desligamento|seguro.{0,3}desemprego|fgts rescisorio/, { tipo: 'demissional' }],
+    [/aviso.{0,3}ferias|recibo.{0,3}ferias|formulario.{0,3}ferias/, { tipo: 'ferias' }],
+    [/\brg\b|registro geral/, { tipo: 'pessoal', subtipo: 'rg' }],
+    [/\bcpf\b/, { tipo: 'pessoal', subtipo: 'cpf' }],
+    [/nr ?\d+|cbsp|huet|caerf|cess|tbs|stcw|certificado/, { tipo: 'treinamento' }],
   ];
-  for (const [re, tipo] of regrasNome) {
-    if (re.test(f)) return { tipo, motivo: `nome do arquivo (${re.source})` };
+  for (const [re, cls] of regrasNome) {
+    if (re.test(f)) return { ...cls, motivo: `nome do arquivo (${re.source})` };
   }
 
   if (MAPA_SUBPASTA[s]) {
-    return { tipo: MAPA_SUBPASTA[s], motivo: `subpasta "${subpasta}"` };
+    return { ...MAPA_SUBPASTA[s], motivo: `subpasta "${subpasta}"` };
   }
   return { tipo: 'outro', motivo: 'fallback (subpasta desconhecida)' };
 }
@@ -163,18 +189,23 @@ interface ColabMin {
 type MatchResult =
   | { status: 'matricula' | 'nome'; colab: ColabMin }
   | { status: 'ambiguo'; candidatos: ColabMin[] }
+  | { status: 'quarentena'; motivo: string }
   | { status: 'nao_encontrado' };
 
 function montarIndices(colabs: ColabMin[]) {
   const porMatricula = new Map<string, ColabMin>();
-  const porMatriculaDigitos = new Map<string, ColabMin>();
+  const porMatriculaDigitos = new Map<string, ColabMin[]>();
   const porNome = new Map<string, ColabMin[]>();
   for (const c of colabs) {
     const mat = (c.matricula || '').trim();
     if (mat) {
       porMatricula.set(mat.toLowerCase(), c);
       const dig = mat.replace(/\D/g, '');
-      if (dig && !porMatriculaDigitos.has(dig)) porMatriculaDigitos.set(dig, c);
+      if (dig) {
+        const arr = porMatriculaDigitos.get(dig) || [];
+        arr.push(c);
+        porMatriculaDigitos.set(dig, arr);
+      }
     }
     const n = norm(c.nome_completo || '');
     if (n) {
@@ -186,17 +217,34 @@ function montarIndices(colabs: ColabMin[]) {
   return { porMatricula, porMatriculaDigitos, porNome };
 }
 
+/**
+ * Regra de ouro (2026-10): pasta COM matrícula que não casa NUNCA cai para
+ * match por nome — era o vetor de documento gravado no colaborador errado.
+ * Vai para quarentena para triagem manual. O fallback por nome só vale para
+ * pasta sem matrícula parseável... que hoje nem vira pasta de colaborador —
+ * mantido apenas via flag explícita --permite-fallback-nome.
+ */
 function casarColaborador(
   pasta: PastaColaborador,
-  idx: ReturnType<typeof montarIndices>
+  idx: ReturnType<typeof montarIndices>,
+  permiteFallbackNome = false
 ): MatchResult {
   const mat = pasta.matricula.trim().toLowerCase();
-  const porMat = idx.porMatricula.get(mat);
-  if (porMat) return { status: 'matricula', colab: porMat };
-  const dig = pasta.matricula.replace(/\D/g, '');
-  if (dig) {
-    const porDig = idx.porMatriculaDigitos.get(dig);
-    if (porDig) return { status: 'matricula', colab: porDig };
+  if (mat) {
+    const porMat = idx.porMatricula.get(mat);
+    if (porMat) return { status: 'matricula', colab: porMat };
+    const dig = pasta.matricula.replace(/\D/g, '');
+    if (dig) {
+      const porDig = idx.porMatriculaDigitos.get(dig) || [];
+      if (porDig.length === 1) return { status: 'matricula', colab: porDig[0] };
+      if (porDig.length > 1) return { status: 'ambiguo', candidatos: porDig };
+    }
+    if (!permiteFallbackNome) {
+      return {
+        status: 'quarentena',
+        motivo: `matrícula "${pasta.matricula}" sem correspondente em gt_colaboradores (fallback por nome desabilitado)`,
+      };
+    }
   }
   const n = norm(pasta.nome);
   const porNome = idx.porNome.get(n);
@@ -229,18 +277,25 @@ function ehPastaEstrutural(nome: string): boolean {
   return PASTA_ESTRUTURAL.some(re => re.test(norm(nome)));
 }
 
+/** Prefix match case-insensitive (normalizado) de caminho relativo contra exclusões. */
+function caminhoExcluido(relNorm: string, exclusoes: string[]): boolean {
+  return exclusoes.some(ex => relNorm === ex || relNorm.startsWith(`${ex}/`));
+}
+
 /**
  * BFS paralelo (pool de workers) pela árvore de Funcionários, descendo APENAS
  * em pastas estruturais. Pasta de pessoa só é aceita sob um ramo "Ativos".
+ * `exclusoes` poda ramos inteiros (ex.: bases restritas) — prefix match.
  * Early-exit quando `limite` > 0 e já há pastas suficientes (uso em smoke sem --filtro).
  */
-async function escanearPastasColaboradores(raizAbs: string, limite = 0): Promise<PastaColaborador[]> {
+async function escanearPastasColaboradores(raizAbs: string, limite = 0, exclusoes: string[] = []): Promise<PastaColaborador[]> {
   const encontradas: PastaColaborador[] = [];
   const fila: Array<{ abs: string; rel: string; depth: number }> = [
     { abs: raizAbs, rel: '', depth: 0 },
   ];
   let processados = 0;
   let atingiuLimite = false;
+  let podadas = 0;
 
   async function worker() {
     while (fila.length > 0 && !atingiuLimite) {
@@ -257,8 +312,14 @@ async function escanearPastasColaboradores(raizAbs: string, limite = 0): Promise
         if (!e.isDirectory()) continue;
         const filhoAbs = path.join(abs, e.name);
         const filhoRel = rel ? `${rel}/${e.name}` : e.name;
+        const filhoRelNorm = norm(filhoRel);
+        if (exclusoes.length > 0 && caminhoExcluido(filhoRelNorm, exclusoes)) {
+          podadas++;
+          if (podadas <= 20) console.log(`[dp-import] EXCL pasta podada: ${filhoRel}`);
+          continue;
+        }
         const parse = parsePastaColaborador(e.name);
-        if (parse && /(^|\/)ativos(\/|$)/i.test(norm(filhoRel))) {
+        if (parse && /(^|\/)ativos(\/|$)/i.test(filhoRelNorm)) {
           encontradas.push({ caminhoAbs: filhoAbs, caminhoRel: filhoRel, nomePasta: e.name, ...parse });
           if (limite > 0 && encontradas.length >= limite) {
             atingiuLimite = true;
@@ -275,6 +336,7 @@ async function escanearPastasColaboradores(raizAbs: string, limite = 0): Promise
 
   const WORKERS = 8;
   await Promise.all(Array.from({ length: WORKERS }, () => worker()));
+  if (podadas > 0) console.log(`[dp-import] Pastas podadas por exclusão: ${podadas}`);
   return encontradas;
 }
 
@@ -369,18 +431,50 @@ async function main() {
   const ocrLib = SEM_OCR ? null : await import('@/lib/ocr');
   const ocrGt = SEM_OCR ? null : await import('@/lib/gestao-tripulantes/ocr-processor');
 
+  // 0) Kill-switch de pausa (gt_configuracoes.dp_import_enabled = false)
+  const { getConfig } = await import('@/lib/gestao-tripulantes/config-service');
+  const cfgHabilitado = await getConfig('dp_import_enabled');
+  if (cfgHabilitado.success && cfgHabilitado.data === false) {
+    const msg = '[dp-import] PAUSADO: gt_configuracoes.dp_import_enabled = false.';
+    if (APLICAR) {
+      console.error(`${msg} Abortando --apply (robô em pausa até correção do matching).`);
+      process.exit(2);
+    }
+    console.warn(`${msg} Prosseguindo apenas em DRY-RUN.`);
+  }
+
   // 1) Conexão SMB → raiz UNC
   const { data: conexao, error: errCon } = await supabaseAdmin
     .from('smb_connections')
-    .select('id, name, local_path, base_path')
+    .select('id, name, local_path, base_path, is_active, excluded_paths')
     .eq('id', CONEXAO_ID)
     .maybeSingle();
   if (errCon || !conexao?.local_path) {
     throw new Error(`Conexão SMB ${CONEXAO_ID} não encontrada ou sem local_path`);
   }
+  if (conexao.is_active === false) {
+    const msg = '[dp-import] Conexão SMB com is_active=false (pausada).';
+    if (APLICAR) {
+      console.error(`${msg} Abortando --apply.`);
+      process.exit(2);
+    }
+    console.warn(`${msg} Prosseguindo apenas em DRY-RUN.`);
+  }
   const raizUnc = String(conexao.local_path).replace(/[\\/]+$/, '');
   const raizScan = path.join(raizUnc, RAIZ_FUNCIONARIOS);
   console.log(`[dp-import] Raiz de scan: ${raizScan}`);
+
+  // Exclusões de ramos (bases/pastas restritas): banco (excluded_paths) + CLI.
+  // Aceita caminho relativo ao local_path OU à raiz de Funcionários (prefixo removido).
+  const prefixoRaiz = norm(RAIZ_FUNCIONARIOS.replace(/[\\/]+/g, '/')) + '/';
+  const exclBanco: string[] = Array.isArray(conexao.excluded_paths) ? conexao.excluded_paths.map(String) : [];
+  const exlusoes = [...exclBanco, ...EXCLUIR_CLI]
+    .map(e => norm(e.replace(/^[\\/]+|[\\/]+$/g, '').replace(/[\\/]+/g, '/')))
+    .map(e => (e.startsWith(prefixoRaiz) ? e.slice(prefixoRaiz.length) : e))
+    .filter(Boolean);
+  if (exlusoes.length > 0) {
+    console.log(`[dp-import] Exclusões ativas (${exlusoes.length}): ${exlusoes.join(' | ')}`);
+  }
 
   // 2) Carregar colaboradores (paginado — PostgREST trunca em 1000)
   const colabs: ColabMin[] = [];
@@ -400,7 +494,7 @@ async function main() {
   const indices = montarIndices(colabs);
 
   // 3) Scan das pastas de colaborador (early-exit no limit quando não há --filtro)
-  const pastas = await escanearPastasColaboradores(raizScan, FILTRO_PASTA ? 0 : LIMIT_PASTAS);
+  const pastas = await escanearPastasColaboradores(raizScan, FILTRO_PASTA ? 0 : LIMIT_PASTAS, exlusoes);
   console.log(`[dp-import] Pastas de colaborador encontradas: ${pastas.length}`);
 
   let selecionadas = pastas;
@@ -414,16 +508,17 @@ async function main() {
   const relatorio: RelatorioPasta[] = [];
   const naoEncontradas: Array<{ pasta: string; nome: string; matricula: string }> = [];
   const ambiguas: Array<{ pasta: string; nome: string; candidatos: number }> = [];
+  const quarentenaMatch: Array<{ pasta: string; nome: string; matricula: string; motivo: string }> = [];
   let arquivosGravados = 0;
   const totais = {
-    pastas: 0, matchMatricula: 0, matchNome: 0, ambiguas: 0, naoEncontradas: 0,
+    pastas: 0, matchMatricula: 0, matchNome: 0, ambiguas: 0, naoEncontradas: 0, quarentenaMatch: 0,
     arquivos: 0, importados: 0, mesclados: 0, jaExistiam: 0, skips: 0, erros: 0,
     ocrConcluido: 0, ocrErro: 0, quarentena: 0,
   };
 
   for (const pasta of selecionadas) {
     totais.pastas++;
-    const match = casarColaborador(pasta, indices);
+    const match = casarColaborador(pasta, indices, PERMITE_FALLBACK_NOME);
     const relPasta: RelatorioPasta = {
       pasta: pasta.caminhoRel,
       nome_parse: pasta.nome,
@@ -433,6 +528,13 @@ async function main() {
       arquivos: [],
     };
 
+    if (match.status === 'quarentena') {
+      totais.quarentenaMatch++;
+      quarentenaMatch.push({ pasta: pasta.caminhoRel, nome: pasta.nome, matricula: pasta.matricula, motivo: match.motivo });
+      console.warn(`[dp-import] QUARENTENA ${pasta.nomePasta} → ${match.motivo}`);
+      relatorio.push(relPasta);
+      continue;
+    }
     if (match.status === 'nao_encontrado') {
       totais.naoEncontradas++;
       naoEncontradas.push({ pasta: pasta.caminhoRel, nome: pasta.nome, matricula: pasta.matricula });
@@ -472,6 +574,7 @@ async function main() {
         continue;
       }
       const tipo = cls.tipo;
+      const subtipo = 'subtipo' in cls ? cls.subtipo || null : null;
       const titulo = arq.nome.replace(/\.[^.]+$/, '').replace(/[_]+/g, ' ').trim().slice(0, 180) || 'Documento';
 
       if (!APLICAR) continue; // dry-run: só reporta classificação
@@ -535,6 +638,7 @@ async function main() {
             .insert({
               colaborador_id: colab.id,
               tipo_documento: tipo,
+              subtipo,
               titulo,
               descricao: `Importado do fileserver: ${pasta.caminhoRel}/${arq.rel}`,
               arquivo_url,
@@ -577,7 +681,7 @@ async function main() {
 
             const result = await ocrLib.processarDocumentoOCR(
               arquivo_url,
-              tipo as import('@/types/ocr').OCRTipoDocumento,
+              integrity.tipoParaOcr(tipo, subtipo) as import('@/types/ocr').OCRTipoDocumento,
               profileCpf
             );
             if (!result.success || !result.data) {
@@ -660,6 +764,8 @@ async function main() {
     gerado_em: new Date().toISOString(),
     modo: APLICAR ? 'apply' : 'dry-run',
     sem_ocr: SEM_OCR,
+    permite_fallback_nome: PERMITE_FALLBACK_NOME,
+    exclusoes: exlusoes,
     duracao_ms: Date.now() - inicio,
     conexao_id: CONEXAO_ID,
     raiz_scan: raizScan,
@@ -667,6 +773,7 @@ async function main() {
     pastas_encontradas: pastas.length,
     pastas_processadas: selecionadas.length,
     totais,
+    quarentena_match: quarentenaMatch,
     nao_encontradas: naoEncontradas,
     ambiguas,
     pastas: relatorio,
@@ -675,8 +782,19 @@ async function main() {
   fs.mkdirSync(path.dirname(SAIDA), { recursive: true });
   fs.writeFileSync(SAIDA, JSON.stringify(resumo, null, 2), 'utf8');
 
+  // CSV de triagem da quarentena de match (matrícula sem correspondente)
+  if (quarentenaMatch.length > 0) {
+    const csvPath = SAIDA.replace(/\.json$/i, '.quarentena.csv');
+    const linhas = ['pasta;nome_parse;matricula_parse;motivo'];
+    for (const q of quarentenaMatch) {
+      linhas.push([q.pasta, q.nome, q.matricula, q.motivo].map(c => `"${String(c).replace(/"/g, '""')}"`).join(';'));
+    }
+    fs.writeFileSync(csvPath, linhas.join('\n'), 'utf8');
+    console.log(`[dp-import] CSV de quarentena: ${csvPath}`);
+  }
+
   console.log('\n===== RESUMO dp-import =====');
-  console.log(`Modo: ${APLICAR ? 'APPLY' : 'DRY-RUN'} | Pastas: ${totais.pastas} (matrícula: ${totais.matchMatricula}, nome: ${totais.matchNome}, ambíguas: ${totais.ambiguas}, não encontradas: ${totais.naoEncontradas})`);
+  console.log(`Modo: ${APLICAR ? 'APPLY' : 'DRY-RUN'} | Pastas: ${totais.pastas} (matrícula: ${totais.matchMatricula}, nome: ${totais.matchNome}, ambíguas: ${totais.ambiguas}, quarentena-match: ${totais.quarentenaMatch}, não encontradas: ${totais.naoEncontradas})`);
   console.log(`Arquivos: ${totais.arquivos} | importados: ${totais.importados} | mesclados: ${totais.mesclados} | já existiam: ${totais.jaExistiam} | skips: ${totais.skips} | erros: ${totais.erros}`);
   if (APLICAR && !SEM_OCR) {
     console.log(`OCR: ${totais.ocrConcluido} concluído, ${totais.ocrErro} erro | quarentena: ${totais.quarentena}`);

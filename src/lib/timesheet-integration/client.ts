@@ -11,8 +11,11 @@ import type {
   ISODate,
   PersonResult,
   PersonUpsert,
+  PunchRecord,
+  PunchSource,
   TimesheetClient,
   TimesheetSummary,
+  TodayPunch,
 } from './types';
 
 export class TimesheetApiError extends Error {
@@ -155,6 +158,42 @@ function buildClient(base: URL, apiKey: string): TimesheetClient {
       if (Array.isArray(data)) return data;
       if (data && Array.isArray(data.timesheets)) return data.timesheets;
       return [];
+    },
+
+    async recordPunch(p, o): Promise<PunchRecord> {
+      const payload = await apiFetch(base, apiKey, '/api/integration/v1/punches', {
+        method: 'POST',
+        body: {
+          externalId: p.externalId,
+          kind: p.kind,
+          at: p.at,
+          source: p.source satisfies PunchSource,
+          ...(p.geo ? { geo: p.geo } : {}),
+        },
+        headers: { 'Idempotency-Key': o.idempotencyKey },
+      });
+      const data = unwrap<PunchRecord>(payload);
+      if (!data || typeof data.entryId !== 'string') {
+        throw new TimesheetApiError('Resposta de batida inválida', 0, 'invalid_punch_response');
+      }
+      return data;
+    },
+
+    async todayPunch(p): Promise<TodayPunch> {
+      const payload = await apiFetch(base, apiKey, '/api/integration/v1/punches/today', {
+        method: 'GET',
+        query: { externalId: p.externalId },
+      });
+      const data = unwrap<TodayPunch>(payload);
+      if (!data || typeof data.date !== 'string') {
+        throw new TimesheetApiError('Resposta de batida do dia inválida', 0, 'invalid_punch_response');
+      }
+      return {
+        date: data.date,
+        open: data.open === true,
+        horaIni: data.horaIni ?? null,
+        horaFim: data.horaFim ?? null,
+      };
     },
   };
 }

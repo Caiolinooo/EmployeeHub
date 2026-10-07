@@ -1,5 +1,6 @@
 import { checkAclPermission } from '@/lib/auth';
 import { hasEffectiveFeature } from '@/lib/effective-feature';
+import { podeMutarCadastroColaborador } from '@/lib/gestao-tripulantes/colaborador-cadastro-auth';
 
 export interface GtDocumentPermissionUser {
   id: string;
@@ -52,4 +53,19 @@ export async function canDeleteGtDocuments(user: GtDocumentPermissionUser): Prom
     (await hasGtAcl(user, 'manage')) ||
     (await hasGtAcl(user, 'admin'))
   );
+}
+
+/**
+ * Incluir e editar documento na ficha: o gate de documento (feature/ACL)
+ * ou o mesmo gate do cadastro DP (ADMIN/MANAGER ou setor DP/RH + módulo GT).
+ */
+export async function podeIncluirOuEditarDocumentoGt(user: GtDocumentPermissionUser): Promise<boolean> {
+  if (await canEditGtDocuments(user)) return true;
+  return podeMutarCadastroColaborador(user.id, user.role);
+}
+
+/** Excluir documento na ficha: gate de delete ou o mesmo gate do cadastro DP. */
+export async function podeExcluirDocumentoGt(user: GtDocumentPermissionUser): Promise<boolean> {
+  if (await canDeleteGtDocuments(user)) return true;
+  return podeMutarCadastroColaborador(user.id, user.role);
 }

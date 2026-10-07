@@ -20,4 +20,11 @@ describe('documentoPertenceAba tab routing', () => {
     assert.equal(abaParaTipoDocumento('cnh'), 'documentos');
     assert.equal(abaParaTipoDocumento('epi'), 'documentos');
   });
+
+  it('routes the 2026-10 prontuário tipos to the Documentos tab', () => {
+    for (const tipo of ['pessoal', 'contratual', 'demissional', 'ferias', 'ponto', 'outro']) {
+      assert.equal(abaParaTipoDocumento(tipo), 'documentos', `${tipo} deve cair na aba Documentos`);
+      assert.equal(documentoPertenceAba(tipo, 'documentos'), true);
+    }
+  });
 });

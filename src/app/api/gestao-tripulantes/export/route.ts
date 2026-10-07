@@ -11,7 +11,9 @@ import {
   previewExportTree,
   saveExportTemplate,
   sanitizarNome,
+  type ExportFilters,
 } from '@/lib/gestao-tripulantes/export-service';
+import { getEmpresasRestricaoUsuario, roleBypassEmpresa } from '@/lib/gestao-tripulantes/empresa-acesso';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -35,7 +37,7 @@ export const maxDuration = 300;
  * Sem preview: responde application/zip (Content-Disposition anexo).
  */
 
-function parseFilters(req: NextRequest) {
+function parseFilters(req: NextRequest): ExportFilters {
   const sp = req.nextUrl.searchParams;
   const funcionariosParam = (sp.get('funcionarios') || '').trim();
   return {
@@ -47,12 +49,18 @@ function parseFilters(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   const token = extractTokenFromHeader(req.headers.get('authorization') || undefined);
-  if (!token || !verifyToken(token)) {
+  const payload = token ? verifyToken(token) : null;
+  if (!payload) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
   try {
     const filters = parseFilters(req);
+    // ACL por empresa: usuário restrito exporta apenas empresas liberadas
+    if (!roleBypassEmpresa(payload.role)) {
+      const restricao = await getEmpresasRestricaoUsuario(payload.userId);
+      if (restricao) filters.empresasPermitidas = restricao;
+    }
     const sp = req.nextUrl.searchParams;
     const isPreview = ['1', 'true'].includes((sp.get('preview') || '').toLowerCase());
     const limiteParam = parseInt(sp.get('limite') || '', 10);

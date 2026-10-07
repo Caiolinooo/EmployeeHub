@@ -49,6 +49,7 @@ interface Formulario {
   formula: string;
   legalType: PayrollLegalType | '';
   codigoWk: string;
+  codigoTimesheet: string;
   isActive: boolean;
 }
 
@@ -63,10 +64,13 @@ const FORMULARIO_VAZIO: Formulario = {
   formula: '',
   legalType: '',
   codigoWk: '',
+  codigoTimesheet: '',
   isActive: true
 };
 
-export default function CodigosFolhaPage() {
+const CODIGOS_PONTO = ['', 'DIAS', 'HORAS', 'HE50', 'NOTURNO', 'FALTA'] as const;
+
+export default function CodigosFolhaPage({ embedded = false }: { embedded?: boolean }) {
   const { t } = useI18n();
   const { hasFeature } = useSupabaseAuth();
   const podeEditar = hasFeature('folha.edit');
@@ -118,7 +122,7 @@ export default function CodigosFolhaPage() {
       if (filtroAtivo === 'ativos' && !c.isActive) return false;
       if (filtroAtivo === 'inativos' && c.isActive) return false;
       if (!termo) return true;
-      return [c.code, c.name, c.description, c.formula, c.codigoWk]
+      return [c.code, c.name, c.description, c.formula, c.codigoWk, c.codigoTimesheet]
         .some((campo) => String(campo || '').toLowerCase().includes(termo));
     });
   }, [codes, busca, filtroTipo, filtroAtivo]);
@@ -148,6 +152,7 @@ export default function CodigosFolhaPage() {
       legalType: code.legalType || '',
       natureza: code.natureza || 'mensal',
       codigoWk: code.codigoWk || '',
+      codigoTimesheet: code.codigoTimesheet || '',
       isActive: code.isActive
     });
     setModalAberto(true);
@@ -175,6 +180,7 @@ export default function CodigosFolhaPage() {
         legalType: form.calculationType === 'legal' && form.legalType ? form.legalType : undefined,
         natureza: form.natureza,
         codigoWk: form.codigoWk.trim() || null,
+        codigoTimesheet: form.codigoTimesheet.trim() || null,
         isActive: form.isActive
       };
       const response = editando
@@ -238,6 +244,7 @@ export default function CodigosFolhaPage() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
+              {!embedded && (
               <Link
                 href="/folha-pagamento"
                 className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
@@ -245,6 +252,7 @@ export default function CodigosFolhaPage() {
               >
                 <ArrowLeft className="h-5 w-5" />
               </Link>
+              )}
               <div className="p-2 bg-abz-blue/10 rounded-lg">
                 <Settings className="h-6 w-6 text-abz-blue" />
               </div>
@@ -253,7 +261,7 @@ export default function CodigosFolhaPage() {
                   {t('payroll.payrollCodes', 'Rubricas')}
                 </h1>
                 <p className="text-gray-600">
-                  Crie e edite as rubricas da folha: proventos, descontos e eventos, com o código do WK
+                  Mesmas rubricas do financeiro e do DP. Código WK e código do ponto apontam para esta rubrica.
                 </p>
               </div>
             </div>
@@ -364,9 +372,13 @@ export default function CodigosFolhaPage() {
                       <td className="px-4 py-3 text-sm">
                         {c.codigoWk ? (
                           <span className="px-2 py-0.5 rounded bg-purple-100 text-purple-800 font-mono text-xs">{c.codigoWk}</span>
-                        ) : (
+                        ) : null}
+                        {c.codigoTimesheet ? (
+                          <span className="ml-1 px-2 py-0.5 rounded bg-sky-100 text-sky-800 font-mono text-xs">{c.codigoTimesheet}</span>
+                        ) : null}
+                        {!c.codigoWk && !c.codigoTimesheet ? (
                           <span className="text-gray-300 text-xs">—</span>
-                        )}
+                        ) : null}
                       </td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${c.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
@@ -554,6 +566,23 @@ export default function CodigosFolhaPage() {
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   Usado pelo sync WK: lançamentos com este código caem nesta rubrica. Único entre rubricas.
+                </p>
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-medium text-gray-700 mb-1">Código do ponto</label>
+                <select
+                  value={form.codigoTimesheet}
+                  onChange={(e) => setForm({ ...form, codigoTimesheet: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-abz-blue focus:border-transparent"
+                >
+                  {CODIGOS_PONTO.map((code) => (
+                    <option key={code || 'nenhum'} value={code}>
+                      {code || 'Não lançar horas do ponto nesta rubrica'}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  Horas aprovadas no Time Sheet caem nesta rubrica. O mesmo cadastro vale no DP e no financeiro. Único entre rubricas.
                 </p>
               </div>
               <div className="sm:col-span-2 flex items-center">

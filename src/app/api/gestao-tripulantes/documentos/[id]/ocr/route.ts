@@ -3,6 +3,8 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { processarDocumentoOCR, processarImagensPreRenderizadas, extrairDadosTexto } from '@/lib/ocr';
 import { extrairDadosASODoTexto, aplicarGateIdentidadeDocumento, persistirCamposOcrDocumento } from '@/lib/gestao-tripulantes/ocr-processor';
+import { tipoParaOcr } from '@/lib/gestao-tripulantes/documento-integrity';
+import { usuarioPodeVerDocumentoGt } from '@/lib/gestao-tripulantes/empresa-acesso';
 import type { OCRTipoDocumento } from '@/types/ocr';
 
 export const dynamic = 'force-dynamic';
@@ -25,6 +27,11 @@ export async function POST(
     }
 
     const { id } = await context.params;
+
+    // ACL por empresa
+    if (!(await usuarioPodeVerDocumentoGt({ id: payload.userId, role: payload.role }, id))) {
+      return NextResponse.json({ error: 'Sem acesso a este documento (empresa restrita)' }, { status: 403 });
+    }
 
     const { data: documento, error: docError } = await supabaseAdmin
       .from('gt_documentos')
@@ -61,6 +68,8 @@ export async function POST(
     }
 
     // Verificar se o cliente enviou imagens pré-renderizadas, texto extraído, ou se usa processamento server-side
+    // tipoOcr: subtipo civil (cnh/certidão/...) vence — docs pós-2026-10 são 'pessoal' + subtipo.
+    const tipoOcr = tipoParaOcr(documento.tipo_documento, documento.subtipo) as OCRTipoDocumento;
     let result;
     try {
       const body = await request.json();
@@ -70,7 +79,7 @@ export async function POST(
 
       if (clientText.length >= 30) {
         console.log(`[OCR/Route] Recebido texto extraído diretamente do cliente (${clientText.length} caracteres).`);
-        const dadosRegex = extrairDadosTexto(clientText, documento.tipo_documento as OCRTipoDocumento, profileCpf);
+        const dadosRegex = extrairDadosTexto(clientText, tipoOcr, profileCpf);
         result = {
           success: true,
           data: {
@@ -83,14 +92,14 @@ export async function POST(
         console.log(`[OCR/Route] Recebidas ${clientImages.length} imagens pré-renderizadas do cliente.`);
         result = await processarImagensPreRenderizadas(
           clientImages,
-          documento.tipo_documento as OCRTipoDocumento,
+          tipoOcr,
           profileCpf
         );
       } else {
         // FLUXO LEGADO: Processamento server-side (pdf-parse, etc.)
         result = await processarDocumentoOCR(
           documento.arquivo_url,
-          documento.tipo_documento as OCRTipoDocumento,
+          tipoOcr,
           profileCpf
         );
       }
@@ -98,7 +107,7 @@ export async function POST(
       // Se o body não for JSON válido (ex: POST sem body), usar fluxo legado
       result = await processarDocumentoOCR(
         documento.arquivo_url,
-        documento.tipo_documento as OCRTipoDocumento,
+        tipoOcr,
         profileCpf
       );
     }

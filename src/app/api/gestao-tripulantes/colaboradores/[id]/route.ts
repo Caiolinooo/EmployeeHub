@@ -10,8 +10,23 @@ import {
   MENSAGEM_CADASTRO_NEGADO,
   podeMutarCadastroColaborador,
 } from '@/lib/gestao-tripulantes/colaborador-cadastro-auth';
+import { usuarioPodeVerEmpresa } from '@/lib/gestao-tripulantes/empresa-acesso';
 
 export const dynamic = 'force-dynamic';
+
+/** ACL por empresa: 403 quando o colaborador é de empresa não liberada ao usuário. */
+async function empresaDoColaboradorPermitida(
+  colaboradorId: string,
+  user: { id: string; role?: string | null }
+): Promise<boolean> {
+  const { data } = await supabaseAdmin
+    .from('gt_colaboradores')
+    .select('empresa_id')
+    .eq('id', colaboradorId)
+    .maybeSingle();
+  if (!data) return true; // inexistente → 404 padrão da rota
+  return usuarioPodeVerEmpresa(user, data.empresa_id);
+}
 
 export async function GET(
   request: NextRequest,
@@ -30,6 +45,11 @@ export async function GET(
     }
 
     const { id } = await context.params;
+
+    if (!(await empresaDoColaboradorPermitida(id, { id: payload.userId, role: payload.role }))) {
+      return NextResponse.json({ error: 'Sem acesso a este colaborador (empresa restrita)' }, { status: 403 });
+    }
+
     const include = parseIncludeParam(request.nextUrl.searchParams.get('include'));
     const result = await loadColaboradorDetail(id, include);
 
@@ -76,6 +96,11 @@ export async function PUT(
     }
 
     const { id } = await context.params;
+
+    if (!(await empresaDoColaboradorPermitida(id, { id: payload.userId, role: payload.role }))) {
+      return NextResponse.json({ error: 'Sem acesso a este colaborador (empresa restrita)' }, { status: 403 });
+    }
+
     const body = await request.json();
     const montado = montarPayloadCadastro(body as Record<string, unknown>, 'update');
     if (!montado.ok) {
@@ -188,6 +213,10 @@ export async function DELETE(
     }
 
     const { id } = await context.params;
+
+    if (!(await empresaDoColaboradorPermitida(id, { id: payload.userId, role: payload.role }))) {
+      return NextResponse.json({ error: 'Sem acesso a este colaborador (empresa restrita)' }, { status: 403 });
+    }
 
     const { error: softDeleteError } = await supabaseAdmin
       .from('gt_colaboradores')

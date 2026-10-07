@@ -147,6 +147,21 @@ async function main() {
     console.log('🔄 SMB Sync — Iniciando...');
     console.log(`📅 ${new Date().toISOString()}`);
 
+    // Kill-switch de pausa (gt_configuracoes.smb_sync_enabled = false)
+    try {
+        const { data: cfg } = await supabase
+            .from('gt_configuracoes')
+            .select('valor')
+            .eq('chave', 'smb_sync_enabled')
+            .maybeSingle();
+        if (cfg && cfg.valor === false) {
+            console.log('⏸ SMB Sync PAUSADO: gt_configuracoes.smb_sync_enabled = false. Abortando.');
+            return;
+        }
+    } catch (e: any) {
+        console.warn(`⚠ Falha ao verificar kill-switch smb_sync_enabled: ${e.message}`);
+    }
+
     // Load all active connections
     const { data: connections, error } = await supabase
         .from('smb_connections')

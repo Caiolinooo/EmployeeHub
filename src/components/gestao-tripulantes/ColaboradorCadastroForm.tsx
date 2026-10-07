@@ -27,6 +27,7 @@ import {
 } from '@/lib/gestao-tripulantes/regime-escala';
 import { formatCpf, isValidCpf } from '@/lib/utils/identity';
 import { useI18n } from '@/contexts/I18nContext';
+import TimesheetVinculoBadges from '@/components/gestao-tripulantes/TimesheetVinculoBadges';
 
 type TabId =
   | 'dados-pessoais'
@@ -458,6 +459,9 @@ export default function ColaboradorCadastroForm({
                     </span>
                   );
                 })()}
+                {mode === 'edit' && colaboradorId ? (
+                  <TimesheetVinculoBadges colaboradorId={colaboradorId} />
+                ) : null}
               </div>
             </>)}
             {section('Nascimento', <>

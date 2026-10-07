@@ -2,6 +2,15 @@ export type OCRTipoDocumento =
   | 'aso'
   | 'treinamento'
   | 'passaporte'
+  | 'certificado'
+  | 'laudo'
+  | 'pessoal'
+  | 'contratual'
+  | 'demissional'
+  | 'ferias'
+  | 'ponto'
+  | 'outro'
+  // Chaves de extração civil (chegam via subtipo — ver tipoParaOcr)
   | 'cnh'
   | 'certidao_nascimento'
   | 'certidao_casamento'
@@ -9,10 +18,7 @@ export type OCRTipoDocumento =
   | 'titulo_eleitor'
   | 'ctps'
   | 'documento_pessoal'
-  | 'certificado'
-  | 'contrato'
-  | 'laudo'
-  | 'outro';
+  | 'contrato';
 
 export type OCRStatus = 'pendente' | 'processando' | 'concluido' | 'erro' | 'nao_aplicavel';
 

@@ -273,34 +273,20 @@ Acompanhe o andamento da sua solicitação de reembolso.
                 content: `
 ## Acessando o Contracheque
 
-O contracheque está disponível através do sistema WK Radar.
+O contracheque é gerado no portal, com as rubricas da folha já calculada pelo DP.
 
 ### Passo a passo:
 
-1. **Acesse o link**:
-   - \`http://wk.groupabz.com/radarwebnet\`
+1. Entre no portal e abra **Contracheque** (\`/contracheque\`)
+2. A competência aparece depois que o DP aprova a folha
+3. Use **Ver** para o holerite e **PDF** para baixar
+4. **Aceitar e assinar** registra a conferência
 
-2. **Selecione** a opção **"Portal Empregado"**
+### Se a lista estiver vazia
 
-3. **Faça login**:
-   - **Usuário**: Seu CPF (apenas números)
-   - **Senha**: \`1\` (no primeiro acesso)
-
-4. **Clique em "Recibo"**
-
-5. **Faça login novamente** (solicitação do sistema)
-
-6. **Visualize ou imprima** seu contracheque
-
-### Primeiro acesso:
-
-- A senha inicial é **"1"**
-- Recomendamos alterar a senha após o primeiro acesso
-
-### Problemas de acesso?
-
-- Verifique se o CPF está correto (sem pontos ou traços)
-- Contate o RH se o problema persistir
+- A folha da competência ainda não foi calculada ou aprovada
+- O login precisa estar ligado ao cadastro (CPF ou vínculo do colaborador)
+- Fale com o DP se o holerite não aparecer depois da aprovação
         `,
                 category: 'contracheque',
                 keywords: ['contracheque', 'recibo', 'salário', 'holerite', 'wk', 'radar']

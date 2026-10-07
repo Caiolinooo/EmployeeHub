@@ -19,6 +19,7 @@ interface PayrollCodeRow {
   legal_type: PayrollCode['legalType'];
   natureza: PayrollCode['natureza'] | null;
   codigo_wk: string | null;
+  codigo_timesheet: string | null;
   is_system: boolean;
   is_active: boolean;
   created_at: string;
@@ -39,6 +40,7 @@ function mapearCode(row: PayrollCodeRow): PayrollCode {
     legalType: row.legal_type ?? undefined,
     natureza: row.natureza ?? 'mensal',
     codigoWk: row.codigo_wk,
+    codigoTimesheet: row.codigo_timesheet,
     isSystem: row.is_system,
     isActive: row.is_active,
     createdAt: new Date(row.created_at),
@@ -116,6 +118,7 @@ export async function PUT(
     const tipoLegal = body.legalType ?? body.legal_type;
     const naturezaBruta = body.natureza;
     const codigoWkBruto = body.codigoWk ?? body.codigo_wk;
+    const codigoTimesheetBruto = body.codigoTimesheet ?? body.codigo_timesheet;
     const ativo = body.isActive ?? body.is_active;
     const novoCode = body.code;
     const novoType = body.type;
@@ -248,6 +251,32 @@ export async function PUT(
     if (tipoLegal !== undefined) patch.legal_type = tipoLegal;
     if (naturezaBruta !== undefined) patch.natureza = naturezaBruta ?? 'mensal';
     if (codigoWk !== undefined) patch.codigo_wk = codigoWk;
+    const codigoTimesheet = codigoTimesheetBruto === undefined
+      ? undefined
+      : (codigoTimesheetBruto === null || String(codigoTimesheetBruto).trim() === ''
+        ? null
+        : String(codigoTimesheetBruto).trim().toUpperCase());
+    if (typeof codigoTimesheet === 'string' && !['DIAS', 'HORAS', 'HE50', 'NOTURNO', 'FALTA'].includes(codigoTimesheet)) {
+      return NextResponse.json({
+        success: false,
+        error: `Código do ponto inválido: ${codigoTimesheet}. Use: DIAS, HORAS, HE50, NOTURNO, FALTA`,
+      } as PayrollApiResponse<null>, { status: 400 });
+    }
+    if (codigoTimesheet) {
+      const { data: conflitoTs } = await supabaseAdmin
+        .from('payroll_codes')
+        .select('id, code, type')
+        .eq('codigo_timesheet', codigoTimesheet)
+        .neq('id', id)
+        .maybeSingle();
+      if (conflitoTs) {
+        return NextResponse.json({
+          success: false,
+          error: `Código do ponto "${codigoTimesheet}" já mapeado para a rubrica ${conflitoTs.code} (${conflitoTs.type})`,
+        } as PayrollApiResponse<null>, { status: 409 });
+      }
+    }
+    if (codigoTimesheet !== undefined) patch.codigo_timesheet = codigoTimesheet;
     if (ativo !== undefined) patch.is_active = ativo;
 
     if (Object.keys(patch).length === 0) {

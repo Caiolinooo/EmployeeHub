@@ -3,6 +3,8 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { getCredential } from '@/lib/secure-credentials';
 import { empresaCredentialKeys } from '@/lib/timesheet-integration/settings';
 import { verifyWebhook } from '@/lib/timesheet-integration/webhooks';
+import { aplicarHorasAprovadas } from '@/lib/timesheet-integration/folha-aplicar';
+import { parseRubricaLines } from '@/lib/timesheet-integration/folha-lancamento';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +27,7 @@ interface WebhookEvent {
   periodEnd?: string;
   workedDays?: number;
   workedMinutes?: number;
+  lines?: unknown;
 }
 
 function parseEvent(raw: string): WebhookEvent | null {
@@ -73,6 +76,14 @@ async function handleEvent(event: WebhookEvent): Promise<void> {
         days: typeof event.workedDays === 'number' ? event.workedDays : null,
         minutes: typeof event.workedMinutes === 'number' ? event.workedMinutes : null,
       });
+      if (event.periodStart && event.periodEnd) {
+        await aplicarHorasAprovadas(admin, {
+          externalId: event.externalId,
+          periodStart: event.periodStart,
+          periodEnd: event.periodEnd,
+          lines: parseRubricaLines(event.lines),
+        });
+      }
       break;
     case 'timesheet.submitted':
       await upsertResumo(event, 'enviado', { days: null, minutes: null });
@@ -175,6 +186,7 @@ export async function POST(request: NextRequest) {
   try {
     await handleEvent(event);
   } catch (error) {
+    await admin.from('ts_webhook_events_seen').delete().eq('event_id', event.id);
     console.error(`[webhooks/pontoflow] erro ao processar ${event.type}:`, error);
     return NextResponse.json(
       {

@@ -331,7 +331,7 @@ QUANDO O USUARIO PERGUNTAR:
 - Sobre "minhas pendencias", "pendencias" → use buscar_dados_usuario com tipo "resumo".
 - Para ver dados de OUTRA pessoa → use o email ou nome dessa pessoa
 - Sobre feedbacks (ex: "quais feedbacks recebemos?", "feedbacks em aberto") → apenas se for ADMIN, use as ferramentas de feedback: buscar_feedbacks, atualizar_status_feedback, excluir_feedback.
-- Sobre contracheques ou holerites (ex: "quero ver meu contracheque", "link do holerite") → use obter_link_contracheque.
+- Sobre contracheques ou holerites (ex: "quero ver meu contracheque", "link do holerite") → use obter_link_contracheque e aponte para /contracheque no portal. Não envie o usuário ao WK Radar.
 - Sobre contratos trabalhistas (ex: "meus contratos", "tenho contratos pendentes?", "envelopes de contratos") → use buscar_contratos.
 - Sobre ponto ou presença (ex: "meu ponto", "registros de presença", "listas de presença") → use buscar_ponto para registros individuais, ou buscar_lista_presenca para ver as listas disponíveis no sistema.
 

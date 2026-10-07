@@ -21,6 +21,7 @@ import {
 } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
 import { fetchWithToken, getToken } from '@/lib/tokenStorage';
+import { uploadDocumentoGt } from '@/lib/gestao-tripulantes/upload-client';
 import { toast } from 'react-hot-toast';
 import { enviarOcrDocumento } from '@/components/gestao-tripulantes/ocr-client';
 import { documentoPertenceAba } from '@/lib/gestao-tripulantes/validade-civil';
@@ -374,21 +375,12 @@ export default function TreinamentosTab({ colaboradorId, colaborador, documentos
     if (!file) return;
     try {
       setUploadingDocId(docId);
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('colaborador_id', colaboradorId);
-      fd.append('documento_id', docId);
-      fd.append('tipo_documento', 'treinamento');
-
-      const res = await fetchWithToken('/api/gestao-tripulantes/documentos/upload', {
-        method: 'POST',
-        body: fd,
+      const json = await uploadDocumentoGt({
+        file,
+        colaboradorId,
+        documentoId: docId,
+        tipoDocumento: 'treinamento',
       });
-
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(json.error || 'Upload falhou');
-      }
 
       toast.success('Certificado anexado com sucesso!');
       onRefresh?.();
@@ -438,25 +430,17 @@ export default function TreinamentosTab({ colaboradorId, colaborador, documentos
       setSavingEdit(true);
 
       if (editForm.file) {
-        const fd = new FormData();
-        fd.append('file', editForm.file);
-        fd.append('colaborador_id', colaboradorId);
-        fd.append('documento_id', editingDoc.id);
-        fd.append('titulo', editForm.titulo.trim());
-        fd.append('subtipo', editForm.subtipo.trim());
-        fd.append('numero_documento', editForm.numero_documento.trim());
-        fd.append('orgao_emissor', editForm.orgao_emissor.trim());
-        fd.append('data_emissao', editForm.data_emissao || '');
-        fd.append('data_validade', editForm.permanente ? '' : editForm.data_validade);
-
-        const upRes = await fetchWithToken('/api/gestao-tripulantes/documentos/upload', {
-          method: 'POST',
-          body: fd,
+        await uploadDocumentoGt({
+          file: editForm.file,
+          colaboradorId,
+          documentoId: editingDoc.id,
+          titulo: editForm.titulo.trim(),
+          subtipo: editForm.subtipo.trim(),
+          numeroDocumento: editForm.numero_documento.trim(),
+          orgaoEmissor: editForm.orgao_emissor.trim(),
+          dataEmissao: editForm.data_emissao || null,
+          dataValidade: editForm.permanente ? null : (editForm.data_validade || null),
         });
-        if (!upRes.ok) {
-          const errJson = await upRes.json().catch(() => ({}));
-          throw new Error(errJson.error || 'Erro ao enviar arquivo');
-        }
       }
 
       const payload = {
@@ -523,25 +507,17 @@ export default function TreinamentosTab({ colaboradorId, colaborador, documentos
       setCreatingNew(true);
 
       if (newForm.file) {
-        const fd = new FormData();
-        fd.append('file', newForm.file);
-        fd.append('colaborador_id', colaboradorId);
-        fd.append('tipo_documento', 'treinamento');
-        fd.append('titulo', newForm.titulo.trim());
-        fd.append('subtipo', newForm.subtipo.trim());
-        fd.append('numero_documento', newForm.numero_documento.trim());
-        fd.append('orgao_emissor', newForm.orgao_emissor.trim());
-        fd.append('data_emissao', newForm.data_emissao || new Date().toISOString().split('T')[0]);
-        fd.append('data_validade', newForm.permanente ? '' : (newForm.data_validade || ''));
-
-        const res = await fetchWithToken('/api/gestao-tripulantes/documentos/upload', {
-          method: 'POST',
-          body: fd,
+        const json = await uploadDocumentoGt({
+          file: newForm.file,
+          colaboradorId,
+          tipoDocumento: 'treinamento',
+          titulo: newForm.titulo.trim(),
+          subtipo: newForm.subtipo.trim(),
+          numeroDocumento: newForm.numero_documento.trim(),
+          orgaoEmissor: newForm.orgao_emissor.trim(),
+          dataEmissao: newForm.data_emissao || new Date().toISOString().split('T')[0],
+          dataValidade: newForm.permanente ? null : (newForm.data_validade || null),
         });
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          throw new Error(json.error || 'Erro ao cadastrar treinamento com arquivo');
-        }
         const newId = json.data?.id as string | undefined;
         const arquivoUrl = json.data?.arquivo_url as string | undefined;
         if (newId && arquivoUrl) {

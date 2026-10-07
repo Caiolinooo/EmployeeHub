@@ -111,6 +111,8 @@ export interface PayrollCode {
   natureza?: PayrollNatureza;
   /** Código equivalente no WK Radar (coluna codigo_wk, índice único parcial). */
   codigoWk?: string | null;
+  /** Código calculado no PontoFlow (DIAS, HORAS, HE50, NOTURNO, FALTA). Único entre rubricas. */
+  codigoTimesheet?: string | null;
   isSystem: boolean;
   isActive: boolean;
   createdAt: Date;

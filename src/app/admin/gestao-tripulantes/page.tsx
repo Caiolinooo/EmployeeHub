@@ -5,7 +5,7 @@ import {
   FiSave, FiRefreshCw, FiToggleLeft, FiSliders, FiDatabase,
   FiBell, FiCamera, FiCpu, FiSettings, FiLayout, FiChevronDown, FiChevronRight,
   FiAnchor, FiGlobe, FiBriefcase, FiPlay, FiCheckCircle, FiAlertTriangle, FiClock,
-  FiCalendar, FiDownload, FiFolder, FiCheckSquare, FiActivity
+  FiCalendar, FiDownload, FiFolder, FiCheckSquare, FiActivity, FiFile, FiLock
 } from 'react-icons/fi';
 import { fetchWithToken } from '@/lib/tokenStorage';
 import TiposEventoEscalaAdmin from '@/components/gestao-tripulantes/admin/TiposEventoEscalaAdmin';
@@ -13,6 +13,8 @@ import AuditoriaDocumentosTab from '@/components/gestao-tripulantes/admin/Audito
 import ExportarTab from '@/components/gestao-tripulantes/admin/ExportarTab';
 import CentrosCustoAdminTab from '@/components/gestao-tripulantes/admin/CentrosCustoAdminTab';
 import DepartamentosAdminTab from '@/components/gestao-tripulantes/admin/DepartamentosAdminTab';
+import TitulosDocumentosAdminTab from '@/components/gestao-tripulantes/admin/TitulosDocumentosAdminTab';
+import AcessoEmpresasAdminTab from '@/components/gestao-tripulantes/admin/AcessoEmpresasAdminTab';
 import CargosAdminTab from '@/components/gestao-tripulantes/admin/CargosAdminTab';
 import WorkflowFechamentoTab, {
   type WorkflowFechamentoHandle,
@@ -127,7 +129,7 @@ export default function GestaoTripulantesAdminPage() {
     if (tab) setActiveTab(tab);
   }, []);
   const fechamentoRef = useRef<WorkflowFechamentoHandle>(null);
-  const TABS_COM_SALVAR_PROPRIO = new Set(['fechamento', 'aso_agendamento', 'auditoria', 'exportar', 'centros_custo', 'departamentos', 'cargos', 'escala', 'matriz_treinamentos']);
+  const TABS_COM_SALVAR_PROPRIO = new Set(['fechamento', 'aso_agendamento', 'auditoria', 'exportar', 'centros_custo', 'departamentos', 'cargos', 'escala', 'matriz_treinamentos', 'titulos_documentos', 'acesso_empresas']);
   const [isTestingConexao, setIsTestingConexao] = useState(false);
   const [isScraping, setIsScraping] = useState(false);
   const [cronLogs, setCronLogs] = useState<any[]>([]);
@@ -281,6 +283,8 @@ export default function GestaoTripulantesAdminPage() {
     { id: 'exportar', label: 'Exportar', icon: FiDownload },
     { id: 'cargos', label: 'Cargos / Funções', icon: FiBriefcase },
     { id: 'departamentos', label: 'Departamentos', icon: FiFolder },
+    { id: 'titulos_documentos', label: 'Títulos de Documentos', icon: FiFile },
+    { id: 'acesso_empresas', label: 'Acesso por Empresa', icon: FiLock },
     { id: 'centros_custo', label: 'Centros de Custo', icon: FiFolder },
     { id: 'fechamento', label: 'Fechamento DP', icon: FiCheckSquare },
     { id: 'aso_agendamento', label: 'Agendamento ASO', icon: FiActivity },
@@ -376,6 +380,8 @@ export default function GestaoTripulantesAdminPage() {
           {activeTab === 'exportar' && <ExportarTab />}
           {activeTab === 'cargos' && <CargosAdminTab />}
           {activeTab === 'departamentos' && <DepartamentosAdminTab />}
+          {activeTab === 'titulos_documentos' && <TitulosDocumentosAdminTab />}
+          {activeTab === 'acesso_empresas' && <AcessoEmpresasAdminTab />}
           {activeTab === 'centros_custo' && <CentrosCustoAdminTab />}
           {activeTab === 'fechamento' && <WorkflowFechamentoTab ref={fechamentoRef} />}
           {activeTab === 'aso_agendamento' && <AsoAgendamentoConfigTab />}

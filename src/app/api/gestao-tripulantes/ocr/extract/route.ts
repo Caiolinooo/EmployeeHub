@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
-    const tipoDocumento = (formData.get('tipo_documento') as string) || 'documento_pessoal';
+    const tipoDocumento = (formData.get('tipo_documento') as string) || 'pessoal';
 
     if (!file) {
       return NextResponse.json({ error: 'Arquivo obrigatório' }, { status: 400 });

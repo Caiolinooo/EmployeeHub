@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiX, FiUpload, FiCpu, FiCheckCircle, FiAlertCircle, FiSend, FiTrash, FiPlus } from 'react-icons/fi';
 import { fetchWithToken } from '@/lib/tokenStorage';
+import { uploadDocumentoGt } from '@/lib/gestao-tripulantes/upload-client';
 import { toast } from 'react-hot-toast';
 import { cpfsMatch, formatCpf, normalizeCpf } from '@/lib/gestao-tripulantes/cpf';
 
@@ -113,26 +114,15 @@ const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', '
     try {
       // 1. Upload ASO Document
       setStep('uploading');
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('colaborador_id', selectedColabId);
-      fd.append('tipo_documento', 'aso');
       // Title is storage label only — identity comes from OCR, never from filename.
       // Datas ficam vazias de propósito: o OCR grava emissão/validade reais.
-      // Data de hoje aqui bloqueava a emissão extraída (persistência só preenche campo vazio).
-      fd.append('titulo', 'ASO');
-
-      const uploadRes = await fetchWithToken('/api/gestao-tripulantes/documentos/upload', {
-        method: 'POST',
-        body: fd,
+      const uploadData = await uploadDocumentoGt({
+        file,
+        colaboradorId: selectedColabId,
+        tipoDocumento: 'aso',
+        titulo: 'ASO',
       });
 
-      if (!uploadRes.ok) {
-        const errJson = await uploadRes.json();
-        throw new Error(errJson.error || 'Falha no upload do documento');
-      }
-
-      const uploadData = await uploadRes.json();
       const uploadedDocId = uploadData.data.id;
       const uploadedDocUrl = uploadData.data.arquivo_url;
       setDocId(uploadedDocId);

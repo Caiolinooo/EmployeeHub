@@ -7,6 +7,7 @@ import {
   resolveCollaboratorDocuments,
 } from '@/lib/document-catalog';
 import { hasFeaturePermission } from '@/lib/permissions';
+import { usuarioPodeVerColaborador } from '@/lib/gestao-tripulantes/empresa-acesso';
 import type { CatalogViewer } from '@/lib/document-catalog/permissions';
 
 export const dynamic = 'force-dynamic';
@@ -38,6 +39,11 @@ export async function GET(request: NextRequest) {
 
     if (!canRequestCollaboratorCatalog(viewer, { userId, colaboradorId, qhseOnly })) {
       return NextResponse.json({ error: 'Permissão negada' }, { status: 403 });
+    }
+
+    // ACL por empresa (GT): colaborador de empresa não liberada → 403
+    if (colaboradorId && !(await usuarioPodeVerColaborador(viewer, colaboradorId))) {
+      return NextResponse.json({ error: 'Sem acesso a este colaborador (empresa restrita)' }, { status: 403 });
     }
 
     const result = await resolveCollaboratorDocuments({

@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { FiUpload, FiDownload, FiGlobe, FiEdit2, FiSave, FiX, FiRefreshCw, FiArchive, FiTrash2 } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
 import { fetchWithToken } from '@/lib/tokenStorage';
+import { uploadDocumentoGt } from '@/lib/gestao-tripulantes/upload-client';
 import { toast } from 'react-hot-toast';
 import { enviarOcrDocumento } from '@/components/gestao-tripulantes/ocr-client';
 import { classificarValidadeCivil, documentoPertenceAba } from '@/lib/gestao-tripulantes/validade-civil';
@@ -89,20 +90,12 @@ export default function PassaportesTab({ colaboradorId, documentos, onRefresh, h
     if (!file) return;
     try {
       setUploading(true);
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('colaborador_id', colaboradorId);
-      fd.append('tipo_documento', 'passaporte');
-      fd.append('titulo', 'Passaporte');
-
-      const res = await fetchWithToken('/api/gestao-tripulantes/documentos/upload', {
-        method: 'POST',
-        body: fd,
+      const result = await uploadDocumentoGt({
+        file,
+        colaboradorId,
+        tipoDocumento: 'passaporte',
+        titulo: 'Passaporte',
       });
-      const result = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(result.error || 'Upload falhou');
-      }
 
       toast.success(t('gestaoTripulantes.upload.success'));
       onRefresh?.();

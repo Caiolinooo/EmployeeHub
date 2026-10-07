@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { garantirNumeroRastreioUnico, calcularStatusValidacaoPorValidade } from '@/lib/gestao-tripulantes/documento-integrity';
+import { idsColaboradoresPermitidos } from '@/lib/gestao-tripulantes/empresa-acesso';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,11 +63,21 @@ export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization') || undefined;
     const token = extractTokenFromHeader(authHeader);
-    if (!token || !verifyToken(token)) {
+    const payload = token ? verifyToken(token) : null;
+    if (!payload) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
-    const docs = await carregarDocumentos();
+    const docsAll = await carregarDocumentos();
+
+    // ACL por empresa: usuário restrito só audita docs de colaboradores liberados
+    const idsPermitidos = await idsColaboradoresPermitidos(
+      { id: payload.userId, role: payload.role },
+      [...new Set(docsAll.map(d => d.colaborador_id).filter(Boolean))] as string[]
+    );
+    const docs = idsPermitidos
+      ? docsAll.filter(d => d.colaborador_id && idsPermitidos.includes(d.colaborador_id))
+      : docsAll;
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     const em30 = new Date(hoje.getTime() + 30 * 86400000);

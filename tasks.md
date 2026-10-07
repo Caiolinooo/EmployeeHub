@@ -1,3 +1,23 @@
+## Ponto vinculado à folha (2026-10-07)
+
+A mesma pessoa liga login, GT, PontoFlow e folha. Batida no portal e em ponto.groupabz.com. Hora aprovada vira item `origem=timesheet`.
+
+- [x] `resolveVinculo` preenche `user_id` e `payroll_employees.employee_id` só com match único
+- [x] `POST/GET /api/pontoflow/punch` bloqueia cadeia incompleta
+- [x] PontoFlow `recordPunch` + `POST /api/integration/v1/punches` + botão na UI do ponto
+- [x] `timesheet.approved` com `lines` grava a folha draft; sem mapa ou sem folha fica pendente
+- [x] Migration `20261007_000006` aplicada (resumo + `payroll_codes.codigo_timesheet`)
+- [ ] Mapear `codigo_timesheet` na aba Rubricas do DP (`/department/dp?tab=rubricas`) — mesmo cadastro do financeiro
+
+## Tipo do documento editável (2026-10-07)
+
+Quem errou o tipo no upload não precisa excluir e reenviar.
+
+- [x] Aba Documentos: Editar troca o tipo no mesmo select do upload
+- [x] `PUT /api/gestao-tripulantes/documentos/[id]` grava `tipo_documento` na mesma linha; arquivo fica
+- [x] Gate de edição inalterado; ASO enviado/processado não troca de tipo (409)
+- [ ] Conferir no navegador com login (lápis → outro tipo → Salvar → card muda o rótulo sem novo upload)
+
 ## Cadastro DP — e-mail Marlene (2026-09-29)
 
 Campos do cadastro alinhados ao que o DP pediu e ao WK (departamento ≠ centro de custo).

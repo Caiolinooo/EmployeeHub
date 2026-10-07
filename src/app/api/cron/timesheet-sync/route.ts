@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAdminFromRequest } from '@/lib/auth';
+import { getSupabaseAdmin } from '@/lib/supabase';
+import { reconcileVinculos, type ReconcileVinculoResult } from '@/lib/timesheet-integration/vinculo';
 import {
   drainOutbox,
   getQueueStatus,
@@ -45,6 +47,13 @@ async function run(
       console.log(`🔄 [timesheet-sync] ${reprocessed} job(s) dead reprocessado(s)`);
     }
     let reconcile: ReconcileResult | null = null;
+    let vinculo: ReconcileVinculoResult | null = null;
+    if (options.reconcile) {
+      vinculo = await reconcileVinculos(await getSupabaseAdmin());
+      console.log(
+        `🔗 [timesheet-sync] vínculo: checked=${vinculo.checked} user=${vinculo.userLinked} folha=${vinculo.folhaLinked} enqueued=${vinculo.enqueued}`,
+      );
+    }
     const drain = await drainOutbox(options.limit);
     console.log(
       `✅ [timesheet-sync] drain: ok=${drain.ok} failed=${drain.failed} dead=${drain.dead}`,
@@ -62,6 +71,7 @@ async function run(
       data: {
         reprocessed,
         drain,
+        vinculo,
         reconcile,
         tempo_execucao_ms: Date.now() - startTime,
       },

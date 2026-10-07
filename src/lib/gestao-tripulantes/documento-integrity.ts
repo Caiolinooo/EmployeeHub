@@ -218,35 +218,14 @@ export function calcularStatusValidacaoPorValidade(
   return 'valido';
 }
 
-/** Tipos aceitos pelo CHECK de `gt_documentos.tipo_documento`. */
-export const TIPOS_DOCUMENTO_VALIDOS = [
-  'aso', 'treinamento', 'passaporte', 'cnh', 'certidao_nascimento',
-  'certidao_casamento', 'reservista', 'titulo_eleitor', 'ctps',
-  'documento_pessoal', 'certificado', 'contrato', 'laudo', 'outro',
-] as const;
-
-const TIPO_UI_PARA_BANCO: Record<string, { tipo: string; subtipo?: string }> = {
-  visto: { tipo: 'documento_pessoal', subtipo: 'visto' },
-  ctm: { tipo: 'documento_pessoal', subtipo: 'ctm' },
-  habilitacao: { tipo: 'cnh', subtipo: 'habilitacao' },
-  declaracao: { tipo: 'outro', subtipo: 'declaracao' },
-  rg: { tipo: 'documento_pessoal', subtipo: 'rg' },
-};
-
-export function normalizarTipoDocumento(tipo: string | null | undefined): {
-  tipo: string | null;
-  subtipo?: string;
-  invalido?: boolean;
-} {
-  const raw = (tipo || '').trim().toLowerCase();
-  if (!raw) return { tipo: null };
-  if ((TIPOS_DOCUMENTO_VALIDOS as readonly string[]).includes(raw)) {
-    return { tipo: raw };
-  }
-  const mapped = TIPO_UI_PARA_BANCO[raw];
-  if (mapped) return mapped;
-  return { tipo: raw, invalido: true };
-}
+export {
+  TIPOS_DOCUMENTO_VALIDOS,
+  normalizarTipoDocumento,
+  resolverTipoDocumentoEdicao,
+  asoBloqueiaTrocaDeTipo,
+  tipoParaOcr,
+} from './documento-tipos';
+export type { TipoDocumentoEdicaoResolvido } from './documento-tipos';
 
 export const MIME_DOCUMENTO_PERMITIDOS = [
   'application/pdf',
@@ -259,7 +238,7 @@ export const MIME_DOCUMENTO_PERMITIDOS = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ] as const;
 
-const EXT_PARA_MIME: Record<string, string> = {
+export const EXT_PARA_MIME: Record<string, string> = {
   pdf: 'application/pdf',
   jpg: 'image/jpeg',
   jpeg: 'image/jpeg',
@@ -271,7 +250,7 @@ const EXT_PARA_MIME: Record<string, string> = {
   docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 };
 
-function sniffMimeFromBytes(buffer: Uint8Array | Buffer | null | undefined): string | null {
+export function sniffMimeFromBytes(buffer: Uint8Array | Buffer | null | undefined): string | null {
   if (!buffer || buffer.length < 12) return null;
   const b0 = buffer[0], b1 = buffer[1], b2 = buffer[2], b3 = buffer[3];
   if (b0 === 0x25 && b1 === 0x50 && b2 === 0x44 && b3 === 0x46) return 'application/pdf';

@@ -47,6 +47,24 @@ export interface ContrachequeDados {
 
 export const round2 = (v: number): number => Math.round(v * 100) / 100;
 
+/**
+ * Coluna do holerite. `outros` e FGTS são informativos (não entram no líquido).
+ * Desconto sai do líquido. O resto é provento.
+ */
+export function naturezaDaRubrica(
+  tipo: string | null | undefined,
+  legalType?: string | null,
+): ContrachequeRubrica['natureza'] {
+  if (legalType === 'fgts' || tipo === 'outros' || tipo === 'informativo') return 'informativo';
+  if (tipo === 'desconto') return 'desconto';
+  return 'provento';
+}
+
+export function unwrapRelacao<T>(valor: T | T[] | null | undefined): T | null {
+  if (Array.isArray(valor)) return valor[0] ?? null;
+  return valor ?? null;
+}
+
 /** '1234.5' → '1.234,50'; null → ''. */
 export function brl(v: number | null | undefined): string {
   if (v == null) return '';

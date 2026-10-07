@@ -302,6 +302,31 @@ export default function DpFolhaPanel() {
 
   const podeEditar = hasFeature('folha.edit');
 
+  const abrirContracheque = async (sheetId: string, employeeId: string, pdf: boolean) => {
+    try {
+      const qs = `sheetId=${encodeURIComponent(sheetId)}&employeeId=${encodeURIComponent(employeeId)}${pdf ? '&pdf=1' : ''}`;
+      const res = await fetchWithToken(`/api/dp/folha/contracheque?${qs}`);
+      if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        throw new Error(json?.error || `HTTP ${res.status}`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      if (pdf) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `contracheque-${employeeId.slice(0, 8)}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        return;
+      }
+      window.open(url, '_blank', 'noopener,noreferrer');
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível gerar o contracheque.');
+    }
+  };
+
   // Competência (mês civil BRT, padrão do portal).
   const [mesAnoInput, setMesAnoInput] = useState(() => mesAnoAtualBRT());
   const competencia = useMemo(() => {
@@ -729,6 +754,9 @@ export default function DpFolhaPanel() {
               <FiDollarSign className="w-4 h-4 text-emerald-600" />
               {tf('dp.folha.titulo', 'Rubricas & Folha')}
             </h2>
+            <Link href="/department/dp?tab=rubricas" className="text-[11px] font-semibold text-abz-blue hover:underline">
+              Cadastro de rubricas
+            </Link>
             <p className="text-[11px] text-gray-500 mt-0.5 hidden sm:block">
               {tf('dp.folha.descricao', 'O sistema calcula a folha com os embarques, dobras, folgas e férias já registrados e gera o relatório por colaborador e centro de custo')}
             </p>
@@ -866,7 +894,7 @@ export default function DpFolhaPanel() {
             ))}
           </div>
           <Link
-            href="/folha-pagamento/configuracoes/codigos"
+            href="/department/dp?tab=rubricas"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition"
           >
             {tf('dp.folha.mapearRubricas', 'Mapear rubricas')}
@@ -1063,6 +1091,24 @@ export default function DpFolhaPanel() {
                                 {' · '}FGTS {formatBRL(c.fgts)}
                                 {' · '}{tf('dp.folha.liquidos', 'Líquido')} {formatBRL(c.liquido)}
                               </p>
+                              {sheet?.id && (
+                                <button
+                                  type="button"
+                                  onClick={() => abrirContracheque(sheet.id, c.employeeId, false)}
+                                  className="mb-2 mr-2 inline-flex items-center rounded-lg border border-gray-300 px-2 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-50"
+                                >
+                                  Contracheque
+                                </button>
+                              )}
+                              {sheet?.id && (
+                                <button
+                                  type="button"
+                                  onClick={() => abrirContracheque(sheet.id, c.employeeId, true)}
+                                  className="mb-2 inline-flex items-center rounded-lg border border-gray-300 px-2 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-50"
+                                >
+                                  PDF
+                                </button>
+                              )}
                               {c.itens.length > 0 && (
                                 <RubricasDuasColunas
                                   tf={tf}
@@ -1120,6 +1166,24 @@ export default function DpFolhaPanel() {
                       </button>
                       {aberto && (
                         <div className="px-4 pb-3">
+                          {sheet?.id && (
+                            <div className="mb-2 flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => abrirContracheque(sheet.id, r.employeeId, false)}
+                                className="inline-flex items-center rounded-lg border border-gray-300 px-2 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-50"
+                              >
+                                Contracheque
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => abrirContracheque(sheet.id, r.employeeId, true)}
+                                className="inline-flex items-center rounded-lg border border-gray-300 px-2 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-50"
+                              >
+                                PDF
+                              </button>
+                            </div>
+                          )}
                           <RubricasDuasColunas
                             tf={tf}
                             itens={r.items.map((item) => ({

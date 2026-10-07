@@ -9,6 +9,7 @@ import CollaboratorModal from '@/components/gestao-tripulantes/CollaboratorModal
 import ModalAprovacaoFechamento from '@/components/gestao-tripulantes/ModalAprovacaoFechamento';
 import AsoAgendamentoDpPanel from '@/components/gestao-tripulantes/AsoAgendamentoDpPanel';
 import DpFolhaPanel from '@/components/dp/DpFolhaPanel';
+import CodigosFolhaPage from '@/app/folha-pagamento/configuracoes/codigos/page';
 import FechamentoDpWizard from '@/components/dp/FechamentoDpWizard';
 import GtPageShell, { GT_PAGE_SCROLLPORT_CLASS } from '@/components/gestao-tripulantes/GtPageShell';
 import SearchableCreatableSelect from '@/components/gestao-tripulantes/SearchableCreatableSelect';
@@ -130,13 +131,13 @@ export default function DepartamentoPessoalPage() {
 
   const podeVerFolha = hasFeature('folha.view');
 
-  const [activeTab, setActiveTab] = useState<'colaboradores' | 'fechamento' | 'asos' | 'folha'>('colaboradores');
+  const [activeTab, setActiveTab] = useState<'colaboradores' | 'fechamento' | 'asos' | 'folha' | 'rubricas'>('colaboradores');
   // Deep-link /department/dp?tab=folha (cards do hub Financeiro).
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const tab = new URLSearchParams(window.location.search).get('tab');
-    if (tab === 'folha' && podeVerFolha) {
-      setActiveTab('folha');
+    if ((tab === 'folha' || tab === 'rubricas') && podeVerFolha) {
+      setActiveTab(tab);
     } else if (tab === 'fechamento' || tab === 'asos' || tab === 'colaboradores') {
       setActiveTab(tab);
     }
@@ -484,6 +485,18 @@ export default function DepartamentoPessoalPage() {
               Rubricas &amp; Folha
             </button>
           )}
+          {podeVerFolha && (
+            <button
+              onClick={() => setActiveTab('rubricas')}
+              className={`pb-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
+                activeTab === 'rubricas'
+                  ? 'border-abz-blue text-abz-blue'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Rubricas
+            </button>
+          )}
           <button
             onClick={() => router.push('/department/e-social')}
             className="pb-3 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-indigo-600 flex items-center gap-2 transition-all whitespace-nowrap"
@@ -819,6 +832,12 @@ export default function DepartamentoPessoalPage() {
       {activeTab === 'folha' && podeVerFolha && (
         <div className="flex flex-col flex-1 min-h-0 overflow-y-auto gap-3">
           <DpFolhaPanel />
+        </div>
+      )}
+
+      {activeTab === 'rubricas' && podeVerFolha && (
+        <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <CodigosFolhaPage embedded />
         </div>
       )}
 

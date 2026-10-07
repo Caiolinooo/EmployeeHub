@@ -4,7 +4,7 @@
  */
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { brl, renderContracheque, type ContrachequeDados } from './contracheque';
+import { brl, naturezaDaRubrica, renderContracheque, type ContrachequeDados } from './contracheque';
 
 const fixture: ContrachequeDados = {
   competencia: 'set/2026',
@@ -34,6 +34,15 @@ describe('brl', () => {
     assert.equal(brl(4500), '4.500,00');
     assert.equal(brl(509.6), '509,60');
     assert.equal(brl(null), '');
+  });
+});
+
+describe('naturezaDaRubrica', () => {
+  it('FGTS e outros ficam informativos; desconto não vira provento', () => {
+    assert.equal(naturezaDaRubrica('outros', 'fgts'), 'informativo');
+    assert.equal(naturezaDaRubrica('outros', null), 'informativo');
+    assert.equal(naturezaDaRubrica('desconto', null), 'desconto');
+    assert.equal(naturezaDaRubrica('provento', null), 'provento');
   });
 });
 

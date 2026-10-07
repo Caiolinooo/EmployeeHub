@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { FiUpload, FiDownload, FiFile, FiAlertCircle, FiCheckCircle, FiClock, FiTrash2, FiArchive, FiEdit2, FiSave, FiX } from 'react-icons/fi';
 import { useI18n } from '@/contexts/I18nContext';
 import { fetchWithToken } from '@/lib/tokenStorage';
+import { uploadDocumentoGt } from '@/lib/gestao-tripulantes/upload-client';
 import { toast } from 'react-hot-toast';
 import { enviarOcrDocumento } from '@/components/gestao-tripulantes/ocr-client';
 import { classificarValidadeCivil, documentoPertenceAba } from '@/lib/gestao-tripulantes/validade-civil';
@@ -14,6 +15,12 @@ import {
   COLLABORATOR_MODAL_TABLE_SCROLL_CLASS,
 } from '@/components/gestao-tripulantes/collaborator-modal-layout';
 import { useGtDocumentPermissions } from '@/components/gestao-tripulantes/use-gt-document-permissions';
+import TituloDocumentoSelect from '@/components/gestao-tripulantes/TituloDocumentoSelect';
+import {
+  labelTipoDocumento,
+  TIPOS_DOCUMENTO_UPLOAD_ABA,
+  tipoInicialFormularioDocumento,
+} from '@/lib/gestao-tripulantes/documento-tipos-ui';
 
 interface Document {
   id: string;
@@ -54,9 +61,11 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const TIPO_COLORS: Record<string, string> = {
-  visto: 'bg-blue-50 border-blue-200',
-  ctm: 'bg-purple-50 border-purple-200',
-  habilitacao: 'bg-green-50 border-green-200',
+  pessoal: 'bg-blue-50 border-blue-200',
+  contratual: 'bg-green-50 border-green-200',
+  demissional: 'bg-red-50 border-red-200',
+  ferias: 'bg-cyan-50 border-cyan-200',
+  ponto: 'bg-purple-50 border-purple-200',
   certificado: 'bg-yellow-50 border-yellow-200',
 };
 
@@ -68,13 +77,14 @@ export default function DocumentosTab({ colaboradorId, documentos, onRefresh, hi
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [editForm, setEditForm] = useState({
+    tipo_documento: 'pessoal',
     titulo: '',
     numero_documento: '',
     orgao_emissor: '',
     data_emissao: '',
     data_validade: '',
   });
-  const [newTipo, setNewTipo] = useState('documento_pessoal');
+  const [newTipo, setNewTipo] = useState('pessoal');
   const [ocrRunning, setOcrRunning] = useState<string | null>(null);
   const [newTitulo, setNewTitulo] = useState('');
   const [historicoAberto, setHistoricoAberto] = useState<Record<string, boolean>>({});
@@ -94,23 +104,22 @@ export default function DocumentosTab({ colaboradorId, documentos, onRefresh, hi
     if (!file) return;
     if (!newTitulo.trim()) {
       toast.error('Informe o título do documento antes de fazer upload');
+      e.target.value = '';
       return;
     }
     try {
       setUploading(true);
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('colaborador_id', colaboradorId);
-      fd.append('tipo_documento', newTipo);
-      fd.append('titulo', newTitulo.trim());
-
-      const res = await fetchWithToken('/api/gestao-tripulantes/documentos/upload', {
-        method: 'POST',
-        body: fd,
+      const json = await uploadDocumentoGt({
+        file,
+        colaboradorId,
+        tipoDocumento: newTipo,
+        titulo: newTitulo.trim(),
       });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error || 'Upload falhou');
-      toast.success(t('gestaoTripulantes.upload.success'));
+      if (json.merged) {
+        toast('Documento idêntico já existia — o registro anterior foi atualizado (sem duplicação)', { icon: 'ℹ️' });
+      } else {
+        toast.success(t('gestaoTripulantes.upload.success'));
+      }
       setNewTitulo('');
       onRefresh?.();
       const docId = json.data?.id as string | undefined;
@@ -149,6 +158,7 @@ export default function DocumentosTab({ colaboradorId, documentos, onRefresh, hi
   const startEditing = (doc: Document) => {
     setEditingId(doc.id);
     setEditForm({
+      tipo_documento: tipoInicialFormularioDocumento(doc.tipo_documento),
       titulo: doc.titulo || '',
       numero_documento: doc.numero_documento || '',
       orgao_emissor: doc.orgao_emissor || '',
@@ -164,6 +174,7 @@ export default function DocumentosTab({ colaboradorId, documentos, onRefresh, hi
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          tipo_documento: editForm.tipo_documento,
           titulo: editForm.titulo.trim() || null,
           numero_documento: editForm.numero_documento.trim() || null,
           orgao_emissor: editForm.orgao_emissor.trim() || null,
@@ -185,7 +196,8 @@ export default function DocumentosTab({ colaboradorId, documentos, onRefresh, hi
 
   return (
     <div className={COLLABORATOR_MODAL_TAB_FILL_CLASS}>
-      {/* Upload area */}
+      {/* Upload area — visível apenas para quem pode editar documentos */}
+      {canEdit ? (
       <div className="p-4 bg-gray-50/70 border-b border-gray-100 shrink-0">
         <div className="flex flex-col sm:flex-row gap-3 items-end">
           <div className="flex-1">
@@ -193,30 +205,16 @@ export default function DocumentosTab({ colaboradorId, documentos, onRefresh, hi
             <select
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
               value={newTipo}
-              onChange={e => setNewTipo(e.target.value)}
+              onChange={e => { setNewTipo(e.target.value); setNewTitulo(''); }}
             >
-              <option value="documento_pessoal">Documento pessoal / Visto / CTM</option>
-              <option value="cnh">CNH / Habilitação</option>
-              <option value="certificado">Certificado</option>
-              <option value="contrato">Contrato</option>
-              <option value="laudo">Laudo</option>
-              <option value="ctps">CTPS</option>
-              <option value="reservista">Reservista</option>
-              <option value="titulo_eleitor">Título de eleitor</option>
-              <option value="certidao_nascimento">Certidão de nascimento</option>
-              <option value="certidao_casamento">Certidão de casamento</option>
-              <option value="outro">Outro / Declaração</option>
+              {TIPOS_DOCUMENTO_UPLOAD_ABA.map((opcao) => (
+                <option key={opcao.value} value={opcao.value}>{opcao.label}</option>
+              ))}
             </select>
           </div>
           <div className="flex-1">
             <label className="block text-xs text-gray-500 font-medium mb-1">Título</label>
-            <input
-              type="text"
-              placeholder="Ex: Visto Americano"
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              value={newTitulo}
-              onChange={e => setNewTitulo(e.target.value)}
-            />
+            <TituloDocumentoSelect tipo={newTipo} value={newTitulo} onChange={setNewTitulo} disabled={uploading} />
           </div>
           <label className={`flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-800 transition ${uploading ? 'opacity-60 pointer-events-none' : ''}`}>
             <FiUpload className="w-3.5 h-3.5" />
@@ -225,6 +223,11 @@ export default function DocumentosTab({ colaboradorId, documentos, onRefresh, hi
           </label>
         </div>
       </div>
+      ) : (
+        <div className="p-3 bg-gray-50/70 border-b border-gray-100 shrink-0 text-xs text-gray-400">
+          Somente leitura — você não tem permissão para incluir documentos.
+        </div>
+      )}
 
       <div className={COLLABORATOR_MODAL_TABLE_SCROLL_CLASS}>
       {grupos.length === 0 ? (
@@ -248,9 +251,25 @@ export default function DocumentosTab({ colaboradorId, documentos, onRefresh, hi
                 }`}
               >
                 <div className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{doc.tipo_documento}</span>
-                    <StatusIcon className={`w-4 h-4 ${STATUS_COLORS[statusKey] || 'text-gray-400'}`} />
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    {editingId === doc.id ? (
+                      <select
+                        aria-label="Tipo do Documento"
+                        className="min-w-0 flex-1 text-xs font-semibold text-gray-700 bg-white border border-gray-200 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        value={editForm.tipo_documento}
+                        onChange={(e) => setEditForm((f) => ({ ...f, tipo_documento: e.target.value }))}
+                      >
+                        {TIPOS_DOCUMENTO_UPLOAD_ABA.map((opcao) => (
+                          <option key={opcao.value} value={opcao.value}>{opcao.label}</option>
+                        ))}
+                        {!TIPOS_DOCUMENTO_UPLOAD_ABA.some((opcao) => opcao.value === editForm.tipo_documento) && (
+                          <option value={editForm.tipo_documento}>{editForm.tipo_documento}</option>
+                        )}
+                      </select>
+                    ) : (
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{labelTipoDocumento(doc.tipo_documento)}</span>
+                    )}
+                    <StatusIcon className={`w-4 h-4 shrink-0 ${STATUS_COLORS[statusKey] || 'text-gray-400'}`} />
                   </div>
                   <p className="font-semibold text-gray-800 text-sm mb-1 line-clamp-2">{doc.titulo}</p>
                   {editingId === doc.id ? (

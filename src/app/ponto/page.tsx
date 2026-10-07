@@ -15,15 +15,40 @@ interface PontoStatus {
   habilitado: boolean;
   motivo: string | null;
   syncStatus: string;
+  vinculo?: {
+    login: boolean;
+    ponto: boolean;
+    folha: boolean;
+    empresa: boolean;
+  };
   resumo: {
     period_start: string;
     period_end: string;
     status: string;
     worked_days: number | null;
     worked_minutes: number | null;
+    folha_status?: string | null;
+    folha_motivo?: string | null;
     updated_at: string;
   } | null;
 }
+
+interface TodayPunch {
+  date: string;
+  open: boolean;
+  horaIni: string | null;
+  horaFim: string | null;
+}
+
+const MOTIVO_LABEL: Record<string, string> = {
+  sem_colaborador: 'Colaborador não encontrado para este usuário. O DP precisa ligar seu login ao cadastro.',
+  ambiguo: 'Mais de um cadastro corresponde a este usuário. O DP precisa unificar.',
+  sem_user: 'Seu login ainda não está ligado ao cadastro do colaborador.',
+  flag_inativa: 'Seu cadastro não está habilitado para Time Sheet. Procure o DP para ativar "Contabilizar no Time Sheet".',
+  sem_empresa: 'A empresa do cadastro ainda não tem tenant do Time Sheet.',
+  sem_people_map: 'Seu cadastro está sendo sincronizado com o Time Sheet. Tente de novo em instantes.',
+  sem_folha: 'Seu cadastro ainda não está ligado à folha. O DP precisa concluir o vínculo.',
+};
 
 function formatDate(iso: string, locale: string): string {
   const d = new Date(`${iso}T00:00:00`);
@@ -36,6 +61,8 @@ export default function PontoPage() {
   const [status, setStatus] = useState<PontoStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [opening, setOpening] = useState(false);
+  const [today, setToday] = useState<TodayPunch | null>(null);
+  const [punching, setPunching] = useState(false);
 
   const authHeaders = useCallback((): HeadersInit => {
     const token = getToken();
@@ -55,7 +82,15 @@ export default function PontoPage() {
         if (!res.ok || !json.success) {
           throw new Error(json.error || t('ponto.timesheet.loadError', 'Falha ao carregar status do Time Sheet'));
         }
-        setStatus(json.data as PontoStatus);
+        const data = json.data as PontoStatus;
+        setStatus(data);
+        if (data.habilitado) {
+          const todayRes = await fetch('/api/pontoflow/punch', { headers: authHeaders() });
+          const todayJson = await todayRes.json();
+          if (!cancelled && todayRes.ok && todayJson.success) {
+            setToday(todayJson.data as TodayPunch);
+          }
+        }
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : t('ponto.timesheet.loadError', 'Falha ao carregar status do Time Sheet'));
@@ -68,6 +103,32 @@ export default function PontoPage() {
       cancelled = true;
     };
   }, [authHeaders, t]);
+
+  const punch = async (kind: 'in' | 'out') => {
+    setPunching(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/pontoflow/punch', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ kind }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'Não foi possível registrar o ponto');
+      }
+      setToday({
+        date: json.data.date,
+        open: kind === 'in',
+        horaIni: json.data.horaIni ?? null,
+        horaFim: json.data.horaFim ?? null,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível registrar o ponto');
+    } finally {
+      setPunching(false);
+    }
+  };
 
   const openTimeSheet = async () => {
     setOpening(true);
@@ -123,7 +184,20 @@ export default function PontoPage() {
           </div>
         ) : status?.habilitado ? (
           <>
-            <div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => punch(today?.open ? 'out' : 'in')}
+                disabled={punching}
+                className="inline-flex items-center px-6 py-3 bg-abz-blue text-white rounded-lg font-semibold hover:bg-abz-blue-dark transition duration-200 shadow-md text-sm disabled:opacity-50"
+              >
+                <FiClock className="mr-2" />
+                {punching
+                  ? 'Registrando…'
+                  : today?.open
+                    ? 'Registrar saída'
+                    : 'Registrar entrada'}
+              </button>
               <button
                 type="button"
                 onClick={openTimeSheet}
@@ -138,6 +212,12 @@ export default function PontoPage() {
               {error && (
                 <p className="mt-3 flex items-center gap-2 text-sm text-red-700">
                   <FiAlertCircle /> {error}
+                </p>
+              )}
+              {today && (
+                <p className="mt-3 text-xs text-gray-500">
+                  Hoje: {today.horaIni || '—'}
+                  {today.horaFim ? ` – ${today.horaFim}` : today.open ? ' (em aberto)' : ''}
                 </p>
               )}
               {(status.syncStatus === 'pending' || status.syncStatus === 'error') && (
@@ -194,10 +274,11 @@ export default function PontoPage() {
           <div className="flex items-start gap-2 rounded-md bg-yellow-50 p-4 text-sm text-yellow-900">
             <FiAlertCircle className="mt-0.5 shrink-0" />
             <span>
-              {t(
-                'ponto.timesheet.notEnabled',
-                'Seu cadastro não está habilitado para Time Sheet. Procure o DP para ativar a opção "Contabilizar no Time Sheet".',
-              )}
+              {MOTIVO_LABEL[status?.motivo || ''] ||
+                t(
+                  'ponto.timesheet.notEnabled',
+                  'Seu cadastro não está habilitado para Time Sheet. Procure o DP para ativar a opção "Contabilizar no Time Sheet".',
+                )}
             </span>
           </div>
         )}

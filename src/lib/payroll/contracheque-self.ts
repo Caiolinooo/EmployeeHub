@@ -15,7 +15,7 @@
  */
 import { supabaseAdmin } from '@/lib/supabase';
 import { normalizeCpf } from '@/lib/utils/identity';
-import type { ContrachequeDados } from '@/lib/payroll/contracheque';
+import { naturezaDaRubrica, unwrapRelacao, type ContrachequeDados } from '@/lib/payroll/contracheque';
 
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
@@ -106,15 +106,34 @@ export async function resolverFuncionariosDoUsuario(
   usuario: UsuarioPortal,
 ): Promise<FuncionarioVinculado[]> {
   const cpfs = await coletarCpfsDoUsuario(usuario);
-  if (cpfs.length === 0) return [];
+  const porId = new Map<string, FuncionarioVinculado>();
 
-  const formatos = cpfs.flatMap((c) => [c, formatarCpf(c)]);
-  const { data, error } = await supabaseAdmin
-    .from('payroll_employees')
-    .select('id, name, cpf')
-    .in('cpf', formatos);
-  if (error) throw new Error(`payroll_employees: ${error.message}`);
-  return (data || []) as FuncionarioVinculado[];
+  const { data: gts, error: erroGt } = await supabaseAdmin
+    .from('gt_colaboradores')
+    .select('id')
+    .eq('user_id', usuario.id)
+    .is('deleted_at', null);
+  if (erroGt) throw new Error(`gt_colaboradores: ${erroGt.message}`);
+  const gtIds = (gts || []).map((g) => String((g as { id: string }).id)).filter(Boolean);
+  if (gtIds.length > 0) {
+    const { data: porVinculo, error: erroVinculo } = await supabaseAdmin
+      .from('payroll_employees')
+      .select('id, name, cpf')
+      .in('employee_id', gtIds);
+    if (erroVinculo) throw new Error(`payroll_employees(employee_id): ${erroVinculo.message}`);
+    for (const row of (porVinculo || []) as FuncionarioVinculado[]) porId.set(row.id, row);
+  }
+
+  if (cpfs.length > 0) {
+    const formatos = cpfs.flatMap((c) => [c, formatarCpf(c)]);
+    const { data, error } = await supabaseAdmin
+      .from('payroll_employees')
+      .select('id, name, cpf')
+      .in('cpf', formatos);
+    if (error) throw new Error(`payroll_employees: ${error.message}`);
+    for (const row of (data || []) as FuncionarioVinculado[]) porId.set(row.id, row);
+  }
+  return [...porId.values()];
 }
 
 /**
@@ -152,23 +171,26 @@ export async function carregarDadosContracheque(
 
   const { data: items } = await supabaseAdmin
     .from('payroll_sheet_items')
-    .select('quantity, reference_value, calculated_value, payroll_codes(code, name, type)')
+    .select('quantity, reference_value, calculated_value, payroll_codes(code, name, type, legal_type)')
     .eq('sheet_id', sheetId)
     .eq('employee_id', employeeId);
 
-  const empresaJoin = sheet.payroll_companies as unknown as { name: string; cnpj: string } | null;
-  const deptJoin = emp.payroll_departments as unknown as { name: string } | null;
+  const empresaJoin = unwrapRelacao(sheet.payroll_companies as { name: string; cnpj: string } | { name: string; cnpj: string }[] | null);
+  const deptJoin = unwrapRelacao(emp.payroll_departments as { name: string } | { name: string }[] | null);
 
   const rubricas = (items ?? []).map((it) => {
-    const code = it.payroll_codes as unknown as { code: string; name: string; type: string } | null;
-    const tipo = code?.type;
+    const code = unwrapRelacao(
+      it.payroll_codes as { code: string; name: string; type: string; legal_type?: string | null } | { code: string; name: string; type: string; legal_type?: string | null }[] | null,
+    );
+    const quantidade = it.quantity == null || it.quantity === '' ? null : Number(it.quantity);
+    const referencia = it.reference_value == null || it.reference_value === '' ? null : Number(it.reference_value);
     return {
       codigo: code?.code || '',
       descricao: code?.name || '',
-      quantidade: Number(it.quantity) || null,
-      referencia: Number(it.reference_value) || null,
+      quantidade: quantidade != null && Number.isFinite(quantidade) ? quantidade : null,
+      referencia: referencia != null && Number.isFinite(referencia) ? referencia : null,
       valor: Number(it.calculated_value) || 0,
-      natureza: tipo === 'desconto' ? ('desconto' as const) : tipo === 'informativo' ? ('informativo' as const) : ('provento' as const),
+      natureza: naturezaDaRubrica(code?.type, code?.legal_type),
     };
   });
 
@@ -192,7 +214,9 @@ export async function carregarDadosContracheque(
     totais: {
       proventos: Number(summary.total_earnings) || 0,
       descontos: Number(summary.total_deductions) || 0,
-      liquido: (Number(summary.total_earnings) || 0) - (Number(summary.total_deductions) || 0),
+      liquido: summary.net_salary != null && summary.net_salary !== ''
+        ? Number(summary.net_salary)
+        : (Number(summary.total_earnings) || 0) - (Number(summary.total_deductions) || 0),
     },
     bases: {
       inss: Number(summary.inss_base) || 0,
