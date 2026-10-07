@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.97.1] - 2026-10-07
+
+### Lista do Departamento Pessoal volta a carregar
+
+#### Corrigido
+
+1. **Lista de colaboradores do DP** deixava de abrir com o toast "Erro ao carregar colaboradores". `GET /api/gestao-tripulantes/colaboradores` respondia 500: o filtro de empresa era `async` e devolvia o builder do PostgREST, que é thenable, então o `await` executava o select e o `.or()` seguinte (`ativo=true`) quebrava com `query.or is not a function`. O filtro passou a ser síncrono (`aplicarFiltroEmpresa`). A mesma listagem com `page=1&limit=50&ativo=true` volta 200 (total 22); busca vazia volta 200 com total 0.
+
 ## [5.97.0] - 2026-10-07
 
 ### Ponto na folha, contracheque no portal e categorias de documento

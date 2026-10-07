@@ -68,20 +68,21 @@ export function montarOrClauseEmpresa(empresaIds: string[], coluna = 'empresa_id
 }
 
 /**
- * Aplica o filtro de empresa numa query PostgREST sobre gt_colaboradores
- * (ou tabela com coluna empresa_id). Sem restrição → query inalterada.
+ * Aplica o filtro de empresa num builder PostgREST já em mãos.
+ * Sem restrição (null) → builder intacto.
  * Com restrição → empresa IN (...) OR empresa IS NULL.
- * Tipado como any: o query builder do supabase-js é nominal demais para generics aqui.
+ *
+ * Síncrono de propósito. O builder é thenable. Devolvê-lo de uma função
+ * async executa o select. O caller recebe `{ data, error }` e o próximo
+ * `.or()` quebra com `query.or is not a function` (GET /colaboradores 500).
  */
-export async function filtrarQueryEmpresa(
-  query: any,
-  user: EmpresaAcessoUser,
+export function aplicarFiltroEmpresa<Q>(
+  query: Q,
+  empresaIds: string[] | null,
   coluna = 'empresa_id'
-): Promise<any> {
-  if (roleBypassEmpresa(user.role)) return query;
-  const restricao = await getEmpresasRestricaoUsuario(user.id);
-  if (!restricao) return query;
-  return query.or(montarOrClauseEmpresa(restricao, coluna));
+): Q {
+  if (!empresaIds) return query;
+  return (query as { or: (filters: string) => Q }).or(montarOrClauseEmpresa(empresaIds, coluna));
 }
 
 /**

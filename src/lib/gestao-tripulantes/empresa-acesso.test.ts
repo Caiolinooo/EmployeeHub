@@ -32,4 +32,29 @@ describe('empresa-acesso (ACL por empresa)', () => {
     const clause = mod.montarOrClauseEmpresa(['aaa-111'], 'gt_colaboradores.empresa_id');
     assert.equal(clause, 'gt_colaboradores.empresa_id.is.null,gt_colaboradores.empresa_id.in.(aaa-111)');
   });
+
+  it('aplicarFiltroEmpresa deixa o builder thenable sem executar e grava a cláusula', () => {
+    let executou = false;
+    const builder = {
+      clause: '',
+      or(filters: string) {
+        this.clause = filters;
+        return this;
+      },
+      then(resolve: (value: unknown) => void) {
+        executou = true;
+        resolve({ data: [{ id: 'executado' }] });
+      },
+    };
+
+    const intacto = mod.aplicarFiltroEmpresa(builder, null);
+    assert.equal(intacto, builder);
+    assert.equal(builder.clause, '');
+    assert.equal(executou, false);
+
+    const filtrado = mod.aplicarFiltroEmpresa(builder, ['emp-1', 'emp-2']);
+    assert.equal(filtrado, builder);
+    assert.equal(builder.clause, 'empresa_id.is.null,empresa_id.in.(emp-1,emp-2)');
+    assert.equal(executou, false);
+  });
 });

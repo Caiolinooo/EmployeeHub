@@ -28,7 +28,11 @@ import {
   MENSAGEM_CADASTRO_NEGADO,
   podeMutarCadastroColaborador,
 } from '@/lib/gestao-tripulantes/colaborador-cadastro-auth';
-import { filtrarQueryEmpresa } from '@/lib/gestao-tripulantes/empresa-acesso';
+import {
+  aplicarFiltroEmpresa,
+  getEmpresasRestricaoUsuario,
+  roleBypassEmpresa,
+} from '@/lib/gestao-tripulantes/empresa-acesso';
 
 const DOC_PENDENCY_SELECT =
   'id, colaborador_id, tipo_documento, subtipo, titulo, descricao, origem, numero_documento, numero_rastreio, data_emissao, data_validade, status_validacao, created_at';
@@ -224,9 +228,12 @@ export async function GET(request: NextRequest) {
       .select(LIST_SELECT, { count: 'exact' })
       .is('deleted_at', null);
 
-    // ACL por empresa: usuário com restrição só vê colaboradores das empresas
-    // liberadas em gt_user_empresa_acesso (0 linhas = sem restrição).
-    query = await filtrarQueryEmpresa(query, { id: payload.userId, role: payload.role });
+    // ACL por empresa: 0 linhas em gt_user_empresa_acesso = sem restrição.
+    // O filtro entra aqui, síncrono. Ver aplicarFiltroEmpresa.
+    const empresasRestritas = roleBypassEmpresa(payload.role)
+      ? null
+      : await getEmpresasRestricaoUsuario(payload.userId);
+    query = aplicarFiltroEmpresa(query, empresasRestritas);
 
     if (cpfMatchId) {
       query = query.eq('id', cpfMatchId);
