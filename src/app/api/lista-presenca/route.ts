@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { canWithGrant } from '@/lib/permission-gate';
 import { supabaseAdmin } from '@/lib/supabase';
 import { authenticateUser } from '@/lib/api-auth';
 
@@ -146,7 +147,7 @@ export async function DELETE(request: NextRequest) {
             .single();
 
         if (!lista) return NextResponse.json({ error: 'Lista não encontrada' }, { status: 404 });
-        if (lista.created_by !== user.id && user.role !== 'ADMIN') {
+        if (lista.created_by !== user.id && !(await canWithGrant(user.id, user.role, ['lista-presenca.manage_any'], 'admin'))) {
             return NextResponse.json({ error: 'Permissão negada' }, { status: 403 });
         }
 

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAllUsers } from '@/hooks/useAllUsers';
 import { useI18n } from '@/contexts/I18nContext';
+import { fetchWithToken } from '@/lib/tokenStorage';
 import { FiShield, FiUsers, FiKey, FiPlus, FiEdit, FiTrash2, FiCheck, FiX, FiInfo } from 'react-icons/fi';
 
 interface ACLPermission {
@@ -110,7 +111,7 @@ const ACLManagementPanel: React.FC = () => {
       const permissionsMap: Record<string, any[]> = {};
       for (const user of users) {
         try {
-          const response = await fetch(`/api/acl/users/${user.id}/permissions`);
+          const response = await fetchWithToken(`/api/acl/users/${user.id}/permissions`);
           if (response.ok) {
             const data = await response.json();
             permissionsMap[user.id] = data.individual_permissions || [];
@@ -336,7 +337,9 @@ const ACLManagementPanel: React.FC = () => {
                             {individualPerms.map((perm: any) => (
                               <span
                                 key={perm.permission.id}
-                                className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded"
+                                className={`text-xs px-2 py-1 rounded ${
+                                  perm.granted === false ? 'bg-red-100 text-red-800 line-through' : 'bg-green-100 text-green-800'
+                                }`}
                               >
                                 {perm.permission.name}
                               </span>

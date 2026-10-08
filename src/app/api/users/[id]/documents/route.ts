@@ -5,6 +5,11 @@ import {
   resolveCollaboratorDocuments,
 } from '@/lib/document-catalog';
 import type { CatalogViewer } from '@/lib/document-catalog/permissions';
+import {
+  MENSAGEM_DOCUMENTOS_RESTRITOS,
+  escopoVeUsuario,
+  resolverEscopoDocumentosGt,
+} from '@/lib/gestao-tripulantes/documento-escopo';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +36,9 @@ export async function GET(
 
     if (!canRequestCollaboratorCatalog(viewer, { userId: id, qhseOnly })) {
       return NextResponse.json({ error: 'Permissão negada' }, { status: 403 });
+    }
+    if (!escopoVeUsuario(await resolverEscopoDocumentosGt(viewer.id, viewer.role), viewer.id, id)) {
+      return NextResponse.json({ error: MENSAGEM_DOCUMENTOS_RESTRITOS }, { status: 403 });
     }
 
     const result = await resolveCollaboratorDocuments({ userId: id, viewer, qhseOnly });

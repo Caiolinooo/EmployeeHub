@@ -9,6 +9,7 @@ export interface Sector {
   id: string;
   name: string;
   description: string | null;
+  allowed_modules?: string[] | null;
   created_at: string;
   updated_at: string;
 }

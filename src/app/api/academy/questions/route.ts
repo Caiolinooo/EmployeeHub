@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 
 function getUserIdFromToken(request: NextRequest): string | null {
     const authHeader = request.headers.get('authorization') || undefined;
@@ -23,7 +24,11 @@ async function verifyPermissions(userId: string): Promise<boolean> {
 
     if (error || !userData) return false;
 
-    return userData.role === 'ADMIN' || (userData.access_permissions?.features?.academy_editor === true);
+    return (
+        userData.role === 'ADMIN' ||
+        userData.access_permissions?.features?.academy_editor === true ||
+        (await canWithGrant(userId, userData.role, ['academy.questions.manage'], 'admin'))
+    );
 }
 
 // GET - List questions for a course

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { supabaseAdmin } from '@/lib/supabase';
 
 /**
@@ -158,7 +159,11 @@ export async function POST(request: NextRequest) {
       .eq('id', payload.userId)
       .single();
 
-    if (userError || !requestingUser || requestingUser.role !== 'ADMIN') {
+    if (
+      userError ||
+      !requestingUser ||
+      !(await canWithGrant(requestingUser.id, requestingUser.role, ['avaliacao.trash.cleanup'], 'admin'))
+    ) {
       return NextResponse.json(
         { error: 'Acesso negado. Apenas administradores podem executar limpeza manual.' },
         { status: 403 }

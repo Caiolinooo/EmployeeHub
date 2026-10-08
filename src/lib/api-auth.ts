@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { canEditAcademy, canModerateAcademy, canEditSocial, canModerateSocial, hasFeaturePermission } from '@/lib/permissions';
 import { verifyTokenFromRequest } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 
 export interface AuthenticatedUser {
   id: string;
@@ -257,6 +258,27 @@ export function withPermission<T extends any[]>(
       return error;
     }
 
+    return handler(request, user, ...args);
+  };
+}
+
+/**
+ * `withPermission` + grants do catálogo vivo (feature JSONB / ACL, `src/config/module-grants.ts`).
+ * O grant só soma: quem passava por `permission` continua passando.
+ */
+export function withPermissionOrGrant<T extends any[]>(
+  permission: string,
+  grants: readonly string[],
+  handler: (request: NextRequest, user: AuthenticatedUser, ...args: T) => Promise<NextResponse>
+) {
+  return async (request: NextRequest, ...args: T) => {
+    const { user, error } = await requireAuth(request);
+    if (error) {
+      return error;
+    }
+    if (!checkPermissions(user, permission) && !(await canWithGrant(user.id, user.role, grants, 'none'))) {
+      return NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
+    }
     return handler(request, user, ...args);
   };
 }

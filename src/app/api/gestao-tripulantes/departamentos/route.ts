@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { podeMutarCadastroColaborador } from '@/lib/gestao-tripulantes/colaborador-cadastro-auth';
+import { normalizarDepartamento } from '@/lib/gestao-tripulantes/departamento-label';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,24 +65,30 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const nome = String(body.nome || '').trim();
-    let codigo = String(body.codigo || '').trim();
-
-    if (!nome) {
+    if (!String(body.nome || '').trim()) {
       return NextResponse.json({ error: 'Nome do departamento é obrigatório' }, { status: 400 });
     }
+    const { nome, codigo: codigoNormalizado } = normalizarDepartamento(String(body.nome), body.codigo);
+    let codigo = codigoNormalizado;
 
     if (!codigo) {
-      const prefixo = /^(\d{1,10})\b/.exec(nome);
-      codigo = prefixo
-        ? prefixo[1]
-        : nome
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .toUpperCase()
-          .replace(/[^A-Z0-9]+/g, '')
-          .slice(0, 10);
+      codigo = nome
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, '')
+        .slice(0, 10);
       if (!codigo) codigo = Date.now().toString(36).toUpperCase().slice(0, 10);
+    }
+
+    const { data: duplicado } = await supabaseAdmin
+      .from('gt_departamentos')
+      .select('id')
+      .eq('codigo', codigo)
+      .limit(1)
+      .maybeSingle();
+    if (duplicado) {
+      return NextResponse.json({ error: `Já existe departamento com o código ${codigo}` }, { status: 409 });
     }
 
     const { data, error } = await supabaseAdmin

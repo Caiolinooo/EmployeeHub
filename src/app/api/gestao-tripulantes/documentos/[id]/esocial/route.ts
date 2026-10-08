@@ -6,6 +6,8 @@ import { canEditGtDocuments } from '@/lib/gestao-tripulantes/documento-permissio
 import { generateEventXML, validateEventXML, validateEventData, updateEvento, logEnvio } from '@/services/eSocialService';
 import { cpfsMatch, normalizeCpf } from '@/lib/gestao-tripulantes/cpf';
 import { sanitizeTsNome } from '@/lib/e-social/ts-nome';
+import { usuarioPodeVerDocumentoGt } from '@/lib/gestao-tripulantes/empresa-acesso';
+import { MENSAGEM_DOCUMENTOS_RESTRITOS } from '@/lib/gestao-tripulantes/documento-escopo';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,6 +49,9 @@ export async function GET(
     // Validate UUID format early (avoids Postgres cast errors)
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(docId)) {
       return NextResponse.json({ error: 'ID de documento inválido' }, { status: 400 });
+    }
+    if (!(await usuarioPodeVerDocumentoGt({ id: payload.userId, role: payload.role }, docId))) {
+      return NextResponse.json({ error: MENSAGEM_DOCUMENTOS_RESTRITOS }, { status: 403 });
     }
 
     const { data: doc, error: docError } = await supabaseAdmin
@@ -194,6 +199,9 @@ export async function POST(
     }
 
     const { id: docId } = await context.params;
+    if (!(await usuarioPodeVerDocumentoGt(user, docId))) {
+      return NextResponse.json({ error: MENSAGEM_DOCUMENTOS_RESTRITOS }, { status: 403 });
+    }
 
     // Fetch document with collaborator's matricula
     const { data: doc, error: docError } = await supabaseAdmin

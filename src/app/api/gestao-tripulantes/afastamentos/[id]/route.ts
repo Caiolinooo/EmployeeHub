@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { exigirCadastroDp } from '@/lib/gestao-tripulantes/gt-route-auth';
 
 // PUT: update afastamento
 export async function PUT(
@@ -7,6 +8,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const denied = await exigirCadastroDp(request);
+    if (denied) return denied;
+
     const { id } = await params;
     const body = await request.json();
 
@@ -42,10 +46,13 @@ export async function PUT(
 
 // DELETE: soft-delete afastamento
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const denied = await exigirCadastroDp(request);
+    if (denied) return denied;
+
     const { id } = await params;
 
     const { error } = await supabaseAdmin

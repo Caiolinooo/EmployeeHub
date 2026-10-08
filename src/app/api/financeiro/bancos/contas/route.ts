@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 /** POST /api/financeiro/bancos/contas — cria conta (gate edit). */
 export async function POST(request: NextRequest) {
   try {
-    const gate = await garantirNivelFinanceiro(request, 'edit');
+    const gate = await garantirNivelFinanceiro(request, 'edit', ['financeiro.bancos.manage']);
     if (!gate.ok) return gate.error;
 
     const body = await corpoJson(request);

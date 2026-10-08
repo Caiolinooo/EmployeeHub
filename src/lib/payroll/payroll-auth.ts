@@ -18,6 +18,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { TokenPayload } from '@/lib/auth';
 import { checkAclPermission, extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { userHasGrant } from '@/lib/effective-permissions-server';
+import { canWithGrant } from '@/lib/permission-gate';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export type NivelPayroll = 'view' | 'edit' | 'approve';
@@ -120,6 +122,8 @@ export async function podeNivelPayroll(
   if (!userId) return false;
 
   if (await checkAclPermission(userId, role || '', MODULO_FOLHA, nivel)) return true;
+  // Feature JSONB de /admin/users (folha.view|edit|approve|admin) também libera.
+  if (await userHasGrant(userId, [`${MODULO_FOLHA}.${nivel}`, `${MODULO_FOLHA}.admin`])) return true;
 
   // Aprovar nunca sai do fallback de setor: exige config de aprovadores.
   if (nivel === 'approve') {
@@ -152,10 +156,14 @@ export type GatePayroll =
   | { ok: true; user: PayrollAutorizado }
   | { ok: false; error: NextResponse };
 
-/** Auth + permissão num passo. Gate de todas as rotas do módulo folha. */
+/**
+ * Auth + permissão num passo. Gate de todas as rotas do módulo folha.
+ * `grants` (ações `financeiro.folha.*` / `contracheque.*` de module-grants) só somam a quem já passa pelo nível.
+ */
 export async function garantirNivelPayroll(
   request: NextRequest,
   nivel: NivelPayroll,
+  grants: readonly string[] = [],
 ): Promise<GatePayroll> {
   const token = tokenFromRequest(request);
   if (!token) {
@@ -181,7 +189,9 @@ export async function garantirNivelPayroll(
 
   const userId = resolveAuthUserId(payload);
   const role = payload.role || '';
-  const permitido = await podeNivelPayroll(userId, role, nivel);
+  const permitido =
+    (await podeNivelPayroll(userId, role, nivel)) ||
+    (grants.length > 0 && (await canWithGrant(userId, role, grants, 'admin')));
   if (!permitido) {
     const acao = nivel === 'view' ? 'visualizar' : nivel === 'edit' ? 'editar' : 'aprovar';
     return {

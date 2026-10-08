@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { resetEPIModuleData } from '@/services/epiService';
+import { canWithGrant } from '@/lib/permission-gate';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,9 +28,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Check for admin role
-        const userRole = payload.role || 'USER';
-        if (userRole !== 'ADMIN') {
+        if (!(await canWithGrant(payload.userId, payload.role, ['epi.reset'], 'admin'))) {
             return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
         }
 

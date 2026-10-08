@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { withPermission } from '@/lib/api-auth';
+import { withPermissionOrGrant } from '@/lib/api-auth';
 import { sendCustomEmail } from '@/lib/notifications';
 import { newsPostTemplate } from '@/lib/emailTemplates';
 import { sendPushToUserIds } from '@/lib/push';
@@ -249,7 +249,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST - Criar novo post de notícia (somente ADMIN, MANAGER ou EDITOR DE NOTÍCIAS)
-export const POST = withPermission('news_editor', async (request: NextRequest) => {
+export const POST = withPermissionOrGrant('news_editor', ['news.create'], async (request: NextRequest) => {
   try {
     const body = await request.json();
     const {

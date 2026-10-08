@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
  * Gate: nível folha 'view'. Sem resumo calculado → 404.
  */
 export async function GET(request: NextRequest) {
-  const gate = await garantirNivelPayroll(request, 'view');
+  const gate = await garantirNivelPayroll(request, 'view', ['contracheque.view_all']);
   if (!gate.ok) return gate.error;
 
   const { searchParams } = new URL(request.url);

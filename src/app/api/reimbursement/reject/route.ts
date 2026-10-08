@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { buildAppUrl } from '@/lib/app-url';
 import { sendEmail } from '@/lib/email';
 
@@ -64,26 +65,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user has permission to reject reimbursements
-    const isAdmin = userRole === 'ADMIN';
-    const isManager = userRole === 'MANAGER';
-
-    if (!isAdmin && !isManager) {
-      // Check if user has specific permission
-      const { data: userPermissions } = await supabaseAdmin
-        .from('users')
-        .select('accessPermissions')
-        .eq('id', userId)
-        .single();
-
-      const hasApprovalPermission = userPermissions?.accessPermissions?.features?.reimbursement_approval === true;
-
-      if (!hasApprovalPermission) {
-        console.error('User does not have permission to reject reimbursements');
-        return NextResponse.json(
-          { error: 'Sem permissão para rejeitar reembolsos' },
-          { status: 403 }
-        );
-      }
+    if (!(await canWithGrant(userId, userRole, ['reimbursement.reject', 'reimbursement_approval']))) {
+      console.error('User does not have permission to reject reimbursements');
+      return NextResponse.json(
+        { error: 'Sem permissão para rejeitar reembolsos' },
+        { status: 403 }
+      );
     }
 
     // Parse request body

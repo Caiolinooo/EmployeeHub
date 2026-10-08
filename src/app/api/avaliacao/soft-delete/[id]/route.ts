@@ -4,6 +4,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
 import { AvaliacaoWorkflowService } from '@/lib/services/avaliacao-workflow-service';
 
@@ -37,7 +38,7 @@ export async function POST(
     }
 
     // Verificar se o usuário é um gerente (MANAGER) ou administrador (ADMIN)
-    if (payload.role !== 'MANAGER' && payload.role !== 'ADMIN') {
+    if (!(await canWithGrant(payload.userId, payload.role, ['avaliacao.delete']))) {
       console.error('Usuário não autorizado a mover avaliações para lixeira:', payload.userId, payload.role);
       return NextResponse.json({
         success: false,
@@ -169,7 +170,7 @@ export async function PUT(
     }
 
     // Verificar se o usuário é um gerente (MANAGER) ou administrador (ADMIN)
-    if (payload.role !== 'MANAGER' && payload.role !== 'ADMIN') {
+    if (!(await canWithGrant(payload.userId, payload.role, ['avaliacao.restore']))) {
       console.error('Usuário não autorizado a restaurar avaliações:', payload.userId, payload.role);
       return NextResponse.json({
         success: false,

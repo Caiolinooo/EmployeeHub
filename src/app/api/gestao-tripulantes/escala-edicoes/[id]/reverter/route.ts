@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { checkAclPermission, extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { resolveAuthUserId } from '@/lib/gestao-tripulantes/aso-agendamento-auth';
-import { isFechamentoRole } from '@/lib/gestao-tripulantes/fechamento-assinatura';
+import { podeAcaoFechamento } from '@/lib/gestao-tripulantes/gt-route-auth';
 import {
   carregarAtorEscala,
   edicaoEhDoProprioAutorAplicada,
@@ -51,16 +51,7 @@ export async function POST(
     let motivo = String(body.motivo || '').trim();
 
     const userId = resolveAuthUserId(payload);
-    const liberado =
-      isFechamentoRole(payload.role) ||
-      (userId
-        ? await checkAclPermission(
-            userId,
-            String(payload.role || '').toUpperCase(),
-            'gestao-tripulantes',
-            'fechamento.revisao',
-          )
-        : false);
+    const liberado = await podeAcaoFechamento(userId, payload.role, 'revisao');
     let autodesfazer = false;
     if (!liberado) {
       // Fora dos gestores: só o AUTOR desfaz a própria edição aplicada.

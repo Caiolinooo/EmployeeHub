@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     // ACL por empresa
     if (!(await usuarioPodeVerColaborador(user, colaborador_id))) {
-      return NextResponse.json({ error: 'Sem acesso a este colaborador (empresa restrita)' }, { status: 403 });
+      return NextResponse.json({ error: 'Sem acesso a este colaborador (escopo ou empresa restrita)' }, { status: 403 });
     }
 
     const maxSize = 20 * 1024 * 1024;

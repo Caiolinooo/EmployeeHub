@@ -30,7 +30,7 @@ export async function POST(
 
     // ACL por empresa
     if (!(await usuarioPodeVerDocumentoGt({ id: payload.userId, role: payload.role }, id))) {
-      return NextResponse.json({ error: 'Sem acesso a este documento (empresa restrita)' }, { status: 403 });
+      return NextResponse.json({ error: 'Sem acesso a este documento (escopo ou empresa restrita)' }, { status: 403 });
     }
 
     const { data: documento, error: docError } = await supabaseAdmin

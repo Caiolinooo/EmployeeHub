@@ -17,8 +17,8 @@ export function useEffectivePermissions() {
     const [permissions, setPermissions] = useState<EffectivePermissions | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Cache key maps to user ID - Version 6 includes effective_features / ACL names
-    const cacheKey = user ? `permissions-v6-${user.id}` : null;
+    // Cache key maps to user ID - Version 7: ACL resources / sector aliases resolved to catalog module keys
+    const cacheKey = user ? `permissions-v7-${user.id}` : null;
 
     const fetchPermissions = useCallback(async (force = false) => {
         if (!user?.id) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withPermission } from '@/lib/api-auth';
+import { withPermissionOrGrant } from '@/lib/api-auth';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import crypto from 'crypto';
 import webpush from 'web-push';
@@ -16,7 +16,7 @@ function encryptValue(value: string, salt: string = 'abz-security-salt'): string
   return iv.toString('hex') + ':' + encrypted;
 }
 
-export const GET = withPermission('manager', async () => {
+export const GET = withPermissionOrGrant('manager', ['notifications.push.manage', 'notifications.manage'], async () => {
   const admin = await getSupabaseAdmin();
   const { data, error } = await admin.from('app_secrets').select('key, value').eq('key','VAPID_PUBLIC_KEY').maybeSingle();
   if (error) {
@@ -26,7 +26,7 @@ export const GET = withPermission('manager', async () => {
   return NextResponse.json({ publicKey: data?.value || null });
 });
 
-export const POST = withPermission('manager', async (req: NextRequest) => {
+export const POST = withPermissionOrGrant('manager', ['notifications.push.manage', 'notifications.manage'], async (req: NextRequest) => {
   try {
     const { rotate } = await req.json().catch(() => ({ rotate: false }));
 

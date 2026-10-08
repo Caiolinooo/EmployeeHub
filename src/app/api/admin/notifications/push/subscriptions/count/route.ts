@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { withPermissionOrGrant } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
+export const GET = withPermissionOrGrant('manager', ['notifications.push.manage', 'notifications.manage'], async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('user_id');
@@ -22,5 +23,4 @@ export async function GET(request: NextRequest) {
     console.error('Erro ao contar push_subscriptions:', e?.message || e);
     return NextResponse.json({ error: 'Falha ao obter contagem' }, { status: 500 });
   }
-}
-
+});

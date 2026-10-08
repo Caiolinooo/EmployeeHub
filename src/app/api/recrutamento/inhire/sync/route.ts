@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const payload = token ? verifyToken(token) : null;
     if (!payload) return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
 
-    const pode = await podeNivelRecrutamento(payload.userId, payload.role, 'manage');
+    const pode = await podeNivelRecrutamento(payload.userId, payload.role, 'manage', ['recrutamento.vagas.sync']);
     if (!pode) return NextResponse.json({ error: 'Sem permissão para sincronizar Inhire' }, { status: 403 });
 
     const cred = await carregarCredenciaisInhire();

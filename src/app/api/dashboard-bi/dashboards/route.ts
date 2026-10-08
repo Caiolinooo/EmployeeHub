@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { verifyRequestToken } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { BIDashboard, DashboardLayout, DashboardPermissions } from '@/types/dashboard-bi';
 
 export const runtime = 'nodejs';
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
       .eq('id', authResult.payload.userId)
       .single();
 
-    if (!user || (user.role !== 'ADMIN' && user.role !== 'MANAGER')) {
+    if (!user || !(await canWithGrant(authResult.payload.userId, user.role, ['kpi.bi.view']))) {
       return NextResponse.json({
         success: false,
         error: 'Sem permissão para visualizar dashboards BI'
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest) {
       .eq('id', authResult.payload.userId)
       .single();
 
-    if (!user || (user.role !== 'ADMIN' && user.role !== 'MANAGER')) {
+    if (!user || !(await canWithGrant(authResult.payload.userId, user.role, ['kpi.bi.create']))) {
       return NextResponse.json({
         success: false,
         error: 'Sem permissão para criar dashboards BI'
@@ -278,7 +279,10 @@ export async function PUT(request: NextRequest) {
       .eq('id', authResult.payload.userId)
       .single();
 
-    if (existingDashboard.created_by !== authResult.payload.userId && user?.role !== 'ADMIN') {
+    if (
+      existingDashboard.created_by !== authResult.payload.userId &&
+      !(await canWithGrant(authResult.payload.userId, user?.role, ['kpi.bi.edit_any'], 'admin'))
+    ) {
       return NextResponse.json({
         success: false,
         error: 'Sem permissão para editar este dashboard'
@@ -378,7 +382,10 @@ export async function DELETE(request: NextRequest) {
       .eq('id', authResult.payload.userId)
       .single();
 
-    if (existingDashboard.created_by !== authResult.payload.userId && user?.role !== 'ADMIN') {
+    if (
+      existingDashboard.created_by !== authResult.payload.userId &&
+      !(await canWithGrant(authResult.payload.userId, user?.role, ['kpi.bi.edit_any'], 'admin'))
+    ) {
       return NextResponse.json({
         success: false,
         error: 'Sem permissão para excluir este dashboard'

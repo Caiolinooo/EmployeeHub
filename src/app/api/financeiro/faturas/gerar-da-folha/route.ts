@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(request: NextRequest) {
   try {
-    const gate = await garantirNivelFinanceiro(request, 'edit');
+    const gate = await garantirNivelFinanceiro(request, 'edit', ['financeiro.faturas.create']);
     if (!gate.ok) return gate.error;
 
     const body = await corpoJson(request);

@@ -4,6 +4,8 @@ import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { isFechamentoRole, normalizeAprovadoresObrigatorios } from '@/lib/gestao-tripulantes/fechamento-assinatura';
 import { listarCandidatosAprovadores } from '@/lib/gestao-tripulantes/fechamento-gestores';
 import { updateConfig } from '@/lib/gestao-tripulantes/config-service';
+import { userHasGrant } from '@/lib/effective-permissions-server';
+import { GT_CONFIG_GRANT } from '@/lib/gestao-tripulantes/gt-route-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -89,7 +91,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
-    if (!isFechamentoRole(payload.role)) {
+    if (!isFechamentoRole(payload.role) && !(await userHasGrant(payload.userId, [GT_CONFIG_GRANT]))) {
       return NextResponse.json({ error: 'Permissão negada. Apenas administradores e gestores podem alterar configurações de fechamento.' }, { status: 403 });
     }
 

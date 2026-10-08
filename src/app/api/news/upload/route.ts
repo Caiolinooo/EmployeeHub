@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
+import { withPermissionOrGrant } from '@/lib/api-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -23,7 +24,7 @@ async function getSupabaseAdmin() {
 }
 
 // POST - Upload de mídias de notícias para o Supabase Storage (bucket 'news')
-export async function POST(request: NextRequest) {
+export const POST = withPermissionOrGrant('news_editor', ['news.create', 'news.attachments.upload'], async (request: NextRequest) => {
   const debugLogs: string[] = [];
 
   try {
@@ -194,5 +195,5 @@ export async function POST(request: NextRequest) {
       debugLogs
     }, { status: 500 });
   }
-}
+});
 

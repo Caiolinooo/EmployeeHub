@@ -232,6 +232,8 @@ export default function UsersPage() {
         }
       }
 
+      window.dispatchEvent(new Event('permissions-updated'));
+
       // Fechar o editor e recarregar a lista
       setShowEditor(false);
       await fetchUsers();

@@ -2,26 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { sendPushToUserIds } from '@/lib/push';
 import { supabaseWithRetry, logError, logPerformance } from '@/lib/apiRetry';
+import { requireAuth } from '@/lib/api-auth';
+import { canWithGrant } from '@/lib/permission-gate';
 
 export const dynamic = 'force-dynamic';
 
 // GET - Listar notificações do usuário
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
+  const { user: caller, error: authError } = await requireAuth(request);
+  if (authError) return authError;
 
   try {
     const { searchParams } = new URL(request.url);
-    const user_id = searchParams.get('user_id');
+    const user_id = searchParams.get('user_id') || caller.id;
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
     const type = searchParams.get('type');
     const unread_only = searchParams.get('unread_only') === 'true';
 
-    if (!user_id) {
-      return NextResponse.json(
-        { error: 'user_id é obrigatório' },
-        { status: 400 }
-      );
+    if (user_id !== caller.id && !(await canWithGrant(caller.id, caller.role, ['notifications.manage']))) {
+      return NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
     }
 
     console.log(`🔄 API Notifications - Listando notificações do usuário ${user_id}`);
@@ -198,6 +199,8 @@ export async function GET(request: NextRequest) {
 
 // POST - Criar nova notificação
 export async function POST(request: NextRequest) {
+  const { user: caller, error: authError } = await requireAuth(request);
+  if (authError) return authError;
   try {
     const body = await request.json();
     const {
@@ -220,6 +223,10 @@ export async function POST(request: NextRequest) {
         { error: 'user_id, type e title são obrigatórios' },
         { status: 400 }
       );
+    }
+
+    if (user_id !== caller.id && !(await canWithGrant(caller.id, caller.role, ['notifications.send', 'notifications.manage']))) {
+      return NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
     }
 
     console.log(`🔄 API Notifications - Criando notificação para usuário ${user_id}: ${title}`);
@@ -310,17 +317,16 @@ export async function POST(request: NextRequest) {
 
 // DELETE - Excluir notificações
 export async function DELETE(request: NextRequest) {
+  const { user: caller, error: authError } = await requireAuth(request);
+  if (authError) return authError;
   try {
     const { searchParams } = new URL(request.url);
-    const user_id = searchParams.get('user_id');
+    const user_id = searchParams.get('user_id') || caller.id;
     const notificationIds = searchParams.get('notification_ids')?.split(',').filter(id => id.trim());
     const deleteAll = searchParams.get('delete_all') === 'true';
 
-    if (!user_id) {
-      return NextResponse.json(
-        { error: 'user_id é obrigatório' },
-        { status: 400 }
-      );
+    if (user_id !== caller.id && !(await canWithGrant(caller.id, caller.role, ['notifications.delete', 'notifications.manage']))) {
+      return NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
     }
 
     console.log(`🗑️ API Notifications - DELETE solicitado para usuário ${user_id}`);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 import { generateLeaveRequestPDF, LeaveRequestPDFData } from '@/lib/leavePDFGenerator';
 import { extractTokenFromHeader, verifyToken, checkAclPermission } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,7 +63,8 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
         if (!isOwner && !isAdmin) {
             const hasAcl = (await checkAclPermission(payload.userId, payload.role, 'ferias', 'read')) ||
                             (await checkAclPermission(payload.userId, payload.role, 'ferias', 'manage')) ||
-                            (await checkAclPermission(payload.userId, payload.role, 'ferias', 'admin'));
+                            (await checkAclPermission(payload.userId, payload.role, 'ferias', 'admin')) ||
+                            (await canWithGrant(payload.userId, payload.role, ['ferias.pdf_all'], 'admin'));
 
             if (!hasAcl) {
                 // Verifica se é líder ou gerente do setor

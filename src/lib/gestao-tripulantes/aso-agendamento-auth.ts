@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { TokenPayload } from '@/lib/auth';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
+import { userHasGrant } from '@/lib/effective-permissions-server';
 import {
   isLogisticaRole,
   setorPermiteAsoLogistica,
@@ -60,16 +61,15 @@ export async function podeAprovarAsoLogistica(
     .eq('id', userId)
     .maybeSingle();
 
-  if (userError || !user?.sector_id) return false;
-
-  const { data: sector, error: sectorError } = await supabaseAdmin
-    .from('sectors')
-    .select('name, allowed_modules')
-    .eq('id', user.sector_id)
-    .maybeSingle();
-
-  if (sectorError || !sector) return false;
-  return setorPermiteAsoLogistica(sector as SetorAsoLogistica);
+  if (!userError && user?.sector_id) {
+    const { data: sector, error: sectorError } = await supabaseAdmin
+      .from('sectors')
+      .select('name, allowed_modules')
+      .eq('id', user.sector_id)
+      .maybeSingle();
+    if (!sectorError && sector && setorPermiteAsoLogistica(sector as SetorAsoLogistica)) return true;
+  }
+  return userHasGrant(userId, ['gestao-tripulantes.aso.approve']);
 }
 
 export function clientIpFromRequest(request: NextRequest): string {

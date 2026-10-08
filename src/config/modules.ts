@@ -1,3 +1,4 @@
+import { EXTRA_RESOURCE_GRANTS, MODULE_GRANTS, type GrantSet } from './module-grants';
 
 export type UserRole = 'ADMIN' | 'MANAGER' | 'USER';
 
@@ -30,6 +31,8 @@ export interface ModuleDefinition {
   visible?: boolean;
   /** ACL resource id when it differs from `key` (noticias → news). */
   aclResource?: string;
+  /** Legacy / sector ids that resolve to this module (sectors.allowed_modules, cards). */
+  aliases?: string[];
   features?: ModuleFeatureDefinition[];
   acl?: ModuleAclDefinition[];
 }
@@ -76,7 +79,7 @@ function crudAcl(
   ];
 }
 
-export const SYSTEM_MODULES: ModuleDefinition[] = [
+const BASE_MODULES: ModuleDefinition[] = [
   {
     key: 'dashboard',
     name: 'Dashboard',
@@ -211,14 +214,14 @@ export const SYSTEM_MODULES: ModuleDefinition[] = [
     category: 'hr',
     href: '/ferias',
     features: [
-      feat('ferias.read', 'Visualizar Férias', 'Pode visualizar pedidos de férias e saldo', ALL),
+      feat('ferias.read', 'Visualizar Férias de terceiros', 'Pode visualizar pedidos e PDFs de férias de qualquer colaborador', STAFF),
       feat('ferias.create', 'Solicitar Férias', 'Pode submeter pedidos de férias', ALL),
       feat('ferias.approve', 'Aprovar Férias', 'Pode aprovar ou rejeitar pedidos de férias', STAFF),
       feat('ferias.manage', 'Gerenciar Férias', 'Pode gerenciar saldos e períodos', ADMIN_ONLY),
       feat('ferias.admin', 'Administrador de Férias', 'Acesso total ao módulo de férias', ADMIN_ONLY, false),
     ],
     acl: [
-      acl('ferias.read', 'read', 'Visualizar férias e saldo', 0, ALL),
+      acl('ferias.read', 'read', 'Visualizar férias de qualquer colaborador', 0, STAFF),
       acl('ferias.create', 'create', 'Solicitar férias', 1, ALL),
       acl('ferias.approve', 'approve', 'Aprovar pedidos de férias', 2, STAFF),
       acl('ferias.manage', 'manage', 'Gerenciar saldos e períodos de férias', 3, ADMIN_ONLY),
@@ -250,14 +253,49 @@ export const SYSTEM_MODULES: ModuleDefinition[] = [
     defaultRoles: ALL,
     category: 'hr',
     href: '/contratos',
+    aliases: ['contracts'],
     features: [
       feat('contracts.sign', 'Assinar Contratos', 'Assinar documentos atribuídos', ALL),
-      feat('contracts.manage', 'Gerenciar Contratos', 'Upload e posições de assinatura', STAFF),
+      feat('contracts.manage', 'Gerenciar Contratos', 'Upload e posições de assinatura (libera todas as ações de gestão abaixo)', STAFF),
+      feat('contratos.view_all', 'Ver contratos de todos', 'Lista e abre contratos de todos os colaboradores', STAFF),
+      feat('contratos.view_own', 'Ver só o próprio contrato', 'Restringe a lista aos contratos vinculados ao próprio usuário', []),
+      feat('contratos.create', 'Criar envelopes', 'Criar envelope e subir PDFs', STAFF),
+      feat('contratos.edit', 'Editar envelopes', 'Editar dados do envelope', STAFF),
+      feat('contratos.delete', 'Excluir envelopes', 'Excluir envelope, documentos e arquivos', STAFF),
+      feat('contratos.dispatch', 'Disparar envelopes', 'Iniciar o fluxo de assinaturas', STAFF),
+      feat('contratos.send', 'Enviar link por e-mail', 'Enviar o link de assinatura por e-mail', STAFF),
+      feat('contratos.cancel', 'Cancelar assinaturas', 'Remover assinaturas pendentes do envelope', STAFF),
+      feat('contratos.resend', 'Reenviar notificações', 'Reenviar a etapa atual de um envelope enviado', STAFF),
+      feat('contratos.download', 'Baixar documentos originais', 'Abrir/baixar o PDF original', ALL, false),
+      feat('contratos.download_signed', 'Baixar documentos assinados', 'Abrir/baixar o PDF já assinado', ALL, false),
+      feat('contratos.templates.view', 'Ver templates de contrato', 'Listar e abrir templates', STAFF),
+      feat('contratos.templates.manage', 'Gerenciar templates de contrato', 'Criar, editar e excluir templates', STAFF),
+      feat('contratos.templates.use', 'Usar templates de contrato', 'Criar envelope a partir de template', STAFF),
+      feat('contratos.signers.manage', 'Gerenciar signatários', 'Atribuir signatários e ver links de assinatura', STAFF),
+      feat('contratos.audit.view', 'Ver auditoria de assinaturas', 'Trilha de auditoria (reservado)', STAFF),
+      feat('contratos.export', 'Exportar contratos', 'Exportar listas e relatórios (reservado)', STAFF),
     ],
     acl: [
+      acl('contratos.view_all', 'view_all', 'Ver contratos de todos os colaboradores', 1, STAFF),
+      acl('contratos.view_own', 'view_own', 'Ver somente os próprios contratos', 0, []),
       acl('contratos.read', 'read', 'Visualizar contratos atribuídos', 0, ALL),
       acl('contratos.sign', 'sign', 'Assinar contratos atribuídos', 1, ALL),
       acl('contratos.manage', 'manage', 'Gerenciar uploads e assinaturas de contratos', 3, STAFF),
+      acl('contratos.create', 'create', 'Criar envelopes de contrato', 2, STAFF),
+      acl('contratos.edit', 'edit', 'Editar envelopes de contrato', 2, STAFF),
+      acl('contratos.delete', 'delete', 'Excluir envelopes de contrato', 3, STAFF),
+      acl('contratos.dispatch', 'dispatch', 'Disparar envelopes de contrato', 2, STAFF),
+      acl('contratos.send', 'send', 'Enviar link de assinatura por e-mail', 2, STAFF),
+      acl('contratos.cancel', 'cancel', 'Cancelar assinaturas pendentes', 2, STAFF),
+      acl('contratos.resend', 'resend', 'Reenviar notificações do envelope', 2, STAFF),
+      acl('contratos.download', 'download', 'Baixar documentos originais', 0, ALL),
+      acl('contratos.download_signed', 'download_signed', 'Baixar documentos assinados', 0, ALL),
+      acl('contratos.templates.view', 'templates.view', 'Ver templates de contrato', 1, STAFF),
+      acl('contratos.templates.manage', 'templates.manage', 'Gerenciar templates de contrato', 3, STAFF),
+      acl('contratos.templates.use', 'templates.use', 'Usar templates de contrato', 2, STAFF),
+      acl('contratos.signers.manage', 'signers.manage', 'Gerenciar signatários e links', 2, STAFF),
+      acl('contratos.audit.view', 'audit.view', 'Ver auditoria de assinaturas', 2, STAFF),
+      acl('contratos.export', 'export', 'Exportar contratos', 2, STAFF),
     ],
   },
   {
@@ -486,6 +524,7 @@ export const SYSTEM_MODULES: ModuleDefinition[] = [
     features: [
       feat('gestao-tripulantes.documents.edit', 'Editar itens do cadastro', 'Treinamentos, ASO, documentos e passaportes', STAFF),
       feat('gestao-tripulantes.documents.delete', 'Excluir itens do cadastro', 'Soft-delete em gt_documentos', STAFF),
+      feat('gestao-tripulantes.cadastro.manage', 'Gerenciar cadastro do DP', 'Cria/edita colaboradores, departamentos, cargos, empresas, embarcações e centros de custo', STAFF),
       feat('gestao-tripulantes.matrizes.manage', 'Gerenciar matrizes', 'Matriz de treinamentos por cargo', STAFF),
       feat('gestao-tripulantes.matrizes.view', 'Visualizar matrizes', 'Ver matrizes de treinamento', STAFF, false),
       feat('gestao-tripulantes.fechamento.periodo', 'Definir período do fechamento', 'Configura o período manual do fechamento mensal', STAFF),
@@ -503,6 +542,7 @@ export const SYSTEM_MODULES: ModuleDefinition[] = [
       acl('gestao-tripulantes.documents.edit', 'documents.edit', 'Editar documentos do cadastro', 1, STAFF),
       acl('gestao-tripulantes.documents.delete', 'documents.delete', 'Excluir documentos do cadastro', 2, STAFF),
       acl('gestao-tripulantes.documents.ocr', 'documents.ocr', 'Executar OCR', 2, STAFF),
+      acl('gestao-tripulantes.cadastro.manage', 'cadastro.manage', 'Gerenciar cadastro do DP (colaboradores e cadastros auxiliares)', 2, STAFF),
       acl('gestao-tripulantes.fechamento.periodo', 'fechamento.periodo', 'Definir período do fechamento mensal', 2, STAFF),
       acl('gestao-tripulantes.fechamento.marcas', 'fechamento.marcas', 'Marcar colaboradores no fechamento mensal', 2, STAFF),
       acl('gestao-tripulantes.fechamento.revisao', 'fechamento.revisao', 'Revisar e reverter edições da escala do fechamento', 2, STAFF),
@@ -581,6 +621,7 @@ export const SYSTEM_MODULES: ModuleDefinition[] = [
     category: 'business',
     href: '/folha-pagamento',
     visible: true,
+    aliases: ['folha', 'folhapagamento', 'folha-pagamento'],
     features: [
       feat('folha.view', 'Visualizar folha', 'Consultar rubricas, planilhas e aprovações', STAFF, false),
       feat('folha.edit', 'Editar folha', 'Lançamentos manuais, rubricas e sincronização', STAFF),
@@ -599,8 +640,29 @@ export const SYSTEM_MODULES: ModuleDefinition[] = [
   },
 ];
 
+/** Soma `module-grants.ts` ao módulo sem sobrescrever nomes já declarados no bloco do módulo. */
+function mergeGrants<T extends { features?: ModuleFeatureDefinition[]; acl?: ModuleAclDefinition[] }>(
+  base: T,
+  grants: GrantSet | undefined,
+): T {
+  if (!grants) return base;
+  const features = base.features || [];
+  const acls = base.acl || [];
+  const featureKeys = new Set(features.map((feature) => feature.key));
+  const aclNames = new Set(acls.map((perm) => perm.name));
+  return {
+    ...base,
+    features: [...features, ...grants.features.filter((feature) => !featureKeys.has(feature.key))],
+    acl: [...acls, ...grants.acl.filter((perm) => !aclNames.has(perm.name))],
+  };
+}
+
+export const SYSTEM_MODULES: ModuleDefinition[] = BASE_MODULES.map((mod) =>
+  mergeGrants(mod, MODULE_GRANTS[mod.key]),
+);
+
 /** ACL resources that are not a sidebar module. */
-export const EXTRA_ACL_RESOURCES: ExtraAclResource[] = [
+const BASE_EXTRA_ACL_RESOURCES: ExtraAclResource[] = [
   {
     resource: 'comments',
     label: 'Comentários',
@@ -638,6 +700,12 @@ export const EXTRA_ACL_RESOURCES: ExtraAclResource[] = [
     ],
   },
 ];
+
+export const EXTRA_ACL_RESOURCES: ExtraAclResource[] = BASE_EXTRA_ACL_RESOURCES.map((item) => {
+  const extra = EXTRA_RESOURCE_GRANTS[item.resource]?.acl || [];
+  const names = new Set(item.permissions.map((perm) => perm.name));
+  return { ...item, permissions: [...item.permissions, ...extra.filter((perm) => !names.has(perm.name))] };
+});
 
 export interface AclSeedPermission {
   name: string;
@@ -768,6 +836,43 @@ export function getAclResourceLabel(resource: string): string {
   const extra = EXTRA_ACL_RESOURCES.find((item) => item.resource === resource);
   if (extra) return extra.label;
   return resource.charAt(0).toUpperCase() + resource.slice(1);
+}
+
+/** Labels / legacy ids stored in sectors.allowed_modules or cards that are not catalog keys. */
+const LEGACY_MODULE_ALIASES: Record<string, string> = {
+  'purchase-orders': 'compras',
+  'purchase orders': 'compras',
+  'ordens de compra': 'compras',
+  kpis: 'kpi',
+  'wk radar': 'wkradar',
+  radar: 'wkradar',
+  'lista de ramais': 'contatos',
+  ramais: 'contatos',
+  'emergência': 'emergencia',
+  'guia offshore': 'guia_offshore',
+  'integração erp': 'integracao-erp',
+  'integracao erp': 'integracao-erp',
+  'todas as solicitações': 'ferias_admin',
+  'todas ferias': 'ferias_admin',
+  'todas as férias': 'ferias_admin',
+  'gerenciar férias': 'ferias_admin',
+};
+
+/**
+ * Maps a sector module id, card id or ACL resource to the catalog module key
+ * (`news` → `noticias`, `reimbursement` → `reembolso`, `folha` → `financeiro`).
+ * Unknown ids return lowercased as-is (`comments`, `social`, `ferias_admin`).
+ */
+export function resolveModuleKey(idOrResource: string): string {
+  const lower = String(idOrResource || '').toLowerCase().trim();
+  if (LEGACY_MODULE_ALIASES[lower]) return LEGACY_MODULE_ALIASES[lower];
+  for (const mod of SYSTEM_MODULES) {
+    if (mod.key === lower) return mod.key;
+  }
+  for (const mod of SYSTEM_MODULES) {
+    if (mod.aclResource === lower || mod.aliases?.includes(lower)) return mod.key;
+  }
+  return lower;
 }
 
 export function getModuleKeyForCatalogFeature(featureKey: string): string | null {

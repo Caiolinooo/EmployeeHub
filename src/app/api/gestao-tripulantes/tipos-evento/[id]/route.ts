@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
+import { GT_CONFIG_GRANT } from '@/lib/gestao-tripulantes/gt-route-auth';
 
 export const dynamic = 'force-dynamic';
 
-function requireAdminManager(request: NextRequest) {
+async function requireAdminManager(request: NextRequest) {
   const authHeader = request.headers.get('authorization') || undefined;
   const token = extractTokenFromHeader(authHeader);
   if (!token) return { error: NextResponse.json({ error: 'Token de autorização necessário' }, { status: 401 }) };
   const payload = verifyToken(token);
   if (!payload) return { error: NextResponse.json({ error: 'Token inválido' }, { status: 401 }) };
-  if (payload.role !== 'ADMIN' && payload.role !== 'MANAGER') {
+  if (!(await canWithGrant(payload.userId, payload.role, [GT_CONFIG_GRANT]))) {
     return { error: NextResponse.json({ error: 'Acesso negado. Apenas ADMIN/MANAGER.' }, { status: 403 }) };
   }
   return { payload };
@@ -26,7 +28,7 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const auth = requireAdminManager(request);
+    const auth = await requireAdminManager(request);
     if (auth.error) return auth.error;
 
     const { id } = await context.params;
@@ -110,7 +112,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const auth = requireAdminManager(request);
+    const auth = await requireAdminManager(request);
     if (auth.error) return auth.error;
 
     const { id } = await context.params;

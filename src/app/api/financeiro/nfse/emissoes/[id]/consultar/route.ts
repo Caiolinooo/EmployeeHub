@@ -12,7 +12,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const gate = await garantirNivelFinanceiro(request, 'edit');
+    const gate = await garantirNivelFinanceiro(request, 'edit', ['financeiro.nfse.emit']);
     if (!gate.ok) return gate.error;
     const { id } = await params;
     const emissao = await consultarNfse(id, await atorDeUserId(gate.user.userId));

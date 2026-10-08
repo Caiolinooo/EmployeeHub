@@ -13,6 +13,7 @@ import {
   toLookupOptions,
   type GtLookupKind,
 } from '@/components/gestao-tripulantes/createGtLookupOption';
+import { DEPARTAMENTO_LEGADO_ID } from '@/lib/gestao-tripulantes/departamento-label';
 import { GENERO_OPTIONS } from '@/lib/gestao-tripulantes/genero';
 import { BANCOS_BR, labelBanco } from '@/lib/gestao-tripulantes/bancos-br';
 import { formatarCep, normalizarCep } from '@/lib/gestao-tripulantes/cep-correios';
@@ -159,6 +160,13 @@ export default function ColaboradorCadastroForm({
   }, []);
 
   const set = (field: string, value: unknown) => setForm(p => ({ ...p, [field]: value }));
+
+  // Valor atual sempre visível: id da lista ou texto legado (sem id) até o usuário trocar.
+  const departamentoAtual = form.departamento_id
+    ? { id: String(form.departamento_id), label: String(form.departamento || form.departamento_id) }
+    : form.departamento
+      ? { id: DEPARTAMENTO_LEGADO_ID, label: String(form.departamento) }
+      : undefined;
 
   const buscarCep = async (bruto: string) => {
     const cep = normalizarCep(bruto);
@@ -662,11 +670,11 @@ export default function ColaboradorCadastroForm({
                 {label('Departamento')}
                 <SearchableCreatableSelect
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                  options={toLookupOptions(departamentos, 'departamentos', form.departamento_id ? { id: String(form.departamento_id), label: String(form.departamento || form.departamento_id) } : undefined)}
-                  value={form.departamento_id ? String(form.departamento_id) : ''}
-                  allowCreate
-                  placeholder="Buscar departamento (WK)..."
+                  options={toLookupOptions(departamentos, 'departamentos', departamentoAtual)}
+                  value={departamentoAtual?.id ?? ''}
+                  placeholder="Selecione o departamento (WK)..."
                   onChange={id => {
+                    if (id === DEPARTAMENTO_LEGADO_ID) return;
                     const row = departamentos.find(d => d.id === id);
                     setForm(p => ({
                       ...p,
@@ -674,13 +682,8 @@ export default function ColaboradorCadastroForm({
                       departamento: row ? formatCentroCustoLabel(row) : '',
                     }));
                   }}
-                  onCreate={async (labelText) => {
-                    const created = await handleCreateLookup('departamentos', labelText, setDepartamentos);
-                    setForm(p => ({ ...p, departamento_id: created.id, departamento: created.label }));
-                    return created;
-                  }}
                 />
-                <p className="text-[11px] text-gray-500 mt-1">No WK este campo é o departamento (ex.: 01 ABZ SERVIÇOS- ADMINISTRATIVO).</p>
+                <p className="text-[11px] text-gray-500 mt-1">Lista padrão da folha (WK), ex.: 01 - ABZ SERVIÇOS- ADMINISTRATIVO. Não aceita valor livre.</p>
               </div>
               <div>
                 {label('Centro de Custo')}

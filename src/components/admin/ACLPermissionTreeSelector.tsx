@@ -21,6 +21,9 @@ interface ACLPermissionTreeSelectorProps {
   userRole: string;
   showRolePermissions?: boolean;
   rolePermissions?: string[];
+  /** Revogações individuais (`user_acl_permissions.granted = false`) de permissões do role. */
+  deniedPermissions?: string[];
+  onDeniedChange?: (permissionIds: string[]) => void;
   disabled?: boolean;
 }
 
@@ -37,6 +40,8 @@ const ACLPermissionTreeSelector: React.FC<ACLPermissionTreeSelectorProps> = ({
   userRole,
   showRolePermissions = false,
   rolePermissions = [],
+  deniedPermissions = [],
+  onDeniedChange,
   disabled = false
 }) => {
   const { t } = useI18n();
@@ -106,16 +111,22 @@ const ACLPermissionTreeSelector: React.FC<ACLPermissionTreeSelectorProps> = ({
     return rolePermissions.includes(permId);
   };
 
-  // Toggle permission selection
+  const isDenied = (permId: string) => deniedPermissions.includes(permId);
+  const isChecked = (permId: string) =>
+    isSelected(permId) || (isGrantedByRole(permId) && !isDenied(permId));
+
+  // Desmarcar algo que vem do role grava revogação; remarcar uma revogação volta ao default do role.
   const togglePermission = (permId: string) => {
     if (disabled) return;
-    
-    const current = selectedPermissions;
-    const updated = current.includes(permId)
-      ? current.filter(id => id !== permId)
-      : [...current, permId];
-    
-    onPermissionChange(updated);
+
+    if (isChecked(permId)) {
+      if (isSelected(permId)) onPermissionChange(selectedPermissions.filter(id => id !== permId));
+      if (isGrantedByRole(permId)) onDeniedChange?.([...deniedPermissions, permId]);
+    } else if (isDenied(permId)) {
+      onDeniedChange?.(deniedPermissions.filter(id => id !== permId));
+    } else {
+      onPermissionChange([...selectedPermissions, permId]);
+    }
   };
 
   // Check if all permissions in a resource are selected
@@ -219,12 +230,12 @@ const ACLPermissionTreeSelector: React.FC<ACLPermissionTreeSelectorProps> = ({
                           togglePermission(perm.id);
                         }}
                         className={`w-4 h-4 border-2 rounded flex items-center justify-center mr-2 flex-shrink-0 cursor-pointer transition-colors ${
-                          isSelected(perm.id)
+                          isChecked(perm.id)
                             ? 'bg-green-600 border-green-600'
                             : 'border-gray-300'
                         }`}
                       >
-                        {isSelected(perm.id) && <FiCheck className="w-3 h-3 text-white" />}
+                        {isChecked(perm.id) && <FiCheck className="w-3 h-3 text-white" />}
                       </div>
                       <div className="flex-1">
                         <span className="text-sm font-medium">{perm.name}</span>
@@ -242,9 +253,14 @@ const ACLPermissionTreeSelector: React.FC<ACLPermissionTreeSelectorProps> = ({
                       }`}>
                         Nível {perm.level}
                       </span>
-                      {isGrantedByRole(perm.id) && !isSelected(perm.id) && (
+                      {isGrantedByRole(perm.id) && !isSelected(perm.id) && !isDenied(perm.id) && (
                         <span className="text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
                           Por Role
+                        </span>
+                      )}
+                      {isDenied(perm.id) && (
+                        <span className="text-xs text-red-700 bg-red-50 px-1.5 py-0.5 rounded">
+                          Revogado
                         </span>
                       )}
                     </div>
@@ -267,7 +283,8 @@ const ACLPermissionTreeSelector: React.FC<ACLPermissionTreeSelectorProps> = ({
       {showRolePermissions && isGrantedByRole(permissions[0]?.id || '') && (
         <div className="text-xs text-green-600 bg-green-50 p-3 rounded border border-green-200">
           <strong>Nota:</strong> Você está visualizando permissões baseadas no role "{userRole}".
-          As permissões individuais são adicionais às permissões do role.
+          Marcar soma uma permissão individual; desmarcar uma permissão do role grava uma revogação
+          só para este usuário (vence role e setor).
         </div>
       )}
     </div>

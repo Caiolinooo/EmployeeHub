@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { EvaluationService } from '@/lib/services/evaluation-service';
 
 export const dynamic = 'force-dynamic';
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Verificar permissões (apenas admin e manager podem ver métricas)
-    if (payload.role !== 'ADMIN' && payload.role !== 'MANAGER') {
+    if (!(await canWithGrant(payload.userId, payload.role, ['avaliacao.metrics.view', 'avaliacoes.metricas.read']))) {
       return NextResponse.json({
         success: false,
         error: 'Apenas administradores e gerentes podem acessar métricas'

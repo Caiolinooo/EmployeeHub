@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { authenticateUser } from '@/lib/api-auth';
+import { denyUnlessCan, loadContractAccess } from '@/lib/contracts/view-access';
 import { v4 as uuidv4 } from 'uuid';
 
 export const dynamic = 'force-dynamic';
@@ -10,6 +11,8 @@ export async function POST(request: NextRequest) {
         const { user, error: authError } = await authenticateUser(request);
         if (authError) return authError;
         if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+        const denied = denyUnlessCan(await loadContractAccess(user), 'templates.use');
+        if (denied) return denied;
 
         const body = await request.json();
         const { template_id, titulo, descricao, roles_mapping } = body;
@@ -148,6 +151,8 @@ export async function POST(request: NextRequest) {
                     assignedName = mapping.external_signer_name || null;
                     assignedEmail = mapping.external_signer_email || null;
                 }
+                // Mesmo formato do assign: dispatcher e sign-access agrupam por e-mail exato
+                assignedEmail = assignedEmail ? String(assignedEmail).toLowerCase().trim() : null;
 
                 // If not mapped and is a template-specific field without user, skip or set placeholder
                 if (!assignedColaboradorId && !assignedEmail) {

@@ -11,6 +11,7 @@ import {
     assignKitToUser
 } from '@/services/epiService';
 import { supabaseAdmin } from '@/lib/db';
+import { podeGerenciarEpi } from '@/lib/epi-access';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,27 +31,7 @@ async function authenticateAndAuthorize(request: NextRequest) {
     if (!payload || !payload.userId) return null;
 
     const role = payload.role || 'USER';
-    if (role === 'ADMIN' || role === 'MANAGER') return payload;
-
-    // Check access_permissions for epi
-    try {
-        const { data: user } = await supabaseAdmin
-            .from('users_unified')
-            .select('access_permissions')
-            .eq('id', payload.userId)
-            .single();
-
-        if (user) {
-            const perms = typeof user.access_permissions === 'string'
-                ? JSON.parse(user.access_permissions)
-                : user.access_permissions;
-            if (perms?.epi || perms?.modules?.epi) return payload;
-        }
-    } catch (e) {
-        console.error('Error checking EPI access:', e);
-    }
-
-    return null;
+    return (await podeGerenciarEpi(payload.userId, role, 'kits.manage')) ? payload : null;
 }
 
 /**

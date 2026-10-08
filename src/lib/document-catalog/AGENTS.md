@@ -18,6 +18,7 @@ Resolver vivo que, dado um colaborador (portal `users_unified` e/ou `gt_colabora
 - `CATALOG_COLAB_SELECT` lê a tabela `gt_colaboradores` (não a view). **Nunca** `cargo_nome` / `empresa_nome` / `embarcacao_nome` (aliases de `gt_vw_colaboradores_completo`). Cargo via `cargo:gt_cargos(nome)` + `flattenCatalogColabRow`. Select com alias da view → PostgREST error → identity null → `GET /api/document-catalog?colaboradorId=` 404 `Colaborador não encontrado` (aba QHSE/EPI). Lista GT e demais abas usam `LIST_SELECT` / `PROFILE_SELECT` com o mesmo join e não têm este 404.
 - **QHSE/EPI na ficha do colaborador**: aba própria **QHSE / EPI** (não dump em Documentos). Módulo-chave `epi` (`QHSE_MODULE_KEY`) — o mesmo checkbox “EPI” em `/admin/users` → Configurar permissões → Módulos do Sistema. Sem ACL extra de catálogo (`lista-presenca.manage` / `gestao-tripulantes.view`). ADMIN/MANAGER sempre veem. USER só com `modules.epi === true` (ou default do role se a flag individual não existir).
 - Query `?qhse=1` / `onlyQhse` devolve só itens QHSE (`qhseRelated` ou `category === 'qhse'`), **exceto ASO/laudo**. `qhseRelated` é false para `tipo_documento` aso/laudo (`qhseFlagsForGtTipo`). `isQhseCatalogDocument` também rejeita `tipoDocumento`/`category` aso|laudo mesmo se uma fonte marcar QHSE. Exames ocupacionais ficam na aba ASO do modal GT.
+- **Escopo de documentos pessoais** (`src/lib/gestao-tripulantes/documento-escopo.ts`, regra pura em `documento-escopo-regra.ts`): terceiros só para ADMIN/SUPERADMIN, MANAGER (contrato legado), setor DP/RH + módulo GT (`setorPermiteDesligamento`) ou `gestao-tripulantes.documents.view_all` (feature/ACL). `access_permissions.features[view_all] === false` nega (vence setor/MANAGER, não ADMIN). Demais = só os próprios (`view_own` implícito pelo vínculo `gt_colaboradores.user_id`; catálogo default N para não abrir o módulo GT a todo USER). Aplicado no servidor: `usuarioPodeVerDocumentoGt` / `usuarioPodeVerColaborador` / `idsColaboradoresPermitidos` (`empresa-acesso.ts`), `GET /api/document-catalog` e `GET /api/users/[id]/documents` (`userId` ≠ viewer) e download EPI/lista QHSE de terceiros.
 - Não alterar agrupamento de Treinamentos/CBSP no GT. A aba Documentos do GT é só `gt_documentos` + Histórico colapsável.
 
 ## Work Guidance
@@ -40,6 +41,7 @@ Registrar fonte futura (código, sem over-engineering):
 - `/admin/users` → editor: seção QHSE se o admin/editor tem `epi`; permissões do colaborador editado = checkbox EPI.
 - `/profile` → aba QHSE / EPI só com `hasAccess('epi')`. Documentos genéricos usam `hideQhse`.
 - USER com `epi: false` não lista EPI de outro colaborador mesmo com ACL de lista-presença/GT.
+- `npx tsx --test src/lib/gestao-tripulantes/documento-escopo.test.ts` — DP vê todos; USER de outro setor/externo só os seus; `view_all` explícito vê todos; DP com `view_all: false` só os seus; MANAGER mantém todos salvo deny.
 
 ## Child DOX Index
 

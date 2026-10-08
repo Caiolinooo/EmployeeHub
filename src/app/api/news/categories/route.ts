@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { withPermissionOrGrant } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST - Criar nova categoria
-export async function POST(request: NextRequest) {
+export const POST = withPermissionOrGrant('news_editor', ['news.categories.manage'], async (request: NextRequest) => {
   try {
     const body = await request.json();
     const { name, description, color, icon, enabled = true } = body;
@@ -98,4 +99,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

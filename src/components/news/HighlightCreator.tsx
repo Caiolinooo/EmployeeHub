@@ -56,7 +56,7 @@ const HighlightCreator: React.FC<HighlightCreatorProps> = ({
       formData.append('folder', 'highlights');
       formData.append('file', selectedFile);
 
-      const uploadResp = await fetch('/api/news/upload', {
+      const uploadResp = await fetchWithToken('/api/news/upload', {
         method: 'POST',
         body: formData
       });

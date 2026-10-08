@@ -67,13 +67,6 @@ export async function dispatchEnvelopeStage(envelopeId: string) {
             const observadores = solicitacoes.filter(s => s.tipo === 'copia');
             if (observadores.length > 0) {
                 console.log(`[Dispatcher] Notificando ${observadores.length} observadores da conclusão...`);
-                // Atualizar status no banco de dados
-                await supabaseAdmin
-                    .from('solicitacoes_assinatura')
-                    .update({ status: 'COMPLETED' })
-                    .eq('envelope_id', envelopeId)
-                    .eq('tipo', 'copia');
-
                 for (const obs of observadores) {
                     const email = obs.colaborador?.email || obs.external_signer_email;
                     const name = obs.colaborador?.first_name || obs.external_signer_name || 'Observador';

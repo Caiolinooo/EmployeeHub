@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { withPermissionOrGrant } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
+
+const SETTINGS_GRANTS = ['reimbursement.settings', 'admin.reimbursement_settings.manage'] as const;
 
 /**
  * API route para gerenciar configurações de reembolso usando arquivo local
@@ -10,7 +13,7 @@ export const dynamic = 'force-dynamic';
  */
 
 // GET - Obter configurações de email de reembolso do arquivo local
-export async function GET(request: NextRequest) {
+export const GET = withPermissionOrGrant('admin', SETTINGS_GRANTS, async (request: NextRequest) => {
   try {
     console.log('GET /api/reimbursement-settings-fallback - Iniciando busca de configurações');
     
@@ -61,10 +64,10 @@ export async function GET(request: NextRequest) {
       recipients: ['andresa.oliveira@groupabz.com', 'fiscal@groupabz.com']
     });
   }
-}
+});
 
 // POST - Criar ou atualizar configurações de email de reembolso no arquivo local
-export async function POST(request: NextRequest) {
+export const POST = withPermissionOrGrant('admin', SETTINGS_GRANTS, async (request: NextRequest) => {
   try {
     console.log('POST /api/reimbursement-settings-fallback - Iniciando processamento');
     
@@ -119,4 +122,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

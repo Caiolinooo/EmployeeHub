@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const gate = await garantirNivelFinanceiro(request, 'edit');
+    const gate = await garantirNivelFinanceiro(request, 'edit', ['financeiro.clientes.manage']);
     if (!gate.ok) return gate.error;
 
     const body = await corpoJson(request);

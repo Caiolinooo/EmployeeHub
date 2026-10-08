@@ -26,7 +26,6 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { fetchWithAuth } from '@/lib/authUtils';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { hasFeaturePermission } from '@/lib/permissions';
 import { useSignature } from '@/contexts/SignatureContext';
 import DocumentStatusBadge from '@/components/contratos/DocumentStatusBadge';
 import SignaturePositionOverlay, { getSignerColor } from '@/components/contratos/SignaturePositionOverlay';
@@ -40,13 +39,13 @@ export default function ContratoDetailPage() {
     const router = useRouter();
     const docId = params?.id as string;
 
-    const { profile, user } = useSupabaseAuth();
+    const { user } = useSupabaseAuth();
     const { requestSignature } = useSignature();
     const { t } = useI18n();
 
-    const isManager = hasFeaturePermission(profile as any, 'contracts.manage')
-        || profile?.role === 'ADMIN'
-        || profile?.role === 'MANAGER';
+    // Ações vêm do servidor (loadContractAccess): JSONB + ACL + role, mesma regra das rotas
+    const [can, setCan] = useState<Record<string, boolean>>({});
+    const isManager = !!can['signers.manage'];
 
     const [envelope, setEnvelope] = useState<any>(null);
     const [documentos, setDocumentos] = useState<any[]>([]);
@@ -123,9 +122,6 @@ export default function ContratoDetailPage() {
     // Send modal state
     const [showSendModal, setShowSendModal] = useState(false);
     const [sendMode, setSendMode] = useState<'email' | 'link' | null>(null);
-    const [emailRecipient, setEmailRecipient] = useState('');
-    const [copiedLink, setCopiedLink] = useState(false);
-
     // Signing state (Collaborator)
     const [isSigning, setIsSigning] = useState(false);
     const [mySolicitacao, setMySolicitacao] = useState<any>(null);
@@ -160,6 +156,7 @@ export default function ContratoDetailPage() {
             if (data.success) {
                 console.log('[ContratoDetail] Envelope carregado:', data.envelope?.titulo);
                 setEnvelope(data.envelope);
+                setCan(data.can || {});
                 setDocumentos(data.documentos || []);
                 setSolicitacoes(data.solicitacoes || []);
 
@@ -282,44 +279,6 @@ export default function ContratoDetailPage() {
         const link = `${window.location.origin}/assinatura/${token}`;
         await navigator.clipboard.writeText(link);
         toast.success(t('contratos.detail.success_link_copied', 'Link único de assinatura copiado!'));
-    };
-
-    // Copy generic public link
-    const handleCopyLink = async () => {
-        const link = `${window.location.origin}/contratos/${docId}/assinar?publico=true`;
-        await navigator.clipboard.writeText(link);
-        setCopiedLink(true);
-        toast.success(t('contratos.detail.success_generic_copied', 'Link genérico copiado!'));
-        setTimeout(() => setCopiedLink(false), 3000);
-    };
-
-    // Send via email
-    const handleSendEmail = async () => {
-        if (!emailRecipient) {
-            toast.error(t('contratos.detail.fill_email', 'Informe o e-mail do destinatário'));
-            return;
-        }
-
-        try {
-            const res = await fetchWithAuth('/api/contracts/send-email', {
-                method: 'POST',
-                body: JSON.stringify({
-                    documento_id: docId,
-                    recipient_email: emailRecipient,
-                }),
-            });
-
-            const data = await res.json();
-            if (data.success) {
-                toast.success(t('contratos.detail.success_email_sent', 'E-mail enviado com sucesso!'));
-                setShowSendModal(false);
-                setEmailRecipient('');
-            } else {
-                toast.error(data.error || t('contratos.detail.error_email_send', 'Erro ao enviar e-mail'));
-            }
-        } catch (err) {
-            toast.error(t('contratos.detail.error_email_send', 'Erro ao enviar e-mail'));
-        }
     };
 
     // Save assignment (HR)
@@ -651,8 +610,8 @@ export default function ContratoDetailPage() {
                             }
                             size="md"
                         />
-                        {isManager && (
-                            <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
+                            {can.delete && (
                                 <button
                                     onClick={handleDeleteEnvelope}
                                     disabled={loading}
@@ -662,6 +621,8 @@ export default function ContratoDetailPage() {
                                     <FiTrash2 className="w-4 h-4" />
                                     <span>{t('common.delete', 'Excluir')}</span>
                                 </button>
+                            )}
+                            {(envelope?.status === 'SENT' ? can.resend : can.dispatch) && envelope?.status !== 'COMPLETED' && (
                                 <button
                                     onClick={() => setShowSendModal(true)}
                                     disabled={loading}
@@ -670,8 +631,8 @@ export default function ContratoDetailPage() {
                                     <FiMail className="w-4 h-4" />
                                     {t('contratos.detail.btn_send', 'Enviar Envelope')}
                                 </button>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                 </div>
 

@@ -37,7 +37,7 @@ export async function GET(
 
     // ACL por empresa
     if (!(await usuarioPodeVerDocumentoGt({ id: payload.userId, role: payload.role }, id))) {
-      return NextResponse.json({ error: 'Sem acesso a este documento (empresa restrita)' }, { status: 403 });
+      return NextResponse.json({ error: 'Sem acesso a este documento (escopo ou empresa restrita)' }, { status: 403 });
     }
 
     const { data, error } = await supabaseAdmin
@@ -92,7 +92,7 @@ export async function PUT(
 
     // ACL por empresa
     if (!(await usuarioPodeVerDocumentoGt(user, id))) {
-      return NextResponse.json({ error: 'Sem acesso a este documento (empresa restrita)' }, { status: 403 });
+      return NextResponse.json({ error: 'Sem acesso a este documento (escopo ou empresa restrita)' }, { status: 403 });
     }
 
     const body = await request.json();
@@ -284,7 +284,7 @@ export async function DELETE(
 
     // ACL por empresa
     if (!(await usuarioPodeVerDocumentoGt(user, id))) {
-      return NextResponse.json({ error: 'Sem acesso a este documento (empresa restrita)' }, { status: 403 });
+      return NextResponse.json({ error: 'Sem acesso a este documento (escopo ou empresa restrita)' }, { status: 403 });
     }
 
     const { error } = await supabaseAdmin

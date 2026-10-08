@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { mapCodigoToDbTipo } from '@/lib/gestao-tripulantes/escala-tipos';
+import { MENSAGEM_ESCALA_NEGADA, podeEditarEscalaGt } from '@/lib/gestao-tripulantes/escala-permissions';
 import { findColaboradorByCpf } from '@/lib/gestao-tripulantes/cpf-lookup';
 import { invalidateManScheduleCache } from '@/lib/gestao-tripulantes/man-schedule-cache';
 import { sincronizarDatasEscalaColaborador } from '@/lib/gestao-tripulantes/embarques-datas-sync';
@@ -124,6 +125,10 @@ export async function POST(request: NextRequest) {
     const payload = verifyToken(token);
     if (!payload) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+    }
+
+    if (!(await podeEditarEscalaGt(payload.userId, payload.role))) {
+      return NextResponse.json({ error: MENSAGEM_ESCALA_NEGADA }, { status: 403 });
     }
 
     // GT v2 (R7): ator da trilha de auditoria (JWT verificado + IP).

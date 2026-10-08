@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
         const role = payload.role?.toUpperCase();
 
         // Only Admins can generate PO from request
-        if (role !== 'ADMIN') {
+        if (!(await canWithGrant(payload.userId, role, ['compras.generate_po'], 'admin'))) {
             return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
         }
 

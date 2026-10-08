@@ -1,20 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { requireAuth } from '@/lib/api-auth';
+import { canWithGrant } from '@/lib/permission-gate';
 
 // POST - Purge (delete) old notifications for a user
 // Body: { user_id: string; olderThanDays?: number; onlyRead?: boolean }
 // Default: olderThanDays=30, onlyRead=true
 export async function POST(request: NextRequest) {
+  const { user: caller, error: authError } = await requireAuth(request);
+  if (authError) return authError;
   try {
     if (!supabaseAdmin) {
       return NextResponse.json({ error: 'Configuração do banco ausente' }, { status: 500 });
     }
 
     const body = await request.json().catch(() => ({}));
-    const { user_id, olderThanDays = 30, onlyRead = true } = body || {};
+    const { olderThanDays = 30, onlyRead = true } = body || {};
+    const user_id: string = body?.user_id || caller.id;
 
-    if (!user_id) {
-      return NextResponse.json({ error: 'user_id é obrigatório' }, { status: 400 });
+    if (user_id !== caller.id && !(await canWithGrant(caller.id, caller.role, ['notifications.purge', 'notifications.manage'], 'admin'))) {
+      return NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
     }
 
     const days = Number.isFinite(olderThanDays) && olderThanDays >= 0 ? olderThanDays : 30;

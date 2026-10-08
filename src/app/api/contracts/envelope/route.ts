@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { authenticateUser, checkPermissions } from '@/lib/api-auth';
+import { authenticateUser } from '@/lib/api-auth';
+import { denyUnlessCan, loadContractAccess } from '@/lib/contracts/view-access';
 import { generateSHA256 } from '@/lib/services/CryptographyService';
 
 export const dynamic = 'force-dynamic';
@@ -14,14 +15,8 @@ export async function POST(request: NextRequest) {
         if (authError) return authError;
         if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
 
-        // Verificação flexível de permissão
-        const isAuthorized = checkPermissions(user, 'contracts_manager') || 
-                             user.role === 'ADMIN' || 
-                             user.role === 'MANAGER';
-                             
-        if (!isAuthorized) {
-            return NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
-        }
+        const denied = denyUnlessCan(await loadContractAccess(user), 'create');
+        if (denied) return denied;
 
         const formData = await request.formData();
         const tituloEnvelope = formData.get('titulo') as string | null;
@@ -61,6 +56,14 @@ export async function POST(request: NextRequest) {
         }
 
         const documentosCriados = [];
+        const uploadedPaths: string[] = [];
+        // Falha no meio do lote: remove envelope (cascata nos documentos) e os PDFs já enviados
+        const rollback = async () => {
+            await supabaseAdmin.from('envelopes').delete().eq('id', envelope.id);
+            if (uploadedPaths.length > 0) {
+                await supabaseAdmin.storage.from('documentos-trabalhistas').remove(uploadedPaths);
+            }
+        };
 
         // 2. Iterar nos arquivos, fazer upload e inserir registros na tabela de documentos
         for (let i = 0; i < files.length; i++) {
@@ -85,11 +88,12 @@ export async function POST(request: NextRequest) {
 
             if (uploadError) {
                 console.error(`Erro ao fazer upload do arquivo ${file.name}:`, uploadError);
-                // Tentar rolar para trás ou apenas avisar. Aqui vamos explodir o fluxo
+                await rollback();
                 return NextResponse.json({ 
-                    error: `Falha no upload do arquivo: ${file.name}. Envelope ${envelope.id} foi criado parcialmente.` 
+                    error: `Falha no upload do arquivo: ${file.name}. Nenhum envelope foi criado.` 
                 }, { status: 500 });
             }
+            uploadedPaths.push(storagePath);
 
             // Inserir documento vinculado ao envelope
             const { data: doc, error: docError } = await supabaseAdmin
@@ -109,6 +113,7 @@ export async function POST(request: NextRequest) {
 
             if (docError) {
                 console.error('Erro ao registrar documento individual:', docError);
+                await rollback();
                 return NextResponse.json({ error: `Erro ao vincular o arquivo ${file.name} ao envelope.` }, { status: 500 });
             }
 

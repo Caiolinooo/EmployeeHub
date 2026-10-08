@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initAvaliacaoModule } from '@/lib/avaliacao-module';
 import { verifyTokenFromRequest } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
     // Verificar autenticação
     const { user } = await verifyTokenFromRequest(request);
 
-    if (!user || (user.role !== 'ADMIN' && user.role !== 'MANAGER')) {
+    if (!user || !(await canWithGrant(user.id, user.role, ['avaliacao.criteria.view']))) {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
     // Verificar autenticação
     const { user } = await verifyTokenFromRequest(request);
 
-    if (!user || user.role !== 'ADMIN') {
+    if (!user || !(await canWithGrant(user.id, user.role, ['avaliacao.criteria.manage'], 'admin'))) {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 

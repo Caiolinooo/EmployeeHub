@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { verifyToken } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,7 +36,11 @@ export async function GET(request: NextRequest) {
       .eq('id', requesterUserId)
       .single();
 
-    if (requestingUserError || !requestingUser || requestingUser.role !== 'ADMIN') {
+    if (
+      requestingUserError ||
+      !requestingUser ||
+      !(await canWithGrant(requesterUserId, requestingUser.role, ['admin.users.permissions.view'], 'admin'))
+    ) {
       return NextResponse.json({ error: 'Acesso negado. Apenas administradores.' }, { status: 403 });
     }
 

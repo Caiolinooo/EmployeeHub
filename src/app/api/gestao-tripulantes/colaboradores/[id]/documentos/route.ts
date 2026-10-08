@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { authenticateUser } from '@/lib/api-auth';
+import { podeIncluirOuEditarDocumentoGt } from '@/lib/gestao-tripulantes/documento-permissions';
 import {
   garantirNumeroRastreioUnico,
   buscarDuplicado,
   validarDatasObrigatorias,
   calcularStatusValidacaoPorValidade,
 } from '@/lib/gestao-tripulantes/documento-integrity';
+import { usuarioPodeVerColaborador } from '@/lib/gestao-tripulantes/empresa-acesso';
+import { MENSAGEM_DOCUMENTOS_RESTRITOS } from '@/lib/gestao-tripulantes/documento-escopo';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +31,9 @@ export async function GET(
     }
 
     const { id } = await context.params;
+    if (!(await usuarioPodeVerColaborador({ id: payload.userId, role: payload.role }, id))) {
+      return NextResponse.json({ error: MENSAGEM_DOCUMENTOS_RESTRITOS }, { status: 403 });
+    }
 
     const { data: documentos, error } = await supabaseAdmin
       .from('gt_documentos')
@@ -119,18 +126,16 @@ export async function POST(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const authHeader = request.headers.get('authorization') || undefined;
-    const token = extractTokenFromHeader(authHeader);
-    if (!token) {
-      return NextResponse.json({ error: 'Token de autorização necessário' }, { status: 401 });
-    }
-
-    const payload = verifyToken(token);
-    if (!payload) {
-      return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+    const { user, error: authError } = await authenticateUser(request);
+    if (authError) return authError;
+    if (!user || !(await podeIncluirOuEditarDocumentoGt(user))) {
+      return NextResponse.json({ error: 'Sem permissão para incluir documentos do cadastro' }, { status: 403 });
     }
 
     const { id } = await context.params;
+    if (!(await usuarioPodeVerColaborador(user, id))) {
+      return NextResponse.json({ error: MENSAGEM_DOCUMENTOS_RESTRITOS }, { status: 403 });
+    }
     const body = await request.json();
     const {
       tipo_documento,

@@ -87,7 +87,7 @@ async function main() {
       'lista-presenca.read', 'lista-presenca.create', 'lista-presenca.manage'
     ],
     'USER': [
-      'ferias.read', 'ferias.create',
+      'ferias.create',
       'contratos.read', 'contratos.sign',
       'lista-presenca.read', 'lista-presenca.create'
     ]

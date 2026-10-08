@@ -4,6 +4,7 @@ import { createLeaveRequest, getUserLeaveRequests, getUserLeaveRequestsFiltered 
 export const dynamic = 'force-dynamic';
 import { notifyLeaveRequestCreated } from '@/services/leaveNotifications';
 import { extractTokenFromHeader, verifyToken, checkAclPermission } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { validateLeaveAdvanceNoticeAsync, getAdvanceNoticeDays } from '@/lib/leaveConfig';
 import { normalizeLeaveStatus } from '@/lib/leaveExport';
 
@@ -32,7 +33,8 @@ export async function GET(request: Request) {
 
         const hasAcl = await checkAclPermission(payload.userId, payload.role, 'ferias', 'admin') ||
                        await checkAclPermission(payload.userId, payload.role, 'ferias', 'manage') ||
-                       await checkAclPermission(payload.userId, payload.role, 'ferias', 'read');
+                       await checkAclPermission(payload.userId, payload.role, 'ferias', 'read') ||
+                       await canWithGrant(payload.userId, payload.role, ['ferias.view_all']);
 
         if (payload.userId !== userId && payload.role !== 'ADMIN' && payload.role !== 'MANAGER' && !hasAcl) {
             return NextResponse.json({ error: 'Você não tem permissão para ver solicitações de outro usuário' }, { status: 403 });

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { withPermission } from '@/lib/api-auth';
+import { withPermissionOrGrant } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +29,7 @@ function deriveIcsFromGcalUrl(input?: string | null): string | null {
   return null;
 }
 
-export const GET = withPermission('manager', async (req, user) => {
+export const GET = withPermissionOrGrant('manager', ['calendario.company.config'], async (req, user) => {
   try {
     const { data, error } = await supabaseAdmin
       .from('settings')
@@ -50,7 +50,7 @@ export const GET = withPermission('manager', async (req, user) => {
   }
 });
 
-export const PUT = withPermission('manager', async (req, user) => {
+export const PUT = withPermissionOrGrant('manager', ['calendario.company.config'], async (req, user) => {
   try {
     const body = await req.json().catch(() => ({}));
     const { gcal_url, notify_minutes_before, extra_recipients, marker_color } = body || {};

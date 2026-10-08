@@ -4,6 +4,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyRequestToken } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -90,7 +91,10 @@ export async function POST(request: NextRequest) {
     const userRole = profile?.role || 'USER';
 
     // Verificar permissão para escrita
-    if (!['ADMIN', 'GERENTE'].includes(userRole)) {
+    if (
+      !['ADMIN', 'GERENTE'].includes(userRole) &&
+      !(await canWithGrant(userId, userRole, ['ia-assistant.knowledge.manage'], 'none'))
+    ) {
       return NextResponse.json({ error: 'Sem permissão para criar entradas' }, { status: 403 });
     }
 
@@ -122,7 +126,10 @@ export async function PUT(request: NextRequest) {
     const { data: profile } = await supabaseAdmin.from('users_unified').select('role').eq('id', userId).single();
     const userRole = profile?.role || 'USER';
 
-    if (!['ADMIN', 'GERENTE'].includes(userRole)) {
+    if (
+      !['ADMIN', 'GERENTE'].includes(userRole) &&
+      !(await canWithGrant(userId, userRole, ['ia-assistant.knowledge.manage'], 'none'))
+    ) {
       return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
 

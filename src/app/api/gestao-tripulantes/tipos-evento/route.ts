@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { DEFAULT_TIPOS_EVENTO_ESCALA } from '@/lib/gestao-tripulantes/escala-tipos';
+import { canWithGrant } from '@/lib/permission-gate';
+import { GT_CONFIG_GRANT } from '@/lib/gestao-tripulantes/gt-route-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,8 +16,8 @@ function requireAuth(request: NextRequest) {
   return { payload };
 }
 
-function requireAdminManager(role: string | undefined) {
-  if (role !== 'ADMIN' && role !== 'MANAGER') {
+async function requireAdminManager(userId: string | undefined, role: string | undefined) {
+  if (!(await canWithGrant(userId, role, [GT_CONFIG_GRANT]))) {
     return NextResponse.json({ error: 'Acesso negado. Apenas ADMIN/MANAGER.' }, { status: 403 });
   }
   return null;
@@ -85,7 +87,7 @@ export async function POST(request: NextRequest) {
   try {
     const auth = requireAuth(request);
     if (auth.error) return auth.error;
-    const denied = requireAdminManager(auth.payload?.role);
+    const denied = await requireAdminManager(auth.payload?.userId, auth.payload?.role);
     if (denied) return denied;
 
     const body = await request.json();

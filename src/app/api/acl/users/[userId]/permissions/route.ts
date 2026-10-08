@@ -1,16 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { requireAuth } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
-// GET - Obter permissões ACL de um usuário específico
+function isAdmin(role: string | null | undefined): boolean {
+  return String(role || '').toUpperCase() === 'ADMIN';
+}
+
+// GET - Permissões ACL de um usuário (o próprio usuário ou ADMIN)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const { userId } = await params;
-    console.log(`🔄 API ACL User Permissions - Buscando permissões do usuário: ${userId}`);
+    const { user: viewer, error: authError } = await requireAuth(request);
+    if (authError) return authError;
+    if (viewer.id !== userId && !isAdmin(viewer.role)) {
+      return NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
+    }
 
     // Buscar dados do usuário
     const { data: user, error: userError } = await supabaseAdmin
@@ -31,6 +40,7 @@ export async function GET(
       .from('user_acl_permissions')
       .select(`
         id,
+        granted,
         granted_at,
         expires_at,
         acl_permissions (
@@ -76,7 +86,6 @@ export async function GET(
       );
     }
 
-    // Organizar dados de resposta
     const response = {
       user: {
         id: user.id,
@@ -87,6 +96,7 @@ export async function GET(
       individual_permissions: userPermissions?.map(up => ({
         id: up.id,
         permission: up.acl_permissions,
+        granted: up.granted !== false,
         granted_at: up.granted_at,
         expires_at: up.expires_at,
         is_expired: up.expires_at ? new Date(up.expires_at) < new Date() : false
@@ -98,7 +108,6 @@ export async function GET(
       effective_permissions: [] // Será calculado no frontend
     };
 
-    console.log(`✅ Permissões carregadas para usuário ${user.email}`);
     return NextResponse.json(response);
 
   } catch (error) {
@@ -110,15 +119,21 @@ export async function GET(
   }
 }
 
-// POST - Atribuir permissão ACL a um usuário
+// POST - Grant (`granted: true`, padrão) ou revogação individual (`granted: false`). Só ADMIN.
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const { userId } = await params;
+    const { user: admin, error: authError } = await requireAuth(request);
+    if (authError) return authError;
+    if (!isAdmin(admin.role)) {
+      return NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
+    }
+
     const body = await request.json();
-    const { permission_id, expires_at, granted_by } = body;
+    const { permission_id, expires_at, granted } = body;
 
     if (!permission_id) {
       return NextResponse.json(
@@ -126,8 +141,6 @@ export async function POST(
         { status: 400 }
       );
     }
-
-    console.log(`🔄 API ACL User Permissions - Atribuindo permissão ${permission_id} ao usuário ${userId}`);
 
     // Verificar se a permissão existe
     const { data: permission, error: permError } = await supabaseAdmin
@@ -157,11 +170,11 @@ export async function POST(
       );
     }
 
-    // Criar atribuição de permissão
     const permissionData = {
       user_id: userId,
       permission_id,
-      granted_by: granted_by || null,
+      granted: granted !== false,
+      granted_by: admin.id,
       granted_at: new Date().toISOString(),
       expires_at: expires_at || null
     };
@@ -183,11 +196,12 @@ export async function POST(
       );
     }
 
-    console.log(`✅ Permissão ${permission.name} atribuída ao usuário ${user.email}`);
     return NextResponse.json({
       success: true,
       permission: newUserPermission,
-      message: `Permissão "${permission.name}" atribuída com sucesso`
+      message: permissionData.granted
+        ? `Permissão "${permission.name}" atribuída com sucesso`
+        : `Permissão "${permission.name}" revogada para o usuário`
     });
 
   } catch (error) {
@@ -199,13 +213,19 @@ export async function POST(
   }
 }
 
-// DELETE - Remover permissão ACL de um usuário
+// DELETE - Remove a linha individual (grant ou revogação): volta ao default do role. Só ADMIN.
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const { userId } = await params;
+    const { user: admin, error: authError } = await requireAuth(request);
+    if (authError) return authError;
+    if (!isAdmin(admin.role)) {
+      return NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const permissionId = searchParams.get('permission_id');
 
@@ -216,9 +236,6 @@ export async function DELETE(
       );
     }
 
-    console.log(`🔄 API ACL User Permissions - Removendo permissão ${permissionId} do usuário ${userId}`);
-
-    // Remover atribuição de permissão
     const { error: deleteError } = await supabaseAdmin
       .from('user_acl_permissions')
       .delete()
@@ -233,7 +250,6 @@ export async function DELETE(
       );
     }
 
-    console.log(`✅ Permissão removida do usuário`);
     return NextResponse.json({
       success: true,
       message: 'Permissão removida com sucesso'

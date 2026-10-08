@@ -18,6 +18,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { TokenPayload } from '@/lib/auth';
 import { checkAclPermission, extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export type NivelFinanceiro = 'view' | 'edit' | 'admin';
@@ -101,10 +102,14 @@ export type GateFinanceiro =
   | { ok: true; user: FinanceiroAutorizado }
   | { ok: false; error: NextResponse };
 
-/** Auth + permissão num passo. Gate de TODAS as rotas /api/financeiro/**. */
+/**
+ * Auth + permissão num passo. Gate de TODAS as rotas /api/financeiro/**.
+ * `grants` (ações `financeiro.*` de module-grants) só somam a quem já passa pelo nível.
+ */
 export async function garantirNivelFinanceiro(
   request: NextRequest,
   nivel: NivelFinanceiro,
+  grants: readonly string[] = [],
 ): Promise<GateFinanceiro> {
   const token = tokenFromRequest(request);
   if (!token) {
@@ -130,7 +135,9 @@ export async function garantirNivelFinanceiro(
 
   const userId = resolveAuthUserId(payload);
   const role = payload.role || '';
-  const permitido = await podeNivelFinanceiro(userId, role, nivel);
+  const permitido =
+    (await podeNivelFinanceiro(userId, role, nivel)) ||
+    (grants.length > 0 && (await canWithGrant(userId, role, grants, 'admin')));
   if (!permitido) {
     const acao = nivel === 'view' ? 'visualizar' : nivel === 'edit' ? 'editar' : 'administrar';
     return {

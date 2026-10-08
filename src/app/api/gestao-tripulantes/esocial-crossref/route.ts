@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { cpfsMatch, normalizeCpf } from '@/lib/gestao-tripulantes/cpf';
+import { filtrarPorColaboradorPermitido } from '@/lib/gestao-tripulantes/empresa-acesso';
+import { MENSAGEM_DOCUMENTOS_RESTRITOS } from '@/lib/gestao-tripulantes/documento-escopo';
 
 export const dynamic = 'force-dynamic';
 
@@ -168,6 +170,17 @@ export async function GET(request: NextRequest) {
         .eq('cpf', cpfDoEvento)
         .maybeSingle();
       colabByCpf = c || null;
+    }
+
+    const conhecidos = [...colabMap.keys(), ...(colabByCpf ? [colabByCpf.id as string] : [])];
+    const sujeitos = conhecidos.length > 0 ? conhecidos : [null];
+    const visiveis = await filtrarPorColaboradorPermitido(
+      { id: payload.userId, role: payload.role },
+      sujeitos,
+      (id) => id,
+    );
+    if (visiveis.length < sujeitos.length) {
+      return NextResponse.json({ error: MENSAGEM_DOCUMENTOS_RESTRITOS }, { status: 403 });
     }
 
     // ── 4. Montar resposta com verificação de consistência ──────

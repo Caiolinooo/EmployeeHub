@@ -14,6 +14,7 @@ import {
   type ExportFilters,
 } from '@/lib/gestao-tripulantes/export-service';
 import { getEmpresasRestricaoUsuario, roleBypassEmpresa } from '@/lib/gestao-tripulantes/empresa-acesso';
+import { resolverEscopoDocumentosGt } from '@/lib/gestao-tripulantes/documento-escopo';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -61,6 +62,8 @@ export async function GET(req: NextRequest) {
       const restricao = await getEmpresasRestricaoUsuario(payload.userId);
       if (restricao) filters.empresasPermitidas = restricao;
     }
+    const escopo = await resolverEscopoDocumentosGt(payload.userId, payload.role);
+    if (escopo.escopo === 'proprios') filters.colaboradoresPermitidos = escopo.colaboradorIds;
     const sp = req.nextUrl.searchParams;
     const isPreview = ['1', 'true'].includes((sp.get('preview') || '').toLowerCase());
     const limiteParam = parseInt(sp.get('limite') || '', 10);

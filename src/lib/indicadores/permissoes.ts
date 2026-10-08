@@ -11,6 +11,7 @@
  * módulo têm RLS ligado e ZERO policies.
  */
 import { checkAclPermission } from '@/lib/auth';
+import { userHasGrant } from '@/lib/effective-permissions-server';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export type NivelIndicadores = 'view' | 'edit' | 'import';
@@ -42,6 +43,8 @@ async function podeNivelIndicadores(
   if (!userId) return false;
 
   if (await checkAclPermission(userId, role || '', MODULO_INDICADORES, nivel)) return true;
+  // Feature JSONB de /admin/users (mesma chave da ACL) também libera.
+  if (await userHasGrant(userId, [`${MODULO_INDICADORES}.${nivel}`])) return true;
 
   const { data: user } = await supabaseAdmin
     .from('users_unified')

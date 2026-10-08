@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const payload = token ? verifyToken(token) : null;
     if (!payload) return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
 
-    const pode = await podeNivelRecrutamento(payload.userId, payload.role, 'view');
+    const pode = await podeNivelRecrutamento(payload.userId, payload.role, 'view', ['recrutamento.vagas.view']);
     if (!pode) return NextResponse.json({ error: 'Sem permissão para recrutamento' }, { status: 403 });
 
     const { data, error } = await supabaseAdmin

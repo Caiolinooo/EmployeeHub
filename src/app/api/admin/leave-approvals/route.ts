@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 import { sendGlobalNotification } from '@/lib/global-notifications';
 import { triggerLeaveNotifications } from '@/services/leaveNotifications';
 import { extractTokenFromHeader, verifyToken, checkAclPermission } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 
 function getAuthPayload(request: Request) {
     const authHeader = request.headers.get('authorization') || undefined;
@@ -140,7 +141,9 @@ export async function POST(request: Request) {
             // Verify they are actually the leader or manager of the sector, or have ACL permissions
             const hasApproveAcl = await checkAclPermission(payload.userId, payload.role, 'ferias', 'approve') ||
                                   await checkAclPermission(payload.userId, payload.role, 'ferias', 'admin') ||
-                                  await checkAclPermission(payload.userId, payload.role, 'ferias', 'manage');
+                                  await checkAclPermission(payload.userId, payload.role, 'ferias', 'manage') ||
+                                  (action === 'REJECT' &&
+                                      await canWithGrant(payload.userId, payload.role, ['ferias.reject'], 'admin'));
 
             if (!isLeader && !isManager && !hasApproveAcl && payload.role !== 'ADMIN') {
                 return NextResponse.json({ error: 'Você não tem permissão para aprovar ou rejeitar solicitações deste setor' }, { status: 403 });

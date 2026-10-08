@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { withAuth, withAdmin } from '@/lib/api-auth';
+import { withPermissionOrGrant } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST is restricted to admins/managers (using withAdmin for now based on request)
-export const POST = withAdmin(async (request: NextRequest, user) => {
+export const POST = withPermissionOrGrant('admin', ['biblioteca.create', 'biblioteca.manage'], async (request: NextRequest, user) => {
     try {
         const json = await request.json();
         const { title, slug, description, type, content_url, content_text, metadata } = json;

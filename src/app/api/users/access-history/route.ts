@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { supabaseAdmin } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -33,7 +34,11 @@ export async function GET(request: NextRequest) {
       .eq('id', payload.userId)
       .single();
 
-    if (userError || !requestingUser || (requestingUser.role !== 'ADMIN' && requestingUser.role !== 'MANAGER')) {
+    if (
+      userError ||
+      !requestingUser ||
+      !(await canWithGrant(requestingUser.id, requestingUser.role, ['admin.users.access_history.view']))
+    ) {
       return NextResponse.json(
         { error: 'Acesso negado. Apenas administradores e gerentes podem acessar o histórico.' },
         { status: 403 }
@@ -158,7 +163,11 @@ export async function POST(request: NextRequest) {
       .eq('id', payload.userId)
       .single();
 
-    if (userError || !requestingUser || requestingUser.role !== 'ADMIN') {
+    if (
+      userError ||
+      !requestingUser ||
+      !(await canWithGrant(requestingUser.id, requestingUser.role, ['admin.users.access_history.record'], 'admin'))
+    ) {
       return NextResponse.json(
         { error: 'Acesso negado. Apenas administradores podem registrar histórico.' },
         { status: 403 }

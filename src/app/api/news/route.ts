@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { supabaseAdmin } from '@/lib/db';
-import { withPermission } from '@/lib/api-auth';
+import { withPermissionOrGrant } from '@/lib/api-auth';
 
 // GET - Obter todas as notícias
 export async function GET(request: NextRequest) {
@@ -205,7 +205,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST - Criar uma nova notícia (somente ADMIN ou MANAGER)
-export const POST = withPermission('manager', async (request: NextRequest) => {
+export const POST = withPermissionOrGrant('manager', ['news.create'], async (request: NextRequest) => {
   try {
     console.log('API de notícias - Iniciando criação de notícia');
     const body = await request.json();

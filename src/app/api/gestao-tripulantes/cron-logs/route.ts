@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
+import { GT_CONFIG_GRANT } from '@/lib/gestao-tripulantes/gt-route-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +15,7 @@ export async function GET(request: NextRequest) {
     }
 
     const payload = verifyToken(token);
-    if (!payload || (payload.role !== 'ADMIN' && payload.role !== 'MANAGER')) {
+    if (!payload || !(await canWithGrant(payload.userId, payload.role, [GT_CONFIG_GRANT]))) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 

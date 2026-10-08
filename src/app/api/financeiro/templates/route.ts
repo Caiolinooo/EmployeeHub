@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const gate = await garantirNivelFinanceiro(request, 'admin');
+    const gate = await garantirNivelFinanceiro(request, 'admin', ['financeiro.templates.manage']);
     if (!gate.ok) return gate.error;
 
     const form = await request.formData();

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import * as XLSX from 'xlsx-js-style';
+import { usuarioPodeVerColaborador } from '@/lib/gestao-tripulantes/empresa-acesso';
+import { MENSAGEM_DOCUMENTOS_RESTRITOS } from '@/lib/gestao-tripulantes/documento-escopo';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,11 +33,15 @@ export async function GET(
   try {
     const authHeader = request.headers.get('authorization') || undefined;
     const token = extractTokenFromHeader(authHeader);
-    if (!token || !verifyToken(token)) {
+    const payload = token ? verifyToken(token) : null;
+    if (!payload) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
     const { id } = await context.params;
+    if (!(await usuarioPodeVerColaborador({ id: payload.userId, role: payload.role }, id))) {
+      return NextResponse.json({ error: MENSAGEM_DOCUMENTOS_RESTRITOS }, { status: 403 });
+    }
 
     // 1. Fetch Collaborator
     const { data: colaborador, error: colError } = await supabaseAdmin

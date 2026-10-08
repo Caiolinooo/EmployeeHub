@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { checkAclPermission, extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { resolveAuthUserId } from '@/lib/gestao-tripulantes/aso-agendamento-auth';
-import { isFechamentoRole } from '@/lib/gestao-tripulantes/fechamento-assinatura';
+import { podeAcaoFechamento } from '@/lib/gestao-tripulantes/gt-route-auth';
 import {
   carregarMarcacoesDoMes,
   mesReferenciaAtualBRT,
@@ -91,10 +91,7 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = resolveAuthUserId(payload);
-    const role = String(payload.role || '').toUpperCase();
-    const liberado =
-      isFechamentoRole(payload.role) ||
-      (userId ? await checkAclPermission(userId, role, 'gestao-tripulantes', 'fechamento.marcas') : false);
+    const liberado = await podeAcaoFechamento(userId, payload.role, 'marcas');
     if (!liberado) {
       return NextResponse.json(
         { error: 'Sem permissão para marcar colaboradores no fechamento.' },

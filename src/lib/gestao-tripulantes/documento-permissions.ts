@@ -61,11 +61,11 @@ export async function canDeleteGtDocuments(user: GtDocumentPermissionUser): Prom
  */
 export async function podeIncluirOuEditarDocumentoGt(user: GtDocumentPermissionUser): Promise<boolean> {
   if (await canEditGtDocuments(user)) return true;
-  return podeMutarCadastroColaborador(user.id, user.role);
+  return podeMutarCadastroColaborador(user.id, user.role ?? undefined);
 }
 
 /** Excluir documento na ficha: gate de delete ou o mesmo gate do cadastro DP. */
 export async function podeExcluirDocumentoGt(user: GtDocumentPermissionUser): Promise<boolean> {
   if (await canDeleteGtDocuments(user)) return true;
-  return podeMutarCadastroColaborador(user.id, user.role);
+  return podeMutarCadastroColaborador(user.id, user.role ?? undefined);
 }

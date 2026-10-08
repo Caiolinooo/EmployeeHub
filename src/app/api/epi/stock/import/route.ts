@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
+import { podeGerenciarEpi } from '@/lib/epi-access';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { parseStockSpreadsheet, importStockFromSpreadsheet } from '@/services/stockImportExport';
 
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
         if (!payload || !payload.userId) return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
 
         const role = payload.role || 'USER';
-        if (role !== 'ADMIN' && role !== 'MANAGER') {
+        if (!(await podeGerenciarEpi(payload.userId, role, 'stock.import'))) {
             return NextResponse.json({ error: 'Permissão negada' }, { status: 403 });
         }
 

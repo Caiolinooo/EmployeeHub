@@ -8,6 +8,7 @@ import {
   type GerenteGeralAuditAssignment
 } from '@/lib/services/evaluation-settings';
 import { verifyToken, verifyTokenFromRequest } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { supabaseAdmin } from '@/lib/supabase';
 
 function buildSettingRecord(params: {
@@ -54,7 +55,7 @@ async function resolveAdminUserId(request: NextRequest): Promise<string | null> 
     .eq('id', userId)
     .single();
 
-  if (error || !user || user.role !== 'ADMIN') {
+  if (error || !user || !(await canWithGrant(user.id, user.role, ['avaliacao.settings.manage'], 'admin'))) {
     return null;
   }
 

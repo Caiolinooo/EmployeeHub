@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { verifyToken } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { ChatChannel, ChannelSettings, ChannelPermissions, ChannelMetadata } from '@/types/chat';
 
 export const runtime = 'nodejs';
@@ -202,7 +203,7 @@ export async function POST(request: NextRequest) {
       .eq('id', payload.userId)
       .single();
 
-    if (!user || user.role !== 'ADMIN') {
+    if (!user || !(await canWithGrant(payload.userId, user.role, ['chat.channels.create'], 'admin'))) {
       return NextResponse.json({
         success: false,
         error: 'Apenas administradores podem criar canais'
@@ -440,7 +441,7 @@ export async function PUT(request: NextRequest) {
 
     const isOwner = existingChannel.created_by === payload.userId;
     const isChannelAdmin = existingChannel.permissions?.admins?.includes(payload.userId);
-    const isSystemAdmin = user?.role === 'ADMIN';
+    const isSystemAdmin = !!user && (await canWithGrant(payload.userId, user.role, ['chat.moderate'], 'admin'));
 
     if (!isOwner && !isChannelAdmin && !isSystemAdmin) {
       return NextResponse.json({
@@ -543,7 +544,7 @@ export async function DELETE(request: NextRequest) {
       .single();
 
     const isOwner = existingChannel.created_by === payload.userId;
-    const isSystemAdmin = user?.role === 'ADMIN';
+    const isSystemAdmin = !!user && (await canWithGrant(payload.userId, user.role, ['chat.moderate'], 'admin'));
 
     if (!isOwner && !isSystemAdmin) {
       return NextResponse.json({

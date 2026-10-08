@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -77,7 +78,7 @@ export async function GET(
         .eq('id', authResult.userId)
         .single();
 
-      if (user?.role !== 'ADMIN') {
+      if (!(await canWithGrant(authResult.userId, user?.role, ['kpi.bi.edit_any'], 'admin'))) {
         return NextResponse.json({
           success: false,
           error: 'Sem permissão para acessar este dashboard'

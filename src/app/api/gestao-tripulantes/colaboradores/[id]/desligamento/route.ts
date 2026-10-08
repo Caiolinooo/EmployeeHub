@@ -9,6 +9,7 @@ import {
   MENSAGEM_DESLIGAMENTO_NEGADO,
   podeRegistrarDesligamento,
 } from '@/lib/gestao-tripulantes/desligamento-auth';
+import { userHasGrant } from '@/lib/effective-permissions-server';
 import {
   avisoDefaultParaTipo,
   isAvisoPrevioTipo,
@@ -32,6 +33,11 @@ import type {
 } from '@/types/gestao-tripulantes';
 
 export const dynamic = 'force-dynamic';
+
+async function podeDesligar(userId: string, role: string | undefined): Promise<boolean> {
+  if (await podeRegistrarDesligamento(userId, role)) return true;
+  return userHasGrant(userId, ['gestao-tripulantes.desligamento.manage', 'dp.desligamento.manage']);
+}
 
 interface ColaboradorDesligRow {
   id: string;
@@ -151,7 +157,7 @@ export async function GET(
       return NextResponse.json({ error: 'Colaborador não encontrado' }, { status: 404 });
     }
 
-    const podeRegistrar = await podeRegistrarDesligamento(userId, auth.payload?.role);
+    const podeRegistrar = await podeDesligar(userId, auth.payload?.role);
     let desligamento: GTDesligamento | null = null;
     try {
       desligamento = await buscarDesligamentoAberto(id);
@@ -193,7 +199,7 @@ export async function POST(
     if (!userId) {
       return NextResponse.json({ error: 'Usuário do token não identificado' }, { status: 401 });
     }
-    if (!(await podeRegistrarDesligamento(userId, auth.payload?.role))) {
+    if (!(await podeDesligar(userId, auth.payload?.role))) {
       return NextResponse.json({ error: MENSAGEM_DESLIGAMENTO_NEGADO }, { status: 403 });
     }
 

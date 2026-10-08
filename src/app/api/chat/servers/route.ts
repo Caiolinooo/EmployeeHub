@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { verifyToken } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -210,7 +211,7 @@ export async function DELETE(request: NextRequest) {
             .single();
 
         const isOwner = server.created_by === payload.userId;
-        const isSystemAdmin = user?.role === 'ADMIN';
+        const isSystemAdmin = !!user && (await canWithGrant(payload.userId, user.role, ['chat.moderate'], 'admin'));
 
         if (!isOwner && !isSystemAdmin) {
             return NextResponse.json({

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { podeGerenciarMatrizesTreinamento } from '@/lib/gestao-tripulantes/matriz-permissions';
+import { userHasGrant } from '@/lib/effective-permissions-server';
 import * as xlsx from 'xlsx';
 
 export const dynamic = 'force-dynamic';
@@ -26,7 +27,9 @@ export async function POST(request: NextRequest) {
     const userId = payload.userId || payload.user_id || payload.id || '';
     const role = payload.role || '';
 
-    const canManage = await podeGerenciarMatrizesTreinamento(userId, role);
+    const canManage =
+      (await podeGerenciarMatrizesTreinamento(userId, role)) ||
+      (await userHasGrant(userId, ['gestao-tripulantes.matrizes.import']));
     if (!canManage) {
       return NextResponse.json(
         { error: 'Acesso negado. É necessário ter perfil gestor, permissão ACL ou pertencer a setor autorizado para importar matrizes.' },

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { supabaseAdmin } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Verificar se é admin
-        if (authResult.role !== 'ADMIN') {
+        if (!(await canWithGrant(authResult.userId, authResult.role, ['wkradar.credentials.view_all'], 'admin'))) {
             return NextResponse.json(
                 { success: false, error: 'Acesso negado. Apenas administradores podem listar credenciais.' },
                 { status: 403 }

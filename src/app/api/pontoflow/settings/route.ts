@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAdminFromRequest } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { parseSafeUrl } from '@/lib/security/safe-url';
 import { resetTimesheetClientCache } from '@/lib/timesheet-integration/client';
@@ -14,6 +15,12 @@ import { getQueueStatus } from '@/lib/timesheet-integration/worker';
 
 export const dynamic = 'force-dynamic';
 
+async function podeConfigurarPonto(request: NextRequest): Promise<boolean> {
+  const admin = await isAdminFromRequest(request);
+  if (admin.isAdmin) return true;
+  return canWithGrant(admin.userId, null, ['ponto.settings.manage'], 'none');
+}
+
 /**
  * Settings da integração Time-Sheet por empresa (admin — D10: 1 tenant/empresa).
  * Mesmo padrão de /api/dp/wk/credentials: segredos NUNCA voltam crus (só
@@ -27,8 +34,7 @@ export const dynamic = 'force-dynamic';
  *       vazio mantém o valor atual). baseUrl validada por parseSafeUrl.
  */
 export async function GET(request: NextRequest) {
-  const admin = await isAdminFromRequest(request);
-  if (!admin.isAdmin) {
+  if (!(await podeConfigurarPonto(request))) {
     return NextResponse.json({ success: false, error: 'Não autorizado' }, { status: 401 });
   }
 
@@ -77,8 +83,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const admin = await isAdminFromRequest(request);
-  if (!admin.isAdmin) {
+  if (!(await podeConfigurarPonto(request))) {
     return NextResponse.json({ success: false, error: 'Não autorizado' }, { status: 401 });
   }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { authenticateUser } from '@/lib/api-auth';
+import { canContractAction } from '@/lib/contracts/action-gate';
 import { generateSHA256, generateFinalHash } from '@/lib/services/CryptographyService';
 import { embedSignatureOnPdf, addAuditPage, embedFieldsAndSignaturesOnPdf, PdfFieldItem } from '@/lib/services/PdfEditorService';
 import { dispatchEnvelopeStage } from '@/lib/envelopeDispatcher';
@@ -58,11 +59,18 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        if (user && !isPublicAccess && !canContractAction({ role: user.role, features: user.access_permissions?.features }, 'sign')) {
+            return NextResponse.json({ error: 'Permissão insuficiente para assinar contratos' }, { status: 403 });
+        }
+
         const documento = solicitacao.documento as any;
 
         // IDENTITY VALIDATION for public/external access
         // This is the server-side guard — even if the frontend is bypassed,
         // the signature will be rejected if identity data doesn't match.
+        if (isPublicAccess && !signer_data) {
+            return NextResponse.json({ error: 'Dados de identificação do signatário são obrigatórios.' }, { status: 400 });
+        }
         if (isPublicAccess && signer_data) {
             const expectedEmail = solicitacao.external_signer_email?.toLowerCase()?.trim();
             const providedEmail = signer_data.email?.toLowerCase()?.trim();

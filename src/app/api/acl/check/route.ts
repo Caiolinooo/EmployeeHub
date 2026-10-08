@@ -97,17 +97,18 @@ async function checkUserACLPermission(
     // 2. Verificar permissão individual do usuário (prioridade máxima)
     const { data: userPermission, error: userPermError } = await supabaseAdmin
       .from('user_acl_permissions')
-      .select('id, expires_at')
+      .select('id, granted, expires_at')
       .eq('user_id', userId)
       .eq('permission_id', permission.id)
       .single();
 
     if (!userPermError && userPermission) {
-      // Verificar se não expirou
-      if (!userPermission.expires_at || new Date(userPermission.expires_at) > new Date()) {
+      const active = !userPermission.expires_at || new Date(userPermission.expires_at) > new Date();
+      if (active && userPermission.granted === false) {
+        return { granted: false, reason: 'individual_revocation', source: 'user' };
+      }
+      if (active) {
         return { granted: true, reason: 'individual_permission', source: 'user' };
-      } else {
-        return { granted: false, reason: 'permission_expired', source: 'user' };
       }
     }
 

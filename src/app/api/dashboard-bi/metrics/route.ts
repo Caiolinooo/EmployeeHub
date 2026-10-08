@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { verifyRequestToken } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { BIMetrics, WidgetMetric, PerformanceMetric, EngagementMetric } from '@/types/dashboard-bi';
 
 export const runtime = 'nodejs';
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
       .eq('id', authResult.payload.userId)
       .single();
 
-    if (!user || (user.role !== 'ADMIN' && user.role !== 'MANAGER')) {
+    if (!user || !(await canWithGrant(authResult.payload.userId, user.role, ['kpi.bi.view']))) {
       return NextResponse.json({
         success: false,
         error: 'Sem permissão para visualizar métricas BI'

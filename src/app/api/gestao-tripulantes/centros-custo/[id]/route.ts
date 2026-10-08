@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { podeMutarCadastroColaborador } from '@/lib/gestao-tripulantes/colaborador-cadastro-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,6 +61,10 @@ export async function PUT(
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
+    if (!(await podeMutarCadastroColaborador(payload.userId, payload.role))) {
+      return NextResponse.json({ error: 'Acesso negado. Sem permissão para gerenciar o cadastro do DP.' }, { status: 403 });
+    }
+
     const { id } = await context.params;
     const body = await request.json();
 
@@ -100,6 +105,10 @@ export async function DELETE(
     const payload = verifyToken(token);
     if (!payload) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+    }
+
+    if (!(await podeMutarCadastroColaborador(payload.userId, payload.role))) {
+      return NextResponse.json({ error: 'Acesso negado. Sem permissão para gerenciar o cadastro do DP.' }, { status: 403 });
     }
 
     const { id } = await context.params;

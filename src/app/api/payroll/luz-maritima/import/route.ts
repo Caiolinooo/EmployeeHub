@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(request: NextRequest) {
   try {
-    const gate = await garantirNivelPayroll(request, 'edit');
+    const gate = await garantirNivelPayroll(request, 'edit', ['financeiro.folha.import']);
     if (!gate.ok) return gate.error;
 
     const formData = await request.formData();

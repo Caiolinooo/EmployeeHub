@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { authenticateUser } from '@/lib/api-auth';
+import { canWithGrant } from '@/lib/permission-gate';
 
 export const dynamic = 'force-dynamic';
 
@@ -299,7 +300,9 @@ export async function DELETE(request: NextRequest) {
       .select('*')
       .eq('id', postId);
 
-    if (user?.role !== 'admin') {
+    const podeExcluirDeTerceiros =
+      user?.role === 'admin' || (await canWithGrant(user?.id, user?.role, ['social.delete.any'], 'none'));
+    if (!podeExcluirDeTerceiros) {
       query = query.eq('user_id', user?.id);
     }
 

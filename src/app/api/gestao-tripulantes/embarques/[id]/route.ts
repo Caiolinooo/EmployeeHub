@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken, type TokenPayload } from '@/lib/auth';
 import { mapCodigoToDbTipo } from '@/lib/gestao-tripulantes/escala-tipos';
+import { MENSAGEM_ESCALA_NEGADA, podeEditarEscalaGt } from '@/lib/gestao-tripulantes/escala-permissions';
 import { invalidateManScheduleCache } from '@/lib/gestao-tripulantes/man-schedule-cache';
 import { sincronizarDatasEscalaColaborador } from '@/lib/gestao-tripulantes/embarques-datas-sync';
 import {
@@ -38,6 +39,10 @@ export async function PUT(
   try {
     const auth = requireAuth(request);
     if (auth.error) return auth.error;
+
+    if (!(await podeEditarEscalaGt(auth.payload!.userId, auth.payload!.role))) {
+      return NextResponse.json({ error: MENSAGEM_ESCALA_NEGADA }, { status: 403 });
+    }
 
     const { id } = await context.params;
     const body = await request.json();
@@ -258,6 +263,10 @@ export async function DELETE(
   try {
     const auth = requireAuth(request);
     if (auth.error) return auth.error;
+
+    if (!(await podeEditarEscalaGt(auth.payload!.userId, auth.payload!.role))) {
+      return NextResponse.json({ error: MENSAGEM_ESCALA_NEGADA }, { status: 403 });
+    }
 
     const { id } = await context.params;
 

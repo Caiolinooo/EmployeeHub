@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Verificar se é admin
-        if (authResult.role !== 'ADMIN') {
+        if (!(await canWithGrant(authResult.userId, authResult.role, ['wkradar.card.seed'], 'admin'))) {
             return NextResponse.json(
                 { success: false, error: 'Acesso negado. Apenas administradores podem criar o card.' },
                 { status: 403 }

@@ -5,6 +5,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyRequestToken } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { supabaseAdmin } from '@/lib/supabase';
 import { invalidateConfigCache } from '@/lib/ia/client';
 import type { IAConfig, IAConfigPublic } from '@/types/ia';
@@ -77,7 +78,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
-    if (tokenResult.payload.role !== 'ADMIN') {
+    if (!(await canWithGrant(tokenResult.payload.userId, tokenResult.payload.role, ['ia-assistant.config.manage'], 'admin'))) {
       return NextResponse.json({ error: 'Acesso negado. Apenas administradores.' }, { status: 403 });
     }
 

@@ -2,31 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { getEPITypes, createEPIType, updateEPIType, deleteEPIType, getEPITypeById } from '@/services/epiService';
 import { supabaseAdmin } from '@/lib/db';
+import { podeGerenciarEpi } from '@/lib/epi-access';
 
 export const dynamic = 'force-dynamic';
 
 // Helper to check if user has access to manage EPIs
 async function hasEPIAccess(userId: string, role: string): Promise<boolean> {
-    if (role === 'ADMIN' || role === 'MANAGER') return true;
-
-    try {
-        const { data: user, error } = await supabaseAdmin
-            .from('users_unified')
-            .select('access_permissions')
-            .eq('id', userId)
-            .single();
-
-        if (error || !user) return false;
-
-        const permissions = typeof user.access_permissions === 'string'
-            ? JSON.parse(user.access_permissions)
-            : user.access_permissions;
-
-        return !!permissions?.epi;
-    } catch (e) {
-        console.error('Error checking EPI access:', e);
-        return false;
-    }
+    return podeGerenciarEpi(userId, role, 'types.manage');
 }
 
 /**

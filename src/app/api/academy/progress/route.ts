@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { withAcademyAuth } from '@/lib/middleware/academy-auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { generateAndStoreCertificate } from '@/lib/certificates';
 import { baseTemplate, academyCertificateTemplate } from '@/lib/emailTemplates';
 
@@ -28,7 +29,11 @@ export async function GET(request: NextRequest) {
         .eq('id', user.id)
         .single();
 
-      if (userError || !userData || userData.role !== 'ADMIN') {
+      if (
+        userError ||
+        !userData ||
+        !(await canWithGrant(user.id, userData.role, ['academy.progress.view_all'], 'admin'))
+      ) {
         return NextResponse.json({ error: 'Permissão negada' }, { status: 403 });
       }
     }

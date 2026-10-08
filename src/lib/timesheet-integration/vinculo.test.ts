@@ -2,7 +2,10 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   candidatosDoLogin,
+  nomesCompartilhados,
+  phoneKey,
   pickPayroll,
+  podeReassumirLogin,
   resolveVinculoByExternalId,
   resolveVinculoByUser,
   type ColaboradorVinculoRow,
@@ -42,6 +45,7 @@ function store(init: {
   byUser?: ColaboradorVinculoRow | null;
   byId?: ColaboradorVinculoRow | null;
   user?: { id: string; email: string | null; tax_id: string | null } | null;
+  users?: Record<string, { id: string; email: string | null; tax_id: string | null; phone_number?: string | null; first_name?: string | null; last_name?: string | null }>;
   candidatos?: ColaboradorVinculoRow[];
   map?: { tsEmployeeId: string; empresaId: string } | null;
   empresa?: boolean;
@@ -64,7 +68,8 @@ function store(init: {
     async colaboradorById() {
       return init.byId ?? null;
     },
-    async userById() {
+    async userById(userId: string) {
+      if (init.users) return init.users[userId] ?? null;
       return init.user === undefined ? null : init.user;
     },
     async candidatos() {
@@ -73,6 +78,11 @@ function store(init: {
     async setUserIdIfEmpty(colaboradorId, userId) {
       userWrites.push(`${colaboradorId}:${userId}`);
       byUser = colab({ ...(init.candidatos?.[0] || colab()), user_id: userId });
+      return true;
+    },
+    async setUserIdFrom(colaboradorId, fromUserId, toUserId) {
+      userWrites.push(`${colaboradorId}:${fromUserId}>${toUserId}`);
+      byUser = colab({ ...(init.candidatos?.[0] || colab()), user_id: toUserId });
       return true;
     },
     async peopleMap() {
@@ -100,6 +110,44 @@ function store(init: {
     },
   };
 }
+
+describe('phoneKey / podeReassumirLogin', () => {
+  it('telefone com 55 e máscara caem nos mesmos 11 dígitos', () => {
+    assert.equal(phoneKey('+55 22 99999-0000'), '22999990000');
+    assert.equal(phoneKey('22 99999-0000'), '22999990000');
+  });
+
+  it('dois nomes em comum liberam a troca; um nome não', () => {
+    assert.equal(nomesCompartilhados('Joao Silva', 'JOAO SILVA SOUZA'), 2);
+    const pessoal = '44444444-4444-4444-4444-444444444444';
+    const base = {
+      id: USER,
+      email: 'joao.silva@groupabz.com',
+      tax_id: null,
+      phone_number: '+5522999990000',
+      first_name: 'Joao',
+      last_name: 'Silva',
+    };
+    const row = colab({
+      user_id: pessoal,
+      email: 'joao@gmail.com',
+      telefone: '22 99999-0000',
+      nome_completo: 'JOAO SILVA SOUZA',
+    });
+    assert.equal(
+      podeReassumirLogin(base, row, { id: pessoal, email: 'joao@gmail.com', tax_id: null }),
+      true,
+    );
+    assert.equal(
+      podeReassumirLogin(
+        base,
+        { ...row, nome_completo: 'MARIA OLIVEIRA' },
+        { id: pessoal, email: 'joao@gmail.com', tax_id: null },
+      ),
+      false,
+    );
+  });
+});
 
 describe('candidatosDoLogin / pickPayroll', () => {
   it('ignora colaborador já ligado a outro login', () => {
@@ -178,6 +226,64 @@ describe('resolveVinculoByUser', () => {
       USER,
     );
     assert.equal(r.motivo, 'sem_folha');
+  });
+
+  it('telefone único no login corporativo reassumir o elo do e-mail pessoal', async () => {
+    const pessoal = '44444444-4444-4444-4444-444444444444';
+    const row = colab({
+      user_id: pessoal,
+      email: 'joao@gmail.com',
+      telefone: '22 99999-0000',
+      nome_completo: 'JOAO SILVA SOUZA',
+    });
+    const s = store({
+      byUser: null,
+      users: {
+        [USER]: {
+          id: USER,
+          email: 'joao.silva@groupabz.com',
+          tax_id: null,
+          phone_number: '+5522999990000',
+          first_name: 'Joao',
+          last_name: 'Silva',
+        },
+        [pessoal]: { id: pessoal, email: 'joao@gmail.com', tax_id: null },
+      },
+      candidatos: [row],
+      payrollGt: payroll(),
+    });
+    const r = await resolveVinculoByUser(s, USER);
+    assert.equal(r.completo, true);
+    assert.deepEqual(s.userWrites, [`${GT}:${pessoal}>${USER}`]);
+    assert.equal(r.colaborador?.user_id, USER);
+  });
+
+  it('telefone de outro nome não troca o user_id', async () => {
+    const pessoal = '44444444-4444-4444-4444-444444444444';
+    const row = colab({
+      user_id: pessoal,
+      email: 'maria@gmail.com',
+      telefone: '22 99999-0000',
+      nome_completo: 'MARIA OLIVEIRA',
+    });
+    const s = store({
+      byUser: null,
+      users: {
+        [USER]: {
+          id: USER,
+          email: 'joao.silva@groupabz.com',
+          tax_id: null,
+          phone_number: '+5522999990000',
+          first_name: 'Joao',
+          last_name: 'Silva',
+        },
+        [pessoal]: { id: pessoal, email: 'maria@gmail.com', tax_id: null },
+      },
+      candidatos: [row],
+    });
+    const r = await resolveVinculoByUser(s, USER);
+    assert.equal(r.motivo, 'sem_colaborador');
+    assert.equal(s.userWrites.length, 0);
   });
 
   it('flag off → flag_inativa', async () => {

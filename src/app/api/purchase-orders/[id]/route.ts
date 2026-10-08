@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { buildAppUrl } from '@/lib/app-url';
 
 export const dynamic = 'force-dynamic';
@@ -380,7 +381,7 @@ export async function DELETE(request: NextRequest, props: { params: Promise<{ id
         const role = payload.role?.toUpperCase() || 'USER';
 
         // Only Admins can delete
-        if (role !== 'ADMIN') {
+        if (!(await canWithGrant(payload.userId, role, ['compras.delete'], 'admin'))) {
             return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
         }
 

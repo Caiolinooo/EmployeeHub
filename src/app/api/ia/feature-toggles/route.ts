@@ -4,6 +4,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyRequestToken } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getAllFeatureToggles, updateFeatureToggle } from '@/lib/ia/agent-service';
 
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     const userId = tokenResult.payload.userId;
     const { data: profile } = await supabaseAdmin.from('users_unified').select('role').eq('id', userId).single();
 
-    if (profile?.role !== 'ADMIN') {
+    if (!profile || !(await canWithGrant(userId, profile.role, ['ia-assistant.feature_toggles.manage'], 'admin'))) {
       return NextResponse.json({ error: 'Acesso restrito a administradores' }, { status: 403 });
     }
 
@@ -47,7 +48,7 @@ export async function PUT(request: NextRequest) {
     const userId = tokenResult.payload.userId;
     const { data: profile } = await supabaseAdmin.from('users_unified').select('role').eq('id', userId).single();
 
-    if (profile?.role !== 'ADMIN') {
+    if (!profile || !(await canWithGrant(userId, profile.role, ['ia-assistant.feature_toggles.manage'], 'admin'))) {
       return NextResponse.json({ error: 'Acesso restrito a administradores' }, { status: 403 });
     }
 

@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { buscarASOsPendentes } from '@/lib/gestao-tripulantes/poliweb-scraper';
 import { importarEProcessarASOs, listarASOsPendentesRevisao } from '@/lib/gestao-tripulantes/poliweb-service';
+import { filtrarPorColaboradorPermitido } from '@/lib/gestao-tripulantes/empresa-acesso';
+import { canWithGrant } from '@/lib/permission-gate';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
+
+const SYNC_GRANTS = ['gestao-tripulantes.poliweb.scrape', 'gestao-tripulantes.admin'] as const;
 
 function asosPayload(
   data: unknown[],
@@ -39,8 +43,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
-    const sync = request.nextUrl.searchParams.get('sync') === '1';
-    let warning: string | undefined;
+    const user = { id: payload.userId, role: payload.role };
+    const pendentesVisiveis = async () =>
+      filtrarPorColaboradorPermitido(user, await listarASOsPendentesRevisao(), (aso) => aso.colaborador_id);
+    const cronSecret = process.env.CRON_SECRET;
+    const syncPedido = request.nextUrl.searchParams.get('sync') === '1';
+    const sync =
+      syncPedido &&
+      ((!!cronSecret && request.headers.get('x-vercel-cron-secret') === cronSecret) ||
+        (await canWithGrant(user.id, user.role, SYNC_GRANTS)));
+    let warning: string | undefined =
+      syncPedido && !sync ? 'Sem permissão para sincronizar o PoliWeb; exibindo os ASOs já importados.' : undefined;
 
     if (sync) {
       const result = await buscarASOsPendentes();
@@ -50,7 +63,7 @@ export async function GET(request: NextRequest) {
           result.error?.includes('habilitado') ||
           result.error?.includes('Credenciais');
         warning = result.error || 'Erro ao buscar ASOs pendentes';
-        const pending = await listarASOsPendentesRevisao();
+        const pending = await pendentesVisiveis();
         return asosPayload(pending, {
           ok: false,
           warning,
@@ -68,7 +81,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const pending = await listarASOsPendentesRevisao();
+    const pending = await pendentesVisiveis();
     return asosPayload(pending, {
       ok: true,
       warning,

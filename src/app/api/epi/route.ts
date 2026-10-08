@@ -9,31 +9,13 @@ import {
 } from '@/services/epiService';
 import { EPICreateRequest, EPIUpdateRequest } from '@/types/epi';
 import { supabaseAdmin } from '@/lib/db';
+import { podeGerenciarEpi } from '@/lib/epi-access';
 
 export const dynamic = 'force-dynamic';
 
 // Helper to check if user has access to manage EPIs
-async function hasEPIAccess(userId: string, role: string): Promise<boolean> {
-    if (role === 'ADMIN' || role === 'MANAGER') return true;
-
-    try {
-        const { data: user, error } = await supabaseAdmin
-            .from('users_unified')
-            .select('access_permissions')
-            .eq('id', userId)
-            .single();
-
-        if (error || !user) return false;
-
-        const permissions = typeof user.access_permissions === 'string'
-            ? JSON.parse(user.access_permissions)
-            : user.access_permissions;
-
-        return !!permissions?.epi;
-    } catch (e) {
-        console.error('Error checking EPI access:', e);
-        return false;
-    }
+async function hasEPIAccess(userId: string, role: string, acao: string): Promise<boolean> {
+    return podeGerenciarEpi(userId, role, acao);
 }
 
 /**
@@ -66,7 +48,7 @@ export async function GET(request: NextRequest) {
         const userRole = payload.role || 'USER';
 
         // Check for specific EPI access permission
-        const canManage = await hasEPIAccess(userId, userRole);
+        const canManage = await hasEPIAccess(userId, userRole, 'view_all');
 
         const searchParams = request.nextUrl.searchParams;
         const status = searchParams.get('status') || undefined;
@@ -181,7 +163,7 @@ export async function PUT(request: NextRequest) {
         const userRole = payload.role || 'USER';
 
         // Check for specific EPI access permission
-        const canManage = await hasEPIAccess(userId, userRole);
+        const canManage = await hasEPIAccess(userId, userRole, 'deliver');
 
         if (!canManage) {
             return NextResponse.json({ error: 'Permissão negada' }, { status: 403 });
@@ -239,7 +221,7 @@ export async function DELETE(request: NextRequest) {
         const userRole = payload.role || 'USER';
 
         // Check for specific EPI access permission
-        const isAdmin = await hasEPIAccess(userId, userRole);
+        const isAdmin = await hasEPIAccess(userId, userRole, 'delete');
 
         const searchParams = request.nextUrl.searchParams;
         const id = searchParams.get('id');

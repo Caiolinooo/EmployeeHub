@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { authenticateUser, checkPermissions } from '@/lib/api-auth';
+import { authenticateUser } from '@/lib/api-auth';
 import { normalizeCpf } from '@/lib/utils/identity';
+import { canMutateEnvelope, denyUnlessCan, isOwnSolicitacao, loadContractAccess } from '@/lib/contracts/view-access';
 
 
 export const dynamic = 'force-dynamic';
@@ -16,11 +17,14 @@ export async function POST(
         if (authError) return authError;
         if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
 
-        if (!checkPermissions(user, 'contracts_manager')) {
-            return NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
-        }
+        const access = await loadContractAccess(user);
+        const denied = denyUnlessCan(access, 'signers.manage');
+        if (denied) return denied;
 
         const { id: envelopeId } = await params;
+        if (!(await canMutateEnvelope(user, access, envelopeId))) {
+            return NextResponse.json({ error: 'Envelope não encontrado' }, { status: 404 });
+        }
         const body = await request.json();
         const { 
             documento_id, 
@@ -140,6 +144,11 @@ export async function GET(
 
         const { id: documentoId } = await params;
 
+        const access = await loadContractAccess(user);
+        if (access.scope === 'none') {
+            return NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
+        }
+
         const { data, error } = await supabaseAdmin
             .from('solicitacoes_assinatura')
             .select(`
@@ -171,7 +180,12 @@ export async function GET(
             return NextResponse.json({ error: 'Erro ao buscar solicitações' }, { status: 500 });
         }
 
-        return NextResponse.json({ success: true, solicitacoes: data || [] });
+        // Sem view_all: só as próprias; token_acesso (assina como externo) só para gestores
+        const rows = (data || [])
+            .filter((s) => access.scope === 'all' || isOwnSolicitacao(user, s))
+            .map((s) => (access.can['signers.manage'] ? s : { ...s, token_acesso: null }));
+
+        return NextResponse.json({ success: true, solicitacoes: rows });
     } catch (error) {
         console.error('Erro em GET /api/contracts/[id]/assign:', error);
         return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
@@ -188,8 +202,13 @@ export async function DELETE(
         if (authError) return authError;
         if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
 
-        if (!checkPermissions(user, 'contracts_manager')) {
-            return NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
+        const access = await loadContractAccess(user);
+        const denied = denyUnlessCan(access, 'cancel', 'signers.manage');
+        if (denied) return denied;
+
+        const { id: envelopeId } = await params;
+        if (!(await canMutateEnvelope(user, access, envelopeId))) {
+            return NextResponse.json({ error: 'Envelope não encontrado' }, { status: 404 });
         }
 
         const { searchParams } = new URL(request.url);
@@ -198,11 +217,12 @@ export async function DELETE(
             return NextResponse.json({ error: 'solicitacao_id é obrigatório' }, { status: 400 });
         }
 
-        // Only delete PENDING assignments
+        // Only delete PENDING assignments of this envelope
         const { error } = await supabaseAdmin
             .from('solicitacoes_assinatura')
             .delete()
             .eq('id', solicitacaoId)
+            .eq('envelope_id', envelopeId)
             .eq('status', 'PENDING');
 
         if (error) {

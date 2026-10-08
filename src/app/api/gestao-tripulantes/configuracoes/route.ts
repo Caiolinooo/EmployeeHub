@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { userHasGrant } from '@/lib/effective-permissions-server';
+import { GT_CONFIG_GRANT } from '@/lib/gestao-tripulantes/gt-route-auth';
 import { saveAsoAgendamentoConfig } from '@/lib/gestao-tripulantes/aso-agendamento-config';
 
 export const dynamic = 'force-dynamic';
@@ -60,6 +62,12 @@ export async function PUT(request: NextRequest) {
     const payload = verifyToken(token);
     if (!payload) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+    }
+
+    const role = String(payload.role || '').toUpperCase();
+    const gestor = role === 'ADMIN' || role === 'MANAGER' || role === 'SUPERADMIN';
+    if (!gestor && !(await userHasGrant(payload.userId, ['gestao-tripulantes.admin', GT_CONFIG_GRANT]))) {
+      return NextResponse.json({ error: 'Acesso negado. Configuração do módulo exige gestor ou GT admin.' }, { status: 403 });
     }
 
     const body = await request.json();

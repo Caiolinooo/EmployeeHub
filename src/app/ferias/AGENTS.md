@@ -49,9 +49,11 @@ Módulo de solicitações de férias (`/ferias`): criação, aprovação por set
 
 ### RBAC
 
-- USER: próprias solicitações
-- Líder/gerente de setor: fila + histórico do(s) setor(es)
+- USER: próprias solicitações e PDF pelo caminho do dono (`payload.userId === userId` / `req.user_id`), sem depender de ACL
+- Líder/gerente de setor (`leave_sector_configs`): fila + histórico do(s) setor(es) e PDF dos liderados, mesmo sendo USER
 - ADMIN / ACL `ferias:admin|manage|read`: todas; PDF para owner, approver do setor, admin/ACL
+- `ferias.read` = ler férias/PDF de **qualquer** colaborador. Default STAFF (catálogo + `role_acl_permissions`); nunca semear para USER (migration `20261008_000015` removeu a linha USER). Grant direto em `user_acl_permissions` continua valendo
+- Grants do catálogo (somam, nunca removem): `ferias.view_all` (ver de outro usuário + lista admin), `ferias.pdf_all` (PDF de terceiros), `ferias.reject` (só ação REJECT em leave-approvals). Default ADMIN/MANAGER, que já passavam pela ACL `ferias.read`/`approve` semeada
 
 ### IA Companion
 
@@ -66,6 +68,8 @@ Módulo de solicitações de férias (`/ferias`): criação, aprovação por set
 - Antecedência: `leaveConfig` / `/api/leave/config`
 
 ## Verification
+
+- `DOTENV_CONFIG_PATH=.env.local npx tsx -r dotenv/config --test src/app/api/leave/leave-access.test.ts` (banco real, só leitura): sem token 401; dono lista + baixa PDF; USER estranho 403 em lista e PDF; ADMIN lista; líder USER do setor baixa PDF do liderado
 
 - `/ferias` sem assinatura → banner + soft-gate em Nova Solicitação / Baixar PDF; CTA abre SignatureModal global; dismiss em sessionStorage libera o fluxo
 - `/ferias` → filtrar ano passado → vê aprovadas/gozadas

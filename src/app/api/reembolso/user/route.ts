@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 import { extractTokenFromHeader, verifyToken, TokenPayload } from '@/lib/auth'; // Importar TokenPayload
+import { canWithGrant } from '@/lib/permission-gate';
 
 // Force this route to be dynamic
 export const dynamic = 'force-dynamic';
@@ -109,7 +110,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Combinar verificação: Admin, Manager por role, ou permissão específica de feature
-    const canViewAllReimbursements = isAdmin || isManager || hasApprovalPermission;
+    const canViewAllReimbursements =
+      isAdmin ||
+      isManager ||
+      hasApprovalPermission ||
+      (await canWithGrant(userId, userRole, ['reimbursement.view_all', 'reimbursement.approve']));
     console.log('Pode visualizar todos os reembolsos:', canViewAllReimbursements, {
       isAdmin,
       isManager,

@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.97.1 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.98.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,13 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.98.0)
+
+- **Departamento do colaborador**: escolha na lista da folha. Salvar não duplica mais o código (`38 - ABZ - MATRIX`).
+- **Documentos pessoais**: só ADMIN, MANAGER, DP/RH ou quem tem a permissão de ver todos enxerga documentos de outros colaboradores. Desmarcar a permissão tira o acesso.
+- **Permissões**: o catálogo de ACL cobre as ações dos módulos, e desmarcar no usuário vence o padrão do papel e do setor.
+- **Contratos e rotas abertas**: envelope e PDF só para quem é parte. Calendário, notícias e notificações exigem login. Férias de terceiros deixam de aparecer para todo usuário.
 
 ## Nesta versão (5.97.1)
 

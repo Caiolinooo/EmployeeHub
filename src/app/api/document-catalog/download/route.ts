@@ -12,6 +12,11 @@ import type { CatalogViewer } from '@/lib/document-catalog/permissions';
 import type { DocumentCatalogSourceId } from '@/lib/document-catalog/types';
 import { isQhseRelatedText } from '@/lib/document-catalog/qhse';
 import { usuarioPodeVerDocumentoGt } from '@/lib/gestao-tripulantes/empresa-acesso';
+import {
+  MENSAGEM_DOCUMENTOS_RESTRITOS,
+  escopoVeUsuario,
+  resolverEscopoDocumentosGt,
+} from '@/lib/gestao-tripulantes/documento-escopo';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,6 +55,11 @@ export async function GET(request: NextRequest) {
       role: user.role,
       access_permissions: user.access_permissions,
     };
+    const escopo = await resolverEscopoDocumentosGt(viewer.id, viewer.role);
+    const negadoPorEscopo = (subjectUserId: string | null | undefined) =>
+      !escopoVeUsuario(escopo, viewer.id, subjectUserId)
+        ? NextResponse.json({ error: MENSAGEM_DOCUMENTOS_RESTRITOS }, { status: 403 })
+        : null;
 
     switch (source) {
       case 'epi': {
@@ -66,6 +76,8 @@ export async function GET(request: NextRequest) {
           if (!canDownloadCatalogSource(viewer, source, true, ownerId)) {
             return NextResponse.json({ error: 'Permissão negada' }, { status: 403 });
           }
+          const negadoReg = negadoPorEscopo(ownerId);
+          if (negadoReg) return negadoReg;
           const redirected = await redirectIfHttp(reg?.signature_url);
           if (redirected) return redirected;
           return NextResponse.json({ error: 'Arquivo não disponível' }, { status: 404 });
@@ -73,6 +85,8 @@ export async function GET(request: NextRequest) {
         if (!canDownloadCatalogSource(viewer, source, true, ownerId)) {
           return NextResponse.json({ error: 'Permissão negada' }, { status: 403 });
         }
+        const negadoFicha = negadoPorEscopo(ownerId);
+        if (negadoFicha) return negadoFicha;
         const identity = await resolveCollaboratorIdentity({ userId: ownerId });
         const regs = await getUserEPIRegistrations(ownerId);
         const signed = regs.find((r) => r.signature_url);
@@ -96,7 +110,7 @@ export async function GET(request: NextRequest) {
         if (!doc) return NextResponse.json({ error: 'Documento não encontrado' }, { status: 404 });
         // ACL por empresa (GT)
         if (!(await usuarioPodeVerDocumentoGt({ id: viewer.id, role: viewer.role }, doc.id))) {
-          return NextResponse.json({ error: 'Sem acesso a este documento (empresa restrita)' }, { status: 403 });
+          return NextResponse.json({ error: 'Sem acesso a este documento (escopo ou empresa restrita)' }, { status: 403 });
         }
         const identity = await resolveCollaboratorIdentity({ colaboradorId: doc.colaborador_id });
         if (!canDownloadCatalogSource(viewer, source, false, identity?.userId || null)) {
@@ -134,6 +148,8 @@ export async function GET(request: NextRequest) {
         if (!canDownloadCatalogSource(viewer, source, qhse, row.user_id)) {
           return NextResponse.json({ error: 'Permissão negada' }, { status: 403 });
         }
+        const negadoLista = negadoPorEscopo(row.user_id);
+        if (negadoLista) return negadoLista;
         const redirected = await redirectIfHttp(row.assinatura_url);
         if (redirected) return redirected;
         return NextResponse.json({ error: 'Assinatura não disponível' }, { status: 404 });

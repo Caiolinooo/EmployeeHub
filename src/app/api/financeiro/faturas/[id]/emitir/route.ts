@@ -15,7 +15,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const gate = await garantirNivelFinanceiro(request, 'edit');
+    const gate = await garantirNivelFinanceiro(request, 'edit', ['financeiro.faturas.create']);
     if (!gate.ok) return gate.error;
     const { id } = await params;
     const fatura = await emitirFatura(id, await atorDeUserId(gate.user.userId));

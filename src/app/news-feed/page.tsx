@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import MainLayout from '@/components/Layout/MainLayout';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { fetchWithToken } from '@/lib/tokenStorage';
 import {
   PlusIcon,
   EllipsisHorizontalIcon,
@@ -161,13 +162,12 @@ const NewsFeedPage: React.FC = () => {
     if (!user?.id || !newComment.trim()) return;
 
     try {
-      const response = await fetch(`/api/news/${newsId}/comments`, {
+      const response = await fetchWithToken(`/api/news/${newsId}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          userId: user.id,
           content: newComment.trim()
         })
       });

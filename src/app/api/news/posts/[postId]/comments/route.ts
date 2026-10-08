@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { requireAuth } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -102,19 +103,25 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ postId: string }> }
 ) {
+  const { user, error: authError } = await requireAuth(request);
+  if (authError) return authError;
   try {
     const { postId } = await params;
     const body = await request.json();
-    const { user_id, content, parent_id } = body;
+    const { content, parent_id } = body;
 
-    if (!user_id || !content) {
+    if (body.user_id && body.user_id !== user.id) {
+      return NextResponse.json({ error: 'user_id diverge do usuário autenticado' }, { status: 403 });
+    }
+
+    if (!content) {
       return NextResponse.json(
-        { error: 'user_id e content são obrigatórios' },
+        { error: 'content é obrigatório' },
         { status: 400 }
       );
     }
 
-    console.log(`🔄 API News Comments - Criando comentário do usuário ${user_id} no post ${postId}`);
+    console.log(`🔄 API News Comments - Criando comentário do usuário ${user.id} no post ${postId}`);
 
     // Verificar se o post existe
     const { data: post, error: postError } = await supabaseAdmin
@@ -126,20 +133,6 @@ export async function POST(
     if (postError || !post) {
       return NextResponse.json(
         { error: 'Post não encontrado' },
-        { status: 404 }
-      );
-    }
-
-    // Verificar se o usuário existe
-    const { data: user, error: userError } = await supabaseAdmin
-      .from('users_unified')
-      .select('id, first_name, last_name, email, role')
-      .eq('id', user_id)
-      .single();
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Usuário não encontrado' },
         { status: 404 }
       );
     }
@@ -164,7 +157,7 @@ export async function POST(
     // Criar o comentário
     const commentData = {
       post_id: postId,
-      user_id,
+      user_id: user.id,
       parent_id: parent_id || null,
       content,
       edited: false,

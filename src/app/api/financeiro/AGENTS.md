@@ -21,7 +21,10 @@ NFS-e (RPS transacional), bancos (integrações/contas/catálogo), cobranças
 
 - `export const dynamic = 'force-dynamic'`
 - Gate em TODA rota: `garantirNivelFinanceiro(request, 'view'|'edit'|'admin')`;
-  o `NextResponse` do gate é repassado direto (401 sem/inválido token, 403 sem nível)
+  o `NextResponse` do gate é repassado direto (401 sem/inválido token, 403 sem nível).
+  3º arg opcional = grants `financeiro.*` de `module-grants.ts` (ex. `faturas.create`, `nfse.cancel`,
+  `bancos.manage`); só somam a quem passa no nível (ADMIN não precisa). Folha usa o mesmo
+  formato em `garantirNivelPayroll` (`financeiro.folha.import|export`, `financeiro.rubricas.manage`, `contracheque.view_all`)
 - Resposta `{success:true, data}` / `{success:false, error}`; 400 payload inválido,
   404 ausente, 409 estado/conflito (ex.: `fatura_moeda_invalida`, `fatura_status_invalido`)
 - `FinanceiroHttpError` do service é mapeado por `finErro` (status+mensagem);

@@ -132,3 +132,6 @@ scripts/output.txt
 scripts/_tmp_*
 wk-export/
 wk-*.csv
+
+# Build temp (TEMP/TMP override p/ npm run build no Windows)
+.build-tmp/

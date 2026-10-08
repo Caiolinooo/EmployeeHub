@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { isAdminFromRequest } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +17,7 @@ export async function GET(
     try {
         // Verify admin access
         const adminCheck = await isAdminFromRequest(request);
-        if (!adminCheck.isAdmin) {
+        if (!adminCheck.isAdmin && !(await canWithGrant(adminCheck.userId, null, ['news.viewers.view'], 'none'))) {
             return NextResponse.json(
                 { success: false, error: 'Acesso não autorizado' },
                 { status: 403 }

@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { authenticateUser, checkPermissions } from '@/lib/api-auth';
+import { authenticateUser } from '@/lib/api-auth';
+import {
+    canMutateEnvelope,
+    denyUnlessCan,
+    getOwnEnvelopeIds,
+    loadContractAccess,
+} from '@/lib/contracts/view-access';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,13 +20,21 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url);
         const status = searchParams.get('status');
         const search = searchParams.get('search');
-        const limit = parseInt(searchParams.get('limit') || '50');
-        const offset = parseInt(searchParams.get('offset') || '0');
+        const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '50') || 50, 1), 200);
+        const offset = Math.max(parseInt(searchParams.get('offset') || '0') || 0, 0);
         const id = searchParams.get('id');
 
-        const isManager = checkPermissions(user, 'contracts_manager');
+        const access = await loadContractAccess(user);
+        const { scope, can } = access;
+        if (scope === 'none') {
+            return NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
+        }
 
         if (id) {
+            if (scope !== 'all' && !(await getOwnEnvelopeIds(user)).includes(id)) {
+                return NextResponse.json({ error: 'Envelope não encontrado' }, { status: 404 });
+            }
+
             // Single Envelope fetch
             const { data: envelope, error: envError } = await supabaseAdmin
                 .from('vw_envelopes_completo')
@@ -86,8 +100,13 @@ export async function GET(request: NextRequest) {
                 let finalPathToSign = doc.arquivo_url;
                 
                 // If it was signed, prioritize the signed path
-                if (lastAudit && lastAudit.arquivo_assinado_url) {
-                    finalPathToSign = lastAudit.arquivo_assinado_url;
+                const isSigned = !!lastAudit?.arquivo_assinado_url;
+                if (isSigned) {
+                    finalPathToSign = lastAudit!.arquivo_assinado_url;
+                }
+
+                if (!(isSigned ? can.download_signed : can.download)) {
+                    return { ...doc, arquivo_url: null };
                 }
 
                 let storagePath = finalPathToSign;
@@ -127,24 +146,37 @@ export async function GET(request: NextRequest) {
                 }
             }));
 
+            // token_acesso permite assinar como signatário externo: só gestores recebem
+            const solicitacoes = (assignments || []).map((s) => (can['signers.manage'] ? s : { ...s, token_acesso: null }));
+
             return NextResponse.json({
                 success: true,
+                scope,
+                can,
                 envelope: envelope,
                 // Para compatibilidade com o frontend legado, se for necessário:
                 documento: processedDocuments[0] || null, 
                 documentos: processedDocuments,
-                solicitacoes: assignments || [],
+                solicitacoes,
             });
         }
 
         // List Envelopes
-        if (isManager) {
+        {
             let query = supabaseAdmin
                 .from('vw_envelopes_completo')
                 .select('*')
                 .neq('status', 'DELETED')
                 .order('data_criacao', { ascending: false })
                 .range(offset, offset + limit - 1);
+
+            if (scope !== 'all') {
+                const ownIds = await getOwnEnvelopeIds(user);
+                if (ownIds.length === 0) {
+                    return NextResponse.json({ success: true, scope, can, documentos: [] });
+                }
+                query = query.in('id', ownIds);
+            }
 
             if (status === 'PENDING') {
                 query = query.gt('total_pendentes', 0);
@@ -162,43 +194,7 @@ export async function GET(request: NextRequest) {
                 return NextResponse.json({ error: 'Erro ao buscar envelopes' }, { status: 500 });
             }
 
-            return NextResponse.json({ success: true, documentos: data || [] });
-        } else {
-            // Collaborators see only their assigned documents
-            let query = supabaseAdmin
-                .from('solicitacoes_assinatura')
-                .select(`
-                    id,
-                    status,
-                    pagina_assinatura,
-                    posicao_x,
-                    posicao_y,
-                    created_at,
-                    documento:documentos_trabalhistas!documento_id (
-                        id,
-                        titulo,
-                        descricao,
-                        arquivo_url,
-                        arquivo_nome,
-                        data_criacao
-                    )
-                `)
-                .eq('colaborador_id', user.id)
-                .order('created_at', { ascending: false })
-                .range(offset, offset + limit - 1);
-
-            if (status) {
-                query = query.eq('status', status);
-            }
-
-            const { data, error } = await query;
-
-            if (error) {
-                console.error('Erro ao buscar atribuições:', error);
-                return NextResponse.json({ error: 'Erro ao buscar documentos' }, { status: 500 });
-            }
-
-            return NextResponse.json({ success: true, documentos: data || [] });
+            return NextResponse.json({ success: true, scope, can, documentos: data || [] });
         }
     } catch (error) {
         console.error('Erro em GET /api/contracts:', error);
@@ -213,13 +209,16 @@ export async function DELETE(request: NextRequest) {
         if (authError) return authError;
         if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
 
-        if (!checkPermissions(user, 'contracts_manager')) {
-            return NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
-        }
+        const access = await loadContractAccess(user);
+        const denied = denyUnlessCan(access, 'delete');
+        if (denied) return denied;
 
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
         if (!id) return NextResponse.json({ error: 'ID é obrigatório' }, { status: 400 });
+        if (!(await canMutateEnvelope(user, access, id))) {
+            return NextResponse.json({ error: 'Envelope não encontrado' }, { status: 404 });
+        }
 
         // 1. Locate all documents to extract their file paths
         const { data: docs, error: docsErr } = await supabaseAdmin

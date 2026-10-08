@@ -143,7 +143,8 @@ const NotificationsPage: React.FC = () => {
 
       // Tentar endpoint genérico primeiro, depois academy como fallback
       let response = await fetch(`/api/notifications?user_id=${user.id}&notification_ids=${notificationIds.join(',')}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
 
       // Se falhar, tentar endpoint academy

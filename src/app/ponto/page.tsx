@@ -1,8 +1,18 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { browserSupportsWebAuthn, platformAuthenticatorIsAvailable, startAuthentication } from '@simplewebauthn/browser';
 import MainLayout from '@/components/Layout/MainLayout';
 import { useI18n } from '@/contexts/I18nContext';
+import {
+  acoesExpediente,
+  faseExpediente,
+  formatarMinutos,
+  normalizarHoje,
+  preferirRelogios,
+  resumoHoje,
+  type HojePonto,
+} from '@/lib/timesheet-integration/jornada';
 import { getToken } from '@/lib/tokenStorage';
 import {
   FiClock,
@@ -33,11 +43,16 @@ interface PontoStatus {
   } | null;
 }
 
-interface TodayPunch {
-  date: string;
-  open: boolean;
-  horaIni: string | null;
-  horaFim: string | null;
+function lerHoje(data: unknown): HojePonto | null {
+  if (!data || typeof data !== 'object') return null;
+  const row = data as Record<string, unknown>;
+  if (typeof row.date !== 'string') return null;
+  return normalizarHoje({
+    date: row.date,
+    open: row.open === true,
+    horaIni: typeof row.horaIni === 'string' ? row.horaIni : null,
+    horaFim: typeof row.horaFim === 'string' ? row.horaFim : null,
+  });
 }
 
 const MOTIVO_LABEL: Record<string, string> = {
@@ -61,8 +76,11 @@ export default function PontoPage() {
   const [status, setStatus] = useState<PontoStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [opening, setOpening] = useState(false);
-  const [today, setToday] = useState<TodayPunch | null>(null);
-  const [punching, setPunching] = useState(false);
+  const [today, setToday] = useState<HojePonto | null>(null);
+  const [todayLoaded, setTodayLoaded] = useState(false);
+  const [punching, setPunching] = useState<'in' | 'out' | null>(null);
+  const [webauthnOk, setWebauthnOk] = useState(true);
+  const [platformOk, setPlatformOk] = useState(true);
 
   const authHeaders = useCallback((): HeadersInit => {
     const token = getToken();
@@ -88,7 +106,15 @@ export default function PontoPage() {
           const todayRes = await fetch('/api/pontoflow/punch', { headers: authHeaders() });
           const todayJson = await todayRes.json();
           if (!cancelled && todayRes.ok && todayJson.success) {
-            setToday(todayJson.data as TodayPunch);
+            const hoje = lerHoje(todayJson.data);
+            if (hoje) {
+              setToday(hoje);
+              setTodayLoaded(true);
+            } else {
+              setError(t('ponto.timesheet.loadError', 'Falha ao carregar status do Time Sheet'));
+            }
+          } else if (!cancelled) {
+            setError(todayJson.error || t('ponto.timesheet.loadError', 'Falha ao carregar status do Time Sheet'));
           }
         }
       } catch (err) {
@@ -104,29 +130,63 @@ export default function PontoPage() {
     };
   }, [authHeaders, t]);
 
+  useEffect(() => {
+    let cancelled = false;
+    setWebauthnOk(browserSupportsWebAuthn());
+    platformAuthenticatorIsAvailable()
+      .then((available) => {
+        if (!cancelled) setPlatformOk(available);
+      })
+      .catch(() => {
+        if (!cancelled) setPlatformOk(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const punch = async (kind: 'in' | 'out') => {
-    setPunching(true);
+    setPunching(kind);
     setError(null);
     try {
+      if (!browserSupportsWebAuthn()) {
+        throw new Error(t('ponto.timesheet.biometricUnsupported', 'Este navegador não oferece biometria. O ponto não foi registrado.'));
+      }
+      const optionsRes = await fetch('/api/auth/webauthn/sign/options', {
+        method: 'POST',
+        headers: authHeaders(),
+      });
+      const optionsPayload = await optionsRes.json().catch(() => null);
+      if (!optionsRes.ok) {
+        throw new Error(optionsPayload?.error || t('ponto.timesheet.biometricFailed', 'Falha ao usar biometria. Cadastre Windows Hello ou digital em Perfil → Biometria (Passkeys).'));
+      }
+      let assertion;
+      try {
+        assertion = await startAuthentication({ optionsJSON: optionsPayload });
+      } catch (err) {
+        if (err instanceof Error && err.name === 'NotAllowedError') {
+          throw new Error(t('ponto.timesheet.biometricCancelled', 'Biometria cancelada. O ponto não foi registrado.'));
+        }
+        throw new Error(t('ponto.timesheet.biometricFailed', 'Falha ao usar biometria. Cadastre Windows Hello ou digital em Perfil → Biometria (Passkeys).'));
+      }
       const res = await fetch('/api/pontoflow/punch', {
         method: 'POST',
         headers: authHeaders(),
-        body: JSON.stringify({ kind }),
+        body: JSON.stringify({ kind, assertion }),
       });
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error || 'Não foi possível registrar o ponto');
+      const json = await res.json().catch(() => null);
+      const recebido = lerHoje(json?.data);
+      if (recebido) {
+        setToday((anterior) => (anterior ? preferirRelogios(recebido, anterior) : recebido));
+        setTodayLoaded(true);
       }
-      setToday({
-        date: json.data.date,
-        open: kind === 'in',
-        horaIni: json.data.horaIni ?? null,
-        horaFim: json.data.horaFim ?? null,
-      });
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.error || t('ponto.timesheet.punchError', 'Não foi possível registrar o ponto'));
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Não foi possível registrar o ponto');
+      setError(err instanceof Error ? err.message : t('ponto.timesheet.punchError', 'Não foi possível registrar o ponto'));
     } finally {
-      setPunching(false);
+      setPunching(null);
     }
   };
 
@@ -156,6 +216,18 @@ export default function PontoPage() {
     resumo && typeof resumo.worked_minutes === 'number'
       ? (resumo.worked_minutes / 60).toFixed(1)
       : null;
+  const fase = today ? faseExpediente(today) : 'aguardando_inicio';
+  const acoes = acoesExpediente(fase);
+  const dia = today ? resumoHoje(today) : null;
+  const hojeTexto = !today || (!today.horaIni && !today.horaFim)
+    ? '—'
+    : !today.horaFim
+      ? `${today.horaIni || '—'} (${t('ponto.timesheet.openShift', 'em aberto')})`
+      : `${today.horaIni || '—'} – ${today.horaFim}${
+          dia?.jornada?.lunchApplied
+            ? ` · ${t('ponto.timesheet.lunch', 'Almoço')} 12:00–13:00 · ${dia.jornada.lunchMinutes} min`
+            : ''
+        }${dia?.jornada ? ` · ${t('ponto.timesheet.net', 'líquido')} ${formatarMinutos(dia.jornada.netMinutes)}` : ''}`;
 
   return (
     <MainLayout>
@@ -184,19 +256,34 @@ export default function PontoPage() {
           </div>
         ) : status?.habilitado ? (
           <>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
-                onClick={() => punch(today?.open ? 'out' : 'in')}
-                disabled={punching}
-                className="inline-flex items-center px-6 py-3 bg-abz-blue text-white rounded-lg font-semibold hover:bg-abz-blue-dark transition duration-200 shadow-md text-sm disabled:opacity-50"
+                data-testid="ponto-inicio"
+                onClick={() => punch('in')}
+                disabled={!acoes.inicio || !todayLoaded || punching !== null || !webauthnOk}
+                className="inline-flex items-center px-6 py-3 bg-abz-blue text-white rounded-lg font-semibold hover:bg-abz-blue-dark transition duration-200 shadow-md text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <FiClock className="mr-2" />
-                {punching
-                  ? 'Registrando…'
-                  : today?.open
-                    ? 'Registrar saída'
-                    : 'Registrar entrada'}
+                {punching === 'in'
+                  ? t('ponto.timesheet.punching', 'Aguardando biometria…')
+                  : acoes.inicio
+                    ? t('ponto.timesheet.start', 'Início de expediente')
+                    : t('ponto.timesheet.startDone', 'Início registrado')}
+              </button>
+              <button
+                type="button"
+                data-testid="ponto-fim"
+                onClick={() => punch('out')}
+                disabled={!acoes.fim || !todayLoaded || punching !== null || !webauthnOk}
+                className="inline-flex items-center px-6 py-3 bg-abz-blue text-white rounded-lg font-semibold hover:bg-abz-blue-dark transition duration-200 shadow-md text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <FiClock className="mr-2" />
+                {punching === 'out'
+                  ? t('ponto.timesheet.punching', 'Aguardando biometria…')
+                  : fase === 'encerrado'
+                    ? t('ponto.timesheet.endDone', 'Fim registrado')
+                    : t('ponto.timesheet.end', 'Fim de expediente')}
               </button>
               <button
                 type="button"
@@ -209,25 +296,53 @@ export default function PontoPage() {
                   ? t('ponto.timesheet.opening', 'Abrindo…')
                   : t('ponto.timesheet.open', 'Abrir Time Sheet')}
               </button>
-              {error && (
-                <p className="mt-3 flex items-center gap-2 text-sm text-red-700">
-                  <FiAlertCircle /> {error}
-                </p>
+              <p className="text-sm text-gray-600" data-testid="ponto-hoje">
+                {t('ponto.timesheet.today', 'Hoje:')}{' '}
+                <span className="font-medium text-gray-900">{hojeTexto}</span>
+              </p>
+            </div>
+            <p className="text-xs text-gray-500">
+              {t(
+                'ponto.timesheet.biometricHint',
+                'A biometria (Windows Hello ou digital) é obrigatória para marcar o início e o fim. O almoço de 12:00 às 13:00 é calculado automaticamente.',
               )}
-              {today && (
-                <p className="mt-3 text-xs text-gray-500">
-                  Hoje: {today.horaIni || '—'}
-                  {today.horaFim ? ` – ${today.horaFim}` : today.open ? ' (em aberto)' : ''}
-                </p>
-              )}
-              {(status.syncStatus === 'pending' || status.syncStatus === 'error') && (
+            </p>
+            {fase === 'encerrado' && (
+              <p className="text-sm text-green-700 flex items-center gap-2">
+                <FiCheckCircle /> {t('ponto.timesheet.closed', 'Expediente encerrado')}
+              </p>
+            )}
+            {dia?.avisoMenosDeOitoHoras && dia.jornada && (
+              <div
+                role="status"
+                data-testid="ponto-aviso-8h"
+                className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"
+              >
+                <FiAlertCircle className="mt-0.5 shrink-0" />
+                <span>
+                  {dia.jornada.lunchApplied
+                    ? t('ponto.timesheet.belowEightLunch', { hours: formatarMinutos(dia.jornada.netMinutes) }, 'Aviso: o expediente de hoje tem {hours} líquidas, menos de 8 horas. O almoço de 12:00 às 13:00 já foi descontado.')
+                    : t('ponto.timesheet.belowEight', { hours: formatarMinutos(dia.jornada.netMinutes) }, 'Aviso: o expediente de hoje tem {hours} líquidas, menos de 8 horas.')}
+                </span>
+              </div>
+            )}
+            {!platformOk && webauthnOk && (
+              <p className="text-xs text-amber-800">
+                {t('ponto.timesheet.noPlatform', 'Este aparelho não confirmou biometria de dispositivo. O ponto só entra se a autenticação biométrica concluir.')}
+              </p>
+            )}
+            {error && (
+              <p className="flex items-center gap-2 text-sm text-red-700">
+                <FiAlertCircle /> {error}
+              </p>
+            )}
+            {(status.syncStatus === 'pending' || status.syncStatus === 'error') && (
                 <p className="mt-3 text-xs text-gray-500">
                   {status.syncStatus === 'pending'
                     ? t('ponto.timesheet.syncPending', 'Seu cadastro está sendo sincronizado; se o acesso falhar, tente novamente em instantes.')
                     : t('ponto.timesheet.syncError', 'Há uma pendência na sincronização do seu cadastro. Avise o DP se o acesso falhar.')}
                 </p>
               )}
-            </div>
 
             {resumo && (
               <div className="border-t pt-6">

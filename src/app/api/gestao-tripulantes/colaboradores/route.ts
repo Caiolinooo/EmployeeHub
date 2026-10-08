@@ -24,6 +24,8 @@ import {
 } from '@/lib/gestao-tripulantes/documento-historico';
 import { montarPayloadCadastro } from '@/lib/gestao-tripulantes/colaborador-cadastro';
 import { syncColaboradorAfterSave } from '@/lib/timesheet-integration/outbox';
+import { aplicarDepartamentoCanonico } from '@/lib/gestao-tripulantes/departamento-canonico';
+import { vincularUsuarioUnico } from '@/lib/gestao-tripulantes/vinculo-usuario';
 import {
   MENSAGEM_CADASTRO_NEGADO,
   podeMutarCadastroColaborador,
@@ -33,6 +35,7 @@ import {
   getEmpresasRestricaoUsuario,
   roleBypassEmpresa,
 } from '@/lib/gestao-tripulantes/empresa-acesso';
+import { escopoVeColaborador, resolverEscopoDocumentosGt } from '@/lib/gestao-tripulantes/documento-escopo';
 
 const DOC_PENDENCY_SELECT =
   'id, colaborador_id, tipo_documento, subtipo, titulo, descricao, origem, numero_documento, numero_rastreio, data_emissao, data_validade, status_validacao, created_at';
@@ -158,11 +161,12 @@ export async function GET(request: NextRequest) {
       cpfMatchId = found.id;
     }
 
-    const [empresaId, embarcacaoId, cargoId, centroId] = await Promise.all([
+    const [empresaId, embarcacaoId, cargoId, centroId, escopo] = await Promise.all([
       empresa ? resolveNomeToId('gt_empresas', empresa) : Promise.resolve(null),
       embarcacao ? resolveNomeToId('gt_embarcacoes', embarcacao) : Promise.resolve(null),
       cargo ? resolveNomeToId('gt_cargos', cargo) : Promise.resolve(null),
       centroCusto ? resolveNomeToId('gt_centros_custo', centroCusto) : Promise.resolve(null),
+      resolverEscopoDocumentosGt(payload.userId, payload.role),
     ]);
 
     if (empresa && !empresaId) {
@@ -330,6 +334,12 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ success: true, data: [], pagination: { page, limit, total: 0, totalPages: 0 } });
       }
     }
+    if (escopo.escopo === 'proprios') {
+      idFilter = (idFilter ?? escopo.colaboradorIds).filter((id) => escopoVeColaborador(escopo, id));
+      if (idFilter.length === 0) {
+        return NextResponse.json({ success: true, data: [], pagination: { page, limit, total: 0, totalPages: 0 } });
+      }
+    }
     if (idFilter) query = query.in('id', idFilter);
 
     const { data: rows, error, count } = await query
@@ -438,6 +448,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'CPF já cadastrado para outro colaborador' }, { status: 409 });
     }
 
+    const departamento = await aplicarDepartamentoCanonico(montado.data);
+    if (!departamento.ok) {
+      return NextResponse.json({ error: departamento.error }, { status: 400 });
+    }
+
     const { data: newColaborador, error: createError } = await supabaseAdmin
       .from('gt_colaboradores')
       .insert(montado.data)
@@ -453,6 +468,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (newColaborador && newColaborador.id) {
+      const vinculo = await vincularUsuarioUnico(newColaborador, { criar: true }).catch(err => {
+        console.error('[vinculo-usuario] Failed on create:', err);
+        return null;
+      });
+      if (vinculo?.userId) newColaborador.user_id = vinculo.userId;
+
       // Enrich with MIO data in background
       const rawCpf = newColaborador.cpf || '';
       const cleanCpf = rawCpf.replace(/\D/g, '');

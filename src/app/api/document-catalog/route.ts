@@ -9,6 +9,11 @@ import {
 import { hasFeaturePermission } from '@/lib/permissions';
 import { usuarioPodeVerColaborador } from '@/lib/gestao-tripulantes/empresa-acesso';
 import type { CatalogViewer } from '@/lib/document-catalog/permissions';
+import {
+  MENSAGEM_DOCUMENTOS_RESTRITOS,
+  escopoVeUsuario,
+  resolverEscopoDocumentosGt,
+} from '@/lib/gestao-tripulantes/documento-escopo';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,9 +46,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Permissão negada' }, { status: 403 });
     }
 
-    // ACL por empresa (GT): colaborador de empresa não liberada → 403
+    if (userId && !escopoVeUsuario(await resolverEscopoDocumentosGt(viewer.id, viewer.role), viewer.id, userId)) {
+      return NextResponse.json({ error: MENSAGEM_DOCUMENTOS_RESTRITOS }, { status: 403 });
+    }
+    // ACL por empresa (GT) + escopo de documentos: colaborador não liberado → 403
     if (colaboradorId && !(await usuarioPodeVerColaborador(viewer, colaboradorId))) {
-      return NextResponse.json({ error: 'Sem acesso a este colaborador (empresa restrita)' }, { status: 403 });
+      return NextResponse.json({ error: 'Sem acesso a este colaborador (escopo ou empresa restrita)' }, { status: 403 });
     }
 
     const result = await resolveCollaboratorDocuments({

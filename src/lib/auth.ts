@@ -2322,9 +2322,13 @@ export async function checkAclPermission(userId: string, userRole: string, resou
           WHERE ap.resource = $3 
             AND ap.action = $4 
             AND ap.enabled = true
+            AND NOT (
+              COALESCE(uap.granted, true) = false
+              AND (uap.expires_at IS NULL OR uap.expires_at > CURRENT_TIMESTAMP)
+            )
             AND (
               rap.id IS NOT NULL 
-              OR (uap.id IS NOT NULL AND (uap.expires_at IS NULL OR uap.expires_at > CURRENT_TIMESTAMP))
+              OR (COALESCE(uap.granted, false) AND (uap.expires_at IS NULL OR uap.expires_at > CURRENT_TIMESTAMP))
             )
         ) as has_permission;
       `, [userId, userRole, resource, action]);

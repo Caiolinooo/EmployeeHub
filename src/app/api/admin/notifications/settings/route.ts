@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { withPermission } from '@/lib/api-auth';
+import { withPermissionOrGrant } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +15,7 @@ const defaultSettings = {
   defaultExpiresDays: 30
 };
 
-export const GET = withPermission('manager', async (_req: NextRequest) => {
+export const GET = withPermissionOrGrant('manager', ['notifications.templates.manage', 'notifications.manage'], async (_req: NextRequest) => {
   try {
     const { data, error } = await supabaseAdmin
       .from('settings')
@@ -36,7 +36,7 @@ export const GET = withPermission('manager', async (_req: NextRequest) => {
   }
 });
 
-export const PUT = withPermission('manager', async (req: NextRequest) => {
+export const PUT = withPermissionOrGrant('manager', ['notifications.templates.manage', 'notifications.manage'], async (req: NextRequest) => {
   try {
     const body = await req.json();
     const value = { ...defaultSettings, ...body };

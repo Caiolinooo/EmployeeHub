@@ -1,19 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { authenticateUser, checkPermissions } from '@/lib/api-auth';
+import { authenticateUser } from '@/lib/api-auth';
+import { buildAppUrl } from '@/lib/app-url';
+import { baseTemplate } from '@/lib/emailTemplates';
+import { sendEmail } from '@/lib/email-service';
+import { canMutateEnvelope, denyUnlessCan, loadContractAccess } from '@/lib/contracts/view-access';
 
 export const dynamic = 'force-dynamic';
 
-// POST — Send document via email
+// POST — Reenvia o link de assinatura (/assinatura/[token]) de uma atribuição pendente do e-mail informado
 export async function POST(request: NextRequest) {
     try {
         const { user, error: authError } = await authenticateUser(request);
         if (authError) return authError;
         if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
 
-        if (!checkPermissions(user, 'contracts_manager')) {
-            return NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
-        }
+        const access = await loadContractAccess(user);
+        const denied = denyUnlessCan(access, 'send', 'resend');
+        if (denied) return denied;
 
         const body = await request.json();
         const { documento_id, recipient_email } = body;
@@ -27,23 +31,38 @@ export async function POST(request: NextRequest) {
         // Get document info
         const { data: doc, error: docError } = await supabaseAdmin
             .from('documentos_trabalhistas')
-            .select('id, titulo, arquivo_url')
+            .select('id, titulo, envelope_id')
             .eq('id', documento_id)
             .single();
 
         if (docError || !doc) {
             return NextResponse.json({ error: 'Documento não encontrado' }, { status: 404 });
         }
+        if (!doc.envelope_id || !(await canMutateEnvelope(user, access, doc.envelope_id))) {
+            return NextResponse.json({ error: 'Documento não encontrado' }, { status: 404 });
+        }
 
-        // Generate public signing link
-        const { getAppBaseUrl } = await import('@/lib/app-url');
-        const { baseTemplate } = await import('@/lib/emailTemplates');
-        const baseUrl = getAppBaseUrl();
-        const signLink = `${baseUrl}/contratos/${documento_id}/assinar?publico=true&email=${encodeURIComponent(recipient_email)}`;
+        // Link público = fluxo real por token (/assinatura/[token]) da atribuição pendente deste e-mail
+        const { data: pending } = await supabaseAdmin
+            .from('solicitacoes_assinatura')
+            .select('token_acesso')
+            .eq('documento_id', documento_id)
+            .eq('status', 'PENDING')
+            .neq('tipo', 'copia')
+            .not('token_acesso', 'is', null)
+            .ilike('external_signer_email', String(recipient_email).trim().replace(/[\\%_]/g, '\\$&'))
+            .limit(1)
+            .maybeSingle();
+
+        if (!pending?.token_acesso) {
+            return NextResponse.json({
+                error: 'Nenhuma assinatura pendente com link para este e-mail neste documento. Atribua o signatário e dispare o envelope.',
+            }, { status: 404 });
+        }
+        const signLink = buildAppUrl(`/assinatura/${pending.token_acesso}`);
 
         // Send email notification
         try {
-            const { sendEmail } = await import('@/lib/email-service');
             const emailText = `Novo documento para assinatura: ${doc.titulo}\n\nAcesse o link para assinar: ${signLink}`;
             const emailHtml = baseTemplate(`
                 <div style="color: #333;">
@@ -59,9 +78,6 @@ export async function POST(request: NextRequest) {
                             Assinar Documento
                         </a>
                     </div>
-                    <p style="font-size: 12px; color: #6b7280; margin-top: 16px;">
-                        Este link é válido por 7 dias.
-                    </p>
                 </div>
             `);
 

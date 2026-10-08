@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { supabaseAdmin } from '@/lib/supabase';
 import { notifyEmployeeEvaluationCompleted } from '@/lib/evaluation-notifications';
 import { QUESTIONARIO_PADRAO } from '@/lib/schemas/evaluation-schemas';
@@ -49,7 +50,10 @@ export async function POST(
       );
     }
 
-    if (avaliacao.avaliador_id !== payload.userId && payload.role !== 'ADMIN') {
+    if (
+      avaliacao.avaliador_id !== payload.userId &&
+      !(await canWithGrant(payload.userId, payload.role, ['avaliacao.finalize_any'], 'admin'))
+    ) {
       return NextResponse.json(
         { success: false, error: 'Você não é o gerente desta avaliação' },
         { status: 403 }

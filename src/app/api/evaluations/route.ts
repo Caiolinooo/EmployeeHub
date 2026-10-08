@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { EvaluationService } from '@/lib/services/evaluation-service';
 import { EvaluationWorkflowService } from '@/lib/services/evaluation-workflow-service';
 import { CreateAvaliacaoData, AvaliacaoFilters, ApiResponse } from '@/lib/schemas/evaluation-schemas';
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar permissões (apenas admin e manager podem criar)
-    if (payload.role !== 'ADMIN' && payload.role !== 'MANAGER') {
+    if (!(await canWithGrant(payload.userId, payload.role, ['avaliacao.create']))) {
       return NextResponse.json({
         success: false,
         error: 'Apenas administradores e gerentes podem criar avaliações'

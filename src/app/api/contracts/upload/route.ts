@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { authenticateUser, checkPermissions } from '@/lib/api-auth';
+import { authenticateUser } from '@/lib/api-auth';
+import { denyUnlessCan, loadContractAccess } from '@/lib/contracts/view-access';
 import { generateSHA256 } from '@/lib/services/CryptographyService';
 
 export const dynamic = 'force-dynamic';
@@ -14,9 +15,8 @@ export async function POST(request: NextRequest) {
         if (authError) return authError;
         if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
 
-        if (!checkPermissions(user, 'contracts_manager')) {
-            return NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
-        }
+        const denied = denyUnlessCan(await loadContractAccess(user), 'create');
+        if (denied) return denied;
 
         const formData = await request.formData();
         const file = formData.get('file') as File | null;

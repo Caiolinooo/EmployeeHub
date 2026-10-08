@@ -2,24 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
 import { lookupCA, syncCADatabase, getCacheStats } from '@/services/caLookupService';
 import { supabaseAdmin } from '@/lib/db';
+import { podeGerenciarEpi } from '@/lib/epi-access';
 
 export const dynamic = 'force-dynamic';
 
 // Helper: check admin/manager access
 async function hasAdminAccess(userId: string, role: string): Promise<boolean> {
-    if (role === 'ADMIN' || role === 'MANAGER') return true;
-    try {
-        const { data: user } = await supabaseAdmin
-            .from('users_unified')
-            .select('access_permissions')
-            .eq('id', userId)
-            .single();
-        if (!user) return false;
-        const perms = typeof user.access_permissions === 'string'
-            ? JSON.parse(user.access_permissions)
-            : user.access_permissions;
-        return !!perms?.epi;
-    } catch { return false; }
+    return podeGerenciarEpi(userId, role, 'ca_lookup');
 }
 
 // Helper: authenticate request

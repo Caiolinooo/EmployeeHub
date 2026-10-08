@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
 /** POST /api/financeiro/bancos/integracoes {adapterKey, apelido, ambiente} (gate admin). */
 export async function POST(request: NextRequest) {
   try {
-    const gate = await garantirNivelFinanceiro(request, 'admin');
+    const gate = await garantirNivelFinanceiro(request, 'admin', ['financeiro.bancos.manage']);
     if (!gate.ok) return gate.error;
 
     const body = await corpoJson(request);

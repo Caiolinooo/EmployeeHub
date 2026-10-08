@@ -1,5 +1,6 @@
 import { fetchWithToken } from '@/lib/tokenStorage';
 import type { SearchableOption } from '@/components/gestao-tripulantes/SearchableCreatableSelect';
+import { formatDepartamentoLabel } from '@/lib/gestao-tripulantes/departamento-label';
 
 export type GtLookupKind = 'cargos' | 'empresas' | 'embarcacoes' | 'centros-custo' | 'departamentos';
 
@@ -9,12 +10,7 @@ export interface GtLookupRow {
   codigo?: string | null;
 }
 
-export function formatCentroCustoLabel(row: { nome?: string | null; codigo?: string | null }): string {
-  const nome = (row.nome || '').trim();
-  const codigo = (row.codigo || '').trim();
-  if (codigo && nome) return `${codigo} - ${nome}`;
-  return codigo || nome;
-}
+export const formatCentroCustoLabel = formatDepartamentoLabel;
 
 export function toLookupOptions(
   rows: GtLookupRow[],

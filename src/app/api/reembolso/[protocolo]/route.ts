@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import {
   sendReimbursementApprovalEmail,
   sendReimbursementRejectionEmail,
@@ -13,6 +14,18 @@ import {
 } from '@/lib/reimbursement-email-routing';
 
 export const dynamic = 'force-dynamic';
+
+type ReimbursementStatus = 'pendente' | 'aprovado' | 'rejeitado' | 'pago';
+
+/** Grant por status final (papel ADMIN/MANAGER e `reimbursement_approval` seguem valendo para todos). */
+const REIMBURSEMENT_STATUS_GRANTS: Record<ReimbursementStatus, readonly string[]> = {
+  pendente: ['reimbursement.approve', 'reimbursement.reopen'],
+  aprovado: ['reimbursement.approve'],
+  rejeitado: ['reimbursement.reject'],
+  pago: ['reimbursement.mark_paid'],
+};
+
+const REIMBURSEMENT_ANY_STATUS_GRANTS = Object.values(REIMBURSEMENT_STATUS_GRANTS).flat();
 
 // Função auxiliar para verificar se a tabela de reembolsos existe
 async function checkReimbursementTableExists() {
@@ -208,7 +221,12 @@ export async function PUT(
     });
 
     // Apenas administradores, gerentes ou usuários com permissão específica podem aprovar/rejeitar reembolsos
-    if (!isAdmin && !isManager && !hasApprovalPermission) {
+    if (
+      !isAdmin &&
+      !isManager &&
+      !hasApprovalPermission &&
+      !(await canWithGrant(payload.userId, payload.role, REIMBURSEMENT_ANY_STATUS_GRANTS))
+    ) {
       console.error('Usuário sem permissão para aprovar/rejeitar reembolsos:', payload.userId);
       return NextResponse.json(
         { error: 'Você não tem permissão para aprovar ou rejeitar solicitações de reembolso' },
@@ -227,6 +245,18 @@ export async function PUT(
       return NextResponse.json(
         { error: 'Status inválido' },
         { status: 400 }
+      );
+    }
+
+    if (
+      !isAdmin &&
+      !isManager &&
+      !hasApprovalPermission &&
+      !(await canWithGrant(payload.userId, payload.role, REIMBURSEMENT_STATUS_GRANTS[status as ReimbursementStatus]))
+    ) {
+      return NextResponse.json(
+        { error: `Você não tem permissão para marcar o reembolso como ${status}` },
+        { status: 403 }
       );
     }
 
@@ -437,7 +467,7 @@ export async function DELETE(
     }
 
     // Apenas administradores podem excluir reembolsos
-    if (payload.role !== 'ADMIN') {
+    if (!(await canWithGrant(payload.userId, payload.role, ['reimbursement.delete'], 'admin'))) {
       console.error('Usuário sem permissão para excluir reembolsos:', payload.userId);
       return NextResponse.json(
         { error: 'Apenas administradores podem excluir solicitações de reembolso' },

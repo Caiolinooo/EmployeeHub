@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { dispatchEnvelopeStage } from '@/lib/envelopeDispatcher';
 import { authenticateUser } from '@/lib/api-auth';
+import { canMutateEnvelope, denyUnlessCan, loadContractAccess } from '@/lib/contracts/view-access';
 
 export async function POST(
     request: NextRequest,
@@ -12,11 +13,9 @@ export async function POST(
         if (authError) return authError;
         if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
 
-        // Verify role can manage contracts
-        const role = (user.role || '').toUpperCase();
-        if (role !== 'ADMIN' && role !== 'MANAGER') {
-            return NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
-        }
+        const access = await loadContractAccess(user);
+        const anyDenied = denyUnlessCan(access, 'dispatch', 'resend');
+        if (anyDenied) return anyDenied;
 
         const { id: envelopeId } = await params;
 
@@ -24,7 +23,7 @@ export async function POST(
             return NextResponse.json({ error: 'Envelope ID não fornecido' }, { status: 400 });
         }
 
-        // 1. Verify envelope existence and that user owns it or is admin
+        // 1. Verify envelope existence and access
         const { data: envelope, error: findError } = await supabaseAdmin
             .from('envelopes')
             .select('id, titulo, status')
@@ -32,6 +31,17 @@ export async function POST(
             .single();
 
         if (findError || !envelope) {
+            return NextResponse.json({ error: 'Envelope não encontrado' }, { status: 404 });
+        }
+
+        // DRAFT = disparo inicial; SENT = reenvio das notificações da etapa atual
+        if (envelope.status === 'COMPLETED') {
+            return NextResponse.json({ error: 'Envelope já concluído' }, { status: 409 });
+        }
+        const denied = denyUnlessCan(access, envelope.status === 'SENT' ? 'resend' : 'dispatch');
+        if (denied) return denied;
+
+        if (!(await canMutateEnvelope(user, access, envelopeId))) {
             return NextResponse.json({ error: 'Envelope não encontrado' }, { status: 404 });
         }
 

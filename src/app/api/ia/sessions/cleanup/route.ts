@@ -5,6 +5,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyRequestToken } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
       .eq('id', userId)
       .single();
 
-    if (!user || user.role !== 'ADMIN') {
+    if (!user || !(await canWithGrant(userId, user.role, ['ia-assistant.sessions.cleanup'], 'admin'))) {
       return NextResponse.json({ error: 'Apenas administradores podem executar cleanup global' }, { status: 403 });
     }
 

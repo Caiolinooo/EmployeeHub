@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { verifyToken } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { ChatMessage, MessageContent, MessageMetadata } from '@/types/chat';
 
 export const runtime = 'nodejs';
@@ -522,7 +523,7 @@ export async function DELETE(request: NextRequest) {
       .single();
 
     const isAuthor = existingMessage.sender_id === payload.userId;
-    const isSystemAdmin = user?.role === 'ADMIN';
+    const isSystemAdmin = !!user && (await canWithGrant(payload.userId, user.role, ['chat.moderate'], 'admin'));
 
     // Verificar se é admin do canal
     const { data: channel } = await admin

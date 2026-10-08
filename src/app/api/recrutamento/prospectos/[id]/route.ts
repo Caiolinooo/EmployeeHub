@@ -17,12 +17,12 @@ async function autenticar(request: NextRequest, nivel: 'view' | 'manage') {
   return { payload };
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { erro } = await autenticar(request, 'manage');
     if (erro) return erro;
 
-    const id = params.id;
+    const { id } = await params;
     const body = await request.json();
 
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -84,12 +84,12 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { erro } = await autenticar(request, 'manage');
     if (erro) return erro;
 
-    const id = params.id;
+    const { id } = await params;
 
     const { data: atual } = await supabaseAdmin
       .from('rc_prospectos')

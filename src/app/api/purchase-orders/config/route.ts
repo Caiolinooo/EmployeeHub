@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 
 export const dynamic = 'force-dynamic';
 
@@ -137,7 +138,7 @@ export async function POST(request: NextRequest) {
         const payload = verifyToken(token);
         const role = payload?.role?.toUpperCase();
 
-        if (role !== 'ADMIN') {
+        if (!(await canWithGrant(payload?.userId, role, ['compras.config'], 'admin'))) {
             return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
         }
 

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { agruparDocumentosPorTipo } from '@/lib/gestao-tripulantes/documento-historico';
+import { usuarioPodeVerColaborador } from '@/lib/gestao-tripulantes/empresa-acesso';
+import { MENSAGEM_DOCUMENTOS_RESTRITOS } from '@/lib/gestao-tripulantes/documento-escopo';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,6 +37,9 @@ export async function GET(
     }
 
     const { id } = await context.params;
+    if (!(await usuarioPodeVerColaborador({ id: payload.userId, role: payload.role }, id))) {
+      return NextResponse.json({ error: MENSAGEM_DOCUMENTOS_RESTRITOS }, { status: 403 });
+    }
 
     // 1. Fetch collaborator with cargo
     const { data: colab, error: colErr } = await supabaseAdmin

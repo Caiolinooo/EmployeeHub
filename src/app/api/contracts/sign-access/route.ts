@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { authenticateUser, checkPermissions } from '@/lib/api-auth';
-import { generateSHA256 } from '@/lib/services/CryptographyService';
+import { authenticateUser } from '@/lib/api-auth';
+import { loadContractAccess } from '@/lib/contracts/view-access';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { documento_id, email } = body;
+        const { documento_id } = body;
 
         if (!documento_id) {
             return NextResponse.json({
@@ -17,9 +17,11 @@ export async function POST(request: NextRequest) {
             }, { status: 400 });
         }
 
-        // Try authenticated access first
         const { user, error: authError } = await authenticateUser(request);
-        const isPublicAccess = !user || authError;
+        if (authError || !user) {
+            // Acesso público é só via token: GET /api/contracts/sign-access/[token]
+            return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+        }
 
         // Fetch the document
         const { data: documento, error: docError } = await supabaseAdmin
@@ -32,50 +34,23 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Documento não encontrado' }, { status: 404 });
         }
 
-        // For managers: allow direct access
-        if (!isPublicAccess && user) {
-            const isManager = checkPermissions(user, 'contracts_manager');
+        // Escopo `all` + download: acesso direto. Demais só com atribuição existente (sem auto-atribuição)
+        const access = await loadContractAccess(user);
+        if (!(access.scope === 'all' && access.can.download)) {
+            const { data: assignments } = await supabaseAdmin
+                .from('solicitacoes_assinatura')
+                .select('id, status')
+                .eq('documento_id', documento_id)
+                .eq('colaborador_id', user.id);
 
-            if (!isManager) {
-                // Non-managers must have an assignment for this document
-                const { data: assignment } = await supabaseAdmin
-                    .from('solicitacoes_assinatura')
-                    .select('id, status')
-                    .eq('documento_id', documento_id)
-                    .eq('colaborador_id', user.id)
-                    .single();
-
-                if (!assignment) {
-                    // Auto-assign for self-service: create a pending assignment
-                    const { data: newAssignment, error: assignError } = await supabaseAdmin
-                        .from('solicitacoes_assinatura')
-                        .insert({
-                            documento_id,
-                            colaborador_id: user.id,
-                            pagina_assinatura: 1,
-                            posicao_x: 100,
-                            posicao_y: 500,
-                            largura_assinatura: 150,
-                            altura_assinatura: 50,
-                            tipo: 'assinatura',
-                            status: 'PENDING',
-                        })
-                        .select('*')
-                        .single();
-
-                    if (assignError) {
-                        // If duplicate key (23505), it means there's already an assignment
-                        if (assignError.code !== '23505') {
-                            console.error('Erro ao auto-atribuir:', assignError);
-                            return NextResponse.json({ error: 'Erro ao criar atribuição' }, { status: 500 });
-                        }
-                    }
-                } else if (assignment.status === 'SIGNED') {
-                    return NextResponse.json({
-                        error: 'Este documento já foi assinado por você',
-                        code: 'ALREADY_SIGNED'
-                    }, { status: 403 });
-                }
+            if (!assignments?.length) {
+                return NextResponse.json({ error: 'Documento não atribuído a você' }, { status: 403 });
+            }
+            if (!assignments.some((a) => a.status === 'PENDING')) {
+                return NextResponse.json({
+                    error: 'Este documento já foi assinado por você',
+                    code: 'ALREADY_SIGNED'
+                }, { status: 403 });
             }
         }
 
@@ -110,25 +85,6 @@ export async function POST(request: NextRequest) {
             const { data: signedData, error: signedError } = await bucket.createSignedUrl(storagePath, 3600);
 
             if (!signedError && signedData?.signedUrl) {
-                // Also fetch or create the assignment for public access
-                let solicitacaoId = null;
-
-                // For public access via email link, find or create assignment
-                if (isPublicAccess) {
-                    // Look for any pending assignment
-                    const { data: assignments } = await supabaseAdmin
-                        .from('solicitacoes_assinatura')
-                        .select('id')
-                        .eq('documento_id', documento_id)
-                        .eq('status', 'PENDING')
-                        .limit(1)
-                        .single();
-
-                    if (assignments) {
-                        solicitacaoId = assignments.id;
-                    }
-                }
-
                 return NextResponse.json({
                     success: true,
                     documento: {
@@ -138,8 +94,8 @@ export async function POST(request: NextRequest) {
                         hash_original: documento.hash_original,
                     },
                     pdf_url: signedData.signedUrl,
-                    solicitacao_id: solicitacaoId,
-                    is_public: isPublicAccess,
+                    solicitacao_id: null,
+                    is_public: false,
                 });
             } else {
                 console.error('[sign-access] Erro ao gerar URL assinada:', signedError);

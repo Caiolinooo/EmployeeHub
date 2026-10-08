@@ -3,6 +3,8 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { formatCpf, isEsocialGlobalVisible, normalizeCpf } from '@/lib/gestao-tripulantes/cpf';
 import { findColaboradorByCpf } from '@/lib/gestao-tripulantes/cpf-lookup';
+import { filtrarPorColaboradorPermitido } from '@/lib/gestao-tripulantes/empresa-acesso';
+import { MENSAGEM_DOCUMENTOS_RESTRITOS } from '@/lib/gestao-tripulantes/documento-escopo';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,6 +32,10 @@ export async function GET(request: NextRequest) {
     }
 
     const colaborador = await findColaboradorByCpf(cpf);
+    const user = { id: payload.userId, role: payload.role };
+    if ((await filtrarPorColaboradorPermitido(user, [colaborador?.id], (id) => id)).length === 0) {
+      return NextResponse.json({ error: MENSAGEM_DOCUMENTOS_RESTRITOS }, { status: 403 });
+    }
     const cpfFormatted = formatCpf(cpf);
 
     let query = supabaseAdmin

@@ -9,7 +9,7 @@ import CollaboratorModal from '@/components/gestao-tripulantes/CollaboratorModal
 import ModalAprovacaoFechamento from '@/components/gestao-tripulantes/ModalAprovacaoFechamento';
 import AsoAgendamentoDpPanel from '@/components/gestao-tripulantes/AsoAgendamentoDpPanel';
 import DpFolhaPanel from '@/components/dp/DpFolhaPanel';
-import CodigosFolhaPage from '@/app/folha-pagamento/configuracoes/codigos/page';
+import CodigosFolha from '@/components/payroll/CodigosFolha';
 import FechamentoDpWizard from '@/components/dp/FechamentoDpWizard';
 import GtPageShell, { GT_PAGE_SCROLLPORT_CLASS } from '@/components/gestao-tripulantes/GtPageShell';
 import SearchableCreatableSelect from '@/components/gestao-tripulantes/SearchableCreatableSelect';
@@ -837,7 +837,7 @@ export default function DepartamentoPessoalPage() {
 
       {activeTab === 'rubricas' && podeVerFolha && (
         <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          <CodigosFolhaPage embedded />
+          <CodigosFolha embedded />
         </div>
       )}
 

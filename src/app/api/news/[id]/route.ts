@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { withPermission } from '@/lib/api-auth';
+import { withPermissionOrGrant } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +39,7 @@ export async function GET(
 }
 
 // PUT - Atualizar uma notícia (somente ADMIN ou MANAGER)
-export const PUT = withPermission('manager', async (
+export const PUT = withPermissionOrGrant('manager', ['news.update', 'news.update.all'], async (
   request: NextRequest,
   _user: any,
   context: { params: Promise<{ id: string }> }
@@ -125,7 +125,7 @@ export const PUT = withPermission('manager', async (
 });
 
 // DELETE - Excluir uma notícia (somente ADMIN ou MANAGER)
-export const DELETE = withPermission('manager', async (
+export const DELETE = withPermissionOrGrant('manager', ['news.delete', 'news.delete.all'], async (
   request: NextRequest,
   _user: any,
   context: { params: Promise<{ id: string }> }

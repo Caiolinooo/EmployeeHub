@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { buildAppUrl } from '@/lib/app-url';
 
 export const dynamic = 'force-dynamic';
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
 
         // Check if user is an approver
         const isApprover = currentRequest.approver_ids?.includes(userId) || false;
-        if (!isApprover && role !== 'ADMIN') {
+        if (!isApprover && !(await canWithGrant(userId, role, ['compras.approve_any'], 'admin'))) {
             return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
         }
 

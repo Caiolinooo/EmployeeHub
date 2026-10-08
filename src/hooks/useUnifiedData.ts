@@ -61,33 +61,15 @@ export function useUnifiedData(options: UseUnifiedDataOptions): UseUnifiedDataRe
               const cards = await getCardsCached({ userId, userRole, userSectorId: (user as any)?.sector_id });
               console.log('🔄 Menu: Got', cards?.length, 'cards from API');
 
-              // Buscar permissões do setor se usuário tiver setor
-              let allowedSectorModules: string[] = [];
-              const sectorId = (user as any)?.sector_id;
-              if (sectorId) {
-                try {
-                  allowedSectorModules = await unifiedDataService.getSectorAllowedModules(sectorId);
-                } catch (e) {
-                  console.error('Falha ao buscar permissões do setor:', e);
-                }
-              }
-
               if (cards?.[0]) {
                 console.log('🔄 Menu: First card title:', cards[0].title, 'id:', cards[0].id);
               }
               loadedItems = (cards || [])
                 .filter((c: any) => {
-                  if (!c.href || c.href.trim() === '' || c.adminOnly) return false;
-
-                  // Filtro de setor (administradores ignoram a restrição de setor)
-                  if (userRole !== 'admin' && sectorId && allowedSectorModules.length > 0) {
-                    // Dashboard é sempre permitido
-                    if (c.id !== 'dashboard' && !allowedSectorModules.includes(c.id)) {
-                      return false;
-                    }
-                  }
-
-                  return true;
+                  // Módulo liberado (setor, usuário ou ACL) é decidido em MainLayout por
+                  // `useEffectivePermissions().hasPermission` — filtrar só pelo setor aqui
+                  // escondia módulos concedidos individualmente.
+                  return !(!c.href || c.href.trim() === '' || c.adminOnly);
                 })
                 .map((c: any) => ({
                   id: c.id,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -32,7 +33,7 @@ export async function DELETE(
     }
 
     // APENAS ADMIN pode fazer hard delete
-    if (payload.role !== 'ADMIN') {
+    if (!(await canWithGrant(payload.userId, payload.role, ['avaliacao.hard_delete'], 'admin'))) {
       return NextResponse.json(
         { success: false, error: 'Apenas administradores podem excluir permanentemente avaliações' },
         { status: 403 }

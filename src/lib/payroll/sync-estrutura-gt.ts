@@ -145,7 +145,7 @@ export async function sincronizarEstruturaGt(
 
   let deptInseridos = 0;
   let deptAtualizados = 0;
-  let deptDesativados = 0;
+  const deptDesativados = 0;
   for (const emp of empresasAtivas || []) {
     const { data: deptRows, error: dErr } = await supabase
       .from('payroll_departments')

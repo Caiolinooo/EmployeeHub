@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { podeMutarCadastroColaborador } from '@/lib/gestao-tripulantes/colaborador-cadastro-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,9 +58,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
-    const role = String(payload.role || '').toUpperCase();
-    if (role !== 'ADMIN' && role !== 'MANAGER' && role !== 'ADMINISTRADOR' && role !== 'SUPERADMIN') {
-      return NextResponse.json({ error: 'Acesso negado. Apenas ADMIN/MANAGER.' }, { status: 403 });
+    if (!(await podeMutarCadastroColaborador(payload.userId, payload.role))) {
+      return NextResponse.json({ error: 'Acesso negado. Sem permissão para gerenciar o cadastro do DP.' }, { status: 403 });
     }
 
     const body = await request.json();

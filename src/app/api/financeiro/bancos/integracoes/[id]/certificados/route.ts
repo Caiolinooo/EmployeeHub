@@ -20,7 +20,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const gate = await garantirNivelFinanceiro(request, 'admin');
+    const gate = await garantirNivelFinanceiro(request, 'admin', ['financeiro.bancos.manage', 'financeiro.certificado.manage']);
     if (!gate.ok) return gate.error;
     const { id } = await params;
 

@@ -5,6 +5,7 @@ import { FiSettings, FiAlertCircle } from 'react-icons/fi';
 import ReimbursementEmailSettings from '@/components/admin/ReimbursementEmailSettings';
 import { useI18n } from '@/contexts/I18nContext';
 import { getDefaultReimbursementEmailSettings } from '@/lib/reimbursement-email-routing';
+import { fetchWithToken } from '@/lib/tokenStorage';
 
 export default function ReimbursementSettingsPage() {
   const { t } = useI18n();
@@ -30,7 +31,7 @@ export default function ReimbursementSettingsPage() {
       // Tentar usar a API principal do Supabase
       try {
         console.log(t('admin.tentandoCarregarConfiguracoesDaApiPrincipal'));
-        const response = await fetch('/api/reimbursement-settings');
+        const response = await fetchWithToken('/api/reimbursement-settings');
 
         if (response.ok) {
           const data = await response.json();
@@ -50,7 +51,7 @@ export default function ReimbursementSettingsPage() {
       // Tentar usar a API de fallback
       try {
         console.log(t('admin.tentandoCarregarConfiguracoesDaApiDeFallback'));
-        const fallbackResponse = await fetch('/api/reimbursement-settings-fallback');
+        const fallbackResponse = await fetchWithToken('/api/reimbursement-settings-fallback');
 
         if (fallbackResponse.ok) {
           const fallbackData = await fallbackResponse.json();
@@ -95,7 +96,7 @@ export default function ReimbursementSettingsPage() {
         console.log(t('admin.tentandoSalvarConfiguracoesNaApiPrincipal'));
 
         // Usar a API do Supabase para salvar as configurações
-        const response = await fetch('/api/reimbursement-settings', {
+        const response = await fetchWithToken('/api/reimbursement-settings', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -138,7 +139,7 @@ export default function ReimbursementSettingsPage() {
             console.log('Tabela settings criada com sucesso, tentando salvar novamente...');
 
             // Tentar salvar novamente após criar a tabela
-            const retryResponse = await fetch('/api/reimbursement-settings', {
+            const retryResponse = await fetchWithToken('/api/reimbursement-settings', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -168,7 +169,7 @@ export default function ReimbursementSettingsPage() {
       try {
         console.log(t('admin.tentandoSalvarConfiguracoesNaApiDeFallback'));
 
-        const fallbackResponse = await fetch('/api/reimbursement-settings-fallback', {
+        const fallbackResponse = await fetchWithToken('/api/reimbursement-settings-fallback', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createEvento, validateEventData, generateEventXML, validateEventXML, logEnvio, STATUS_EVENTO } from '@/services/eSocialService';
 import { syncEsocialStatusFromEvento } from '@/lib/gestao-tripulantes/esocial-sync';
+import { exigirCadastroDp, exigirTokenGt } from '@/lib/gestao-tripulantes/gt-route-auth';
 
 // GET: list afastamentos for a collaborator
 export async function GET(request: NextRequest) {
   try {
+    const denied = exigirTokenGt(request);
+    if (denied) return denied;
+
     const { searchParams } = new URL(request.url);
     const colaboradorId = searchParams.get('colaborador_id');
 
@@ -31,6 +35,9 @@ export async function GET(request: NextRequest) {
 // POST: create afastamento + auto-generate S-2230
 export async function POST(request: NextRequest) {
   try {
+    const denied = await exigirCadastroDp(request);
+    if (denied) return denied;
+
     const body = await request.json();
     const {
       colaborador_id,

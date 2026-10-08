@@ -12,7 +12,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const gate = await garantirNivelFinanceiro(request, 'view');
+    const gate = await garantirNivelFinanceiro(request, 'view', ['financeiro.export']);
     if (!gate.ok) return gate.error;
     const { id } = await params;
     const input = await montarFaturaRenderInput(id);

@@ -1,19 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { requireAuth, type AuthenticatedUser } from '@/lib/api-auth';
+import { canWithGrant } from '@/lib/permission-gate';
 
 export const dynamic = 'force-dynamic';
 
+const forbidden = () => NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
+
+function canActFor(user: AuthenticatedUser, ownerId: string | null | undefined, grants: readonly string[]) {
+  return ownerId === user.id || canWithGrant(user.id, user.role, grants);
+}
+
+async function eventOwner(eventId: string): Promise<string | null | undefined> {
+  const { data } = await supabaseAdmin.from('calendar_events').select('user_id').eq('id', eventId).maybeSingle();
+  return data ? (data as { user_id: string | null }).user_id : undefined;
+}
+
 export async function GET(request: NextRequest) {
+  const { user, error: authError } = await requireAuth(request);
+  if (authError) return authError;
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const userId = searchParams.get('userId') || user.id;
     const timeMin = searchParams.get('timeMin');
     const timeMax = searchParams.get('timeMax');
     const maxResults = parseInt(searchParams.get('maxResults') || '50');
 
-    if (!userId) {
-      return NextResponse.json({ error: 'userId é obrigatório' }, { status: 400 });
-    }
+    if (!(await canActFor(user, userId, ['calendario.manage']))) return forbidden();
 
     let query = supabaseAdmin
       .from('calendar_events')
@@ -60,13 +73,18 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const { user, error: authError } = await requireAuth(request);
+  if (authError) return authError;
   try {
     const body = await request.json();
-    const { userId, summary, description, start, end, location, attendees, reminders } = body;
+    const { summary, description, start, end, location, attendees, reminders } = body;
+    const userId = body.userId || user.id;
 
-    if (!userId || !summary || !start || !end) {
+    if (!summary || !start || !end) {
       return NextResponse.json({ error: 'Campos obrigatórios faltando' }, { status: 400 });
     }
+
+    if (!(await canActFor(user, userId, ['calendario.create', 'calendario.manage']))) return forbidden();
 
     const { data: event, error } = await supabaseAdmin
       .from('calendar_events')
@@ -102,6 +120,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const { user, error: authError } = await requireAuth(request);
+  if (authError) return authError;
   try {
     const body = await request.json();
     const { eventId, summary, description, start, end, location, attendees } = body;
@@ -109,6 +129,10 @@ export async function PUT(request: NextRequest) {
     if (!eventId) {
       return NextResponse.json({ error: 'eventId é obrigatório' }, { status: 400 });
     }
+
+    const ownerId = await eventOwner(eventId);
+    if (ownerId === undefined) return NextResponse.json({ error: 'Evento não encontrado' }, { status: 404 });
+    if (!(await canActFor(user, ownerId, ['calendario.update', 'calendario.manage']))) return forbidden();
 
     const { data: event, error } = await supabaseAdmin
       .from('calendar_events')
@@ -139,6 +163,8 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const { user, error: authError } = await requireAuth(request);
+  if (authError) return authError;
   try {
     const { searchParams } = new URL(request.url);
     const eventId = searchParams.get('eventId');
@@ -146,6 +172,10 @@ export async function DELETE(request: NextRequest) {
     if (!eventId) {
       return NextResponse.json({ error: 'eventId é obrigatório' }, { status: 400 });
     }
+
+    const ownerId = await eventOwner(eventId);
+    if (ownerId === undefined) return NextResponse.json({ error: 'Evento não encontrado' }, { status: 404 });
+    if (!(await canActFor(user, ownerId, ['calendario.delete', 'calendario.manage']))) return forbidden();
 
     const { error } = await supabaseAdmin
       .from('calendar_events')

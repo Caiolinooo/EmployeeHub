@@ -16,7 +16,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const gate = await garantirNivelFinanceiro(request, 'edit');
+    const gate = await garantirNivelFinanceiro(request, 'edit', ['financeiro.nfse.cancel']);
     if (!gate.ok) return gate.error;
     const { id } = await params;
     const body = await corpoJson(request);

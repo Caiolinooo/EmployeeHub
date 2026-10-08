@@ -1,5 +1,30 @@
 # Changelog
 
+## [5.98.0] - 2026-10-08
+
+### ACL, documentos pessoais e correções do cadastro DP
+
+#### Adicionado
+
+1. **Departamento no cadastro** é uma lista da folha (`gt_departamentos`), não texto livre. O rótulo não repete o código (`38 - ABZ - MATRIX`, não `38 - 38 - ABZ - MATRIX`).
+2. **Vínculo com o usuário do portal**: criar ou editar colaborador liga `gt_colaboradores` a `users_unified` por CPF e depois e-mail, sem duplicar conta. Script `scripts/backfill-gt-vinculo-usuario.ts` (dry-run por padrão).
+3. **ACLs por ação** no catálogo (`src/config/module-grants.ts`), visíveis em `/admin/users`. Contratos ganham `view_all`, `view_own` e ações de criar, enviar, cancelar, baixar e templates. Documentos pessoais do GT/DP ganham `gestao-tripulantes.documents.view_all` e `view_own`. Cadastro DP ganha `gestao-tripulantes.cadastro.manage`.
+4. **Revogação**: desmarcar uma permissão grava `user_acl_permissions.granted = false` e vence o padrão do papel e do setor.
+
+#### Alterado
+
+1. **Quem vê documentos de outros colaboradores**: ADMIN, MANAGER, setor DP/RH com o módulo GT, ou `documents.view_all` marcado. Os demais veem só os próprios. A lista, a exportação, o ASO por CPF, o cruzamento e-Social, os ASOs do PoliWeb e a busca da ficha seguem o mesmo recorte. Desmarcar `view_all` tira o acesso, inclusive de DP e MANAGER.
+2. **Setor restrito**: o ACL padrão do papel USER não abre módulo que o setor não lista. O chat foi mantido nos setores Departamento Pessoal, Engenharia e Logística.
+3. **Contratos**: quem tem a ACL de gestão passa a gerenciar de verdade. O link de assinatura enviado por e-mail aponta para `/assinatura/[token]`.
+
+#### Corrigido
+
+1. **Salvar departamento** duplicava o código no nome. Os 7 cadastros e os 2 departamentos já gravados assim foram normalizados.
+2. **Contratos**: envelope, PDF assinado e token de signatário não abrem mais para quem não é parte. Assinatura de externo exige os dados do signatário. Upload que falha não deixa envelope órfão. Reenviar envelope concluído devolve 409.
+3. **Rotas sem login** de calendário, notícias e notificações passam a exigir token. Comentário de notícia grava o autor do token. Ler notificação de outra pessoa exige gestão.
+4. **Férias**: `ferias.read` deixou de valer para todo USER. Cada um continua vendo e baixando as próprias. A leitura geral ficou em ADMIN, MANAGER e grants diretos.
+5. **Upload da biblioteca** verifica a assinatura do JWT. As configurações de reembolso e a edição de ACL exigem permissão. A importação `?sync=1` do PoliWeb não roda para qualquer usuário logado.
+
 ## [5.97.1] - 2026-10-07
 
 ### Lista do Departamento Pessoal volta a carregar

@@ -13,11 +13,12 @@ import {
     getLowStockAlerts,
 } from '@/services/epiStockService';
 import { supabaseAdmin } from '@/lib/db';
+import { podeGerenciarEpi } from '@/lib/epi-access';
 
 export const dynamic = 'force-dynamic';
 
 // Helper: authenticate and check EPI admin access
-async function authenticateAndAuthorize(request: NextRequest) {
+async function authenticateAndAuthorize(request: NextRequest, acao: 'stock.view' | 'stock.edit') {
     const authHeader = request.headers.get('authorization');
     let token = extractTokenFromHeader(authHeader || undefined);
 
@@ -32,27 +33,7 @@ async function authenticateAndAuthorize(request: NextRequest) {
     if (!payload || !payload.userId) return null;
 
     const role = payload.role || 'USER';
-    if (role === 'ADMIN' || role === 'MANAGER') return payload;
-
-    // Check access_permissions for epi
-    try {
-        const { data: user } = await supabaseAdmin
-            .from('users_unified')
-            .select('access_permissions')
-            .eq('id', payload.userId)
-            .single();
-
-        if (user) {
-            const perms = typeof user.access_permissions === 'string'
-                ? JSON.parse(user.access_permissions)
-                : user.access_permissions;
-            if (perms?.epi || perms?.modules?.epi) return payload;
-        }
-    } catch (e) {
-        console.error('Error checking EPI access:', e);
-    }
-
-    return null;
+    return (await podeGerenciarEpi(payload.userId, role, acao)) ? payload : null;
 }
 
 /**
@@ -61,7 +42,7 @@ async function authenticateAndAuthorize(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
     try {
-        const payload = await authenticateAndAuthorize(request);
+        const payload = await authenticateAndAuthorize(request, 'stock.view');
         if (!payload) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -104,7 +85,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
     try {
-        const payload = await authenticateAndAuthorize(request);
+        const payload = await authenticateAndAuthorize(request, 'stock.edit');
         if (!payload) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -167,7 +148,7 @@ export async function POST(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
     try {
-        const payload = await authenticateAndAuthorize(request);
+        const payload = await authenticateAndAuthorize(request, 'stock.edit');
         if (!payload) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }

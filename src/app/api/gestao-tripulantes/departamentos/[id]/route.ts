@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { podeMutarCadastroColaborador } from '@/lib/gestao-tripulantes/colaborador-cadastro-auth';
+import { formatDepartamentoLabel, normalizarDepartamento } from '@/lib/gestao-tripulantes/departamento-label';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,12 +62,19 @@ export async function PUT(
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
+    if (!(await podeMutarCadastroColaborador(payload.userId, payload.role))) {
+      return NextResponse.json({ error: 'Acesso negado. Sem permissão para gerenciar o cadastro do DP.' }, { status: 403 });
+    }
+
     const { id } = await context.params;
     const body = await request.json();
 
     const updateData: Record<string, any> = { ...body, updated_at: new Date().toISOString() };
     delete updateData.id;
     delete updateData.created_at;
+    if (typeof updateData.nome === 'string' && updateData.nome.trim()) {
+      Object.assign(updateData, normalizarDepartamento(updateData.nome, updateData.codigo));
+    }
 
     const { data, error } = await supabaseAdmin
       .from('gt_departamentos')
@@ -78,6 +87,12 @@ export async function PUT(
       console.error('Erro ao atualizar departamento:', error);
       return NextResponse.json({ error: 'Erro ao atualizar departamento' }, { status: 500 });
     }
+
+    // `gt_colaboradores.departamento` guarda o rótulo derivado; mantém em sincronia.
+    await supabaseAdmin
+      .from('gt_colaboradores')
+      .update({ departamento: formatDepartamentoLabel(data) })
+      .eq('departamento_id', id);
 
     return NextResponse.json({ success: true, data });
   } catch (error) {
@@ -100,6 +115,10 @@ export async function DELETE(
     const payload = verifyToken(token);
     if (!payload) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+    }
+
+    if (!(await podeMutarCadastroColaborador(payload.userId, payload.role))) {
+      return NextResponse.json({ error: 'Acesso negado. Sem permissão para gerenciar o cadastro do DP.' }, { status: 403 });
     }
 
     const { id } = await context.params;

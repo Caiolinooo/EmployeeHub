@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/useToast';
 import { useI18n } from '@/contexts/I18nContext';
 import CommentActions from './CommentActions';
 import { useACLPermissions } from '@/hooks/useACLPermissions';
+import { fetchWithToken } from '@/lib/tokenStorage';
 
 interface UserInfo {
   id: string;
@@ -65,10 +66,10 @@ const NewsCommentSection: React.FC<Props> = ({ postId, userId }) => {
 
     try {
       setSending(true);
-      const res = await fetch(`/api/news/posts/${postId}/comments`, {
+      const res = await fetchWithToken(`/api/news/posts/${postId}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, content: text })
+        body: JSON.stringify({ content: text })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || t('newsSystem.errorSendingComment', 'Erro ao enviar comentário'));
@@ -95,7 +96,7 @@ const NewsCommentSection: React.FC<Props> = ({ postId, userId }) => {
   };
 
   const handleEdit = async (commentId: string, newContent: string) => {
-    const res = await fetch(`/api/news/posts/${postId}/comments/${commentId}`, {
+    const res = await fetchWithToken(`/api/news/posts/${postId}/comments/${commentId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: newContent })
@@ -107,7 +108,7 @@ const NewsCommentSection: React.FC<Props> = ({ postId, userId }) => {
 
   const handleDelete = async (commentId: string) => {
     const endpoint = `/api/news/posts/${postId}/comments/${commentId}`;
-    const res = await fetch(endpoint, { method: 'DELETE' });
+    const res = await fetchWithToken(endpoint, { method: 'DELETE' });
     if (res.ok) {
       setComments(prev => prev.filter(c => c.id !== commentId));
     }

@@ -8,9 +8,13 @@
  * Colaborador sem empresa (empresa_id NULL) permanece visível a todos —
  * decisão para não sumir com cadastros legados.
  * ADMIN / MANAGER / SUPERADMIN fazem bypass.
+ * As variantes de documento/colaborador aplicam antes o escopo `documents.view_all|view_own`
+ * (`documento-escopo.ts`, vale também para MANAGER com deny explícito): escopo próprio só passa
+ * nos colaboradores vinculados ao usuário.
  */
 
 import { supabaseAdmin } from '@/lib/supabase';
+import { escopoVeColaborador, resolverEscopoDocumentosGt } from './documento-escopo';
 
 export interface EmpresaAcessoUser {
   id: string;
@@ -94,13 +98,14 @@ export async function usuarioPodeVerDocumentoGt(
   user: EmpresaAcessoUser,
   documentoId: string
 ): Promise<boolean> {
-  if (roleBypassEmpresa(user.role)) return true;
   const { data, error } = await supabaseAdmin
     .from('gt_documentos')
     .select('colaborador_id, gt_colaboradores(empresa_id)')
     .eq('id', documentoId)
     .maybeSingle();
   if (error || !data) return true;
+  const escopo = await resolverEscopoDocumentosGt(user.id, user.role);
+  if (!escopoVeColaborador(escopo, data.colaborador_id)) return false;
   const empresaId = (data.gt_colaboradores as any)?.empresa_id ?? null;
   return usuarioPodeVerEmpresa(user, empresaId);
 }
@@ -112,13 +117,13 @@ export async function usuarioPodeVerColaborador(
   user: EmpresaAcessoUser,
   colaboradorId: string
 ): Promise<boolean> {
-  if (roleBypassEmpresa(user.role)) return true;
   const { data, error } = await supabaseAdmin
     .from('gt_colaboradores')
     .select('empresa_id')
     .eq('id', colaboradorId)
     .maybeSingle();
   if (error || !data) return true;
+  if (!escopoVeColaborador(await resolverEscopoDocumentosGt(user.id, user.role), colaboradorId)) return false;
   return usuarioPodeVerEmpresa(user, data.empresa_id);
 }
 
@@ -131,9 +136,12 @@ export async function idsColaboradoresPermitidos(
   user: EmpresaAcessoUser,
   colaboradorIds: string[]
 ): Promise<string[] | null> {
-  if (roleBypassEmpresa(user.role)) return null;
-  const restricao = await getEmpresasRestricaoUsuario(user.id);
-  if (!restricao) return null;
+  const escopo = await resolverEscopoDocumentosGt(user.id, user.role);
+  if (escopo.escopo === 'proprios') {
+    colaboradorIds = colaboradorIds.filter((id) => escopoVeColaborador(escopo, id));
+  }
+  const restricao = roleBypassEmpresa(user.role) ? null : await getEmpresasRestricaoUsuario(user.id);
+  if (!restricao) return escopo.escopo === 'proprios' ? colaboradorIds : null;
   if (colaboradorIds.length === 0) return [];
 
   const { data, error } = await supabaseAdmin
@@ -148,4 +156,23 @@ export async function idsColaboradoresPermitidos(
   return (data || [])
     .filter(c => !c.empresa_id || restricao.includes(c.empresa_id))
     .map(c => c.id as string);
+}
+
+/**
+ * Mantém só as linhas cujo colaborador o usuário pode ver (escopo + empresa).
+ * Linha sem colaborador (quarentena, evento órfão) só passa sem restrição nenhuma.
+ */
+export async function filtrarPorColaboradorPermitido<T>(
+  user: EmpresaAcessoUser,
+  rows: T[],
+  colaboradorDe: (row: T) => string | null | undefined,
+): Promise<T[]> {
+  const ids = [...new Set(rows.map(colaboradorDe).filter((id): id is string => !!id))];
+  const permitidos = await idsColaboradoresPermitidos(user, ids);
+  if (!permitidos) return rows;
+  const visiveis = new Set(permitidos);
+  return rows.filter((row) => {
+    const id = colaboradorDe(row);
+    return !!id && visiveis.has(id);
+  });
 }

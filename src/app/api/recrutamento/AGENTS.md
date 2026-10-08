@@ -25,7 +25,7 @@ Módulo de recrutamento: espelha vagas e candidatos do InHire (`rc_vagas`, `rc_p
 - `GET/POST /api/recrutamento/vagas` + `PUT/DELETE /api/recrutamento/vagas/[id]` — CRUD vagas. DELETE = soft (`deleted_at`); bloqueia (409) se houver prospecto ativo na vaga.
 - `GET/POST /api/recrutamento/prospectos` + `PUT/DELETE /api/recrutamento/prospectos/[id]` — CRUD prospectos. DELETE = soft; prospecto `convertido` não pode ser excluído (409). PUT valida CPF (módulo 11), status no enum e vaga ativa. GETs filtram `deleted_at IS NULL`.
 - Soft delete: coluna `deleted_at` (migration `20261002_000001_rc_recrutamento_soft_delete.sql`). Unicidade de CPF só entre ativos (`uq_rc_prospectos_cpf_ativo`).
-- Permissão: `podeNivelRecrutamento(userId, role, 'manage')` para escrita, `'view'` para leitura (`src/lib/recrutamento/recrutamento-auth.ts`).
+- Permissão: `podeNivelRecrutamento(userId, role, 'manage')` para escrita, `'view'` para leitura (`src/lib/recrutamento/recrutamento-auth.ts`). 4º arg = grants que somam: `recrutamento.vagas.view` (GET vagas), `candidatos.view` (GET prospectos), `vagas.sync` (sync), `inhire.configure` (test-auth). Converter segue o gate do cadastro DP; `candidatos.advance|reject` / `precadastro.send` sem rota (o PUT edita o prospecto inteiro).
 - Client InHire: `src/lib/recrutamento/inhire-client.ts` (cache de sessão em memória, retry 1x em 401, `limparSessaoInhire`).
 - UI: `/department/recrutamento` — modais de edição inline + botões Editar/Excluir por linha (feature `recrutamento.manage`).
 

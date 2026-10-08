@@ -1,7 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { requireAuth } from '@/lib/api-auth';
+import { canWithGrant } from '@/lib/permission-gate';
 
 export const dynamic = 'force-dynamic';
+
+/** Autor do comentário OU moderação (ADMIN/MANAGER ou grant `news.comments.moderate`). */
+async function authorizeComment(request: NextRequest, postId: string, commentId: string) {
+    const { user, error } = await requireAuth(request);
+    if (error) return { error };
+
+    const { data: comment } = await supabaseAdmin
+        .from('news_post_comments')
+        .select('user_id, parent_id')
+        .eq('id', commentId)
+        .eq('post_id', postId)
+        .maybeSingle();
+
+    if (!comment) {
+        return { error: NextResponse.json({ error: 'Comentário não encontrado' }, { status: 404 }) };
+    }
+    if (comment.user_id !== user.id && !(await canWithGrant(user.id, user.role, ['news.comments.moderate']))) {
+        return { error: NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 }) };
+    }
+    return { comment: comment as { user_id: string; parent_id: string | null } };
+}
 
 export async function PUT(
     request: NextRequest,
@@ -9,6 +32,9 @@ export async function PUT(
 ) {
     try {
         const { postId, commentId } = await params;
+        const auth = await authorizeComment(request, postId, commentId);
+        if (auth.error) return auth.error;
+
         const body = await request.json();
         const { content } = body;
 
@@ -51,20 +77,11 @@ export async function DELETE(
 ) {
     try {
         const { postId, commentId } = await params;
+        const auth = await authorizeComment(request, postId, commentId);
+        if (auth.error) return auth.error;
+        const { comment } = auth;
 
         console.log(`🔄 API News Comments - Excluindo comentário ${commentId} do post ${postId}`);
-
-        // Pegar o comentário para ver se é comentário principal (para decrementar a contagem do post)
-        const { data: comment, error: fetchError } = await supabaseAdmin
-            .from('news_post_comments')
-            .select('parent_id')
-            .eq('id', commentId)
-            .eq('post_id', postId)
-            .single();
-
-        if (fetchError || !comment) {
-            return NextResponse.json({ error: 'Comentário não encontrado' }, { status: 404 });
-        }
 
         const { error: deleteError } = await supabaseAdmin
             .from('news_post_comments')

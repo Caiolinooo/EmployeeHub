@@ -460,8 +460,7 @@ export default function NovoColaboradorModal({ isOpen, onClose, onSuccess }: Pro
                   className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs bg-white"
                   options={toLookupOptions(departamentos, 'departamentos', form.departamento_id ? { id: form.departamento_id, label: form.departamento || form.departamento_id } : undefined)}
                   value={form.departamento_id || ''}
-                  allowCreate
-                  placeholder="Buscar departamento (WK)..."
+                  placeholder="Selecione o departamento (WK)..."
                   onChange={id => {
                     const row = departamentos.find(d => d.id === id);
                     setForm(p => ({
@@ -469,11 +468,6 @@ export default function NovoColaboradorModal({ isOpen, onClose, onSuccess }: Pro
                       departamento_id: id || null,
                       departamento: row ? formatCentroCustoLabel(row) : '',
                     }));
-                  }}
-                  onCreate={async (labelText) => {
-                    const created = await handleCreateLookup('departamentos', labelText, setDepartamentos);
-                    setForm(p => ({ ...p, departamento_id: created.id, departamento: created.label }));
-                    return created;
                   }}
                 />
               </div>

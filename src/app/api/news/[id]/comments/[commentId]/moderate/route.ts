@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,9 +16,9 @@ export async function DELETE(
     const payload = verifyToken(token);
     if (!payload) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    // TODO: Integrate ACL check for 'comments.moderate'. For now, allow ADMIN or GERENTE.
     const role = (payload as any).role?.toLowerCase?.() || '';
-    if (!(role === 'admin' || role === 'gerente')) {
+    const legacyRole = role === 'admin' || role === 'gerente';
+    if (!legacyRole && !(await canWithGrant(payload.userId, (payload as any).role, ['news.comments.moderate'], 'none'))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

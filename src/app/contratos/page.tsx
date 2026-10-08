@@ -9,8 +9,6 @@ import {
 } from 'react-icons/fi';
 import Link from 'next/link';
 import { fetchWithAuth } from '@/lib/authUtils';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
-import { hasFeaturePermission } from '@/lib/permissions';
 import { useEffectivePermissions } from '@/hooks/useEffectivePermissions';
 import DocumentUploadModal from '@/components/contratos/DocumentUploadModal';
 import DocumentStatusBadge from '@/components/contratos/DocumentStatusBadge';
@@ -20,14 +18,15 @@ import toast from 'react-hot-toast';
 type FilterStatus = 'ALL' | 'PENDING' | 'SIGNED';
 
 export default function ContratosPage() {
-    const { profile } = useSupabaseAuth();
     const { hasPermission, loading: permsLoading } = useEffectivePermissions();
     const { t } = useI18n();
-    const isManager = hasFeaturePermission(profile as any, 'contracts.manage')
-        || profile?.role === 'ADMIN'
-        || profile?.role === 'MANAGER';
-
     const [documentos, setDocumentos] = useState<any[]>([]);
+    // Ações vêm do servidor (loadContractAccess): JSONB + ACL + role, mesma regra das rotas
+    const [can, setCan] = useState<Record<string, boolean>>({});
+    const canTemplates = !!(can['templates.view'] || can['templates.manage'] || can['templates.use']);
+    // Escopo vem do servidor (contratos.view_all / view_own); o filtro real é aplicado na API
+    const [scope, setScope] = useState<'all' | 'own'>('own');
+    const viewAll = scope === 'all';
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<FilterStatus>('ALL');
@@ -46,6 +45,10 @@ export default function ContratosPage() {
 
             if (data.success) {
                 setDocumentos(data.documentos || []);
+                setScope(data.scope === 'all' ? 'all' : 'own');
+                setCan(data.can || {});
+            } else {
+                toast.error(data.error || t('contratos.error_loading', 'Erro ao carregar documentos'));
             }
         } catch (err) {
             console.error('Erro ao buscar documentos:', err);
@@ -61,12 +64,8 @@ export default function ContratosPage() {
 
     // Stats
     const totalDocs = documentos.length;
-    const pendingDocs = documentos.filter((d: any) =>
-        isManager ? (d.total_pendentes > 0) : (d.status === 'PENDING')
-    ).length;
-    const signedDocs = documentos.filter((d: any) =>
-        isManager ? (d.total_pendentes === 0 && d.total_assinados > 0) : (d.status === 'SIGNED')
-    ).length;
+    const pendingDocs = documentos.filter((d: any) => d.total_pendentes > 0).length;
+    const signedDocs = documentos.filter((d: any) => d.total_pendentes === 0 && d.total_assinados > 0).length;
 
     if (permsLoading) {
         return (
@@ -97,10 +96,10 @@ export default function ContratosPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">
-                            {isManager ? t('contratos.title_manager', 'Envelopes de Contratos') : t('contratos.title_user', 'Meus Documentos')}
+                            {viewAll ? t('contratos.title_manager', 'Envelopes de Contratos') : t('contratos.title_user', 'Meus Documentos')}
                         </h1>
                         <p className="text-sm text-gray-500 mt-1">
-                            {isManager
+                            {viewAll
                                 ? t('contratos.desc_manager', 'Crie envelopes com múltiplos documentos, atribua assinaturas e acompanhe o progresso')
                                 : t('contratos.desc_user', 'Documentos pendentes de assinatura eletrônica')}
                         </p>
@@ -113,9 +112,9 @@ export default function ContratosPage() {
                         >
                             <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                         </button>
-                        {isManager && (
+                        {(can.create || canTemplates) && (
                             <>
-                                <button
+                                {canTemplates && <button
                                     onClick={() => {
                                         setUploadModalTab('templates');
                                         setIsUploadOpen(true);
@@ -124,8 +123,8 @@ export default function ContratosPage() {
                                 >
                                     <FiSettings className="w-4 h-4 text-gray-500" />
                                     {t('contratos.btn_templates', 'Configurar Templates')}
-                                </button>
-                                <button
+                                </button>}
+                                {can.create && <button
                                     onClick={() => {
                                         setUploadModalTab('envelope');
                                         setIsUploadOpen(true);
@@ -134,7 +133,7 @@ export default function ContratosPage() {
                                 >
                                     <FiUpload className="w-4 h-4" />
                                     {t('contratos.btn_create', 'Criar Envelope')}
-                                </button>
+                                </button>}
                             </>
                         )}
                     </div>
@@ -148,7 +147,7 @@ export default function ContratosPage() {
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-gray-900">{totalDocs}</p>
-                            <p className="text-xs text-gray-500">{isManager ? t('contratos.total_envelopes', 'Total de Envelopes') : t('contratos.total_docs', 'Total de Documentos')}</p>
+                            <p className="text-xs text-gray-500">{viewAll ? t('contratos.total_envelopes', 'Total de Envelopes') : t('contratos.total_docs', 'Total de Documentos')}</p>
                         </div>
                     </div>
                     <div className="bg-white rounded-xl border border-gray-100 p-5 flex items-center gap-4">
@@ -210,8 +209,8 @@ export default function ContratosPage() {
                     ) : documentos.length === 0 ? (
                         <div className="text-center py-16">
                             <FiFileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                            <p className="text-gray-500 text-sm">{isManager ? t('contratos.no_envelope', 'Nenhum envelope encontrado') : t('contratos.no_document', 'Nenhum documento encontrado')}</p>
-                            {isManager && (
+                            <p className="text-gray-500 text-sm">{viewAll ? t('contratos.no_envelope', 'Nenhum envelope encontrado') : t('contratos.no_document', 'Nenhum documento encontrado')}</p>
+                            {can.create && (
                                 <button
                                     onClick={() => setIsUploadOpen(true)}
                                     className="mt-4 text-sm text-blue-600 hover:text-blue-800 font-medium"
@@ -223,13 +222,10 @@ export default function ContratosPage() {
                     ) : (
                         <div className="divide-y divide-gray-50">
                             {documentos.map((doc: any) => {
-                                const docData = isManager ? doc : doc.documento;
-                                const docId = isManager ? doc.id : docData?.id;
-                                const titulo = isManager ? doc.titulo : docData?.titulo;
-                                const dataCriacao = isManager ? doc.data_criacao : docData?.data_criacao;
-                                const docStatus = isManager
-                                    ? (doc.total_pendentes > 0 ? 'PENDING' : doc.total_assinados > 0 ? 'SIGNED' : 'ACTIVE')
-                                    : doc.status;
+                                const docId = doc.id;
+                                const titulo = doc.titulo;
+                                const dataCriacao = doc.data_criacao;
+                                const docStatus = doc.total_pendentes > 0 ? 'PENDING' : doc.total_assinados > 0 ? 'SIGNED' : 'ACTIVE';
 
                                 return (
                                     <Link
@@ -256,7 +252,7 @@ export default function ContratosPage() {
                                                         <FiCalendar className="w-3 h-3" />
                                                         {dataCriacao && new Date(dataCriacao).toLocaleDateString('pt-BR')}
                                                     </span>
-                                                    {isManager && (
+                                                    {viewAll && (
                                                         <>
                                                             <span className="flex items-center gap-1 text-xs text-gray-400 border-l border-gray-200 pl-2">
                                                                 <FiFileText className="w-3 h-3" />

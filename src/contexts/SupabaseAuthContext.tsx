@@ -14,6 +14,7 @@ import { activateUserAfterEmailVerification } from '@/lib/user-approval';
 import { getDefaultPermissionsForRole } from '@/config/modules';
 import { clearCompanionSession } from '@/lib/ia/companion-session-storage';
 import { hasEffectiveFeature } from '@/lib/effective-feature';
+import { resolveModuleKey } from '@/config/modules';
 // Import a browser-compatible JWT library or use a safer approach
 
 // Função para gerar um token JWT (deve ser feito no servidor)
@@ -160,7 +161,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   const [hasPassword, setHasPassword] = useState(false);
   const [authStatus, setAuthStatus] = useState<string | undefined>(undefined);
   const [rolePermissions, setRolePermissions] = useState<any>({});
-  const [aclEnabledModules, setAclEnabledModules] = useState<string[]>([]);
+  const [effectiveModules, setEffectiveModules] = useState<Record<string, boolean> | null>(null);
   const [effectiveFeatures, setEffectiveFeatures] = useState<Record<string, boolean>>({});
   const [aclPermissionNames, setAclPermissionNames] = useState<string[]>([]);
   const router = useRouter();
@@ -182,6 +183,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
   // Carregar módulos habilitados via ACL (após perfil do usuário estar disponível)
   useEffect(() => {
+    setEffectiveModules(null);
     if (!user?.id) return;
 
     const loadAclModules = async () => {
@@ -189,14 +191,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         const res = await fetch('/api/user/effective-permissions', { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
-          if (data.effective_modules) {
-            // Extrair módulos que ficaram ativos especificamente via ACL
-            // A API já inclui ACL na composição, então usamos os effective_modules
-            const modules = Object.entries(data.effective_modules)
-              .filter(([_, v]) => v === true)
-              .map(([k]) => k);
-            setAclEnabledModules(modules);
-          }
+          if (data.effective_modules) setEffectiveModules(data.effective_modules);
           setEffectiveFeatures(data.effective_features || {});
           setAclPermissionNames(Array.isArray(data.acl_permission_names) ? data.acl_permission_names : []);
         }
@@ -2165,10 +2160,11 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
           }
 
 
-          // ----------------------------------------------------------------------
-          // LOGICA DE PERMISSÃO HIERÁRQUICA E RESTRITIVA (STRICT SECTOR MODE)
-          // Referência: src/app/api/user/effective-permissions/route.ts
-          // ----------------------------------------------------------------------
+          // Servidor decide (composeEffectiveModules: revogação do usuário → grant do usuário →
+          // setor estrito / papel). Abaixo é só o fallback enquanto /api/user/effective-permissions carrega.
+          if (effectiveModules) {
+            return effectiveModules[module] === true;
+          }
 
           // 1. Permissões Individuais (Prioridade Máxima)
           const individualPermissions = profile?.accessPermissions?.modules || profile?.access_permissions?.modules;
@@ -2176,14 +2172,6 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
             const hasIndividualAccess = individualPermissions[module];
             debugLog(`🔐 Acesso ao módulo ${module} determinado por permissão individual do usuário: ${hasIndividualAccess}`);
             return hasIndividualAccess;
-          }
-
-          // 1b. ACL Permissions (via effective-permissions API)
-          // Se o effective-permissions API (que inclui user_acl_permissions + role_acl_permissions)
-          // já retornou os módulos, usar como camada intermediária
-          if (aclEnabledModules.includes(module)) {
-            debugLog(`🔐 Acesso ao módulo ${module} concedido via ACL do usuário`);
-            return true;
           }
 
           // 2. Permissões de Setor (Strict Sector Mode)
@@ -2195,7 +2183,9 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
             const coreModules = ['dashboard'];
 
             // Verifica permissão do setor
-            const hasSectorAccess = profile.sector.allowed_modules.includes(module);
+            const hasSectorAccess = profile.sector.allowed_modules.some(
+              (id: string) => id === module || resolveModuleKey(id) === module,
+            );
             const isCoreModule = coreModules.includes(module);
 
             debugLog(`🔐 Acesso ao módulo ${module} via Setor: ${hasSectorAccess} (Core: ${isCoreModule})`);
@@ -2282,12 +2272,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
               const aclRes = await fetch('/api/user/effective-permissions', { cache: 'no-store' });
               if (aclRes.ok) {
                 const aclData = await aclRes.json();
-                if (aclData.effective_modules) {
-                  const modules = Object.entries(aclData.effective_modules)
-                    .filter(([_, v]) => v === true)
-                    .map(([k]) => k);
-                  setAclEnabledModules(modules);
-                }
+                if (aclData.effective_modules) setEffectiveModules(aclData.effective_modules);
                 setEffectiveFeatures(aclData.effective_features || {});
                 setAclPermissionNames(
                   Array.isArray(aclData.acl_permission_names) ? aclData.acl_permission_names : [],

@@ -1,3 +1,13 @@
+## Ponto com biometria (2026-10-07)
+
+Início e fim de expediente em `/ponto` exigem WebAuthn. Almoço 12:00–13:00 é calculado. Aviso se o líquido ficar menor que 8h.
+
+- [x] `calcularJornada` + testes (sobreposição, fora da janela, limiar de 8h)
+- [x] `POST /api/pontoflow/punch` recusa batida sem asserção UV e grava `ts_punch_biometric`
+- [x] Tela: botões início/fim, `Hoje:` com líquido, aviso âmbar
+- [x] Migration `20261007_000007_ts_punch_biometric.sql` aplicada (`node scripts/apply-ts-punch-biometric.js`, RLS on)
+- [ ] Conferir no navegador com login: biometria, estados dos botões, aviso e almoço
+
 ## Ponto vinculado à folha (2026-10-07)
 
 A mesma pessoa liga login, GT, PontoFlow e folha. Batida no portal e em ponto.groupabz.com. Hora aprovada vira item `origem=timesheet`.

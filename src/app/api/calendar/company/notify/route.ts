@@ -3,6 +3,9 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { parseIcs } from '@/lib/ics';
 import { sendEmail } from '@/lib/email-service';
 import { dedupeSimilarCalendarEvents } from '@/lib/calendar-event-dedupe';
+import { requireAuth } from '@/lib/api-auth';
+import { canWithGrant } from '@/lib/permission-gate';
+import { hasCronOrSetupSecret } from '@/lib/public-debug-guard';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,6 +35,13 @@ async function getCalendarSettings() {
 }
 
 export async function POST(req: NextRequest) {
+  if (!hasCronOrSetupSecret(req)) {
+    const { user, error } = await requireAuth(req);
+    if (error) return error;
+    if (!(await canWithGrant(user.id, user.role, ['calendario.notify']))) {
+      return NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
+    }
+  }
   try {
     const { icsUrl, notifyMinutes, extraRecipients } = await getCalendarSettings();
     if (!icsUrl) return NextResponse.json({ error: 'ICS URL não configurada' }, { status: 400 });

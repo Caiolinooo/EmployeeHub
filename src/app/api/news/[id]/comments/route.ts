@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { requireAuth } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -77,14 +78,21 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { user, error: authError } = await requireAuth(request);
+  if (authError) return authError;
   try {
     const { id: newsId } = await params;
     const body = await request.json();
-    const { userId, content, parentId } = body;
+    const { content, parentId } = body;
+    const userId = user.id;
 
-    if (!userId || !content) {
+    if (body.userId && body.userId !== userId) {
+      return NextResponse.json({ error: 'userId diverge do usuário autenticado' }, { status: 403 });
+    }
+
+    if (!content) {
       return NextResponse.json(
-        { error: 'userId e content são obrigatórios' },
+        { error: 'content é obrigatório' },
         { status: 400 }
       );
     }
@@ -108,20 +116,6 @@ export async function POST(
     if (newsError || !news) {
       return NextResponse.json(
         { error: 'Notícia não encontrada' },
-        { status: 404 }
-      );
-    }
-
-    // Verificar se o usuário existe
-    const { data: user, error: userError } = await supabaseAdmin
-      .from('users_unified')
-      .select('id, first_name, last_name, email, role')
-      .eq('id', userId)
-      .single();
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Usuário não encontrado' },
         { status: 404 }
       );
     }

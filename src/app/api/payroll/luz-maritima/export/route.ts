@@ -14,7 +14,7 @@ export const runtime = 'nodejs';
  */
 export async function GET(request: NextRequest) {
   try {
-    const gate = await garantirNivelPayroll(request, 'view');
+    const gate = await garantirNivelPayroll(request, 'view', ['financeiro.folha.export']);
     if (!gate.ok) return gate.error;
 
     // Runtime check to ensure this only runs during actual HTTP requests

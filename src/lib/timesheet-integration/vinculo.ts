@@ -1,6 +1,8 @@
 /**
  * Cadeia única login ↔ GT ↔ PontoFlow ↔ folha.
- * CPF/e-mail só preenchem elo vazio quando o match é único. Nunca cria segunda pessoa.
+ * CPF, e-mail e telefone preenchem elo vazio quando o match é único.
+ * Telefone também reassumir o elo do e-mail pessoal do próprio cadastro.
+ * Nunca cria segunda pessoa.
  */
 import { normalizeCpf, formatCpf } from '@/lib/utils/identity';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -20,10 +22,21 @@ export interface ColaboradorVinculoRow {
   empresa_id: string | null;
   cpf: string | null;
   email: string | null;
+  telefone?: string | null;
+  telefone_2?: string | null;
   nome_completo: string | null;
   contabilizar_timesheet: boolean | null;
   ativo: boolean | null;
   timesheet_sync_status?: string | null;
+}
+
+export interface PortalUserVinculo {
+  id: string;
+  email: string | null;
+  tax_id: string | null;
+  phone_number?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
 }
 
 export interface PayrollVinculoRow {
@@ -46,9 +59,11 @@ export interface VinculoResolvido {
 export interface VinculoStore {
   colaboradorByUserId(userId: string): Promise<ColaboradorVinculoRow | null>;
   colaboradorById(id: string): Promise<ColaboradorVinculoRow | null>;
-  userById(userId: string): Promise<{ id: string; email: string | null; tax_id: string | null } | null>;
-  candidatos(cpfDigits: string | null, email: string | null): Promise<ColaboradorVinculoRow[]>;
+  userById(userId: string): Promise<PortalUserVinculo | null>;
+  candidatos(cpfDigits: string | null, email: string | null, phoneDigits?: string | null): Promise<ColaboradorVinculoRow[]>;
   setUserIdIfEmpty(colaboradorId: string, userId: string): Promise<boolean>;
+  /** Troca o login só se o user_id atual ainda é `fromUserId`. */
+  setUserIdFrom(colaboradorId: string, fromUserId: string, toUserId: string): Promise<boolean>;
   peopleMap(colaboradorId: string): Promise<{ tsEmployeeId: string; empresaId: string } | null>;
   empresaEnabled(empresaId: string): Promise<boolean>;
   payrollByGtId(gtId: string): Promise<PayrollVinculoRow | null>;
@@ -74,6 +89,60 @@ function digits(raw: string | null | undefined): string {
 
 function emailNorm(raw: string | null | undefined): string {
   return (raw || '').trim().toLowerCase();
+}
+
+/** Últimos 11 dígitos. DDD+número, com ou sem 55. Menos que 11 não entra. */
+export function phoneKey(raw: string | null | undefined): string {
+  const d = (raw || '').replace(/\D/g, '');
+  if (d.length >= 11) return d.slice(-11);
+  return '';
+}
+
+function foldName(raw: string | null | undefined): string[] {
+  return (raw || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .split(/[^a-z]+/)
+    .filter((token) => token.length >= 3);
+}
+
+/** Quantos tokens do login aparecem no nome do cadastro. */
+export function nomesCompartilhados(
+  loginNome: string | null | undefined,
+  cadastroNome: string | null | undefined,
+): number {
+  const cadastro = new Set(foldName(cadastroNome));
+  let n = 0;
+  for (const token of foldName(loginNome)) {
+    if (cadastro.has(token)) n += 1;
+  }
+  return n;
+}
+
+function loginNome(user: PortalUserVinculo): string {
+  return [user.first_name, user.last_name].filter(Boolean).join(' ');
+}
+
+/**
+ * O cadastro já tem user_id no login do e-mail pessoal gravado nele.
+ * O login atual é outro, com o mesmo telefone e dois nomes em comum.
+ * Não troca um vínculo que não seja esse par.
+ */
+export function podeReassumirLogin(
+  user: PortalUserVinculo,
+  row: ColaboradorVinculoRow,
+  outro: PortalUserVinculo | null,
+): boolean {
+  const phone = phoneKey(user.phone_number);
+  if (!phone || !outro || !row.user_id || row.user_id === user.id) return false;
+  if (outro.id !== row.user_id) return false;
+  const emailCadastro = emailNorm(row.email);
+  if (!emailCadastro || emailNorm(outro.email) !== emailCadastro) return false;
+  if (emailNorm(user.email) === emailCadastro) return false;
+  const foneCadastro = phoneKey(row.telefone) === phone || phoneKey(row.telefone_2) === phone;
+  if (!foneCadastro) return false;
+  return nomesCompartilhados(loginNome(user), row.nome_completo) >= 2;
 }
 
 /** Linhas que este login pode assumir: user_id vazio ou já é ele. Outro user_id não entra. */
@@ -177,6 +246,18 @@ async function ligarFolha(
   return pick.row;
 }
 
+async function gravarUserId(
+  store: VinculoStore,
+  row: ColaboradorVinculoRow,
+  userId: string,
+): Promise<ColaboradorVinculoRow | null> {
+  const ok = row.user_id
+    ? await store.setUserIdFrom(row.id, row.user_id, userId)
+    : await store.setUserIdIfEmpty(row.id, userId);
+  if (!ok) return store.colaboradorByUserId(userId);
+  return { ...row, user_id: userId };
+}
+
 async function acharPorIdentidade(
   store: VinculoStore,
   userId: string,
@@ -185,20 +266,22 @@ async function acharPorIdentidade(
   if (!user) return null;
   const cpf = digits(user.tax_id);
   const email = emailNorm(user.email);
-  if (!cpf && !email) return null;
-  const rows = await store.candidatos(cpf || null, email || null);
+  const phone = phoneKey(user.phone_number);
+  if (!cpf && !email && !phone) return null;
+  const rows = await store.candidatos(cpf || null, email || null, phone || null);
   const pick = candidatosDoLogin(rows, userId);
   if (pick.kind === 'many') return 'ambiguo';
-  if (pick.kind === 'none') return null;
-  if (!pick.row.user_id) {
-    const ok = await store.setUserIdIfEmpty(pick.row.id, userId);
-    if (!ok) {
-      const again = await store.colaboradorByUserId(userId);
-      return again;
-    }
-    return { ...pick.row, user_id: userId };
+  if (pick.kind === 'one') {
+    if (!pick.row.user_id) return gravarUserId(store, pick.row, userId);
+    return pick.row;
   }
-  return pick.row;
+
+  const presos = rows.filter((row) => row.user_id && row.user_id !== userId);
+  if (presos.length !== 1) return null;
+  const row = presos[0];
+  const outro = await store.userById(row.user_id as string);
+  if (!podeReassumirLogin(user, row, outro)) return null;
+  return gravarUserId(store, row, userId);
 }
 
 /** Resolve a cadeia a partir do usuário do portal (JWT). */
@@ -236,7 +319,7 @@ export async function resolveVinculoByExternalId(
 }
 
 const COLAB_SELECT =
-  'id, user_id, empresa_id, cpf, email, nome_completo, contabilizar_timesheet, ativo, timesheet_sync_status';
+  'id, user_id, empresa_id, cpf, email, telefone, telefone_2, nome_completo, contabilizar_timesheet, ativo, timesheet_sync_status';
 
 function asColab(row: unknown): ColaboradorVinculoRow | null {
   if (!row || typeof row !== 'object') return null;
@@ -274,7 +357,7 @@ export function createSupabaseVinculoStore(db: SupabaseClient): VinculoStore {
     async userById(userId) {
       const { data, error } = await db
         .from('users_unified')
-        .select('id, email, tax_id')
+        .select('id, email, tax_id, phone_number, first_name, last_name')
         .eq('id', userId)
         .maybeSingle();
       if (error) throw new Error(`users_unified: ${error.message}`);
@@ -283,14 +366,21 @@ export function createSupabaseVinculoStore(db: SupabaseClient): VinculoStore {
         id: String(data.id),
         email: data.email ? String(data.email) : null,
         tax_id: data.tax_id ? String(data.tax_id) : null,
+        phone_number: data.phone_number ? String(data.phone_number) : null,
+        first_name: data.first_name ? String(data.first_name) : null,
+        last_name: data.last_name ? String(data.last_name) : null,
       };
     },
-    async candidatos(cpfDigits, email) {
+    async candidatos(cpfDigits, email, phoneDigits) {
       const filters: string[] = [];
       if (cpfDigits) {
         filters.push(`cpf.eq.${cpfDigits}`, `cpf.eq.${formatCpf(cpfDigits)}`);
       }
       if (email) filters.push(`email.ilike.${email}`);
+      const suffix = phoneDigits && phoneDigits.length >= 11 ? phoneDigits.slice(-9) : '';
+      if (suffix) {
+        filters.push(`telefone.ilike.%${suffix}`, `telefone_2.ilike.%${suffix}`);
+      }
       if (filters.length === 0) return [];
       const { data, error } = await db
         .from('gt_colaboradores')
@@ -306,7 +396,10 @@ export function createSupabaseVinculoStore(db: SupabaseClient): VinculoStore {
         if (!row || seen.has(row.id)) continue;
         const cpfOk = cpfDigits ? digits(row.cpf) === cpfDigits : false;
         const emailOk = email ? emailNorm(row.email) === email : false;
-        if (!cpfOk && !emailOk) continue;
+        const phoneOk = phoneDigits
+          ? phoneKey(row.telefone) === phoneDigits || phoneKey(row.telefone_2) === phoneDigits
+          : false;
+        if (!cpfOk && !emailOk && !phoneOk) continue;
         seen.add(row.id);
         out.push(row);
       }
@@ -320,6 +413,16 @@ export function createSupabaseVinculoStore(db: SupabaseClient): VinculoStore {
         .is('user_id', null)
         .select('id');
       if (error) throw new Error(`gt user_id: ${error.message}`);
+      return Array.isArray(data) && data.length > 0;
+    },
+    async setUserIdFrom(colaboradorId, fromUserId, toUserId) {
+      const { data, error } = await db
+        .from('gt_colaboradores')
+        .update({ user_id: toUserId })
+        .eq('id', colaboradorId)
+        .eq('user_id', fromUserId)
+        .select('id');
+      if (error) throw new Error(`gt user_id troca: ${error.message}`);
       return Array.isArray(data) && data.length > 0;
     },
     async peopleMap(colaboradorId) {

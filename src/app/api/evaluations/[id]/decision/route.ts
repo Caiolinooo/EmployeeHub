@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 import { EvaluationService } from '@/lib/services/evaluation-service';
 import { EvaluationWorkflowService } from '@/lib/services/evaluation-workflow-service';
 import { DecisaoGerenteData } from '@/lib/schemas/evaluation-schemas';
@@ -55,7 +56,7 @@ export async function POST(
     }
 
     // Verificar permissões (appenas admin e manager podem tomar decisões)
-    if (payload.role !== 'ADMIN' && payload.role !== 'MANAGER') {
+    if (!(await canWithGrant(payload.userId, payload.role, ['avaliacao.decide']))) {
       return NextResponse.json({
         success: false,
         error: 'Apenas administradores e gerentes podem tomar decisões sobre avaliações'

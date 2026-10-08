@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { authenticateUser, checkPermissions } from '@/lib/api-auth';
+import { authenticateUser } from '@/lib/api-auth';
+import { denyUnlessCan, loadContractAccess } from '@/lib/contracts/view-access';
 import { generateSHA256 } from '@/lib/services/CryptographyService';
 
 export const dynamic = 'force-dynamic';
@@ -13,6 +14,8 @@ export async function GET(request: NextRequest) {
         const { user, error: authError } = await authenticateUser(request);
         if (authError) return authError;
         if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+        const denied = denyUnlessCan(await loadContractAccess(user), 'templates.view', 'templates.manage', 'templates.use');
+        if (denied) return denied;
 
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
@@ -107,9 +110,8 @@ export async function POST(request: NextRequest) {
         if (authError) return authError;
         if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
 
-        if (!checkPermissions(user, 'contracts_manager')) {
-            return NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
-        }
+        const denied = denyUnlessCan(await loadContractAccess(user), 'templates.manage');
+        if (denied) return denied;
 
         const contentType = request.headers.get('content-type') || '';
 
@@ -292,9 +294,8 @@ export async function DELETE(request: NextRequest) {
         if (authError) return authError;
         if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
 
-        if (!checkPermissions(user, 'contracts_manager')) {
-            return NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
-        }
+        const denied = denyUnlessCan(await loadContractAccess(user), 'templates.manage');
+        if (denied) return denied;
 
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');

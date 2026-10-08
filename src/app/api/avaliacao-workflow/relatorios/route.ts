@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AvaliacaoWorkflowService } from '@/lib/services/avaliacao-workflow-service';
 import { getCurrentUser } from '@/lib/supabase';
+import { canWithGrant } from '@/lib/permission-gate';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,8 +19,8 @@ export async function GET(request: NextRequest) {
       }, { status: 401 });
     }
 
-    // Verificar permissão (apenas ADMIN e gerentes podem ver relatórios)
-    if (currentUser.role !== 'ADMIN') {
+    // Verificar permissão (ADMIN ou grant avaliacao.reports.view)
+    if (!(await canWithGrant(currentUser.id, currentUser.role, ['avaliacao.reports.view'], 'admin'))) {
       return NextResponse.json({
         success: false,
         error: 'Sem permissão para acessar relatórios'
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
-    if (currentUser.role !== 'ADMIN') {
+    if (!(await canWithGrant(currentUser.id, currentUser.role, ['avaliacao.reports.export'], 'admin'))) {
       return NextResponse.json({
         success: false,
         error: 'Sem permissão para exportar dados'

@@ -8,7 +8,10 @@ export const handler: Handler = async () => {
       console.warn('No base URL in env (URL/DEPLOY_URL). Falling back to relative fetch.');
     }
     const endpoint = `${base || ''}/api/calendar/company/notify`;
-    const res = await fetch(endpoint, { method: 'POST' });
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.CRON_SECRET || ''}` },
+    });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       console.error('Notify endpoint failed', res.status, data);

@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     // ACL por empresa
     if (!(await usuarioPodeVerColaborador(user, colaborador_id))) {
-      return NextResponse.json({ error: 'Sem acesso a este colaborador (empresa restrita)' }, { status: 403 });
+      return NextResponse.json({ error: 'Sem acesso a este colaborador (escopo ou empresa restrita)' }, { status: 403 });
     }
 
     const path = montarPathArquivo(colaborador_id, nome_arquivo);

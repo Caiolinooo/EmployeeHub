@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { fetchWithToken } from '@/lib/tokenStorage';
 
 interface ACLPermission {
   id: string;
@@ -22,6 +23,8 @@ interface UserPermissions {
   individual_permissions: Array<{
     id: string;
     permission: ACLPermission;
+    /** false = revogação individual (vence o role). */
+    granted: boolean;
     granted_at: string;
     expires_at?: string;
     is_expired: boolean;
@@ -40,6 +43,12 @@ interface PermissionCheckResult {
   permission_source: string;
 }
 
+function notifyPermissionsUpdated() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('permissions-updated'));
+  }
+}
+
 export function useACLPermissions(userId?: string) {
   const [permissions, setPermissions] = useState<UserPermissions | null>(null);
   const [loading, setLoading] = useState(false);
@@ -51,29 +60,25 @@ export function useACLPermissions(userId?: string) {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/acl/users/${targetUserId}/permissions`);
-      
+      const response = await fetchWithToken(`/api/acl/users/${targetUserId}/permissions`);
+
       if (!response.ok) {
         throw new Error('Erro ao carregar permissões do usuário');
       }
 
       const data = await response.json();
-      
-      // Calcular permissões efetivas (individual + role, sem duplicatas)
+
+      // Role + grants individuais, menos as revogações individuais
       const effectivePermissions = new Map<string, ACLPermission>();
-      
-      // Adicionar permissões por role
       data.role_permissions.forEach((rp: any) => {
         effectivePermissions.set(rp.permission.id, rp.permission);
       });
-      
-      // Adicionar permissões individuais (sobrescreve role se houver conflito)
       data.individual_permissions.forEach((up: any) => {
-        if (!up.is_expired) {
-          effectivePermissions.set(up.permission.id, up.permission);
-        }
+        if (up.is_expired) return;
+        if (up.granted === false) effectivePermissions.delete(up.permission.id);
+        else effectivePermissions.set(up.permission.id, up.permission);
       });
-      
+
       const result = { ...data, effective_permissions: Array.from(effectivePermissions.values()) };
       setPermissions(result);
     } catch (err) {
@@ -99,7 +104,7 @@ export function useACLPermissions(userId?: string) {
       });
 
       const response = await fetch(`/api/acl/check?${params}`);
-      
+
       if (!response.ok) {
         throw new Error('Erro ao verificar permissão');
       }
@@ -111,54 +116,57 @@ export function useACLPermissions(userId?: string) {
     }
   }, []);
 
-  // Atribuir permissão a usuário
-  const grantPermission = useCallback(async (
+  const upsertPermission = useCallback(async (
     targetUserId: string,
-    permissionId: string,
-    expiresAt?: string,
-    grantedBy?: string
+    body: { permission_id: string; granted: boolean; expires_at?: string; granted_by?: string }
   ): Promise<boolean> => {
     try {
-      const response = await fetch(`/api/acl/users/${targetUserId}/permissions`, {
+      const response = await fetchWithToken(`/api/acl/users/${targetUserId}/permissions`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          permission_id: permissionId,
-          expires_at: expiresAt,
-          granted_by: grantedBy
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao atribuir permissão');
+        throw new Error('Erro ao gravar permissão');
       }
 
-      // Recarregar permissões do usuário
       if (targetUserId === userId) {
         await loadUserPermissions(targetUserId);
       }
-
-      // Notificar outros componentes que permissões foram alteradas
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new Event('permissions-updated'));
-      }
-
+      notifyPermissionsUpdated();
       return true;
     } catch (err) {
-      console.error('Erro ao atribuir permissão:', err);
+      console.error('Erro ao gravar permissão:', err);
       return false;
     }
   }, [userId, loadUserPermissions]);
 
-  // Remover permissão de usuário
+  // Atribuir permissão a usuário
+  const grantPermission = useCallback((
+    targetUserId: string,
+    permissionId: string,
+    expiresAt?: string,
+    grantedBy?: string
+  ): Promise<boolean> =>
+    upsertPermission(targetUserId, {
+      permission_id: permissionId,
+      granted: true,
+      expires_at: expiresAt,
+      granted_by: grantedBy,
+    }), [upsertPermission]);
+
+  // Revogar individualmente uma permissão que o usuário teria pelo role
+  const denyPermission = useCallback((targetUserId: string, permissionId: string): Promise<boolean> =>
+    upsertPermission(targetUserId, { permission_id: permissionId, granted: false }), [upsertPermission]);
+
+  // Remover a linha individual (grant ou revogação): volta ao default do role
   const revokePermission = useCallback(async (
     targetUserId: string,
     permissionId: string
   ): Promise<boolean> => {
     try {
-      const response = await fetch(
+      const response = await fetchWithToken(
         `/api/acl/users/${targetUserId}/permissions?permission_id=${permissionId}`,
         {
           method: 'DELETE',
@@ -169,16 +177,10 @@ export function useACLPermissions(userId?: string) {
         throw new Error('Erro ao remover permissão');
       }
 
-      // Recarregar permissões do usuário
       if (targetUserId === userId) {
         await loadUserPermissions(targetUserId);
       }
-
-      // Notificar outros componentes que permissões foram alteradas
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new Event('permissions-updated'));
-      }
-
+      notifyPermissionsUpdated();
       return true;
     } catch (err) {
       console.error('Erro ao remover permissão:', err);
@@ -233,6 +235,7 @@ export function useACLPermissions(userId?: string) {
     loadUserPermissions,
     checkPermission,
     grantPermission,
+    denyPermission,
     revokePermission,
     hasPermission,
     hasResourcePermission,

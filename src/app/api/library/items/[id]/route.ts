@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { withAdmin } from '@/lib/api-auth';
+import { withPermissionOrGrant } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
-export const DELETE = withAdmin(async (request: NextRequest, user, context: { params: Promise<{ id: string }> }) => {
+export const DELETE = withPermissionOrGrant('admin', ['biblioteca.delete', 'biblioteca.manage'], async (request: NextRequest, user, context: { params: Promise<{ id: string }> }) => {
     const { id } = await context.params;
 
     if (!id) {
@@ -85,7 +85,7 @@ export const DELETE = withAdmin(async (request: NextRequest, user, context: { pa
 });
 
 // Optional: PUT for updates (future proofing)
-export const PUT = withAdmin(async (request: NextRequest, user, context: { params: Promise<{ id: string }> }) => {
+export const PUT = withPermissionOrGrant('admin', ['biblioteca.update', 'biblioteca.manage'], async (request: NextRequest, user, context: { params: Promise<{ id: string }> }) => {
     const { id } = await context.params;
     const json = await request.json();
 

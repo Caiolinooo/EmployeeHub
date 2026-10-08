@@ -12,7 +12,7 @@ import { Sector } from '@/types/index';
 import { useACLPermissions } from '@/hooks/useACLPermissions';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { QHSE_MODULE_KEY } from '@/lib/document-catalog/permissions';
-import { getFullPermissionsForRole, getModuleKeyForCatalogFeature } from '@/config/modules';
+import { getModuleKeyForCatalogFeature, resolveModuleKey } from '@/config/modules';
 import CollaboratorDocumentsCatalog from './CollaboratorDocumentsCatalog';
 import CatalogFeatureToggles from './CatalogFeatureToggles';
 
@@ -69,10 +69,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
     startup_splash_url: '',
     startup_sound_enabled: false,
     startup_sound_url: '',
-    accessPermissions: {
-      modules: getFullPermissionsForRole('USER'),
-      features: {}
-    },
+    accessPermissions: { modules: {}, features: {} },
     reimbursement_email_settings: {
       enabled: false,
       recipients: []
@@ -96,6 +93,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
   const [showACLPermissions, setShowACLPermissions] = useState(false);
   const [loadingModules, setLoadingModules] = useState(false);
   const [selectedACLPermissions, setSelectedACLPermissions] = useState<string[]>([]);
+  const [deniedACLPermissions, setDeniedACLPermissions] = useState<string[]>([]);
   const [roleACLPermissions, setRoleACLPermissions] = useState<string[]>([]);
 
   // State for available sectors
@@ -153,6 +151,7 @@ const UserEditor: React.FC<UserEditorProps> = ({
     loading: loadingACL,
     loadUserPermissions,
     grantPermission,
+    denyPermission,
     revokePermission
   } = useACLPermissions(editedUser._id || '');
 
@@ -166,10 +165,10 @@ const UserEditor: React.FC<UserEditorProps> = ({
   // Sincronizar as permissões carregadas com o estado local para edição offline
   useEffect(() => {
     if (userACLPermissions) {
-      const individualIds = userACLPermissions.individual_permissions
-        .filter((up: any) => !up.is_expired)
-        .map((up: any) => up.permission.id) || [];
+      const active = userACLPermissions.individual_permissions.filter((up) => !up.is_expired);
+      const individualIds = active.filter((up) => up.granted).map((up) => up.permission.id);
       setSelectedACLPermissions(individualIds);
+      setDeniedACLPermissions(active.filter((up) => !up.granted).map((up) => up.permission.id));
 
       const roleIds = userACLPermissions.role_permissions
         .map((rp: any) => rp.permission.id) || [];
@@ -263,55 +262,16 @@ const UserEditor: React.FC<UserEditorProps> = ({
     setSelectedACLPermissions(permissionIds);
   };
 
-  // Permissões padrão para cada papel — all 24 system modules
-  const defaultPermissions: Record<string, { modules: Record<string, boolean> }> = {
-    ADMIN: {
-      modules: {
-        dashboard: true, noticias: true, calendario: true, 'ia-assistant': true,
-        ponto: true, contracheque: true, reembolso: true, kpi: true,
-        avaliacao: true, epi: true, ferias: true, 'lista-presenca': true,
-        contratos: true, academy: true, biblioteca: true, ajuda: true,
-        compras: true, poliweb: true, 'man-schedule': true, chat: true,
-        wkradar: true, admin: true, 'integracao-erp': true
-      }
-    },
-    MANAGER: {
-      modules: {
-        dashboard: true, noticias: true, calendario: true, 'ia-assistant': true,
-        ponto: true, contracheque: true, reembolso: true, kpi: false,
-        avaliacao: true, epi: true, ferias: true, 'lista-presenca': true,
-        contratos: true, academy: true, biblioteca: true, ajuda: true,
-        compras: true, poliweb: true, 'man-schedule': false, chat: true,
-        wkradar: false, admin: false, 'integracao-erp': false
-      }
-    },
-    USER: {
-      modules: {
-        dashboard: true, noticias: true, calendario: true, 'ia-assistant': true,
-        ponto: true, contracheque: true, reembolso: true, kpi: false,
-        avaliacao: false, epi: true, ferias: true, 'lista-presenca': true,
-        contratos: true, academy: true, biblioteca: true, ajuda: true,
-        compras: false, poliweb: true, 'man-schedule': false, chat: true,
-        wkradar: false, admin: false, 'integracao-erp': false
-      }
-    }
-  };
-
-  // Inicializar permissões se não existirem
-  if (!editedUser.accessPermissions) {
-    editedUser.accessPermissions = defaultPermissions[editedUser.role];
-  }
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
-    // Se estiver alterando o papel, atualizar as permissões padrão
+    // Trocar o papel zera os overrides: o usuário herda defaults do novo papel/setor.
     if (name === 'role' && ['ADMIN', 'MANAGER', 'USER'].includes(value)) {
       const role = value as 'ADMIN' | 'MANAGER' | 'USER';
       setEditedUser(prev => ({
         ...prev,
         [name]: role,
-        accessPermissions: defaultPermissions[role]
+        accessPermissions: { modules: {}, features: {} }
       }));
     } else if (name === 'position') {
       // Smart Sector Auto-Selection based on Position Keywords
@@ -523,24 +483,18 @@ const UserEditor: React.FC<UserEditorProps> = ({
     if (!isNewUser && editedUser._id) {
       try {
         console.log('[UserEditor] Iniciando salvamento das permissões ACL...');
-        // Obter permissões atuais
-        const currentPermissions = userACLPermissions?.individual_permissions
-          .filter((up: any) => !up.is_expired)
-          .map((up: any) => up.permission.id) || [];
+        const current = (userACLPermissions?.individual_permissions || []).filter((up) => !up.is_expired);
+        const currentGranted = current.filter((up) => up.granted).map((up) => up.permission.id);
+        const currentDenied = current.filter((up) => !up.granted).map((up) => up.permission.id);
 
-        // Encontrar permissões a adicionar
-        const toAdd = selectedACLPermissions.filter(id => !currentPermissions.includes(id));
-
-        // Encontrar permissões a remover
-        const toRemove = currentPermissions.filter(id => !selectedACLPermissions.includes(id));
-
-        // Adicionar novas permissões
-        for (const permissionId of toAdd) {
+        for (const permissionId of selectedACLPermissions.filter(id => !currentGranted.includes(id))) {
           await grantPermission(editedUser._id, permissionId);
         }
-
-        // Remover permissões desmarcadas
-        for (const permissionId of toRemove) {
+        for (const permissionId of deniedACLPermissions.filter(id => !currentDenied.includes(id))) {
+          await denyPermission(editedUser._id, permissionId);
+        }
+        const kept = new Set([...selectedACLPermissions, ...deniedACLPermissions]);
+        for (const permissionId of [...currentGranted, ...currentDenied].filter(id => !kept.has(id))) {
           await revokePermission(editedUser._id, permissionId);
         }
 
@@ -858,9 +812,16 @@ const UserEditor: React.FC<UserEditorProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   {availableModules.map((module) => {
                     const hasIndividualPermission = editedUser.accessPermissions?.modules?.[module.id] !== undefined;
+                    const sectorModules = availableSectors.find((s) => s.id === editedUser.sector_id)?.allowed_modules;
+                    const strictSector = editedUser.role === 'USER' && !!editedUser.sector_id;
+                    const isEnabledBySector =
+                      module.id === 'dashboard' ||
+                      (sectorModules || []).some((id) => resolveModuleKey(id) === module.id);
                     const isEnabledByRole = rolePermissions[editedUser.role]?.modules?.[module.id] || false;
+                    const inheritedLabel = strictSector || (isEnabledBySector && !isEnabledByRole) ? 'Por Setor' : 'Por Role';
+                    const isInherited = strictSector ? isEnabledBySector : isEnabledByRole || (!!editedUser.sector_id && isEnabledBySector);
                     const isEnabledIndividually = editedUser.accessPermissions?.modules?.[module.id] || false;
-                    const finalEnabled = hasIndividualPermission ? isEnabledIndividually : isEnabledByRole;
+                    const finalEnabled = hasIndividualPermission ? isEnabledIndividually : isInherited;
 
                     return (
                       <div key={module.id} className="flex items-start p-2 border rounded-lg">
@@ -882,9 +843,9 @@ const UserEditor: React.FC<UserEditorProps> = ({
                               Personalizado
                             </span>
                           )}
-                          {!hasIndividualPermission && isEnabledByRole && (
+                          {!hasIndividualPermission && isInherited && (
                             <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded">
-                              Por Role
+                              {inheritedLabel}
                             </span>
                           )}
                         </div>
@@ -953,6 +914,8 @@ const UserEditor: React.FC<UserEditorProps> = ({
                   userRole={editedUser.role}
                   showRolePermissions={true}
                   rolePermissions={roleACLPermissions}
+                  deniedPermissions={deniedACLPermissions}
+                  onDeniedChange={setDeniedACLPermissions}
                   disabled={editedUser.role === 'ADMIN'} // Administradores têm todas as permissões
                 />
               )}

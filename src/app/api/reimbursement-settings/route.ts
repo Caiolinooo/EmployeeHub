@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/db';
+import { withPermissionOrGrant } from '@/lib/api-auth';
 import {
   getDefaultReimbursementEmailSettings,
   normalizeReimbursementEmailSettings,
@@ -7,8 +8,10 @@ import {
 
 export const dynamic = 'force-dynamic';
 
-// GET - Obter configurações de email de reembolso
-export async function GET(request: NextRequest) {
+const SETTINGS_GRANTS = ['reimbursement.settings', 'admin.reimbursement_settings.manage'] as const;
+
+// GET - Obter configurações de email de reembolso (só a tela admin consome)
+export const GET = withPermissionOrGrant('admin', SETTINGS_GRANTS, async (request: NextRequest) => {
   try {
     console.log('GET /api/reimbursement-settings - Iniciando busca de configurações');
 
@@ -178,10 +181,10 @@ export async function GET(request: NextRequest) {
     // Retornar valores padrão mesmo em caso de erro
     return NextResponse.json(getDefaultReimbursementEmailSettings());
   }
-}
+});
 
 // POST - Criar ou atualizar configurações de email de reembolso
-export async function POST(request: NextRequest) {
+export const POST = withPermissionOrGrant('admin', SETTINGS_GRANTS, async (request: NextRequest) => {
   try {
     console.log('POST /api/reimbursement-settings - Iniciando processamento');
 
@@ -414,4 +417,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

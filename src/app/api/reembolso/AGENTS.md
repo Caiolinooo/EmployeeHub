@@ -24,6 +24,10 @@ APIs de criação e atualização de status de reembolso, incluindo o envio de e
 
 Defaults: Andresa | fiscal | fiscal. Admin pode adicionar/remover emails em cada lista.
 
+### Gate da config
+
+`GET|POST /api/reimbursement-settings` e `/api/reimbursement-settings-fallback` exigem JWT verificado + ADMIN **ou** grant `reimbursement.settings` / `admin.reimbursement_settings.manage` (`withPermissionOrGrant`). GET não é público: só a tela `/admin/reimbursement-settings` consome (via `fetchWithToken`); o envio de e-mail lê `settings` direto no servidor.
+
 ### Templates obrigatórios
 
 Usar apenas templates em `emailTemplates.ts` via `baseTemplate`:
@@ -44,6 +48,7 @@ Usar apenas templates em `emailTemplates.ts` via `baseTemplate`:
 
 ```bash
 npx tsx scripts/test-reimbursement-email-routing.ts
+npx tsx --test src/app/api/library/upload-auth/upload-auth.test.ts  # settings: sem token / forjado → 401
 ```
 
 ## Child DOX Index

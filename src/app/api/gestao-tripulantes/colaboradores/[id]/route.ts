@@ -6,11 +6,14 @@ import { findColaboradorByCpf } from '@/lib/gestao-tripulantes/cpf-lookup';
 import { loadColaboradorDetail, parseIncludeParam } from '@/lib/gestao-tripulantes/colaborador-get';
 import { montarPayloadCadastro } from '@/lib/gestao-tripulantes/colaborador-cadastro';
 import { syncColaboradorAfterSave } from '@/lib/timesheet-integration/outbox';
+import { aplicarDepartamentoCanonico } from '@/lib/gestao-tripulantes/departamento-canonico';
+import { vincularUsuarioUnico } from '@/lib/gestao-tripulantes/vinculo-usuario';
 import {
   MENSAGEM_CADASTRO_NEGADO,
   podeMutarCadastroColaborador,
 } from '@/lib/gestao-tripulantes/colaborador-cadastro-auth';
 import { usuarioPodeVerEmpresa } from '@/lib/gestao-tripulantes/empresa-acesso';
+import { escopoVeColaborador, resolverEscopoDocumentosGt } from '@/lib/gestao-tripulantes/documento-escopo';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,6 +54,12 @@ export async function GET(
     }
 
     const include = parseIncludeParam(request.nextUrl.searchParams.get('include'));
+    const escopo = await resolverEscopoDocumentosGt(payload.userId, payload.role);
+    const documentosRestritos = !escopoVeColaborador(escopo, id);
+    if (documentosRestritos) {
+      include.delete('documentos');
+      include.delete('esocial_asos');
+    }
     const result = await loadColaboradorDetail(id, include);
 
     if (result.error) {
@@ -66,7 +75,7 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      data: result.data,
+      data: { ...result.data, escopo_documentos: escopo.escopo, documentos_restritos: documentosRestritos },
     });
   } catch (error) {
     console.error('Erro ao obter colaborador:', error);
@@ -137,6 +146,11 @@ export async function PUT(
       }
       updateData[idKey] = row.id;
     }
+    const departamento = await aplicarDepartamentoCanonico(updateData);
+    if (!departamento.ok) {
+      return NextResponse.json({ error: departamento.error }, { status: 400 });
+    }
+
     // Time-Sheet: flag anterior p/ detectar mudança (design §9.1/§9.2).
     let flagAnterior: boolean | null = null;
     if ('contabilizar_timesheet' in updateData) {
@@ -165,6 +179,9 @@ export async function PUT(
     }
 
     if (updated && updated.id) {
+      await vincularUsuarioUnico(updated, { criar: true }).catch(err => {
+        console.error('[vinculo-usuario] Failed on update:', err);
+      });
       autoGenerateESocialEvents(updated.id).catch(err => {
         console.error('[eSocialAuto] Failed in background execution on update:', err);
       });

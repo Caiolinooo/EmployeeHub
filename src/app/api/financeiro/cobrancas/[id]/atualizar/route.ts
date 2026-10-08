@@ -12,7 +12,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const gate = await garantirNivelFinanceiro(request, 'edit');
+    const gate = await garantirNivelFinanceiro(request, 'edit', ['financeiro.cobrancas.generate']);
     if (!gate.ok) return gate.error;
     const { id } = await params;
     const cobranca = await atualizarCobranca(id, await atorDeUserId(gate.user.userId));

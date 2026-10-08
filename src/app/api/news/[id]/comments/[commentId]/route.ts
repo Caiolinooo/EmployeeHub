@@ -1,7 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { requireAuth } from '@/lib/api-auth';
+import { canWithGrant } from '@/lib/permission-gate';
 
 export const dynamic = 'force-dynamic';
+
+/** Autor do comentário OU moderação (ADMIN/MANAGER ou grant `news.comments.moderate`). */
+async function authorizeComment(request: NextRequest, newsId: string, commentId: string): Promise<NextResponse | null> {
+  const { user, error } = await requireAuth(request);
+  if (error) return error;
+
+  const { data: comment } = await supabaseAdmin
+    .from('news_comments')
+    .select('user_id')
+    .eq('id', commentId)
+    .eq('news_id', newsId)
+    .maybeSingle();
+
+  if (!comment) return NextResponse.json({ error: 'Comentário não encontrado' }, { status: 404 });
+  if (comment.user_id !== user.id && !(await canWithGrant(user.id, user.role, ['news.comments.moderate']))) {
+    return NextResponse.json({ error: 'Permissão insuficiente' }, { status: 403 });
+  }
+  return null;
+}
 
 export async function PUT(
   request: NextRequest,
@@ -9,6 +30,9 @@ export async function PUT(
 ) {
   try {
     const { id: newsId, commentId } = await params;
+    const denied = await authorizeComment(request, newsId, commentId);
+    if (denied) return denied;
+
     const body = await request.json();
     const { content } = body;
 
@@ -41,6 +65,8 @@ export async function DELETE(
 ) {
   try {
     const { id: newsId, commentId } = await params;
+    const denied = await authorizeComment(request, newsId, commentId);
+    if (denied) return denied;
 
     const { error } = await supabaseAdmin
       .from('news_comments')
@@ -58,4 +84,3 @@ export async function DELETE(
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
   }
 }
-

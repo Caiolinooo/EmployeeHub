@@ -79,6 +79,8 @@ interface Substitution {
 // (que usa `[key: string]: unknown`).
 type CollaboratorDetail = {
   id: string;
+  /** Servidor omitiu documentos: escopo `documents.view_own` e o colaborador não é do viewer. */
+  documentos_restritos?: boolean;
   nome_completo: string;
   cpf: string;
   rg: string;
@@ -163,6 +165,9 @@ const TABS: { key: TabKey; label: string; labelKey?: string; icon: React.Element
   { key: 'desligamento', label: 'Desligamento', icon: FiUserX },
 ];
 
+/** Abas que leem documentos pessoais; somem quando o servidor devolve `documentos_restritos`. */
+const DOCUMENT_TABS = new Set<TabKey>(['ficha', 'treinamentos', 'aso', 'passaportes', 'documentos', 'qhse']);
+
 function SkeletonBlock() {
   return (
     <div className="animate-pulse space-y-3 p-6">
@@ -240,13 +245,18 @@ export default function CollaboratorModal({ colaboradorId, onClose, initialTab, 
   const { t } = useI18n();
   const { hasAccess } = useSupabaseAuth();
   const canSeeQhseTab = hasAccess(QHSE_MODULE_KEY);
-  const visibleTabs = useMemo(
-    () => TABS.filter((tab) => tab.key !== 'qhse' || canSeeQhseTab),
-    [canSeeQhseTab]
-  );
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab || 'dados');
   const [focusDocId, setFocusDocId] = useState<string | null>(highlightDocId || null);
   const [data, setData] = useState<CollaboratorDetail | null>(null);
+  const documentosRestritos = data?.documentos_restritos === true;
+  const visibleTabs = useMemo(
+    () =>
+      TABS.filter(
+        (tab) =>
+          (tab.key !== 'qhse' || canSeeQhseTab) && !(documentosRestritos && DOCUMENT_TABS.has(tab.key))
+      ),
+    [canSeeQhseTab, documentosRestritos]
+  );
   const [loading, setLoading] = useState(true);
   const [showBackModal, setShowBackModal] = useState(false);
   const [showDesligamentoModal, setShowDesligamentoModal] = useState(false);
@@ -311,8 +321,10 @@ export default function CollaboratorModal({ colaboradorId, onClose, initialTab, 
   }, [focusDocId, activeTab, loading, data]);
 
   useEffect(() => {
-    if (activeTab === 'qhse' && !canSeeQhseTab) setActiveTab('documentos');
-  }, [activeTab, canSeeQhseTab]);
+    if (!visibleTabs.some((tab) => tab.key === activeTab)) {
+      setActiveTab(documentosRestritos ? 'dados' : 'documentos');
+    }
+  }, [activeTab, visibleTabs, documentosRestritos]);
 
   useEffect(() => {
     const prevOverflow = document.body.style.overflow;

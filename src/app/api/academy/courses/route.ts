@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { canEditAcademy } from '@/lib/permissions';
 
 import { extractTokenFromHeader, verifyToken } from '@/lib/auth';
+import { canWithGrant } from '@/lib/permission-gate';
 
 export const dynamic = 'force-dynamic';
 
@@ -278,7 +279,10 @@ export async function PUT(request: NextRequest) {
     }
 
     // Verificar se o usuário é o instrutor ou admin
-    if (existingCourse.instructor_id !== resolvedUserId && userData.role !== 'ADMIN') {
+    if (
+      existingCourse.instructor_id !== resolvedUserId &&
+      !(await canWithGrant(resolvedUserId, userData.role, ['academy.update_any'], 'admin'))
+    ) {
       return NextResponse.json({ error: 'Apenas o instrutor ou admin pode editar este curso' }, { status: 403 });
     }
 
@@ -378,7 +382,10 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Verificar se o usuário é o instrutor ou admin
-    if (existingCourse.instructor_id !== resolvedUserId && userData.role !== 'ADMIN') {
+    if (
+      existingCourse.instructor_id !== resolvedUserId &&
+      !(await canWithGrant(resolvedUserId, userData.role, ['academy.delete_any'], 'admin'))
+    ) {
       return NextResponse.json({ error: 'Apenas o instrutor ou admin pode excluir este curso' }, { status: 403 });
     }
 

@@ -396,8 +396,8 @@ export const PERMISSION_DESCRIPTIONS = {
     description: 'Pode assinar documentos atribuídos eletronicamente'
   },
   'ferias.read': {
-    title: 'Visualizar Férias',
-    description: 'Pode visualizar seus próprios pedidos de férias e saldo'
+    title: 'Visualizar Férias de terceiros',
+    description: 'Pode visualizar pedidos e PDFs de férias de qualquer colaborador'
   },
   'ferias.create': {
     title: 'Solicitar Férias',
@@ -578,7 +578,7 @@ export const DEFAULT_PERMISSIONS_BY_ROLE: Record<string, {
       'workflows.view': false, 'workflows.execute': false,
       'chat.view': true, 'chat.send': true,
       news_editor: false, news_manager: false,
-      'ferias.read': true, 'ferias.create': true, 'ferias.approve': false, 'ferias.manage': false, 'ferias.admin': false,
+      'ferias.create': true, 'ferias.approve': false, 'ferias.manage': false, 'ferias.admin': false,
       'lista-presenca.read': true, 'lista-presenca.create': true, 'lista-presenca.manage': false, 'lista-presenca.admin': false
     }
   }

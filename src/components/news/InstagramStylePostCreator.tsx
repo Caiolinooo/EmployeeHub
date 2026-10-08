@@ -195,7 +195,7 @@ const InstagramStylePostCreator: React.FC<InstagramStylePostCreatorProps> = ({
           form.append('file', file);
         });
 
-        const uploadResp = await fetch('/api/news/upload', { method: 'POST', body: form });
+        const uploadResp = await fetchWithToken('/api/news/upload', { method: 'POST', body: form });
 
         if (uploadResp.ok) {
           const uploadData = await uploadResp.json();

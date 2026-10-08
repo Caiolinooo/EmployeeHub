@@ -160,6 +160,8 @@ export interface ExportFilters {
   centroCusto?: string; // id ou nome (parcial)
   /** ACL por empresa: quando presente (array), restringe o export às empresas liberadas */
   empresasPermitidas?: string[];
+  /** Escopo próprio de documentos: quando presente, só esses `gt_colaboradores.id`. */
+  colaboradoresPermitidos?: string[];
 }
 
 async function carregarLookups(): Promise<{
@@ -231,6 +233,10 @@ export async function buscarColaboradoresFiltrados(
     // ACL por empresa (restritos): empresa IN (...) OR empresa IS NULL
     if (filters.empresasPermitidas) {
       query = query.or(montarOrClauseEmpresa(filters.empresasPermitidas));
+    }
+    if (filters.colaboradoresPermitidos) {
+      if (filters.colaboradoresPermitidos.length === 0) return { success: true, data: [] };
+      query = query.in('id', filters.colaboradoresPermitidos);
     }
     const cenIds = resolveId(filters.centroCusto, lookups.centros);
     if (cenIds) {

@@ -14,7 +14,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const gate = await garantirNivelFinanceiro(request, 'admin');
+    const gate = await garantirNivelFinanceiro(request, 'admin', ['financeiro.templates.manage']);
     if (!gate.ok) return gate.error;
     const { id } = await params;
     const body = await corpoJson(request);
@@ -58,7 +58,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const gate = await garantirNivelFinanceiro(request, 'admin');
+    const gate = await garantirNivelFinanceiro(request, 'admin', ['financeiro.templates.manage']);
     if (!gate.ok) return gate.error;
     const { id } = await params;
     const { error } = await supabaseAdmin
