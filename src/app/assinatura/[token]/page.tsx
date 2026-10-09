@@ -13,6 +13,7 @@ import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { getToken } from '@/lib/tokenStorage';
 import { useI18n } from '@/contexts/I18nContext';
 import { normalizeCpf, formatCpf, isValidCpf, namesMatch, birthDatesMatch } from '@/lib/utils/identity';
+import { missingRequiredFieldValue, uniqueSignatureDocuments } from '@/lib/contracts/signature-queue';
 
 
 
@@ -44,7 +45,9 @@ export default function AssinaturaExternaPage() {
         }
     }, []);
     const [queue, setQueue] = useState<any[]>([]);
+    const [files, setFiles] = useState<any[]>([]);
     const [activeIndex, setActiveIndex] = useState(0);
+    const hasQueue = React.useRef(false);
     
     // Auth & Legal steps
     const [step, setStep] = useState<'AUTH' | 'REVIEW' | 'SIGNED'>('AUTH');
@@ -107,7 +110,9 @@ export default function AssinaturaExternaPage() {
     useEffect(() => {
         if (!token) return;
 
-        const fetchTokenData = async () => {
+        const fetchTokenData = async (background?: boolean) => {
+            const soft = !!background && hasQueue.current;
+            if (!soft) setLoading(true);
             try {
                 const res = await fetch(`/api/contracts/sign-access/${token}`);
                 const data = await res.json();
@@ -133,7 +138,16 @@ export default function AssinaturaExternaPage() {
                         });
                         setFilledValues(initialValues);
 
+                        hasQueue.current = true;
                         setQueue(data.queue); // Keep full list for visual sequence context
+                        const docFiles = Array.isArray(data.documentos) && data.documentos.length > 0
+                            ? data.documentos
+                            : uniqueSignatureDocuments(data.queue).map((item: any) => ({
+                                id: item.documento?.id,
+                                titulo: item.documento?.titulo,
+                                pdf_url: item.pdf_url,
+                            }));
+                        setFiles(docFiles);
                         // Set initial active index to first pending signature or fallback
                         const firstPendingIdx = data.queue.findIndex((q: any) => q.status === 'PENDING' && (q.tipo === 'assinatura' || q.tipo === 'rubrica'));
                         const chosenIdx = firstPendingIdx !== -1 
@@ -368,10 +382,10 @@ export default function AssinaturaExternaPage() {
                 });
                 setQueue(updatedQueue);
                 
-                const nextPendingIdx = updatedQueue.findIndex((q, idx) => idx > activeIndex && q.status === 'PENDING' && (q.tipo === 'assinatura' || q.tipo === 'rubrica'));
+                const nextPendingIdx = updatedQueue.findIndex((q) => q.documento?.id !== currentItem.documento?.id && q.status === 'PENDING' && (q.tipo === 'assinatura' || q.tipo === 'rubrica'));
                 const fallbackPendingIdx = nextPendingIdx !== -1 
                     ? nextPendingIdx 
-                    : updatedQueue.findIndex((q, idx) => idx > activeIndex && q.status === 'PENDING');
+                    : updatedQueue.findIndex((q) => q.documento?.id !== currentItem.documento?.id && q.status === 'PENDING' && q.tipo !== 'copia');
                 
                 if (fallbackPendingIdx !== -1) {
                     setActiveIndex(fallbackPendingIdx);
@@ -428,10 +442,20 @@ export default function AssinaturaExternaPage() {
         );
     }
 
-    // Helper counts
-    const totalDocs = queue.length;
-    const completedCount = queue.filter(q => q.status === 'SIGNED').length;
+    // Arquivos = PDFs distintos. queue.length conta campos e fazia "02 files" com 1 PDF.
+    const signatureFiles = files.length > 0 ? files : uniqueSignatureDocuments(queue).map((item: any) => ({
+        id: item.documento?.id,
+        titulo: item.documento?.titulo,
+        pdf_url: item.pdf_url,
+    }));
+    const totalDocs = signatureFiles.length;
+    const completedFileCount = signatureFiles.filter((file) => {
+        const fields = queue.filter((q: any) => q.documento?.id === file.id && q.tipo !== 'copia');
+        return fields.length > 0 && fields.every((q: any) => q.status === 'SIGNED');
+    }).length;
+    const completedCount = completedFileCount;
     const pendingCount = totalDocs - completedCount;
+    const activeFileIndex = Math.max(0, signatureFiles.findIndex((file) => file.id === currentItem?.documento?.id));
 
     // Calculate pending text/checkbox fields for the current document that are still empty
     const currentDocId = currentItem?.documento?.id;
@@ -439,7 +463,7 @@ export default function AssinaturaExternaPage() {
         q.documento?.id === currentDocId &&
         q.status === 'PENDING' &&
         (q.tipo === 'texto' || q.tipo === 'checkbox') &&
-        !filledValues[q.id]?.trim()
+        missingRequiredFieldValue(q, filledValues)
     ) : [];
     const pendingPages = [...new Set(pendingTextFields.map((q: any) => q.pagina_assinatura))].sort((a, b) => a - b);
 
@@ -494,7 +518,7 @@ export default function AssinaturaExternaPage() {
                         <div className="flex items-center gap-2 flex-shrink-0">
                             {totalDocs > 1 && (
                                 <div className="text-xs font-medium bg-white border px-2 py-1 rounded text-gray-500">
-                                    Doc {activeIndex + 1}/{totalDocs}
+                                    Doc {activeFileIndex + 1}/{totalDocs}
                                 </div>
                             )}
                             {pdfUrl && (
@@ -510,6 +534,25 @@ export default function AssinaturaExternaPage() {
                         </div>
                     </div>
                     
+                    {signatureFiles.length > 1 && (
+                        <div className="flex gap-2 overflow-x-auto px-3 py-2 border-b border-gray-100 bg-white">
+                            {signatureFiles.map((file, index) => (
+                                <button
+                                    key={file.id || index}
+                                    type="button"
+                                    onClick={() => {
+                                        const idx = queue.findIndex((q: any) => q.documento?.id === file.id && q.tipo !== 'copia');
+                                        if (idx >= 0) setActiveIndex(idx);
+                                    }}
+                                    className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium border ${
+                                        file.id === documento?.id ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-gray-50 border-transparent text-gray-600'
+                                    }`}
+                                >
+                                    {index + 1}. {file.titulo || 'Documento'}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                     <div ref={pdfContainerRef} className="flex-1 bg-gray-100 overflow-auto custom-scrollbar relative">
                         {step === 'AUTH' ? (
                             <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center backdrop-blur-md bg-gray-100/90 z-[60]">
@@ -545,6 +588,7 @@ export default function AssinaturaExternaPage() {
 
                                 <div className="shadow-2xl bg-white">
                                     <Document
+                                        key={documento?.id || pdfUrl || 'pdf'}
                                         file={pdfUrl}
                                         onLoadSuccess={onDocumentLoadSuccess}
                                         onLoadError={onDocumentLoadError}

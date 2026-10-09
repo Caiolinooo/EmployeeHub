@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { sameSigner, uniqueSignatureDocuments } from '@/lib/contracts/signature-queue';
+import { latestAuditForDocument, storagePathFromUrl } from '@/lib/contracts/signed-file';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,8 +31,9 @@ export async function GET(request: NextRequest, props: { params: Promise<{ token
 
         const refSol = refSols[0];
 
-        // 2. Fetch ALL solicitations for this envelope that belong to this signer (collaborator or external signer)
-        let query = supabaseAdmin
+        // 2. Todos os campos do envelope. O filtro antigo era só colaborador_id OU e-mail exato:
+        // o segundo PDF (mesmo signatário, e-mail com outra capitalização ou vínculo interno x externo) sumia.
+        const { data: envelopeSols, error: solError } = await supabaseAdmin
             .from('solicitacoes_assinatura')
             .select(`
                 *,
@@ -38,17 +41,11 @@ export async function GET(request: NextRequest, props: { params: Promise<{ token
                 colaborador:users_unified!colaborador_id (email, first_name, last_name, tax_id, birth_date),
                 envelope:envelopes!envelope_id (id, titulo, remetente_id)
             `)
-            .eq('envelope_id', refSol.envelope_id);
+            .eq('envelope_id', refSol.envelope_id)
+            .order('ordem', { ascending: true })
+            .order('created_at', { ascending: true });
 
-        if (refSol.colaborador_id) {
-            query = query.eq('colaborador_id', refSol.colaborador_id);
-        } else if (refSol.external_signer_email) {
-            query = query.eq('external_signer_email', refSol.external_signer_email);
-        } else {
-            query = query.eq('id', refSol.id);
-        }
-
-        const { data: solicitacoes, error: solError } = await query;
+        const solicitacoes = (envelopeSols || []).filter((row) => sameSigner(refSol, row));
 
         if (solError || !solicitacoes || solicitacoes.length === 0) {
             return NextResponse.json({ error: 'Erro ao buscar solicitações de assinatura' }, { status: 500 });
@@ -106,47 +103,28 @@ export async function GET(request: NextRequest, props: { params: Promise<{ token
             let currentPdfUrl = null;
 
             // Check if this document has signed steps already (from a previous signer in the chain)
-            const { data: lastAudit } = await supabaseAdmin
-                .from('auditoria_assinaturas')
-                .select('arquivo_assinado_url, solicitacoes_assinatura!inner(documento_id)')
-                .eq('solicitacoes_assinatura.documento_id', doc.id)
-                .order('data_assinatura', { ascending: false })
-                .limit(1)
-                .single();
+            const lastAudit = doc?.id ? await latestAuditForDocument(supabaseAdmin, doc.id) : null;
 
             let finalPathToSign = doc?.arquivo_url;
             
-            // Prioritize the accumulated signed file
+            // Prioritize the accumulated signed file of THIS document only
             if (lastAudit && lastAudit.arquivo_assinado_url) {
                 finalPathToSign = lastAudit.arquivo_assinado_url;
             }
 
             if (finalPathToSign) {
-                let storagePath = finalPathToSign;
-
-                if (storagePath.includes('/storage/v1/object/')) {
-                    const bucketMarker = '/documentos-trabalhistas/';
-                    if (storagePath.includes(bucketMarker)) {
-                        const parts = storagePath.split(bucketMarker);
-                        storagePath = decodeURIComponent(parts[1]);
-                        if (storagePath.includes('?')) {
-                            storagePath = storagePath.split('?')[0];
-                        }
-                    } else {
-                        const parts = storagePath.split('/object/public/');
-                        if (parts.length > 1) {
-                            const pathParts = parts[1].split('/');
-                            storagePath = decodeURIComponent(pathParts.slice(1).join('/'));
-                        }
-                    }
-                }
-
-                const { data: signedData } = await bucket.createSignedUrl(storagePath, 3600);
+                const storagePath = storagePathFromUrl(finalPathToSign);
+                const { data: signedData } = storagePath
+                    ? await bucket.createSignedUrl(storagePath, 3600)
+                    : { data: null };
                 if (signedData?.signedUrl) {
                     currentPdfUrl = signedData.signedUrl;
-                } else {
-                    // If signedUrl fails, fallback to original to avoid blocking UI entirely
-                    currentPdfUrl = finalPathToSign;
+                } else if (doc?.arquivo_url && doc.arquivo_url !== finalPathToSign) {
+                    const originalPath = storagePathFromUrl(doc.arquivo_url);
+                    const { data: originalSigned } = originalPath
+                        ? await bucket.createSignedUrl(originalPath, 3600)
+                        : { data: null };
+                    currentPdfUrl = originalSigned?.signedUrl || null;
                 }
             }
 
@@ -172,6 +150,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ token
                 target_tax_id: targetTaxId,
                 target_birth_date: targetBirthDate,
                 valor_preenchido: sol.valor_preenchido,
+                obrigatorio: sol.obrigatorio !== false,
                 documento: {
                     id: doc?.id,
                     titulo: doc?.titulo,
@@ -182,9 +161,17 @@ export async function GET(request: NextRequest, props: { params: Promise<{ token
             };
         }));
 
+        const documentos = uniqueSignatureDocuments(payload).map((item) => ({
+            id: item.documento?.id,
+            titulo: item.documento?.titulo,
+            pdf_url: item.pdf_url,
+        }));
+
         return NextResponse.json({
             success: true,
-            queue: payload
+            queue: payload,
+            documentos,
+            file_count: documentos.length,
         });
 
     } catch (error) {

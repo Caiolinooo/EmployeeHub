@@ -129,7 +129,7 @@ When the user requests a durable behavior change, record it here or in the relev
 - `src/lib/document-catalog/AGENTS.md` — catálogo global de documentos (QHSE/EPI, lista de presença, GT, academy)
 - `src/config/AGENTS.md` — catálogo vivo de módulos + permissões (UserEditor / ACL)
 - `src/app/api/acl/AGENTS.md` — seed ACL a partir do catálogo vivo
-- `src/lib/contracts/AGENTS.md` — contratos: escopo `contratos.view_all` / `view_own`, ações granulares `contratos.*` e gates das rotas
+- `src/lib/contracts/AGENTS.md` — contratos: escopo `contratos.view_all` / `view_own`, ações granulares `contratos.*`, editor de campos, `obrigatorio` e `file_count` (PDFs distintos)
 - `src/app/api/recrutamento/AGENTS.md` — auth InHire (divergências do manual), sync vagas/candidatos, endpoints reais
 - `src/components/financeiro/AGENTS.md` — casca Portal / Financeiro (áreas agrupadas) e painel da competência na paleta `abz-blue`
 - `src/lib/timesheet-integration/AGENTS.md` — cadeia login/GT/PontoFlow/folha, batida biométrica (início/fim), almoço 12:00–13:00, aviso menor que 8h, horas em `payroll_sheet_items` origem `timesheet`

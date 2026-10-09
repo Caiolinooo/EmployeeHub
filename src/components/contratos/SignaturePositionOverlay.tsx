@@ -14,6 +14,11 @@ interface SignaturePositionOverlayProps {
     interactive?: boolean;
     draggable?: boolean;
     onDragEnd?: (newX: number, newY: number) => void;
+    resizable?: boolean;
+    onResizeEnd?: (box: { x: number; y: number; width: number; height: number }) => void;
+    selected?: boolean;
+    onSelect?: (e: React.PointerEvent<HTMLDivElement>) => void;
+    required?: boolean;
     colorClasses?: {
         border: string;
         bg: string;
@@ -35,25 +40,38 @@ export default function SignaturePositionOverlay({
     interactive = false,
     draggable = false,
     onDragEnd,
+    resizable = false,
+    onResizeEnd,
+    selected = false,
+    onSelect,
+    required = true,
     colorClasses,
     pulse = false,
     tipo,
 }: SignaturePositionOverlayProps) {
     const [isDragging, setIsDragging] = useState(false);
+    const [isResizing, setIsResizing] = useState(false);
     const [currentPos, setCurrentPos] = useState({ x, y });
+    const [currentSize, setCurrentSize] = useState({ width, height });
     const dragOffsetRef = useRef({ x: 0, y: 0 });
     const currentPosRef = useRef({ x, y });
+    const currentSizeRef = useRef({ width, height });
+    const resizeRef = useRef({ dir: 'se', startX: 0, startY: 0, x: 0, y: 0, width: 0, height: 0 });
     const onDragEndRef = useRef(onDragEnd);
+    const onResizeEndRef = useRef(onResizeEnd);
     onDragEndRef.current = onDragEnd;
+    onResizeEndRef.current = onResizeEnd;
     const elementRef = useRef<HTMLDivElement>(null);
 
     // Sync position if external x,y changes
     useEffect(() => {
-        if (!isDragging) {
+        if (!isDragging && !isResizing) {
             setCurrentPos({ x, y });
             currentPosRef.current = { x, y };
+            setCurrentSize({ width, height });
+            currentSizeRef.current = { width, height };
         }
-    }, [x, y, isDragging]);
+    }, [x, y, width, height, isDragging, isResizing]);
 
     // Handle drag pointer events
     useEffect(() => {
@@ -81,6 +99,55 @@ export default function SignaturePositionOverlay({
             document.removeEventListener('pointerup', handlePointerUp);
         };
     }, [isDragging]);
+
+    useEffect(() => {
+        if (!isResizing) return;
+
+        const handlePointerMove = (e: PointerEvent) => {
+            const start = resizeRef.current;
+            const dx = e.clientX - start.startX;
+            const dy = e.clientY - start.startY;
+            let nextX = start.x;
+            let nextY = start.y;
+            let nextW = start.width;
+            let nextH = start.height;
+            if (start.dir.includes('e')) nextW = start.width + dx;
+            if (start.dir.includes('s')) nextH = start.height + dy;
+            if (start.dir.includes('w')) {
+                nextW = start.width - dx;
+                nextX = start.x + dx;
+            }
+            if (start.dir.includes('n')) {
+                nextH = start.height - dy;
+                nextY = start.y + dy;
+            }
+            nextW = Math.max(16, nextW);
+            nextH = Math.max(16, nextH);
+            nextX = Math.max(0, nextX);
+            nextY = Math.max(0, nextY);
+            currentPosRef.current = { x: nextX, y: nextY };
+            currentSizeRef.current = { width: nextW, height: nextH };
+            setCurrentPos({ x: nextX, y: nextY });
+            setCurrentSize({ width: nextW, height: nextH });
+        };
+
+        const handlePointerUp = () => {
+            setIsResizing(false);
+            onResizeEndRef.current?.({
+                x: currentPosRef.current.x,
+                y: currentPosRef.current.y,
+                width: currentSizeRef.current.width,
+                height: currentSizeRef.current.height,
+            });
+        };
+
+        document.addEventListener('pointermove', handlePointerMove);
+        document.addEventListener('pointerup', handlePointerUp);
+        return () => {
+            document.removeEventListener('pointermove', handlePointerMove);
+            document.removeEventListener('pointerup', handlePointerUp);
+        };
+    }, [isResizing]);
 
     const statusStyles = {
         PENDING: {
@@ -118,6 +185,8 @@ export default function SignaturePositionOverlay({
     const statusLabel = status === 'SIGNED' ? '✓ Assinado' : status === 'REJECTED' ? '✕ Rejeitado' : label;
 
     const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+        if ((e.target as HTMLElement).dataset.resize) return;
+        onSelect?.(e);
         if (!draggable) {
             if (interactive && onClick) onClick();
             return;
@@ -134,6 +203,22 @@ export default function SignaturePositionOverlay({
         setIsDragging(true);
     };
 
+    const startResize = (dir: string) => (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!resizable) return;
+        e.preventDefault();
+        e.stopPropagation();
+        resizeRef.current = {
+            dir,
+            startX: e.clientX,
+            startY: e.clientY,
+            x: currentPos.x,
+            y: currentPos.y,
+            width: currentSize.width,
+            height: currentSize.height,
+        };
+        setIsResizing(true);
+    };
+
     // Rounding class depends on type (checkbox is square, others are capsule-shaped or rounded rectangles)
     const roundingClass = resolvedTipo === 'checkbox' ? 'rounded-lg' : 'rounded-2xl';
 
@@ -143,15 +228,16 @@ export default function SignaturePositionOverlay({
             onPointerDown={handlePointerDown}
             className={`group absolute border-2 ${styles.border} ${styles.bg} ${roundingClass} flex items-center transition-all duration-200 select-none shadow-sm
                 ${pulse && status === 'PENDING' ? 'animate-pulse ring-4' : ''}
-                ${interactive || draggable ? (isDragging ? 'cursor-grabbing shadow-lg scale-102 ring-2 pointer-events-auto' : 'cursor-grab hover:ring-2 hover:shadow-md pointer-events-auto') : 'pointer-events-none'}
+                ${selected ? 'ring-2 ring-blue-600 ring-offset-1' : ''}
+                ${interactive || draggable ? (isDragging ? 'cursor-grabbing shadow-lg ring-2 pointer-events-auto' : 'cursor-grab hover:ring-2 hover:shadow-md pointer-events-auto') : 'pointer-events-none'}
                 ${interactive && !draggable ? 'cursor-pointer hover:scale-[1.02] pointer-events-auto' : ''}
                 ${interactive ? styles.ring : ''}`}
             style={{
                 left: currentPos.x,
                 top: currentPos.y,
-                width: width,
-                height: height,
-                zIndex: isDragging ? 50 : 10,
+                width: currentSize.width,
+                height: currentSize.height,
+                zIndex: isDragging || isResizing || selected ? 50 : 10,
                 touchAction: 'none' // Prevent scrolling when dragging on touch devices
             }}
         >
@@ -218,6 +304,26 @@ export default function SignaturePositionOverlay({
                     )}
                 </div>
             )}
+            {!required && (
+                <span className="absolute -top-2 -right-1 text-[8px] font-bold bg-white text-slate-500 border border-slate-200 rounded px-1">
+                    opc
+                </span>
+            )}
+            {resizable && (selected || isResizing) && (['nw', 'ne', 'sw', 'se'] as const).map((dir) => (
+                <div
+                    key={dir}
+                    data-resize={dir}
+                    onPointerDown={startResize(dir)}
+                    className="absolute w-2.5 h-2.5 bg-white border-2 border-blue-600 rounded-sm pointer-events-auto"
+                    style={{
+                        left: dir.includes('w') ? -4 : undefined,
+                        right: dir.includes('e') ? -4 : undefined,
+                        top: dir.includes('n') ? -4 : undefined,
+                        bottom: dir.includes('s') ? -4 : undefined,
+                        cursor: dir === 'nw' || dir === 'se' ? 'nwse-resize' : 'nesw-resize',
+                    }}
+                />
+            ))}
         </div>
     );
 }

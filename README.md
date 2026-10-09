@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.98.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.99.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,13 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.99.0)
+
+- **Campos do contrato**: no envelope e no template dá para arrastar, copiar, selecionar vários, editar e redimensionar. O envelope grava na hora; o template só ao salvar.
+- **Obrigatório**: campo marcado (padrão) exige texto ou checkbox na assinatura. Opcional não trava o envio.
+- **Vários PDFs na assinatura**: cada arquivo do envelope tem a própria aba. Dois PDFs não aparecem mais como um só.
+- **Atualizar**: a lista e o envelope continuam na tela; o spinner fica só no ícone.
 
 ## Nesta versão (5.98.0)
 

@@ -28,14 +28,18 @@ export default function ContratosPage() {
     const [scope, setScope] = useState<'all' | 'own'>('own');
     const viewAll = scope === 'all';
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const hasList = React.useRef(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<FilterStatus>('ALL');
     const [isUploadOpen, setIsUploadOpen] = useState(false);
     const [uploadModalTab, setUploadModalTab] = useState<'envelope' | 'templates'>('envelope');
 
-    const fetchDocumentos = useCallback(async () => {
+    const fetchDocumentos = useCallback(async (background?: boolean) => {
+        const soft = !!background && hasList.current;
         try {
-            setLoading(true);
+            if (soft) setRefreshing(true);
+            else setLoading(true);
             const params = new URLSearchParams();
             if (statusFilter !== 'ALL') params.set('status', statusFilter);
             if (searchTerm.trim()) params.set('search', searchTerm.trim());
@@ -45,6 +49,7 @@ export default function ContratosPage() {
 
             if (data.success) {
                 setDocumentos(data.documentos || []);
+                hasList.current = true;
                 setScope(data.scope === 'all' ? 'all' : 'own');
                 setCan(data.can || {});
             } else {
@@ -55,6 +60,7 @@ export default function ContratosPage() {
             toast.error(t('contratos.error_loading', 'Erro ao carregar documentos'));
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     }, [statusFilter, searchTerm]);
 
@@ -106,11 +112,11 @@ export default function ContratosPage() {
                     </div>
                     <div className="flex items-center gap-3">
                         <button
-                            onClick={fetchDocumentos}
+                            onClick={() => fetchDocumentos(true)}
                             className="p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                             title={t('common.update', 'Atualizar')}
                         >
-                            <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                            <FiRefreshCw className={`w-4 h-4 ${loading || refreshing ? 'animate-spin' : ''}`} />
                         </button>
                         {(can.create || canTemplates) && (
                             <>
@@ -202,7 +208,7 @@ export default function ContratosPage() {
 
                 {/* Document List */}
                 <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-                    {loading ? (
+                    {loading && documentos.length === 0 ? (
                         <div className="flex items-center justify-center py-16">
                             <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent" />
                         </div>

@@ -106,11 +106,14 @@ export async function dispatchEnvelopeStage(envelopeId: string) {
         // 5. Obter TODOS os signatários desse estágio (podem ter múltiplos na mesma ordem)
         const signatariosDaVez = pendentes.filter(s => (s.ordem || 1) === minOrdem);
         
-        // Agrupar por identificador único (ID do colaborador ou E-mail externo)
-        // Isso garante que um e-mail seja enviado uma única vez por estágio para cada recipiente distinto
-        const uniqueRecipients = Array.from(new Set(signatariosDaVez.map(s => 
-            s.colaborador_id || s.external_signer_email
-        )));
+        // Uma pessoa = um link, mesmo se um PDF está no id interno e o outro só no e-mail.
+        const recipientKeyOf = (s: any) => {
+            const email = (s.colaborador?.email || s.external_signer_email || '').trim().toLowerCase();
+            if (email) return `email:${email}`;
+            if (s.colaborador_id) return `colab:${s.colaborador_id}`;
+            return '';
+        };
+        const uniqueRecipients = Array.from(new Set(signatariosDaVez.map(recipientKeyOf).filter(Boolean)));
 
         let notifyCount = 0;
 
@@ -118,32 +121,24 @@ export async function dispatchEnvelopeStage(envelopeId: string) {
             if (!recipientKey) continue;
 
             // Filtrar registros desse grupo
-            const groupForUser = signatariosDaVez.filter(s => 
-                (s.colaborador_id === recipientKey) || (s.external_signer_email === recipientKey)
-            );
+            const groupForUser = signatariosDaVez.filter(s => recipientKeyOf(s) === recipientKey);
             
             const firstRequest = groupForUser[0];
             
-            // Garantir token robusto
+            // Um token para todos os PDFs deste signatário no envelope.
+            // Antes só gravava se o primeiro campo estava vazio e só na ordem atual:
+            // o segundo arquivo ficava com outro token e o link abria um PDF só.
             let finalToken = firstRequest.token_acesso;
             if (!finalToken) {
                 finalToken = crypto.randomUUID();
-                
-                // Atualizar o token em todo o bloco desse recipiente
-                let q = supabaseAdmin
+            }
+
+            const ids = groupForUser.map((s) => s.id).filter(Boolean);
+            if (ids.length > 0) {
+                await supabaseAdmin
                     .from('solicitacoes_assinatura')
                     .update({ token_acesso: finalToken })
-                    .eq('envelope_id', envelopeId)
-                    .eq('ordem', minOrdem)
-                    .eq('status', 'PENDING');
-                
-                if (firstRequest.colaborador_id) {
-                    q = q.eq('colaborador_id', firstRequest.colaborador_id);
-                } else {
-                    q = q.eq('external_signer_email', firstRequest.external_signer_email);
-                }
-
-                await q;
+                    .in('id', ids);
             }
 
             const actionUrl = `/assinatura/${finalToken}`;

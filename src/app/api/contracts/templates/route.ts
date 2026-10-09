@@ -166,7 +166,8 @@ export async function POST(request: NextRequest) {
                         largura_assinatura: c.largura_assinatura || 150,
                         altura_assinatura: c.altura_assinatura || 50,
                         tipo: c.tipo,
-                        ordem: c.ordem || 1
+                        ordem: c.ordem || 1,
+                        obrigatorio: c.obrigatorio === false ? false : true,
                     }));
 
                     const { error: insertError } = await supabaseAdmin

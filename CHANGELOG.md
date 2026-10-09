@@ -1,5 +1,23 @@
 # Changelog
 
+## [5.99.0] - 2026-10-09
+
+### Editor de campos do contrato e PDFs distintos na assinatura
+
+#### Adicionado
+
+1. **Campos no envelope e no template**: caixas de assinatura/campo arrastáveis (os selecionados andam juntos), copiáveis (+16pt), multi-seleção (Shift/Ctrl), editáveis e redimensionáveis. O envelope grava com `PATCH /api/contracts/[id]/assign`. O template fica local até Salvar.
+2. **Painel móvel**: cartão do signatário e o painel de confirmar campo usam `DraggableFloatingPanel` (mesmo gesto da escala GT).
+3. **Campo obrigatório** (`obrigatorio`, padrão verdadeiro) em `solicitacoes_assinatura` e `contrato_template_campos` (migration `20261009_000001_contrato_campo_obrigatorio.sql`, já aplicada no projeto Painel_ABZGroup). `POST /api/contracts/sign` recusa texto vazio e checkbox desmarcado quando o campo é obrigatório. Opcional não bloqueia.
+
+#### Alterado
+
+1. **Atualizar lista e envelope** mantém o dado atual na tela. O spinner fica só no ícone de atualizar (`GET /api/contracts`).
+
+#### Corrigido
+
+1. **Dois PDFs pareciam um só** em `/assinatura/[token]`: a fila contava cada campo como arquivo (`totalDocs = queue.length`) e o `Document` do react-pdf não remontava. `GET /api/contracts/sign-access/[token]` devolve `documentos` e `file_count` (PDFs distintos; cópia não entra). A tela tem uma aba por arquivo e `key={documento.id}`.
+
 ## [5.98.0] - 2026-10-08
 
 ### ACL, documentos pessoais e correções do cadastro DP

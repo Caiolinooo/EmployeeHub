@@ -7,6 +7,7 @@ import {
     getOwnEnvelopeIds,
     loadContractAccess,
 } from '@/lib/contracts/view-access';
+import { latestAuditForDocument, storagePathFromUrl } from '@/lib/contracts/signed-file';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,6 +76,7 @@ export async function GET(request: NextRequest) {
                     ordem,
                     status,
                     tipo,
+                    obrigatorio,
                     token_acesso,
                     valor_preenchido,
                     visualizado_em,
@@ -88,14 +90,8 @@ export async function GET(request: NextRequest) {
 
             // Process pre-signed URLs for ALL documents in the envelope to allow viewer to cycle
             const processedDocuments = await Promise.all((documentos || []).map(async (doc) => {
-                // Check if this document has signed steps already
-                const { data: lastAudit } = await supabaseAdmin
-                    .from('auditoria_assinaturas')
-                    .select('arquivo_assinado_url, solicitacoes_assinatura!inner(documento_id)')
-                    .eq('solicitacoes_assinatura.documento_id', doc.id)
-                    .order('data_assinatura', { ascending: false })
-                    .limit(1)
-                    .single();
+                // Auditoria só deste documento (não a do outro PDF do envelope)
+                const lastAudit = await latestAuditForDocument(supabaseAdmin, doc.id);
 
                 let finalPathToSign = doc.arquivo_url;
                 
@@ -109,24 +105,7 @@ export async function GET(request: NextRequest) {
                     return { ...doc, arquivo_url: null };
                 }
 
-                let storagePath = finalPathToSign;
-                
-                if (storagePath.includes('/storage/v1/object/')) {
-                    const bucketMarker = '/documentos-trabalhistas/';
-                    if (storagePath.includes(bucketMarker)) {
-                        const parts = storagePath.split(bucketMarker);
-                        storagePath = decodeURIComponent(parts[1]);
-                        if (storagePath.includes('?')) {
-                            storagePath = storagePath.split('?')[0];
-                        }
-                    } else {
-                        const parts = storagePath.split('/object/public/');
-                        if (parts.length > 1) {
-                            const pathParts = parts[1].split('/');
-                            storagePath = decodeURIComponent(pathParts.slice(1).join('/'));
-                        }
-                    }
-                }
+                const storagePath = storagePathFromUrl(finalPathToSign);
 
                 try {
                     const { data: signedData } = await supabaseAdmin

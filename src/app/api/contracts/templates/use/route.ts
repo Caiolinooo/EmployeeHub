@@ -173,6 +173,7 @@ export async function POST(request: NextRequest) {
                     altura_assinatura: field.altura_assinatura,
                     tipo: field.tipo,
                     ordem: field.ordem,
+                    obrigatorio: field.obrigatorio === false ? false : true,
                     status: 'PENDING',
                     token_acesso: uuidv4()
                 });

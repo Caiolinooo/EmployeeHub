@@ -1,3 +1,15 @@
+## Contratos — campos, modal móvel, refresh e 2 arquivos (2026-10-09)
+
+Editor de posicionamento, flag obrigatório, refresh sem travar a tela e os dois PDFs da assinatura.
+
+- [x] Campos arrastáveis, copiáveis, multi-seleção, editáveis e redimensionáveis no envelope (`/contratos/[id]`) e no template (`/contratos/templates/[id]`)
+- [x] Painel do campo usa `DraggableFloatingPanel` (mesmo gesto do painel da escala GT)
+- [x] Refresh da lista e do envelope em background (`GET /api/contracts`); a tela fica com o dado atual
+- [x] `obrigatorio` em `solicitacoes_assinatura` e `contrato_template_campos` (migration `20261009_000001`); validação no `POST /api/contracts/sign` e na página `/assinatura/[token]`
+- [x] Fila de assinatura devolve PDFs distintos (`documentos` + `file_count`); o viewer troca de arquivo com `key` e abas
+- [x] Migration aplicada no projeto `Painel_ABZGroup` (`obrigatorio` nas duas tabelas)
+- [ ] Conferir no navegador com login: arrastar, copiar, redimensionar, obrigatório, refresh e os dois PDFs
+
 ## Ponto com biometria (2026-10-07)
 
 Início e fim de expediente em `/ponto` exigem WebAuthn. Almoço 12:00–13:00 é calculado. Aviso se o líquido ficar menor que 8h.

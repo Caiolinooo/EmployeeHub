@@ -20,8 +20,9 @@ import {
     FiDownload, FiCheck, FiX, FiPlus,
     FiChevronLeft, FiChevronRight, FiChevronDown, FiTrash2, FiShield,
     FiMail, FiLink, FiPenTool, FiCheckCircle,
-    FiTarget, FiEdit, FiUserPlus, FiPlusCircle, FiSearch, FiEye
+    FiTarget, FiEdit, FiUserPlus, FiPlusCircle, FiSearch, FiEye, FiRefreshCw, FiCopy
 } from 'react-icons/fi';
+import DraggableFloatingPanel from '@/components/ui/DraggableFloatingPanel';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { fetchWithAuth } from '@/lib/authUtils';
@@ -52,6 +53,10 @@ export default function ContratoDetailPage() {
     const [activeDocIndex, setActiveDocIndex] = useState(0);
     const [solicitacoes, setSolicitacoes] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const hasEnvelope = useRef(false);
+    const [selectedFieldIds, setSelectedFieldIds] = useState<string[]>([]);
+    const [fieldRequired, setFieldRequired] = useState(true);
     const [pdfWidth, setPdfWidth] = useState(600);
     const [currentPage, setCurrentPage] = useState(1);
     const [numPages, setNumPages] = useState<number>(0);
@@ -60,7 +65,7 @@ export default function ContratoDetailPage() {
     const [isAssigning, setIsAssigning] = useState(false);
     const [selectedColaborador, setSelectedColaborador] = useState('');
     const [colaboradores, setColaboradores] = useState<any[]>([]);
-    const [clickPos, setClickPos] = useState<{ x: number; y: number; page: number; tipo: 'assinatura' | 'rubrica' | 'texto' | 'checkbox' | 'copia' } | null>(null);
+    const [clickPos, setClickPos] = useState<{ x: number; y: number; page: number; tipo: 'assinatura' | 'rubrica' | 'texto' | 'checkbox' | 'copia'; w?: number; h?: number } | null>(null);
     const [signatureType, setSignatureType] = useState<'assinatura' | 'rubrica' | 'texto' | 'checkbox' | 'copia'>('assinatura');
     const [signatureOrder, setSignatureOrder] = useState<number>(1);
     
@@ -147,14 +152,17 @@ export default function ContratoDetailPage() {
     // Active CCs (Observers) in the entire envelope
     const ccSolicitacoes = solicitacoes.filter((s: any) => s.tipo === 'copia');
 
-    const fetchDocumento = useCallback(async () => {
+    const fetchDocumento = useCallback(async (background?: boolean) => {
+        const soft = !!background && hasEnvelope.current;
         try {
-            setLoading(true);
+            if (soft) setRefreshing(true);
+            else setLoading(true);
             const res = await fetchWithAuth(`/api/contracts?id=${docId}`);
             const data = await res.json();
 
             if (data.success) {
                 console.log('[ContratoDetail] Envelope carregado:', data.envelope?.titulo);
+                hasEnvelope.current = true;
                 setEnvelope(data.envelope);
                 setCan(data.can || {});
                 setDocumentos(data.documentos || []);
@@ -189,12 +197,23 @@ export default function ContratoDetailPage() {
             toast.error(t('contratos.detail.error_loading_envelope', 'Erro ao carregar envelope'));
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     }, [docId, user?.id, router]);
 
     useEffect(() => {
         if (docId) fetchDocumento();
     }, [docId, fetchDocumento]);
+
+    useEffect(() => {
+        const onVisible = () => {
+            if (document.visibilityState === 'visible' && hasEnvelope.current) {
+                fetchDocumento(true);
+            }
+        };
+        document.addEventListener('visibilitychange', onVisible);
+        return () => document.removeEventListener('visibilitychange', onVisible);
+    }, [fetchDocumento]);
 
     // When switching documents, reset page
     useEffect(() => {
@@ -310,8 +329,8 @@ export default function ContratoDetailPage() {
         // CONVERSION: Scale pixel browser clicks to canonical PDF Points
         let finalX = posX;
         let finalY = posY;
-        let finalW = posTipo === 'rubrica' ? 100 : (posTipo === 'checkbox' ? 16 : 150);
-        let finalH = posTipo === 'rubrica' ? 30 : (posTipo === 'checkbox' ? 16 : (posTipo === 'texto' ? 22 : 50));
+        let finalW = clickPos?.w || (posTipo === 'rubrica' ? 90 : (posTipo === 'checkbox' ? 18 : (posTipo === 'texto' ? 120 : 150)));
+        let finalH = clickPos?.h || (posTipo === 'rubrica' ? 24 : (posTipo === 'checkbox' ? 18 : (posTipo === 'texto' ? 24 : 28)));
 
         if (originalPageSize) {
             const scaleFactor = originalPageSize.width / pdfWidth;
@@ -338,6 +357,7 @@ export default function ContratoDetailPage() {
                     altura_assinatura: finalH,
                     tipo: posTipo,
                     ordem: signatureOrder,
+                    obrigatorio: fieldRequired,
                 }),
             });
 
@@ -366,7 +386,7 @@ export default function ContratoDetailPage() {
                 }
                 setSearchQuery('');
                 setClickPos(null);
-                fetchDocumento();
+                fetchDocumento(true);
             } else {
                 toast.error(data.error || t('contratos.detail.error_assigning', 'Erro ao atribuir'));
             }
@@ -406,7 +426,7 @@ export default function ContratoDetailPage() {
                 toast.success(t('contratos.detail.success_cc_added', 'Pessoa em cópia adicionada com sucesso!'));
                 setCcName('');
                 setCcEmail('');
-                fetchDocumento();
+                fetchDocumento(true);
             } else {
                 toast.error(data.error || t('contratos.detail.error_cc_add', 'Erro ao adicionar pessoa em cópia'));
             }
@@ -426,7 +446,7 @@ export default function ContratoDetailPage() {
                 method: 'DELETE',
             });
             toast.success(t('contratos.detail.success_removed', 'Atribuição removida'));
-            fetchDocumento();
+            fetchDocumento(true);
         } catch {
             toast.error(t('common.error_removing', 'Erro ao remover'));
         }
@@ -442,10 +462,110 @@ export default function ContratoDetailPage() {
                 })
             ));
             toast.success(t('contratos.detail.success_removed_all', 'Todas as atribuições removidas'));
-            fetchDocumento();
+            fetchDocumento(true);
         } catch {
             toast.error(t('common.error_removing', 'Erro ao remover'));
         }
+    };
+
+    const pointsPerPx = originalPageSize ? originalPageSize.width / pdfWidth : 1;
+
+    const patchField = async (id: string, body: Record<string, unknown>) => {
+        const res = await fetchWithAuth(`/api/contracts/${docId}/assign`, {
+            method: 'PATCH',
+            body: JSON.stringify({ solicitacao_id: id, ...body }),
+        });
+        const data = await res.json();
+        if (!data.success) {
+            toast.error(data.error || 'Erro ao atualizar campo');
+            return false;
+        }
+        return true;
+    };
+
+    const handleSelectField = (id: string, e: React.PointerEvent) => {
+        if (e.shiftKey || e.metaKey || e.ctrlKey) {
+            setSelectedFieldIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+        } else if (!selectedFieldIds.includes(id)) {
+            setSelectedFieldIds([id]);
+        }
+    };
+
+    const handleFieldDragEnd = async (id: string, newX: number, newY: number) => {
+        if (!originalPageSize) return;
+        const field = solicitacoes.find((s: any) => s.id === id);
+        if (!field || field.status !== 'PENDING') return;
+        const oldPx = field.posicao_x / pointsPerPx;
+        const oldPy = field.posicao_y / pointsPerPx;
+        const dx = newX - oldPx;
+        const dy = newY - oldPy;
+        const ids = selectedFieldIds.includes(id) ? selectedFieldIds : [id];
+        const ok = await Promise.all(ids.map(async (fid) => {
+            const f = solicitacoes.find((s: any) => s.id === fid);
+            if (!f || f.status !== 'PENDING') return true;
+            const px = fid === id ? newX : (f.posicao_x / pointsPerPx) + dx;
+            const py = fid === id ? newY : (f.posicao_y / pointsPerPx) + dy;
+            return patchField(fid, {
+                posicao_x: Math.round(Math.max(0, px) * pointsPerPx),
+                posicao_y: Math.round(Math.max(0, py) * pointsPerPx),
+            });
+        }));
+        if (ok.every(Boolean)) fetchDocumento(true);
+    };
+
+    const handleFieldResizeEnd = async (id: string, box: { x: number; y: number; width: number; height: number }) => {
+        if (!originalPageSize) return;
+        const ok = await patchField(id, {
+            posicao_x: Math.round(box.x * pointsPerPx),
+            posicao_y: Math.round(box.y * pointsPerPx),
+            largura_assinatura: Math.round(box.width * pointsPerPx),
+            altura_assinatura: Math.round(box.height * pointsPerPx),
+        });
+        if (ok) fetchDocumento(true);
+    };
+
+    const handleCopySelected = async () => {
+        const fields = solicitacoes.filter((s: any) => selectedFieldIds.includes(s.id) && s.status === 'PENDING' && s.tipo !== 'copia');
+        if (fields.length === 0) return;
+        for (const s of fields) {
+            await fetchWithAuth(`/api/contracts/${docId}/assign`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    documento_id: s.documento_id,
+                    colaborador_id: s.colaborador_id || null,
+                    external_signer_name: s.external_signer_name || null,
+                    external_signer_email: s.external_signer_email || null,
+                    pagina_assinatura: s.pagina_assinatura,
+                    posicao_x: (s.posicao_x || 0) + 16,
+                    posicao_y: (s.posicao_y || 0) + 16,
+                    largura_assinatura: s.largura_assinatura,
+                    altura_assinatura: s.altura_assinatura,
+                    tipo: s.tipo,
+                    ordem: s.ordem || 1,
+                    obrigatorio: s.obrigatorio !== false,
+                }),
+            });
+        }
+        toast.success('Campo copiado');
+        fetchDocumento(true);
+    };
+
+    const handleDeleteSelected = async () => {
+        if (selectedFieldIds.length === 0) return;
+        if (!confirm(`Remover ${selectedFieldIds.length} campo(s)?`)) return;
+        await Promise.all(selectedFieldIds.map((id) =>
+            fetchWithAuth(`/api/contracts/${docId}/assign?solicitacao_id=${id}`, { method: 'DELETE' })
+        ));
+        setSelectedFieldIds([]);
+        toast.success('Campos removidos');
+        fetchDocumento(true);
+    };
+
+    const handleToggleRequired = async (value: boolean) => {
+        const ids = selectedFieldIds.length ? selectedFieldIds : [];
+        await Promise.all(ids.map((id) => patchField(id, { obrigatorio: value })));
+        setFieldRequired(value);
+        fetchDocumento(true);
     };
 
     // Dispatch envelope sequence (HR)
@@ -460,7 +580,7 @@ export default function ContratoDetailPage() {
             if (data.success) {
                 toast.success(t('contratos.detail.success_dispatched', 'Fluxo de assinaturas iniciado! Os signatários da vez foram notificados.'));
                 setShowSendModal(false);
-                fetchDocumento(); 
+                fetchDocumento(true); 
             } else {
                 toast.error(data.error || t('contratos.detail.error_dispatch', 'Erro ao disparar envelope'));
             }
@@ -541,7 +661,7 @@ export default function ContratoDetailPage() {
                     if (data.arquivo_assinado_url) {
                         setSignedPdfUrl(data.arquivo_assinado_url);
                     }
-                    fetchDocumento();
+                    fetchDocumento(true);
                 } else {
                     toast.error(data.error || t('contratos.detail.error_signing', 'Erro ao assinar'));
                 }
@@ -558,7 +678,7 @@ export default function ContratoDetailPage() {
     // Render PDF URL for current document
     const pdfUrl = currentDocumento?.arquivo_url;
 
-    if (loading) {
+    if (loading && !envelope) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-600 border-t-transparent" />
@@ -611,6 +731,14 @@ export default function ContratoDetailPage() {
                             size="md"
                         />
                         <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => fetchDocumento(true)}
+                                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+                                title="Atualizar"
+                            >
+                                <FiRefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                            </button>
                             {can.delete && (
                                 <button
                                     onClick={handleDeleteEnvelope}
@@ -666,6 +794,19 @@ export default function ContratoDetailPage() {
                                 </button>
                             );
                         })}
+                    </div>
+                )}
+
+                {isManager && selectedFieldIds.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs">
+                        <span className="font-semibold text-gray-700">{selectedFieldIds.length} selecionado(s)</span>
+                        <button type="button" onClick={handleCopySelected} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-gray-200 hover:bg-gray-50">
+                            <FiCopy className="w-3.5 h-3.5" /> Copiar
+                        </button>
+                        <button type="button" onClick={() => handleToggleRequired(true)} className="px-2 py-1 rounded-lg border border-gray-200 hover:bg-gray-50">Obrigatório</button>
+                        <button type="button" onClick={() => handleToggleRequired(false)} className="px-2 py-1 rounded-lg border border-gray-200 hover:bg-gray-50">Opcional</button>
+                        <button type="button" onClick={handleDeleteSelected} className="px-2 py-1 rounded-lg border border-red-200 text-red-600 hover:bg-red-50">Excluir</button>
+                        <span className="text-gray-400">Shift ou Ctrl para multi-seleção. Arraste para mover. Cantos para redimensionar.</span>
                     </div>
                 )}
 
@@ -866,6 +1007,7 @@ export default function ContratoDetailPage() {
                                     {/* PDF Native Renderer */}
                                     <div className="flex justify-center bg-gray-200/50 p-6 rounded-lg overflow-hidden border border-gray-300">
                                         <Document
+                                            key={currentDocumento?.id || pdfUrl || 'pdf'}
                                             file={pdfUrl}
                                             onLoadSuccess={onDocumentLoadSuccess}
                                             onLoadError={onDocumentLoadError}
@@ -905,7 +1047,7 @@ export default function ContratoDetailPage() {
                                                     const signerId = s.colaborador_id || s.external_signer_email || s.id;
                                                     const isMyField = s.colaborador_id === user?.id;
 
-                                                    if (s.status === 'PENDING' && s.tipo === 'texto') {
+                                                    if (s.status === 'PENDING' && s.tipo === 'texto' && isMyField && !isManager) {
                                                         return (
                                                             <div
                                                                 key={`input-overlay-${s.id}`}
@@ -935,7 +1077,7 @@ export default function ContratoDetailPage() {
                                                         );
                                                     }
 
-                                                    if (s.status === 'PENDING' && s.tipo === 'checkbox') {
+                                                    if (s.status === 'PENDING' && s.tipo === 'checkbox' && isMyField && !isManager) {
                                                         return (
                                                             <div
                                                                 key={`checkbox-overlay-${s.id}`}
@@ -1018,6 +1160,7 @@ export default function ContratoDetailPage() {
                                                         ? `${s.colaborador.first_name}` 
                                                         : (s.external_signer_name || s.external_signer_email || 'Convidado');
 
+                                                    const canEditField = isManager && s.status === 'PENDING';
                                                     return (
                                                         <SignaturePositionOverlay
                                                             key={s.id}
@@ -1027,7 +1170,15 @@ export default function ContratoDetailPage() {
                                                             height={displayH}
                                                             label={`${displayName}`}
                                                             status={s.status as 'PENDING' | 'SIGNED' | 'REJECTED'}
-                                                            interactive={false}
+                                                            tipo={s.tipo}
+                                                            interactive={canEditField}
+                                                            draggable={canEditField}
+                                                            resizable={canEditField}
+                                                            selected={selectedFieldIds.includes(s.id)}
+                                                            required={s.obrigatorio !== false}
+                                                            onSelect={(e) => handleSelectField(s.id, e)}
+                                                            onDragEnd={(newX, newY) => handleFieldDragEnd(s.id, newX, newY)}
+                                                            onResizeEnd={(box) => handleFieldResizeEnd(s.id, box)}
                                                             colorClasses={getSignerColor(signerId)}
                                                         />
                                                     );
@@ -1038,39 +1189,28 @@ export default function ContratoDetailPage() {
                                                         <SignaturePositionOverlay
                                                             x={clickPos.x}
                                                             y={clickPos.y}
-                                                            width={signatureType === 'rubrica' ? 90 : (signatureType === 'checkbox' ? 18 : (signatureType === 'texto' ? 120 : 150))}
-                                                            height={signatureType === 'rubrica' ? 24 : (signatureType === 'checkbox' ? 18 : (signatureType === 'texto' ? 24 : 28))}
+                                                            width={clickPos.w || (signatureType === 'rubrica' ? 90 : (signatureType === 'checkbox' ? 18 : (signatureType === 'texto' ? 120 : 150)))}
+                                                            height={clickPos.h || (signatureType === 'rubrica' ? 24 : (signatureType === 'checkbox' ? 18 : (signatureType === 'texto' ? 24 : 28)))}
                                                             label={selectedColaborador 
                                                                 ? (colaboradores.find(c => (c.id||c._id) === selectedColaborador)?.first_name || t('common.selected', 'Selecionado')) 
                                                                 : (manualSignerName || t('contratos.detail.new_position', 'Posição Nova'))}
                                                             status="PENDING"
                                                             interactive={true}
                                                             draggable={true}
+                                                            resizable={true}
+                                                            required={fieldRequired}
                                                             onDragEnd={(newX, newY) => setClickPos(prev => prev ? { ...prev, x: newX, y: newY } : null)}
+                                                            onResizeEnd={(box) => setClickPos(prev => prev ? { ...prev, x: box.x, y: box.y, w: box.width, h: box.height } : null)}
                                                             colorClasses={getSignerColor(selectedColaborador || manualSignerEmail || 'temp')}
                                                         />
 
-                                                        {/* Floating Config Card */}
-                                                        <div 
-                                                            className="absolute z-[60] bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 p-5 w-[320px] animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-200 text-left"
-                                                            style={{ 
-                                                                left: Math.max(10, Math.min(clickPos.x + 20, pdfWidth - 340)), 
-                                                                top: Math.max(10, Math.min(clickPos.y - 20, (originalPageSize ? (pdfWidth / originalPageSize.width * originalPageSize.height) : 800) - 440)),
-                                                                pointerEvents: 'auto',
-                                                                cursor: 'default'
-                                                            }}
-                                                            onClick={(e) => e.stopPropagation()}
+                                                        <DraggableFloatingPanel
+                                                            title={t('contratos.detail.signer', 'Signatário')}
+                                                            onClose={() => resetAssignState()}
+                                                            width={340}
+                                                            zIndex={80}
                                                         >
-                                                            <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-100">
-                                                                <h4 className="text-xs font-bold text-gray-900 flex items-center gap-1.5 uppercase tracking-wide">
-                                                                    <FiUserPlus className="text-blue-600 w-3.5 h-3.5" /> {t('contratos.detail.signer', 'Signatário')}
-                                                                </h4>
-                                                                <button onClick={() => resetAssignState()} className="text-gray-400 hover:text-red-500 transition-colors">
-                                                                    <FiX className="w-4 h-4" />
-                                                                </button>
-                                                            </div>
-
-                                                            <div className="space-y-3">
+                                                            <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
                                                                 <div className="flex items-center justify-between gap-2 py-1 px-2.5 bg-blue-50/50 rounded-lg border border-blue-100/50 mb-1">
                                                                     <div>
                                                                         <label className="text-[10px] font-bold text-blue-600 block">{t('contratos.detail.flow', 'Fluxo de Assinatura')}</label>
@@ -1212,6 +1352,16 @@ export default function ContratoDetailPage() {
                                                                     )}
                                                                 </div>
 
+                                                                <label className="flex items-center gap-2 py-1 px-1 text-[10px] text-gray-600 font-medium">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={fieldRequired}
+                                                                        onChange={(e) => setFieldRequired(e.target.checked)}
+                                                                        className="rounded border-gray-300 text-blue-600 w-3.5 h-3.5"
+                                                                    />
+                                                                    Campo obrigatório
+                                                                </label>
+
                                                                 {/* Checkbox for reusing signer info */}
                                                                 <div className="flex items-center gap-2 py-1 px-1">
                                                                     <input 
@@ -1236,7 +1386,7 @@ export default function ContratoDetailPage() {
                                                                     </button>
                                                                 </div>
                                                             </div>
-                                                        </div>
+                                                        </DraggableFloatingPanel>
                                                     </>
                                                 )}
                                             </div>

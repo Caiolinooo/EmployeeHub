@@ -16,8 +16,9 @@ const PDF_OPTIONS = {
 import {
     FiArrowLeft, FiFileText, FiUsers, FiEdit3,
     FiCheck, FiX, FiPlus, FiChevronLeft, FiChevronRight,
-    FiTrash2, FiSave, FiSettings
+    FiTrash2, FiSave, FiSettings, FiCopy, FiRefreshCw
 } from 'react-icons/fi';
+import DraggableFloatingPanel from '@/components/ui/DraggableFloatingPanel';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { fetchWithAuth } from '@/lib/authUtils';
@@ -38,6 +39,10 @@ export default function TemplateFieldsEditorPage() {
     const [activeDocIndex, setActiveDocIndex] = useState(0);
     const [campos, setCampos] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const hasTemplate = useRef(false);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [fieldRequired, setFieldRequired] = useState(true);
     const [pdfWidth, setPdfWidth] = useState(620);
     const [currentPage, setCurrentPage] = useState(1);
     const [numPages, setNumPages] = useState<number>(0);
@@ -53,12 +58,15 @@ export default function TemplateFieldsEditorPage() {
 
     const activeDoc = documentos[activeDocIndex];
 
-    const loadTemplateData = useCallback(async () => {
+    const loadTemplateData = useCallback(async (background?: boolean) => {
+        const soft = !!background && hasTemplate.current;
         try {
-            setLoading(true);
+            if (soft) setRefreshing(true);
+            else setLoading(true);
             const res = await fetchWithAuth(`/api/contracts/templates?id=${templateId}`);
             const data = await res.json();
             if (data.success) {
+                hasTemplate.current = true;
                 setTemplate(data.template);
                 setDocumentos(data.documentos || []);
                 setCampos(data.campos || []);
@@ -75,6 +83,7 @@ export default function TemplateFieldsEditorPage() {
             router.push('/contratos');
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     }, [templateId, router]);
 
@@ -135,6 +144,7 @@ export default function TemplateFieldsEditorPage() {
             largura_assinatura: finalW,
             altura_assinatura: finalH,
             tipo: fieldType,
+            obrigatorio: fieldRequired,
             ordem: campos.filter(c => c.documento_id === activeDoc.id).length + 1
         };
 
@@ -148,22 +158,46 @@ export default function TemplateFieldsEditorPage() {
         toast.success('Campo removido do template');
     };
 
-    const handleDragField = (id: string, newX: number, newY: number) => {
-        if (!originalPageSize) return;
-        const scaleFactor = originalPageSize.width / pdfWidth;
-        const finalX = Math.round(newX * scaleFactor);
-        const finalY = Math.round(newY * scaleFactor);
+    const pointsPerPx = originalPageSize ? originalPageSize.width / pdfWidth : 1;
 
+    const moveFields = (id: string, newX: number, newY: number) => {
+        if (!originalPageSize) return;
+        const field = campos.find(c => c.id === id);
+        if (!field) return;
+        const oldPx = field.posicao_x / pointsPerPx;
+        const oldPy = field.posicao_y / pointsPerPx;
+        const dx = newX - oldPx;
+        const dy = newY - oldPy;
+        const ids = selectedIds.includes(id) ? selectedIds : [id];
         setCampos(campos.map(c => {
-            if (c.id === id) {
-                return {
-                    ...c,
-                    posicao_x: finalX,
-                    posicao_y: finalY
-                };
-            }
-            return c;
+            if (!ids.includes(c.id)) return c;
+            const px = c.id === id ? newX : (c.posicao_x / pointsPerPx) + dx;
+            const py = c.id === id ? newY : (c.posicao_y / pointsPerPx) + dy;
+            return { ...c, posicao_x: Math.round(Math.max(0, px) * pointsPerPx), posicao_y: Math.round(Math.max(0, py) * pointsPerPx) };
         }));
+    };
+
+    const resizeField = (id: string, box: { x: number; y: number; width: number; height: number }) => {
+        setCampos(campos.map(c => c.id === id ? {
+            ...c,
+            posicao_x: Math.round(box.x * pointsPerPx),
+            posicao_y: Math.round(box.y * pointsPerPx),
+            largura_assinatura: Math.round(box.width * pointsPerPx),
+            altura_assinatura: Math.round(box.height * pointsPerPx),
+        } : c));
+    };
+
+    const copySelected = () => {
+        const copies = campos.filter(c => selectedIds.includes(c.id)).map((c, i) => ({
+            ...c,
+            id: `temp-${Date.now()}-${i}`,
+            posicao_x: (c.posicao_x || 0) + 16,
+            posicao_y: (c.posicao_y || 0) + 16,
+        }));
+        if (copies.length === 0) return;
+        setCampos([...campos, ...copies]);
+        setSelectedIds(copies.map(c => c.id));
+        toast.success('Campo copiado');
     };
 
     const handleSaveTemplateFields = async () => {
@@ -186,7 +220,7 @@ export default function TemplateFieldsEditorPage() {
             const data = await res.json();
             if (data.success) {
                 toast.success('Template de campos salvo com sucesso!');
-                loadTemplateData();
+                loadTemplateData(true);
             } else {
                 toast.error(data.error || 'Erro ao salvar template');
             }
@@ -196,7 +230,7 @@ export default function TemplateFieldsEditorPage() {
         }
     };
 
-    if (loading) {
+    if (loading && !template) {
         return (
             <MainLayout>
                 <div className="flex flex-col items-center justify-center min-h-[70vh] text-gray-500">
@@ -282,8 +316,11 @@ export default function TemplateFieldsEditorPage() {
 
                         {/* Position Tool */}
                         <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-                            <h3 className="text-sm font-bold text-gray-950 mb-3 uppercase tracking-wider flex items-center gap-2">
-                                <FiSettings className="text-gray-400" /> Ferramenta de Campos
+                            <h3 className="text-sm font-bold text-gray-950 mb-3 uppercase tracking-wider flex items-center justify-between gap-2">
+                                <span className="flex items-center gap-2"><FiSettings className="text-gray-400" /> Ferramenta de Campos</span>
+                                <button type="button" onClick={() => loadTemplateData(true)} title="Atualizar" className="p-1 text-gray-400 hover:text-gray-700">
+                                    <FiRefreshCw className={refreshing ? 'animate-spin' : ''} />
+                                </button>
                             </h3>
                             
                             <div className="space-y-4">
@@ -324,6 +361,22 @@ export default function TemplateFieldsEditorPage() {
                                         ))}
                                     </div>
                                 </div>
+
+                                <label className="flex items-center gap-2 text-xs text-gray-600">
+                                    <input type="checkbox" checked={fieldRequired} onChange={(e) => setFieldRequired(e.target.checked)} />
+                                    Novo campo obrigatório
+                                </label>
+
+                                {selectedIds.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                        <button type="button" onClick={copySelected} className="inline-flex items-center gap-1 px-2 py-1 text-xs border rounded-lg">
+                                            <FiCopy /> Copiar
+                                        </button>
+                                        <button type="button" onClick={() => setCampos(campos.map(c => selectedIds.includes(c.id) ? { ...c, obrigatorio: true } : c))} className="px-2 py-1 text-xs border rounded-lg">Obrigatório</button>
+                                        <button type="button" onClick={() => setCampos(campos.map(c => selectedIds.includes(c.id) ? { ...c, obrigatorio: false } : c))} className="px-2 py-1 text-xs border rounded-lg">Opcional</button>
+                                        <button type="button" onClick={() => { setCampos(campos.filter(c => !selectedIds.includes(c.id))); setSelectedIds([]); }} className="px-2 py-1 text-xs border border-red-200 text-red-600 rounded-lg">Excluir</button>
+                                    </div>
+                                )}
 
                                 <div className="pt-2">
                                     <button
@@ -440,6 +493,7 @@ export default function TemplateFieldsEditorPage() {
                                     style={{ width: pdfWidth + 10 }}
                                 >
                                     <Document
+                                        key={activeDoc.id}
                                         file={activeDoc.arquivo_url}
                                         onLoadSuccess={onDocumentLoadSuccess}
                                         onLoadError={t => {
@@ -489,8 +543,20 @@ export default function TemplateFieldsEditorPage() {
                                                     width={displayW}
                                                     height={displayH}
                                                     label={`${c.tipo.toUpperCase()}: ${c.papel_nome}`}
+                                                    tipo={c.tipo}
                                                     draggable={true}
-                                                    onDragEnd={(newX, newY) => handleDragField(c.id, newX, newY)}
+                                                    resizable={true}
+                                                    selected={selectedIds.includes(c.id)}
+                                                    required={c.obrigatorio !== false}
+                                                    onSelect={(e) => {
+                                                        if (e.shiftKey || e.metaKey || e.ctrlKey) {
+                                                            setSelectedIds(prev => prev.includes(c.id) ? prev.filter(id => id !== c.id) : [...prev, c.id]);
+                                                        } else if (!selectedIds.includes(c.id)) {
+                                                            setSelectedIds([c.id]);
+                                                        }
+                                                    }}
+                                                    onDragEnd={(newX, newY) => moveFields(c.id, newX, newY)}
+                                                    onResizeEnd={(box) => resizeField(c.id, box)}
                                                     colorClasses={color}
                                                 />
                                             );
@@ -498,20 +564,17 @@ export default function TemplateFieldsEditorPage() {
 
                                     {/* Click setup position confirmation overlay */}
                                     {clickPos && clickPos.page === currentPage && (
-                                        <div 
-                                            className="absolute bg-white/95 border border-gray-200 p-4 rounded-xl shadow-2xl z-40 flex flex-col gap-2 max-w-[260px]"
-                                            style={{ 
-                                                left: Math.max(10, Math.min(clickPos.x - 20, pdfWidth - 280)), 
-                                                top: Math.max(10, Math.min(clickPos.y - 20, (originalPageSize ? (pdfWidth / originalPageSize.width * originalPageSize.height) : 800) - 220)) 
-                                            }}
-                                            onClick={e => e.stopPropagation()} // Prevent resetting clicking position
-                                        >
-                                            <p className="text-xs font-bold text-gray-900 uppercase tracking-wider">Confirmar Campo</p>
+                                        <DraggableFloatingPanel title="Confirmar campo" onClose={() => setClickPos(null)} width={280} zIndex={90}>
+                                            <div className="flex flex-col gap-2" onClick={e => e.stopPropagation()}>
                                             <div className="text-[10px] text-gray-500 leading-normal space-y-1">
                                                 <p><strong>Papel:</strong> {selectedRole}</p>
                                                 <p><strong>Tipo:</strong> {fieldType.toUpperCase()}</p>
                                                 <p><strong>Pág:</strong> {clickPos.page}</p>
                                             </div>
+                                            <label className="flex items-center gap-2 text-[10px] text-gray-600 font-medium">
+                                                <input type="checkbox" checked={fieldRequired} onChange={(e) => setFieldRequired(e.target.checked)} />
+                                                Campo obrigatório
+                                            </label>
                                             <div className="flex gap-2 mt-2">
                                                 <button
                                                     onClick={() => setClickPos(null)}
@@ -526,7 +589,8 @@ export default function TemplateFieldsEditorPage() {
                                                     <FiCheck /> Confirmar
                                                 </button>
                                             </div>
-                                        </div>
+                                            </div>
+                                        </DraggableFloatingPanel>
                                     )}
                                 </div>
                             </div>

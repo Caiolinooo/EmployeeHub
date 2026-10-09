@@ -108,6 +108,7 @@ export async function POST(
                 altura_assinatura: isCC ? null : (altura_assinatura || 50),
                 tipo: tipo || 'assinatura',
                 ordem: body.ordem || 1,
+                obrigatorio: body.obrigatorio === false ? false : true,
                 status: 'PENDING',
             })
             .select('*')
@@ -188,6 +189,62 @@ export async function GET(
         return NextResponse.json({ success: true, solicitacoes: rows });
     } catch (error) {
         console.error('Erro em GET /api/contracts/[id]/assign:', error);
+        return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
+    }
+}
+
+// PATCH — Move, resize, copy metadata, or toggle obrigatório on a pending field
+export async function PATCH(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { user, error: authError } = await authenticateUser(request);
+        if (authError) return authError;
+        if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+
+        const access = await loadContractAccess(user);
+        const denied = denyUnlessCan(access, 'signers.manage');
+        if (denied) return denied;
+
+        const { id: envelopeId } = await params;
+        if (!(await canMutateEnvelope(user, access, envelopeId))) {
+            return NextResponse.json({ error: 'Envelope não encontrado' }, { status: 404 });
+        }
+
+        const body = await request.json();
+        const solicitacaoId = body.solicitacao_id as string | undefined;
+        if (!solicitacaoId) {
+            return NextResponse.json({ error: 'solicitacao_id é obrigatório' }, { status: 400 });
+        }
+
+        const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+        if (body.posicao_x !== undefined) updates.posicao_x = body.posicao_x;
+        if (body.posicao_y !== undefined) updates.posicao_y = body.posicao_y;
+        if (body.largura_assinatura !== undefined) updates.largura_assinatura = body.largura_assinatura;
+        if (body.altura_assinatura !== undefined) updates.altura_assinatura = body.altura_assinatura;
+        if (body.pagina_assinatura !== undefined) updates.pagina_assinatura = body.pagina_assinatura;
+        if (body.tipo !== undefined) updates.tipo = body.tipo;
+        if (body.ordem !== undefined) updates.ordem = body.ordem;
+        if (body.obrigatorio !== undefined) updates.obrigatorio = body.obrigatorio === false ? false : true;
+
+        const { data, error } = await supabaseAdmin
+            .from('solicitacoes_assinatura')
+            .update(updates)
+            .eq('id', solicitacaoId)
+            .eq('envelope_id', envelopeId)
+            .eq('status', 'PENDING')
+            .select('*')
+            .single();
+
+        if (error || !data) {
+            console.error('Erro ao atualizar solicitação:', error);
+            return NextResponse.json({ error: 'Não foi possível atualizar o campo pendente' }, { status: 400 });
+        }
+
+        return NextResponse.json({ success: true, solicitacao: data });
+    } catch (error) {
+        console.error('Erro em PATCH /api/contracts/[id]/assign:', error);
         return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
     }
 }

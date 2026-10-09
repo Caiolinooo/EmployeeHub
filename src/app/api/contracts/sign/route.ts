@@ -6,6 +6,8 @@ import { generateSHA256, generateFinalHash } from '@/lib/services/CryptographySe
 import { embedSignatureOnPdf, addAuditPage, embedFieldsAndSignaturesOnPdf, PdfFieldItem } from '@/lib/services/PdfEditorService';
 import { dispatchEnvelopeStage } from '@/lib/envelopeDispatcher';
 import { normalizeCpf, birthDatesMatch } from '@/lib/utils/identity';
+import { latestAuditForDocument, storagePathFromUrl } from '@/lib/contracts/signed-file';
+import { missingRequiredFieldValue } from '@/lib/contracts/signature-queue';
 
 
 export const dynamic = 'force-dynamic';
@@ -141,13 +143,7 @@ export async function POST(request: NextRequest) {
         let expectedHash = documento.hash_original;
         
         // Find if there is a previous signature for this document
-        const { data: lastAudit } = await supabaseAdmin
-            .from('auditoria_assinaturas')
-            .select('arquivo_assinado_url, hash_final, metadados, solicitacoes_assinatura!inner(documento_id)')
-            .eq('solicitacoes_assinatura.documento_id', documento.id)
-            .order('data_assinatura', { ascending: false })
-            .limit(1)
-            .single();
+        const lastAudit = await latestAuditForDocument(supabaseAdmin, documento.id);
 
         try {
             let urlToDownload = documento.arquivo_url;
@@ -158,16 +154,7 @@ export async function POST(request: NextRequest) {
             }
 
             const bucketName = 'documentos-trabalhistas';
-            let storagePath: string;
-
-            if (urlToDownload.includes(`/storage/v1/object/public/${bucketName}/`)) {
-                storagePath = urlToDownload.split(`/storage/v1/object/public/${bucketName}/`)[1];
-            } else if (urlToDownload.includes(`/storage/v1/object/sign/${bucketName}/`)) {
-                // Remove the query params to just get the path for download
-                storagePath = urlToDownload.split(`/storage/v1/object/sign/${bucketName}/`)[1].split('?')[0];
-            } else {
-                storagePath = urlToDownload;
-            }
+            const storagePath = storagePathFromUrl(urlToDownload, bucketName);
 
             const { data: fileData, error: dlError } = await supabaseAdmin
                 .storage
@@ -227,6 +214,17 @@ export async function POST(request: NextRequest) {
 
         const { data: siblingFields } = await fieldsQuery;
         const siblingList = siblingFields || [];
+
+        const filled = (field_values && typeof field_values === 'object') ? field_values as Record<string, string> : {};
+        const missing = siblingList.find((sib) => missingRequiredFieldValue(sib, filled));
+        if (missing) {
+            return NextResponse.json({
+                error: missing.tipo === 'checkbox'
+                    ? 'Marque os campos obrigatórios antes de assinar.'
+                    : 'Preencha os campos obrigatórios antes de assinar.',
+                field_id: missing.id,
+            }, { status: 400 });
+        }
 
         // Update sibling fields in the database as completed
         for (const sib of siblingList) {
@@ -337,12 +335,14 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Erro ao salvar documento assinado' }, { status: 500 });
         }
 
-const { data: signedUrlData } = await supabaseAdmin
+        const { data: signedUrlData } = await supabaseAdmin
             .storage
             .from('documentos-trabalhistas')
-            .createSignedUrl(signedFileName, 2592000); // 30 days
+            .createSignedUrl(signedFileName, 3600);
 
-        const arquivoAssinadoUrl = signedUrlData?.signedUrl || signedFileName;
+        // Banco guarda o path. A resposta devolve URL fresca para o viewer.
+        const arquivoAssinadoUrl = signedFileName;
+        const arquivoAssinadoPublico = signedUrlData?.signedUrl || signedFileName;
 
         // 9. Insert audit record
         const { error: auditError } = await supabaseAdmin
@@ -419,7 +419,7 @@ const { data: signedUrlData } = await supabaseAdmin
             success: true,
             message: 'Documento assinado com sucesso',
             hash_final: hashFinal,
-            arquivo_assinado_url: arquivoAssinadoUrl,
+            arquivo_assinado_url: arquivoAssinadoPublico,
         });
     } catch (error) {
         console.error('Erro em POST /api/contracts/sign:', error);
