@@ -10,6 +10,7 @@ Escopo de visualização e gate de ações dos contratos (`/contratos`, `/api/co
 - `action-gate.ts` — regra pura `canContractAction` / `buildContractAccess` (tabela `ACTION_DEFAULT`: `manage` | `open`)
 - `view-access.ts` — servidor: `loadContractAccess(user)` (uma leitura de `loadEffectivePermissions`: JSONB + ACL + módulo efetivo), `denyUnlessCan`, `canMutateEnvelope`, `getOwnEnvelopeIds`, `isOwnSolicitacao`
 - `signature-queue.ts` — item da fila é campo, não PDF. `uniqueSignatureDocuments` / `file_count` = PDFs distintos (cópia fora). `isFieldRequired` (default true) e `missingRequiredFieldValue` (texto vazio ou checkbox ≠ `true`)
+- `field-live.ts` — patch otimista, reversão se o campo não mudou de novo, URL de PDF estável, troca de id temporário
 - `signed-file.ts` — path no bucket e última auditoria **deste** `documento_id` (não a de outro arquivo do envelope)
 - Tabelas: `envelopes`, `documentos_trabalhistas`, `solicitacoes_assinatura` (status enum `PENDING|SIGNED|REJECTED`), `auditoria_assinaturas`, `contrato_templates*`, view `vw_envelopes_completo`. Envelope: `DRAFT|SENT|COMPLETED|DELETED`
 - Vínculo "próprio contrato": `solicitacoes_assinatura.colaborador_id = users_unified.id` **ou** `external_signer_email` = e-mail do usuário (assinante ou cópia)
@@ -23,10 +24,10 @@ Escopo de visualização e gate de ações dos contratos (`/contratos`, `/api/co
 - Mutação em envelope exige escopo `all` ou ser o remetente (`canMutateEnvelope`). Escopo `view_own` explícito restringe também as mutações.
 - `audit.view` e `export` existem no catálogo sem rota ainda (reservados).
 - Link de assinatura externo é sempre `/assinatura/[token]` (dispatcher e `send-email`). A página legada `/contratos/[id]/assinar` foi removida.
-- Posição dos campos: envelope persiste em `PATCH /api/contracts/[id]/assign`. Template fica no cliente até Salvar. Painéis flutuantes usam `DraggableFloatingPanel`.
+- Posição dos campos: cada gesto persiste no fim (pointerup), sem `GET` que troca o PDF. Envelope: `POST`/`PATCH`/`DELETE /api/contracts/[id]/assign` e o estado local daquele campo (falha reverte só ele). Template: `POST /api/contracts/templates` com o conjunto, debounce 300ms, update por id; id temporário vira o id real só se o editor não mudou de novo. `arquivo_url` estável se o path do storage não mudou (`field-live.ts`). Sem `visibilitychange` no editor. Painéis flutuantes usam `DraggableFloatingPanel`.
 - `obrigatorio` (default true) em `solicitacoes_assinatura` e `contrato_template_campos`. `POST /api/contracts/sign` recusa obrigatório vazio; opcional não bloqueia.
 - `GET /api/contracts/sign-access/[token]` devolve `documentos` e `file_count` (PDFs distintos, cópias fora). `/assinatura/[token]` uma aba por arquivo e `key={documento.id}`. Nunca `queue.length` como total de arquivos.
-- Refresh da lista e do envelope (`GET /api/contracts`) mantém o dado atual; spinner só no ícone.
+- `GET /api/contracts` no editor só no load, no botão Atualizar, no disparo e depois de assinar. Gesto de campo não dispara esse GET. URL assinada nova com o mesmo path não remonta o `<Document>`.
 - Rotas usam `supabaseAdmin` (service role). RLS das tabelas de contrato é só `service_role` (`20261008_000002_contratos_rls_hardening.sql`); o gate é a API.
 
 ## Verification

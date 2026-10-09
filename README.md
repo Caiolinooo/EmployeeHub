@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.99.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.99.1 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,11 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.99.1)
+
+- **Campos do contrato**: arrastar, redimensionar, copiar, excluir ou marcar obrigatório não recarrega o PDF. O envelope grava o gesto na hora; o template grava o conjunto cerca de 300 ms depois. Se a gravação falha e o campo não foi movido de novo, a posição volta.
+- **Assinatura**: a URL do PDF fica estável na sessão. A página volta para 1 só quando o arquivo muda.
 
 ## Nesta versão (5.99.0)
 

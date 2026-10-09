@@ -4,11 +4,12 @@ Editor de posicionamento, flag obrigatório, refresh sem travar a tela e os dois
 
 - [x] Campos arrastáveis, copiáveis, multi-seleção, editáveis e redimensionáveis no envelope (`/contratos/[id]`) e no template (`/contratos/templates/[id]`)
 - [x] Painel do campo usa `DraggableFloatingPanel` (mesmo gesto do painel da escala GT)
-- [x] Refresh da lista e do envelope em background (`GET /api/contracts`); a tela fica com o dado atual
+- [x] Lista (`/contratos`) atualiza em background no botão; o editor não refaz o GET no gesto de campo
 - [x] `obrigatorio` em `solicitacoes_assinatura` e `contrato_template_campos` (migration `20261009_000001`); validação no `POST /api/contracts/sign` e na página `/assinatura/[token]`
 - [x] Fila de assinatura devolve PDFs distintos (`documentos` + `file_count`); o viewer troca de arquivo com `key` e abas
 - [x] Migration aplicada no projeto `Painel_ABZGroup` (`obrigatorio` nas duas tabelas)
-- [ ] Conferir no navegador com login: arrastar, copiar, redimensionar, obrigatório, refresh e os dois PDFs
+- [x] Editor não recarrega o PDF no gesto: sem `visibilitychange`, sem `fetchDocumento`/`loadTemplateData` depois de drag, resize, cópia, exclusão ou obrigatório. Save no fim do gesto. URL assinada estável (`field-live.ts`)
+- [ ] Conferir no navegador com login: arrastar um campo não pisca o PDF nem dispara GET do envelope
 
 ## Ponto com biometria (2026-10-07)
 

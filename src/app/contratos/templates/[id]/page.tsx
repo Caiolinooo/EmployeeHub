@@ -22,6 +22,13 @@ import DraggableFloatingPanel from '@/components/ui/DraggableFloatingPanel';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { fetchWithAuth } from '@/lib/authUtils';
+import {
+    adoptServerIds,
+    isPersistedFieldId,
+    isStaleLiveSave,
+    mergeDocumentFileUrls,
+    remapIds,
+} from '@/lib/contracts/field-live';
 import SignaturePositionOverlay, { getSignerColor } from '@/components/contratos/SignaturePositionOverlay';
 import { useI18n } from '@/contexts/I18nContext';
 import toast from 'react-hot-toast';
@@ -57,6 +64,16 @@ export default function TemplateFieldsEditorPage() {
     const containerRef = useRef<HTMLDivElement>(null);
 
     const activeDoc = documentos[activeDocIndex];
+    const routerRef = useRef(router);
+    routerRef.current = router;
+    const camposRef = useRef<any[]>([]);
+    const epochRef = useRef(0);
+    const ackedEpochRef = useRef(0);
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const flushingRef = useRef(false);
+    const flushAgainRef = useRef(false);
+    const flushInflightRef = useRef<Promise<void> | null>(null);
+    const failRetryRef = useRef(0);
 
     const loadTemplateData = useCallback(async (background?: boolean) => {
         const soft = !!background && hasTemplate.current;
@@ -68,24 +85,28 @@ export default function TemplateFieldsEditorPage() {
             if (data.success) {
                 hasTemplate.current = true;
                 setTemplate(data.template);
-                setDocumentos(data.documentos || []);
-                setCampos(data.campos || []);
+                setDocumentos((prev) => mergeDocumentFileUrls(prev, data.documentos || []));
+                if (epochRef.current === ackedEpochRef.current) {
+                    const nextCampos = data.campos || [];
+                    camposRef.current = nextCampos;
+                    setCampos(nextCampos);
+                }
                 if (data.template?.papeis?.length > 0) {
-                    setSelectedRole(data.template.papeis[0]);
+                    setSelectedRole((prev) => prev || data.template.papeis[0]);
                 }
             } else {
                 toast.error(data.error || 'Erro ao carregar template');
-                router.push('/contratos');
+                routerRef.current.push('/contratos');
             }
         } catch (err) {
             console.error(err);
             toast.error('Erro ao conectar ao servidor');
-            router.push('/contratos');
+            routerRef.current.push('/contratos');
         } finally {
             setLoading(false);
             setRefreshing(false);
         }
-    }, [templateId, router]);
+    }, [templateId]);
 
     useEffect(() => {
         if (templateId) {
@@ -95,8 +116,101 @@ export default function TemplateFieldsEditorPage() {
 
     const onDocumentLoadSuccess = ({ numPages: n }: { numPages: number }) => {
         setNumPages(n);
-        setCurrentPage(1);
     };
+
+    const flushTemplateSave = (): Promise<void> => {
+        if (flushInflightRef.current) {
+            flushAgainRef.current = true;
+            return flushInflightRef.current;
+        }
+        flushingRef.current = true;
+        let failed = false;
+        const job = (async () => {
+        try {
+            do {
+                flushAgainRef.current = false;
+                const epoch = epochRef.current;
+                const payload = camposRef.current.map((c) => ({ ...c }));
+                let data: { success?: boolean; error?: string; campos?: { id: string; client_id?: string | null }[] };
+                try {
+                    const res = await fetchWithAuth('/api/contracts/templates', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: templateId,
+                            campos: payload.map(({ id: fieldId, ...rest }) => ({
+                                ...rest,
+                                id: isPersistedFieldId(fieldId) ? fieldId : undefined,
+                                client_id: fieldId,
+                            })),
+                        }),
+                    });
+                    data = await res.json();
+                } catch (err) {
+                    console.error(err);
+                    if (!isStaleLiveSave(epoch, epochRef.current)) {
+                        toast.error('Erro ao conectar ao servidor');
+                        failed = true;
+                    } else {
+                        flushAgainRef.current = true;
+                    }
+                    break;
+                }
+                if (!data.success) {
+                    if (!isStaleLiveSave(epoch, epochRef.current)) {
+                        toast.error(data.error || 'Erro ao salvar template');
+                        failed = true;
+                    } else {
+                        flushAgainRef.current = true;
+                    }
+                    break;
+                }
+                if (isStaleLiveSave(epoch, epochRef.current)) {
+                    flushAgainRef.current = true;
+                    continue;
+                }
+                const returned = Array.isArray(data.campos) ? data.campos : [];
+                failRetryRef.current = 0;
+                ackedEpochRef.current = epoch;
+                setCampos((prev) => {
+                    if (isStaleLiveSave(epoch, epochRef.current)) return prev;
+                    const adopted = adoptServerIds(prev, returned);
+                    camposRef.current = adopted;
+                    return adopted;
+                });
+                setSelectedIds((prev) => (
+                    isStaleLiveSave(epoch, epochRef.current) ? prev : remapIds(prev, returned)
+                ));
+            } while (flushAgainRef.current);
+        } finally {
+            flushingRef.current = false;
+            flushInflightRef.current = null;
+        }
+        if (flushAgainRef.current || (!failed && epochRef.current !== ackedEpochRef.current)) {
+            flushAgainRef.current = false;
+            await flushTemplateSave();
+        } else if (failed && epochRef.current !== ackedEpochRef.current && failRetryRef.current < 2) {
+            failRetryRef.current += 1;
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => { void flushTemplateSave(); }, 800);
+        }
+        })();
+        flushInflightRef.current = job;
+        return job;
+    };
+
+    const commitCampos = (updater: (prev: any[]) => any[]) => {
+        const next = updater(camposRef.current);
+        camposRef.current = next;
+        setCampos(next);
+        epochRef.current += 1;
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => { void flushTemplateSave(); }, 300);
+    };
+
+    useEffect(() => () => {
+        if (timerRef.current) clearTimeout(timerRef.current);
+    }, []);
 
     const onPageLoadSuccess = (page: any) => {
         const viewport = page.getViewport({ scale: 1.0 });
@@ -145,16 +259,17 @@ export default function TemplateFieldsEditorPage() {
             altura_assinatura: finalH,
             tipo: fieldType,
             obrigatorio: fieldRequired,
-            ordem: campos.filter(c => c.documento_id === activeDoc.id).length + 1
+            ordem: camposRef.current.filter(c => c.documento_id === activeDoc.id).length + 1
         };
 
-        setCampos([...campos, newField]);
+        commitCampos(prev => [...prev, newField]);
         setClickPos(null);
         toast.success('Campo inserido na página!');
     };
 
     const handleRemoveField = (id: string) => {
-        setCampos(campos.filter(c => c.id !== id));
+        commitCampos(prev => prev.filter(c => c.id !== id));
+        setSelectedIds(prev => prev.filter(selected => selected !== id));
         toast.success('Campo removido do template');
     };
 
@@ -162,23 +277,25 @@ export default function TemplateFieldsEditorPage() {
 
     const moveFields = (id: string, newX: number, newY: number) => {
         if (!originalPageSize) return;
-        const field = campos.find(c => c.id === id);
-        if (!field) return;
-        const oldPx = field.posicao_x / pointsPerPx;
-        const oldPy = field.posicao_y / pointsPerPx;
-        const dx = newX - oldPx;
-        const dy = newY - oldPy;
-        const ids = selectedIds.includes(id) ? selectedIds : [id];
-        setCampos(campos.map(c => {
-            if (!ids.includes(c.id)) return c;
-            const px = c.id === id ? newX : (c.posicao_x / pointsPerPx) + dx;
-            const py = c.id === id ? newY : (c.posicao_y / pointsPerPx) + dy;
-            return { ...c, posicao_x: Math.round(Math.max(0, px) * pointsPerPx), posicao_y: Math.round(Math.max(0, py) * pointsPerPx) };
-        }));
+        commitCampos(prev => {
+            const field = prev.find(c => c.id === id);
+            if (!field) return prev;
+            const oldPx = field.posicao_x / pointsPerPx;
+            const oldPy = field.posicao_y / pointsPerPx;
+            const dx = newX - oldPx;
+            const dy = newY - oldPy;
+            const ids = selectedIds.includes(id) ? selectedIds : [id];
+            return prev.map(c => {
+                if (!ids.includes(c.id)) return c;
+                const px = c.id === id ? newX : (c.posicao_x / pointsPerPx) + dx;
+                const py = c.id === id ? newY : (c.posicao_y / pointsPerPx) + dy;
+                return { ...c, posicao_x: Math.round(Math.max(0, px) * pointsPerPx), posicao_y: Math.round(Math.max(0, py) * pointsPerPx) };
+            });
+        });
     };
 
     const resizeField = (id: string, box: { x: number; y: number; width: number; height: number }) => {
-        setCampos(campos.map(c => c.id === id ? {
+        commitCampos(prev => prev.map(c => c.id === id ? {
             ...c,
             posicao_x: Math.round(box.x * pointsPerPx),
             posicao_y: Math.round(box.y * pointsPerPx),
@@ -188,45 +305,23 @@ export default function TemplateFieldsEditorPage() {
     };
 
     const copySelected = () => {
-        const copies = campos.filter(c => selectedIds.includes(c.id)).map((c, i) => ({
+        const copies = camposRef.current.filter(c => selectedIds.includes(c.id)).map((c, i) => ({
             ...c,
             id: `temp-${Date.now()}-${i}`,
             posicao_x: (c.posicao_x || 0) + 16,
             posicao_y: (c.posicao_y || 0) + 16,
         }));
         if (copies.length === 0) return;
-        setCampos([...campos, ...copies]);
+        commitCampos(prev => [...prev, ...copies]);
         setSelectedIds(copies.map(c => c.id));
         toast.success('Campo copiado');
     };
 
     const handleSaveTemplateFields = async () => {
-        try {
-            const res = await fetchWithAuth('/api/contracts/templates', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    id: templateId,
-                    campos: campos.map(({ id, ...rest }) => ({
-                        ...rest,
-                        // Clean temp ids
-                        id: id.startsWith('temp-') ? undefined : id
-                    }))
-                })
-            });
-
-            const data = await res.json();
-            if (data.success) {
-                toast.success('Template de campos salvo com sucesso!');
-                loadTemplateData(true);
-            } else {
-                toast.error(data.error || 'Erro ao salvar template');
-            }
-        } catch (err) {
-            console.error(err);
-            toast.error('Erro ao conectar ao servidor');
+        if (timerRef.current) clearTimeout(timerRef.current);
+        await flushTemplateSave();
+        if (epochRef.current === ackedEpochRef.current) {
+            toast.success('Template de campos salvo com sucesso!');
         }
     };
 
@@ -372,9 +467,9 @@ export default function TemplateFieldsEditorPage() {
                                         <button type="button" onClick={copySelected} className="inline-flex items-center gap-1 px-2 py-1 text-xs border rounded-lg">
                                             <FiCopy /> Copiar
                                         </button>
-                                        <button type="button" onClick={() => setCampos(campos.map(c => selectedIds.includes(c.id) ? { ...c, obrigatorio: true } : c))} className="px-2 py-1 text-xs border rounded-lg">Obrigatório</button>
-                                        <button type="button" onClick={() => setCampos(campos.map(c => selectedIds.includes(c.id) ? { ...c, obrigatorio: false } : c))} className="px-2 py-1 text-xs border rounded-lg">Opcional</button>
-                                        <button type="button" onClick={() => { setCampos(campos.filter(c => !selectedIds.includes(c.id))); setSelectedIds([]); }} className="px-2 py-1 text-xs border border-red-200 text-red-600 rounded-lg">Excluir</button>
+                                        <button type="button" onClick={() => commitCampos(prev => prev.map(c => selectedIds.includes(c.id) ? { ...c, obrigatorio: true } : c))} className="px-2 py-1 text-xs border rounded-lg">Obrigatório</button>
+                                        <button type="button" onClick={() => commitCampos(prev => prev.map(c => selectedIds.includes(c.id) ? { ...c, obrigatorio: false } : c))} className="px-2 py-1 text-xs border rounded-lg">Opcional</button>
+                                        <button type="button" onClick={() => { commitCampos(prev => prev.filter(c => !selectedIds.includes(c.id))); setSelectedIds([]); }} className="px-2 py-1 text-xs border border-red-200 text-red-600 rounded-lg">Excluir</button>
                                     </div>
                                 )}
 

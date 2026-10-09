@@ -92,9 +92,14 @@ export default function AssinaturaExternaPage() {
         };
     }, []);
 
+    const loadedPdfKey = React.useRef<string | null>(null);
     const onDocumentLoadSuccess = ({ numPages: n }: { numPages: number }) => {
         setNumPages(n);
-        setCurrentPage(1);
+        const key = (queue[activeIndex]?.documento?.id as string | undefined) || null;
+        if (loadedPdfKey.current !== key) {
+            loadedPdfKey.current = key;
+            setCurrentPage(1);
+        }
     };
 
     const onPageLoadSuccess = (page: any) => {
@@ -244,7 +249,13 @@ export default function AssinaturaExternaPage() {
 
     const currentItem = queue[activeIndex];
     const documento = currentItem?.documento;
-    const pdfUrl = currentItem?.pdf_url;
+    const pdfFileRef = React.useRef<Record<string, string>>({});
+    const rawPdfUrl = currentItem?.pdf_url as string | undefined;
+    const docKey = documento?.id as string | undefined;
+    if (docKey && rawPdfUrl && !pdfFileRef.current[docKey]) {
+        pdfFileRef.current[docKey] = rawPdfUrl;
+    }
+    const pdfUrl = (docKey && pdfFileRef.current[docKey]) || rawPdfUrl;
 
     const handleAuthSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -588,7 +599,7 @@ export default function AssinaturaExternaPage() {
 
                                 <div className="shadow-2xl bg-white">
                                     <Document
-                                        key={documento?.id || pdfUrl || 'pdf'}
+                                        key={documento?.id || 'pdf'}
                                         file={pdfUrl}
                                         onLoadSuccess={onDocumentLoadSuccess}
                                         onLoadError={onDocumentLoadError}

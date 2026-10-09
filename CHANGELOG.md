@@ -1,5 +1,19 @@
 # Changelog
 
+## [5.99.1] - 2026-10-09
+
+### Campos do contrato não recarregam o PDF ao posicionar
+
+#### Corrigido
+
+1. **Envelope** (`/contratos/[id]`): o editor não escuta mais `visibilitychange` e não faz `GET` depois de arrastar, redimensionar, copiar, excluir ou marcar obrigatório. A `key` do `<Document>` é só o id do documento. A URL assinada permanece se o caminho no storage não mudou (`mergeDocumentFileUrls`). Cada gesto grava no fim (`pointerup`) com `PATCH`/`POST`/`DELETE /api/contracts/[id]/assign` e atualiza só aquele campo. Se a API falha e o usuário não moveu o campo de novo, a posição volta.
+2. **Template** (`/contratos/templates/[id]`): criar, mover, redimensionar, copiar, excluir e obrigatório persistem cerca de 300 ms depois, via `POST /api/contracts/templates` com o conjunto (update por id; sem apagar e recriar). A resposta não sobrescreve a posição se o usuário já editou de novo. O botão Salvar não recarrega o PDF.
+3. **Assinatura** (`/assinatura/[token]`): a `key` é o id do documento; a primeira URL daquele arquivo vale na sessão; a página volta para 1 só quando o arquivo muda. Trocar de PDF ainda remonta o viewer.
+
+#### Adicionado
+
+1. **Helpers de gravação ao vivo** em `src/lib/contracts/field-live.ts` (patch otimista, reversão, URL estável, troca de id temporário) e `field-live.test.ts`.
+
 ## [5.99.0] - 2026-10-09
 
 ### Editor de campos do contrato e PDFs distintos na assinatura

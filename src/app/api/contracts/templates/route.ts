@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { authenticateUser } from '@/lib/api-auth';
 import { denyUnlessCan, loadContractAccess } from '@/lib/contracts/view-access';
+import { isPersistedFieldId } from '@/lib/contracts/field-live';
 import { generateSHA256 } from '@/lib/services/CryptographyService';
 
 export const dynamic = 'force-dynamic';
@@ -140,20 +141,27 @@ export async function POST(request: NextRequest) {
                 }
             }
 
-            // Save fields if provided
+            // Save fields if provided. Update by id; insert only new rows.
+            // Delete-all would mint new ids on every drag and remount the overlays.
+            let savedCampos: { id: string; client_id: string | null }[] | undefined;
             if (campos !== undefined) {
-                // Delete existing fields first
-                const { error: deleteError } = await supabaseAdmin
+                const { data: existingRows, error: existingError } = await supabaseAdmin
                     .from('contrato_template_campos')
-                    .delete()
+                    .select('id')
                     .eq('template_id', id);
 
-                if (deleteError) {
-                    return NextResponse.json({ error: 'Erro ao limpar campos anteriores' }, { status: 500 });
+                if (existingError) {
+                    return NextResponse.json({ error: 'Erro ao ler campos do template' }, { status: 500 });
                 }
 
-                if (campos.length > 0) {
-                    const camposInsert = campos.map((c: any) => ({
+                const existingIds = new Set((existingRows || []).map((row) => row.id as string));
+                const kept: string[] = [];
+                const returned: { id: string; client_id: string | null }[] = [];
+
+                for (const c of campos as Array<Record<string, unknown>>) {
+                    const clientId = (typeof c.client_id === 'string' ? c.client_id : null)
+                        || (typeof c.id === 'string' ? c.id : null);
+                    const row = {
                         template_id: id,
                         documento_id: c.documento_id,
                         papel_nome: c.papel_nome || null,
@@ -168,20 +176,55 @@ export async function POST(request: NextRequest) {
                         tipo: c.tipo,
                         ordem: c.ordem || 1,
                         obrigatorio: c.obrigatorio === false ? false : true,
-                    }));
+                    };
 
-                    const { error: insertError } = await supabaseAdmin
-                        .from('contrato_template_campos')
-                        .insert(camposInsert);
-
-                    if (insertError) {
-                        console.error('Erro ao salvar novos campos:', insertError);
-                        return NextResponse.json({ error: 'Erro ao salvar novos campos' }, { status: 500 });
+                    if (isPersistedFieldId(c.id) && existingIds.has(c.id)) {
+                        const { error: updateError } = await supabaseAdmin
+                            .from('contrato_template_campos')
+                            .update(row)
+                            .eq('id', c.id)
+                            .eq('template_id', id);
+                        if (updateError) {
+                            console.error('Erro ao atualizar campo do template:', updateError);
+                            return NextResponse.json({ error: 'Erro ao salvar novos campos' }, { status: 500 });
+                        }
+                        kept.push(c.id);
+                        returned.push({ id: c.id, client_id: clientId });
+                    } else {
+                        const { data: inserted, error: insertError } = await supabaseAdmin
+                            .from('contrato_template_campos')
+                            .insert(row)
+                            .select('id')
+                            .single();
+                        if (insertError || !inserted) {
+                            console.error('Erro ao salvar novos campos:', insertError);
+                            return NextResponse.json({ error: 'Erro ao salvar novos campos' }, { status: 500 });
+                        }
+                        kept.push(inserted.id);
+                        returned.push({ id: inserted.id, client_id: clientId });
                     }
                 }
+
+                const stale = [...existingIds].filter((fieldId) => !kept.includes(fieldId));
+                if (stale.length > 0) {
+                    const { error: deleteError } = await supabaseAdmin
+                        .from('contrato_template_campos')
+                        .delete()
+                        .eq('template_id', id)
+                        .in('id', stale);
+                    if (deleteError) {
+                        return NextResponse.json({ error: 'Erro ao limpar campos anteriores' }, { status: 500 });
+                    }
+                }
+
+                savedCampos = returned;
             }
 
-            return NextResponse.json({ success: true, message: 'Template atualizado com sucesso!' });
+            return NextResponse.json({
+                success: true,
+                message: 'Template atualizado com sucesso!',
+                ...(savedCampos ? { campos: savedCampos } : {}),
+            });
         }
 
         // Case 2: Multipart Form Data (create new template with uploaded files)

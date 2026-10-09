@@ -32,6 +32,15 @@ import DocumentStatusBadge from '@/components/contratos/DocumentStatusBadge';
 import SignaturePositionOverlay, { getSignerColor } from '@/components/contratos/SignaturePositionOverlay';
 import AuditInfoPanel from '@/components/contratos/AuditInfoPanel';
 import { useI18n } from '@/contexts/I18nContext';
+import {
+    insertFields,
+    mergeDocumentFileUrls,
+    patchFields,
+    removeFields,
+    restoreRemoved,
+    revertIfUnchanged,
+    swapFieldId,
+} from '@/lib/contracts/field-live';
 import toast from 'react-hot-toast';
 import MainLayout from '@/components/Layout/MainLayout';
 
@@ -152,6 +161,19 @@ export default function ContratoDetailPage() {
     // Active CCs (Observers) in the entire envelope
     const ccSolicitacoes = solicitacoes.filter((s: any) => s.tipo === 'copia');
 
+    const solicitacoesRef = useRef<any[]>([]);
+    const fieldWrites = useRef(0);
+    const routerRef = useRef(router);
+    routerRef.current = router;
+    const tRef = useRef(t);
+    tRef.current = t;
+
+    const applySolicitacoes = (updater: (prev: any[]) => any[]) => {
+        const next = updater(solicitacoesRef.current);
+        solicitacoesRef.current = next;
+        setSolicitacoes(next);
+    };
+
     const fetchDocumento = useCallback(async (background?: boolean) => {
         const soft = !!background && hasEnvelope.current;
         try {
@@ -165,10 +187,14 @@ export default function ContratoDetailPage() {
                 hasEnvelope.current = true;
                 setEnvelope(data.envelope);
                 setCan(data.can || {});
-                setDocumentos(data.documentos || []);
-                setSolicitacoes(data.solicitacoes || []);
+                setDocumentos((prev) => mergeDocumentFileUrls(prev, data.documentos || []));
+                // Escrita de campo em curso: não substituir a lista (o GET traria a posição antiga).
+                if (fieldWrites.current === 0) {
+                    const nextSolicitacoes = data.solicitacoes || [];
+                    solicitacoesRef.current = nextSolicitacoes;
+                    setSolicitacoes(nextSolicitacoes);
+                }
 
-                // Populate filledValues with any existing database values
                 const initialValues: Record<string, string> = {};
                 (data.solicitacoes || []).forEach((s: any) => {
                     if (s.valor_preenchido !== null && s.valor_preenchido !== undefined) {
@@ -176,44 +202,32 @@ export default function ContratoDetailPage() {
                     }
                 });
                 setFilledValues(prev => ({ ...initialValues, ...prev }));
-
-                // Reset page when docs load
-                setCurrentPage(1);
-
-                // Find my assignment in any document
-                // Find my assignment in any document (prioritize signature/rubric pending)
-                if (user?.id) {
-                    const activeSols = data.solicitacoes || [];
-                    const mine = activeSols.find((s: any) => s.colaborador_id === user.id && s.status === 'PENDING' && (s.tipo === 'assinatura' || s.tipo === 'rubrica'))
-                        || activeSols.find((s: any) => s.colaborador_id === user.id && s.status === 'PENDING')
-                        || activeSols.find((s: any) => s.colaborador_id === user.id);
-                    setMySolicitacao(mine || null);
-                }
             } else {
-                toast.error(data.error || t('contratos.detail.envelope_not_found', 'Envelope não encontrado'));
-                router.push('/contratos');
+                toast.error(data.error || tRef.current('contratos.detail.envelope_not_found', 'Envelope não encontrado'));
+                routerRef.current.push('/contratos');
             }
         } catch (err) {
-            toast.error(t('contratos.detail.error_loading_envelope', 'Erro ao carregar envelope'));
+            toast.error(tRef.current('contratos.detail.error_loading_envelope', 'Erro ao carregar envelope'));
         } finally {
             setLoading(false);
             setRefreshing(false);
         }
-    }, [docId, user?.id, router]);
+    }, [docId]);
 
     useEffect(() => {
         if (docId) fetchDocumento();
     }, [docId, fetchDocumento]);
 
     useEffect(() => {
-        const onVisible = () => {
-            if (document.visibilityState === 'visible' && hasEnvelope.current) {
-                fetchDocumento(true);
-            }
-        };
-        document.addEventListener('visibilitychange', onVisible);
-        return () => document.removeEventListener('visibilitychange', onVisible);
-    }, [fetchDocumento]);
+        if (!user?.id) {
+            setMySolicitacao(null);
+            return;
+        }
+        const mine = solicitacoes.find((s: any) => s.colaborador_id === user.id && s.status === 'PENDING' && (s.tipo === 'assinatura' || s.tipo === 'rubrica'))
+            || solicitacoes.find((s: any) => s.colaborador_id === user.id && s.status === 'PENDING')
+            || solicitacoes.find((s: any) => s.colaborador_id === user.id);
+        setMySolicitacao(mine || null);
+    }, [user?.id, solicitacoes]);
 
     // When switching documents, reset page
     useEffect(() => {
@@ -340,6 +354,35 @@ export default function ContratoDetailPage() {
             finalH = Math.round(finalH * scaleFactor);
         }
 
+        const colab = colaboradores.find(c => (c.id || c._id) === selectedColaborador);
+        const tempId = `temp-${Date.now()}`;
+        const optimistic = {
+            id: tempId,
+            documento_id: currentDocumento.id,
+            envelope_id: docId,
+            colaborador_id: selectedColaborador || null,
+            colaborador: colab ? {
+                id: colab.id || colab._id,
+                first_name: colab.first_name,
+                last_name: colab.last_name,
+                email: colab.email,
+            } : null,
+            external_signer_name: manualSignerName || null,
+            external_signer_email: manualSignerEmail || null,
+            pagina_assinatura: posPage,
+            posicao_x: finalX,
+            posicao_y: finalY,
+            largura_assinatura: finalW,
+            altura_assinatura: finalH,
+            tipo: posTipo,
+            ordem: signatureOrder,
+            obrigatorio: fieldRequired,
+            status: 'PENDING',
+        };
+        applySolicitacoes(prev => insertFields(prev, [optimistic]));
+        setClickPos(null);
+        fieldWrites.current += 1;
+
         try {
             const res = await fetchWithAuth(`/api/contracts/${docId}/assign`, {
                 method: 'POST',
@@ -363,7 +406,12 @@ export default function ContratoDetailPage() {
 
             const data = await res.json();
 
-            if (data.success) {
+            if (data.success && data.solicitacao?.id) {
+                const serverId = data.solicitacao.id as string;
+                applySolicitacoes(prev => patchFields(swapFieldId(prev, tempId, serverId), [{
+                    id: serverId,
+                    ...(data.solicitacao.token_acesso ? { token_acesso: data.solicitacao.token_acesso } : {}),
+                }]));
                 toast.success(t('contratos.detail.success_assigned', 'Assinatura posicionada com sucesso!'));
                 const newLastSigner = reuseSignerInfo ? {
                     colaborador_id: selectedColaborador,
@@ -385,13 +433,15 @@ export default function ContratoDetailPage() {
                     setIsExternalInput(false);
                 }
                 setSearchQuery('');
-                setClickPos(null);
-                fetchDocumento(true);
             } else {
+                applySolicitacoes(prev => removeFields(prev, [tempId]));
                 toast.error(data.error || t('contratos.detail.error_assigning', 'Erro ao atribuir'));
             }
         } catch (err) {
+            applySolicitacoes(prev => removeFields(prev, [tempId]));
             toast.error(t('contratos.detail.error_assigning_save', 'Erro ao salvar atribuição'));
+        } finally {
+            fieldWrites.current -= 1;
         }
     };
 
@@ -407,14 +457,30 @@ export default function ContratoDetailPage() {
             return;
         }
 
+        const tempId = `temp-cc-${Date.now()}`;
+        const optimistic = {
+            id: tempId,
+            documento_id: currentDocumento.id,
+            envelope_id: docId,
+            external_signer_name: ccName.trim(),
+            external_signer_email: ccEmail.trim(),
+            tipo: 'copia',
+            ordem: 1,
+            status: 'PENDING',
+        };
+        applySolicitacoes(prev => insertFields(prev, [optimistic]));
+        setCcName('');
+        setCcEmail('');
+        fieldWrites.current += 1;
+
         try {
             setIsAddingCC(true);
             const res = await fetchWithAuth(`/api/contracts/${docId}/assign`, {
                 method: 'POST',
                 body: JSON.stringify({
                     documento_id: currentDocumento.id,
-                    external_signer_name: ccName.trim(),
-                    external_signer_email: ccEmail.trim(),
+                    external_signer_name: optimistic.external_signer_name,
+                    external_signer_email: optimistic.external_signer_email,
                     tipo: 'copia',
                     ordem: 1,
                 }),
@@ -422,50 +488,66 @@ export default function ContratoDetailPage() {
 
             const data = await res.json();
 
-            if (data.success) {
+            if (data.success && data.solicitacao?.id) {
+                const serverId = data.solicitacao.id as string;
+                applySolicitacoes(prev => patchFields(swapFieldId(prev, tempId, serverId), [{
+                    id: serverId,
+                    ...(data.solicitacao.token_acesso ? { token_acesso: data.solicitacao.token_acesso } : {}),
+                }]));
                 toast.success(t('contratos.detail.success_cc_added', 'Pessoa em cópia adicionada com sucesso!'));
-                setCcName('');
-                setCcEmail('');
-                fetchDocumento(true);
             } else {
+                applySolicitacoes(prev => removeFields(prev, [tempId]));
                 toast.error(data.error || t('contratos.detail.error_cc_add', 'Erro ao adicionar pessoa em cópia'));
             }
         } catch {
+            applySolicitacoes(prev => removeFields(prev, [tempId]));
             toast.error(t('contratos.detail.error_cc_comms', 'Erro de comunicação ao salvar cópia'));
         } finally {
             setIsAddingCC(false);
+            fieldWrites.current -= 1;
         }
     };
 
     // Delete assignment (HR)
+    const deleteSolicitacoesLive = async (ids: string[]) => {
+        const snapshots = solicitacoesRef.current.filter((s: any) => ids.includes(s.id));
+        applySolicitacoes(prev => removeFields(prev, ids));
+        setSelectedFieldIds(prev => prev.filter(id => !ids.includes(id)));
+        fieldWrites.current += 1;
+        try {
+            const results = await Promise.all(ids.map(async (id) => {
+                const res = await fetchWithAuth(`/api/contracts/${docId}/assign?solicitacao_id=${id}`, {
+                    method: 'DELETE',
+                });
+                const data = await res.json().catch(() => ({}));
+                return res.ok && data.success !== false;
+            }));
+            const failed = snapshots.filter((_, index) => !results[index]);
+            if (failed.length > 0) {
+                applySolicitacoes(prev => restoreRemoved(prev, failed));
+                toast.error(t('common.error_removing', 'Erro ao remover'));
+                return false;
+            }
+            return true;
+        } catch {
+            applySolicitacoes(prev => restoreRemoved(prev, snapshots));
+            toast.error(t('common.error_removing', 'Erro ao remover'));
+            return false;
+        } finally {
+            fieldWrites.current -= 1;
+        }
+    };
+
     const handleDeleteAssignment = async (solicitacaoId: string) => {
         if (!confirm(t('contratos.detail.confirm_delete_assign', 'Remover esta atribuição?'))) return;
-
-        try {
-            await fetchWithAuth(`/api/contracts/${docId}/assign?solicitacao_id=${solicitacaoId}`, {
-                method: 'DELETE',
-            });
-            toast.success(t('contratos.detail.success_removed', 'Atribuição removida'));
-            fetchDocumento(true);
-        } catch {
-            toast.error(t('common.error_removing', 'Erro ao remover'));
-        }
+        const ok = await deleteSolicitacoesLive([solicitacaoId]);
+        if (ok) toast.success(t('contratos.detail.success_removed', 'Atribuição removida'));
     };
 
     const handleDeleteAllSignerAssignments = async (name: string, items: any[]) => {
         if (!confirm(t('contratos.detail.confirm_delete_all_signer', 'Remover todas as atribuições de {name}?').replace('{name}', name))) return;
-
-        try {
-            await Promise.all(items.map(s => 
-                fetchWithAuth(`/api/contracts/${docId}/assign?solicitacao_id=${s.id}`, {
-                    method: 'DELETE',
-                })
-            ));
-            toast.success(t('contratos.detail.success_removed_all', 'Todas as atribuições removidas'));
-            fetchDocumento(true);
-        } catch {
-            toast.error(t('common.error_removing', 'Erro ao remover'));
-        }
+        const ok = await deleteSolicitacoesLive(items.map((s) => s.id));
+        if (ok) toast.success(t('contratos.detail.success_removed_all', 'Todas as atribuições removidas'));
     };
 
     const pointsPerPx = originalPageSize ? originalPageSize.width / pdfWidth : 1;
@@ -493,79 +575,158 @@ export default function ContratoDetailPage() {
 
     const handleFieldDragEnd = async (id: string, newX: number, newY: number) => {
         if (!originalPageSize) return;
-        const field = solicitacoes.find((s: any) => s.id === id);
+        const current = solicitacoesRef.current;
+        const field = current.find((s: any) => s.id === id);
         if (!field || field.status !== 'PENDING') return;
         const oldPx = field.posicao_x / pointsPerPx;
         const oldPy = field.posicao_y / pointsPerPx;
         const dx = newX - oldPx;
         const dy = newY - oldPy;
         const ids = selectedFieldIds.includes(id) ? selectedFieldIds : [id];
-        const ok = await Promise.all(ids.map(async (fid) => {
-            const f = solicitacoes.find((s: any) => s.id === fid);
-            if (!f || f.status !== 'PENDING') return true;
-            const px = fid === id ? newX : (f.posicao_x / pointsPerPx) + dx;
-            const py = fid === id ? newY : (f.posicao_y / pointsPerPx) + dy;
-            return patchField(fid, {
+        const snapshots = current.filter((s: any) => ids.includes(s.id) && s.status === 'PENDING');
+        const updates = snapshots.map((f: any) => {
+            const px = f.id === id ? newX : (f.posicao_x / pointsPerPx) + dx;
+            const py = f.id === id ? newY : (f.posicao_y / pointsPerPx) + dy;
+            return {
+                id: f.id,
                 posicao_x: Math.round(Math.max(0, px) * pointsPerPx),
                 posicao_y: Math.round(Math.max(0, py) * pointsPerPx),
-            });
-        }));
-        if (ok.every(Boolean)) fetchDocumento(true);
+            };
+        });
+        applySolicitacoes(prev => patchFields(prev, updates));
+        fieldWrites.current += 1;
+        try {
+            const ok = await Promise.all(updates.map((u: any) => patchField(u.id, {
+                posicao_x: u.posicao_x,
+                posicao_y: u.posicao_y,
+            })));
+            const failed = updates.filter((_: any, index: number) => !ok[index]);
+            if (failed.length > 0) {
+                const failedSnaps = snapshots.filter((s: any) => failed.some((f: any) => f.id === s.id));
+                applySolicitacoes(prev => revertIfUnchanged(prev, failed, failedSnaps));
+            }
+        } finally {
+            fieldWrites.current -= 1;
+        }
     };
 
     const handleFieldResizeEnd = async (id: string, box: { x: number; y: number; width: number; height: number }) => {
         if (!originalPageSize) return;
-        const ok = await patchField(id, {
+        const snap = solicitacoesRef.current.find((s: any) => s.id === id);
+        if (!snap || snap.status !== 'PENDING') return;
+        const update = {
+            id,
             posicao_x: Math.round(box.x * pointsPerPx),
             posicao_y: Math.round(box.y * pointsPerPx),
             largura_assinatura: Math.round(box.width * pointsPerPx),
             altura_assinatura: Math.round(box.height * pointsPerPx),
-        });
-        if (ok) fetchDocumento(true);
+        };
+        applySolicitacoes(prev => patchFields(prev, [update]));
+        fieldWrites.current += 1;
+        try {
+            const ok = await patchField(id, {
+                posicao_x: update.posicao_x,
+                posicao_y: update.posicao_y,
+                largura_assinatura: update.largura_assinatura,
+                altura_assinatura: update.altura_assinatura,
+            });
+            if (!ok) applySolicitacoes(prev => revertIfUnchanged(prev, [update], [snap]));
+        } finally {
+            fieldWrites.current -= 1;
+        }
     };
 
     const handleCopySelected = async () => {
-        const fields = solicitacoes.filter((s: any) => selectedFieldIds.includes(s.id) && s.status === 'PENDING' && s.tipo !== 'copia');
+        const fields = solicitacoesRef.current.filter((s: any) => selectedFieldIds.includes(s.id) && s.status === 'PENDING' && s.tipo !== 'copia');
         if (fields.length === 0) return;
-        for (const s of fields) {
-            await fetchWithAuth(`/api/contracts/${docId}/assign`, {
-                method: 'POST',
-                body: JSON.stringify({
-                    documento_id: s.documento_id,
-                    colaborador_id: s.colaborador_id || null,
-                    external_signer_name: s.external_signer_name || null,
-                    external_signer_email: s.external_signer_email || null,
-                    pagina_assinatura: s.pagina_assinatura,
-                    posicao_x: (s.posicao_x || 0) + 16,
-                    posicao_y: (s.posicao_y || 0) + 16,
-                    largura_assinatura: s.largura_assinatura,
-                    altura_assinatura: s.altura_assinatura,
-                    tipo: s.tipo,
-                    ordem: s.ordem || 1,
-                    obrigatorio: s.obrigatorio !== false,
-                }),
-            });
+        const copies = fields.map((s: any, index: number) => ({
+            ...s,
+            id: `temp-${Date.now()}-${index}`,
+            posicao_x: (s.posicao_x || 0) + 16,
+            posicao_y: (s.posicao_y || 0) + 16,
+            status: 'PENDING',
+        }));
+        applySolicitacoes(prev => insertFields(prev, copies));
+        setSelectedFieldIds(copies.map((c: any) => c.id));
+        fieldWrites.current += 1;
+        try {
+            const created = await Promise.all(copies.map(async (s: any) => {
+                const res = await fetchWithAuth(`/api/contracts/${docId}/assign`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        documento_id: s.documento_id,
+                        colaborador_id: s.colaborador_id || null,
+                        external_signer_name: s.external_signer_name || null,
+                        external_signer_email: s.external_signer_email || null,
+                        pagina_assinatura: s.pagina_assinatura,
+                        posicao_x: s.posicao_x,
+                        posicao_y: s.posicao_y,
+                        largura_assinatura: s.largura_assinatura,
+                        altura_assinatura: s.altura_assinatura,
+                        tipo: s.tipo,
+                        ordem: s.ordem || 1,
+                        obrigatorio: s.obrigatorio !== false,
+                    }),
+                });
+                const data = await res.json().catch(() => ({}));
+                return { tempId: s.id, data };
+            }));
+            const failedIds: string[] = [];
+            for (const row of created) {
+                if (row.data?.success && row.data.solicitacao?.id) {
+                    const serverId = row.data.solicitacao.id as string;
+                    applySolicitacoes(prev => patchFields(swapFieldId(prev, row.tempId, serverId), [{
+                        id: serverId,
+                        ...(row.data.solicitacao.token_acesso ? { token_acesso: row.data.solicitacao.token_acesso } : {}),
+                    }]));
+                    setSelectedFieldIds(prev => prev.map(id => id === row.tempId ? serverId : id));
+                } else {
+                    failedIds.push(row.tempId);
+                }
+            }
+            if (failedIds.length > 0) {
+                applySolicitacoes(prev => removeFields(prev, failedIds));
+                setSelectedFieldIds(prev => prev.filter(id => !failedIds.includes(id)));
+                toast.error(t('contratos.detail.error_assigning', 'Erro ao atribuir'));
+            } else {
+                toast.success('Campo copiado');
+            }
+        } catch {
+            applySolicitacoes(prev => removeFields(prev, copies.map((c: any) => c.id)));
+            toast.error(t('contratos.detail.error_assigning_save', 'Erro ao salvar atribuição'));
+        } finally {
+            fieldWrites.current -= 1;
         }
-        toast.success('Campo copiado');
-        fetchDocumento(true);
     };
 
     const handleDeleteSelected = async () => {
         if (selectedFieldIds.length === 0) return;
         if (!confirm(`Remover ${selectedFieldIds.length} campo(s)?`)) return;
-        await Promise.all(selectedFieldIds.map((id) =>
-            fetchWithAuth(`/api/contracts/${docId}/assign?solicitacao_id=${id}`, { method: 'DELETE' })
-        ));
-        setSelectedFieldIds([]);
-        toast.success('Campos removidos');
-        fetchDocumento(true);
+        const ok = await deleteSolicitacoesLive(selectedFieldIds);
+        if (ok) toast.success('Campos removidos');
     };
 
     const handleToggleRequired = async (value: boolean) => {
         const ids = selectedFieldIds.length ? selectedFieldIds : [];
-        await Promise.all(ids.map((id) => patchField(id, { obrigatorio: value })));
+        if (ids.length === 0) {
+            setFieldRequired(value);
+            return;
+        }
+        const snapshots = solicitacoesRef.current.filter((s: any) => ids.includes(s.id));
+        const updates = ids.map((id) => ({ id, obrigatorio: value }));
+        applySolicitacoes(prev => patchFields(prev, updates));
         setFieldRequired(value);
-        fetchDocumento(true);
+        fieldWrites.current += 1;
+        try {
+            const ok = await Promise.all(ids.map((id) => patchField(id, { obrigatorio: value })));
+            const failed = updates.filter((_, index) => !ok[index]);
+            if (failed.length > 0) {
+                const failedSnaps = snapshots.filter((s: any) => failed.some((f) => f.id === s.id));
+                applySolicitacoes(prev => revertIfUnchanged(prev, failed, failedSnaps));
+            }
+        } finally {
+            fieldWrites.current -= 1;
+        }
     };
 
     // Dispatch envelope sequence (HR)
@@ -1007,7 +1168,7 @@ export default function ContratoDetailPage() {
                                     {/* PDF Native Renderer */}
                                     <div className="flex justify-center bg-gray-200/50 p-6 rounded-lg overflow-hidden border border-gray-300">
                                         <Document
-                                            key={currentDocumento?.id || pdfUrl || 'pdf'}
+                                            key={currentDocumento?.id || 'pdf'}
                                             file={pdfUrl}
                                             onLoadSuccess={onDocumentLoadSuccess}
                                             onLoadError={onDocumentLoadError}
