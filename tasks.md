@@ -1,3 +1,22 @@
+## Prazo do contrato no cadastro GT/DP (2026-10-09)
+
+Select no lugar do texto livre. Sem virada automática de Experiência para Indeterminado aos 90 dias.
+
+- [x] Select: Indeterminado, Determinado, Experiência, Não se aplica, temporário (`ColaboradorCadastroForm` e `NovoColaboradorModal`)
+- [x] Dias + Término em Determinado, temporário e Experiência; prorrogação só em Experiência
+- [x] Migration `supabase/migrations/20261009_000003_gt_colaboradores_prazo_contrato.sql` (já aplicada no Painel_ABZGroup)
+- [x] Aplicar a migration no Supabase remoto antes de abrir a ficha
+
+## E-mail corporativo no cadastro GT/DP (2026-10-09)
+
+Campo `email_corporativo` na aba Contato do `ColaboradorCadastroForm` (DP, GT e edição da ficha). Não substitui o e-mail pessoal.
+
+- [x] Coluna na migration `supabase/migrations/20261009_000002_gt_colaboradores_email_corporativo.sql`
+- [x] Whitelist + validação opcional em `montarPayloadCadastro` / `normalizarEmailOpcional`
+- [x] Leitura em `PROFILE_SELECT`
+- [x] Aplicar a migration no Supabase remoto (`Painel_ABZGroup`) antes de usar o form
+- [ ] Sumiço de dados já digitados: só diagnóstico, sem correção (ver relatório). O `useEffect` do form repõe o rascunho quando `initialData` muda
+
 ## Contratos — campos, modal móvel, refresh e 2 arquivos (2026-10-09)
 
 Editor de posicionamento, flag obrigatório, refresh sem travar a tela e os dois PDFs da assinatura.
@@ -126,6 +145,8 @@ DP precisa criar funcionário e alterar qualquer dado do cadastro no banco inter
 - [x] Payload compartilhado `colaborador-cadastro.ts` (CPF Módulo 11, `matricula_esocial`, escala sem 14x14 default)
 - [x] Gate `podeMutarCadastroColaborador` em POST/PUT/DELETE `/colaboradores`
 - [x] Form `ColaboradorCadastroForm` em `/department/dp/novo`, GT `/novo` e aba Dados Pessoais
+- [x] Forma de Pagamento: opção Transferência Bancária (UI; coluna TEXT, sem migration)
+- [x] Tipo de Contrato: opção Aprendiz (UI; coluna TEXT, sem migration)
 - [x] Lista DP: botão **Novo colaborador**
 - [x] Testes `colaborador-cadastro.test.ts`
 - [ ] Preview: criar colaborador no DP, reabrir ficha e editar banco/PIS/salário/regime

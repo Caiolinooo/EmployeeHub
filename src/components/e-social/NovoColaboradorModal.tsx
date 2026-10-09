@@ -16,6 +16,8 @@ import {
 import { GENERO_OPTIONS } from '@/lib/gestao-tripulantes/genero';
 import { BANCOS_BR, labelBanco } from '@/lib/gestao-tripulantes/bancos-br';
 import { formatarCep, normalizarCep } from '@/lib/gestao-tripulantes/cep-correios';
+import { aplicarTrocaPrazoContrato } from '@/lib/gestao-tripulantes/prazo-contrato';
+import { PrazoContratoFields } from '@/components/gestao-tripulantes/PrazoContratoFields';
 
 type TabId = 'dados-pessoais' | 'documentos' | 'endereco' | 'contato' | 'dados-bancarios' | 'vinculo' | 'esocial';
 
@@ -490,13 +492,23 @@ export default function NovoColaboradorModal({ isOpen, onClose, onSuccess }: Pro
             {section('Remuneração', <>
               <div>{label('Salário base (R$)')}{input('salario', { type: 'number' })}</div>
               <div>{label('Tipo de Salário')}{select('tipo_salario', ['Mensal', 'Por Hora', 'Por Dia', 'Comissionado'])}</div>
-              <div>{label('Forma de Pagamento')}{select('forma_pagamento', ['Depósito', 'Cheque', 'Dinheiro', 'Pix'])}</div>
+              <div>{label('Forma de Pagamento')}{select('forma_pagamento', ['Depósito', 'Cheque', 'Dinheiro', 'Pix', 'Transferência Bancária'])}</div>
               <div>{label('Sindicato')}{input('sindicato')}</div>
             </>)}
             {section('Regime e Contrato', <>
               <div>{label('Regime de Trabalho')}{select('regime_trabalho', ['Offshore', 'Presencial', 'Híbrido', 'Home Office', 'Escala'])}</div>
-              <div>{label('Tipo de Contrato')}{select('tipo_contrato', ['CLT', 'PJ', 'Temporário', 'Estágio', 'Autônomo'])}</div>
-              <div>{label('Prazo do Contrato')}{input('prazo_contrato')}</div>
+              <div>{label('Tipo de Contrato')}{select('tipo_contrato', ['CLT', 'PJ', 'Temporário', 'Estágio', 'Autônomo', 'Aprendiz'])}</div>
+              <PrazoContratoFields
+                prazo={form.prazo_contrato}
+                dias={form.prazo_contrato_dias}
+                termino={form.prazo_contrato_termino}
+                prorrogDias={form.prazo_contrato_prorrog_dias}
+                prorrogTermino={form.prazo_contrato_prorrog_termino}
+                onPrazoChange={value => setForm(p => aplicarTrocaPrazoContrato(p, value))}
+                onCampoChange={(field, value) => set(field, value)}
+                inputClassName="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                labelClassName="block text-xs font-semibold text-gray-600 mb-1"
+              />
               <div>{label('Categoria do Contrato')}{input('categoria_contrato')}</div>
               <div>{label('Tipo de Trabalho')}{input('tipo_trabalho')}</div>
               <div>{label('Tipo de Mão de Obra')}{input('tipo_mao_de_obra')}</div>

@@ -19,6 +19,7 @@ interface CollaboratorDetail {
   rg: string;
   data_nascimento: string;
   email: string;
+  email_corporativo?: string | null;
   telefone: string;
   telefone_2?: string | null;
   nacionalidade: string;
@@ -188,6 +189,7 @@ export default function DadosPessoaisTab({ data, onUpdate, onRefresh }: Props) {
               <InfoField label={t('gestaoTripulantes.personalData.fatherName')} value={data.nome_pai} />
               <InfoField label={t('gestaoTripulantes.personalData.maritalStatus')} value={data.estado_civil} />
               <InfoField label={t('gestaoTripulantes.personalData.email')} value={data.email} />
+              <InfoField label="E-mail Corporativo" value={data.email_corporativo} />
               <InfoField label="Telefone" value={data.telefone} />
               <InfoField label="Telefone 2" value={data.telefone_2} />
               <InfoField label="Escolaridade" value={data.escolaridade} />

@@ -51,6 +51,7 @@ export interface GTColaborador {
     rg?: string;
     data_nascimento?: string;
     email?: string;
+    email_corporativo?: string | null;
     telefone?: string;
     nacionalidade: string;
     naturalidade?: string;
@@ -68,6 +69,11 @@ export interface GTColaborador {
     matricula?: string;
     status_embarque: StatusEmbarque;
     standby: boolean;
+    prazo_contrato?: string | null;
+    prazo_contrato_dias?: number | null;
+    prazo_contrato_termino?: string | null;
+    prazo_contrato_prorrog_dias?: number | null;
+    prazo_contrato_prorrog_termino?: string | null;
     regime_trabalho?: string | null;
     escala_embarque?: number | string | null;
     escala_folga?: number | string | null;

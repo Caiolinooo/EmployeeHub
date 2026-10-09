@@ -2,9 +2,16 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   montarPayloadCadastro,
+  normalizarEmailOpcional,
   resolverMatriculaEsocial,
   validarCadastroMinimo,
 } from './colaborador-cadastro';
+import {
+  aplicarTrocaPrazoContrato,
+  opcoesPrazoContrato,
+  prazoContratoExigeProrrogacao,
+  prazoContratoExigeVigencia,
+} from './prazo-contrato';
 
 const CPF_OK = '529.982.247-25';
 const CPF_DIGITS = '52998224725';
@@ -137,6 +144,145 @@ describe('montarPayloadCadastro', () => {
     const puro = montarPayloadCadastro({ escala_embarque: 21 }, 'update');
     assert.equal(puro.ok, true);
     if (puro.ok) assert.equal(puro.data.escala_embarque, 21);
+  });
+
+  it('e-mail corporativo é opcional e não altera o e-mail pessoal', () => {
+    assert.deepEqual(normalizarEmailOpcional(''), { ok: true, value: null });
+    assert.deepEqual(normalizarEmailOpcional('   '), { ok: true, value: null });
+    assert.deepEqual(normalizarEmailOpcional(null), { ok: true, value: null });
+    assert.deepEqual(normalizarEmailOpcional('  ana@groupabz.com  '), { ok: true, value: 'ana@groupabz.com' });
+    const ruim = normalizarEmailOpcional('sem-arroba');
+    assert.equal(ruim.ok, false);
+
+    const vazio = montarPayloadCadastro({
+      email: 'aislan.roocha@gmail.com',
+      email_corporativo: '  ',
+    }, 'update');
+    assert.equal(vazio.ok, true);
+    if (!vazio.ok) return;
+    assert.equal(vazio.data.email, 'aislan.roocha@gmail.com');
+    assert.equal(vazio.data.email_corporativo, null);
+
+    const preenchido = montarPayloadCadastro({
+      email_corporativo: 'ana@groupabz.com',
+    }, 'update');
+    assert.equal(preenchido.ok, true);
+    if (!preenchido.ok) return;
+    assert.equal(preenchido.data.email_corporativo, 'ana@groupabz.com');
+    assert.equal(preenchido.data.email, undefined);
+
+    const invalido = montarPayloadCadastro({ email_corporativo: 'sem-arroba' }, 'update');
+    assert.equal(invalido.ok, false);
+    if (!invalido.ok) assert.equal(invalido.error, 'E-mail corporativo inválido');
+  });
+
+  it('prazo do contrato grava o texto e zera datas quando o tipo não pede vigência', () => {
+    const indeterminado = montarPayloadCadastro({
+      prazo_contrato: 'Indeterminado',
+      prazo_contrato_dias: 45,
+      prazo_contrato_termino: '2026-12-01',
+      prazo_contrato_prorrog_dias: 45,
+      prazo_contrato_prorrog_termino: '2027-01-15',
+    }, 'update');
+    assert.equal(indeterminado.ok, true);
+    if (!indeterminado.ok) return;
+    assert.equal(indeterminado.data.prazo_contrato, 'Indeterminado');
+    assert.equal(indeterminado.data.prazo_contrato_dias, null);
+    assert.equal(indeterminado.data.prazo_contrato_termino, null);
+    assert.equal(indeterminado.data.prazo_contrato_prorrog_dias, null);
+    assert.equal(indeterminado.data.prazo_contrato_prorrog_termino, null);
+
+    const naoAplica = montarPayloadCadastro({
+      prazo_contrato: 'Não se aplica',
+      prazo_contrato_dias: -1,
+    }, 'update');
+    assert.equal(naoAplica.ok, true);
+    if (!naoAplica.ok) return;
+    assert.equal(naoAplica.data.prazo_contrato_dias, null);
+
+    const experiencia = montarPayloadCadastro({
+      prazo_contrato: 'Experiência',
+      prazo_contrato_dias: 45,
+      prazo_contrato_termino: '',
+      prazo_contrato_prorrog_dias: 45,
+      prazo_contrato_prorrog_termino: '2026-08-01',
+    }, 'update');
+    assert.equal(experiencia.ok, true);
+    if (!experiencia.ok) return;
+    assert.equal(experiencia.data.prazo_contrato, 'Experiência');
+    assert.equal(experiencia.data.prazo_contrato_dias, 45);
+    assert.equal(experiencia.data.prazo_contrato_termino, null);
+    assert.equal(experiencia.data.prazo_contrato_prorrog_dias, 45);
+    assert.equal(experiencia.data.prazo_contrato_prorrog_termino, '2026-08-01');
+
+    const determinado = montarPayloadCadastro({
+      prazo_contrato: 'Determinado',
+      prazo_contrato_dias: 0,
+      prazo_contrato_termino: '2026-11-30',
+      prazo_contrato_prorrog_dias: 10,
+      prazo_contrato_prorrog_termino: '2026-12-30',
+    }, 'update');
+    assert.equal(determinado.ok, true);
+    if (!determinado.ok) return;
+    assert.equal(determinado.data.prazo_contrato_dias, 0);
+    assert.equal(determinado.data.prazo_contrato_termino, '2026-11-30');
+    assert.equal(determinado.data.prazo_contrato_prorrog_dias, null);
+    assert.equal(determinado.data.prazo_contrato_prorrog_termino, null);
+
+    const temporario = montarPayloadCadastro({
+      prazo_contrato: 'temporário',
+      prazo_contrato_dias: 30,
+      prazo_contrato_prorrog_dias: 5,
+    }, 'update');
+    assert.equal(temporario.ok, true);
+    if (!temporario.ok) return;
+    assert.equal(temporario.data.prazo_contrato, 'temporário');
+    assert.equal(temporario.data.prazo_contrato_dias, 30);
+    assert.equal(temporario.data.prazo_contrato_prorrog_dias, null);
+
+    const legado = montarPayloadCadastro({
+      prazo_contrato: '12 meses',
+      prazo_contrato_dias: 12,
+    }, 'update');
+    assert.equal(legado.ok, true);
+    if (!legado.ok) return;
+    assert.equal(legado.data.prazo_contrato, '12 meses');
+    assert.equal(legado.data.prazo_contrato_dias, 12);
+
+    const diasRuim = montarPayloadCadastro({
+      prazo_contrato: 'Experiência',
+      prazo_contrato_dias: -1,
+    }, 'update');
+    assert.equal(diasRuim.ok, false);
+
+    const semPrazo = montarPayloadCadastro({ email: 'a@b.com' }, 'update');
+    assert.equal(semPrazo.ok, true);
+    if (!semPrazo.ok) return;
+    assert.equal(semPrazo.data.prazo_contrato_dias, undefined);
+    assert.equal(semPrazo.data.prazo_contrato_termino, undefined);
+  });
+
+  it('opções do prazo incluem texto livre antigo e não trocam Experiência aos 90 dias', () => {
+    assert.deepEqual(opcoesPrazoContrato('Indeterminado'), [
+      'Indeterminado', 'Determinado', 'Experiência', 'Não se aplica', 'temporário',
+    ]);
+    assert.deepEqual(opcoesPrazoContrato('12 meses').at(-1), '12 meses');
+    assert.equal(prazoContratoExigeVigencia('Indeterminado'), false);
+    assert.equal(prazoContratoExigeVigencia('Não se aplica'), false);
+    assert.equal(prazoContratoExigeVigencia('Determinado'), true);
+    assert.equal(prazoContratoExigeVigencia('temporário'), true);
+    assert.equal(prazoContratoExigeVigencia('Experiência'), true);
+    assert.equal(prazoContratoExigeProrrogacao('Experiência'), true);
+    assert.equal(prazoContratoExigeProrrogacao('Determinado'), false);
+    const trocado = aplicarTrocaPrazoContrato({
+      prazo_contrato: 'Experiência',
+      prazo_contrato_dias: '45',
+      prazo_contrato_prorrog_dias: '45',
+    }, 'Indeterminado');
+    assert.equal(trocado.prazo_contrato, 'Indeterminado');
+    assert.equal(trocado.prazo_contrato_dias, '');
+    assert.equal(trocado.prazo_contrato_prorrog_dias, '');
+    assert.equal(trocado.prazo_contrato, 'Indeterminado');
   });
 
   it('e-Social: texto sem inteiro inicial continua rejeitado', () => {

@@ -22,7 +22,7 @@ export const DEFAULT_INCLUDE = [
 export type ColaboradorInclude = (typeof DEFAULT_INCLUDE)[number];
 
 const PROFILE_SELECT = `
-  id, user_id, nome_completo, cpf, rg, data_nascimento, email, telefone, telefone_2,
+  id, user_id, nome_completo, cpf, rg, data_nascimento, email, email_corporativo, telefone, telefone_2,
   nacionalidade, naturalidade, naturalidade_uf, pais_nascimento,
   nome_mae, nome_pai, estado_civil,
   endereco_logradouro, endereco_numero, endereco_complemento,
@@ -39,6 +39,7 @@ const PROFILE_SELECT = `
   rnm_rne, rnm_rne_emissao, rnm_rne_validade,
   salario, tipo_salario, forma_pagamento, sindicato, cbo,
   jornada_semanal, jornada_mensal, tipo_contrato, prazo_contrato,
+  prazo_contrato_dias, prazo_contrato_termino, prazo_contrato_prorrog_dias, prazo_contrato_prorrog_termino,
   categoria_contrato, tipo_trabalho, tipo_mao_de_obra, regime_trabalho,
   escala_embarque, escala_folga, departamento, departamento_id, motivo_demissao,
   tipo_admissao, natureza_atividade, tipo_jornada, tipo_lotacao, matricula_esocial,

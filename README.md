@@ -2,7 +2,7 @@
 
 Portal corporativo da ABZ Group. Pessoas, escala offshore, folha DP, e-Social, férias, reembolso e o resto do dia a dia no mesmo sistema.
 
-**Versão:** 5.99.1 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
+**Versão:** 5.100.0 · **Produção:** Vercel · **Repo:** [Caiolinooo/painel-abz](https://github.com/Caiolinooo/painel-abz)
 
 ![Painel ABZ](public/images/LC1_Azul.png)
 
@@ -15,6 +15,12 @@ Next.js + Supabase. Login JWT/Supabase, permissões por módulo/feature/ACL, dad
 Histórico de versões: [CHANGELOG.md](CHANGELOG.md). Segurança: [SECURITY.md](SECURITY.md). Contratos de código: [AGENTS.md](AGENTS.md).
 
 ---
+
+## Nesta versão (5.100.0)
+
+- **E-mail corporativo**: campo opcional no cadastro do colaborador. Não substitui o e-mail pessoal. E-mail inválido é recusado.
+- **Pagamento e contrato**: Transferência Bancária depois de Pix; Aprendiz depois de Autônomo. No e-Social, Aprendiz ainda entra como CLT (código 1).
+- **Prazo do contrato**: Indeterminado, Determinado, Experiência, Não se aplica ou temporário. Determinado, temporário e Experiência pedem dias e término; a prorrogação só aparece em Experiência. Indeterminado e Não se aplica não gravam datas. Experiência não vira Indeterminado sozinha.
 
 ## Nesta versão (5.99.1)
 

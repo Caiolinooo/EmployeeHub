@@ -27,7 +27,7 @@ UI de `/department/dp` para o DP operar cadastro de colaboradores, fechamento de
 
 - Novos campos da tabela DP devem existir em `LIST_SELECT` + flatten.
 - Clique na linha de ASO **ou** na lista de colaboradores abre o `CollaboratorModal` do colaborador.
-- **Cadastro do zero**: botão **Novo colaborador** no header → `/department/dp/novo` (`ColaboradorCadastroForm` + `POST /colaboradores`). Mesma tabela `gt_colaboradores`. GT reusa o form em `/department/gestao-tripulantes/novo`.
+- **Cadastro do zero**: botão **Novo colaborador** no header → `/department/dp/novo` (`ColaboradorCadastroForm` + `POST /colaboradores`). Mesma tabela `gt_colaboradores`. GT reusa o form em `/department/gestao-tripulantes/novo`. Aba Contato grava `email_corporativo` (opcional) além de `email` / `telefone` / `telefone_2`. Coluna na migration `20261009_000002` (já aplicada no Painel_ABZGroup).
 - **Departamento** (coluna da lista e campo do form) = `gt_colaboradores.departamento`, rótulo `NN - NOME` derivado de `gt_departamentos`; campo do form é select estrito (contrato em `src/components/gestao-tripulantes/AGENTS.md`). Embarcação Atual segue readonly (escala local).
 - **Editar qualquer dado**: linha/Editar abre o modal; aba Dados Pessoais → Editar monta o form completo (pessoais, docs, banco, vínculo, e-Social) via `PUT /colaboradores/[id]`.
 - **Desligamento**: não há ação na lista. Abrir o modal → botão/aba **Desligamento** (`DesligamentoModal`). API `GET|POST /colaboradores/[id]/desligamento`. Colaborador já inativo com `gt_desligamentos` mostra histórico (não desliga de novo).

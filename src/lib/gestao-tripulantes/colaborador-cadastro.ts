@@ -3,6 +3,13 @@
  * DP and GT mutate the same table via POST|PUT /colaboradores.
  */
 import { isValidCpf, normalizeCpf } from '@/lib/utils/identity';
+import {
+  PRAZO_CONTRATO_DATA_FIELDS,
+  PRAZO_CONTRATO_DIAS_FIELDS,
+  prazoContratoExigeProrrogacao,
+  prazoContratoExigeVigencia,
+  prazoContratoZeraDatas,
+} from './prazo-contrato';
 import { persistirCamposEscala } from './regime-escala';
 
 export const ALLOWED_COLAB_FIELDS = [
@@ -10,7 +17,7 @@ export const ALLOWED_COLAB_FIELDS = [
   'data_nascimento', 'sexo', 'genero', 'estado_civil', 'peso', 'altura',
   'raca_cor', 'escolaridade', 'deficiencia', 'deficiencia_cid',
   'nacionalidade', 'naturalidade', 'naturalidade_uf', 'pais_nascimento',
-  'nome_mae', 'nome_pai', 'email', 'telefone', 'telefone_2', 'foto_url',
+  'nome_mae', 'nome_pai', 'email', 'email_corporativo', 'telefone', 'telefone_2', 'foto_url',
   'endereco_logradouro', 'endereco_numero', 'endereco_complemento',
   'endereco_bairro', 'endereco_cidade', 'endereco_uf', 'endereco_cep',
   'dados_bancarios', 'pis_pasep', 'ctps', 'ctps_serie', 'ctps_uf',
@@ -24,6 +31,8 @@ export const ALLOWED_COLAB_FIELDS = [
   'salario', 'tipo_salario', 'forma_pagamento', 'sindicato', 'cbo',
   'salario_moeda', 'salario_periodo', 'salario_natureza',
   'jornada_semanal', 'jornada_mensal', 'tipo_contrato', 'prazo_contrato',
+  'prazo_contrato_dias', 'prazo_contrato_termino',
+  'prazo_contrato_prorrog_dias', 'prazo_contrato_prorrog_termino',
   'categoria_contrato', 'tipo_trabalho', 'tipo_mao_de_obra', 'regime_trabalho',
   'escala_embarque', 'escala_folga', 'status_embarque', 'standby', 'ativo',
   'data_ultimo_embarque', 'data_ultimo_desembarque', 'data_proximo_embarque',
@@ -42,6 +51,8 @@ export const NUMBER_COLAB_FIELDS = new Set([
 /** Campos de escala NxN: e-Social manda "14x21" — extrai o primeiro inteiro. */
 export const ESCALA_NXN_COLAB_FIELDS = new Set(['escala_embarque', 'escala_folga']);
 export const JSON_COLAB_FIELDS = new Set(['dados_bancarios', 'dados_saude']);
+const PRAZO_DIAS_FIELDS = new Set<string>(PRAZO_CONTRATO_DIAS_FIELDS);
+const PRAZO_DATA_FIELDS = new Set<string>(PRAZO_CONTRATO_DATA_FIELDS);
 
 export const MENSAGEM_CADASTRO_NEGADO =
   'Apenas o DP pode cadastrar ou alterar colaborador. É necessário ser gestor (ADMIN/MANAGER) ou pertencer a um setor de Departamento Pessoal / RH com o módulo Gestão de Tripulantes.';
@@ -82,6 +93,21 @@ export function validarCadastroMinimo(
   return { ok: true, nome, cpf };
 }
 
+const EMAIL_OPCIONAL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Vazio é válido. Texto preenchido precisa parecer e-mail. Não altera o e-mail pessoal. */
+export function normalizarEmailOpcional(
+  value: unknown,
+): { ok: true; value: string | null } | { ok: false; error: string } {
+  if (value == null) return { ok: true, value: null };
+  const text = String(value).trim();
+  if (!text) return { ok: true, value: null };
+  if (text.length > 320 || !EMAIL_OPCIONAL_RE.test(text)) {
+    return { ok: false, error: 'E-mail corporativo inválido' };
+  }
+  return { ok: true, value: text };
+}
+
 export function resolverMatriculaEsocial(body: Record<string, unknown>): string | null {
   const eso = body.matricula_esocial == null ? '' : String(body.matricula_esocial).trim();
   if (eso) return eso;
@@ -89,10 +115,48 @@ export function resolverMatriculaEsocial(body: Record<string, unknown>): string 
   return mat || null;
 }
 
+function prazoDoBody(body: Record<string, unknown>): string {
+  if (!Object.prototype.hasOwnProperty.call(body, 'prazo_contrato')) return '';
+  return body.prazo_contrato == null ? '' : String(body.prazo_contrato);
+}
+
+function campoPrazoDescartado(body: Record<string, unknown>, key: string): boolean {
+  const prazo = prazoDoBody(body);
+  if (!Object.prototype.hasOwnProperty.call(body, 'prazo_contrato')) return false;
+  if (prazoContratoZeraDatas(prazo)) return true;
+  const prorrog = key === 'prazo_contrato_prorrog_dias' || key === 'prazo_contrato_prorrog_termino';
+  return prorrog && prazoContratoExigeVigencia(prazo) && !prazoContratoExigeProrrogacao(prazo);
+}
+
 function coerceField(
   key: string,
   value: unknown,
+  body: Record<string, unknown>,
 ): { ok: true; value: unknown } | { ok: false; error: string } {
+  if (PRAZO_DIAS_FIELDS.has(key) || PRAZO_DATA_FIELDS.has(key)) {
+    if (campoPrazoDescartado(body, key)) return { ok: true, value: null };
+  }
+
+  if (PRAZO_DIAS_FIELDS.has(key)) {
+    if (value == null || value === '') return { ok: true, value: null };
+    const n = typeof value === 'number' ? value : Number(String(value).trim());
+    if (!Number.isInteger(n) || n < 0) {
+      return { ok: false, error: `Campo ${key} deve ser um inteiro maior ou igual a zero` };
+    }
+    return { ok: true, value: n };
+  }
+
+  if (PRAZO_DATA_FIELDS.has(key)) {
+    if (value == null) return { ok: true, value: null };
+    const text = String(value).trim();
+    if (!text) return { ok: true, value: null };
+    const iso = text.slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+      return { ok: false, error: `Campo ${key} deve ser uma data` };
+    }
+    return { ok: true, value: iso };
+  }
+
   if (BOOLEAN_COLAB_FIELDS.has(key)) {
     if (typeof value === 'boolean') return { ok: true, value };
     if (value === 'true' || value === 'false') return { ok: true, value: value === 'true' };
@@ -175,12 +239,31 @@ export function montarPayloadCadastro(
   for (const [key, value] of Object.entries(body)) {
     if (!ALLOWED_COLAB_FIELD_SET.has(key)) continue;
     if (key === 'cpf' || key === 'nome_completo') continue;
+    if (key === 'email_corporativo') {
+      const emailCorp = normalizarEmailOpcional(value);
+      if (!emailCorp.ok) return { ok: false, error: emailCorp.error, status: 400 };
+      data.email_corporativo = emailCorp.value;
+      continue;
+    }
     if (mode === 'create' && (key === 'nacionalidade' || key === 'pais_nascimento' || key === 'status_embarque')) {
       if (value == null || String(value).trim() === '') continue;
     }
-    const coerced = coerceField(key, value);
+    const coerced = coerceField(key, value, body);
     if (!coerced.ok) return { ok: false, error: coerced.error, status: 400 };
     data[key] = coerced.value;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, 'prazo_contrato')) {
+    const prazo = data.prazo_contrato == null ? '' : String(data.prazo_contrato);
+    if (prazoContratoZeraDatas(prazo)) {
+      data.prazo_contrato_dias = null;
+      data.prazo_contrato_termino = null;
+      data.prazo_contrato_prorrog_dias = null;
+      data.prazo_contrato_prorrog_termino = null;
+    } else if (prazoContratoExigeVigencia(prazo) && !prazoContratoExigeProrrogacao(prazo)) {
+      data.prazo_contrato_prorrog_dias = null;
+      data.prazo_contrato_prorrog_termino = null;
+    }
   }
 
   const shouldPersistEscala =

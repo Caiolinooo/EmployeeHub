@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.100.0] - 2026-10-09
+
+### Cadastro GT/DP: e-mail corporativo, pagamento e prazo do contrato
+
+#### Adicionado
+
+1. **E-mail corporativo** opcional (`email_corporativo`) na aba Contato do `ColaboradorCadastroForm` (DP, GT e edição da ficha). A ficha mostra o valor. Não grava no e-mail pessoal. Vazio vira null; texto inválido responde 400 (`E-mail corporativo inválido`). Migration `supabase/migrations/20261009_000002_gt_colaboradores_email_corporativo.sql`, já aplicada no Supabase Painel_ABZGroup (`arzvingdtnttiejcvucs`).
+2. **Forma de pagamento**: opção Transferência Bancária, depois de Pix, em `ColaboradorCadastroForm` e `NovoColaboradorModal`. A coluna já era TEXT.
+3. **Tipo de contrato**: opção Aprendiz, depois de Autônomo, nos dois forms. `tipo_contrato` já era TEXT. No e-Social, `tipoContratoMap` não tem Aprendiz: tipo desconhecido continua no código 1 (CLT).
+4. **Prazo do contrato** virou select: Indeterminado, Determinado, Experiência, Não se aplica, temporário (`PrazoContratoFields`). Texto livre antigo permanece na lista. Determinado e temporário mostram Dias e Término. Experiência também mostra prorrogação (dias) e término da prorrogação. Indeterminado e Não se aplica gravam dias e datas como null. Não há 90 dias fixos nem virada automática para Indeterminado. Migration `supabase/migrations/20261009_000003_gt_colaboradores_prazo_contrato.sql`, já aplicada no mesmo projeto.
+
 ## [5.99.1] - 2026-10-09
 
 ### Campos do contrato não recarregam o PDF ao posicionar

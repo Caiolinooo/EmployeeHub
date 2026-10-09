@@ -27,6 +27,9 @@ import {
   persistirCamposEscala,
 } from '@/lib/gestao-tripulantes/regime-escala';
 import { formatCpf, isValidCpf } from '@/lib/utils/identity';
+import { normalizarEmailOpcional } from '@/lib/gestao-tripulantes/colaborador-cadastro';
+import { aplicarTrocaPrazoContrato } from '@/lib/gestao-tripulantes/prazo-contrato';
+import { PrazoContratoFields } from '@/components/gestao-tripulantes/PrazoContratoFields';
 import { useI18n } from '@/contexts/I18nContext';
 import TimesheetVinculoBadges from '@/components/gestao-tripulantes/TimesheetVinculoBadges';
 
@@ -100,6 +103,8 @@ export function hydrateCadastroForm(data?: Record<string, unknown> | null): Reco
     data_ultimo_embarque: toDateInput(data.data_ultimo_embarque as string | null),
     data_ultimo_desembarque: toDateInput(data.data_ultimo_desembarque as string | null),
     data_proximo_embarque: toDateInput(data.data_proximo_embarque as string | null),
+    prazo_contrato_termino: toDateInput(data.prazo_contrato_termino as string | null),
+    prazo_contrato_prorrog_termino: toDateInput(data.prazo_contrato_prorrog_termino as string | null),
     standby: Boolean(data.standby),
     ativo: data.ativo !== false,
     contabilizar_timesheet: Boolean(data.contabilizar_timesheet),
@@ -298,6 +303,12 @@ export default function ColaboradorCadastroForm({
       setActiveTab('dados-pessoais');
       return;
     }
+    const emailCorp = normalizarEmailOpcional(form.email_corporativo);
+    if (!emailCorp.ok) {
+      toast.error(emailCorp.error);
+      setActiveTab('contato');
+      return;
+    }
 
     setSaving(true);
     try {
@@ -312,6 +323,7 @@ export default function ColaboradorCadastroForm({
         ...form,
         nome_completo: nome,
         cpf,
+        email_corporativo: emailCorp.value,
         matricula: matricula || null,
         matricula_esocial: matriculaEsocial || null,
         salario: emptyToNull(form.salario),
@@ -591,6 +603,7 @@ export default function ColaboradorCadastroForm({
               <div>{label('E-mail')}{input('email', { type: 'email' })}</div>
               <div>{label('Telefone 1')}{input('telefone')}</div>
               <div>{label('Telefone 2')}{input('telefone_2')}</div>
+              <div>{label('E-mail Corporativo')}{input('email_corporativo', { type: 'email', placeholder: 'nome@groupabz.com' })}</div>
             </>)}
           </div>
         );
@@ -717,7 +730,7 @@ export default function ColaboradorCadastroForm({
               <div>{label('Período')}{select('salario_periodo', ['mes', 'ano', 'dia', 'hora'])}</div>
               <div>{label('Natureza')}{select('salario_natureza', ['bruto', 'liquido'])}</div>
               <div>{label('Tipo de Salário')}{select('tipo_salario', ['Mensal', 'Por Hora', 'Por Dia', 'Comissionado'])}</div>
-              <div>{label('Forma de Pagamento')}{select('forma_pagamento', ['Depósito', 'Cheque', 'Dinheiro', 'Pix'])}</div>
+              <div>{label('Forma de Pagamento')}{select('forma_pagamento', ['Depósito', 'Cheque', 'Dinheiro', 'Pix', 'Transferência Bancária'])}</div>
               <div>{label('Sindicato')}{input('sindicato')}</div>
             </>)}
             {section('Regime e Contrato', <>
@@ -752,8 +765,18 @@ export default function ColaboradorCadastroForm({
                   ))}
                 </select>
               </div>
-              <div>{label('Tipo de Contrato')}{select('tipo_contrato', ['CLT', 'PJ', 'Temporário', 'Estágio', 'Autônomo'])}</div>
-              <div>{label('Prazo do Contrato')}{input('prazo_contrato')}</div>
+              <div>{label('Tipo de Contrato')}{select('tipo_contrato', ['CLT', 'PJ', 'Temporário', 'Estágio', 'Autônomo', 'Aprendiz'])}</div>
+              <PrazoContratoFields
+                prazo={form.prazo_contrato}
+                dias={form.prazo_contrato_dias}
+                termino={form.prazo_contrato_termino}
+                prorrogDias={form.prazo_contrato_prorrog_dias}
+                prorrogTermino={form.prazo_contrato_prorrog_termino}
+                onPrazoChange={value => setForm(p => aplicarTrocaPrazoContrato(p, value))}
+                onCampoChange={(field, value) => set(field, value)}
+                inputClassName="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                labelClassName="block text-sm font-medium text-gray-700 mb-1"
+              />
               <div>{label('Categoria do Contrato')}{input('categoria_contrato')}</div>
               <div>{label('Tipo de Trabalho')}{input('tipo_trabalho')}</div>
               <div>{label('Tipo de Mão de Obra')}{input('tipo_mao_de_obra')}</div>
