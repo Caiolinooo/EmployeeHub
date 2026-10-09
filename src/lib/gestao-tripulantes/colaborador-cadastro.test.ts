@@ -12,6 +12,7 @@ import {
   prazoContratoExigeProrrogacao,
   prazoContratoExigeVigencia,
 } from './prazo-contrato';
+import { opcoesSindicato, resolverSindicato, SINDICATO_OPCOES } from './sindicato';
 
 const CPF_OK = '529.982.247-25';
 const CPF_DIGITS = '52998224725';
@@ -283,6 +284,18 @@ describe('montarPayloadCadastro', () => {
     assert.equal(trocado.prazo_contrato_dias, '');
     assert.equal(trocado.prazo_contrato_prorrog_dias, '');
     assert.equal(trocado.prazo_contrato, 'Indeterminado');
+  });
+
+  it('sindicato: código antigo seleciona o rótulo WK e texto sem código fica na lista', () => {
+    assert.equal(resolverSindicato('SINDITOB'), SINDICATO_OPCOES[0]);
+    assert.equal(resolverSindicato('  sinditob  '), SINDICATO_OPCOES[0]);
+    assert.equal(resolverSindicato(SINDICATO_OPCOES[3]), SINDICATO_OPCOES[3]);
+    assert.equal(resolverSindicato(''), '');
+    assert.equal(resolverSindicato(null), '');
+    assert.equal(resolverSindicato('SINDICATO ANTIGO'), 'SINDICATO ANTIGO');
+    assert.deepEqual(opcoesSindicato('SINDITOB'), [...SINDICATO_OPCOES]);
+    assert.equal(opcoesSindicato('SINDICATO ANTIGO').at(-1), 'SINDICATO ANTIGO');
+    assert.equal(opcoesSindicato('').length, 4);
   });
 
   it('e-Social: texto sem inteiro inicial continua rejeitado', () => {

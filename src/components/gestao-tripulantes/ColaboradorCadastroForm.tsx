@@ -29,6 +29,7 @@ import {
 import { formatCpf, isValidCpf } from '@/lib/utils/identity';
 import { normalizarEmailOpcional } from '@/lib/gestao-tripulantes/colaborador-cadastro';
 import { aplicarTrocaPrazoContrato } from '@/lib/gestao-tripulantes/prazo-contrato';
+import { opcoesSindicato, resolverSindicato } from '@/lib/gestao-tripulantes/sindicato';
 import { PrazoContratoFields } from '@/components/gestao-tripulantes/PrazoContratoFields';
 import { useI18n } from '@/contexts/I18nContext';
 import TimesheetVinculoBadges from '@/components/gestao-tripulantes/TimesheetVinculoBadges';
@@ -105,6 +106,7 @@ export function hydrateCadastroForm(data?: Record<string, unknown> | null): Reco
     data_proximo_embarque: toDateInput(data.data_proximo_embarque as string | null),
     prazo_contrato_termino: toDateInput(data.prazo_contrato_termino as string | null),
     prazo_contrato_prorrog_termino: toDateInput(data.prazo_contrato_prorrog_termino as string | null),
+    sindicato: resolverSindicato(data.sindicato),
     standby: Boolean(data.standby),
     ativo: data.ativo !== false,
     contabilizar_timesheet: Boolean(data.contabilizar_timesheet),
@@ -731,7 +733,7 @@ export default function ColaboradorCadastroForm({
               <div>{label('Natureza')}{select('salario_natureza', ['bruto', 'liquido'])}</div>
               <div>{label('Tipo de Salário')}{select('tipo_salario', ['Mensal', 'Por Hora', 'Por Dia', 'Comissionado'])}</div>
               <div>{label('Forma de Pagamento')}{select('forma_pagamento', ['Depósito', 'Cheque', 'Dinheiro', 'Pix', 'Transferência Bancária'])}</div>
-              <div>{label('Sindicato')}{input('sindicato')}</div>
+              <div>{label('Sindicato')}{select('sindicato', opcoesSindicato(form.sindicato))}</div>
             </>)}
             {section('Regime e Contrato', <>
               <div>

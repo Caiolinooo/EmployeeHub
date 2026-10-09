@@ -17,6 +17,7 @@ import { GENERO_OPTIONS } from '@/lib/gestao-tripulantes/genero';
 import { BANCOS_BR, labelBanco } from '@/lib/gestao-tripulantes/bancos-br';
 import { formatarCep, normalizarCep } from '@/lib/gestao-tripulantes/cep-correios';
 import { aplicarTrocaPrazoContrato } from '@/lib/gestao-tripulantes/prazo-contrato';
+import { opcoesSindicato } from '@/lib/gestao-tripulantes/sindicato';
 import { PrazoContratoFields } from '@/components/gestao-tripulantes/PrazoContratoFields';
 
 type TabId = 'dados-pessoais' | 'documentos' | 'endereco' | 'contato' | 'dados-bancarios' | 'vinculo' | 'esocial';
@@ -493,7 +494,7 @@ export default function NovoColaboradorModal({ isOpen, onClose, onSuccess }: Pro
               <div>{label('Salário base (R$)')}{input('salario', { type: 'number' })}</div>
               <div>{label('Tipo de Salário')}{select('tipo_salario', ['Mensal', 'Por Hora', 'Por Dia', 'Comissionado'])}</div>
               <div>{label('Forma de Pagamento')}{select('forma_pagamento', ['Depósito', 'Cheque', 'Dinheiro', 'Pix', 'Transferência Bancária'])}</div>
-              <div>{label('Sindicato')}{input('sindicato')}</div>
+              <div>{label('Sindicato')}{select('sindicato', opcoesSindicato(form.sindicato))}</div>
             </>)}
             {section('Regime e Contrato', <>
               <div>{label('Regime de Trabalho')}{select('regime_trabalho', ['Offshore', 'Presencial', 'Híbrido', 'Home Office', 'Escala'])}</div>

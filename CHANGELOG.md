@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.101.0] - 2026-10-09
+
+### Cadastro GT/DP: sindicato vira lista do WK
+
+#### Adicionado
+
+1. **Sindicato** no `ColaboradorCadastroForm` e no `NovoColaboradorModal` deixou de ser texto livre. O select grava `código - nome` (`src/lib/gestao-tripulantes/sindicato.ts`): SINDITOB, SINDENFMAR, SINTHOP e TAICUPAM. Código já salvo (ex.: `SINDITOB`) seleciona a opção. Texto que não casa com nenhum código permanece na lista. A coluna `sindicato` continua TEXT. Sem migration.
+
 ## [5.100.0] - 2026-10-09
 
 ### Cadastro GT/DP: e-mail corporativo, pagamento e prazo do contrato

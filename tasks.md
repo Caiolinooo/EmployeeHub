@@ -147,6 +147,7 @@ DP precisa criar funcionário e alterar qualquer dado do cadastro no banco inter
 - [x] Form `ColaboradorCadastroForm` em `/department/dp/novo`, GT `/novo` e aba Dados Pessoais
 - [x] Forma de Pagamento: opção Transferência Bancária (UI; coluna TEXT, sem migration)
 - [x] Tipo de Contrato: opção Aprendiz (UI; coluna TEXT, sem migration)
+- [x] Sindicato: select WK (código - nome) nos dois forms; código antigo seleciona a opção; texto sem match permanece; coluna TEXT, sem migration (2026-10-09)
 - [x] Lista DP: botão **Novo colaborador**
 - [x] Testes `colaborador-cadastro.test.ts`
 - [ ] Preview: criar colaborador no DP, reabrir ficha e editar banco/PIS/salário/regime
